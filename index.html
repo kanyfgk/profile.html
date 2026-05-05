@@ -345,9 +345,9 @@ async function saveAction(){
 }
 async function loadLiveRatings(){
   const { data, error } = await supabaseClient
-    .from("vaero_reviews")
-    .select("product_id, rating");
-
+  .from("vaero_reviews")
+  .select("product_id, rating")
+  .eq("is_verified", true);
   if(error){
     console.error("Supabase error:", error);
     return;
