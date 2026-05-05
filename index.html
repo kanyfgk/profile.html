@@ -312,6 +312,12 @@ async function loadLiveRatings(){
   });
 
   console.log("LIVE RATINGS:", grouped);
+  for (let product in grouped) {
+  const ratings = grouped[product];
+  const avg = ratings.reduce((a, b) => a + b, 0) / ratings.length;
+
+  console.log(product, avg.toFixed(1), ratings.length);
+}
 }
 
 renderProducts();
