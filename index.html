@@ -11,75 +11,162 @@
 *{box-sizing:border-box;margin:0;padding:0}
 
 body{
-  background:linear-gradient(135deg,#07111d,#18314a 55%,#384b61);
+  background:#0b1620;
   color:white;
   font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;
 }
 
-.wrap{max-width:720px;margin:0 auto;padding:30px 18px 80px}
+/* HERO */
+.hero{
+  height:180px;
+  background:linear-gradient(120deg,#1a2b3c,#2f4b68);
+}
 
-.header{
+/* WRAP */
+.wrap{
+  max-width:720px;
+  margin:-60px auto 0;
+  padding:0 16px 80px;
+}
+
+/* PROFILE CARD */
+.profile{
+  background:#111c28;
+  border-radius:24px;
+  padding:22px;
+  box-shadow:0 20px 60px rgba(0,0,0,.4);
+}
+
+.top{
   display:flex;
-  align-items:center;
   gap:16px;
+  align-items:center;
 }
 
 .avatar{
-  width:70px;height:70px;border-radius:50%;
-  background:rgba(230,215,176,.2);
-  display:flex;align-items:center;justify-content:center;
-  font-family:"Oswald";font-size:26px;
+  width:80px;height:80px;
+  border-radius:50%;
+  background:#e6d7b0;
+  color:#0b1620;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-family:"Oswald";
+  font-size:26px;
 }
 
-.name{font-family:"Oswald";font-size:32px;letter-spacing:3px}
-.bio{margin-top:14px;color:rgba(255,255,255,.75);line-height:24px}
+.name{
+  font-family:"Oswald";
+  font-size:32px;
+  letter-spacing:4px;
+}
 
-.actions{display:flex;gap:10px;margin-top:16px}
+.bio{
+  margin-top:16px;
+  color:#cfd6de;
+  font-size:15px;
+  line-height:24px;
+}
+
+/* ACTIONS */
+.actions{
+  display:flex;
+  gap:10px;
+  margin-top:18px;
+}
+
 .btn{
-  flex:1;text-align:center;
-  padding:14px;border-radius:12px;
+  flex:1;
+  padding:14px;
+  border-radius:12px;
+  text-align:center;
   text-decoration:none;
   font-size:14px;
 }
-.primary{background:#e6d7b0;color:#0b1620;font-weight:600}
-.secondary{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15);color:white}
 
-.section{margin-top:28px}
-.title{color:#e6d7b0;font-size:13px;margin-bottom:10px}
+.primary{
+  background:#e6d7b0;
+  color:#0b1620;
+  font-weight:600;
+}
 
+.secondary{
+  background:#1a2b3c;
+  color:white;
+}
+
+/* SECTION */
+.section{
+  margin-top:28px;
+}
+
+.title{
+  font-size:13px;
+  color:#e6d7b0;
+  margin-bottom:10px;
+}
+
+/* PRODUCT CARDS */
+.products{
+  display:flex;
+  gap:12px;
+  overflow-x:auto;
+}
+
+.product{
+  min-width:150px;
+  background:#162533;
+  border-radius:16px;
+  padding:12px;
+}
+
+.product-img{
+  height:90px;
+  border-radius:12px;
+  background:linear-gradient(120deg,#2a3d52,#3d5c78);
+  margin-bottom:10px;
+}
+
+.product b{
+  font-size:14px;
+}
+
+.product span{
+  font-size:12px;
+  color:#aaa;
+}
+
+/* CONTENT GRID */
 .grid{
   display:grid;
   grid-template-columns:1fr 1fr;
   gap:10px;
 }
 
-.card{
-  background:rgba(255,255,255,.07);
-  padding:14px;
-  border-radius:14px;
-}
-
-.card b{display:block;margin-bottom:4px}
-.card span{font-size:13px;color:rgba(255,255,255,.6)}
-
 .post{
-  margin-top:10px;
-  padding:14px;
-  background:rgba(255,255,255,.06);
+  height:110px;
+  background:#162533;
   border-radius:14px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:12px;
+  color:#aaa;
 }
 
+/* LOCK */
 .lock{
-  margin-top:10px;
+  background:#1a2b3c;
   padding:12px;
-  background:rgba(230,215,176,.12);
   border-radius:12px;
   font-size:13px;
   color:#e6d7b0;
 }
 
+/* MODAL */
 .modal{
-  position:fixed;inset:0;
+  position:fixed;
+  inset:0;
   background:rgba(0,0,0,.6);
   display:none;
   align-items:center;
@@ -89,9 +176,9 @@ body{
 .modal.show{display:flex}
 
 .modal-box{
-  background:#101b28;
+  background:#111c28;
   padding:24px;
-  border-radius:18px;
+  border-radius:20px;
   width:90%;
   max-width:400px;
 }
@@ -101,9 +188,7 @@ input{
   padding:14px;
   margin-top:10px;
   border-radius:10px;
-  border:1px solid rgba(255,255,255,.2);
-  background:rgba(255,255,255,.08);
-  color:white;
+  border:0;
 }
 
 button{
@@ -113,8 +198,6 @@ button{
   border:0;
   border-radius:10px;
   background:#e6d7b0;
-  color:#0b1620;
-  font-weight:600;
 }
 
 @media(max-width:600px){
@@ -125,76 +208,89 @@ button{
 
 <body>
 
+<div class="hero"></div>
+
 <div class="wrap">
 
-  <!-- PROFIL -->
-  <div class="header">
-    <div class="avatar">V</div>
-    <div>
-      <div class="name">VAERO</div>
-      <div>@vaero</div>
-    </div>
-  </div>
+<div class="profile">
 
-  <div class="bio">
-    Araç içi kişisel atmosfer sistemi.  
-    Koku yenileme, destek ve VAERO deneyimini buradan yönet.
-  </div>
-
-  <div class="actions">
-    <a class="btn primary" href="https://wa.me/905391152765" target="_blank">Mesaj gönder</a>
-    <a class="btn secondary" href="#">Instagram</a>
-  </div>
-
-  <!-- ÜRÜNLER -->
-  <div class="section">
-    <div class="title">ÜRÜNLER</div>
-    <div class="grid">
-      <div class="card"><b>Koku yenile</b><span>Mevcut kokunu tekrar al</span></div>
-      <div class="card"><b>Atmosfer paketleri</b><span>Toplu koku avantajları</span></div>
-    </div>
-  </div>
-
-  <!-- GÖNDERİLER -->
-  <div class="section">
-    <div class="title">GÖNDERİLER</div>
-    <div class="post">Yeni kokular yakında geliyor...</div>
-    <div class="post">VAERO kullanıcı deneyimleri burada paylaşılır.</div>
-  </div>
-
-  <!-- YORUM -->
-  <div class="section">
-    <div class="title">YORUM & PUAN</div>
-    <div class="lock">
-      Bu alan sadece müşteri numarası ile doğrulanan kullanıcılar içindir.
-    </div>
-  </div>
-
-  <!-- YARIŞMA -->
-  <div class="section">
-    <div class="title">YARIŞMA</div>
-    <div class="lock">
-      Yarışmalara katılım için müşteri doğrulaması gerekir.
-    </div>
-  </div>
-
+<div class="top">
+<div class="avatar">V</div>
+<div>
+<div class="name">VAERO</div>
+</div>
 </div>
 
-<!-- KAYIT MODAL -->
+<div class="bio">
+Araç içi kişisel atmosfer sistemi.  
+Temiz, kontrollü ve kişisel sürüş deneyimi.
+</div>
+
+<div class="actions">
+<a class="btn primary" href="https://wa.me/905391152765">Mesaj gönder</a>
+<a class="btn secondary">Instagram</a>
+</div>
+
+<!-- PRODUCTS -->
+<div class="section">
+<div class="title">ÜRÜNLER</div>
+<div class="products">
+
+<div class="product">
+<div class="product-img"></div>
+<b>VAERO cihaz</b>
+<span>Ana sistem</span>
+</div>
+
+<div class="product">
+<div class="product-img"></div>
+<b>Koku yenile</b>
+<span>Refill</span>
+</div>
+
+<div class="product">
+<div class="product-img"></div>
+<b>3’lü paket</b>
+<span>Avantajlı</span>
+</div>
+
+</div>
+</div>
+
+<!-- CONTENT -->
+<div class="section">
+<div class="title">VAERO</div>
+<div class="grid">
+<div class="post">Video</div>
+<div class="post">Deneyim</div>
+<div class="post">Kullanıcı</div>
+<div class="post">Yeni ürün</div>
+</div>
+</div>
+
+<!-- LOCKED -->
+<div class="section">
+<div class="title">MÜŞTERİ ALANI</div>
+<div class="lock">
+Yorum, puan ve yarışmalar müşteri numarası ile açılır.
+</div>
+</div>
+
+</div>
+</div>
+
+<!-- MODAL -->
 <div class="modal" id="modal">
-  <div class="modal-box">
-    <h3>Müşteri girişi</h3>
-    <p style="font-size:13px;color:#ccc">
-      Yorum, puan ve avantajlara erişmek için müşteri numaranı gir.
-    </p>
-    <input placeholder="Müşteri numarası">
-    <button>Kayıt ol</button>
-  </div>
+<div class="modal-box">
+<h3>Müşteri girişi</h3>
+<input placeholder="Müşteri numarası">
+<button>Devam et</button>
+</div>
 </div>
 
 <script>
 setTimeout(()=>{
-  document.getElementById("modal").classList.add("show");
+document.getElementById("modal").classList.add("show");
 },10000);
 </script>
 
