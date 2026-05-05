@@ -292,10 +292,10 @@ renderFlow();
 const SUPABASE_URL = "https://sb_publishable_eTspasegbb8PbX2hEGMD5w_ggrWRuYN";
 const SUPABASE_KEY = "wpfiszzxlwkmaqcqmywa";
 
-const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 async function loadProducts() {
-  const { data, error } = await supabase
+  const { data, error } = await supabaseClient
     .from("vaero_reviews")
     .select("product_id, rating");
 
