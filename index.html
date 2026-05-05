@@ -294,13 +294,21 @@ function openAction(type){
 
 function closeAction(){actionModal.classList.remove("show")}
 
-function saveAction(){
+async function saveAction(){
   const customer=customers[activeId];
   const productId=activeContent.product;
   const bought=customer.purchased.includes(productId);
   const already=customer.rated.includes(productId);
   const verified=actionType==="rate" && bought && !already;
-
+await supabaseClient.from("vaero_reviews").insert([
+  {
+    customer_code: activeId,
+    product_id: productId,
+    rating: parseInt(ratingBox.value),
+    comment: actionText.value
+  }
+]);
+  
   if(verified){
     customer.rated.push(productId);
     alert("★ Doğrulanmış puan kaydedildi. Bu yorum VAERO ürününe yansır.");
