@@ -435,33 +435,65 @@ loadLiveRatings();
   }
 
   const list = document.getElementById("reviewList");
+const verifiedCount = data.filter(item => item.is_verified).length;
+const normalCount = data.length - verifiedCount;
 
-  list.innerHTML = data.map(item => {
-    return `
-  <div style="
-    margin-bottom:10px;
-    padding:10px;
-    border-radius:10px;
-    background:${item.is_verified ? 'rgba(230,215,176,.16)' : '#111'};
-    border:${item.is_verified ? '1px solid rgba(230,215,176,.45)' : '1px solid rgba(255,255,255,.08)'};
-  ">
-    <div style="font-size:11px; color:${item.is_verified ? '#e6d7b0' : 'rgba(255,255,255,.55)'}; margin-bottom:5px;">
-      ${item.is_verified ? '★ Onaylı Deneyim' : 'Normal Yorum'}
+let header = `
+  <div style="margin-bottom:10px;">
+    <div style="font-size:13px; color:#e6d7b0; font-weight:700;">
+      Onaylı Deneyimler (${verifiedCount})
     </div>
-
-    <div style="font-size:13px; line-height:18px;">
-      ${item.comment || '—'}
+    <div style="font-size:11px; color:rgba(255,255,255,.55); margin-top:3px;">
+      Normal yorumlar: ${normalCount}
     </div>
+  </div>
+`;
+  const verified = data.filter(item => item.is_verified);
+const normal = data.filter(item => !item.is_verified);
 
-    ${item.is_verified ? `
+list.innerHTML = `
+  <div style="margin-bottom:12px;">
+    <div style="font-size:14px; color:#e6d7b0; font-weight:700;">
+      ★ Onaylı Deneyimler (${verified.length})
+    </div>
+  </div>
+
+  ${verified.map(item => `
+    <div style="
+      margin-bottom:10px;
+      padding:10px;
+      border-radius:10px;
+      background:rgba(230,215,176,.16);
+      border:1px solid rgba(230,215,176,.45);
+    ">
+      <div style="font-size:13px;">
+        ${item.comment || '—'}
+      </div>
       <div style="font-size:12px; margin-top:6px; color:#e6d7b0;">
         Puan: ${item.rating}/5
       </div>
-    ` : ''}
+    </div>
+  `).join("")}
+
+  <div style="margin-top:16px; margin-bottom:10px;">
+    <div style="font-size:12px; color:rgba(255,255,255,.5);">
+      Diğer yorumlar (${normal.length})
+    </div>
   </div>
+
+  ${normal.map(item => `
+    <div style="
+      margin-bottom:8px;
+      padding:8px;
+      border-radius:8px;
+      background:#111;
+    ">
+      <div style="font-size:13px;">
+        ${item.comment || '—'}
+      </div>
+    </div>
+  `).join("")}
 `;
-  }).join("");
-}
 </script>
 
 </body>
