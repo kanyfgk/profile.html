@@ -108,6 +108,10 @@ textarea{min-height:88px}
   <div class="section-label">VAERO ÜRÜNLERİ</div>
   <div class="product-grid" id="productGrid"></div>
 
+<div id="reviewSection" style="display:none; margin-top:20px;">
+  <div id="reviewList"></div>
+</div>
+
   <div class="flow-gate" onclick="openFlow()">
     <div>
       <b>Müşteri Akışı</b>
@@ -217,7 +221,7 @@ let actionType=null;
 
 function renderProducts(){
   productGrid.innerHTML=products.map(p=>`
-    <button class="product-tile ${p.rec?'recommended':''}" data-product="${p.id}" onclick="openProduct('${p.id}')">
+    <button class="product-tile ${p.rec?'recommended':''}" data-product="${p.id}" onclick="openProduct('${p.id}'); openReviews('${p.id}')">
       <b>${p.name}</b>
       <span>${p.sub}</span>
     </button>
@@ -337,7 +341,7 @@ if (purchase) {
 
   isValidDate = diffDays <= 365;
 }
-
+const verified = bought && isValidDate;
   const { data: oldReview } = await supabaseClient
     .from("vaero_reviews")
     .select("id")
@@ -483,7 +487,10 @@ loadLiveRatings();
     `).join("")}
   `;
 }
-
+function openReviews(productId){
+  document.getElementById("reviewSection").style.display = "block";
+  loadReviews(productId);
+}
   </script>
 </body>
 </html>
