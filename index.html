@@ -57,6 +57,83 @@ button{padding:13px;border:0;border-radius:12px}
 .close{background:rgba(255,255,255,.09);color:white}
 .blurAfterLock.locked-view .grid,.blurAfterLock.locked-view .platform{filter:blur(3px);pointer-events:none}
 @media(max-width:600px){.platform{grid-template-columns:1fr}.name{font-size:28px}}
+  .id-link{
+  margin-top:10px;
+  background:none;
+  border:0;
+  color:#e6d7b0;
+  text-decoration:underline;
+  font-size:13px;
+  cursor:pointer;
+  padding:0;
+}
+
+.feed{
+  margin-top:22px;
+}
+
+.feed-card{
+  margin-top:12px;
+  border-radius:18px;
+  background:rgba(255,255,255,.06);
+  border:1px solid rgba(255,255,255,.10);
+  overflow:hidden;
+}
+
+.feed-media{
+  height:240px;
+  background:
+    radial-gradient(circle at 50% 25%,rgba(230,215,176,.35),transparent 22%),
+    linear-gradient(145deg,#162533,#334a61);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-family:"Oswald";
+  letter-spacing:2px;
+  color:rgba(255,255,255,.6);
+}
+
+.feed-body{
+  padding:14px;
+}
+
+.feed-meta{
+  font-size:12px;
+  color:#e6d7b0;
+  margin-bottom:6px;
+}
+
+.feed-text{
+  font-size:14px;
+  line-height:22px;
+  color:rgba(255,255,255,.75);
+}
+
+.comment-box{
+  margin-top:10px;
+  display:flex;
+  gap:8px;
+}
+
+.comment-box input{
+  flex:1;
+  padding:11px;
+}
+
+.comment-box button{
+  width:auto;
+  padding:11px 14px;
+}
+
+.add-content{
+  margin-top:14px;
+  padding:14px;
+  border-radius:15px;
+  background:rgba(230,215,176,.10);
+  color:#e6d7b0;
+  font-size:13px;
+  cursor:pointer;
+}
 </style>
 </head>
 
@@ -97,9 +174,13 @@ button{padding:13px;border:0;border-radius:12px}
   </div>
 
   <div class="pulse">
-    İlk 12 saniye ön izleme açık. Yorum, puan, yarışma ve özel fırsatlar müşteri ID ile açılır.
-    <div class="preview-timer" id="timer">Ön izleme: 12 saniye</div>
-  </div>
+  İlk 12 saniye ön izleme açık. Yorum, puan, yarışma ve özel fırsatlar müşteri ID ile açılır.
+  <div class="preview-timer" id="timer">Ön izleme: 12 saniye</div>
+
+  <button class="id-link" onclick="openIdModal()">
+    Müşteri ID ile giriş yap
+  </button>
+</div>
 
   <div class="tabs">
     <div class="tab active">AKIŞ</div>
@@ -122,6 +203,16 @@ button{padding:13px;border:0;border-radius:12px}
     <button class="tile locked"><b>Yarışma</b><span>Müşteri alanı</span></button>
   </div>
 
+  <div class="feed">
+  <div class="section-title">MÜŞTERİ AKIŞI</div>
+
+  <div class="add-content" onclick="addCustomerContent()">
+    + Reels / gönderi ekle
+  </div>
+
+  <div id="customerFeed"></div>
+</div>
+  
   <div class="platform">
     <div class="box"><b>Doğrulanmış yorum</b><span>★ sadece satın alınan ürüne yapılan yorumlarda görünür.</span></div>
     <div class="box"><b>Ürün güveni</b><span>Aldığı ürünü yorumlayan müşteri sistemde ayrı görünür.</span></div>
@@ -180,6 +271,100 @@ function unlock(){
 function previewOnly(){
   document.getElementById("lockModal").classList.remove("show");
 }
+  let verifiedCustomerId = null;
+
+function openIdModal(){
+  document.getElementById("lockModal").classList.add("show");
+}
+
+const oldUnlock = unlock;
+unlock = function(){
+  const id=document.getElementById("customerId").value.trim();
+
+  if(customers[id]){
+    verifiedCustomerId = id;
+    document.getElementById("lockModal").classList.remove("show");
+    document.getElementById("page").classList.remove("locked-view");
+    alert("Müşteri doğrulandı. Etkileşim alanı açıldı.");
+    renderFeed();
+  }else{
+    alert("Müşteri ID bulunamadı.");
+  }
+}
+
+const sampleFeed = [
+  {
+    type:"Reels",
+    product:"White Tea",
+    id:"VA-001",
+    text:"White Tea araç içinde temiz ve ferah bir his verdi. Ağır değil."
+  },
+  {
+    type:"Gönderi",
+    product:"VAERO Cihaz",
+    id:"VA-002",
+    text:"Cihaz küçük ama araç içinde premium bir hava oluşturuyor."
+  }
+];
+
+function renderFeed(){
+  const feed = JSON.parse(localStorage.getItem("vaeroFeed") || JSON.stringify(sampleFeed));
+
+  document.getElementById("customerFeed").innerHTML = feed.map((item,index)=>`
+    <div class="feed-card">
+      <div class="feed-media">${item.type}</div>
+      <div class="feed-body">
+        <div class="feed-meta">★ Doğrulanmış ID: ${item.id} • Ürün: ${item.product}</div>
+        <div class="feed-text">${item.text}</div>
+
+        <div class="comment-box">
+          <input id="comment-${index}" placeholder="Yorum yaz">
+          <button onclick="addComment(${index})">Gönder</button>
+        </div>
+      </div>
+    </div>
+  `).join("");
+}
+
+function addCustomerContent(){
+  if(!verifiedCustomerId){
+    openIdModal();
+    return;
+  }
+
+  const product = prompt("Hangi ürün hakkında? Örn: White Tea, VAERO Cihaz, Ocean");
+  if(!product) return;
+
+  const text = prompt("Kısa deneyimini yaz:");
+  if(!text) return;
+
+  const feed = JSON.parse(localStorage.getItem("vaeroFeed") || JSON.stringify(sampleFeed));
+
+  feed.unshift({
+    type:"Gönderi",
+    product:product,
+    id:verifiedCustomerId,
+    text:text
+  });
+
+  localStorage.setItem("vaeroFeed", JSON.stringify(feed));
+  renderFeed();
+}
+
+function addComment(index){
+  if(!verifiedCustomerId){
+    openIdModal();
+    return;
+  }
+
+  const input = document.getElementById("comment-"+index);
+  if(!input.value.trim()) return;
+
+  alert("Yorum kaydedildi. Gerçek sistemde bu yorum ID ile saklanacak.");
+  input.value = "";
+}
+
+renderFeed();
 </script>
 
 </body>
