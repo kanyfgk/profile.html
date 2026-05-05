@@ -3,232 +3,77 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>VAERO | Live Profile</title>
+<title>VAERO | Profile</title>
 <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@700&display=swap" rel="stylesheet">
 
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 body{background:#07111d;color:white;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif}
-.wrap{max-width:620px;margin:0 auto;padding:18px 12px 80px}
+.wrap{max-width:620px;margin:0 auto;padding:18px 12px 90px}
 .top{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px}
 .logo{font-family:"Oswald";font-size:32px;letter-spacing:5px}
 .live{font-size:12px;color:#e6d7b0}
 .hero{border-radius:26px;padding:22px;background:linear-gradient(145deg,#101b28,#14263a);border:1px solid rgba(255,255,255,.12)}
 .profile-row{display:flex;gap:16px;align-items:center}
-.avatar{width:86px;height:86px;border-radius:50%;background:radial-gradient(circle at 50% 25%,rgba(255,255,255,.32),transparent 18%),linear-gradient(145deg,#e6d7b0,#6d8298);display:flex;align-items:center;justify-content:center;color:#07111d;font-family:"Oswald";font-size:34px}
+.avatar{width:86px;height:86px;border-radius:50%;background:linear-gradient(145deg,#e6d7b0,#6d8298);display:flex;align-items:center;justify-content:center;color:#07111d;font-family:"Oswald";font-size:34px}
 .name{font-family:"Oswald";font-size:30px;letter-spacing:4px}
 .bio{margin-top:14px;color:rgba(255,255,255,.75);font-size:14px;line-height:22px}
 .actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:16px}
 .btn{padding:12px;text-align:center;border-radius:12px;text-decoration:none;font-size:14px}
 .primary{background:#e6d7b0;color:#07111d;font-weight:700}
 .secondary{background:rgba(255,255,255,.08);color:white;border:1px solid rgba(255,255,255,.10)}
-.routes{display:flex;gap:10px;overflow-x:auto;margin:18px 0;padding-bottom:4px}
-.route{min-width:70px;text-align:center}
-.circle{width:62px;height:62px;margin:0 auto 6px;border-radius:50%;border:1px solid rgba(230,215,176,.45);background:rgba(255,255,255,.06);display:flex;align-items:center;justify-content:center;font-size:20px}
-.route span{font-size:11px;color:rgba(255,255,255,.68)}
 .pulse{margin:18px 0;padding:14px;border-radius:16px;background:rgba(230,215,176,.10);border:1px solid rgba(230,215,176,.18);font-size:13px;color:#e6d7b0;line-height:21px}
-.tabs{display:grid;grid-template-columns:repeat(4,1fr);border-top:1px solid rgba(255,255,255,.10);border-bottom:1px solid rgba(255,255,255,.10);margin-top:18px}
-.tab{text-align:center;padding:13px 0;font-size:11px;color:rgba(255,255,255,.55)}
-.tab.active{color:white;border-bottom:2px solid #e6d7b0}
-.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:4px;margin-top:4px;position:relative}
-.tile{aspect-ratio:1/1;border:0;position:relative;overflow:hidden;background:linear-gradient(145deg,#162533,#334a61);color:white;text-align:left;padding:8px}
-.tile::before{content:"";position:absolute;inset:15%;border-radius:20px;background:radial-gradient(circle at 50% 20%,rgba(230,215,176,.45),transparent 26%)}
+.id-link{margin-top:10px;background:none;border:0;color:#e6d7b0;text-decoration:underline;font-size:13px;cursor:pointer;padding:0}
+.section-title{margin:20px 0 10px;color:#e6d7b0;font-size:12px;letter-spacing:1px}
+.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:4px}
+.tile{aspect-ratio:1/1;border:0;position:relative;overflow:hidden;background:linear-gradient(145deg,#162533,#334a61);color:white;text-align:left;padding:8px;border-radius:4px;cursor:pointer}
+.tile:before{content:"";position:absolute;inset:15%;border-radius:20px;background:radial-gradient(circle at 50% 20%,rgba(230,215,176,.45),transparent 26%)}
 .tile b{position:absolute;left:8px;bottom:23px;font-size:11px;z-index:2}
 .tile span{position:absolute;left:8px;bottom:8px;font-size:9px;color:rgba(255,255,255,.7);z-index:2}
-.tile.video:after{content:"▶️";position:absolute;top:7px;right:8px;font-size:12px;z-index:3}
 .tile.recommended:after{content:"Önerilen";position:absolute;top:7px;right:6px;background:#e6d7b0;color:#07111d;border-radius:999px;padding:3px 6px;font-size:9px;font-weight:700;z-index:3}
-.tile.locked{filter:blur(.3px)}
-.tile.locked:after{content:"ID";position:absolute;top:7px;right:7px;background:rgba(0,0,0,.45);border:1px solid rgba(255,255,255,.2);color:white;border-radius:999px;padding:3px 7px;font-size:9px;z-index:3}
-.platform{margin-top:18px;display:grid;grid-template-columns:1fr 1fr;gap:10px}
-.box{padding:14px;border-radius:15px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.09)}
-.box b{display:block;font-size:14px;margin-bottom:5px}
-.box span{font-size:12px;color:rgba(255,255,255,.58);line-height:18px}
-.lockbar{margin-top:18px;padding:14px;border-radius:15px;background:rgba(230,215,176,.10);color:#e6d7b0;font-size:13px;line-height:21px}
-.preview-timer{font-size:12px;color:rgba(255,255,255,.5);margin-top:10px}
-.overlay{position:fixed;inset:0;background:rgba(0,0,0,.66);display:none;align-items:center;justify-content:center;padding:18px;z-index:50;backdrop-filter:blur(6px)}
+.flow-entry{margin-top:20px;padding:16px;border-radius:18px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.10);display:flex;align-items:center;justify-content:space-between;cursor:pointer}
+.flow-entry b{font-size:15px}
+.flow-entry span{font-size:13px;color:rgba(255,255,255,.58)}
+.flow-icon{width:46px;height:46px;border-radius:50%;background:rgba(230,215,176,.14);display:flex;align-items:center;justify-content:center;color:#e6d7b0;font-size:20px}
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.72);display:none;align-items:center;justify-content:center;padding:14px;z-index:50}
 .overlay.show{display:flex}
-.modal{width:100%;max-width:420px;background:#101b28;border:1px solid rgba(255,255,255,.14);border-radius:24px;padding:24px;box-shadow:0 24px 80px rgba(0,0,0,.45)}
-.modal h2{font-family:"Oswald";font-size:32px;margin-bottom:8px}
+.modal{width:100%;max-width:430px;background:#101b28;border:1px solid rgba(255,255,255,.14);border-radius:24px;padding:22px;box-shadow:0 24px 80px rgba(0,0,0,.45)}
+.modal h2{font-family:"Oswald";font-size:30px;margin-bottom:8px}
 .modal p{font-size:14px;line-height:23px;color:rgba(255,255,255,.68);margin-bottom:14px}
-input{width:100%;padding:14px;border-radius:12px;border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.08);color:white;outline:none}
+input,textarea,select{width:100%;padding:13px;border-radius:12px;border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.08);color:white;outline:none;margin-top:9px}
+textarea{min-height:90px}
+select option{color:#111}
 .modal-actions{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px}
 button{padding:13px;border:0;border-radius:12px}
 .confirm{background:#e6d7b0;color:#07111d;font-weight:700}
 .close{background:rgba(255,255,255,.09);color:white}
-.blurAfterLock.locked-view .grid,.blurAfterLock.locked-view .platform{filter:blur(3px);pointer-events:none}
-@media(max-width:600px){.platform{grid-template-columns:1fr}.name{font-size:28px}}
-  .id-link{
-  margin-top:10px;
-  background:none;
-  border:0;
-  color:#e6d7b0;
-  text-decoration:underline;
-  font-size:13px;
-  cursor:pointer;
-  padding:0;
-}
-
-.feed{
-  margin-top:22px;
-}
-
-.feed-card{
-  margin-top:12px;
-  border-radius:18px;
-  background:rgba(255,255,255,.06);
-  border:1px solid rgba(255,255,255,.10);
-  overflow:hidden;
-}
-
-.feed-media{
-  height:240px;
-  background:
-    radial-gradient(circle at 50% 25%,rgba(230,215,176,.35),transparent 22%),
-    linear-gradient(145deg,#162533,#334a61);
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  font-family:"Oswald";
-  letter-spacing:2px;
-  color:rgba(255,255,255,.6);
-}
-
-.feed-body{
-  padding:14px;
-}
-
-.feed-meta{
-  font-size:12px;
-  color:#e6d7b0;
-  margin-bottom:6px;
-}
-
-.feed-text{
-  font-size:14px;
-  line-height:22px;
-  color:rgba(255,255,255,.75);
-}
-
-.comment-box{
-  margin-top:10px;
-  display:flex;
-  gap:8px;
-}
-
-.comment-box input{
-  flex:1;
-  padding:11px;
-}
-
-.comment-box button{
-  width:auto;
-  padding:11px 14px;
-}
-
-.add-content{
-  margin-top:14px;
-  padding:14px;
-  border-radius:15px;
-  background:rgba(230,215,176,.10);
-  color:#e6d7b0;
-  font-size:13px;
-  cursor:pointer;
-}
-  .community{
-  margin-top:22px;
-}
-
-.community-grid{
-  display:grid;
-  grid-template-columns:repeat(3,1fr);
-  gap:10px;
-}
-
-.community-icon{
-  aspect-ratio:1/1;
-  border:1px solid rgba(255,255,255,.10);
-  background:rgba(255,255,255,.06);
-  color:white;
-  border-radius:18px;
-  display:flex;
-  flex-direction:column;
-  align-items:center;
-  justify-content:center;
-  gap:8px;
-  cursor:pointer;
-}
-
-.community-icon b{
-  font-size:22px;
-  color:#e6d7b0;
-}
-
-.community-icon span{
-  font-size:12px;
-  color:rgba(255,255,255,.68);
-}
-
-.community-note{
-  margin-top:12px;
-  padding:12px;
-  border-radius:14px;
-  background:rgba(230,215,176,.09);
-  color:#e6d7b0;
-  font-size:12px;
-  line-height:19px;
-}
-
-.community-panel{
-  margin-top:12px;
-}
-
-.panel-empty{
-  padding:14px;
-  border-radius:14px;
-  background:rgba(255,255,255,.05);
-  color:rgba(255,255,255,.55);
-  font-size:13px;
-}
-
-.mini-feed{
-  display:grid;
-  gap:10px;
-}
-
-.mini-card{
-  padding:13px;
-  border-radius:14px;
-  background:rgba(255,255,255,.06);
-  border:1px solid rgba(255,255,255,.10);
-}
-
-.mini-meta{
-  font-size:12px;
-  color:#e6d7b0;
-  margin-bottom:6px;
-}
-
-.mini-text{
-  font-size:13px;
-  line-height:20px;
-  color:rgba(255,255,255,.72);
-}
-
-.locked-panel{
-  padding:14px;
-  border-radius:14px;
-  background:rgba(230,215,176,.10);
-  color:#e6d7b0;
-  font-size:13px;
-  line-height:20px;
-}
+.flow-screen{position:fixed;inset:0;background:#07111d;display:none;z-index:40;overflow-y:auto}
+.flow-screen.show{display:block}
+.flow-head{max-width:620px;margin:0 auto;padding:18px 12px;display:flex;justify-content:space-between;align-items:center}
+.back{background:none;color:white;border:0;font-size:24px;padding:4px}
+.flow-title{font-family:"Oswald";letter-spacing:2px;font-size:24px}
+.content-grid{max-width:620px;margin:0 auto;padding:0 12px 80px;display:grid;grid-template-columns:repeat(3,1fr);gap:4px}
+.content-tile{aspect-ratio:1/1.35;border:0;border-radius:6px;background:linear-gradient(145deg,#17283a,#40576f);position:relative;color:white;text-align:left;padding:8px;overflow:hidden}
+.content-tile:before{content:"";position:absolute;inset:20%;border-radius:30px;background:radial-gradient(circle at 50% 25%,rgba(230,215,176,.45),transparent 28%)}
+.content-tile b{position:absolute;left:8px;bottom:26px;font-size:11px;z-index:2}
+.content-tile span{position:absolute;left:8px;bottom:9px;font-size:9px;color:rgba(255,255,255,.65);z-index:2}
+.viewer{position:fixed;inset:0;background:#000;display:none;z-index:60;color:white}
+.viewer.show{display:block}
+.viewer-media{position:absolute;inset:0 72px 0 0;background:linear-gradient(145deg,#182b3e,#46627c);display:flex;align-items:center;justify-content:center;font-family:"Oswald";font-size:30px;letter-spacing:3px}
+.viewer-info{position:absolute;left:18px;bottom:28px;right:90px}
+.viewer-info b{display:block;font-size:15px;margin-bottom:6px}
+.viewer-info p{font-size:13px;line-height:20px;color:rgba(255,255,255,.75)}
+.side-actions{position:absolute;right:12px;bottom:90px;display:grid;gap:14px}
+.side-action{width:50px;height:50px;border-radius:50%;background:rgba(255,255,255,.12);color:white;border:1px solid rgba(255,255,255,.14);display:flex;align-items:center;justify-content:center;font-size:20px}
+.side-label{text-align:center;font-size:10px;color:rgba(255,255,255,.72);margin-top:4px}
+.viewer-close{position:absolute;top:18px;left:14px;background:rgba(255,255,255,.12);color:white;border:0;border-radius:999px;width:42px;height:42px}
+.verified-line{color:#e6d7b0;font-size:13px;margin-bottom:8px}
 </style>
 </head>
 
 <body>
 
-<div class="wrap blurAfterLock" id="page">
-
+<div class="wrap">
   <div class="top">
     <div class="logo">VAERO</div>
     <div class="live">LIVE PROFILE</div>
@@ -244,7 +89,7 @@ button{padding:13px;border:0;border-radius:12px}
     </div>
 
     <div class="bio">
-      Araç içi kişisel atmosfer sistemi. Ürünler, kokular, kullanıcı deneyimleri ve VAERO etkinlikleri tek alanda.
+      Araç içi kişisel atmosfer sistemi. Ürünler, kokular ve doğrulanmış müşteri deneyimleri tek alanda.
     </div>
 
     <div class="actions">
@@ -253,216 +98,254 @@ button{padding:13px;border:0;border-radius:12px}
     </div>
   </div>
 
-  <div class="routes">
-    <div class="route"><div class="circle">◎</div><span>Instagram</span></div>
-    <div class="route"><div class="circle">▶️</div><span>Reels</span></div>
-    <div class="route"><div class="circle">✦</div><span>Kokular</span></div>
-    <div class="route"><div class="circle">★</div><span>Yorum</span></div>
-    <div class="route"><div class="circle">⚑</div><span>Yarışma</span></div>
+  <div class="pulse">
+    İlk bakış herkese açık. Puan, eleştiri, şikayet ve doğrulanmış yorum için müşteri ID gerekir.
+    <br>
+    <button class="id-link" onclick="openIdModal()">Müşteri ID ile giriş yap</button>
   </div>
 
-  <div class="pulse">
-  İlk 12 saniye ön izleme açık. Yorum, puan, yarışma ve özel fırsatlar müşteri ID ile açılır.
-  <div class="preview-timer" id="timer">Ön izleme: 12 saniye</div>
+  <div class="section-title">VAERO ÜRÜNLERİ</div>
+  <div class="grid" id="productGrid"></div>
 
-  <button class="id-link" onclick="openIdModal()">
-    Müşteri ID ile giriş yap
-  </button>
+  <div class="flow-entry" onclick="openFlow()">
+    <div>
+      <b>Müşteri Akışı</b><br>
+      <span>Reels, gönderi, eleştiri ve doğrulanmış deneyimler</span>
+    </div>
+    <div class="flow-icon">↗️</div>
+  </div>
 </div>
 
-  <div class="tabs">
-    <div class="tab active">AKIŞ</div>
-    <div class="tab">REELS</div>
-    <div class="tab">ÜRÜNLER</div>
-    <div class="tab">YORUM</div>
+<div class="flow-screen" id="flowScreen">
+  <div class="flow-head">
+    <button class="back" onclick="closeFlow()">‹</button>
+    <div class="flow-title">MÜŞTERİ AKIŞI</div>
+    <button class="back" onclick="openIdModal()">ID</button>
+  </div>
+  <div class="content-grid" id="contentGrid"></div>
+</div>
+
+<div class="viewer" id="viewer">
+  <button class="viewer-close" onclick="closeViewer()">×</button>
+  <div class="viewer-media" id="viewerMedia">VAERO</div>
+
+  <div class="side-actions">
+    <div>
+      <button class="side-action" onclick="rateContent()">★</button>
+      <div class="side-label">Puan</div>
+    </div>
+    <div>
+      <button class="side-action" onclick="commentContent()">💬</button>
+      <div class="side-label">Eleştir</div>
+    </div>
+    <div>
+      <button class="side-action" onclick="complainContent()">!</button>
+      <div class="side-label">Şikayet</div>
+    </div>
+    <div>
+      <button class="side-action" onclick="compareContent()">◇</button>
+      <div class="side-label">Kıyas</div>
+    </div>
+    <div>
+      <button class="side-action" onclick="shareContent()">↗️</button>
+      <div class="side-label">Paylaş</div>
+    </div>
   </div>
 
-  <div class="grid">
-    <button class="tile recommended"><b>VAERO Cihaz</b><span>Ana sistem</span></button>
-    <button class="tile video"><b>Reels</b><span>Kullanım</span></button>
-    <button class="tile"><b>White Tea</b><span>Temiz atmosfer</span></button>
-
-    <button class="tile recommended"><b>Refill</b><span>Koku yenileme</span></button>
-    <button class="tile locked"><b>Yorumlar</b><span>ID ile açılır</span></button>
-    <button class="tile video"><b>Deneyim</b><span>Kullanıcı</span></button>
-
-    <button class="tile"><b>Ocean</b><span>Serin his</span></button>
-    <button class="tile recommended"><b>3’lü Paket</b><span>Önerilen</span></button>
-    <button class="tile locked"><b>Yarışma</b><span>Müşteri alanı</span></button>
+  <div class="viewer-info">
+    <div class="verified-line" id="verifiedLine"></div>
+    <b id="viewerTitle"></b>
+    <p id="viewerText"></p>
   </div>
+</div>
 
-  <div class="community">
-  <div class="section-title">MÜŞTERİ KEŞFİ</div>
-
-  <div class="community-grid">
-    <button class="community-icon" onclick="openCommunity('reels')">
-      <b>▶️</b>
-      <span>Reels</span>
-    </button>
-
-    <button class="community-icon" onclick="openCommunity('reviews')">
-      <b>★</b>
-      <span>Yorumlar</span>
-    </button>
-
-    <button class="community-icon" onclick="openCommunity('complaints')">
-      <b>!</b>
-      <span>Şikayet</span>
-    </button>
-
-    <button class="community-icon" onclick="openCommunity('compare')">
-      <b>◇</b>
-      <span>Karşılaştır</span>
-    </button>
-
-    <button class="community-icon" onclick="openCommunity('brands')">
-      <b>↗️</b>
-      <span>Markalar</span>
-    </button>
-
-    <button class="community-icon" onclick="openCommunity('add')">
-      <b>＋</b>
-      <span>İçerik ekle</span>
-    </button>
-  </div>
-
-  <div class="community-note">
-    Müşteri içerikleri; deneyim, eleştiri, şikayet ve ürün karşılaştırmaları için açılır. Etkileşim için VAERO müşteri ID gerekir.
-  </div>
-
-  <div id="communityPanel" class="community-panel">
-    <div class="panel-empty">
-      Bir bölüm seç. ID doğrulandıysa içerikler açılır.
+<div class="overlay" id="idModal">
+  <div class="modal">
+    <h2>Müşteri ID</h2>
+    <p>Puan, yorum, eleştiri ve şikayet için müşteri ID ile devam et.</p>
+    <input id="customerId" placeholder="Örn: VA-001">
+    <div class="modal-actions">
+      <button class="close" onclick="closeIdModal()">Kapat</button>
+      <button class="confirm" onclick="login()">Giriş yap</button>
     </div>
   </div>
 </div>
-  
-  <div class="platform">
-    <div class="box"><b>Doğrulanmış yorum</b><span>★ sadece satın alınan ürüne yapılan yorumlarda görünür.</span></div>
-    <div class="box"><b>Ürün güveni</b><span>Aldığı ürünü yorumlayan müşteri sistemde ayrı görünür.</span></div>
-    <div class="box"><b>Canlı etkinlik</b><span>Yarışma, çekiliş ve kampanyalar müşteri alanından açılır.</span></div>
-    <div class="box"><b>Sosyal rota</b><span>Instagram, reels ve marka güncellemeleri buradan yönlenir.</span></div>
-  </div>
 
-  <div class="lockbar">
-    Bu alan herkes tarafından görülebilir. Etkileşim ve özel içerik için VAERO müşteri ID gerekir.
-  </div>
-
-</div>
-
-<div class="overlay" id="lockModal">
+<div class="overlay" id="actionModal">
   <div class="modal">
-    <h2>VAERO müşteri alanı</h2>
-    <p>Yorum, puanlama, yarışmalar ve özel koku avantajları için müşteri ID ile devam et.</p>
-    <input id="customerId" placeholder="Müşteri ID">
+    <h2 id="actionTitle">İşlem</h2>
+    <p id="actionText"></p>
+    <select id="ratingSelect" style="display:none">
+      <option value="5">5 yıldız</option>
+      <option value="4">4 yıldız</option>
+      <option value="3">3 yıldız</option>
+      <option value="2">2 yıldız</option>
+      <option value="1">1 yıldız</option>
+    </select>
+    <textarea id="actionInput" placeholder="Yaz..."></textarea>
     <div class="modal-actions">
-      <button class="close" onclick="previewOnly()">Sadece bak</button>
-      <button class="confirm" onclick="unlock()">Giriş yap</button>
+      <button class="close" onclick="closeAction()">Kapat</button>
+      <button class="confirm" onclick="saveAction()">Kaydet</button>
     </div>
   </div>
 </div>
 
 <script>
-let seconds=12;
-const timer=document.getElementById("timer");
-
-const countdown=setInterval(()=>{
-  seconds--;
-  timer.innerText="Ön izleme: "+seconds+" saniye";
-  if(seconds<=0){
-    clearInterval(countdown);
-    document.getElementById("lockModal").classList.add("show");
-    document.getElementById("page").classList.add("locked-view");
-  }
-},1000);
+const products=[
+  {id:"device",name:"VAERO Cihaz",sub:"Ana sistem",recommended:true},
+  {id:"white-tea",name:"White Tea",sub:"Temiz atmosfer",recommended:true},
+  {id:"ocean",name:"Ocean",sub:"Serin his"},
+  {id:"cologne",name:"Cologne",sub:"Klasik güçlü"},
+  {id:"sweet-flower",name:"Sweet Flower",sub:"Yumuşak sıcak"},
+  {id:"shangrila",name:"Shangrila",sub:"Hafif dengeli"},
+  {id:"refill",name:"Refill",sub:"Koku yenileme"},
+  {id:"bundle",name:"3’lü Paket",sub:"Önerilen",recommended:true},
+  {id:"brand",name:"VAERO Marka",sub:"Genel deneyim"}
+];
 
 const customers={
-  "VA-001":{purchased:["VAERO Cihaz","White Tea"]},
-  "VA-002":{purchased:["VAERO Cihaz","Ocean","3’lü Paket"]}
+  "VA-001":{purchased:["device","white-tea","brand"],usedRatings:[]},
+  "VA-002":{purchased:["device","ocean","bundle","brand"],usedRatings:[]}
 };
 
-function previewOnly(){
-  document.getElementById("lockModal").classList.remove("show");
-}
-  let verifiedCustomerId = null;
+const contents=[
+  {id:"c1",type:"Reels",product:"white-tea",title:"White Tea deneyimi",text:"Ağır olmayan temiz atmosfer yorumu."},
+  {id:"c2",type:"Gönderi",product:"device",title:"VAERO cihaz kullanımı",text:"Cihazın araç içindeki ilk etkisi."},
+  {id:"c3",type:"Eleştiri",product:"ocean",title:"Ocean karşılaştırması",text:"Ocean daha serin, White Tea daha temiz."},
+  {id:"c4",type:"Şikayet",product:"cologne",title:"Cologne yoğunluk yorumu",text:"Bazı kullanıcılar için güçlü olabilir."},
+  {id:"c5",type:"Gönderi",product:"bundle",title:"3’lü paket deneyimi",text:"Uzun kullanım için avantajlı tercih."},
+  {id:"c6",type:"Reels",product:"brand",title:"VAERO genel deneyim",text:"Marka deneyimi ve destek yorumu."}
+];
 
-function openIdModal(){
-  document.getElementById("lockModal").classList.add("show");
+let currentCustomerId=null;
+let currentContent=null;
+let currentAction=null;
+
+function renderProducts(){
+  document.getElementById("productGrid").innerHTML=products.map(p=>`
+    <button class="tile ${p.recommended?'recommended':''}" onclick="openProduct('${p.id}')">
+      <b>${p.name}</b><span>${p.sub}</span>
+    </button>
+  `).join("");
 }
-unlock = function(){
+
+function renderContents(){
+  document.getElementById("contentGrid").innerHTML=contents.map(c=>`
+    <button class="content-tile" onclick="openViewer('${c.id}')">
+      <b>${c.title}</b><span>${c.type}</span>
+    </button>
+  `).join("");
+}
+
+function openProduct(id){
+  const item=products.find(p=>p.id===id);
+  const related=contents.find(c=>c.product===id);
+  if(related){openViewer(related.id);return;}
+  alert(item.name+" içeriği yakında açılacak.");
+}
+
+function openFlow(){document.getElementById("flowScreen").classList.add("show")}
+function closeFlow(){document.getElementById("flowScreen").classList.remove("show")}
+function openIdModal(){document.getElementById("idModal").classList.add("show")}
+function closeIdModal(){document.getElementById("idModal").classList.remove("show")}
+
+function login(){
   const id=document.getElementById("customerId").value.trim();
-
   if(customers[id]){
-    verifiedCustomerId = id;
-    document.getElementById("lockModal").classList.remove("show");
-    document.getElementById("page").classList.remove("locked-view");
-    alert("Müşteri doğrulandı. Etkileşim alanı açıldı.");
+    currentCustomerId=id;
+    closeIdModal();
+    alert("ID doğrulandı.");
   }else{
     alert("Müşteri ID bulunamadı.");
   }
 }
 
-const communityData = {
-  reels: [
-    {id:"VA-001", product:"White Tea", text:"Kısa kullanım videosu: araç içinde ağır olmayan temiz his."},
-    {id:"VA-002", product:"Ocean", text:"Serin ve hafif atmosfer deneyimi."}
-  ],
-  reviews: [
-    {id:"VA-001", product:"White Tea", text:"★ Doğrulanmış yorum: Ferah ve premium his verdi."},
-    {id:"VA-002", product:"VAERO Cihaz", text:"★ Doğrulanmış yorum: Cihaz küçük ama etkisi net."}
-  ],
-  complaints: [
-    {id:"VA-003", product:"Cologne", text:"Koku karakterli ama bazı kullanıcılara güçlü gelebilir."}
-  ],
-  compare: [
-    {id:"VA-002", product:"Ocean vs White Tea", text:"Ocean daha serin, White Tea daha temiz his bırakıyor."}
-  ],
-  brands: [
-    {id:"VAERO", product:"Anlaşmalı marka alanı", text:"Gelecekte partner markalar ve müşteri eleştiri içerikleri burada açılır."}
-  ]
-};
-
-function openCommunity(type){
-  const panel = document.getElementById("communityPanel");
-
-  if(type === "add"){
-    if(!verifiedCustomerId){
-      openIdModal();
-      return;
-    }
-    const product = prompt("Hangi ürün / marka hakkında?");
-    if(!product) return;
-    const text = prompt("Kısa deneyim / eleştiri yaz:");
-    if(!text) return;
-
-    alert("İçerik alındı. Gerçek sistemde onay sonrası yayınlanacak.");
-    return;
-  }
-
-  if(!verifiedCustomerId){
-    panel.innerHTML = `
-      <div class="locked-panel">
-        Bu alan müşteri ID ile açılır. Ön izleme sınırlıdır.
-        <br><br>
-        <button class="id-link" onclick="openIdModal()">Müşteri ID ile giriş yap</button>
-      </div>
-    `;
-    return;
-  }
-
-  const data = communityData[type] || [];
-
-  panel.innerHTML = `
-    <div class="mini-feed">
-      ${data.map(item=>`
-        <div class="mini-card">
-          <div class="mini-meta">ID: ${item.id} • Ürün: ${item.product}</div>
-          <div class="mini-text">${item.text}</div>
-        </div>
-      `).join("")}
-    </div>
-  `;
+function openViewer(id){
+  currentContent=contents.find(c=>c.id===id);
+  const product=products.find(p=>p.id===currentContent.product);
+  document.getElementById("viewerMedia").innerText=currentContent.type;
+  document.getElementById("viewerTitle").innerText=currentContent.title;
+  document.getElementById("viewerText").innerText=currentContent.text;
+  document.getElementById("verifiedLine").innerText=product ? "Ürün: "+product.name : "";
+  document.getElementById("viewer").classList.add("show");
 }
+
+function closeViewer(){document.getElementById("viewer").classList.remove("show")}
+
+function requireId(){
+  if(!currentCustomerId){
+    openIdModal();
+    return false;
+  }
+  return true;
+}
+
+function rateContent(){
+  if(!requireId())return;
+  currentAction="rate";
+  document.getElementById("actionTitle").innerText="Puan ver";
+  document.getElementById("actionText").innerText="Satın aldığın ürünse ilk puanın doğrulanmış yıldız olarak görünür.";
+  document.getElementById("ratingSelect").style.display="block";
+  document.getElementById("actionInput").placeholder="Kısa yorum yaz";
+  document.getElementById("actionModal").classList.add("show");
+}
+
+function commentContent(){
+  if(!requireId())return;
+  currentAction="comment";
+  document.getElementById("actionTitle").innerText="Eleştiri / yorum";
+  document.getElementById("actionText").innerText="Yorumun ID ile görünür. Satın alınmamış ürünlerde yıldızlı görünmez.";
+  document.getElementById("ratingSelect").style.display="none";
+  document.getElementById("actionInput").placeholder="Yorum veya eleştiri yaz";
+  document.getElementById("actionModal").classList.add("show");
+}
+
+function complainContent(){
+  if(!requireId())return;
+  currentAction="complaint";
+  document.getElementById("actionTitle").innerText="Şikayet bildir";
+  document.getElementById("actionText").innerText="Şikayet içeriğin ID ile işaretlenir ve inceleme alanına düşer.";
+  document.getElementById("ratingSelect").style.display="none";
+  document.getElementById("actionInput").placeholder="Şikayetini yaz";
+  document.getElementById("actionModal").classList.add("show");
+}
+
+function compareContent(){
+  if(!requireId())return;
+  currentAction="compare";
+  document.getElementById("actionTitle").innerText="Karşılaştır";
+  document.getElementById("actionText").innerText="Kullandığın ürünleri karşılaştır.";
+  document.getElementById("ratingSelect").style.display="none";
+  document.getElementById("actionInput").placeholder="Karşılaştırma yaz";
+  document.getElementById("actionModal").classList.add("show");
+}
+
+function shareContent(){
+  alert("Paylaşım altyapısı sonraki aşamada bağlanacak.");
+}
+
+function closeAction(){document.getElementById("actionModal").classList.remove("show")}
+
+function saveAction(){
+  const customer=customers[currentCustomerId];
+  const productId=currentContent.product;
+  const purchased=customer.purchased.includes(productId);
+  const alreadyRated=customer.usedRatings.includes(productId);
+  const verified=currentAction==="rate" && purchased && !alreadyRated;
+
+  if(verified){
+    customer.usedRatings.push(productId);
+    alert("★ Doğrulanmış puan kaydedildi. Bu yorum ilgili VAERO ürününe yansır.");
+  }else{
+    alert("Yorum kaydedildi. Doğrulanmış yıldız olarak sayılmadı.");
+  }
+
+  document.getElementById("actionInput").value="";
+  closeAction();
+}
+
+renderProducts();
+renderContents();
 </script>
 
 </body>
