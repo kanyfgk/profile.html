@@ -329,10 +329,6 @@ if (purchase) {
     return;
   }
 
-  const bought = customer.purchased.includes(productId);
-  const already = customer.rated.includes(productId);
-  const verified = actionType === "rate" && bought && isValidDate;
-
   const { data, error } = await supabaseClient
     .from("vaero_reviews")
     .insert([
