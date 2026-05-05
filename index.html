@@ -3,63 +3,74 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>VAERO | Profil</title>
+<title>VAERO | Live Profile</title>
 <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@700&display=swap" rel="stylesheet">
+
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 body{background:#07111d;color:white;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif}
-.wrap{max-width:560px;margin:0 auto;padding:22px 14px 80px}
-.brand{display:flex;align-items:center;justify-content:space-between;margin-bottom:22px}
+.wrap{max-width:620px;margin:0 auto;padding:18px 12px 80px}
+.top{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px}
 .logo{font-family:"Oswald";font-size:32px;letter-spacing:5px}
-.status{font-size:12px;color:#e6d7b0}
-.profile{padding:20px;border-radius:24px;background:linear-gradient(145deg,#101b28,#0b1620);border:1px solid rgba(255,255,255,.10)}
-.head{display:flex;gap:16px;align-items:center}
-.avatar{width:82px;height:82px;border-radius:50%;background:radial-gradient(circle at 50% 25%,rgba(255,255,255,.28),transparent 18%),linear-gradient(145deg,#e6d7b0,#5b6f84);display:flex;align-items:center;justify-content:center;font-family:"Oswald";font-size:32px;color:#07111d}
+.live{font-size:12px;color:#e6d7b0}
+.hero{border-radius:26px;padding:22px;background:linear-gradient(145deg,#101b28,#14263a);border:1px solid rgba(255,255,255,.12)}
+.profile-row{display:flex;gap:16px;align-items:center}
+.avatar{width:86px;height:86px;border-radius:50%;background:radial-gradient(circle at 50% 25%,rgba(255,255,255,.32),transparent 18%),linear-gradient(145deg,#e6d7b0,#6d8298);display:flex;align-items:center;justify-content:center;color:#07111d;font-family:"Oswald";font-size:34px}
 .name{font-family:"Oswald";font-size:30px;letter-spacing:4px}
-.bio{margin-top:14px;font-size:14px;line-height:22px;color:rgba(255,255,255,.75)}
+.bio{margin-top:14px;color:rgba(255,255,255,.75);font-size:14px;line-height:22px}
 .actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:16px}
-.btn{padding:12px;border-radius:12px;text-align:center;text-decoration:none;font-size:14px}
+.btn{padding:12px;text-align:center;border-radius:12px;text-decoration:none;font-size:14px}
 .primary{background:#e6d7b0;color:#07111d;font-weight:700}
 .secondary{background:rgba(255,255,255,.08);color:white;border:1px solid rgba(255,255,255,.10)}
-.routes{display:flex;gap:10px;overflow-x:auto;margin:22px 0;padding-bottom:4px}
-.route{min-width:74px;text-align:center}
-.route-circle{width:64px;height:64px;margin:0 auto 7px;border-radius:50%;border:1px solid rgba(230,215,176,.45);background:rgba(255,255,255,.06);display:flex;align-items:center;justify-content:center;font-size:20px}
-.route span{font-size:12px;color:rgba(255,255,255,.7)}
-.section-title{margin:20px 0 10px;color:#e6d7b0;font-size:12px;letter-spacing:1px}
-.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:4px}
-.tile{aspect-ratio:1/1;border:0;position:relative;background:linear-gradient(145deg,#162533,#334a61);color:white;overflow:hidden;text-align:left;padding:8px;cursor:pointer}
-.tile:before{content:"";position:absolute;inset:16%;border-radius:18px;background:radial-gradient(circle at 50% 20%,rgba(230,215,176,.45),transparent 26%)}
-.tile b{position:absolute;left:8px;bottom:22px;font-size:12px;z-index:2}
-.tile span{position:absolute;left:8px;bottom:7px;font-size:10px;color:rgba(255,255,255,.7);z-index:2}
+.routes{display:flex;gap:10px;overflow-x:auto;margin:18px 0;padding-bottom:4px}
+.route{min-width:70px;text-align:center}
+.circle{width:62px;height:62px;margin:0 auto 6px;border-radius:50%;border:1px solid rgba(230,215,176,.45);background:rgba(255,255,255,.06);display:flex;align-items:center;justify-content:center;font-size:20px}
+.route span{font-size:11px;color:rgba(255,255,255,.68)}
+.pulse{margin:18px 0;padding:14px;border-radius:16px;background:rgba(230,215,176,.10);border:1px solid rgba(230,215,176,.18);font-size:13px;color:#e6d7b0;line-height:21px}
+.tabs{display:grid;grid-template-columns:repeat(4,1fr);border-top:1px solid rgba(255,255,255,.10);border-bottom:1px solid rgba(255,255,255,.10);margin-top:18px}
+.tab{text-align:center;padding:13px 0;font-size:11px;color:rgba(255,255,255,.55)}
+.tab.active{color:white;border-bottom:2px solid #e6d7b0}
+.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:4px;margin-top:4px;position:relative}
+.tile{aspect-ratio:1/1;border:0;position:relative;overflow:hidden;background:linear-gradient(145deg,#162533,#334a61);color:white;text-align:left;padding:8px}
+.tile::before{content:"";position:absolute;inset:15%;border-radius:20px;background:radial-gradient(circle at 50% 20%,rgba(230,215,176,.45),transparent 26%)}
+.tile b{position:absolute;left:8px;bottom:23px;font-size:11px;z-index:2}
+.tile span{position:absolute;left:8px;bottom:8px;font-size:9px;color:rgba(255,255,255,.7);z-index:2}
+.tile.video:after{content:"▶️";position:absolute;top:7px;right:8px;font-size:12px;z-index:3}
 .tile.recommended:after{content:"Önerilen";position:absolute;top:7px;right:6px;background:#e6d7b0;color:#07111d;border-radius:999px;padding:3px 6px;font-size:9px;font-weight:700;z-index:3}
-.trust{margin-top:18px;padding:13px;border-radius:14px;background:rgba(230,215,176,.10);color:#e6d7b0;font-size:13px;line-height:20px}
-.modal{position:fixed;inset:0;background:rgba(0,0,0,.62);display:none;align-items:center;justify-content:center;padding:18px;z-index:20}
-.modal.show{display:flex}
-.box{width:100%;max-width:420px;background:#101b28;border:1px solid rgba(255,255,255,.12);border-radius:22px;padding:22px}
-.box h2{font-family:"Oswald";font-size:30px;margin-bottom:8px}
-.box p{font-size:14px;line-height:22px;color:rgba(255,255,255,.68);margin-bottom:14px}
-input,textarea,select{width:100%;padding:13px;border-radius:12px;border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.08);color:white;margin-top:9px}
-select option{color:#111}
-textarea{min-height:90px}
-.modal-actions{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:12px}
-button.action{padding:13px;border:0;border-radius:12px}
+.tile.locked{filter:blur(.3px)}
+.tile.locked:after{content:"ID";position:absolute;top:7px;right:7px;background:rgba(0,0,0,.45);border:1px solid rgba(255,255,255,.2);color:white;border-radius:999px;padding:3px 7px;font-size:9px;z-index:3}
+.platform{margin-top:18px;display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.box{padding:14px;border-radius:15px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.09)}
+.box b{display:block;font-size:14px;margin-bottom:5px}
+.box span{font-size:12px;color:rgba(255,255,255,.58);line-height:18px}
+.lockbar{margin-top:18px;padding:14px;border-radius:15px;background:rgba(230,215,176,.10);color:#e6d7b0;font-size:13px;line-height:21px}
+.preview-timer{font-size:12px;color:rgba(255,255,255,.5);margin-top:10px}
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.66);display:none;align-items:center;justify-content:center;padding:18px;z-index:50;backdrop-filter:blur(6px)}
+.overlay.show{display:flex}
+.modal{width:100%;max-width:420px;background:#101b28;border:1px solid rgba(255,255,255,.14);border-radius:24px;padding:24px;box-shadow:0 24px 80px rgba(0,0,0,.45)}
+.modal h2{font-family:"Oswald";font-size:32px;margin-bottom:8px}
+.modal p{font-size:14px;line-height:23px;color:rgba(255,255,255,.68);margin-bottom:14px}
+input{width:100%;padding:14px;border-radius:12px;border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.08);color:white;outline:none}
+.modal-actions{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px}
+button{padding:13px;border:0;border-radius:12px}
 .confirm{background:#e6d7b0;color:#07111d;font-weight:700}
 .close{background:rgba(255,255,255,.09);color:white}
-.review{margin-top:10px;padding:12px;border-radius:12px;background:rgba(255,255,255,.06);font-size:13px;line-height:20px}
-.verified{color:#e6d7b0;font-size:12px;margin-bottom:5px}
-.unverified{color:rgba(255,255,255,.45);font-size:12px;margin-bottom:5px}
+.blurAfterLock.locked-view .grid,.blurAfterLock.locked-view .platform{filter:blur(3px);pointer-events:none}
+@media(max-width:600px){.platform{grid-template-columns:1fr}.name{font-size:28px}}
 </style>
 </head>
+
 <body>
 
-<div class="wrap">
-  <div class="brand">
+<div class="wrap blurAfterLock" id="page">
+
+  <div class="top">
     <div class="logo">VAERO</div>
-    <div class="status">RESMİ PROFİL</div>
+    <div class="live">LIVE PROFILE</div>
   </div>
 
-  <div class="profile">
-    <div class="head">
+  <div class="hero">
+    <div class="profile-row">
       <div class="avatar">V</div>
       <div>
         <div class="name">VAERO</div>
@@ -68,163 +79,107 @@ button.action{padding:13px;border:0;border-radius:12px}
     </div>
 
     <div class="bio">
-      Araç içi kişisel atmosfer sistemi.<br>
-      Ürünler, koku yenileme, gerçek müşteri yorumları ve VAERO güncellemeleri.
+      Araç içi kişisel atmosfer sistemi. Ürünler, kokular, kullanıcı deneyimleri ve VAERO etkinlikleri tek alanda.
     </div>
 
     <div class="actions">
       <a class="btn primary" href="https://wa.me/905391152765" target="_blank">Mesaj gönder</a>
-      <a class="btn secondary" href="#" onclick="alert('Instagram linki sonra eklenecek.');return false;">Instagram</a>
+      <a class="btn secondary" href="#" onclick="alert('Sosyal medya linkleri sonra eklenecek.');return false;">Sosyal hesaplar</a>
     </div>
   </div>
 
   <div class="routes">
-    <div class="route"><div class="route-circle">◎</div><span>Instagram</span></div>
-    <div class="route"><div class="route-circle">✦</div><span>Reels</span></div>
-    <div class="route"><div class="route-circle">★</div><span>Yorum</span></div>
-    <div class="route"><div class="route-circle">◌</div><span>Ürün</span></div>
-    <div class="route"><div class="route-circle">⚑</div><span>Yarışma</span></div>
+    <div class="route"><div class="circle">◎</div><span>Instagram</span></div>
+    <div class="route"><div class="circle">▶️</div><span>Reels</span></div>
+    <div class="route"><div class="circle">✦</div><span>Kokular</span></div>
+    <div class="route"><div class="circle">★</div><span>Yorum</span></div>
+    <div class="route"><div class="circle">⚑</div><span>Yarışma</span></div>
   </div>
 
-  <div class="section-title">VAERO VİTRİNİ</div>
-  <div class="grid" id="productGrid"></div>
-
-  <div class="trust">
-    ★ işareti yalnızca ürünü gerçekten satın alan müşteri yorumlarında görünür.
+  <div class="pulse">
+    İlk 12 saniye ön izleme açık. Yorum, puan, yarışma ve özel fırsatlar müşteri ID ile açılır.
+    <div class="preview-timer" id="timer">Ön izleme: 12 saniye</div>
   </div>
 
-  <div class="section-title">YORUMLAR</div>
-  <div id="reviews"></div>
+  <div class="tabs">
+    <div class="tab active">AKIŞ</div>
+    <div class="tab">REELS</div>
+    <div class="tab">ÜRÜNLER</div>
+    <div class="tab">YORUM</div>
+  </div>
+
+  <div class="grid">
+    <button class="tile recommended"><b>VAERO Cihaz</b><span>Ana sistem</span></button>
+    <button class="tile video"><b>Reels</b><span>Kullanım</span></button>
+    <button class="tile"><b>White Tea</b><span>Temiz atmosfer</span></button>
+
+    <button class="tile recommended"><b>Refill</b><span>Koku yenileme</span></button>
+    <button class="tile locked"><b>Yorumlar</b><span>ID ile açılır</span></button>
+    <button class="tile video"><b>Deneyim</b><span>Kullanıcı</span></button>
+
+    <button class="tile"><b>Ocean</b><span>Serin his</span></button>
+    <button class="tile recommended"><b>3’lü Paket</b><span>Önerilen</span></button>
+    <button class="tile locked"><b>Yarışma</b><span>Müşteri alanı</span></button>
+  </div>
+
+  <div class="platform">
+    <div class="box"><b>Doğrulanmış yorum</b><span>★ sadece satın alınan ürüne yapılan yorumlarda görünür.</span></div>
+    <div class="box"><b>Ürün güveni</b><span>Aldığı ürünü yorumlayan müşteri sistemde ayrı görünür.</span></div>
+    <div class="box"><b>Canlı etkinlik</b><span>Yarışma, çekiliş ve kampanyalar müşteri alanından açılır.</span></div>
+    <div class="box"><b>Sosyal rota</b><span>Instagram, reels ve marka güncellemeleri buradan yönlenir.</span></div>
+  </div>
+
+  <div class="lockbar">
+    Bu alan herkes tarafından görülebilir. Etkileşim ve özel içerik için VAERO müşteri ID gerekir.
+  </div>
+
 </div>
 
-<div class="modal" id="registerModal">
-  <div class="box">
-    <h2>Müşteri girişi</h2>
-    <p>Yorum, puanlama ve yarışmalara katılım için müşteri numaranla devam et.</p>
-    <input id="customerCode" placeholder="Müşteri numarası örn: VA-001">
+<div class="overlay" id="lockModal">
+  <div class="modal">
+    <h2>VAERO müşteri alanı</h2>
+    <p>Yorum, puanlama, yarışmalar ve özel koku avantajları için müşteri ID ile devam et.</p>
+    <input id="customerId" placeholder="Müşteri ID">
     <div class="modal-actions">
-      <button class="action close" onclick="closeRegister()">Daha sonra</button>
-      <button class="action confirm" onclick="loginCustomer()">Devam et</button>
-    </div>
-  </div>
-</div>
-
-<div class="modal" id="productModal">
-  <div class="box">
-    <h2 id="modalTitle">Ürün</h2>
-    <p id="modalText"></p>
-    <select id="rating">
-      <option value="5">5 yıldız</option>
-      <option value="4">4 yıldız</option>
-      <option value="3">3 yıldız</option>
-      <option value="2">2 yıldız</option>
-      <option value="1">1 yıldız</option>
-    </select>
-    <textarea id="comment" placeholder="Yorum yaz"></textarea>
-    <div class="modal-actions">
-      <button class="action close" onclick="closeProduct()">Kapat</button>
-      <button class="action confirm" onclick="submitReview()">Yorum bırak</button>
+      <button class="close" onclick="previewOnly()">Sadece bak</button>
+      <button class="confirm" onclick="unlock()">Giriş yap</button>
     </div>
   </div>
 </div>
 
 <script>
-const products=[
-  {id:"device",name:"VAERO Cihaz",sub:"Ana sistem",recommended:true},
-  {id:"white-tea",name:"White Tea",sub:"Temiz atmosfer",recommended:true},
-  {id:"ocean",name:"Ocean",sub:"Serin his"},
-  {id:"cologne",name:"Cologne",sub:"Klasik güçlü"},
-  {id:"sweet-flower",name:"Sweet Flower",sub:"Yumuşak sıcak"},
-  {id:"shangrila",name:"Shangrila",sub:"Hafif dengeli"},
-  {id:"refill",name:"Refill",sub:"Koku yenileme"},
-  {id:"bundle",name:"Paketler",sub:"Çoklu avantaj",recommended:true},
-  {id:"contest",name:"Yarışma",sub:"Yakında"}
-];
+let seconds=12;
+const timer=document.getElementById("timer");
+
+const countdown=setInterval(()=>{
+  seconds--;
+  timer.innerText="Ön izleme: "+seconds+" saniye";
+  if(seconds<=0){
+    clearInterval(countdown);
+    document.getElementById("lockModal").classList.add("show");
+    document.getElementById("page").classList.add("locked-view");
+  }
+},1000);
 
 const customers={
-  "VA-001":{name:"Müşteri",purchased:["device","white-tea"]},
-  "VA-002":{name:"Müşteri",purchased:["device","ocean","bundle"]}
+  "VA-001":{purchased:["VAERO Cihaz","White Tea"]},
+  "VA-002":{purchased:["VAERO Cihaz","Ocean","3’lü Paket"]}
 };
 
-let currentCustomer=null;
-let selectedProduct=null;
-
-function renderProducts(){
-  const grid=document.getElementById("productGrid");
-  grid.innerHTML=products.map(p=>`
-    <button class="tile ${p.recommended?'recommended':''}" onclick="openProduct('${p.id}')">
-      <b>${p.name}</b><span>${p.sub}</span>
-    </button>
-  `).join("");
-}
-
-function openProduct(id){
-  selectedProduct=products.find(p=>p.id===id);
-  document.getElementById("modalTitle").innerText=selectedProduct.name;
-  document.getElementById("modalText").innerText=selectedProduct.sub + ". Yorum bırakmak için müşteri numarası önerilir.";
-  document.getElementById("productModal").classList.add("show");
-}
-
-function closeProduct(){
-  document.getElementById("productModal").classList.remove("show");
-}
-
-function submitReview(){
-  if(!selectedProduct)return;
-  const rating=document.getElementById("rating").value;
-  const comment=document.getElementById("comment").value.trim();
-  const verified=currentCustomer && currentCustomer.purchased.includes(selectedProduct.id);
-
-  const review={
-    product:selectedProduct.name,
-    rating,
-    comment:comment || "Yorum yazılmadı.",
-    verified
-  };
-
-  const reviews=JSON.parse(localStorage.getItem("vaeroReviews")||"[]");
-  reviews.unshift(review);
-  localStorage.setItem("vaeroReviews",JSON.stringify(reviews));
-
-  document.getElementById("comment").value="";
-  closeProduct();
-  renderReviews();
-}
-
-function renderReviews(){
-  const reviews=JSON.parse(localStorage.getItem("vaeroReviews")||"[]");
-  document.getElementById("reviews").innerHTML=reviews.map(r=>`
-    <div class="review">
-      <div class="${r.verified?'verified':'unverified'}">
-        ${r.verified?'★ Doğrulanmış alıcı':'Doğrulanmamış yorum'}
-      </div>
-      <b>${r.product} — ${r.rating}/5</b><br>
-      ${r.comment}
-    </div>
-  ).join("") || `<div class="review">Henüz yorum yok.</div>;
-}
-
-function loginCustomer(){
-  const code=document.getElementById("customerCode").value.trim();
-  if(customers[code]){
-    currentCustomer=customers[code];
-    alert("Müşteri doğrulandı.");
-    closeRegister();
+function unlock(){
+  const id=document.getElementById("customerId").value.trim();
+  if(customers[id]){
+    document.getElementById("lockModal").classList.remove("show");
+    document.getElementById("page").classList.remove("locked-view");
+    alert("Müşteri doğrulandı. Özel alanlar açıldı.");
   }else{
-    alert("Müşteri numarası bulunamadı.");
+    alert("Müşteri ID bulunamadı.");
   }
 }
 
-function closeRegister(){
-  document.getElementById("registerModal").classList.remove("show");
+function previewOnly(){
+  document.getElementById("lockModal").classList.remove("show");
 }
-
-setTimeout(()=>{
-  document.getElementById("registerModal").classList.add("show");
-},10000);
-
-renderProducts();
-renderReviews();
 </script>
 
 </body>
