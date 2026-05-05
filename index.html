@@ -4,8 +4,189 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>VAERO | Profil</title>
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@700&display=swap" rel="stylesheet">
+
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{
+  min-height:100vh;
+  background:linear-gradient(135deg,#07111d,#18314a 55%,#384b61);
+  color:white;
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;
+}
+.wrap{max-width:620px;margin:0 auto;padding:34px 18px 70px}
+.profile{
+  background:rgba(8,18,30,.82);
+  border:1px solid rgba(255,255,255,.12);
+  border-radius:26px;
+  padding:28px;
+  box-shadow:0 24px 80px rgba(0,0,0,.35);
+}
+.top{display:flex;gap:18px;align-items:center}
+.avatar{
+  width:82px;height:82px;border-radius:50%;
+  background:rgba(230,215,176,.14);
+  border:1px solid rgba(230,215,176,.35);
+  display:flex;align-items:center;justify-content:center;
+  font-family:"Oswald";font-size:28px;letter-spacing:3px;
+}
+.name{font-family:"Oswald";font-size:34px;letter-spacing:4px}
+.handle{color:#e6d7b0;font-size:13px;margin-top:4px}
+.bio{margin-top:22px;color:rgba(255,255,255,.72);font-size:15px;line-height:25px}
+.actions{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:22px}
+.btn{
+  text-decoration:none;text-align:center;border-radius:14px;
+  padding:15px 14px;font-size:14px;display:block;
+}
+.primary{background:#e6d7b0;color:#0b1620;font-weight:700}
+.secondary{background:rgba(255,255,255,.08);color:white;border:1px solid rgba(255,255,255,.12)}
+.section{margin-top:24px}
+.title{font-size:13px;color:#e6d7b0;letter-spacing:1px;margin-bottom:12px}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.card{
+  background:rgba(255,255,255,.07);
+  border:1px solid rgba(255,255,255,.10);
+  border-radius:16px;
+  padding:16px;
+}
+.card b{display:block;font-size:15px;margin-bottom:6px}
+.card span{font-size:13px;color:rgba(255,255,255,.58);line-height:20px}
+.review{
+  margin-top:12px;
+  padding:16px;
+  border-radius:16px;
+  background:rgba(255,255,255,.06);
+  border:1px solid rgba(255,255,255,.10);
+}
+.stars{color:#e6d7b0;margin-bottom:8px}
+.review p{color:rgba(255,255,255,.68);font-size:14px;line-height:23px}
+.note{margin-top:22px;color:rgba(255,255,255,.42);font-size:12px;line-height:20px}
+
+.modal{
+  position:fixed;inset:0;
+  background:rgba(0,0,0,.55);
+  display:none;
+  align-items:center;
+  justify-content:center;
+  padding:22px;
+  z-index:20;
+}
+.modal.show{display:flex}
+.modal-card{
+  width:100%;max-width:420px;
+  background:#101b28;
+  border:1px solid rgba(255,255,255,.12);
+  border-radius:24px;
+  padding:26px;
+  box-shadow:0 24px 80px rgba(0,0,0,.45);
+}
+.modal-card h2{
+  font-family:"Oswald";
+  font-size:30px;
+  margin-bottom:10px;
+}
+.modal-card p{
+  color:rgba(255,255,255,.68);
+  font-size:14px;
+  line-height:23px;
+  margin-bottom:18px;
+}
+input{
+  width:100%;
+  border:1px solid rgba(255,255,255,.14);
+  background:rgba(255,255,255,.08);
+  color:white;
+  border-radius:13px;
+  padding:15px;
+  font-size:15px;
+  outline:none;
+}
+.modal-actions{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px}
+button{
+  border:0;border-radius:13px;padding:14px;font-size:14px;cursor:pointer;
+}
+.confirm{background:#e6d7b0;color:#0b1620;font-weight:700}
+.close{background:rgba(255,255,255,.08);color:white}
+@media(max-width:520px){
+  .actions,.grid{grid-template-columns:1fr}
+  .name{font-size:30px}
+}
+</style>
 </head>
+
 <body>
-  <h1>VAERO Profil Sayfası</h1>
+
+<div class="wrap">
+  <div class="profile">
+    <div class="top">
+      <div class="avatar">V</div>
+      <div>
+        <div class="name">VAERO</div>
+        <div class="handle">@vaero</div>
+      </div>
+    </div>
+
+    <div class="bio">
+      Araç içi kişisel atmosfer sistemi.  
+      Koku yenileme, destek ve VAERO güncellemeleri bu profil üzerinden yönetilir.
+    </div>
+
+    <div class="actions">
+      <a class="btn primary" href="https://wa.me/905391152765" target="_blank">Mesaj gönder</a>
+      <a class="btn secondary" href="#" onclick="alert('Instagram linki yakında eklenecek.'); return false;">Instagram</a>
+    </div>
+
+    <div class="section">
+      <div class="title">ÜRÜNLER</div>
+      <div class="grid">
+        <div class="card"><b>Koku yenileme</b><span>VAERO kokunu tekrar sipariş et.</span></div>
+        <div class="card"><b>Atmosfer paketleri</b><span>1, 2 veya çoklu koku seçenekleri.</span></div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="title">MÜŞTERİ DENEYİMİ</div>
+      <div class="review">
+        <div class="stars">★★★★★</div>
+        <p>Yorum ve puanlama yalnızca müşteri numarasıyla doğrulanan kullanıcılar için açılır.</p>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="title">GÜVEN</div>
+      <div class="grid">
+        <div class="card"><b>Gerçek müşteri</b><span>Puanlama müşteri numarasıyla korunur.</span></div>
+        <div class="card"><b>Aktif marka</b><span>Sosyal medya ve destek bağlantıları burada yer alır.</span></div>
+      </div>
+    </div>
+
+    <div class="note">
+      Bu profil VAERO ürün sonrası destek, yenileme ve müşteri deneyimi alanıdır.
+    </div>
+  </div>
+</div>
+
+<div class="modal" id="registerModal">
+  <div class="modal-card">
+    <h2>Müşteri alanı</h2>
+    <p>Müşteri numaranla devam et. Yenileme, yorum ve özel avantajlara eriş.</p>
+    <input id="customerCode" placeholder="Müşteri numarası">
+    <div class="modal-actions">
+      <button class="close" onclick="closeModal()">Daha sonra</button>
+      <button class="confirm" onclick="alert('Kayıt sistemi sonraki adımda bağlanacak.')">Devam et</button>
+    </div>
+  </div>
+</div>
+
+<script>
+setTimeout(()=>{
+  document.getElementById("registerModal").classList.add("show");
+},10000);
+
+function closeModal(){
+  document.getElementById("registerModal").classList.remove("show");
+}
+</script>
+
 </body>
 </html>
