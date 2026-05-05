@@ -297,6 +297,25 @@ function closeAction(){actionModal.classList.remove("show")}
 async function saveAction(){
   const customer = customers[activeId];
   const productId = activeContent.product;
+  const { data: purchase, error: purchaseError } = await supabaseClient
+  .from("vaero_customer_products")
+  .select("purchase_date")
+  .eq("customer_code", activeId)
+  .eq("product_id", productId)
+  .maybeSingle();
+
+let bought = false;
+let isValidDate = false;
+
+if (purchase) {
+  bought = true;
+
+  const purchaseDate = new Date(purchase.purchase_date);
+  const now = new Date();
+  const diffDays = (now - purchaseDate) / (1000 * 60 * 60 * 24);
+
+  isValidDate = diffDays <= 365;
+}
 
   const { data: oldReview } = await supabaseClient
     .from("vaero_reviews")
@@ -312,7 +331,7 @@ async function saveAction(){
 
   const bought = customer.purchased.includes(productId);
   const already = customer.rated.includes(productId);
-  const verified = actionType === "rate" && bought && !already;
+  const verified = actionType === "rate" && bought && isValidDate;
 
   const { data, error } = await supabaseClient
     .from("vaero_reviews")
@@ -334,11 +353,12 @@ async function saveAction(){
   }
 
   if(verified){
-    customer.rated.push(productId);
-    alert("★ Doğrulanmış puan kaydedildi.");
-  }else{
-    alert("Yorum kaydedildi. Yıldızlı/doğrulanmış puan olarak sayılmadı.");
-  }
+  alert("★ Doğrulanmış puan kaydedildi.");
+}else if(bought && !isValidDate){
+  alert("Bu ID sistemde görünüyor ancak doğrulanmış puan süresi dolmuş. Son 12 ay içindeki güncel müşteri ID’niz varsa onunla devam edin.");
+}else{
+  alert("Yorum kaydedildi. Bu ürün bu ID ile doğrulanmış satın alım olarak görünmediği için yıldızlı puan sayılmadı.");
+}
 
   closeAction();
   loadLiveRatings();
