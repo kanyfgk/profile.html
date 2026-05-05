@@ -3,169 +3,142 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>VAERO | Profile</title>
+<title>VAERO | Profil</title>
 <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@700&display=swap" rel="stylesheet">
 
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 body{background:#07111d;color:white;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif}
-.wrap{max-width:620px;margin:0 auto;padding:18px 12px 90px}
-.top{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px}
-.logo{font-family:"Oswald";font-size:32px;letter-spacing:5px}
-.live{font-size:12px;color:#e6d7b0}
-.hero{border-radius:26px;padding:22px;background:linear-gradient(145deg,#101b28,#14263a);border:1px solid rgba(255,255,255,.12)}
-.profile-row{display:flex;gap:16px;align-items:center}
-.avatar{width:86px;height:86px;border-radius:50%;background:linear-gradient(145deg,#e6d7b0,#6d8298);display:flex;align-items:center;justify-content:center;color:#07111d;font-family:"Oswald";font-size:34px}
-.name{font-family:"Oswald";font-size:30px;letter-spacing:4px}
-.bio{margin-top:14px;color:rgba(255,255,255,.75);font-size:14px;line-height:22px}
-.actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:16px}
-.btn{padding:12px;text-align:center;border-radius:12px;text-decoration:none;font-size:14px}
-.primary{background:#e6d7b0;color:#07111d;font-weight:700}
-.secondary{background:rgba(255,255,255,.08);color:white;border:1px solid rgba(255,255,255,.10)}
-.pulse{margin:18px 0;padding:14px;border-radius:16px;background:rgba(230,215,176,.10);border:1px solid rgba(230,215,176,.18);font-size:13px;color:#e6d7b0;line-height:21px}
-.id-link{margin-top:10px;background:none;border:0;color:#e6d7b0;text-decoration:underline;font-size:13px;cursor:pointer;padding:0}
-.section-title{margin:20px 0 10px;color:#e6d7b0;font-size:12px;letter-spacing:1px}
-.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:4px}
-.tile{aspect-ratio:1/1;border:0;position:relative;overflow:hidden;background:linear-gradient(145deg,#162533,#334a61);color:white;text-align:left;padding:8px;border-radius:4px;cursor:pointer}
-.tile:before{content:"";position:absolute;inset:15%;border-radius:20px;background:radial-gradient(circle at 50% 20%,rgba(230,215,176,.45),transparent 26%)}
-.tile b{position:absolute;left:8px;bottom:23px;font-size:11px;z-index:2}
-.tile span{position:absolute;left:8px;bottom:8px;font-size:9px;color:rgba(255,255,255,.7);z-index:2}
-.tile.recommended:after{content:"Önerilen";position:absolute;top:7px;right:6px;background:#e6d7b0;color:#07111d;border-radius:999px;padding:3px 6px;font-size:9px;font-weight:700;z-index:3}
-.flow-entry{margin-top:20px;padding:16px;border-radius:18px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.10);display:flex;align-items:center;justify-content:space-between;cursor:pointer}
-.flow-entry b{font-size:15px}
-.flow-entry span{font-size:13px;color:rgba(255,255,255,.58)}
-.flow-icon{width:46px;height:46px;border-radius:50%;background:rgba(230,215,176,.14);display:flex;align-items:center;justify-content:center;color:#e6d7b0;font-size:20px}
-.overlay{position:fixed;inset:0;background:rgba(0,0,0,.72);display:none;align-items:center;justify-content:center;padding:14px;z-index:50}
-.overlay.show{display:flex}
-.modal{width:100%;max-width:430px;background:#101b28;border:1px solid rgba(255,255,255,.14);border-radius:24px;padding:22px;box-shadow:0 24px 80px rgba(0,0,0,.45)}
-.modal h2{font-family:"Oswald";font-size:30px;margin-bottom:8px}
-.modal p{font-size:14px;line-height:23px;color:rgba(255,255,255,.68);margin-bottom:14px}
-input,textarea,select{width:100%;padding:13px;border-radius:12px;border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.08);color:white;outline:none;margin-top:9px}
-textarea{min-height:90px}
-select option{color:#111}
-.modal-actions{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px}
-button{padding:13px;border:0;border-radius:12px}
-.confirm{background:#e6d7b0;color:#07111d;font-weight:700}
-.close{background:rgba(255,255,255,.09);color:white}
-.flow-screen{position:fixed;inset:0;background:#07111d;display:none;z-index:40;overflow-y:auto}
-.flow-screen.show{display:block}
-.flow-head{max-width:620px;margin:0 auto;padding:18px 12px;display:flex;justify-content:space-between;align-items:center}
-.back{background:none;color:white;border:0;font-size:24px;padding:4px}
-.flow-title{font-family:"Oswald";letter-spacing:2px;font-size:24px}
-.content-grid{max-width:620px;margin:0 auto;padding:0 12px 80px;display:grid;grid-template-columns:repeat(3,1fr);gap:4px}
-.content-tile{aspect-ratio:1/1.35;border:0;border-radius:6px;background:linear-gradient(145deg,#17283a,#40576f);position:relative;color:white;text-align:left;padding:8px;overflow:hidden}
-.content-tile:before{content:"";position:absolute;inset:20%;border-radius:30px;background:radial-gradient(circle at 50% 25%,rgba(230,215,176,.45),transparent 28%)}
-.content-tile b{position:absolute;left:8px;bottom:26px;font-size:11px;z-index:2}
-.content-tile span{position:absolute;left:8px;bottom:9px;font-size:9px;color:rgba(255,255,255,.65);z-index:2}
-.viewer{position:fixed;inset:0;background:#000;display:none;z-index:60;color:white}
+.app{max-width:560px;margin:0 auto;padding:18px 12px 90px}
+.brand-head{display:flex;align-items:center;gap:14px;margin-bottom:18px}
+.mark{width:58px;height:58px;border-radius:50%;background:#e6d7b0;color:#07111d;font-family:"Oswald";display:flex;align-items:center;justify-content:center;font-size:26px}
+.brand-name{font-family:"Oswald";font-size:31px;letter-spacing:5px}
+.bio{font-size:13px;color:rgba(255,255,255,.68);line-height:21px;margin-top:3px}
+.quick{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:16px 0 18px}
+.quick a,.quick button{border:0;border-radius:999px;padding:12px;text-align:center;text-decoration:none;font-size:13px}
+.quick .main{background:#e6d7b0;color:#07111d;font-weight:700}
+.quick .soft{background:rgba(255,255,255,.08);color:white;border:1px solid rgba(255,255,255,.1)}
+.notice{padding:12px 14px;border-radius:16px;background:rgba(230,215,176,.09);color:#e6d7b0;font-size:12px;line-height:19px;margin-bottom:14px}
+.section-label{font-size:12px;letter-spacing:1px;color:rgba(230,215,176,.9);margin:16px 0 9px}
+.product-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:5px}
+.product-tile{aspect-ratio:1/1.12;border:0;border-radius:9px;background:linear-gradient(145deg,#162533,#31465d);color:white;position:relative;overflow:hidden;text-align:left;padding:8px;cursor:pointer}
+.product-tile:before{content:"";position:absolute;inset:14%;border-radius:22px;background:radial-gradient(circle at 50% 20%,rgba(230,215,176,.48),transparent 27%)}
+.product-tile b{position:absolute;left:8px;bottom:24px;font-size:11px;z-index:2}
+.product-tile span{position:absolute;left:8px;bottom:8px;font-size:9px;color:rgba(255,255,255,.66);z-index:2}
+.product-tile.recommended:after{content:"Önerilen";position:absolute;top:7px;right:6px;background:#e6d7b0;color:#07111d;border-radius:999px;padding:3px 6px;font-size:9px;font-weight:800;z-index:3}
+
+.flow-gate{margin-top:18px;border-radius:20px;padding:16px;background:linear-gradient(145deg,rgba(230,215,176,.13),rgba(255,255,255,.055));border:1px solid rgba(230,215,176,.18);display:flex;align-items:center;justify-content:space-between;gap:12px;cursor:pointer}
+.flow-gate b{display:block;font-size:15px;margin-bottom:4px}
+.flow-gate span{font-size:12px;color:rgba(255,255,255,.62);line-height:18px}
+.flow-symbol{width:48px;height:48px;border-radius:50%;background:#e6d7b0;color:#07111d;display:flex;align-items:center;justify-content:center;font-weight:800}
+
+.full{position:fixed;inset:0;background:#07111d;display:none;z-index:40;overflow-y:auto}
+.full.show{display:block}
+.full-head{max-width:560px;margin:0 auto;padding:16px 12px;display:flex;align-items:center;justify-content:space-between}
+.back{border:0;background:rgba(255,255,255,.08);color:white;width:40px;height:40px;border-radius:50%;font-size:22px}
+.full-title{font-family:"Oswald";font-size:25px;letter-spacing:3px}
+.flow-grid{max-width:560px;margin:0 auto;padding:0 12px 90px;display:grid;grid-template-columns:repeat(3,1fr);gap:5px}
+.flow-tile{aspect-ratio:1/1.38;border:0;border-radius:9px;background:linear-gradient(145deg,#102033,#3d5870);position:relative;color:white;text-align:left;padding:8px;overflow:hidden;cursor:pointer}
+.flow-tile:before{content:"";position:absolute;inset:16%;border-radius:28px;background:radial-gradient(circle at 50% 24%,rgba(230,215,176,.42),transparent 28%)}
+.flow-tile .type{position:absolute;top:7px;left:7px;background:rgba(0,0,0,.34);border-radius:999px;padding:3px 6px;font-size:9px;color:#e6d7b0;z-index:2}
+.flow-tile b{position:absolute;left:8px;bottom:25px;font-size:11px;z-index:2}
+.flow-tile span{position:absolute;left:8px;bottom:8px;font-size:9px;color:rgba(255,255,255,.65);z-index:2}
+
+.viewer{position:fixed;inset:0;background:#05080d;display:none;z-index:70;color:white}
 .viewer.show{display:block}
-.viewer-media{position:absolute;inset:0 72px 0 0;background:linear-gradient(145deg,#182b3e,#46627c);display:flex;align-items:center;justify-content:center;font-family:"Oswald";font-size:30px;letter-spacing:3px}
-.viewer-info{position:absolute;left:18px;bottom:28px;right:90px}
-.viewer-info b{display:block;font-size:15px;margin-bottom:6px}
-.viewer-info p{font-size:13px;line-height:20px;color:rgba(255,255,255,.75)}
-.side-actions{position:absolute;right:12px;bottom:90px;display:grid;gap:14px}
-.side-action{width:50px;height:50px;border-radius:50%;background:rgba(255,255,255,.12);color:white;border:1px solid rgba(255,255,255,.14);display:flex;align-items:center;justify-content:center;font-size:20px}
-.side-label{text-align:center;font-size:10px;color:rgba(255,255,255,.72);margin-top:4px}
-.viewer-close{position:absolute;top:18px;left:14px;background:rgba(255,255,255,.12);color:white;border:0;border-radius:999px;width:42px;height:42px}
-.verified-line{color:#e6d7b0;font-size:13px;margin-bottom:8px}
+.media{position:absolute;inset:0;background:linear-gradient(145deg,#17293c,#4b657c);display:flex;align-items:center;justify-content:center;font-family:"Oswald";font-size:34px;letter-spacing:4px;color:rgba(255,255,255,.72)}
+.close-view{position:absolute;top:16px;left:12px;width:42px;height:42px;border-radius:50%;border:0;background:rgba(0,0,0,.35);color:white;font-size:24px;z-index:3}
+.content-info{position:absolute;left:16px;right:78px;bottom:22px;z-index:2}
+.content-info .verified{color:#e6d7b0;font-size:12px;margin-bottom:8px}
+.content-info b{display:block;font-size:16px;margin-bottom:6px}
+.content-info p{font-size:13px;line-height:20px;color:rgba(255,255,255,.76)}
+.actions-side{position:absolute;right:12px;bottom:86px;display:grid;gap:13px;z-index:3}
+.act-wrap{text-align:center}
+.act{width:49px;height:49px;border-radius:50%;border:1px solid rgba(255,255,255,.14);background:rgba(0,0,0,.32);color:white;font-size:19px;display:flex;align-items:center;justify-content:center}
+.act-label{font-size:9px;color:rgba(255,255,255,.7);margin-top:4px}
+
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.68);display:none;align-items:center;justify-content:center;padding:18px;z-index:90}
+.overlay.show{display:flex}
+.modal{width:100%;max-width:410px;background:#101b28;border:1px solid rgba(255,255,255,.14);border-radius:22px;padding:22px}
+.modal h2{font-family:"Oswald";font-size:29px;margin-bottom:7px}
+.modal p{font-size:13px;line-height:21px;color:rgba(255,255,255,.68);margin-bottom:12px}
+input,textarea,select{width:100%;padding:13px;border-radius:12px;border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.08);color:white;margin-top:9px;outline:none}
+select option{color:#111}
+textarea{min-height:88px}
+.modal-actions{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:12px}
+.modal button{border:0;border-radius:12px;padding:13px}
+.confirm{background:#e6d7b0;color:#07111d;font-weight:800}
+.cancel{background:rgba(255,255,255,.09);color:white}
 </style>
 </head>
 
 <body>
 
-<div class="wrap">
-  <div class="top">
-    <div class="logo">VAERO</div>
-    <div class="live">LIVE PROFILE</div>
-  </div>
-
-  <div class="hero">
-    <div class="profile-row">
-      <div class="avatar">V</div>
-      <div>
-        <div class="name">VAERO</div>
-        <div style="color:#e6d7b0;font-size:13px">@vaero</div>
-      </div>
-    </div>
-
-    <div class="bio">
-      Araç içi kişisel atmosfer sistemi. Ürünler, kokular ve doğrulanmış müşteri deneyimleri tek alanda.
-    </div>
-
-    <div class="actions">
-      <a class="btn primary" href="https://wa.me/905391152765" target="_blank">Mesaj gönder</a>
-      <a class="btn secondary" href="#" onclick="alert('Sosyal medya linkleri sonra eklenecek.');return false;">Sosyal hesaplar</a>
-    </div>
-  </div>
-
-  <div class="pulse">
-    İlk bakış herkese açık. Puan, eleştiri, şikayet ve doğrulanmış yorum için müşteri ID gerekir.
-    <br>
-    <button class="id-link" onclick="openIdModal()">Müşteri ID ile giriş yap</button>
-  </div>
-
-  <div class="section-title">VAERO ÜRÜNLERİ</div>
-  <div class="grid" id="productGrid"></div>
-
-  <div class="flow-entry" onclick="openFlow()">
+<div class="app">
+  <div class="brand-head">
+    <div class="mark">V</div>
     <div>
-      <b>Müşteri Akışı</b><br>
-      <span>Reels, gönderi, eleştiri ve doğrulanmış deneyimler</span>
+      <div class="brand-name">VAERO</div>
+      <div class="bio">Araç içi kişisel atmosfer sistemi.</div>
     </div>
-    <div class="flow-icon">↗️</div>
+  </div>
+
+  <div class="quick">
+    <a class="main" href="https://wa.me/905391152765" target="_blank">Mesaj gönder</a>
+    <button class="soft" onclick="openIdModal()">Müşteri ID</button>
+  </div>
+
+  <div class="notice">
+    Ürünler herkese görünür. Puan, eleştiri ve doğrulanmış yorum için müşteri ID gerekir.
+  </div>
+
+  <div class="section-label">VAERO ÜRÜNLERİ</div>
+  <div class="product-grid" id="productGrid"></div>
+
+  <div class="flow-gate" onclick="openFlow()">
+    <div>
+      <b>Müşteri Akışı</b>
+      <span>Deneyim, video, eleştiri ve doğrulanmış yorum içerikleri.</span>
+    </div>
+    <div class="flow-symbol">↗️</div>
   </div>
 </div>
 
-<div class="flow-screen" id="flowScreen">
-  <div class="flow-head">
+<div class="full" id="flowScreen">
+  <div class="full-head">
     <button class="back" onclick="closeFlow()">‹</button>
-    <div class="flow-title">MÜŞTERİ AKIŞI</div>
+    <div class="full-title">AKIŞ</div>
     <button class="back" onclick="openIdModal()">ID</button>
   </div>
-  <div class="content-grid" id="contentGrid"></div>
+  <div class="flow-grid" id="flowGrid"></div>
 </div>
 
 <div class="viewer" id="viewer">
-  <button class="viewer-close" onclick="closeViewer()">×</button>
-  <div class="viewer-media" id="viewerMedia">VAERO</div>
+  <button class="close-view" onclick="closeViewer()">×</button>
+  <div class="media" id="mediaText">VAERO</div>
 
-  <div class="side-actions">
-    <div>
-      <button class="side-action" onclick="rateContent()">★</button>
-      <div class="side-label">Puan</div>
-    </div>
-    <div>
-      <button class="side-action" onclick="commentContent()">💬</button>
-      <div class="side-label">Eleştir</div>
-    </div>
-    <div>
-      <button class="side-action" onclick="complainContent()">!</button>
-      <div class="side-label">Şikayet</div>
-    </div>
-    <div>
-      <button class="side-action" onclick="compareContent()">◇</button>
-      <div class="side-label">Kıyas</div>
-    </div>
-    <div>
-      <button class="side-action" onclick="shareContent()">↗️</button>
-      <div class="side-label">Paylaş</div>
-    </div>
+  <div class="actions-side">
+    <div class="act-wrap"><button class="act" onclick="openAction('rate')">★</button><div class="act-label">Puan</div></div>
+    <div class="act-wrap"><button class="act" onclick="openAction('comment')">💬</button><div class="act-label">Eleştir</div></div>
+    <div class="act-wrap"><button class="act" onclick="openAction('complaint')">!</button><div class="act-label">Şikayet</div></div>
+    <div class="act-wrap"><button class="act" onclick="openAction('compare')">◇</button><div class="act-label">Kıyas</div></div>
+    <div class="act-wrap"><button class="act" onclick="alert('Paylaşım bağlantısı sonraki aşamada eklenecek.')">↗️</button><div class="act-label">Paylaş</div></div>
   </div>
 
-  <div class="viewer-info">
-    <div class="verified-line" id="verifiedLine"></div>
+  <div class="content-info">
+    <div class="verified" id="verifiedText"></div>
     <b id="viewerTitle"></b>
-    <p id="viewerText"></p>
+    <p id="viewerDesc"></p>
   </div>
 </div>
 
 <div class="overlay" id="idModal">
   <div class="modal">
     <h2>Müşteri ID</h2>
-    <p>Puan, yorum, eleştiri ve şikayet için müşteri ID ile devam et.</p>
+    <p>Yorum, puanlama ve doğrulanmış eleştiri için müşteri ID ile devam et.</p>
     <input id="customerId" placeholder="Örn: VA-001">
     <div class="modal-actions">
-      <button class="close" onclick="closeIdModal()">Kapat</button>
+      <button class="cancel" onclick="closeIdModal()">Kapat</button>
       <button class="confirm" onclick="login()">Giriş yap</button>
     </div>
   </div>
@@ -174,17 +147,17 @@ button{padding:13px;border:0;border-radius:12px}
 <div class="overlay" id="actionModal">
   <div class="modal">
     <h2 id="actionTitle">İşlem</h2>
-    <p id="actionText"></p>
-    <select id="ratingSelect" style="display:none">
+    <p id="actionHint"></p>
+    <select id="ratingBox" style="display:none">
       <option value="5">5 yıldız</option>
       <option value="4">4 yıldız</option>
       <option value="3">3 yıldız</option>
       <option value="2">2 yıldız</option>
       <option value="1">1 yıldız</option>
     </select>
-    <textarea id="actionInput" placeholder="Yaz..."></textarea>
+    <textarea id="actionText" placeholder="Yaz..."></textarea>
     <div class="modal-actions">
-      <button class="close" onclick="closeAction()">Kapat</button>
+      <button class="cancel" onclick="closeAction()">Kapat</button>
       <button class="confirm" onclick="saveAction()">Kaydet</button>
     </div>
   </div>
@@ -192,160 +165,131 @@ button{padding:13px;border:0;border-radius:12px}
 
 <script>
 const products=[
-  {id:"device",name:"VAERO Cihaz",sub:"Ana sistem",recommended:true},
-  {id:"white-tea",name:"White Tea",sub:"Temiz atmosfer",recommended:true},
+  {id:"device",name:"VAERO Cihaz",sub:"Ana sistem",rec:true},
+  {id:"white-tea",name:"White Tea",sub:"Temiz atmosfer",rec:true},
   {id:"ocean",name:"Ocean",sub:"Serin his"},
   {id:"cologne",name:"Cologne",sub:"Klasik güçlü"},
   {id:"sweet-flower",name:"Sweet Flower",sub:"Yumuşak sıcak"},
   {id:"shangrila",name:"Shangrila",sub:"Hafif dengeli"},
   {id:"refill",name:"Refill",sub:"Koku yenileme"},
-  {id:"bundle",name:"3’lü Paket",sub:"Önerilen",recommended:true},
+  {id:"bundle",name:"3’lü Paket",sub:"Avantajlı",rec:true},
   {id:"brand",name:"VAERO Marka",sub:"Genel deneyim"}
 ];
 
-const customers={
-  "VA-001":{purchased:["device","white-tea","brand"],usedRatings:[]},
-  "VA-002":{purchased:["device","ocean","bundle","brand"],usedRatings:[]}
-};
-
 const contents=[
-  {id:"c1",type:"Reels",product:"white-tea",title:"White Tea deneyimi",text:"Ağır olmayan temiz atmosfer yorumu."},
-  {id:"c2",type:"Gönderi",product:"device",title:"VAERO cihaz kullanımı",text:"Cihazın araç içindeki ilk etkisi."},
-  {id:"c3",type:"Eleştiri",product:"ocean",title:"Ocean karşılaştırması",text:"Ocean daha serin, White Tea daha temiz."},
-  {id:"c4",type:"Şikayet",product:"cologne",title:"Cologne yoğunluk yorumu",text:"Bazı kullanıcılar için güçlü olabilir."},
-  {id:"c5",type:"Gönderi",product:"bundle",title:"3’lü paket deneyimi",text:"Uzun kullanım için avantajlı tercih."},
-  {id:"c6",type:"Reels",product:"brand",title:"VAERO genel deneyim",text:"Marka deneyimi ve destek yorumu."}
+  {id:"f1",product:"white-tea",type:"Video",title:"White Tea deneyimi",desc:"Temiz ve ağır olmayan atmosfer yorumu."},
+  {id:"f2",product:"device",type:"Gönderi",title:"Cihaz kullanımı",desc:"Araç içi kullanım hissi ve ilk izlenim."},
+  {id:"f3",product:"ocean",type:"Eleştiri",title:"Ocean yorumu",desc:"Serinlik hissi ve kullanım farkı."},
+  {id:"f4",product:"cologne",type:"Şikayet",title:"Cologne yoğunluğu",desc:"Bazı kullanıcılara güçlü gelebilecek yapı."},
+  {id:"f5",product:"bundle",type:"Kıyas",title:"Paket kullanımı",desc:"Tek koku yerine çoklu kullanım karşılaştırması."},
+  {id:"f6",product:"brand",type:"Marka",title:"VAERO genel deneyim",desc:"Destek, yenileme ve marka güveni üzerine yorum."}
 ];
 
-let currentCustomerId=null;
-let currentContent=null;
-let currentAction=null;
+const customers={
+  "VA-001":{purchased:["device","white-tea","brand"],rated:[]},
+  "VA-002":{purchased:["device","ocean","bundle","brand"],rated:[]}
+};
+
+let activeId=null;
+let activeContent=null;
+let actionType=null;
 
 function renderProducts(){
-  document.getElementById("productGrid").innerHTML=products.map(p=>`
-    <button class="tile ${p.recommended?'recommended':''}" onclick="openProduct('${p.id}')">
+  productGrid.innerHTML=products.map(p=>`
+    <button class="product-tile ${p.rec?'recommended':''}" onclick="openProduct('${p.id}')">
       <b>${p.name}</b><span>${p.sub}</span>
     </button>
   `).join("");
 }
 
-function renderContents(){
-  document.getElementById("contentGrid").innerHTML=contents.map(c=>`
-    <button class="content-tile" onclick="openViewer('${c.id}')">
-      <b>${c.title}</b><span>${c.type}</span>
+function renderFlow(){
+  flowGrid.innerHTML=contents.map(c=>`
+    <button class="flow-tile" onclick="openViewer('${c.id}')">
+      <div class="type">${c.type}</div>
+      <b>${c.title}</b><span>${getProductName(c.product)}</span>
     </button>
   `).join("");
 }
 
-function openProduct(id){
-  const item=products.find(p=>p.id===id);
-  const related=contents.find(c=>c.product===id);
-  if(related){openViewer(related.id);return;}
-  alert(item.name+" içeriği yakında açılacak.");
+function getProductName(id){
+  return products.find(p=>p.id===id)?.name || "VAERO";
 }
 
-function openFlow(){document.getElementById("flowScreen").classList.add("show")}
-function closeFlow(){document.getElementById("flowScreen").classList.remove("show")}
-function openIdModal(){document.getElementById("idModal").classList.add("show")}
-function closeIdModal(){document.getElementById("idModal").classList.remove("show")}
+function openProduct(productId){
+  const related=contents.find(c=>c.product===productId);
+  if(related){openViewer(related.id)}
+  else{alert("Bu ürün içeriği sonraki aşamada açılacak.")}
+}
+
+function openFlow(){flowScreen.classList.add("show")}
+function closeFlow(){flowScreen.classList.remove("show")}
+function openIdModal(){idModal.classList.add("show")}
+function closeIdModal(){idModal.classList.remove("show")}
 
 function login(){
-  const id=document.getElementById("customerId").value.trim();
+  const id=customerId.value.trim();
   if(customers[id]){
-    currentCustomerId=id;
+    activeId=id;
     closeIdModal();
-    alert("ID doğrulandı.");
+    alert("Müşteri ID doğrulandı.");
   }else{
     alert("Müşteri ID bulunamadı.");
   }
 }
 
-function openViewer(id){
-  currentContent=contents.find(c=>c.id===id);
-  const product=products.find(p=>p.id===currentContent.product);
-  document.getElementById("viewerMedia").innerText=currentContent.type;
-  document.getElementById("viewerTitle").innerText=currentContent.title;
-  document.getElementById("viewerText").innerText=currentContent.text;
-  document.getElementById("verifiedLine").innerText=product ? "Ürün: "+product.name : "";
-  document.getElementById("viewer").classList.add("show");
+function openViewer(contentId){
+  activeContent=contents.find(c=>c.id===contentId);
+  mediaText.innerText=activeContent.type;
+  viewerTitle.innerText=activeContent.title;
+  viewerDesc.innerText=activeContent.desc;
+  verifiedText.innerText="Ürün: "+getProductName(activeContent.product);
+  viewer.classList.add("show");
 }
 
-function closeViewer(){document.getElementById("viewer").classList.remove("show")}
+function closeViewer(){viewer.classList.remove("show")}
 
-function requireId(){
-  if(!currentCustomerId){
-    openIdModal();
-    return false;
-  }
-  return true;
+function openAction(type){
+  if(!activeId){openIdModal();return}
+  actionType=type;
+  ratingBox.style.display=type==="rate" ? "block" : "none";
+  actionTitle.innerText={
+    rate:"Puan ver",
+    comment:"Eleştiri yaz",
+    complaint:"Şikayet bildir",
+    compare:"Karşılaştır"
+  }[type];
+
+  actionHint.innerText={
+    rate:"Satın aldığın ürüne ilk puanın doğrulanmış yıldız olarak VAERO ürününe yansır.",
+    comment:"Yorumun ID ile görünür. Satın alınmamış üründe yıldızlı sayılmaz.",
+    complaint:"Şikayet içeriğin ID ile inceleme alanına düşer.",
+    compare:"Kullandığın ürünleri karşılaştır."
+  }[type];
+
+  actionText.value="";
+  actionModal.classList.add("show");
 }
 
-function rateContent(){
-  if(!requireId())return;
-  currentAction="rate";
-  document.getElementById("actionTitle").innerText="Puan ver";
-  document.getElementById("actionText").innerText="Satın aldığın ürünse ilk puanın doğrulanmış yıldız olarak görünür.";
-  document.getElementById("ratingSelect").style.display="block";
-  document.getElementById("actionInput").placeholder="Kısa yorum yaz";
-  document.getElementById("actionModal").classList.add("show");
-}
-
-function commentContent(){
-  if(!requireId())return;
-  currentAction="comment";
-  document.getElementById("actionTitle").innerText="Eleştiri / yorum";
-  document.getElementById("actionText").innerText="Yorumun ID ile görünür. Satın alınmamış ürünlerde yıldızlı görünmez.";
-  document.getElementById("ratingSelect").style.display="none";
-  document.getElementById("actionInput").placeholder="Yorum veya eleştiri yaz";
-  document.getElementById("actionModal").classList.add("show");
-}
-
-function complainContent(){
-  if(!requireId())return;
-  currentAction="complaint";
-  document.getElementById("actionTitle").innerText="Şikayet bildir";
-  document.getElementById("actionText").innerText="Şikayet içeriğin ID ile işaretlenir ve inceleme alanına düşer.";
-  document.getElementById("ratingSelect").style.display="none";
-  document.getElementById("actionInput").placeholder="Şikayetini yaz";
-  document.getElementById("actionModal").classList.add("show");
-}
-
-function compareContent(){
-  if(!requireId())return;
-  currentAction="compare";
-  document.getElementById("actionTitle").innerText="Karşılaştır";
-  document.getElementById("actionText").innerText="Kullandığın ürünleri karşılaştır.";
-  document.getElementById("ratingSelect").style.display="none";
-  document.getElementById("actionInput").placeholder="Karşılaştırma yaz";
-  document.getElementById("actionModal").classList.add("show");
-}
-
-function shareContent(){
-  alert("Paylaşım altyapısı sonraki aşamada bağlanacak.");
-}
-
-function closeAction(){document.getElementById("actionModal").classList.remove("show")}
+function closeAction(){actionModal.classList.remove("show")}
 
 function saveAction(){
-  const customer=customers[currentCustomerId];
-  const productId=currentContent.product;
-  const purchased=customer.purchased.includes(productId);
-  const alreadyRated=customer.usedRatings.includes(productId);
-  const verified=currentAction==="rate" && purchased && !alreadyRated;
+  const customer=customers[activeId];
+  const productId=activeContent.product;
+  const bought=customer.purchased.includes(productId);
+  const already=customer.rated.includes(productId);
+  const verified=actionType==="rate" && bought && !already;
 
   if(verified){
-    customer.usedRatings.push(productId);
-    alert("★ Doğrulanmış puan kaydedildi. Bu yorum ilgili VAERO ürününe yansır.");
+    customer.rated.push(productId);
+    alert("★ Doğrulanmış puan kaydedildi. Bu yorum VAERO ürününe yansır.");
   }else{
-    alert("Yorum kaydedildi. Doğrulanmış yıldız olarak sayılmadı.");
+    alert("Yorum kaydedildi. Yıldızlı/doğrulanmış puan olarak sayılmadı.");
   }
-
-  document.getElementById("actionInput").value="";
   closeAction();
 }
 
 renderProducts();
-renderContents();
+renderFlow();
 </script>
 
 </body>
