@@ -158,7 +158,14 @@ textarea{min-height:88px}
   </div>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
 <script>
+const SUPABASE_URL = "https://wpfiszzxlwkmaqcqmywa.supabase.co";
+const SUPABASE_KEY = "sb_publishable_eTspasegbb8PbX2hEGMD5w_ggrWRuYN";
+
+const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
 const products=[
   {id:"device",name:"VAERO Cihaz",sub:"Ana sistem",rec:true},
   {id:"white-tea",name:"White Tea",sub:"Temiz atmosfer",rec:true},
@@ -192,7 +199,8 @@ let actionType=null;
 function renderProducts(){
   productGrid.innerHTML=products.map(p=>`
     <button class="product-tile ${p.rec?'recommended':''}" onclick="openProduct('${p.id}')">
-      <b>${p.name}</b><span>${p.sub}</span>
+      <b>${p.name}</b>
+      <span>${p.sub}</span>
     </button>
   `).join("");
 }
@@ -201,7 +209,8 @@ function renderFlow(){
   flowGrid.innerHTML=contents.map(c=>`
     <button class="flow-tile" onclick="openViewer('${c.id}')">
       <div class="type">${c.type}</div>
-      <b>${c.title}</b><span>${getProductName(c.product)}</span>
+      <b>${c.title}</b>
+      <span>${getProductName(c.product)}</span>
     </button>
   `).join("");
 }
@@ -283,45 +292,32 @@ function saveAction(){
   closeAction();
 }
 
-renderProducts();
-renderFlow();
-</script>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
-
-<script>
-const SUPABASE_URL = "https://sb_publishable_eTspasegbb8PbX2hEGMD5w_ggrWRuYN";
-const SUPABASE_KEY = "wpfiszzxlwkmaqcqmywa";
-
-const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-
-async function loadProducts() {
+async function loadLiveRatings(){
   const { data, error } = await supabaseClient
     .from("vaero_reviews")
     .select("product_id, rating");
 
-  if (error) {
-    console.error(error);
+  if(error){
+    console.error("Supabase error:", error);
     return;
   }
 
   const grouped = {};
 
-  data.forEach(item => {
-    if (!grouped[item.product_id]) {
+  data.forEach(item=>{
+    if(!grouped[item.product_id]){
       grouped[item.product_id] = [];
     }
     grouped[item.product_id].push(item.rating);
   });
 
-  for (let product in grouped) {
-    const ratings = grouped[product];
-    const avg = ratings.reduce((a, b) => a + b, 0) / ratings.length;
-
-    console.log(product, avg.toFixed(1), ratings.length);
-  }
+  console.log("LIVE RATINGS:", grouped);
 }
 
-loadProducts();
+renderProducts();
+renderFlow();
+loadLiveRatings();
 </script>
+
 </body>
 </html>
