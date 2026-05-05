@@ -295,27 +295,40 @@ function openAction(type){
 function closeAction(){actionModal.classList.remove("show")}
 
 async function saveAction(){
-  const customer=customers[activeId];
-  const productId=activeContent.product;
-  const bought=customer.purchased.includes(productId);
-  const already=customer.rated.includes(productId);
-  const verified=actionType==="rate" && bought && !already;
-await supabaseClient.from("vaero_reviews").insert([
-  {
-    customer_code: activeId,
-    product_id: productId,
-    rating: parseInt(ratingBox.value),
-    comment: actionText.value
+  const customer = customers[activeId];
+  const productId = activeContent.product;
+  const bought = customer.purchased.includes(productId);
+  const already = customer.rated.includes(productId);
+  const verified = actionType === "rate" && bought && !already;
+
+  const { data, error } = await supabaseClient
+    .from("vaero_reviews")
+    .insert([
+      {
+        customer_code: activeId,
+        product_id: productId,
+        rating: parseInt(ratingBox.value),
+        comment: actionText.value,
+        is_verified: verified
+      }
+    ])
+    .select();
+
+  if(error){
+    console.error("INSERT ERROR:", error);
+    alert("Kayıt eklenemedi: " + error.message);
+    return;
   }
-]);
-  
+
   if(verified){
     customer.rated.push(productId);
-    alert("★ Doğrulanmış puan kaydedildi. Bu yorum VAERO ürününe yansır.");
+    alert("★ Doğrulanmış puan kaydedildi.");
   }else{
-    alert("Yorum kaydedildi. Yıldızlı/doğrulanmış puan olarak sayılmadı.");
+    alert("Yorum kaydedildi.");
   }
+
   closeAction();
+  loadLiveRatings();
 }
 
 async function loadLiveRatings(){
