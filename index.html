@@ -134,6 +134,94 @@ button{padding:13px;border:0;border-radius:12px}
   font-size:13px;
   cursor:pointer;
 }
+  .community{
+  margin-top:22px;
+}
+
+.community-grid{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:10px;
+}
+
+.community-icon{
+  aspect-ratio:1/1;
+  border:1px solid rgba(255,255,255,.10);
+  background:rgba(255,255,255,.06);
+  color:white;
+  border-radius:18px;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  gap:8px;
+  cursor:pointer;
+}
+
+.community-icon b{
+  font-size:22px;
+  color:#e6d7b0;
+}
+
+.community-icon span{
+  font-size:12px;
+  color:rgba(255,255,255,.68);
+}
+
+.community-note{
+  margin-top:12px;
+  padding:12px;
+  border-radius:14px;
+  background:rgba(230,215,176,.09);
+  color:#e6d7b0;
+  font-size:12px;
+  line-height:19px;
+}
+
+.community-panel{
+  margin-top:12px;
+}
+
+.panel-empty{
+  padding:14px;
+  border-radius:14px;
+  background:rgba(255,255,255,.05);
+  color:rgba(255,255,255,.55);
+  font-size:13px;
+}
+
+.mini-feed{
+  display:grid;
+  gap:10px;
+}
+
+.mini-card{
+  padding:13px;
+  border-radius:14px;
+  background:rgba(255,255,255,.06);
+  border:1px solid rgba(255,255,255,.10);
+}
+
+.mini-meta{
+  font-size:12px;
+  color:#e6d7b0;
+  margin-bottom:6px;
+}
+
+.mini-text{
+  font-size:13px;
+  line-height:20px;
+  color:rgba(255,255,255,.72);
+}
+
+.locked-panel{
+  padding:14px;
+  border-radius:14px;
+  background:rgba(230,215,176,.10);
+  color:#e6d7b0;
+  font-size:13px;
+  line-height:20px;
+}
 </style>
 </head>
 
@@ -203,14 +291,50 @@ button{padding:13px;border:0;border-radius:12px}
     <button class="tile locked"><b>Yarışma</b><span>Müşteri alanı</span></button>
   </div>
 
-  <div class="feed">
-  <div class="section-title">MÜŞTERİ AKIŞI</div>
+  <div class="community">
+  <div class="section-title">MÜŞTERİ KEŞFİ</div>
 
-  <div class="add-content" onclick="addCustomerContent()">
-    + Reels / gönderi ekle
+  <div class="community-grid">
+    <button class="community-icon" onclick="openCommunity('reels')">
+      <b>▶️</b>
+      <span>Reels</span>
+    </button>
+
+    <button class="community-icon" onclick="openCommunity('reviews')">
+      <b>★</b>
+      <span>Yorumlar</span>
+    </button>
+
+    <button class="community-icon" onclick="openCommunity('complaints')">
+      <b>!</b>
+      <span>Şikayet</span>
+    </button>
+
+    <button class="community-icon" onclick="openCommunity('compare')">
+      <b>◇</b>
+      <span>Karşılaştır</span>
+    </button>
+
+    <button class="community-icon" onclick="openCommunity('brands')">
+      <b>↗️</b>
+      <span>Markalar</span>
+    </button>
+
+    <button class="community-icon" onclick="openCommunity('add')">
+      <b>＋</b>
+      <span>İçerik ekle</span>
+    </button>
   </div>
 
-  <div id="customerFeed"></div>
+  <div class="community-note">
+    Müşteri içerikleri; deneyim, eleştiri, şikayet ve ürün karşılaştırmaları için açılır. Etkileşim için VAERO müşteri ID gerekir.
+  </div>
+
+  <div id="communityPanel" class="community-panel">
+    <div class="panel-empty">
+      Bir bölüm seç. ID doğrulandıysa içerikler açılır.
+    </div>
+  </div>
 </div>
   
   <div class="platform">
@@ -257,17 +381,6 @@ const customers={
   "VA-002":{purchased:["VAERO Cihaz","Ocean","3’lü Paket"]}
 };
 
-function unlock(){
-  const id=document.getElementById("customerId").value.trim();
-  if(customers[id]){
-    document.getElementById("lockModal").classList.remove("show");
-    document.getElementById("page").classList.remove("locked-view");
-    alert("Müşteri doğrulandı. Özel alanlar açıldı.");
-  }else{
-    alert("Müşteri ID bulunamadı.");
-  }
-}
-
 function previewOnly(){
   document.getElementById("lockModal").classList.remove("show");
 }
@@ -276,8 +389,6 @@ function previewOnly(){
 function openIdModal(){
   document.getElementById("lockModal").classList.add("show");
 }
-
-const oldUnlock = unlock;
 unlock = function(){
   const id=document.getElementById("customerId").value.trim();
 
@@ -286,85 +397,72 @@ unlock = function(){
     document.getElementById("lockModal").classList.remove("show");
     document.getElementById("page").classList.remove("locked-view");
     alert("Müşteri doğrulandı. Etkileşim alanı açıldı.");
-    renderFeed();
   }else{
     alert("Müşteri ID bulunamadı.");
   }
 }
 
-const sampleFeed = [
-  {
-    type:"Reels",
-    product:"White Tea",
-    id:"VA-001",
-    text:"White Tea araç içinde temiz ve ferah bir his verdi. Ağır değil."
-  },
-  {
-    type:"Gönderi",
-    product:"VAERO Cihaz",
-    id:"VA-002",
-    text:"Cihaz küçük ama araç içinde premium bir hava oluşturuyor."
+const communityData = {
+  reels: [
+    {id:"VA-001", product:"White Tea", text:"Kısa kullanım videosu: araç içinde ağır olmayan temiz his."},
+    {id:"VA-002", product:"Ocean", text:"Serin ve hafif atmosfer deneyimi."}
+  ],
+  reviews: [
+    {id:"VA-001", product:"White Tea", text:"★ Doğrulanmış yorum: Ferah ve premium his verdi."},
+    {id:"VA-002", product:"VAERO Cihaz", text:"★ Doğrulanmış yorum: Cihaz küçük ama etkisi net."}
+  ],
+  complaints: [
+    {id:"VA-003", product:"Cologne", text:"Koku karakterli ama bazı kullanıcılara güçlü gelebilir."}
+  ],
+  compare: [
+    {id:"VA-002", product:"Ocean vs White Tea", text:"Ocean daha serin, White Tea daha temiz his bırakıyor."}
+  ],
+  brands: [
+    {id:"VAERO", product:"Anlaşmalı marka alanı", text:"Gelecekte partner markalar ve müşteri eleştiri içerikleri burada açılır."}
+  ]
+};
+
+function openCommunity(type){
+  const panel = document.getElementById("communityPanel");
+
+  if(type === "add"){
+    if(!verifiedCustomerId){
+      openIdModal();
+      return;
+    }
+    const product = prompt("Hangi ürün / marka hakkında?");
+    if(!product) return;
+    const text = prompt("Kısa deneyim / eleştiri yaz:");
+    if(!text) return;
+
+    alert("İçerik alındı. Gerçek sistemde onay sonrası yayınlanacak.");
+    return;
   }
-];
 
-function renderFeed(){
-  const feed = JSON.parse(localStorage.getItem("vaeroFeed") || JSON.stringify(sampleFeed));
-
-  document.getElementById("customerFeed").innerHTML = feed.map((item,index)=>`
-    <div class="feed-card">
-      <div class="feed-media">${item.type}</div>
-      <div class="feed-body">
-        <div class="feed-meta">★ Doğrulanmış ID: ${item.id} • Ürün: ${item.product}</div>
-        <div class="feed-text">${item.text}</div>
-
-        <div class="comment-box">
-          <input id="comment-${index}" placeholder="Yorum yaz">
-          <button onclick="addComment(${index})">Gönder</button>
-        </div>
+  if(!verifiedCustomerId){
+    panel.innerHTML = `
+      <div class="locked-panel">
+        Bu alan müşteri ID ile açılır. Ön izleme sınırlıdır.
+        <br><br>
+        <button class="id-link" onclick="openIdModal()">Müşteri ID ile giriş yap</button>
       </div>
+    `;
+    return;
+  }
+
+  const data = communityData[type] || [];
+
+  panel.innerHTML = `
+    <div class="mini-feed">
+      ${data.map(item=>`
+        <div class="mini-card">
+          <div class="mini-meta">ID: ${item.id} • Ürün: ${item.product}</div>
+          <div class="mini-text">${item.text}</div>
+        </div>
+      `).join("")}
     </div>
-  `).join("");
+  `;
 }
-
-function addCustomerContent(){
-  if(!verifiedCustomerId){
-    openIdModal();
-    return;
-  }
-
-  const product = prompt("Hangi ürün hakkında? Örn: White Tea, VAERO Cihaz, Ocean");
-  if(!product) return;
-
-  const text = prompt("Kısa deneyimini yaz:");
-  if(!text) return;
-
-  const feed = JSON.parse(localStorage.getItem("vaeroFeed") || JSON.stringify(sampleFeed));
-
-  feed.unshift({
-    type:"Gönderi",
-    product:product,
-    id:verifiedCustomerId,
-    text:text
-  });
-
-  localStorage.setItem("vaeroFeed", JSON.stringify(feed));
-  renderFeed();
-}
-
-function addComment(index){
-  if(!verifiedCustomerId){
-    openIdModal();
-    return;
-  }
-
-  const input = document.getElementById("comment-"+index);
-  if(!input.value.trim()) return;
-
-  alert("Yorum kaydedildi. Gerçek sistemde bu yorum ID ile saklanacak.");
-  input.value = "";
-}
-
-renderFeed();
 </script>
 
 </body>
