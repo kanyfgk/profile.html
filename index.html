@@ -4,294 +4,350 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>VAERO | Profil</title>
-
 <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@700&display=swap" rel="stylesheet">
 
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
-
 body{
-  background:#0b1620;
+  background:#07111d;
   color:white;
   font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;
 }
-
-/* HERO */
-.hero{
-  height:180px;
-  background:linear-gradient(120deg,#1a2b3c,#2f4b68);
-}
-
-/* WRAP */
 .wrap{
-  max-width:720px;
-  margin:-60px auto 0;
-  padding:0 16px 80px;
+  max-width:540px;
+  margin:0 auto;
+  padding:20px 14px 70px;
 }
-
-/* PROFILE CARD */
-.profile{
-  background:#111c28;
-  border-radius:24px;
-  padding:22px;
-  box-shadow:0 20px 60px rgba(0,0,0,.4);
-}
-
-.top{
+.topbar{
   display:flex;
-  gap:16px;
+  justify-content:space-between;
   align-items:center;
+  margin-bottom:22px;
 }
-
-.avatar{
-  width:80px;height:80px;
-  border-radius:50%;
-  background:#e6d7b0;
-  color:#0b1620;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  font-family:"Oswald";
-  font-size:26px;
-}
-
-.name{
-  font-family:"Oswald";
-  font-size:32px;
+.brand{
+  font-family:"Oswald",Arial,sans-serif;
+  font-size:28px;
   letter-spacing:4px;
 }
-
-.bio{
-  margin-top:16px;
-  color:#cfd6de;
-  font-size:15px;
-  line-height:24px;
+.menu{
+  font-size:22px;
+  opacity:.8;
 }
-
-/* ACTIONS */
-.actions{
-  display:flex;
-  gap:10px;
-  margin-top:18px;
-}
-
-.btn{
-  flex:1;
-  padding:14px;
-  border-radius:12px;
-  text-align:center;
-  text-decoration:none;
-  font-size:14px;
-}
-
-.primary{
-  background:#e6d7b0;
-  color:#0b1620;
-  font-weight:600;
-}
-
-.secondary{
-  background:#1a2b3c;
-  color:white;
-}
-
-/* SECTION */
-.section{
-  margin-top:28px;
-}
-
-.title{
-  font-size:13px;
-  color:#e6d7b0;
-  margin-bottom:10px;
-}
-
-/* PRODUCT CARDS */
-.products{
-  display:flex;
-  gap:12px;
-  overflow-x:auto;
-}
-
-.product{
-  min-width:150px;
-  background:#162533;
-  border-radius:16px;
-  padding:12px;
-}
-
-.product-img{
-  height:90px;
-  border-radius:12px;
-  background:linear-gradient(120deg,#2a3d52,#3d5c78);
-  margin-bottom:10px;
-}
-
-.product b{
-  font-size:14px;
-}
-
-.product span{
-  font-size:12px;
-  color:#aaa;
-}
-
-/* CONTENT GRID */
-.grid{
+.profile-head{
   display:grid;
-  grid-template-columns:1fr 1fr;
-  gap:10px;
+  grid-template-columns:92px 1fr;
+  gap:18px;
+  align-items:center;
 }
-
-.post{
-  height:110px;
-  background:#162533;
-  border-radius:14px;
+.avatar{
+  width:92px;
+  height:92px;
+  border-radius:50%;
+  background:
+    radial-gradient(circle at 50% 25%,rgba(255,255,255,.3),transparent 18%),
+    linear-gradient(145deg,#e6d7b0,#7c8da0);
   display:flex;
   align-items:center;
   justify-content:center;
-  font-size:12px;
-  color:#aaa;
+  color:#07111d;
+  font-family:"Oswald";
+  font-size:34px;
+  letter-spacing:2px;
 }
-
-/* LOCK */
-.lock{
-  background:#1a2b3c;
-  padding:12px;
-  border-radius:12px;
-  font-size:13px;
+.stats{
+  display:flex;
+  justify-content:space-between;
+  text-align:center;
+}
+.stats b{
+  display:block;
+  font-size:17px;
+}
+.stats span{
+  font-size:12px;
+  color:rgba(255,255,255,.6);
+}
+.name{
+  margin-top:18px;
+  font-weight:700;
+  font-size:15px;
+}
+.bio{
+  margin-top:6px;
+  font-size:14px;
+  line-height:22px;
+  color:rgba(255,255,255,.78);
+}
+.bio .muted{
   color:#e6d7b0;
 }
-
-/* MODAL */
+.actions{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:8px;
+  margin-top:16px;
+}
+.action{
+  text-align:center;
+  padding:10px;
+  border-radius:10px;
+  text-decoration:none;
+  font-size:14px;
+  color:white;
+  background:rgba(255,255,255,.09);
+  border:1px solid rgba(255,255,255,.08);
+}
+.action.primary{
+  background:#e6d7b0;
+  color:#07111d;
+  font-weight:700;
+}
+.highlights{
+  display:flex;
+  gap:14px;
+  overflow-x:auto;
+  margin-top:24px;
+  padding-bottom:6px;
+}
+.highlight{
+  min-width:70px;
+  text-align:center;
+}
+.circle{
+  width:66px;
+  height:66px;
+  border-radius:50%;
+  border:1px solid rgba(230,215,176,.5);
+  background:rgba(255,255,255,.06);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  margin:0 auto 7px;
+  font-size:20px;
+}
+.highlight span{
+  font-size:12px;
+  color:rgba(255,255,255,.7);
+}
+.tabs{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  margin-top:26px;
+  border-top:1px solid rgba(255,255,255,.10);
+  border-bottom:1px solid rgba(255,255,255,.10);
+}
+.tab{
+  text-align:center;
+  padding:13px 0;
+  font-size:12px;
+  color:rgba(255,255,255,.55);
+}
+.tab.active{
+  color:white;
+  border-bottom:2px solid #e6d7b0;
+}
+.grid{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:3px;
+  margin-top:3px;
+}
+.post{
+  aspect-ratio:1/1;
+  background:
+    radial-gradient(circle at 50% 25%,rgba(255,255,255,.2),transparent 16%),
+    linear-gradient(145deg,#162533,#31465d);
+  position:relative;
+  overflow:hidden;
+}
+.post::after{
+  content:attr(data-label);
+  position:absolute;
+  left:7px;
+  bottom:7px;
+  font-size:11px;
+  color:white;
+  background:rgba(0,0,0,.35);
+  padding:4px 6px;
+  border-radius:999px;
+}
+.post.video::before{
+  content:"▶️";
+  position:absolute;
+  right:7px;
+  top:6px;
+  font-size:12px;
+}
+.post.product{
+  background:
+    radial-gradient(circle at 50% 28%,rgba(230,215,176,.35),transparent 20%),
+    linear-gradient(145deg,#1a2b3c,#5a6470);
+}
+.post.product::before{
+  content:"VAERO";
+  position:absolute;
+  top:50%;
+  left:50%;
+  transform:translate(-50%,-50%);
+  font-family:"Oswald";
+  letter-spacing:2px;
+  color:rgba(255,255,255,.62);
+  font-size:15px;
+}
+.lockline{
+  margin-top:18px;
+  padding:13px;
+  border-radius:12px;
+  background:rgba(230,215,176,.10);
+  color:#e6d7b0;
+  font-size:13px;
+  line-height:20px;
+}
 .modal{
   position:fixed;
   inset:0;
-  background:rgba(0,0,0,.6);
+  background:rgba(0,0,0,.58);
   display:none;
   align-items:center;
   justify-content:center;
+  padding:22px;
+  z-index:10;
 }
-
 .modal.show{display:flex}
-
 .modal-box{
-  background:#111c28;
+  width:100%;
+  max-width:390px;
+  background:#101b28;
+  border:1px solid rgba(255,255,255,.12);
+  border-radius:22px;
   padding:24px;
-  border-radius:20px;
-  width:90%;
-  max-width:400px;
 }
-
+.modal-box h2{
+  font-family:"Oswald";
+  font-size:30px;
+  margin-bottom:8px;
+}
+.modal-box p{
+  color:rgba(255,255,255,.65);
+  font-size:14px;
+  line-height:22px;
+  margin-bottom:14px;
+}
 input{
   width:100%;
   padding:14px;
-  margin-top:10px;
-  border-radius:10px;
-  border:0;
+  border-radius:12px;
+  border:1px solid rgba(255,255,255,.14);
+  background:rgba(255,255,255,.08);
+  color:white;
+  outline:none;
 }
-
-button{
-  width:100%;
+.modal-actions{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:10px;
   margin-top:12px;
-  padding:14px;
-  border:0;
-  border-radius:10px;
-  background:#e6d7b0;
 }
-
-@media(max-width:600px){
-  .grid{grid-template-columns:1fr}
+button{
+  padding:13px;
+  border:0;
+  border-radius:12px;
+}
+.confirm{
+  background:#e6d7b0;
+  color:#07111d;
+  font-weight:700;
+}
+.close{
+  background:rgba(255,255,255,.09);
+  color:white;
 }
 </style>
 </head>
 
 <body>
 
-<div class="hero"></div>
-
 <div class="wrap">
 
-<div class="profile">
+  <div class="topbar">
+    <div class="brand">VAERO</div>
+    <div class="menu">⋯</div>
+  </div>
 
-<div class="top">
-<div class="avatar">V</div>
-<div>
-<div class="name">VAERO</div>
-</div>
-</div>
+  <div class="profile-head">
+    <div class="avatar">V</div>
+    <div class="stats">
+      <div><b>12</b><span>gönderi</span></div>
+      <div><b>0</b><span>yorum</span></div>
+      <div><b>Yeni</b><span>seri</span></div>
+    </div>
+  </div>
 
-<div class="bio">
-Araç içi kişisel atmosfer sistemi.  
-Temiz, kontrollü ve kişisel sürüş deneyimi.
-</div>
+  <div class="name">VAERO</div>
+  <div class="bio">
+    Araç içi kişisel atmosfer sistemi.<br>
+    <span class="muted">Koku yenileme • ürün desteği • kullanıcı deneyimleri</span>
+  </div>
 
-<div class="actions">
-<a class="btn primary" href="https://wa.me/905391152765">Mesaj gönder</a>
-<a class="btn secondary">Instagram</a>
-</div>
+  <div class="actions">
+    <a class="action primary" href="https://wa.me/905391152765" target="_blank">Mesaj gönder</a>
+    <a class="action" href="#" onclick="alert('Instagram linki yakında eklenecek.'); return false;">Instagram</a>
+  </div>
 
-<!-- PRODUCTS -->
-<div class="section">
-<div class="title">ÜRÜNLER</div>
-<div class="products">
+  <div class="highlights">
+    <div class="highlight"><div class="circle">◌</div><span>Ürün</span></div>
+    <div class="highlight"><div class="circle">✦</div><span>Kokular</span></div>
+    <div class="highlight"><div class="circle">★</div><span>Yorumlar</span></div>
+    <div class="highlight"><div class="circle">◍</div><span>Reels</span></div>
+    <div class="highlight"><div class="circle">⚑</div><span>Yarışma</span></div>
+  </div>
 
-<div class="product">
-<div class="product-img"></div>
-<b>VAERO cihaz</b>
-<span>Ana sistem</span>
-</div>
+  <div class="tabs">
+    <div class="tab active">GÖNDERİLER</div>
+    <div class="tab">REELS</div>
+    <div class="tab">ÜRÜNLER</div>
+  </div>
 
-<div class="product">
-<div class="product-img"></div>
-<b>Koku yenile</b>
-<span>Refill</span>
-</div>
+  <div class="grid">
+    <div class="post product" data-label="Cihaz"></div>
+    <div class="post video" data-label="Reels"></div>
+    <div class="post" data-label="Deneyim"></div>
 
-<div class="product">
-<div class="product-img"></div>
-<b>3’lü paket</b>
-<span>Avantajlı</span>
-</div>
+    <div class="post product" data-label="White Tea"></div>
+    <div class="post video" data-label="Kullanım"></div>
+    <div class="post" data-label="Yorum"></div>
 
-</div>
-</div>
+    <div class="post product" data-label="Refill"></div>
+    <div class="post" data-label="Duyuru"></div>
+    <div class="post video" data-label="Video"></div>
+  </div>
 
-<!-- CONTENT -->
-<div class="section">
-<div class="title">VAERO</div>
-<div class="grid">
-<div class="post">Video</div>
-<div class="post">Deneyim</div>
-<div class="post">Kullanıcı</div>
-<div class="post">Yeni ürün</div>
-</div>
-</div>
-
-<!-- LOCKED -->
-<div class="section">
-<div class="title">MÜŞTERİ ALANI</div>
-<div class="lock">
-Yorum, puan ve yarışmalar müşteri numarası ile açılır.
-</div>
-</div>
+  <div class="lockline">
+    Yorum, puanlama ve yarışmalar yalnızca müşteri numarasıyla doğrulanan kullanıcılar için açılır.
+  </div>
 
 </div>
-</div>
 
-<!-- MODAL -->
-<div class="modal" id="modal">
-<div class="modal-box">
-<h3>Müşteri girişi</h3>
-<input placeholder="Müşteri numarası">
-<button>Devam et</button>
-</div>
+<div class="modal" id="registerModal">
+  <div class="modal-box">
+    <h2>Müşteri alanı</h2>
+    <p>Müşteri numaranla devam et. Yorum, puanlama ve özel avantajlara eriş.</p>
+    <input placeholder="Müşteri numarası">
+    <div class="modal-actions">
+      <button class="close" onclick="closeModal()">Daha sonra</button>
+      <button class="confirm" onclick="alert('Kayıt sistemi sonraki adımda bağlanacak.')">Devam et</button>
+    </div>
+  </div>
 </div>
 
 <script>
 setTimeout(()=>{
-document.getElementById("modal").classList.add("show");
+  document.getElementById("registerModal").classList.add("show");
 },10000);
+
+function closeModal(){
+  document.getElementById("registerModal").classList.remove("show");
+}
 </script>
 
 </body>
