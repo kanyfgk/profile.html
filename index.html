@@ -248,14 +248,33 @@ function closeFlow(){flowScreen.classList.remove("show")}
 function openIdModal(){idModal.classList.add("show")}
 function closeIdModal(){idModal.classList.remove("show")}
 
-function login(){
-  const id=customerId.value.trim();
-  if(customers[id]){
-    activeId=id;
-    closeIdModal();
+async function login(){
+  const id = customerId.value.trim();
+
+  if(!id){
+    alert("Müşteri ID girin.");
+    return;
+  }
+
+  const { data, error } = await supabaseClient
+    .from("vaero_customer_products")
+    .select("customer_code")
+    .eq("customer_code", id)
+    .limit(1);
+
+  if(error){
+    alert("ID kontrol edilemedi.");
+    console.error(error);
+    return;
+  }
+
+  activeId = id;
+  closeIdModal();
+
+  if(data && data.length > 0){
     alert("Müşteri ID doğrulandı.");
   }else{
-    alert("Müşteri ID bulunamadı.");
+    alert("Bu ID sistemde görünmedi. Yorum yazabilirsiniz ama yıldızlı/doğrulanmış puan sayılmaz.");
   }
 }
 
