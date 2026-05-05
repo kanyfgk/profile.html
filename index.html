@@ -335,19 +335,19 @@ for (let product in grouped) {
   const ratings = grouped[product];
   const avg = ratings.reduce((a, b) => a + b, 0) / ratings.length;
 
-  const card = document.querySelector([data-product="${product}"]);
+  const card = document.querySelector(`[data-product="${product}"]`);
 
   if (card) {
     const badge = document.createElement("div");
     badge.className = "rating-badge";
-    badge.innerHTML = ★ ${avg.toFixed(1)} <small>${ratings.length} yorum</small>;
+    badge.innerHTML = `★ ${avg.toFixed(1)} <small>${ratings.length} yorum</small>`;
     card.appendChild(badge);
   }
 
   console.log(product, avg.toFixed(1), ratings.length);
 }
 }
-
+ 
 renderProducts();
 renderFlow();
 loadLiveRatings();
