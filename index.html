@@ -64,6 +64,24 @@ textarea{min-height:88px}
 .modal button{border:0;border-radius:12px;padding:13px}
 .confirm{background:#e6d7b0;color:#07111d;font-weight:800}
 .cancel{background:rgba(255,255,255,.09);color:white}
+  .rating-badge{
+  position:absolute;
+  top:8px;
+  left:8px;
+  background:#8f7a4f;
+  color:white;
+  border-radius:999px;
+  padding:4px 7px;
+  font-size:10px;
+  font-weight:700;
+  z-index:5;
+}
+
+.rating-badge small{
+  opacity:.8;
+  margin-left:3px;
+  font-weight:500;
+}
 </style>
 </head>
 
@@ -198,7 +216,7 @@ let actionType=null;
 
 function renderProducts(){
   productGrid.innerHTML=products.map(p=>`
-    <button class="product-tile ${p.rec?'recommended':''}" onclick="openProduct('${p.id}')">
+    <button class="product-tile ${p.rec?'recommended':''}" data-product="${p.id}" onclick="openProduct('${p.id}')">
       <b>${p.name}</b>
       <span>${p.sub}</span>
     </button>
@@ -312,9 +330,19 @@ async function loadLiveRatings(){
   });
 
   console.log("LIVE RATINGS:", grouped);
-  for (let product in grouped) {
+
+for (let product in grouped) {
   const ratings = grouped[product];
   const avg = ratings.reduce((a, b) => a + b, 0) / ratings.length;
+
+  const card = document.querySelector([data-product="${product}"]);
+
+  if (card) {
+    const badge = document.createElement("div");
+    badge.className = "rating-badge";
+    badge.innerHTML = ★ ${avg.toFixed(1)} <small>${ratings.length} yorum</small>;
+    card.appendChild(badge);
+  }
 
   console.log(product, avg.toFixed(1), ratings.length);
 }
