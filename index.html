@@ -427,7 +427,7 @@ loadLiveRatings();
     .select("rating, comment, is_verified")
     .eq("product_id", productId)
     .order("is_verified", { ascending: false })
-.order("id", { ascending: false });
+    .order("id", { ascending: false });
 
   if(error){
     console.error(error);
@@ -435,66 +435,51 @@ loadLiveRatings();
   }
 
   const list = document.getElementById("reviewList");
-const verifiedCount = data.filter(item => item.is_verified).length;
-const normalCount = data.length - verifiedCount;
 
-let header = `
-  <div style="margin-bottom:10px;">
-    <div style="font-size:13px; color:#e6d7b0; font-weight:700;">
-      Onaylı Deneyimler (${verifiedCount})
-    </div>
-    <div style="font-size:11px; color:rgba(255,255,255,.55); margin-top:3px;">
-      Normal yorumlar: ${normalCount}
-    </div>
-  </div>
-`;
   const verified = data.filter(item => item.is_verified);
-const normal = data.filter(item => !item.is_verified);
+  const normal = data.filter(item => !item.is_verified);
 
-list.innerHTML = `
-  <div style="margin-bottom:12px;">
-    <div style="font-size:14px; color:#e6d7b0; font-weight:700;">
-      ★ Onaylı Deneyimler (${verified.length})
-    </div>
-  </div>
-
-  ${verified.map(item => `
-    <div style="
-      margin-bottom:10px;
-      padding:10px;
-      border-radius:10px;
-      background:rgba(230,215,176,.16);
-      border:1px solid rgba(230,215,176,.45);
-    ">
-      <div style="font-size:13px;">
-        ${item.comment || '—'}
-      </div>
-      <div style="font-size:12px; margin-top:6px; color:#e6d7b0;">
-        Puan: ${item.rating}/5
+  list.innerHTML = `
+    <div style="margin-bottom:12px;">
+      <div style="font-size:14px; color:#e6d7b0; font-weight:700;">
+        ★ Onaylı Deneyimler (${verified.length})
       </div>
     </div>
-  `).join("")}
-`;
-  <div style="margin-top:16px; margin-bottom:10px;">
-    <div style="font-size:12px; color:rgba(255,255,255,.5);">
-      Diğer yorumlar (${normal.length})
-    </div>
-  </div>
 
-  ${normal.map(item => `
-    <div style="
-      margin-bottom:8px;
-      padding:8px;
-      border-radius:8px;
-      background:#111;
-    ">
-      <div style="font-size:13px;">
-        ${item.comment || '—'}
+    ${verified.map(item => `
+      <div style="
+        margin-bottom:10px;
+        padding:10px;
+        border-radius:10px;
+        background:rgba(230,215,176,.16);
+        border:1px solid rgba(230,215,176,.45);
+      ">
+        <div style="font-size:13px;">
+          ${item.comment || '—'}
+        </div>
+        <div style="font-size:12px; margin-top:6px; color:#e6d7b0;">
+          Puan: ${item.rating}/5
+        </div>
+      </div>
+    `).join("")}
+
+    <div style="margin-top:16px; margin-bottom:10px;">
+      <div style="font-size:12px; color:rgba(255,255,255,.5);">
+        Diğer yorumlar (${normal.length})
       </div>
     </div>
-  `).join("")}
-`;
-</script>
 
-</body>
-</html>
+    ${normal.map(item => `
+      <div style="
+        margin-bottom:8px;
+        padding:8px;
+        border-radius:8px;
+        background:#111;
+      ">
+        <div style="font-size:13px;">
+          ${item.comment || '—'}
+        </div>
+      </div>
+    `).join("")}
+  `;
+}
