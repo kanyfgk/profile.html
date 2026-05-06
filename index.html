@@ -229,7 +229,16 @@ color:#e6d7b0;
 ">
 Verified yorumlar
 </div>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</div>
+</div>
+
+<div class="modal-actions">
+  <button class="cancel" onclick="closeBrand()">Kapat</button>
+  <button class="confirm">Markayı İncele</button>
+</div>
+
+</div>
+</div>
 <div class="overlay" id="idModal">
   <div class="modal">
     <h2>Müşteri ID</h2>
@@ -327,8 +336,14 @@ function openProduct(productId){
   else{alert("Bu ürün içeriği sonraki aşamada açılacak.")}
 }
 
-function openFlow(){flowScreen.classList.add("show")}
-function closeFlow(){flowScreen.classList.remove("show")}
+function openFlow(){
+  document.getElementById("flowScreen").classList.add("show");
+}
+
+function closeFlow(){
+  document.getElementById("flowScreen").classList.remove("show");
+}
+
 function openIdModal(){
   document.getElementById("idModal").classList.add("show");
 }
@@ -380,28 +395,36 @@ function openViewer(contentId){
 function closeViewer(){viewer.classList.remove("show")}
 
 function openAction(type){
-  if(!activeId){openIdModal();return}
-  actionType=type;
-  ratingBox.style.display=type==="rate" ? "block" : "none";
-  actionTitle.innerText={
+  if(!activeId){
+    openIdModal();
+    return;
+  }
+
+  actionType = type;
+
+  document.getElementById("ratingBox").style.display =
+    type === "rate" ? "block" : "none";
+
+  document.getElementById("actionTitle").innerText = {
     rate:"Puan ver",
     comment:"Eleştiri yaz",
     complaint:"Şikayet bildir",
     compare:"Karşılaştır"
   }[type];
 
-  actionHint.innerText={
+  document.getElementById("actionHint").innerText = {
     rate:"Satın aldığın ürüne ilk puanın doğrulanmış yıldız olarak VAERO ürününe yansır.",
     comment:"Yorumun ID ile görünür. Satın alınmamış üründe yıldızlı sayılmaz.",
     complaint:"Şikayet içeriğin ID ile inceleme alanına düşer.",
     compare:"Kullandığın ürünleri karşılaştır."
   }[type];
 
-  actionText.value="";
-  actionModal.classList.add("show");
+  document.getElementById("actionText").value = "";
+  document.getElementById("actionModal").classList.add("show");
 }
-
-function closeAction(){actionModal.classList.remove("show")}
+function closeAction(){
+  document.getElementById("actionModal").classList.remove("show");
+}
 
 async function saveAction(){
   const customer = customers[activeId];
@@ -444,8 +467,8 @@ const verified = bought && isValidDate;
       {
         customer_code: activeId,
         product_id: productId,
-        rating: parseInt(ratingBox.value),
-        comment: actionText.value,
+        rating: parseInt(document.getElementById("ratingBox").value),
+comment: document.getElementById("actionText").value,
         is_verified: verified
       }
     ])
