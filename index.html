@@ -357,10 +357,9 @@ async function login(){
   }
 
   const { data, error } = await supabaseClient
-    .from("vaero_customer_products")
-    .select("customer_code")
-    .eq("customer_code", id)
-    .limit(1);
+  .from("vaero_customer_products")
+  .select("*")
+  .eq("customer_code", id);
 
   if(error){
     alert("ID kontrol edilemedi.");
