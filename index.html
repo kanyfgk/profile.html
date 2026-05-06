@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>VAERO | Profil</title>
+  <link rel="icon" href="data:,">
 <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@700&display=swap" rel="stylesheet">
 
 <style>
@@ -437,27 +438,46 @@ async function loadActionReviews(type){
 
   const { data, error } = await supabaseClient
     .from("vaero_reviews")
-    .select("comment, rating, is_verified, type")
+    .select("comment, rating, is_verified, type, product_id")
     .eq("product_id", activeContent.product)
-    .eq("type", type)
     .order("id", { ascending:false })
-    .limit(8);
+    .limit(20);
 
   if(error){
-    console.error(error);
-    box.style.display = "none";
+    console.error("ACTION REVIEWS ERROR:", error);
+    box.style.display = "block";
+    box.innerHTML = `<div style="font-size:12px;color:#ffb3b3;">Yorumlar yüklenemedi.</div>`;
     return;
   }
 
-  if(!data || data.length === 0){
-    box.style.display = "none";
-    box.innerHTML = "";
-    return;
+  let filtered = data || [];
+
+  if(type === "comment"){
+    filtered = filtered.filter(item =>
+      item.type === "comment" || item.type === "yorum" || !item.type
+    );
+  }else{
+    filtered = filtered.filter(item => item.type === type);
   }
 
   box.style.display = "block";
 
-  box.innerHTML = data.map(item => `
+  if(filtered.length === 0){
+    box.innerHTML = `
+      <div style="
+        padding:9px;
+        border-radius:10px;
+        background:rgba(255,255,255,.05);
+        color:rgba(255,255,255,.6);
+        font-size:12px;
+      ">
+        Henüz bu bölümde yorum yok.
+      </div>
+    `;
+    return;
+  }
+
+  box.innerHTML = filtered.map(item => `
     <div style="
       padding:8px;
       border-radius:10px;
