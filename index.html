@@ -329,11 +329,16 @@ function openProduct(productId){
 
 function openFlow(){flowScreen.classList.add("show")}
 function closeFlow(){flowScreen.classList.remove("show")}
-function openIdModal(){idModal.classList.add("show")}
-function closeIdModal(){idModal.classList.remove("show")}
+function openIdModal(){
+  document.getElementById("idModal").classList.add("show");
+}
+
+function closeIdModal(){
+  document.getElementById("idModal").classList.remove("show");
+}
 
 async function login(){
-  const id = customerId.value.trim();
+  const id = document.getElementById("customerId").value.trim();
 
   if(!id){
     alert("Müşteri ID girin.");
