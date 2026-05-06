@@ -426,19 +426,17 @@ async function saveAction(){
   const productId = activeContent.product;
   console.log("ACTIVE ID:", activeId);
 console.log("ACTIVE PRODUCT:", productId);
-  const { data: purchase, error: purchaseError } = await supabaseClient
+  const { data: purchases, error: purchaseError } = await supabaseClient
   .from("vaero_customer_products")
-  .select("*")
+  .select("id, customer_code, product_id")
   .eq("customer_code", activeId)
-  .eq("product_id", productId)
-  .maybeSingle();
+  .eq("product_id", productId);
 
-if(purchaseError){
-  console.error("PURCHASE CHECK ERROR:", purchaseError);
-}
+console.log("PURCHASE MATCH:", purchases);
+console.log("PURCHASE ERROR:", purchaseError);
 
-let bought = !!purchase;
-let isValidDate = !!purchase;
+let bought = purchases && purchases.length > 0;
+let isValidDate = bought;
 const verified = actionType === "rate" && bought && isValidDate;
   const { data: oldReview } = await supabaseClient
     .from("vaero_reviews")
