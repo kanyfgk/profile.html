@@ -445,7 +445,7 @@ if (purchase) {
 
   isValidDate = diffDays <= 365;
 }
-const verified = bought && isValidDate;
+const verified = actionType === "rate" && bought && isValidDate;
   const { data: oldReview } = await supabaseClient
     .from("vaero_reviews")
     .select("id,is_verified")
