@@ -534,7 +534,8 @@ async function loadLiveRatings(){
   });
 
   console.log("LIVE RATINGS:", grouped);
-
+const mostCommented = Object.entries(grouped)
+  .sort((a,b)=>b[1].totalComments - a[1].totalComments)[0]?.[0];
   for (let product in grouped) {
 
     const item = grouped[product];
@@ -542,6 +543,11 @@ async function loadLiveRatings(){
     const card = document.querySelector(`[data-product="${product}"]`);
 
     const oldBadge = card?.querySelector(".rating-badge");
+    const oldTrend = card?.querySelector(".trend-badge");
+
+if(oldTrend){
+  oldTrend.remove();
+}
 
     if(oldBadge){
       oldBadge.remove();
@@ -570,6 +576,29 @@ async function loadLiveRatings(){
       }
 
       card.appendChild(badge);
+      if(product === mostCommented){
+
+  const trend = document.createElement("div");
+
+  trend.innerHTML = "TREND";
+        trend.className = "trend-badge";
+
+  trend.style.cssText = `
+    position:absolute;
+    top:34px;
+    left:8px;
+    background:#e6d7b0;
+    color:#111;
+    font-size:9px;
+    font-weight:800;
+    padding:3px 6px;
+    border-radius:999px;
+    z-index:5;
+  `;
+
+  card.appendChild(trend);
+
+}
 
     }
 
@@ -596,7 +625,9 @@ loadLiveRatings();
   const list = document.getElementById("reviewList");
 
   const verified = data.filter(item => item.is_verified);
-  const criticism = data.filter(item => item.type === "comment");
+  const criticism = data.filter(
+  item => item.type === "comment" && !item.is_verified
+);
 const complaints = data.filter(item => item.type === "complaint");
 const comparisons = data.filter(item => item.type === "compare");
 const normal = data.filter(item => !item.is_verified && item.type === "rate");
