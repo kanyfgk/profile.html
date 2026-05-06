@@ -501,44 +501,77 @@ function closeBrand(){
 }
   
 async function loadLiveRatings(){
+
   const { data, error } = await supabaseClient
-  .from("vaero_reviews")
-  .select("product_id, rating")
-  .eq("is_verified", true);
+    .from("vaero_reviews")
+    .select("product_id, rating, is_verified");
+
   if(error){
     console.error("Supabase error:", error);
     return;
   }
- 
+
   const grouped = {};
 
-  data.forEach(item=>{
+  data.forEach(item => {
+
     if(!grouped[item.product_id]){
-      grouped[item.product_id] = [];
+      grouped[item.product_id] = {
+        verifiedRatings: [],
+        totalComments: 0
+      };
     }
-    grouped[item.product_id].push(item.rating);
+
+    grouped[item.product_id].totalComments += 1;
+
+    if(item.is_verified){
+      grouped[item.product_id].verifiedRatings.push(item.rating);
+    }
+
   });
 
   console.log("LIVE RATINGS:", grouped);
 
-for (let product in grouped) {
-  const ratings = grouped[product];
-  const avg = ratings.reduce((a, b) => a + b, 0) / ratings.length;
+  for (let product in grouped) {
 
-  const card = document.querySelector(`[data-product="${product}"]`);
-const oldBadge = card?.querySelector(".rating-badge");
-if(oldBadge){
-  oldBadge.remove();
-}
-  if (card) {
-    const badge = document.createElement("div");
-    badge.className = "rating-badge";
-    badge.innerHTML = `★ ${avg.toFixed(1)} <small>${ratings.length} yorum</small>`;
-    card.appendChild(badge);
+    const item = grouped[product];
+
+    const card = document.querySelector([data-product="${product}"]);
+
+    const oldBadge = card?.querySelector(".rating-badge");
+
+    if(oldBadge){
+      oldBadge.remove();
+    }
+
+    if(card){
+
+      const badge = document.createElement("div");
+
+      badge.className = "rating-badge";
+
+      if(item.verifiedRatings.length > 0){
+
+        const avg =
+          item.verifiedRatings.reduce((a,b)=>a+b,0)
+          / item.verifiedRatings.length;
+
+        badge.innerHTML =
+          ★ ${avg.toFixed(1)} <small>${item.verifiedRatings.length} onaylı · ${item.totalComments} yorum</small>;
+
+      } else {
+
+        badge.innerHTML =
+          <small>${item.totalComments} yorum</small>;
+
+      }
+
+      card.appendChild(badge);
+
+    }
+
   }
 
-  console.log(product, avg.toFixed(1), ratings.length);
-}
 }
  
 renderProducts();
