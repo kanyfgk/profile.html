@@ -230,7 +230,17 @@ color:#e6d7b0;
 Verified yorumlar
 </div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
+<div class="overlay" id="idModal">
+  <div class="modal">
+    <h2>Müşteri ID</h2>
+    <p>Yorum, puanlama ve doğrulanmış eleştiri için müşteri ID ile devam et.</p>
+    <input id="customerId" placeholder="Örn: VA-001">
+    <div class="modal-actions">
+      <button class="cancel" onclick="closeIdModal()">Kapat</button>
+      <button class="confirm" onclick="login()">Giriş yap</button>
+    </div>
+  </div>
+</div>
 <div class="overlay" id="actionModal">
   <div class="modal">
     <h2 id="actionTitle">İşlem</h2>
