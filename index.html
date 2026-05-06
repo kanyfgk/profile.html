@@ -237,6 +237,12 @@ BAŞVURU AÇIK
       <option value="2">2 yıldız</option>
       <option value="1">1 yıldız</option>
     </select>
+    <div id="actionReviewList" style="
+  max-height:180px;
+  overflow:auto;
+  margin:10px 0;
+  display:none;
+"></div>
     <textarea id="actionText" placeholder="Yaz..."></textarea>
     <div class="modal-actions">
       <button class="cancel" onclick="closeAction()">Kapat</button>
@@ -415,12 +421,61 @@ function openAction(type){
   }[type];
 
   document.getElementById("actionText").value = "";
+  loadActionReviews(type);
   document.getElementById("actionModal").classList.add("show");
 }
 function closeAction(){
   document.getElementById("actionModal").classList.remove("show");
 }
+async function loadActionReviews(type){
+  const box = document.getElementById("actionReviewList");
 
+  if(!activeContent){
+    box.style.display = "none";
+    return;
+  }
+
+  const { data, error } = await supabaseClient
+    .from("vaero_reviews")
+    .select("comment, rating, is_verified, type")
+    .eq("product_id", activeContent.product)
+    .eq("type", type)
+    .order("id", { ascending:false })
+    .limit(8);
+
+  if(error){
+    console.error(error);
+    box.style.display = "none";
+    return;
+  }
+
+  if(!data || data.length === 0){
+    box.style.display = "none";
+    box.innerHTML = "";
+    return;
+  }
+
+  box.style.display = "block";
+
+  box.innerHTML = data.map(item => `
+    <div style="
+      padding:8px;
+      border-radius:10px;
+      background:rgba(255,255,255,.06);
+      margin-bottom:7px;
+      border:1px solid rgba(255,255,255,.08);
+    ">
+      <div style="font-size:12px; line-height:17px;">
+        ${item.comment || '—'}
+      </div>
+      ${item.is_verified ? `
+        <div style="font-size:10px; color:#e6d7b0; margin-top:5px;">
+          ★ Doğrulanmış
+        </div>
+      ` : ``}
+    </div>
+  `).join("");
+}
 async function saveAction(){
   const customer = customers[activeId];
   const productId = activeContent.product;
@@ -478,9 +533,10 @@ type: actionType
   alert("Yorum kaydedildi. Bu ürün bu ID ile doğrulanmış satın alım olarak görünmediği için yıldızlı puan sayılmadı.");
 }
 
-  closeAction();
   loadLiveRatings();
 loadReviews(productId);
+loadActionReviews(actionType);
+document.getElementById("actionText").value = "";
   }
   function openBrand(type){
 
