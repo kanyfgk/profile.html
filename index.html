@@ -309,7 +309,7 @@ let actionType=null;
 
 function renderProducts(){
   productGrid.innerHTML=products.map(p=>`
-    <button class="product-tile ${p.rec?'recommended':''}" data-product="${p.id}" onclick="openProduct('${p.id}'); openReviews('${p.id}')">
+    <button class="product-tile ${p.rec?'recommended':''}" data-product="${p.id}" onclick="openProduct('${p.id}')"
       <b>${p.name}</b>
       <span>${p.sub}</span>
     </button>
@@ -331,9 +331,29 @@ function getProductName(id){
 }
 
 function openProduct(productId){
-  const related=contents.find(c=>c.product===productId);
-  if(related){openViewer(related.id)}
-  else{alert("Bu ürün içeriği sonraki aşamada açılacak.")}
+  const related = contents.find(c => c.product === productId);
+
+  if(related){
+    openViewer(related.id);
+    return;
+  }
+
+  activeContent = {
+    id: productId,
+    product: productId,
+    type: "Ürün",
+    title: getProductName(productId),
+    desc: "Bu ürün için doğrulanmış deneyimler ve kullanıcı yorumları."
+  };
+
+  mediaText.innerText = "Ürün";
+  viewerTitle.innerText = activeContent.title;
+  viewerDesc.innerText = activeContent.desc;
+  verifiedText.innerText = "Ürün: " + getProductName(productId);
+
+  loadReviews(productId);
+
+  viewer.classList.add("show");
 }
 
 function openFlow(){
