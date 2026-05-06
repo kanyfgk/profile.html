@@ -424,6 +424,8 @@ function closeAction(){
 async function saveAction(){
   const customer = customers[activeId];
   const productId = activeContent.product;
+  console.log("ACTIVE ID:", activeId);
+console.log("ACTIVE PRODUCT:", productId);
   const { data: purchase, error: purchaseError } = await supabaseClient
   .from("vaero_customer_products")
   .select("purchase_date")
