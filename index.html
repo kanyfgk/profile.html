@@ -456,9 +456,9 @@ const verified = actionType === "rate" && bought && isValidDate;
       {
         customer_code: activeId,
         product_id: productId,
-        rating: parseInt(document.getElementById("ratingBox").value),
+        rating: actionType === "rate" ? parseInt(document.getElementById("ratingBox").value) : null,
 comment: document.getElementById("actionText").value,
-        is_verified: verified,
+is_verified: verified,
 type: actionType
       }
     ])
@@ -583,7 +583,7 @@ loadLiveRatings();
   async function loadReviews(productId){
   const { data, error } = await supabaseClient
     .from("vaero_reviews")
-    .select("rating, comment, is_verified")
+    .select("rating, comment, is_verified, type")
     .eq("product_id", productId)
     .order("is_verified", { ascending: false })
     .order("id", { ascending: false });
@@ -596,13 +596,10 @@ loadLiveRatings();
   const list = document.getElementById("reviewList");
 
   const verified = data.filter(item => item.is_verified);
-  const criticism = data.filter(
-  item => !item.is_verified && item.rating <= 2
-);
-
-const normal = data.filter(
-  item => !item.is_verified && item.rating > 2
-);
+  const criticism = data.filter(item => item.type === "comment");
+const complaints = data.filter(item => item.type === "complaint");
+const comparisons = data.filter(item => item.type === "compare");
+const normal = data.filter(item => !item.is_verified && item.type === "rate");
 
   list.innerHTML = `
     <div style="margin-bottom:12px;">
@@ -655,7 +652,45 @@ ${criticism.map(item => `
     </div>
   </div>
 `).join("")}
+<div style="margin-top:16px; margin-bottom:10px;">
+  <div style="font-size:12px; color:#ffcc99;">
+    Şikayetler (${complaints.length})
+  </div>
+</div>
 
+${complaints.map(item => `
+  <div style="
+    margin-bottom:8px;
+    padding:8px;
+    border-radius:8px;
+    background:rgba(120,70,20,.35);
+    border:1px solid rgba(255,180,100,.15);
+  ">
+    <div style="font-size:13px;">
+      ${item.comment || '—'}
+    </div>
+  </div>
+`).join("")}
+
+<div style="margin-top:16px; margin-bottom:10px;">
+  <div style="font-size:12px; color:#b8d7ff;">
+    Kıyaslar (${comparisons.length})
+  </div>
+</div>
+
+${comparisons.map(item => `
+  <div style="
+    margin-bottom:8px;
+    padding:8px;
+    border-radius:8px;
+    background:rgba(30,70,120,.35);
+    border:1px solid rgba(120,180,255,.15);
+  ">
+    <div style="font-size:13px;">
+      ${item.comment || '—'}
+    </div>
+  </div>
+`).join("")}
 <div style="margin-top:16px; margin-bottom:10px;">
   <div style="font-size:12px; color:rgba(255,255,255,.5);">
     Diğer yorumlar (${normal.length})
