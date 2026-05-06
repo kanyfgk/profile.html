@@ -428,23 +428,17 @@ async function saveAction(){
 console.log("ACTIVE PRODUCT:", productId);
   const { data: purchase, error: purchaseError } = await supabaseClient
   .from("vaero_customer_products")
-  .select("purchase_date")
+  .select("*")
   .eq("customer_code", activeId)
   .eq("product_id", productId)
   .maybeSingle();
 
-let bought = false;
-let isValidDate = false;
-
-if (purchase) {
-  bought = true;
-
-  const purchaseDate = new Date(purchase.purchase_date);
-  const now = new Date();
-  const diffDays = (now - purchaseDate) / (1000 * 60 * 60 * 24);
-
-  isValidDate = diffDays <= 365;
+if(purchaseError){
+  console.error("PURCHASE CHECK ERROR:", purchaseError);
 }
+
+let bought = !!purchase;
+let isValidDate = !!purchase;
 const verified = actionType === "rate" && bought && isValidDate;
   const { data: oldReview } = await supabaseClient
     .from("vaero_reviews")
