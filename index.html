@@ -196,7 +196,39 @@ BAŞVURU AÇIK
     <p id="viewerDesc"></p>
   </div>
 </div>
+<div class="overlay" id="brandModal">
+  <div class="modal">
+    <h2 id="brandTitle">Marka</h2>
 
+    <p id="brandText">
+      Marka detayları burada görünecek.
+    </p>
+
+    <div style="
+    margin-top:14px;
+    padding:12px;
+    border-radius:14px;
+    background:rgba(255,255,255,.05);
+    border:1px solid rgba(255,255,255,.08);
+    ">
+      <div style="font-size:12px;color:rgba(255,255,255,.6);">
+        Doğrulanmış Güven Skoru
+      <div style="
+margin-top:8px;
+display:flex;
+gap:8px;
+flex-wrap:wrap;
+">
+
+<div style="
+padding:5px 8px;
+border-radius:999px;
+background:rgba(230,215,176,.12);
+font-size:11px;
+color:#e6d7b0;
+">
+Verified yorumlar
+</div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 <div class="overlay" id="actionModal">
@@ -558,39 +590,6 @@ function openReviews(productId){
   document.getElementById("reviewSection").style.display = "block";
   loadReviews(productId);
 }
-  <div class="overlay" id="brandModal">
-  <div class="modal">
-    <h2 id="brandTitle">Marka</h2>
-
-    <p id="brandText">
-      Marka detayları burada görünecek.
-    </p>
-
-    <div style="
-    margin-top:14px;
-    padding:12px;
-    border-radius:14px;
-    background:rgba(255,255,255,.05);
-    border:1px solid rgba(255,255,255,.08);
-    ">
-      <div style="font-size:12px;color:rgba(255,255,255,.6);">
-        Doğrulanmış Güven Skoru
-      <div style="
-margin-top:8px;
-display:flex;
-gap:8px;
-flex-wrap:wrap;
-">
-
-<div style="
-padding:5px 8px;
-border-radius:999px;
-background:rgba(230,215,176,.12);
-font-size:11px;
-color:#e6d7b0;
-">
-Verified yorumlar
-</div>
 
 <div style="
 padding:5px 8px;
