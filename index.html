@@ -447,12 +447,12 @@ if (purchase) {
 const verified = bought && isValidDate;
   const { data: oldReview } = await supabaseClient
     .from("vaero_reviews")
-    .select("id")
+    .select("id,is_verified")
     .eq("customer_code", activeId)
     .eq("product_id", productId)
     .maybeSingle();
 
-  if(oldReview && verified){
+  if(oldReview && actionType === "rate" && verified){
     alert("Bu müşteri ID’si bu ürüne daha önce puan vermiş. Aynı ürüne ikinci kez yıldızlı yorum yapılamaz.");
     return;
   }
