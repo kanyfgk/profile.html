@@ -349,7 +349,7 @@ const verified = bought && isValidDate;
     .eq("product_id", productId)
     .maybeSingle();
 
-  if(oldReview){
+  if(oldReview && verified){
     alert("Bu müşteri ID’si bu ürüne daha önce puan vermiş. Aynı ürüne ikinci kez yıldızlı yorum yapılamaz.");
     return;
   }
@@ -410,7 +410,10 @@ for (let product in grouped) {
   const avg = ratings.reduce((a, b) => a + b, 0) / ratings.length;
 
   const card = document.querySelector(`[data-product="${product}"]`);
-
+const oldBadge = card?.querySelector(".rating-badge");
+if(oldBadge){
+  oldBadge.remove();
+}
   if (card) {
     const badge = document.createElement("div");
     badge.className = "rating-badge";
@@ -447,6 +450,14 @@ loadLiveRatings();
     <div style="margin-bottom:12px;">
       <div style="font-size:14px; color:#e6d7b0; font-weight:700;">
         ★ Onaylı Deneyimler (${verified.length})
+        <div style="
+font-size:11px;
+color:rgba(255,255,255,.55);
+margin-top:4px;
+line-height:16px;
+">
+Gerçek satın alım doğrulaması yapılmış kullanıcı yorumları.
+</div>
       </div>
     </div>
 
@@ -455,14 +466,14 @@ loadLiveRatings();
         margin-bottom:10px;
         padding:10px;
         border-radius:10px;
-        background:rgba(230,215,176,.16);
+        background:linear-gradient(145deg,rgba(230,215,176,.16),rgba(143,122,79,.18));
         border:1px solid rgba(230,215,176,.45);
       ">
         <div style="font-size:13px;">
           ${item.comment || '—'}
         </div>
         <div style="font-size:12px; margin-top:6px; color:#e6d7b0;">
-          Puan: ${item.rating}/5
+          ★ ${item.rating}/5 doğrulanmış puan
         </div>
       </div>
     `).join("")}
