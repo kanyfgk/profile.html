@@ -367,14 +367,13 @@ async function login(){
     return;
   }
 
-  if(data && data.length > 0){
   activeId = id;
-  closeIdModal();
+closeIdModal();
+
+if(data && data.length > 0){
   alert("Müşteri ID doğrulandı.");
 }else{
-  activeId = id;
-  closeIdModal();
-  alert("Bu ID sistemde görünmedi. Yorum yazabilirsiniz ama yıldızlı/doğrulanmış puan sayılmaz.");
+  alert("ID alındı. Satın alınan ürün eşleşirse doğrulanmış sayılır.");
 }
 }
 
