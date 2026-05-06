@@ -161,13 +161,19 @@ BAŞVURU AÇIK
 </div>
 
   <div class="flow-gate" onclick="openFlow()">
-    <div>
-      <b>Müşteri Akışı</b>
-      <span>Deneyim, video, eleştiri ve doğrulanmış yorum içerikleri.</span>
-    </div>
-    <div class="flow-symbol">↗️</div>
+  <div>
+    <b>Müşteri Akışı</b>
+    <span>Deneyim, video, eleştiri ve doğrulanmış yorum içerikleri.</span>
   </div>
+  <div class="flow-symbol">↗️</div>
 </div>
+
+<div id="discoverGrid" style="
+margin-top:14px;
+display:grid;
+grid-template-columns:1fr 1fr;
+gap:8px;
+"></div>
 
 <div class="full" id="flowScreen">
   <div class="full-head">
@@ -244,7 +250,24 @@ BAŞVURU AÇIK
   margin:10px 0;
   display:none;
 "></div>
-    <textarea id="actionText" placeholder="Yaz..."></textarea>
+
+<select id="experienceType">
+  <option value="">Deneyim tipi</option>
+  <option value="night_drive">Gece sürüşü</option>
+  <option value="rainy_weather">Yağmurlu hava</option>
+  <option value="long_road">Uzun yol</option>
+  <option value="first_try">İlk deneyim</option>
+  <option value="after_30_days">30 gün sonra</option>
+  <option value="daily_use">Günlük kullanım</option>
+</select>
+
+<select id="wouldBuyAgain">
+  <option value="">Tekrar alır mıydın?</option>
+  <option value="true">Evet</option>
+  <option value="false">Hayır</option>
+</select>
+
+<textarea id="actionText" placeholder="Yaz..."></textarea> 
     <div class="modal-actions">
       <button class="cancel" onclick="closeAction()">Kapat</button>
       <button class="confirm" onclick="saveAction()">Kaydet</button>
@@ -538,7 +561,12 @@ const verified = actionType === "rate" && bought && isValidDate;
         rating: actionType === "rate" ? parseInt(document.getElementById("ratingBox").value) : null,
 comment: document.getElementById("actionText").value,
 is_verified: verified,
-type: actionType
+type: actionType,
+experience_type: document.getElementById("experienceType").value || null,
+would_buy_again:
+  document.getElementById("wouldBuyAgain").value === ""
+    ? null
+    : document.getElementById("wouldBuyAgain").value === "true"
       }
     ])
     .select();
@@ -558,9 +586,12 @@ type: actionType
 }
 
   loadLiveRatings();
+  loadDiscover();
 loadReviews(productId);
 loadActionReviews(actionType);
 document.getElementById("actionText").value = "";
+  document.getElementById("experienceType").value = "";
+document.getElementById("wouldBuyAgain").value = "";
   }
   function openBrand(type){
 
@@ -689,6 +720,7 @@ if(oldTrend){
 renderProducts();
 renderFlow();
 loadLiveRatings();
+loadDiscover();
   async function loadReviews(productId){
   const { data, error } = await supabaseClient
     .from("vaero_reviews")
@@ -825,6 +857,136 @@ ${normal.map(item => `
 function openReviews(productId){
   document.getElementById("reviewSection").style.display = "block";
   loadReviews(productId);
+}
+  async function loadDiscover(){
+
+  const { data, error } = await supabaseClient
+    .from("vaero_reviews")
+    .select("*")
+    .order("id",{ascending:false})
+    .limit(200);
+
+  if(error){
+    console.error(error);
+    return;
+  }
+
+  const discover = document.getElementById("discoverGrid");
+  if(!discover) return;
+
+  const nightDrive = data.filter(x=>x.experience_type==="night_drive").length;
+  const longRoad = data.filter(x=>x.experience_type==="long_road").length;
+  const repeatBuy = data.filter(x=>x.would_buy_again===true).length;
+  const firstTry = data.filter(x=>x.experience_type==="first_try").length;
+
+  discover.innerHTML = `
+    <div style="padding:12px;border-radius:16px;background:#fff;border:1px solid #e7e2d6;">
+      <div style="font-size:11px;color:#777;">Gece sürüşü deneyimleri</div>
+      <div style="margin-top:6px;font-size:22px;font-weight:800;">${nightDrive}</div>
+    </div>
+
+    <div style="padding:12px;border-radius:16px;background:#fff;border:1px solid #e7e2d6;">
+      <div style="font-size:11px;color:#777;">Uzun yol deneyimleri</div>
+      <div style="margin-top:6px;font-size:22px;font-weight:800;">${longRoad}</div>
+    </div>
+
+    <div style="padding:12px;border-radius:16px;background:#fff;border:1px solid #e7e2d6;">
+      <div style="font-size:11px;color:#777;">Tekrar alırım diyenler</div>
+      <div style="margin-top:6px;font-size:22px;font-weight:800;">${repeatBuy}</div>
+    </div>
+
+    <div style="padding:12px;border-radius:16px;background:#fff;border:1px solid #e7e2d6;">
+      <div style="font-size:11px;color:#777;">İlk kez deneyenler</div>
+      <div style="margin-top:6px;font-size:22px;font-weight:800;">${firstTry}</div>
+    </div>
+  `;
+}
+  async function loadDiscover(){
+
+  const { data, error } = await supabaseClient
+    .from("vaero_reviews")
+    .select("*")
+    .order("id",{ascending:false})
+    .limit(200);
+
+  if(error){
+    console.error(error);
+    return;
+  }
+
+  const discover = document.getElementById("discoverGrid");
+
+  const nightDrive =
+    data.filter(x=>x.experience_type==="night_drive").length;
+
+  const longRoad =
+    data.filter(x=>x.experience_type==="long_road").length;
+
+  const repeatBuy =
+    data.filter(x=>x.would_buy_again===true).length;
+
+  const firstTry =
+    data.filter(x=>x.experience_type==="first_try").length;
+
+  discover.innerHTML = `
+
+  <div style="
+    padding:12px;
+    border-radius:16px;
+    background:#fff;
+    border:1px solid #e7e2d6;
+  ">
+    <div style="font-size:11px;color:#777;">
+      Gece sürüşü deneyimleri
+    </div>
+    <div style="margin-top:6px;font-size:22px;font-weight:800;">
+      ${nightDrive}
+    </div>
+  </div>
+
+  <div style="
+    padding:12px;
+    border-radius:16px;
+    background:#fff;
+    border:1px solid #e7e2d6;
+  ">
+    <div style="font-size:11px;color:#777;">
+      Uzun yol deneyimleri
+    </div>
+    <div style="margin-top:6px;font-size:22px;font-weight:800;">
+      ${longRoad}
+    </div>
+  </div>
+
+  <div style="
+    padding:12px;
+    border-radius:16px;
+    background:#fff;
+    border:1px solid #e7e2d6;
+  ">
+    <div style="font-size:11px;color:#777;">
+      Tekrar alırım diyenler
+    </div>
+    <div style="margin-top:6px;font-size:22px;font-weight:800;">
+      ${repeatBuy}
+    </div>
+  </div>
+
+  <div style="
+    padding:12px;
+    border-radius:16px;
+    background:#fff;
+    border:1px solid #e7e2d6;
+  ">
+    <div style="font-size:11px;color:#777;">
+      İlk kez deneyenler
+    </div>
+    <div style="margin-top:6px;font-size:22px;font-weight:800;">
+      ${firstTry}
+    </div>
+  </div>
+
+  `;
 }
   </script>
 </body>
