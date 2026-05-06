@@ -404,7 +404,10 @@ async function login(){
 
   const { data, error } = await supabaseClient
   .from("vaero_customer_products")
-  .select("*")
+  .select(`
+  *,
+  vaero_review_supports(id)
+`)
   .eq("customer_code", id);
 
   if(error){
@@ -477,7 +480,15 @@ async function loadActionReviews(type){
 
   const { data, error } = await supabaseClient
     .from("vaero_reviews")
-    .select("comment, rating, is_verified, type, product_id")
+    .select(`
+  id,
+  comment,
+  rating,
+  is_verified,
+  type,
+  product_id,
+  vaero_review_supports(id)
+`)
     .eq("product_id", activeContent.product)
     .order("id", { ascending:false })
     .limit(100);
@@ -490,6 +501,14 @@ async function loadActionReviews(type){
   }
 
   let filtered = data || [];
+  filtered.sort((a,b)=>{
+
+  const aSupports = a.vaero_review_supports?.length || 0;
+  const bSupports = b.vaero_review_supports?.length || 0;
+
+  return bSupports - aSupports;
+
+});
 
   if(type === "comment"){
 
@@ -536,6 +555,32 @@ async function loadActionReviews(type){
           ★ Doğrulanmış
         </div>
       ` : ``}
+      ${(item.vaero_review_supports?.length || 0) > 0 ? `
+<div style="
+  margin-top:7px;
+  display:inline-block;
+  padding:4px 8px;
+  border-radius:999px;
+  background:rgba(230,215,176,.12);
+  color:#e6d7b0;
+  font-size:10px;
+  font-weight:700;
+">
+  ${item.vaero_review_supports.length} kişi aynı deneyimi yaşadı
+</div>
+` : ``}
+      <button onclick="supportReview('${item.id}')" style="
+  margin-top:7px;
+  border:0;
+  border-radius:999px;
+  padding:7px 9px;
+  background:rgba(230,215,176,.14);
+  color:#e6d7b0;
+  font-size:11px;
+  font-weight:700;
+">
+  Ben de bunu yaşadım
+</button> 
     </div>
   `).join("");
 }
@@ -740,7 +785,13 @@ loadDiscover();
   async function loadReviews(productId){
   const { data, error } = await supabaseClient
     .from("vaero_reviews")
-    .select("rating, comment, is_verified, type")
+    .select(`
+rating,
+comment,
+is_verified,
+type,
+id
+`)
     .eq("product_id", productId)
     .order("is_verified", { ascending: false })
     .order("id", { ascending: false });
@@ -874,6 +925,37 @@ function openReviews(productId){
   document.getElementById("reviewSection").style.display = "block";
   loadReviews(productId);
 }
+  async function supportReview(reviewId){
+
+  if(!activeId){
+    openIdModal();
+    return;
+  }
+
+  const { error } = await supabaseClient
+    .from("vaero_review_supports")
+    .insert([
+      {
+        review_id: reviewId,
+        customer_code: activeId
+      }
+    ]);
+
+  if(error){
+
+    if(error.message.includes("duplicate")){
+      alert("Bu yorumu zaten destekledin.");
+      return;
+    }
+
+    console.error(error);
+    alert("Destek gönderilemedi.");
+    return;
+  }
+
+  alert("Deneyim desteğin kaydedildi 🔥");
+
+}
   async function loadDiscover(){
 
   const { data, error } = await supabaseClient
@@ -888,6 +970,11 @@ function openReviews(productId){
   }
 
   const discover = document.getElementById("discoverGrid");
+    const topSupported = [...data]
+  .sort((a,b)=>
+    (b.vaero_review_supports?.length || 0) -
+    (a.vaero_review_supports?.length || 0)
+  )[0];
   if(!discover) return;
 
   const nightDrive = data.filter(x=>x.experience_type==="night_drive").length;
@@ -896,6 +983,37 @@ function openReviews(productId){
   const firstTry = data.filter(x=>x.experience_type==="first_try").length;
 
   discover.innerHTML = `
+  ${topSupported ? `
+<div style="
+grid-column:1 / -1;
+padding:14px;
+border-radius:18px;
+background:#111;
+color:white;
+border:1px solid rgba(230,215,176,.25);
+">
+  <div style="font-size:11px;color:#e6d7b0;font-weight:800;">
+    TOPLULUKÇA ÖNE ÇIKAN
+  </div>
+
+  <div style="
+  margin-top:8px;
+  font-size:14px;
+  line-height:21px;
+  font-weight:600;
+  ">
+    “${topSupported.comment || 'Deneyim notu'}”
+  </div>
+
+  <div style="
+  margin-top:8px;
+  font-size:11px;
+  color:rgba(255,255,255,.6);
+  ">
+    ${topSupported.vaero_review_supports?.length || 0} kişi aynı deneyimi yaşadı
+  </div>
+</div>
+` : ``}
 
 <div onclick="openDiscoverType('night_drive','Gece sürüşü deneyimleri')" style="
 padding:12px;
@@ -1027,93 +1145,7 @@ cursor:pointer;
 
 `;
 }
-  async function loadDiscover(){
-
-  const { data, error } = await supabaseClient
-    .from("vaero_reviews")
-    .select("*")
-    .order("id",{ascending:false})
-    .limit(200);
-
-  if(error){
-    console.error(error);
-    return;
-  }
-
-  const discover = document.getElementById("discoverGrid");
-
-  const nightDrive =
-    data.filter(x=>x.experience_type==="night_drive").length;
-
-  const longRoad =
-    data.filter(x=>x.experience_type==="long_road").length;
-
-  const repeatBuy =
-    data.filter(x=>x.would_buy_again===true).length;
-
-  const firstTry =
-    data.filter(x=>x.experience_type==="first_try").length;
-
-  discover.innerHTML = `
-
-  <div style="
-    padding:12px;
-    border-radius:16px;
-    background:#fff;
-    border:1px solid #e7e2d6;
-  ">
-    <div style="font-size:11px;color:#777;">
-      Gece sürüşü deneyimleri
-    </div>
-    <div style="margin-top:6px;font-size:22px;font-weight:800;">
-      ${nightDrive}
-    </div>
-  </div>
-
-  <div style="
-    padding:12px;
-    border-radius:16px;
-    background:#fff;
-    border:1px solid #e7e2d6;
-  ">
-    <div style="font-size:11px;color:#777;">
-      Uzun yol deneyimleri
-    </div>
-    <div style="margin-top:6px;font-size:22px;font-weight:800;">
-      ${longRoad}
-    </div>
-  </div>
-
-  <div style="
-    padding:12px;
-    border-radius:16px;
-    background:#fff;
-    border:1px solid #e7e2d6;
-  ">
-    <div style="font-size:11px;color:#777;">
-      Tekrar alırım diyenler
-    </div>
-    <div style="margin-top:6px;font-size:22px;font-weight:800;">
-      ${repeatBuy}
-    </div>
-  </div>
-
-  <div style="
-    padding:12px;
-    border-radius:16px;
-    background:#fff;
-    border:1px solid #e7e2d6;
-  ">
-    <div style="font-size:11px;color:#777;">
-      İlk kez deneyenler
-    </div>
-    <div style="margin-top:6px;font-size:22px;font-weight:800;">
-      ${firstTry}
-    </div>
-  </div>
-
-  `;
-}
+  
   </script>
 </body>
 </html>
