@@ -458,7 +458,8 @@ const verified = actionType === "rate" && bought && isValidDate;
         product_id: productId,
         rating: parseInt(document.getElementById("ratingBox").value),
 comment: document.getElementById("actionText").value,
-        is_verified: verified
+        is_verified: verified,
+type: actionType
       }
     ])
     .select();
