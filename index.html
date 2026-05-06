@@ -239,7 +239,7 @@ BAŞVURU AÇIK
       <option value="1">1 yıldız</option>
     </select>
     <div id="actionReviewList" style="
-  max-height:180px;
+  max-height:42vh;
   overflow:auto;
   margin:10px 0;
   display:none;
@@ -441,7 +441,7 @@ async function loadActionReviews(type){
     .select("comment, rating, is_verified, type, product_id")
     .eq("product_id", activeContent.product)
     .order("id", { ascending:false })
-    .limit(20);
+    .limit(100);
 
   if(error){
     console.error("ACTION REVIEWS ERROR:", error);
@@ -453,12 +453,16 @@ async function loadActionReviews(type){
   let filtered = data || [];
 
   if(type === "comment"){
-    filtered = filtered.filter(item =>
-      item.type === "comment" || item.type === "yorum" || !item.type
-    );
-  }else{
-    filtered = filtered.filter(item => item.type === type);
-  }
+
+  filtered = filtered.filter(item =>
+    item.comment && item.comment.trim() !== ""
+  );
+
+}else{
+
+  filtered = filtered.filter(item => item.type === type);
+
+}
 
   box.style.display = "block";
 
