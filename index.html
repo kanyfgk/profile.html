@@ -174,7 +174,23 @@ display:grid;
 grid-template-columns:1fr 1fr;
 gap:8px;
 "></div>
+<div id="discoverModal" class="overlay">
+  <div class="modal">
+    <h2 id="discoverTitle">Keşfet</h2>
+    <p id="discoverHint">Bu başlıktaki deneyim notları.</p>
 
+    <div id="discoverList" style="
+      max-height:45vh;
+      overflow:auto;
+      margin-top:12px;
+    "></div>
+
+    <div class="modal-actions">
+      <button class="cancel" onclick="closeDiscover()">Kapat</button>
+      <button class="confirm" onclick="openFlow()">Akışa Git</button>
+    </div>
+  </div>
+</div>
 <div class="full" id="flowScreen">
   <div class="full-head">
     <button class="back" onclick="closeFlow()">‹</button>
@@ -880,26 +896,136 @@ function openReviews(productId){
   const firstTry = data.filter(x=>x.experience_type==="first_try").length;
 
   discover.innerHTML = `
-    <div style="padding:12px;border-radius:16px;background:#fff;border:1px solid #e7e2d6;">
-      <div style="font-size:11px;color:#777;">Gece sürüşü deneyimleri</div>
-      <div style="margin-top:6px;font-size:22px;font-weight:800;">${nightDrive}</div>
-    </div>
 
-    <div style="padding:12px;border-radius:16px;background:#fff;border:1px solid #e7e2d6;">
-      <div style="font-size:11px;color:#777;">Uzun yol deneyimleri</div>
-      <div style="margin-top:6px;font-size:22px;font-weight:800;">${longRoad}</div>
-    </div>
+<div onclick="openDiscoverType('night_drive','Gece sürüşü deneyimleri')" style="
+padding:12px;
+border-radius:16px;
+background:#fff;
+border:1px solid #e7e2d6;
+cursor:pointer;
+">
+  <div style="font-size:11px;color:#777;">
+    Gece sürüşü deneyimleri
+  </div>
 
-    <div style="padding:12px;border-radius:16px;background:#fff;border:1px solid #e7e2d6;">
-      <div style="font-size:11px;color:#777;">Tekrar alırım diyenler</div>
-      <div style="margin-top:6px;font-size:22px;font-weight:800;">${repeatBuy}</div>
-    </div>
+  <div style="
+    margin-top:10px;
+    font-size:13px;
+    line-height:19px;
+    font-weight:600;
+  ">
+    ${nightDrive > 0
+      ? `"Gece sürüşünde ortam resmen değişiyor."`
+      : `Henüz deneyim yok.`}
+  </div>
 
-    <div style="padding:12px;border-radius:16px;background:#fff;border:1px solid #e7e2d6;">
-      <div style="font-size:11px;color:#777;">İlk kez deneyenler</div>
-      <div style="margin-top:6px;font-size:22px;font-weight:800;">${firstTry}</div>
-    </div>
-  `;
+  <div style="
+    margin-top:10px;
+    font-size:11px;
+    color:#8f7a4f;
+    font-weight:700;
+  ">
+    ${nightDrive} deneyim →
+  </div>
+</div>
+
+<div onclick="openDiscoverType('long_road','Uzun yol deneyimleri')" style="
+padding:12px;
+border-radius:16px;
+background:#fff;
+border:1px solid #e7e2d6;
+cursor:pointer;
+">
+  <div style="font-size:11px;color:#777;">
+    Uzun yol deneyimleri
+  </div>
+
+  <div style="
+    margin-top:10px;
+    font-size:13px;
+    line-height:19px;
+    font-weight:600;
+  ">
+    ${longRoad > 0
+      ? `"Uzun yolda Shangrila baş ağrıtmadı."`
+      : `Henüz deneyim yok.`}
+  </div>
+
+  <div style="
+    margin-top:10px;
+    font-size:11px;
+    color:#8f7a4f;
+    font-weight:700;
+  ">
+    ${longRoad} deneyim →
+  </div>
+</div>
+
+<div onclick="openDiscoverType('buy_again','Tekrar alırım diyenler')" style="
+padding:12px;
+border-radius:16px;
+background:#fff;
+border:1px solid #e7e2d6;
+cursor:pointer;
+">
+  <div style="font-size:11px;color:#777;">
+    Tekrar alırım diyenler
+  </div>
+
+  <div style="
+    margin-top:10px;
+    font-size:13px;
+    line-height:19px;
+    font-weight:600;
+  ">
+    ${repeatBuy > 0
+      ? `"White Tea kullandıktan sonra sigara kokusuna tahammül edemiyorum."`
+      : `Henüz deneyim yok.`}
+  </div>
+
+  <div style="
+    margin-top:10px;
+    font-size:11px;
+    color:#8f7a4f;
+    font-weight:700;
+  ">
+    ${repeatBuy} deneyim →
+  </div>
+</div>
+
+<div onclick="openDiscoverType('first_try','İlk kez deneyenler')" style="
+padding:12px;
+border-radius:16px;
+background:#fff;
+border:1px solid #e7e2d6;
+cursor:pointer;
+">
+  <div style="font-size:11px;color:#777;">
+    İlk kez deneyenler
+  </div>
+
+  <div style="
+    margin-top:10px;
+    font-size:13px;
+    line-height:19px;
+    font-weight:600;
+  ">
+    ${firstTry > 0
+      ? `"Babam bile cihazı sordu."`
+      : `Henüz deneyim yok.`}
+  </div>
+
+  <div style="
+    margin-top:10px;
+    font-size:11px;
+    color:#8f7a4f;
+    font-weight:700;
+  ">
+    ${firstTry} deneyim →
+  </div>
+</div>
+
+`;
 }
   async function loadDiscover(){
 
