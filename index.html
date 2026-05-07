@@ -800,6 +800,15 @@ left:160%;
   *{
 -webkit-tap-highlight-color:transparent;
 }
+  body.modal-open .app,
+body.modal-open .bottom-nav{
+transform:scale(.985);
+filter:blur(1.5px);
+transition:
+transform .28s ease,
+filter .28s ease,
+opacity .28s ease;
+}
 </style>
 </head>
 
@@ -2184,11 +2193,17 @@ function closeCommunity(){
   setActiveNav("home");
 }
   function lockBody(){
+
   document.body.style.overflow = "hidden";
+
+  document.body.classList.add("modal-open");
 }
 
 function unlockBody(){
+
   document.body.style.overflow = "";
+
+  document.body.classList.remove("modal-open");
 }
   </script>
   
