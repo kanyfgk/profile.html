@@ -9,7 +9,42 @@
 
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
-body{background:#f3f2ee;color:#1a1a1a;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif}
+body{
+background:#f3f2ee;
+color:#1a1a1a;
+
+font-family:
+-apple-system,
+BlinkMacSystemFont,
+"Segoe UI",
+Arial,
+sans-serif;
+
+position:relative;
+overflow-x:hidden;
+}
+  body:before{
+content:"";
+
+position:fixed;
+top:-20%;
+left:-20%;
+
+width:70vw;
+height:70vw;
+
+background:
+radial-gradient(
+circle,
+rgba(230,215,176,.12),
+transparent 60%
+);
+
+pointer-events:none;
+z-index:-1;
+
+animation:ambientMove 18s ease-in-out infinite alternate;
+}
 .app{max-width:560px;margin:0 auto;padding:18px 12px 90px}
 .brand-head{display:flex;align-items:center;gap:14px;margin-bottom:18px}
 .mark{width:58px;height:58px;border-radius:50%;background:#8f7a4f;color:white;font-family:"Oswald";display:flex;align-items:center;justify-content:center;font-size:26px}
@@ -22,7 +57,60 @@ body{background:#f3f2ee;color:#1a1a1a;font-family:-apple-system,BlinkMacSystemFo
 .notice{padding:12px 14px;border-radius:16px;background:#f7f5ef;color:#8f7a4f;border:1px solid #e4e1d8;font-size:12px;line-height:19px;margin-bottom:14px}
 .section-label{font-size:12px;letter-spacing:1px;color:rgba(230,215,176,.9);margin:16px 0 9px}
 .product-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:5px}
-.product-tile{aspect-ratio:1/1.12;border:1px solid #e4e1d8;box-shadow:0 4px 12px rgba(0,0,0,0.03);border-radius:9px;background:#ffffff;color:#1a1a1a;position:relative;overflow:hidden;text-align:left;padding:8px;cursor:pointer}
+.product-tile{
+aspect-ratio:1/1.12;
+border:1px solid #e4e1d8;
+
+box-shadow:
+0 4px 12px rgba(0,0,0,0.03);
+
+border-radius:12px;
+
+background:#ffffff;
+color:#1a1a1a;
+
+position:relative;
+overflow:hidden;
+text-align:left;
+padding:8px;
+cursor:pointer;
+
+transition:
+transform .22s ease,
+box-shadow .22s ease,
+border-color .22s ease;
+}
+  .product-tile:before{
+content:"";
+
+position:absolute;
+inset:-40%;
+
+background:
+radial-gradient(
+circle at top right,
+rgba(230,215,176,.22),
+transparent 32%
+);
+
+opacity:0;
+transition:opacity .22s ease;
+
+pointer-events:none;
+}
+
+.product-tile:active{
+transform:scale(.975);
+
+border-color:rgba(230,215,176,.35);
+
+box-shadow:
+0 10px 24px rgba(0,0,0,.08);
+}
+
+.product-tile:active:before{
+opacity:1;
+}
   .product-tile.brand-box{
 background:linear-gradient(145deg,#ffffff,#f6f1e7);
 border:1px solid rgba(143,122,79,.22);
@@ -147,7 +235,21 @@ rgba(0,0,0,.55)
 pointer-events:none;
 }
 .close-view{position:absolute;top:16px;left:12px;width:42px;height:42px;border-radius:50%;border:0;background:rgba(0,0,0,.35);color:white;font-size:24px;z-index:3}
-.content-info{position:absolute;left:16px;right:78px;bottom:22px;z-index:2}
+.content-info{
+position:absolute;
+left:16px;
+right:78px;
+bottom:22px;
+z-index:2;
+
+opacity:0;
+transform:translateY(12px);
+
+animation:
+viewerTextIn .42s ease forwards;
+
+animation-delay:.12s;
+}
 .content-info .verified{color:#e6d7b0;font-size:12px;margin-bottom:8px}
 .content-info b{display:block;font-size:16px;margin-bottom:6px}
 .content-info p{font-size:13px;line-height:20px;color:rgba(255,255,255,.76)}
@@ -557,6 +659,25 @@ filter:brightness(1.04);
 to{
 opacity:1;
 transform:translateY(0);
+}
+
+}
+  @keyframes viewerTextIn{
+
+to{
+opacity:1;
+transform:translateY(0);
+}
+
+}
+  @keyframes ambientMove{
+
+0%{
+transform:translate(0,0) scale(1);
+}
+
+100%{
+transform:translate(40px,30px) scale(1.08);
 }
 
 }
