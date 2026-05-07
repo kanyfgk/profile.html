@@ -108,6 +108,97 @@ grid-template-columns:1fr 1fr;
 #idModal .confirm{
 white-space:nowrap;
 }
+  .profile-screen{
+  position:fixed;
+  inset:0;
+  background:#06101a;
+  color:white;
+  display:none;
+  z-index:120;
+  overflow-y:auto;
+}
+
+.profile-screen.show{display:block}
+
+.profile-wrap{
+  max-width:560px;
+  margin:0 auto;
+  padding:18px 14px 90px;
+}
+
+.profile-top{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  margin-bottom:22px;
+}
+
+.profile-card{
+  border:1px solid rgba(230,215,176,.18);
+  background:linear-gradient(145deg,rgba(255,255,255,.06),rgba(255,255,255,.02));
+  border-radius:24px;
+  padding:18px;
+  margin-bottom:14px;
+}
+
+.profile-name{
+  font-family:"Oswald";
+  font-size:38px;
+  letter-spacing:2px;
+}
+
+.profile-stats{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:8px;
+  margin-top:16px;
+}
+
+.profile-stat{
+  background:rgba(255,255,255,.05);
+  border-radius:16px;
+  padding:12px;
+  font-size:12px;
+}
+
+.profile-stat b{
+  display:block;
+  color:#e6d7b0;
+  font-size:20px;
+  margin-bottom:4px;
+}
+
+.mode-create{
+  border:1px solid rgba(230,215,176,.35);
+  background:radial-gradient(circle at 75% 30%,rgba(230,215,176,.18),transparent 35%),#091724;
+  border-radius:26px;
+  padding:20px;
+  margin-top:18px;
+}
+
+.mode-create h3{
+  font-family:"Oswald";
+  font-size:28px;
+  letter-spacing:1px;
+  margin-bottom:8px;
+}
+
+.mode-create p{
+  font-size:13px;
+  color:rgba(255,255,255,.68);
+  line-height:21px;
+}
+
+.mode-btn{
+  margin-top:16px;
+  width:100%;
+  border:0;
+  border-radius:18px;
+  padding:15px;
+  background:#e6d7b0;
+  color:#07111d;
+  font-weight:800;
+}
 </style>
 </head>
 
@@ -309,7 +400,48 @@ gap:8px;
     </div>
   </div>
 </div>
-  
+  <div class="profile-screen" id="profileScreen">
+  <div class="profile-wrap">
+    <div class="profile-top">
+      <button class="back" onclick="closeProfile()">‹</button>
+      <div style="font-family:Oswald;letter-spacing:4px;">PROFİLİM</div>
+      <button class="back" onclick="openIdModal()">ID</button>
+    </div>
+
+    <div class="profile-card">
+      <div style="color:#e6d7b0;font-size:12px;">DOĞRULANMIŞ PROFİL</div>
+      <div class="profile-name" id="profileName">VA-001</div>
+      <p style="color:rgba(255,255,255,.65);line-height:22px;margin-top:8px;">
+        Deneyim paylaş, vizyon üret, topluluğun içinde değer kazan.
+      </p>
+
+      <div class="profile-stats">
+        <div class="profile-stat"><b>7</b>Seviye</div>
+        <div class="profile-stat"><b>246</b>Topluluk</div>
+        <div class="profile-stat"><b>98%</b>Doğrulanmış</div>
+      </div>
+    </div>
+
+    <div class="profile-card">
+      <div style="color:#e6d7b0;font-size:12px;letter-spacing:2px;margin-bottom:10px;">SON AKTİVİTE</div>
+      <p style="font-size:13px;color:rgba(255,255,255,.7);line-height:22px;">
+        White Tea deneyimi paylaşıldı.<br>
+        Topluluğa yeni yorum eklendi.<br>
+        Marka anketine katılım sağlandı.
+      </p>
+    </div>
+
+    <div class="mode-create" onclick="openModeCreate()">
+      <div style="color:#e6d7b0;font-size:11px;letter-spacing:2px;">MODA YARAT</div>
+      <h3>Vizyonunu yarat, dünyaya göster.</h3>
+      <p>
+        ID’si olan herkes dijital moda veya ürün vizyonu hazırlayabilir.
+        Beğenilirse keşfete çıkar, ister açık artırma ister global deneme ile ilerler.
+      </p>
+      <button class="mode-btn">Yaratmaya Başla →</button>
+    </div>
+  </div>
+</div>
 <div class="overlay" id="actionModal">
   <div class="modal">
     <h2 id="actionTitle">İşlem</h2>
@@ -357,7 +489,7 @@ gap:8px;
 <script>
 const SUPABASE_URL = "https://wpfiszzxlwkmaqcqmywa.supabase.co";
 const SUPABASE_KEY = "sb_publishable_eTspasegbb8PbX2hEGMD5w_ggrWRuYN";
-
+  
 const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 const products=[
@@ -481,7 +613,11 @@ async function login(){
 closeIdModal();
 
 if(data && data.length > 0){
+
   alert("Müşteri ID doğrulandı.");
+
+  openProfile();
+
 }else{
   alert("ID alındı. Satın alınan ürün eşleşirse doğrulanmış sayılır.");
 }
@@ -1270,6 +1406,17 @@ function finishIdFocus(){
 
 function closeDiscover(){
   document.getElementById("discoverModal").classList.remove("show");
+}
+  function openProfile(){
+  document.getElementById("profileScreen").classList.add("show");
+}
+
+function closeProfile(){
+  document.getElementById("profileScreen").classList.remove("show");
+}
+
+function openModeCreate(){
+  alert("Moda Yarat stüdyosu sonraki aşamada açılacak.");
 }
   </script>
 </body>
