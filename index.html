@@ -1471,10 +1471,7 @@ async function login(){
 
   const { data, error } = await supabaseClient
   .from("vaero_customer_products")
-  .select(`
-*,
-vaero_review_supports(id)
-`)
+  .select("*")
   .eq("customer_code", id);
 
   if(error){
@@ -1509,7 +1506,10 @@ function closeViewer(){
 
   viewer.classList.remove("show");
 
-  function unlockBody(){
+  setTimeout(()=>{
+    unlockBody();
+  },240);
+}
 
 const anyOpen =
 document.querySelector(".overlay.show") ||
@@ -1690,6 +1690,12 @@ console.log("PURCHASE ERROR:", purchaseError);
 let bought = purchases && purchases.length > 0;
 let isValidDate = bought;
 const verified = actionType === "rate" && bought && isValidDate;
+  const wouldBuyAgainValue = document.getElementById("wouldBuyAgain").value;
+
+const wouldBuyAgain =
+  wouldBuyAgainValue === ""
+    ? null
+    : wouldBuyAgainValue === "true";
   const { data: oldReview } = await supabaseClient
     .from("vaero_reviews")
     .select("id,is_verified")
@@ -1713,13 +1719,7 @@ comment: document.getElementById("actionText").value,
 is_verified: verified,
 type: actionType,
 experience_type: document.getElementById("experienceType").value || null,
-const wouldBuyAgainValue =
-document.getElementById("wouldBuyAgain").value;
-
-const wouldBuyAgain =
-wouldBuyAgainValue === ""
-? null
-: wouldBuyAgainValue === "true";
+        would_buy_again: wouldBuyAgain
       }
     ])
     .select();
@@ -2412,8 +2412,15 @@ function closeCommunity(){
 
 function unlockBody(){
 
-  document.body.style.overflow = "";
+  const anyOpen =
+    document.querySelector(".overlay.show") ||
+    document.querySelector(".viewer.show") ||
+    document.querySelector(".full.show") ||
+    document.querySelector(".profile-screen.show");
 
+  if(anyOpen) return;
+
+  document.body.style.overflow = "";
   document.body.classList.remove("modal-open");
 }
   </script>
