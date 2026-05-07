@@ -1608,6 +1608,7 @@ function openProfile(){
 
 function closeProfile(){
   document.getElementById("profileScreen").classList.remove("show");
+  setActiveNav("home");
 }
 
 function openModeCreate(){
@@ -1621,6 +1622,7 @@ function openBrandHub(){
 
 function closeBrandHub(){
   document.getElementById("brandHubScreen").classList.remove("show");
+  setActiveNav("home");
 }
 
 function openCommunity(){
@@ -1629,6 +1631,7 @@ function openCommunity(){
 }
 function closeCommunity(){
   document.getElementById("communityScreen").classList.remove("show");
+  setActiveNav("home");
 }
   function setActiveNav(name){
   document.querySelectorAll(".nav-btn").forEach(btn=>{
