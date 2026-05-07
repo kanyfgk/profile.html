@@ -943,23 +943,7 @@ left:160%;
   *{
 -webkit-tap-highlight-color:transparent;
 }
-  body.modal-open .app{
-transform:scale(.985);
-filter:blur(1.5px);
-transition:
-transform .28s ease,
-filter .28s ease,
-opacity .28s ease;
-}
-
-body.modal-open .bottom-nav{
-transform:translateX(-50%) scale(.985);
-filter:blur(1.5px);
-transition:
-transform .28s ease,
-filter .28s ease,
-opacity .28s ease;
-}
+  
   @keyframes navFloat{
 
 0%{
@@ -1162,7 +1146,7 @@ gap:8px;
     <h2>Müşteri ID</h2>
     <p>Yorum, puanlama ve doğrulanmış eleştiri için müşteri ID ile devam et.</p>
 
-    <input id="customerId" placeholder="Örn: VA-001" onclick="openIdFocus()" onfocus="openIdFocus()" autocomplete="off" autocapitalize="characters">
+    <input id="customerId" placeholder="Örn: VA-001" autocomplete="off" autocapitalize="characters">
 
     <div class="modal-actions">
       <button class="cancel" onclick="closeIdModal()">Kapat</button>
@@ -1455,10 +1439,11 @@ function openIdModal(){
   
 
 function closeIdModal(){
-
-  unlockBody();
-
   document.getElementById("idModal").classList.remove("show");
+
+  setTimeout(()=>{
+    unlockBody();
+  },250);
 }
 
 async function login(){
@@ -1542,10 +1527,11 @@ function openAction(type){
   document.getElementById("actionModal").classList.add("show");
 }
 function closeAction(){
-
-  unlockBody();
-
   document.getElementById("actionModal").classList.remove("show");
+
+  setTimeout(()=>{
+    unlockBody();
+  },250);
 }
 async function loadActionReviews(type){
   const box = document.getElementById("actionReviewList");
@@ -2235,6 +2221,10 @@ cursor:pointer;
 
 function closeIdFocus(){
   document.getElementById("idFocusModal").classList.remove("show");
+
+  setTimeout(()=>{
+    unlockBody();
+  },250);
 }
 
 function finishIdFocus(){
