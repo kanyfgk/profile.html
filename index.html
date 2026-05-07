@@ -52,7 +52,29 @@ transform:translateY(0);
 .back{border:0;background:rgba(255,255,255,.08);color:white;width:40px;height:40px;border-radius:50%;font-size:22px}
 .full-title{font-family:"Oswald";font-size:25px;letter-spacing:3px}
 .flow-grid{max-width:560px;margin:0 auto;padding:0 12px 90px;display:grid;grid-template-columns:repeat(3,1fr);gap:5px}
-.flow-tile{aspect-ratio:1/1.38;border:0;border-radius:9px;background:linear-gradient(145deg,#102033,#3d5870);position:relative;color:white;text-align:left;padding:8px;overflow:hidden;cursor:pointer}
+.flow-tile{
+aspect-ratio:1/1.38;
+border:1px solid rgba(255,255,255,.06);
+border-radius:12px;
+background:
+linear-gradient(145deg,#102033,#3d5870);
+position:relative;
+color:white;
+text-align:left;
+padding:8px;
+overflow:hidden;
+cursor:pointer;
+
+transition:
+transform .22s ease,
+border-color .22s ease,
+box-shadow .22s ease;
+}
+  .flow-tile:active{
+transform:scale(.97);
+border-color:rgba(230,215,176,.28);
+box-shadow:0 0 22px rgba(230,215,176,.12);
+
 .flow-tile:before{content:"";position:absolute;inset:16%;border-radius:28px;background:radial-gradient(circle at 50% 24%,rgba(230,215,176,.42),transparent 28%)}
 .flow-tile .type{position:absolute;top:7px;left:7px;background:rgba(0,0,0,.34);border-radius:999px;padding:3px 6px;font-size:9px;color:#e6d7b0;z-index:2}
 .flow-tile b{position:absolute;left:8px;bottom:25px;font-size:11px;z-index:2}
@@ -307,22 +329,39 @@ border-color:rgba(230,215,176,.38);
   .bottom-nav{
 position:fixed;
 left:50%;
-transform:translateX(-50%);    
-right:0;
+transform:translateX(-50%);
 bottom:14px;
+
 width:calc(100% - 22px);
-max-width:560px;    
-height:74px;
-border-radius:26px;    
-background:rgba(7,17,29,.92);
-backdrop-filter:blur(18px);
-border:1px solid rgba(230,215,176,.08);    
-border-top:1px solid rgba(230,215,176,.08);
+max-width:560px;
+height:78px;
+
+border-radius:28px;
+
+background:
+linear-gradient(
+180deg,
+rgba(255,255,255,.08),
+rgba(255,255,255,.02)
+),
+rgba(7,17,29,.78);
+
+backdrop-filter:blur(24px);
+-webkit-backdrop-filter:blur(24px);
+
+border:1px solid rgba(255,255,255,.08);
+
 display:flex;
 justify-content:space-around;
 align-items:center;
+
 z-index:120;
-box-shadow:0 10px 40px rgba(0,0,0,.35);    
+
+box-shadow:
+0 10px 40px rgba(0,0,0,.35),
+0 0 0 1px rgba(255,255,255,.03) inset;
+
+overflow:hidden;
 }
 
 .nav-btn{
@@ -333,7 +372,10 @@ font-size:10px;
 display:flex;
 flex-direction:column;
 align-items:center;
-gap:50px;
+justify-content:center;
+gap:4px;
+height:100%;
+min-width:58px;
 }
 
 .nav-btn.active{
@@ -341,14 +383,15 @@ color:#e6d7b0;
 }
 
 .nav-icon{
-width:34px;
-height:34px;
-border-radius:12px;
+width:38px;
+height:38px;
+border-radius:14px;
 display:flex;
 align-items:center;
 justify-content:center;
-background:rgba(255,255,255,.04);
-font-size:16px;
+background:rgba(255,255,255,.045);
+font-size:17px;
+backdrop-filter:blur(10px);
 }
   .nav-btn{
 transition:
@@ -438,6 +481,20 @@ opacity:.8;
 
 .bottom-nav{
 overflow:hidden;
+}
+  button, a{
+-webkit-tap-highlight-color:transparent;
+}
+
+button{
+transition:
+transform .18s ease,
+filter .18s ease;
+}
+
+button:active{
+transform:scale(.97);
+filter:brightness(1.04);
 }
 </style>
 </head>
@@ -938,9 +995,11 @@ function openViewer(contentId){
 
 function closeViewer(){
 
-  unlockBody();
-
   viewer.classList.remove("show");
+
+  setTimeout(()=>{
+    unlockBody();
+  },240);
 }
 
 function openAction(type){
