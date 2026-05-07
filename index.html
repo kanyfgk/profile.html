@@ -56,7 +56,7 @@ border:1px solid rgba(143,122,79,.22);
 .act{width:49px;height:49px;border-radius:50%;border:1px solid rgba(255,255,255,.14);background:rgba(0,0,0,.32);color:white;font-size:19px;display:flex;align-items:center;justify-content:center}
 .act-label{font-size:9px;color:rgba(255,255,255,.7);margin-top:4px}
 
-.overlay{position:fixed;inset:0;background:rgba(0,0,0,.68);display:none;align-items:center;justify-content:center;padding:18px;z-index:90}
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.68);display:none;align-items:center;justify-content:center;padding:18px;z-index:200}
 .overlay.show{display:flex}
 .modal{width:100%;max-width:410px;background:#101b28;border:1px solid rgba(255,255,255,.14);border-radius:22px;padding:22px}
 .modal h2{font-family:"Oswald";font-size:29px;margin-bottom:7px}
@@ -116,11 +116,10 @@ color:white;
 z-index:120;
 overflow-y:auto;
 
-opacity:1;
-pointer-events:auto;
-transform:translateY(0) scale(1);
-transition:
-opacity .34s ease,
+opacity:0;
+pointer-events:none;
+transform:translateY(18px) scale(.985);
+transition:opacity .34s ease,
 transform .34s ease;
 }
 
@@ -786,10 +785,7 @@ async function login(){
 
   const { data, error } = await supabaseClient
   .from("vaero_customer_products")
-  .select(`
-  *,
-  vaero_review_supports(id)
-`)
+  .select("*")
   .eq("customer_code", id);
 
   if(error){
