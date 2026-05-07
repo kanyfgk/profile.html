@@ -157,7 +157,9 @@ border:1px solid rgba(143,122,79,.22);
 }
 .flow-gate{margin-top:18px;border-radius:20px;padding:16px;background:linear-gradient(145deg,rgba(230,215,176,.13),rgba(255,255,255,.055));border:1px solid rgba(230,215,176,.18);display:flex;align-items:center;justify-content:space-between;gap:12px;cursor:pointer}
 .flow-gate b{display:block;font-size:15px;margin-bottom:4px}
-.flow-gate span{font-size:12px;color:rgba(255,255,255,.62);line-height:18px}
+.flow-gate span{
+color:#6f6758;
+}
 .flow-symbol{width:48px;height:48px;border-radius:50%;background:#e6d7b0;color:#07111d;display:flex;align-items:center;justify-content:center;font-weight:800}
 
 .full{
@@ -219,6 +221,7 @@ box-shadow .22s ease;
 transform:scale(.97);
 border-color:rgba(230,215,176,.28);
 box-shadow:0 0 22px rgba(230,215,176,.12);
+}
 
 .flow-tile:before{content:"";position:absolute;inset:16%;border-radius:28px;background:radial-gradient(circle at 50% 24%,rgba(230,215,176,.42),transparent 28%)}
  .flow-tile:after{
@@ -247,18 +250,23 @@ position:fixed;
 inset:0;
 
 background:
-radial-gradient(
-circle at center,
-rgba(255,255,255,.03),
-transparent 45%
-),
+radial-gradient(circle at center,rgba(255,255,255,.03),transparent 45%),
 #05080d;
 
 z-index:70;
 color:white;
- .viewer:before{
-content:"";
 
+opacity:0;
+pointer-events:none;
+transform:scale(1.02);
+
+transition:
+opacity .24s ease,
+transform .24s ease;
+}
+
+.viewer:before{
+content:"";
 position:absolute;
 inset:0;
 
@@ -273,15 +281,8 @@ rgba(0,0,0,.42)
 
 pointer-events:none;
 z-index:1;
-} 
-opacity:0;
-pointer-events:none;
-transform:scale(1.02);
-
-transition:
-opacity .24s ease,
-transform .24s ease;
 }
+
 .viewer.show{
 opacity:1;
 pointer-events:auto;
@@ -605,26 +606,29 @@ transform:translateY(0) scale(1);
 }
 
 .profile-card{
-  border:1px solid rgba(230,215,176,.18);
-  background:linear-gradient(145deg,rgba(255,255,255,.06),rgba(255,255,255,.02));
-  
-  border-radius:24px;
-  padding:18px;
-  margin-bottom:14px;
-  transition:transform .22s ease, border-color .22s ease, background .22s ease;
-  position:relative;
-  overflow:hidden;
-  opacity:0;
+border:1px solid rgba(230,215,176,.18);
+background:linear-gradient(145deg,rgba(255,255,255,.06),rgba(255,255,255,.02));
+
+border-radius:24px;
+padding:18px;
+margin-bottom:14px;
+
+transition:transform .22s ease, border-color .22s ease, background .22s ease;
+
+position:relative;
+overflow:hidden;
+
+opacity:0;
 transform:translateY(18px);
 
 animation:profileCardIn .5s ease forwards;
 }
 
 .profile-card:before{
-
 content:"";
 position:absolute;
 inset:-40%;
+
 background:radial-gradient(
 circle at 50% 50%,
 rgba(230,215,176,.08),
@@ -634,14 +638,12 @@ transparent 40%
 opacity:0;
 transition:opacity .25s ease;
 pointer-events:none;
-
 }
 
 .profile-card:active:before{
 opacity:1;
-}  
 }
-  
+ 
 .profile-card:active{
 
 transform:scale(.985);
@@ -941,9 +943,17 @@ left:160%;
   *{
 -webkit-tap-highlight-color:transparent;
 }
-  body.modal-open .app,
-body.modal-open .bottom-nav{
+  body.modal-open .app{
 transform:scale(.985);
+filter:blur(1.5px);
+transition:
+transform .28s ease,
+filter .28s ease,
+opacity .28s ease;
+}
+
+body.modal-open .bottom-nav{
+transform:translateX(-50%) scale(.985);
 filter:blur(1.5px);
 transition:
 transform .28s ease,
@@ -1066,7 +1076,7 @@ BAŞVURU AÇIK
   <div class="product-grid" id="productGrid"></div>
 
 <div id="reviewSection" style="display:none; margin-top:20px;">
-  <div id="reviewList"></div>
+  <div id="reviewSectionList"></div>
 </div>
 
   <div class="flow-gate" onclick="openFlow()">
@@ -1461,7 +1471,10 @@ async function login(){
 
   const { data, error } = await supabaseClient
   .from("vaero_customer_products")
-  .select("*")
+  .select(`
+*,
+vaero_review_supports(id)
+`)
   .eq("customer_code", id);
 
   if(error){
@@ -1496,9 +1509,18 @@ function closeViewer(){
 
   viewer.classList.remove("show");
 
-  setTimeout(()=>{
-    unlockBody();
-  },240);
+  function unlockBody(){
+
+const anyOpen =
+document.querySelector(".overlay.show") ||
+document.querySelector(".viewer.show") ||
+document.querySelector(".full.show") ||
+document.querySelector(".profile-screen.show");
+
+if(anyOpen) return;
+
+document.body.style.overflow = "";
+document.body.classList.remove("modal-open");
 }
 
 function openAction(type){
@@ -1691,10 +1713,13 @@ comment: document.getElementById("actionText").value,
 is_verified: verified,
 type: actionType,
 experience_type: document.getElementById("experienceType").value || null,
-would_buy_again:
-  document.getElementById("wouldBuyAgain").value === ""
-    ? null
-    : document.getElementById("wouldBuyAgain").value === "true"
+const wouldBuyAgainValue =
+document.getElementById("wouldBuyAgain").value;
+
+const wouldBuyAgain =
+wouldBuyAgainValue === ""
+? null
+: wouldBuyAgainValue === "true";
       }
     ])
     .select();
