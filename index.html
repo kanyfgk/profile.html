@@ -1511,18 +1511,6 @@ function closeViewer(){
   },240);
 }
 
-const anyOpen =
-document.querySelector(".overlay.show") ||
-document.querySelector(".viewer.show") ||
-document.querySelector(".full.show") ||
-document.querySelector(".profile-screen.show");
-
-if(anyOpen) return;
-
-document.body.style.overflow = "";
-document.body.classList.remove("modal-open");
-}
-
 function openAction(type){
   if(!activeId){
     openIdModal();
