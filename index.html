@@ -22,6 +22,10 @@ sans-serif;
 
 position:relative;
 overflow-x:hidden;
+
+ -webkit-font-smoothing:antialiased;
+-moz-osx-font-smoothing:grayscale;
+scroll-behavior:smooth;
 }
   body:before{
 content:"";
@@ -321,16 +325,44 @@ textarea{min-height:88px}
 .confirm{background:#e6d7b0;color:#07111d;font-weight:800}
 .cancel{background:rgba(255,255,255,.09);color:white}
   .rating-badge{
-  position:absolute;
-  top:8px;
-  left:8px;
-  background:#8f7a4f;
-  color:white;
-  border-radius:999px;
-  padding:4px 7px;
-  font-size:10px;
-  font-weight:700;
-  z-index:5;
+position:absolute;
+top:8px;
+left:8px;
+
+background:#8f7a4f;
+color:white;
+
+border-radius:999px;
+padding:4px 7px;
+
+font-size:10px;
+font-weight:700;
+
+z-index:5;
+
+overflow:hidden;
+}
+    .rating-badge:after{
+content:"";
+
+position:absolute;
+top:0;
+left:-120%;
+
+width:80%;
+height:100%;
+
+background:
+linear-gradient(
+90deg,
+transparent,
+rgba(255,255,255,.35),
+transparent
+);
+
+transform:skewX(-20deg);
+
+animation:badgeShine 3.8s linear infinite;
 }
 
 .rating-badge small{
@@ -695,6 +727,16 @@ width:78vw;
 height:78vw;
 background:radial-gradient(circle,rgba(230,215,176,.10),transparent 62%);
 pointer-events:none;
+}
+  @keyframes badgeShine{
+
+100%{
+left:160%;
+}
+
+}
+  *{
+-webkit-tap-highlight-color:transparent;
 }
 </style>
 </head>
