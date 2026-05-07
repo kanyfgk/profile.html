@@ -760,11 +760,14 @@ function openProduct(productId){
 }
 
 function openFlow(){
+  closeAllScreens();
+  setActiveNav("flow");
   document.getElementById("flowScreen").classList.add("show");
 }
 
 function closeFlow(){
   document.getElementById("flowScreen").classList.remove("show");
+  setActiveNav("home");
 }
 
 function openIdModal(){
@@ -1602,7 +1605,14 @@ function closeDiscover(){
 }
 
 function openProfile(){
+
+  closeFlow();
+  closeViewer();
+  closeAction();
   closeAllScreens();
+
+  setActiveNav("profile");
+
   document.getElementById("profileScreen").classList.add("show");
 }
 
@@ -1616,7 +1626,14 @@ function openModeCreate(){
 }
 
 function openBrandHub(){
+
+  closeFlow();
+  closeViewer();
+  closeAction();
   closeAllScreens();
+
+  setActiveNav("brands");
+
   document.getElementById("brandHubScreen").classList.add("show");
 }
 
@@ -1626,7 +1643,14 @@ function closeBrandHub(){
 }
 
 function openCommunity(){
+
+  closeFlow();
+  closeViewer();
+  closeAction();
   closeAllScreens();
+
+  setActiveNav("community");
+
   document.getElementById("communityScreen").classList.add("show");
 }
 function closeCommunity(){
