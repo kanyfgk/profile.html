@@ -165,7 +165,9 @@ overflow-y:auto;
 opacity:0;
 pointer-events:none;
 transform:translateY(18px);
-transition:opacity .28s ease, transform .28s ease;
+transition:
+opacity .36s cubic-bezier(.22,.8,.24,1),
+transform .36s cubic-bezier(.22,.8,.24,1);
 }
 .full.show{
 opacity:1;
@@ -447,13 +449,41 @@ color:white;
 input,textarea,select{
 width:100%;
 padding:13px;
-border-radius:12px;
-border:1px solid rgba(255,255,255,.14);
-background:rgba(255,255,255,.08);
+
+border-radius:14px;
+
+border:1px solid rgba(255,255,255,.12);
+
+background:
+linear-gradient(
+180deg,
+rgba(255,255,255,.07),
+rgba(255,255,255,.03)
+);
+
 color:white;
+
 margin-top:9px;
 outline:none;
+
 font-size:16px;
+
+transition:
+border-color .22s ease,
+box-shadow .22s ease,
+transform .18s ease;
+}
+    input:focus,
+textarea:focus,
+select:focus{
+
+border-color:rgba(230,215,176,.45);
+
+box-shadow:
+0 0 0 4px rgba(230,215,176,.08),
+0 10px 30px rgba(0,0,0,.18);
+
+transform:translateY(-1px);
 }
 select option{color:#111}
 textarea{min-height:88px}
@@ -543,8 +573,9 @@ overflow-y:auto;
 opacity:0;
 pointer-events:none;
 transform:translateY(18px) scale(.985);
-transition:opacity .34s ease,
-transform .34s ease;
+transition:
+opacity .42s cubic-bezier(.22,.8,.24,1),
+transform .42s cubic-bezier(.22,.8,.24,1);
 }
 
 .profile-screen.show{
@@ -569,6 +600,10 @@ transform:translateY(0) scale(1);
   transition:transform .22s ease, border-color .22s ease, background .22s ease;
   position:relative;
   overflow:hidden;
+  opacity:0;
+transform:translateY(18px);
+
+animation:profileCardIn .5s ease forwards;
 }
 
 .profile-card:before{
@@ -911,6 +946,36 @@ transform:translateX(-50%) translateY(-2px);
 
 100%{
 transform:translateX(-50%) translateY(0);
+}
+
+}
+  .app{
+animation:appReveal .55s ease;
+}
+
+@keyframes appReveal{
+
+0%{
+opacity:0;
+transform:translateY(10px);
+}
+
+100%{
+opacity:1;
+transform:translateY(0);
+}
+
+}
+  .profile-card:nth-child(1){animation-delay:.04s}
+.profile-card:nth-child(2){animation-delay:.09s}
+.profile-card:nth-child(3){animation-delay:.14s}
+.profile-card:nth-child(4){animation-delay:.19s}
+
+@keyframes profileCardIn{
+
+to{
+opacity:1;
+transform:translateY(0);
 }
 
 }
