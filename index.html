@@ -1541,31 +1541,55 @@ function openCommunity(){
 function closeCommunity(){
   document.getElementById("communityScreen").classList.remove("show");
 }
+  function setActiveNav(name){
+  document.querySelectorAll(".nav-btn").forEach(btn=>{
+    btn.classList.remove("active");
+  });
+
+  const active = document.querySelector(`[data-nav="${name}"]`);
+  if(active){
+    active.classList.add("active");
+  }
+}
+  function setActiveNav(name){
+
+  document.querySelectorAll(".nav-btn").forEach(btn=>{
+    btn.classList.remove("active");
+  });
+
+  const active =
+  document.querySelector([data-nav="${name}"]);
+
+  if(active){
+    active.classList.add("active");
+  }
+
+}
   </script>
   
   <div class="bottom-nav">
 
-<button class="nav-btn active">
+<button class="nav-btn active" data-nav="home" onclick="setActiveNav('home')">
   <div class="nav-icon">⌂</div>
   Ana
 </button>
 
-<button class="nav-btn" onclick="openFlow()">
+<button class="nav-btn" data-nav="flow" onclick="setActiveNav('flow'); openFlow()">
   <div class="nav-icon">≈</div>
   Akış
 </button>
 
-<button class="nav-btn" onclick="openBrandHub()">
+<button class="nav-btn" data-nav="brands" onclick="setActiveNav('brands'); openBrandHub()">
   <div class="nav-icon">◇</div>
   Markalar
 </button>
 
-<button class="nav-btn" onclick="openCommunity()">
+<button class="nav-btn" data-nav="community" onclick="setActiveNav('community'); openCommunity()">
   <div class="nav-icon">◎</div>
   Topluluk
 </button>
 
-<button class="nav-btn" onclick="openProfile()">
+<button class="nav-btn" data-nav="profile" onclick="setActiveNav('profile'); openProfile()">
   <div class="nav-icon">◉</div>
   Profil
 </button>
