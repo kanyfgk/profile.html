@@ -465,7 +465,10 @@ async function login(){
 
   const { data, error } = await supabaseClient
   .from("vaero_customer_products")
-  .select("*")
+  .select(`
+  *,
+  vaero_review_supports(id)
+`)
   .eq("customer_code", id);
 
   if(error){
@@ -1226,6 +1229,48 @@ function finishIdFocus(){
     document.getElementById("idFocusModal").classList.remove("show");
   },100);
 } 
+  async function openDiscoverType(type, title){
+  const modal = document.getElementById("discoverModal");
+  const titleBox = document.getElementById("discoverTitle");
+  const list = document.getElementById("discoverList");
+
+  titleBox.innerText = title;
+  modal.classList.add("show");
+
+  const { data, error } = await supabaseClient
+    .from("vaero_reviews")
+    .select("comment, rating, is_verified, product_id, experience_type, would_buy_again")
+    .order("id", { ascending:false })
+    .limit(100);
+
+  if(error){
+    list.innerHTML = "Deneyimler yüklenemedi.";
+    return;
+  }
+
+  let filtered = data || [];
+
+  if(type === "buy_again"){
+    filtered = filtered.filter(x => x.would_buy_again === true);
+  }else{
+    filtered = filtered.filter(x => x.experience_type === type);
+  }
+
+  list.innerHTML = filtered.length
+    ? filtered.map(x => `
+      <div style="padding:10px;border-radius:12px;background:rgba(255,255,255,.06);margin-bottom:8px;">
+        <div style="font-size:13px;line-height:19px;">${x.comment || "—"}</div>
+        <div style="font-size:10px;color:#e6d7b0;margin-top:6px;">
+          ${x.is_verified ? "★ Doğrulanmış" : "Deneyim notu"}
+        </div>
+      </div>
+    `).join("")
+    : `<div style="font-size:13px;color:rgba(255,255,255,.65);">Henüz deneyim yok.</div>`;
+}
+
+function closeDiscover(){
+  document.getElementById("discoverModal").classList.remove("show");
+}
   </script>
 </body>
 </html>
