@@ -112,7 +112,22 @@ opacity:1;
 pointer-events:auto;
 backdrop-filter:blur(6px);
 }
-.modal{width:100%;max-width:410px;background:#101b28;border:1px solid rgba(255,255,255,.14);border-radius:22px;padding:22px}
+.modal{
+width:100%;
+max-width:410px;
+background:#101b28;
+border:1px solid rgba(255,255,255,.14);
+border-radius:22px;
+padding:22px;
+transform:translateY(18px) scale(.96);
+transition:transform .24s ease, opacity .24s ease;
+opacity:0;
+}
+
+.overlay.show .modal{
+transform:translateY(0) scale(1);
+opacity:1;
+}
 .modal h2{font-family:"Oswald";font-size:29px;margin-bottom:7px}
 .modal p{font-size:13px;line-height:21px;color:rgba(255,255,255,.68);margin-bottom:12px}
 input,textarea,select{
@@ -125,13 +140,6 @@ color:white;
 margin-top:9px;
 outline:none;
 font-size:16px;
-  .modal{
-transform:translateY(18px) scale(.96);
-transition:
-transform .24s ease,
-opacity .24s ease;
-opacity:0;
-}
 }
 select option{color:#111}
 textarea{min-height:88px}
@@ -203,15 +211,11 @@ transform:translateY(0) scale(1);
   border-radius:24px;
   padding:18px;
   margin-bottom:14px;
-  transition:
+  transition:transform .22s ease, border-color .22s ease, background .22s ease;
+  position:relative;
+  overflow:hidden;
+}
 
-transform .22s ease,
-
-border-color .22s ease,
-
-background .22s ease;
-position:relative;
-overflow:hidden;
 .profile-card:before{
 
 content:"";
@@ -1828,7 +1832,7 @@ function unlockBody(){
   <div class="bottom-nav">
   <div class="nav-glow"></div>
 
-<button class="nav-btn active" data-nav="home" onclick="goHome()"
+<button class="nav-btn active" data-nav="home" onclick="goHome()">
   <div class="nav-icon">⌂</div>
   Ana
 </button>
