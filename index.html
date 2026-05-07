@@ -150,6 +150,8 @@ border:1px solid rgba(255,255,255,.06);
 border-radius:12px;
 background:
 linear-gradient(145deg,#102033,#3d5870);
+box-shadow:
+0 10px 24px rgba(0,0,0,.16);  
 position:relative;
 color:white;
 text-align:left;
@@ -172,16 +174,59 @@ border-color:rgba(230,215,176,.28);
 box-shadow:0 0 22px rgba(230,215,176,.12);
 
 .flow-tile:before{content:"";position:absolute;inset:16%;border-radius:28px;background:radial-gradient(circle at 50% 24%,rgba(230,215,176,.42),transparent 28%)}
+ .flow-tile:after{
+content:"";
+
+position:absolute;
+inset:0;
+
+background:
+linear-gradient(
+180deg,
+rgba(255,255,255,.04),
+transparent 30%
+);
+
+pointer-events:none;
+}
+    .flow-tile:nth-child(even){
+transform:translateY(2px);
+}
 .flow-tile .type{position:absolute;top:7px;left:7px;background:rgba(0,0,0,.34);border-radius:999px;padding:3px 6px;font-size:9px;color:#e6d7b0;z-index:2}
 .flow-tile b{position:absolute;left:8px;bottom:25px;font-size:11px;z-index:2}
 .product-tile span{position:absolute;left:8px;bottom:8px;font-size:9px;color:#6b6b6b;z-index:2}
 .viewer{
 position:fixed;
 inset:0;
-background:#05080d;
+
+background:
+radial-gradient(
+circle at center,
+rgba(255,255,255,.03),
+transparent 45%
+),
+#05080d;
+
 z-index:70;
 color:white;
+ .viewer:before{
+content:"";
 
+position:absolute;
+inset:0;
+
+background:
+linear-gradient(
+180deg,
+rgba(0,0,0,.18),
+transparent 22%,
+transparent 72%,
+rgba(0,0,0,.42)
+);
+
+pointer-events:none;
+z-index:1;
+} 
 opacity:0;
 pointer-events:none;
 transform:scale(1.02);
