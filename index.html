@@ -61,7 +61,17 @@ border:1px solid rgba(143,122,79,.22);
 .modal{width:100%;max-width:410px;background:#101b28;border:1px solid rgba(255,255,255,.14);border-radius:22px;padding:22px}
 .modal h2{font-family:"Oswald";font-size:29px;margin-bottom:7px}
 .modal p{font-size:13px;line-height:21px;color:rgba(255,255,255,.68);margin-bottom:12px}
-input,textarea,select{width:100%;padding:13px;border-radius:12px;border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.08);color:white;margin-top:9px;outline:none}
+input,textarea,select{
+width:100%;
+padding:13px;
+border-radius:12px;
+border:1px solid rgba(255,255,255,.14);
+background:rgba(255,255,255,.08);
+color:white;
+margin-top:9px;
+outline:none;
+font-size:16px;
+}
 select option{color:#111}
 textarea{min-height:88px}
 .modal-actions{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:12px}
@@ -85,6 +95,18 @@ textarea{min-height:88px}
   opacity:.8;
   margin-left:3px;
   font-weight:500;
+}
+  #idModal .modal{
+max-width:92vw;
+overflow:hidden;
+}
+
+#idModal .modal-actions{
+grid-template-columns:1fr 1fr;
+}
+
+#idModal .confirm{
+white-space:nowrap;
 }
 </style>
 </head>
@@ -242,13 +264,52 @@ gap:8px;
   <div class="modal">
     <h2>Müşteri ID</h2>
     <p>Yorum, puanlama ve doğrulanmış eleştiri için müşteri ID ile devam et.</p>
-    <input id="customerId" placeholder="Örn: VA-001">
+
+    <input id="customerId" placeholder="Örn: VA-001" readonly onclick="openIdFocus()" autocomplete="off" autocapitalize="characters">
+
     <div class="modal-actions">
       <button class="cancel" onclick="closeIdModal()">Kapat</button>
       <button class="confirm" onclick="login()">Giriş yap</button>
     </div>
   </div>
 </div>
+
+<div class="overlay" id="idFocusModal">
+  <div class="modal" style="max-width:94vw;">
+    <h2>ID Gir</h2>
+    <p>Müşteri ID kodunu buraya yaz.</p>
+
+    <input
+      id="customerIdFocus"
+      placeholder="VA-001"
+      autocomplete="off"
+      autocapitalize="characters"
+      style="font-size:22px;padding:18px;"
+    >
+
+    <button
+      onclick="finishIdFocus()"
+      style="
+        width:100%;
+        margin-top:14px;
+        border:0;
+        border-radius:18px;
+        padding:18px;
+        background:#e6d7b0;
+        color:#07111d;
+        font-size:18px;
+        font-weight:800;
+      "
+    >
+      Doldurdum
+    </button>
+
+    <div class="modal-actions">
+      <button class="cancel" onclick="closeIdFocus()">Vazgeç</button>
+    </div>
+  </div>
+</div>
+  
 <div class="overlay" id="actionModal">
   <div class="modal">
     <h2 id="actionTitle">İşlem</h2>
@@ -404,10 +465,7 @@ async function login(){
 
   const { data, error } = await supabaseClient
   .from("vaero_customer_products")
-  .select(`
-  *,
-  vaero_review_supports(id)
-`)
+  .select("*")
   .eq("customer_code", id);
 
   if(error){
@@ -1145,7 +1203,29 @@ cursor:pointer;
 
 `;
 }
-  
+  function openIdFocus(){
+  document.getElementById("idFocusModal").classList.add("show");
+
+  setTimeout(()=>{
+    document.getElementById("customerIdFocus").focus();
+  },200);
+}
+
+function closeIdFocus(){
+  document.getElementById("idFocusModal").classList.remove("show");
+}
+
+function finishIdFocus(){
+  const value = document.getElementById("customerIdFocus").value.trim();
+
+  document.getElementById("customerId").value = value;
+
+  document.getElementById("customerIdFocus").blur();
+
+  setTimeout(()=>{
+    document.getElementById("idFocusModal").classList.remove("show");
+  },100);
+} 
   </script>
 </body>
 </html>
