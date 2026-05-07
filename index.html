@@ -52,8 +52,23 @@ animation:ambientMove 18s ease-in-out infinite alternate;
 .app{max-width:560px;margin:0 auto;padding:18px 12px 90px}
 .brand-head{display:flex;align-items:center;gap:14px;margin-bottom:18px}
 .mark{width:58px;height:58px;border-radius:50%;background:#8f7a4f;color:white;font-family:"Oswald";display:flex;align-items:center;justify-content:center;font-size:26px}
-.brand-name{font-family:"Oswald";font-size:31px;letter-spacing:5px}
-.bio{font-size:13px;color:#6b6b6b;line-height:21px;margin-top:3px}
+.brand-name{
+font-family:"Oswald";
+font-size:34px;
+letter-spacing:6px;
+line-height:1;
+color:#1b1b1b;
+
+text-shadow:
+0 1px 0 rgba(255,255,255,.25);
+}
+.bio{
+font-size:13px;
+color:#7a7468;
+line-height:21px;
+margin-top:6px;
+letter-spacing:.2px;
+}
 .quick{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:16px 0 18px}
 .quick a,.quick button{border:0;border-radius:999px;padding:12px;text-align:center;text-decoration:none;font-size:13px}
 .quick .main{background:#8f7a4f;color:white;font-weight:700}
@@ -1414,7 +1429,7 @@ async function loadActionReviews(type){
         color:rgba(255,255,255,.6);
         font-size:12px;
       ">
-        Henüz bu bölümde yorum yok.
+        İlk doğrulanmış deneyim henüz paylaşılmadı.
       </div>
     `;
     return;
@@ -1915,7 +1930,7 @@ cursor:pointer;
   ">
     ${nightDrive > 0
       ? `"Gece sürüşünde ortam resmen değişiyor."`
-      : `Henüz deneyim yok.`}
+      : `Topluluk ilk deneyimi bekliyor.`}
   </div>
 
   <div style="
@@ -1947,7 +1962,7 @@ cursor:pointer;
   ">
     ${longRoad > 0
       ? `"Uzun yolda Shangrila baş ağrıtmadı."`
-      : `Henüz deneyim yok.`}
+      : `Topluluk ilk deneyimi bekliyor.`}
   </div>
 
   <div style="
@@ -1979,7 +1994,7 @@ cursor:pointer;
   ">
     ${repeatBuy > 0
       ? `"White Tea kullandıktan sonra sigara kokusuna tahammül edemiyorum."`
-      : `Henüz deneyim yok.`}
+      : `Topluluk ilk deneyimi bekliyor.`}
   </div>
 
   <div style="
@@ -2011,7 +2026,7 @@ cursor:pointer;
   ">
     ${firstTry > 0
       ? `"Babam bile cihazı sordu."`
-      : `Henüz deneyim yok.`}
+      : `Topluluk ilk deneyimi bekliyor.`}
   </div>
 
   <div style="
@@ -2090,7 +2105,7 @@ function finishIdFocus(){
         </div>
       </div>
     `).join("")
-    : `<div style="font-size:13px;color:rgba(255,255,255,.65);">Henüz deneyim yok.</div>`;
+    : `<div style="font-size:13px;color:rgba(255,255,255,.65);">Topluluk ilk deneyimi bekliyor.</div>`;
 }
 
 function closeDiscover(){
