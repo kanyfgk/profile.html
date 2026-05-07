@@ -65,6 +65,10 @@ padding:8px;
 overflow:hidden;
 cursor:pointer;
 
+opacity:0;
+transform:translateY(14px);
+animation:flowIn .45s ease forwards;  
+
 transition:
 transform .22s ease,
 border-color .22s ease,
@@ -99,7 +103,49 @@ opacity:1;
 pointer-events:auto;
 transform:scale(1);
 }
-.media{position:absolute;inset:0;background:linear-gradient(145deg,#17293c,#4b657c);display:flex;align-items:center;justify-content:center;font-family:"Oswald";font-size:34px;letter-spacing:4px;color:rgba(255,255,255,.72)}
+.media{
+position:absolute;
+inset:0;
+
+background:
+radial-gradient(
+circle at top,
+rgba(230,215,176,.10),
+transparent 28%
+),
+linear-gradient(
+145deg,
+#17293c,
+#4b657c
+);
+
+display:flex;
+align-items:center;
+justify-content:center;
+
+font-family:"Oswald";
+font-size:34px;
+letter-spacing:4px;
+
+color:rgba(255,255,255,.72);
+
+overflow:hidden;
+}
+.media:after{
+content:"";
+
+position:absolute;
+inset:0;
+
+background:
+linear-gradient(
+180deg,
+rgba(0,0,0,.02),
+rgba(0,0,0,.55)
+);
+
+pointer-events:none;
+}
 .close-view{position:absolute;top:16px;left:12px;width:42px;height:42px;border-radius:50%;border:0;background:rgba(0,0,0,.35);color:white;font-size:24px;z-index:3}
 .content-info{position:absolute;left:16px;right:78px;bottom:22px;z-index:2}
 .content-info .verified{color:#e6d7b0;font-size:12px;margin-bottom:8px}
@@ -124,6 +170,8 @@ opacity:0;
 pointer-events:none;
 backdrop-filter:blur(0px);
 
+will-change:opacity, backdrop-filter;
+
 transition:
 opacity .24s ease,
 backdrop-filter .24s ease;
@@ -132,7 +180,8 @@ backdrop-filter .24s ease;
 display:flex;
 opacity:1;
 pointer-events:auto;
-backdrop-filter:blur(6px);
+backdrop-filter:blur(10px);
+-webkit-backdrop-filter:blur(10px);
 }
 .modal{
 width:100%;
@@ -495,6 +544,21 @@ filter .18s ease;
 button:active{
 transform:scale(.97);
 filter:brightness(1.04);
+}
+  .flow-tile:nth-child(1){animation-delay:.02s}
+.flow-tile:nth-child(2){animation-delay:.05s}
+.flow-tile:nth-child(3){animation-delay:.08s}
+.flow-tile:nth-child(4){animation-delay:.11s}
+.flow-tile:nth-child(5){animation-delay:.14s}
+.flow-tile:nth-child(6){animation-delay:.17s}
+
+@keyframes flowIn{
+
+to{
+opacity:1;
+transform:translateY(0);
+}
+
 }
 </style>
 </head>
