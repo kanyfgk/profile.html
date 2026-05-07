@@ -117,7 +117,7 @@ z-index:120;
 overflow-y:auto;
 
 opacity:1;
-pointer-events:autoe;
+pointer-events:auto;
 transform:translateY(0) scale(1);
 transition:
 opacity .34s ease,
@@ -1607,9 +1607,6 @@ function closeProfile(){
 function openModeCreate(){
   alert("Moda Yarat stüdyosu sonraki aşamada açılacak.");
 }
-  function openBrandHub(){
-  alert("Marka merkezi sonraki aşamada açılacak.");
-}
 
 function openBrandHub(){
   document.getElementById("brandHubScreen").classList.add("show");
@@ -1643,7 +1640,7 @@ function closeCommunity(){
   });
 
   const active =
-  document.querySelector([data-nav="${name}"]);
+  document.querySelector(`[data-nav="${name}"]`);
 
   if(active){
     active.classList.add("active");
