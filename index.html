@@ -799,8 +799,6 @@ closeIdModal();
 
 if(data && data.length > 0){
 
-  alert("Müşteri ID doğrulandı.");
-
   openProfile();
 
 }else{
@@ -1597,7 +1595,14 @@ function finishIdFocus(){
 function closeDiscover(){
   document.getElementById("discoverModal").classList.remove("show");
 }
-  function openProfile(){
+  function closeAllScreens(){
+  document.querySelectorAll(".profile-screen").forEach(screen=>{
+    screen.classList.remove("show");
+  });
+}
+
+function openProfile(){
+  closeAllScreens();
   document.getElementById("profileScreen").classList.add("show");
 }
 
@@ -1610,6 +1615,7 @@ function openModeCreate(){
 }
 
 function openBrandHub(){
+  closeAllScreens();
   document.getElementById("brandHubScreen").classList.add("show");
 }
 
@@ -1618,9 +1624,9 @@ function closeBrandHub(){
 }
 
 function openCommunity(){
+  closeAllScreens();
   document.getElementById("communityScreen").classList.add("show");
 }
-
 function closeCommunity(){
   document.getElementById("communityScreen").classList.remove("show");
 }
@@ -1648,6 +1654,7 @@ function closeCommunity(){
   }
 
 }
+  
   </script>
   
   <div class="bottom-nav">
