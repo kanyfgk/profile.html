@@ -1512,10 +1512,12 @@ const profile = profiles && profiles.length > 0 ? profiles[0] : null;
   }
 const verifiedBox = document.querySelector(".verified-value");
 
-if(purchases && purchases.length > 0){
-    verifiedBox.innerText = "GERÇEK";
-} else {
-    verifiedBox.innerText = "YOK";
+if(verifiedBox){
+    if(profile.is_verified){
+        verifiedBox.innerText = "GERÇEK";
+    } else {
+        verifiedBox.innerText = "YOK";
+    }
 }
   activeId = id;
   localStorage.setItem("vaero_id", id);
