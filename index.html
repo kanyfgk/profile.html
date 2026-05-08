@@ -1853,6 +1853,30 @@ renderProducts();
 renderFlow();
 loadLiveRatings();
 loadDiscover();
+  supabaseClient
+.channel('vaero-live')
+
+.on(
+'postgres_changes',
+{
+event:'INSERT',
+schema:'public',
+table:'vaero_reviews'
+},
+payload=>{
+
+loadLiveRatings();
+loadDiscover();
+
+if(activeContent){
+loadReviews(activeContent.product);
+loadActionReviews(actionType || "comment");
+}
+
+}
+)
+
+.subscribe();
   async function loadReviews(productId){
   const { data, error } = await supabaseClient
     .from("vaero_reviews")
@@ -2025,7 +2049,8 @@ function openReviews(productId){
   }
 
   alert("Deneyim desteğin kaydedildi 🔥");
-
+loadActionReviews(actionType || "comment");
+loadDiscover();
 }
   async function loadDiscover(){
 
@@ -2376,16 +2401,22 @@ function closeCommunity(){
   }
 
 }
-  function goHome(){
+  function closeEverything(){
 
   closeFlow();
   closeViewer();
   closeAction();
-  closeAllScreens();
-
+  closeBrand();
   closeIdModal();
   closeIdFocus();
   closeDiscover();
+  closeAllScreens();
+
+  unlockBody();
+}
+  function goHome(){
+
+  closeEverything();
 
   setActiveNav("home");
 }
