@@ -1235,7 +1235,7 @@ line-height:18px;
         ID’si olan herkes dijital moda veya ürün vizyonu hazırlayabilir.
         Beğenilirse keşfete çıkar, ister açık artırma ister global deneme ile ilerler.
       </p>
-      <button class="mode-btn" onclick="openModeCreate()">Yaratmaya Başla →</button>
+      <button class="mode-btn" type="button">Yaratmaya Başla →</button>
     </div>
   </div>
 </div>
@@ -1486,6 +1486,7 @@ async function login(){
   }
 
   activeId = id;
+  document.getElementById("profileName").innerText = id;
 closeIdModal();
 
 if(data && data.length > 0){
