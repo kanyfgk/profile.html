@@ -1526,10 +1526,12 @@ if(profileNameEl){
 }
   const verifiedOwnership = document.getElementById("verifiedOwnership");
 
-if(purchases && purchases.length > 0){
-    verifiedOwnership.innerText = purchases.length + " ÜRÜN";
-}else{
-    verifiedOwnership.innerText = "0 ÜRÜN";
+if(verifiedOwnership){
+    if(purchases && purchases.length > 0){
+        verifiedOwnership.innerText = purchases.length + " ÜRÜN";
+    }else{
+        verifiedOwnership.innerText = "0 ÜRÜN";
+    }
 }
   
 
