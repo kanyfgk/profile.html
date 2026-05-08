@@ -1477,7 +1477,7 @@ async function login(){
   const { data: profiles, error: profileError } = await supabaseClient
     .from("vaero_profiles")
     .select("*")
-    .ilike("customer_code", id)
+    .eq("customer_code", "VA-001")
     .limit(1);
 
 const profile = profiles && profiles.length > 0 ? profiles[0] : null;
