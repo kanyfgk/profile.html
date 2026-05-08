@@ -1465,7 +1465,14 @@ function closeIdModal(){
     unlockBody();
   },250);
 }
+window.addEventListener("load", async () => {
+    const savedId = localStorage.getItem("vaero_id");
 
+    if(savedId){
+        document.getElementById("customerId").value = savedId;
+        await login();
+    }
+});
 async function login(){
   const id = document.getElementById("customerId").value.trim().toUpperCase();
 
@@ -1511,6 +1518,7 @@ if(purchases && purchases.length > 0){
     verifiedBox.innerText = "YOK";
 }
   activeId = id;
+  localStorage.setItem("vaero_id", id);
   document.getElementById("profileName").innerText = id;
   const verifiedOwnership = document.getElementById("verifiedOwnership");
 
