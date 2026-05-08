@@ -1006,11 +1006,12 @@ transform:translateY(0);
 
   <div class="quick">
     <a class="main" href="https://wa.me/905391152765" target="_blank">Mesaj gönder</a>
-    <button class="soft" onclick="openIdModal()">Müşteri ID</button>
+    <button class="soft" onclick="openIdModal()">Platform ID
+    </button>
   </div>
 
   <div class="notice">
-    Ürünler herkese görünür. Puan, eleştiri ve doğrulanmış yorum için müşteri ID gerekir.
+    Ürünler herkese görünür. Puan, eleştiri ve doğrulanmış yorum için Platform ID gerekir.
   </div>
 <div class="section-label">MARKALAR</div>
 
@@ -1150,8 +1151,8 @@ line-height:18px;
 </div>
 <div class="overlay" id="idModal">
   <div class="modal">
-    <h2>Müşteri ID</h2>
-    <p>Yorum, puanlama ve doğrulanmış eleştiri için müşteri ID ile devam et.</p>
+    <h2>Platform ID</h2>
+    <p>Yorum, puanlama ve doğrulanmış eleştiri için Müşteri ID ile devam et.</p>
 
     <input id="customerId" placeholder="Örn: VA-001" autocomplete="off" autocapitalize="characters">
 
@@ -1165,7 +1166,7 @@ line-height:18px;
 <div class="overlay" id="idFocusModal">
   <div class="modal" style="max-width:94vw;">
     <h2>ID Gir</h2>
-    <p>Müşteri ID kodunu buraya yaz.</p>
+    <p>Platform ID kodunu buraya yaz.</p>
 
     <input
       id="customerIdFocus"
@@ -1753,7 +1754,7 @@ const wouldBuyAgain =
     .maybeSingle();
 
   if(oldReview && actionType === "rate" && verified){
-    alert("Bu müşteri ID’si bu ürüne daha önce puan vermiş. Aynı ürüne ikinci kez yıldızlı yorum yapılamaz.");
+    alert("Bu Platform ID’si bu ürüne daha önce puan vermiş. Aynı ürüne ikinci kez yıldızlı yorum yapılamaz.");
     return;
   }
 
@@ -1779,7 +1780,7 @@ experience_type: document.getElementById("experienceType").value || null,
   error.message &&
   error.message.includes("unique_verified_customer_product_review")
 ){
-  alert("Bu müşteri ID’si bu ürüne daha önce doğrulanmış yıldızlı puan verdi. Aynı ürüne ikinci kez yıldızlı yorum yapılamaz.");
+  alert("Bu Platform ID’si bu ürüne daha önce doğrulanmış yıldızlı puan verdi. Aynı ürüne ikinci kez yıldızlı yorum yapılamaz.");
   return;
 }
 
@@ -1790,7 +1791,7 @@ alert("Kayıt eklenemedi.");
   if(verified){
   alert("★ Doğrulanmış puan kaydedildi.");
 }else if(bought && !isValidDate){
-  alert("Bu ID sistemde görünüyor ancak doğrulanmış puan süresi dolmuş. Son 12 ay içindeki güncel müşteri ID’niz varsa onunla devam edin.");
+  alert("Bu ID sistemde görünüyor ancak doğrulanmış puan süresi dolmuş. Son 12 ay içindeki güncel Platform ID’niz varsa onunla devam edin.");
 }else{
   alert("Yorum kaydedildi. Bu ürün bu ID ile doğrulanmış satın alım olarak görünmediği için yıldızlı puan sayılmadı.");
 }
@@ -2346,7 +2347,7 @@ function finishIdFocus(){
   const value = document.getElementById("customerIdFocus").value.trim();
 
   if(!value){
-    alert("Müşteri ID girin.");
+    alert("Platform ID girin.");
     return;
   }
 
@@ -2532,7 +2533,7 @@ function unlockBody(){
   Ana
 </button>
 
-<button class="nav-btn" data-nav="flow" onclick="setActiveNav('flow'); openFlow()">
+<button class="nav-btn" data-nav="flow" onclick="closeViewer(); openFlow()">
   <div class="nav-icon">≈</div>
   Akış
 </button>
