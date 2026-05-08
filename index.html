@@ -1467,35 +1467,52 @@ function closeIdModal(){
 }
 
 async function login(){
-  const id = document.getElementById("customerId").value.trim();
+  const id = document.getElementById("customerId").value.trim().toUpperCase();
 
   if(!id){
-    alert("Müşteri ID girin.");
+    alert("Platform ID girin.");
     return;
   }
 
-  const { data, error } = await supabaseClient
-  .from("vaero_customer_products")
-  .select("*")
-  .eq("customer_code", id);
+  const { data: profile, error: profileError } = await supabaseClient
+    .from("vaero_profiles")
+    .select("*")
+    .eq("customer_code", id)
+    .maybeSingle();
 
-  if(error){
-    alert("ID kontrol edilemedi.");
-    console.error(error);
+  if(profileError){
+    console.error("PROFILE LOOKUP ERROR:", profileError);
+    alert("Platform ID şu an kontrol edilemedi.");
+    return;
+  }
+
+  if(!profile){
+    alert("Bu Platform ID henüz kayıtlı görünmüyor.");
+    return;
+  }
+
+  const { data: purchases, error: purchaseError } = await supabaseClient
+    .from("vaero_customer_products")
+    .select("*")
+    .eq("customer_code", id);
+
+  if(purchaseError){
+    console.error("PURCHASE LOOKUP ERROR:", purchaseError);
+    alert("Ürün doğrulama bilgisi şu an kontrol edilemedi.");
     return;
   }
 
   activeId = id;
   document.getElementById("profileName").innerText = id;
-closeIdModal();
 
-if(data && data.length > 0){
+  closeIdModal();
 
-  openProfile();
-
-}else{
-  alert("ID alındı. Satın alınan ürün eşleşirse doğrulanmış sayılır.");
-}
+  if(purchases && purchases.length > 0){
+    openProfile();
+  }else{
+    alert("Platform ID doğrulandı. Bu profile bağlı satın alınmış ürün görünmüyor.");
+    openProfile();
+  }
 }
 
 function openViewer(contentId){
@@ -1726,7 +1743,15 @@ experience_type: document.getElementById("experienceType").value || null,
 
   if(error){
     console.error("INSERT ERROR:", error);
-    alert("Kayıt eklenemedi: " + error.message);
+    if(
+  error.message &&
+  error.message.includes("unique_verified_customer_product_review")
+){
+  alert("Bu müşteri ID’si bu ürüne daha önce doğrulanmış yıldızlı puan verdi. Aynı ürüne ikinci kez yıldızlı yorum yapılamaz.");
+  return;
+}
+
+alert("Kayıt eklenemedi.");
     return;
   }
 
