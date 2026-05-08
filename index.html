@@ -1519,7 +1519,11 @@ if(purchases && purchases.length > 0){
 }
   activeId = id;
   localStorage.setItem("vaero_id", id);
-  document.getElementById("profileName").innerText = id;
+  const profileNameEl = document.getElementById("profileName");
+
+if(profileNameEl){
+    profileNameEl.innerText = id;
+}
   const verifiedOwnership = document.getElementById("verifiedOwnership");
 
 if(purchases && purchases.length > 0){
