@@ -1215,7 +1215,7 @@ line-height:18px;
       <div class="profile-stats">
         <div class="profile-stat"><b>7</b>Seviye</div>
         <div class="profile-stat"><b>246</b>Topluluk</div>
-        <div class="profile-stat"><b>98%</b>Doğrulanmış</div>
+        <div class="profile-stat"><b id="verifiedOwnership">KONTROL</b>Doğrulanmış</div>
       </div>
     </div>
 
@@ -1503,9 +1503,23 @@ const profile = profiles && profiles.length > 0 ? profiles[0] : null;
     alert("Ürün doğrulama bilgisi şu an kontrol edilemedi.");
     return;
   }
+const verifiedBox = document.querySelector(".verified-value");
 
+if(purchases && purchases.length > 0){
+    verifiedBox.innerText = "GERÇEK";
+} else {
+    verifiedBox.innerText = "YOK";
+}
   activeId = id;
   document.getElementById("profileName").innerText = id;
+  const verifiedOwnership = document.getElementById("verifiedOwnership");
+
+if(purchases && purchases.length > 0){
+    verifiedOwnership.innerText = "GERÇEK";
+}else{
+    verifiedOwnership.innerText = "YOK";
+}
+  
 
   closeIdModal();
 
