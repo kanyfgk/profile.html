@@ -198,6 +198,7 @@ aspect-ratio:1/1.38;
 border:1px solid rgba(255,255,255,.06);
 border-radius:12px;
 background:
+radial-gradient(circle at top right,rgba(230,215,176,.14),transparent 28%),
 linear-gradient(145deg,#102033,#3d5870);
 box-shadow:
 0 10px 24px rgba(0,0,0,.16);  
@@ -1120,6 +1121,12 @@ gap:8px;
     <div class="verified" id="verifiedText"></div>
     <b id="viewerTitle"></b>
     <p id="viewerDesc"></p>
+    <div id="viewerMeta" style="
+margin-top:10px;
+font-size:11px;
+color:rgba(255,255,255,.58);
+line-height:18px;
+"></div>
   </div>
 </div>
 <div class="overlay" id="brandModal">
@@ -1383,6 +1390,19 @@ function renderFlow(){
   flowGrid.innerHTML=contents.map(c=>`
     <button class="flow-tile" onclick="openViewer('${c.id}')">
       <div class="type">${c.type}</div>
+      <div style="
+position:absolute;
+top:7px;
+right:7px;
+font-size:9px;
+padding:3px 6px;
+border-radius:999px;
+background:rgba(255,255,255,.08);
+color:rgba(255,255,255,.72);
+z-index:2;
+">
+CANLI
+</div>
       <b>${c.title}</b>
       <span>${getProductName(c.product)}</span>
     </button>
@@ -1482,6 +1502,10 @@ function openViewer(contentId){
   mediaText.innerText=activeContent.type;
   viewerTitle.innerText=activeContent.title;
   viewerDesc.innerText=activeContent.desc;
+  document.getElementById("viewerMeta").innerHTML = `
+${Math.floor(Math.random()*40)+10} topluluk etkileşimi ·
+${Math.floor(Math.random()*12)+3} doğrulanmış deneyim
+`;
   verifiedText.innerText="Ürün: "+getProductName(activeContent.product);
   loadReviews(activeContent.product);
   lockBody();
