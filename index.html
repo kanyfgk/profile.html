@@ -1474,11 +1474,13 @@ async function login(){
     return;
   }
 
-  const { data: profile, error: profileError } = await supabaseClient
+  const { data: profiles, error: profileError } = await supabaseClient
     .from("vaero_profiles")
     .select("*")
-    .eq("customer_code", id)
-    .maybeSingle();
+    .ilike("customer_code", id)
+    .limit(1);
+
+const profile = profiles && profiles.length > 0 ? profiles[0] : null;
 
   if(profileError){
     console.error("PROFILE LOOKUP ERROR:", profileError);
