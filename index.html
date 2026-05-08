@@ -1137,7 +1137,7 @@ gap:8px;
 
     <div class="modal-actions">
       <button class="cancel" onclick="closeBrand()">Kapat</button>
-      <button class="confirm">Markayı İncele</button>
+      <button class="confirm" onclick="closeBrand(); openBrandHub();">Markayı İncele</button>
     </div>
   </div>
 </div>
@@ -1228,7 +1228,7 @@ gap:8px;
         ID’si olan herkes dijital moda veya ürün vizyonu hazırlayabilir.
         Beğenilirse keşfete çıkar, ister açık artırma ister global deneme ile ilerler.
       </p>
-      <button class="mode-btn">Yaratmaya Başla →</button>
+      <button class="mode-btn" onclick="openModeCreate()">Yaratmaya Başla →</button>
     </div>
   </div>
 </div>
@@ -1262,7 +1262,7 @@ gap:8px;
       <p style="color:rgba(255,255,255,.65);line-height:22px;margin-top:8px;">
         Bu soru önce markayı daha önce tercih eden doğrulanmış kullanıcılara gösterilir.
       </p>
-      <button class="mode-btn" style="background:#ffb3b3;">Anketi İncele →</button>
+      <button class="mode-btn" style="background:#ffb3b3;" onclick="alert('Canlı eleştiri doğrulama anketi sonraki aşamada aktif edilecek.')">Anketi İncele →</button>
     </div>
   </div>
 </div>
@@ -2342,7 +2342,7 @@ function closeProfile(){
 }
 
 function openModeCreate(){
-  alert("Moda Yarat stüdyosu sonraki aşamada açılacak.");
+  alert("Vizyon yaratma stüdyosu sonraki aşamada aktif edilecek. Burada kullanıcı ürün/fikir konsepti oluşturabilecek.");
 }
 
 function openBrandHub(){
