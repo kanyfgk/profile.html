@@ -1930,18 +1930,51 @@ experience_type: document.getElementById("experienceType").value || null,
     .select();
 
   if(error){
-    console.log("INSERT BLOCKED:", error.message);
-    if(
-  error.message &&
-  error.message.includes("unique_verified_customer_product_review")
-){
-  alert("Bu Platform ID’si bu ürüne daha önce doğrulanmış yıldızlı puan verdi. Aynı ürüne ikinci kez yıldızlı yorum yapılamaz.");
-  return;
-}
 
-alert("Kayıt eklenemedi.");
+  console.log("INSERT BLOCKED:", error.message);
+
+  if(
+    error.message &&
+    error.message.includes("unique_verified_customer_product_review")
+  ){
+    const fallback = await supabaseClient
+      .from("vaero_reviews")
+      .insert([
+        {
+          customer_code: activeId,
+          product_id: productId,
+          rating: null,
+          comment: document.getElementById("actionText").value || "Tekrar deneyim notu",
+          is_verified: false,
+          type: "comment",
+          experience_type: document.getElementById("experienceType").value || null,
+          would_buy_again: wouldBuyAgain
+        }
+      ]);
+
+    if(fallback.error){
+      console.log("FALLBACK INSERT ERROR:", fallback.error.message);
+      alert("Bu ürüne daha önce doğrulanmış puan verilmiş. Ek yorum da kaydedilemedi.");
+      return;
+    }
+
+    alert("Bu ürüne daha önce doğrulanmış yıldız verilmişti. Yeni giriş normal deneyim yorumu olarak kaydedildi.");
+
+    loadLiveRatings();
+    loadDiscover();
+    loadReviews(productId);
+    loadActionReviews(actionType);
+
+    document.getElementById("actionText").value = "";
+    document.getElementById("experienceType").value = "";
+    document.getElementById("wouldBuyAgain").value = "";
+
     return;
   }
+
+  alert("Kayıt eklenemedi.");
+  return;
+}
 
   if(verified){
   alert("★ Doğrulanmış puan kaydedildi.");
