@@ -2388,6 +2388,38 @@ const hottestComment =
 
 const risingCount =
   topSupported?.vaero_review_supports?.length || 0;
+    const trendingReviews = [...data]
+  .map(x => {
+
+    let trendScore = 0;
+
+    trendScore += (x.vaero_review_supports?.length || 0) * 5;
+
+    if(x.is_verified){
+      trendScore += 8;
+    }
+
+    const createdTime = new Date(x.created_at).getTime();
+    const now = Date.now();
+
+    const hours =
+      (now - createdTime) / (1000*60*60);
+
+    if(hours <= 24){
+      trendScore += 4;
+    }
+
+    return {
+      ...x,
+      trendScore
+    };
+
+  })
+  .sort((a,b)=>
+    b.trendScore - a.trendScore
+  );
+
+const hottestTrend = trendingReviews[0];
   if(!discover) return;
 
   const nightDrive = data.filter(x=>x.experience_type==="night_drive").length;
@@ -2408,7 +2440,14 @@ border:1px solid rgba(230,215,176,.25);
   <div style="font-size:11px;color:#e6d7b0;font-weight:800;">
     TOPLULUKÇA ÖNE ÇIKAN
   </div>
-
+<div style="
+margin-top:8px;
+font-size:14px;
+line-height:21px;
+font-weight:700;
+">
+🔥 ${hottestComment}
+</div>
   <div style="
 font-size:11px;
 color:#c8a96a;
