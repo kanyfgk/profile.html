@@ -2588,10 +2588,20 @@ function closeProfile(){
 }
 
 function openModeCreate(){
-  if(!activeId){
-    openIdModal();
-    return;
-  }
+
+if(!activeId){
+openIdModal();
+return;
+}
+
+if(window.currentProfile && window.currentProfile.membershipExpired){
+alert("Moda Yarat alanı için aktif Platform ID üyeliği gerekir.");
+return;
+}
+
+alert("Vizyon yaratma stüdyosu sonraki aşamada aktif edilecek.");
+
+}
 
   if(window.currentProfile && window.currentProfile.membershipExpired){
     alert("Moda Yarat alanı için aktif Platform ID üyeliği gerekir.");
@@ -2600,10 +2610,7 @@ function openModeCreate(){
 
   alert("Vizyon yaratma stüdyosu sonraki aşamada aktif edilecek. Burada kullanıcı ürün/fikir konsepti oluşturabilecek.");
 }
-if(!activeId){
-  openIdModal();
-  return;
-}
+
 function openBrandHub(){
   if(window.currentProfile && window.currentProfile.membershipExpired){
   alert("Marka merkezi için aktif üyelik gerekir.");
