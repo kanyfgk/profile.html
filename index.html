@@ -2119,6 +2119,14 @@ async function loadActionReviews(type){
   },2000);
 }
 async function saveAction(){
+  const experienceValue = document.getElementById("experienceType").value;
+const buyAgainValue = document.getElementById("wouldBuyAgain").value;
+const textValue = document.getElementById("actionText").value.trim();
+
+if(!experienceValue || !buyAgainValue || !textValue){
+  showToast("Deneyim tipi, tekrar alma seçimi ve yorum alanı doldurulmalı.");
+  return;
+}
   const saveBtn =
 document.querySelector("#actionModal .confirm");
 
