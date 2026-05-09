@@ -1154,7 +1154,7 @@ line-height:18px;
     <h2>Platform ID</h2>
     <p>Yorum, puanlama ve doğrulanmış eleştiri için Müşteri ID ile devam et.</p>
 
-    <input id="customerId" placeholder="Örn: VA-001" autocomplete="off" autocapitalize="characters">
+    <input id="customerId" placeholder="VA-001" autocomplete="off" autocapitalize="characters">
 
     <div class="modal-actions">
       <button class="cancel" onclick="closeIdModal()">Kapat</button>
@@ -1502,7 +1502,7 @@ const profile = profiles && profiles.length > 0 ? profiles[0] : null;
   }
 
   const { data: purchases, error: purchaseError } = await supabaseClient
-    .from("vaero_customer_products")
+    .from("vaero_profiles")
     .select("*")
     .eq("customer_code", id);
 
