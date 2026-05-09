@@ -1288,10 +1288,68 @@ VA MEMBER
 
     <div class="profile-card" style="border-color:rgba(255,120,120,.25);">
       <div style="color:#ffb3b3;font-size:12px;letter-spacing:2px;">CANLI ELEŞTİRİ DOĞRULAMA</div>
-      <h3 style="margin-top:8px;">Bu eleştiri doğru mu?</h3>
+      <h3 style="margin-top:8px;">
+${liveVerificationSignal
+? "Bu eleştiri doğru mu?"
+: "Şu anda aktif doğrulama yok"}
+</h3>
+      ${liveVerificationSignal ? `
+<div style="
+margin-top:10px;
+display:flex;
+justify-content:space-between;
+gap:10px;
+">
+
+<div style="
+flex:1;
+background:rgba(255,70,70,.12);
+border:1px solid rgba(255,70,70,.35);
+padding:14px;
+border-radius:14px;
+">
+<div style="font-size:13px;color:#ffb3b3;">
+Memnun değil
+</div>
+
+<div style="
+font-size:26px;
+font-weight:700;
+margin-top:6px;
+color:#ff8080;
+">
+68%
+</div>
+</div>
+
+<div style="
+flex:1;
+background:rgba(120,255,160,.08);
+border:1px solid rgba(120,255,160,.25);
+padding:14px;
+border-radius:14px;
+">
+<div style="font-size:13px;color:#9dffb3;">
+Memnun
+</div>
+
+<div style="
+font-size:26px;
+font-weight:700;
+margin-top:6px;
+color:#8fffaa;
+">
+32%
+</div>
+</div>
+
+</div>
+` : ``}
       <p style="color:rgba(255,255,255,.65);line-height:22px;margin-top:8px;">
-        Bu soru önce markayı daha önce tercih eden doğrulanmış kullanıcılara gösterilir.
-      </p>
+${liveVerificationSignal
+? "Bu soru önce markayı daha önce tercih eden doğrulanmış kullanıcılara gösterilir."
+: "Sistem şu anda kritik bir topluluk doğrulaması algılamadı."}
+</p>
       <button class="mode-btn" style="background:#ffb3b3;" onclick="alert('Canlı eleştiri doğrulama anketi sonraki aşamada aktif edilecek.')">Anketi İncele →</button>
     </div>
   </div>
@@ -2430,6 +2488,18 @@ const hottestComment =
 
 const risingCount =
   topSupported?.vaero_review_supports?.length || 0;
+    const complaintQueue = data.filter(x => {
+  const supportCount =
+    x.vaero_review_supports?.length || 0;
+
+  return (
+    x.type === "complaint" ||
+    supportCount >= 2
+  );
+});
+
+const liveVerificationSignal =
+  complaintQueue[0] || null;
     const trendingReviews = [...data]
   .map(x => {
 
