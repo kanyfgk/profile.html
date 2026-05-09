@@ -1212,6 +1212,19 @@ line-height:18px;
   STATÜ KONTROL EDİLİYOR
 </div>
       <div class="profile-name" id="profileName">VA-001</div>
+      <div id="profileBadge" style="
+margin-top:8px;
+display:inline-block;
+padding:6px 10px;
+border-radius:999px;
+background:rgba(230,215,176,.12);
+color:#e6d7b0;
+font-size:11px;
+font-weight:800;
+letter-spacing:1px;
+">
+VA MEMBER
+</div>
       <p style="color:rgba(255,255,255,.65);line-height:22px;margin-top:8px;">
         Deneyim paylaş, vizyon üret, topluluğun içinde değer kazan.
       </p>
@@ -1227,6 +1240,9 @@ line-height:18px;
       <div style="color:#e6d7b0;font-size:12px;letter-spacing:2px;margin-bottom:10px;">SON AKTİVİTE</div>
       <div id="warningBox" style="display:none;margin-top:14px;padding:12px;border-radius:14px;background:rgba(255,120,120,0.08);border:1px solid rgba(255,120,120,0.18);color:#ffb3b3;font-size:13px;line-height:1.5;">
   WARNING SYSTEM ACTIVE
+</div>
+      <div id="brandStatusBox" style="display:none;margin-top:12px;padding:12px;border-radius:14px;background:rgba(230,215,176,0.08);border:1px solid rgba(230,215,176,0.18);color:#e6d7b0;font-size:13px;line-height:1.5;">
+  MARKA DURUMU KONTROL EDİLİYOR
 </div>
       <p style="font-size:13px;color:rgba(255,255,255,.7);line-height:22px;">
         White Tea deneyimi paylaşıldı.<br>
@@ -1477,6 +1493,8 @@ window.addEventListener("load", async () => {
 
     if(savedId){
         document.getElementById("customerId").value = savedId;
+      document.getElementById("customerId").value =
+savedId.toUpperCase();
         await login();
     }
 });
@@ -1536,6 +1554,15 @@ if(verifiedBox){
 
 if(profileNameEl){
     profileNameEl.innerText = id;
+  if(window.currentProfile && !window.currentProfile.verified){
+
+  profileNameEl.style.opacity = ".72";
+
+}else{
+
+  profileNameEl.style.opacity = "1";
+
+}
 }
   const membershipType = profile.membership_type || "visitor";
 const aeStatus = profile.ae_status || "none";
@@ -1560,12 +1587,66 @@ window.currentProfile.membershipExpired = membershipExpired;
 
 console.log("CURRENT PROFILE:", window.currentProfile); 
   const statusText = document.getElementById("profileStatusText");
+  const badge = document.getElementById("profileBadge");
+
+if(badge){
+
+  if(aeStatus !== "none"){
+
+    badge.innerText = "Æ VERIFIED";
+
+    badge.style.background =
+    "rgba(230,215,176,.18)";
+
+    badge.style.color = "#e6d7b0";
+
+  }else if(membershipType === "VA"){
+
+    badge.innerText = "VA MEMBER";
+
+    badge.style.background =
+    "rgba(255,255,255,.08)";
+
+    badge.style.color = "#fff";
+
+  }else{
+
+    badge.innerText = "VISITOR";
+
+    badge.style.background =
+    "rgba(255,120,120,.12)";
+
+    badge.style.color = "#ffb3b3";
+
+  }
+
+}
   const warningBox = document.getElementById("warningBox");
+  const brandStatusBox = document.getElementById("brandStatusBox");
+
+if(brandStatusBox && aeStatus !== "none"){
+  brandStatusBox.style.display = "block";
+
+  if(brandActive){
+    brandStatusBox.innerText = "Æ marka hesabı aktif.";
+  }else{
+    brandStatusBox.innerText = "Æ marka hesabı pasif görünüyor. Aktiflik düşerse uyarı süreci başlayabilir.";
+  }
+}
 
 if(statusText){
   if(window.currentProfile.membershipExpired){
+    document.querySelector(".profile-card").style.border =
+"1px solid rgba(255,80,80,.28)";
+    if(badge){
+  badge.innerText = "MEMBERSHIP EXPIRED";
+  badge.style.background = "rgba(255,80,80,.16)";
+  badge.style.color = "#ffb3b3";
+}
     statusText.innerText = "ÜYELİK SÜRESİ DOLDU";
 }else if(aeStatus !== "none"){
+    document.querySelector(".profile-card").style.boxShadow =
+"0 0 32px rgba(230,215,176,.08)";
     statusText.innerText = "Æ MARKA STATÜSÜ · " + aeStatus.toUpperCase();
 }else if(membershipType === "VA"){
     statusText.innerText = "VA PLATFORM ÜYESİ";
@@ -1584,10 +1665,22 @@ if(statusText){
   const verifiedOwnership = document.getElementById("verifiedOwnership");
 
 if(verifiedOwnership){
+  verifiedOwnership.parentElement.style.transition =
+"all .25s ease";
     if(purchases && purchases.length > 0){
         verifiedOwnership.innerText = purchases.length + " ÜRÜN";
+      verifiedOwnership.parentElement.style.background =
+"rgba(230,215,176,.12)";
+
+verifiedOwnership.parentElement.style.border =
+"1px solid rgba(230,215,176,.22)";
     }else{
         verifiedOwnership.innerText = "0 ÜRÜN";
+      verifiedOwnership.parentElement.style.background =
+"rgba(255,255,255,.05)";
+
+verifiedOwnership.parentElement.style.border =
+"1px solid rgba(255,255,255,.05)";
     }
 }
   
@@ -1627,6 +1720,10 @@ function closeViewer(){
 }
 
 function openAction(type){
+  if(window.currentProfile && window.currentProfile.membershipExpired){
+  alert("Bu Platform ID’nin üyelik süresi dolmuş. Puan, eleştiri ve doğrulanmış işlem için üyeliği yenilemen gerekir.");
+  return;
+}
   if(!activeId){
     openIdModal();
     return;
@@ -1778,6 +1875,10 @@ async function loadActionReviews(type){
   `).join("");
 }
 async function saveAction(){
+  if(window.currentProfile && window.currentProfile.membershipExpired){
+  alert("Bu Platform ID’nin üyelik süresi dolmuş. İşlem kaydedilemez.");
+  return;
+}
   const customer = customers[activeId];
   const productId = activeContent.product;
   console.log("ACTIVE ID:", activeId);
@@ -2158,6 +2259,10 @@ function openReviews(productId){
   loadReviews(productId);
 }
   async function supportReview(reviewId){
+    if(window.currentProfile && window.currentProfile.membershipExpired){
+  alert("Bu Platform ID’nin üyelik süresi dolmuş. Deneyim desteği için üyeliği yenilemen gerekir.");
+  return;
+}
 
   if(!activeId){
     openIdModal();
@@ -2464,6 +2569,10 @@ function closeDiscover(){
 function openProfile(){
 
   closeFlow();
+  if(!activeId){
+  openIdModal();
+  return;
+}
   closeViewer();
   closeAction();
   closeAllScreens();
@@ -2479,10 +2588,27 @@ function closeProfile(){
 }
 
 function openModeCreate(){
+  if(!activeId){
+    openIdModal();
+    return;
+  }
+
+  if(window.currentProfile && window.currentProfile.membershipExpired){
+    alert("Moda Yarat alanı için aktif Platform ID üyeliği gerekir.");
+    return;
+  }
+
   alert("Vizyon yaratma stüdyosu sonraki aşamada aktif edilecek. Burada kullanıcı ürün/fikir konsepti oluşturabilecek.");
 }
-
+if(!activeId){
+  openIdModal();
+  return;
+}
 function openBrandHub(){
+  if(window.currentProfile && window.currentProfile.membershipExpired){
+  alert("Marka merkezi için aktif üyelik gerekir.");
+  return;
+}
 
   closeFlow();
   closeViewer();
@@ -2498,7 +2624,10 @@ function closeBrandHub(){
   document.getElementById("brandHubScreen").classList.remove("show");
   setActiveNav("home");
 }
-
+if(!activeId){
+  openIdModal();
+  return;
+}
 function openCommunity(){
 
   closeFlow();
