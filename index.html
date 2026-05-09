@@ -1225,6 +1225,9 @@ line-height:18px;
 
     <div class="profile-card">
       <div style="color:#e6d7b0;font-size:12px;letter-spacing:2px;margin-bottom:10px;">SON AKTİVİTE</div>
+      <div id="warningBox" style="display:none;margin-top:14px;padding:12px;border-radius:14px;background:rgba(255,120,120,0.08);border:1px solid rgba(255,120,120,0.18);color:#ffb3b3;font-size:13px;line-height:1.5;">
+  WARNING SYSTEM ACTIVE
+</div>
       <p style="font-size:13px;color:rgba(255,255,255,.7);line-height:22px;">
         White Tea deneyimi paylaşıldı.<br>
         Topluluğa yeni yorum eklendi.<br>
@@ -1550,6 +1553,7 @@ window.currentProfile = {
 
 console.log("CURRENT PROFILE:", window.currentProfile); 
   const statusText = document.getElementById("profileStatusText");
+  const warningBox = document.getElementById("warningBox");
 
 if(statusText){
   if(aeStatus !== "none"){
@@ -1559,6 +1563,13 @@ if(statusText){
   }else{
     statusText.innerText = "ZİYARETÇİ MODU";
   }
+}
+  if(warningBox && window.currentProfile.warningCount > 0){
+  warningBox.style.display = "block";
+  warningBox.innerText =
+    "Bu marka " +
+    window.currentProfile.warningCount +
+    " adet aktivite uyarısı aldı.";
 }
   console.log("CURRENT PROFILE:", window.currentProfile);
   const verifiedOwnership = document.getElementById("verifiedOwnership");
