@@ -2119,6 +2119,14 @@ async function loadActionReviews(type){
   },2000);
 }
 async function saveAction(){
+  const saveBtn =
+document.querySelector("#actionModal .confirm");
+
+if(saveBtn){
+  saveBtn.disabled = true;
+  saveBtn.style.opacity = ".6";
+  saveBtn.innerText = "Kaydediliyor...";
+}
   if(window.currentProfile && window.currentProfile.membershipExpired){
   alert("Bu Platform ID’nin üyelik süresi dolmuş. İşlem kaydedilemez.");
   return;
@@ -2231,6 +2239,11 @@ if(actionNotice){
     document.getElementById("actionText").value = "";
     document.getElementById("experienceType").value = "";
     document.getElementById("wouldBuyAgain").value = "";
+    if(saveBtn){
+  saveBtn.disabled = false;
+  saveBtn.style.opacity = "1";
+  saveBtn.innerText = "Kaydet";
+}
 
     return;
   }
@@ -2247,8 +2260,8 @@ if(actionNotice){
 
   if(verified){
 
-    actionNotice.innerText =
-    "★ Doğrulanmış puan başarıyla kaydedildi.";
+    closeAction();
+showToast("★ Doğrulanmış puan başarıyla kaydedildi.");
 
   }else if(bought && !isValidDate){
 
@@ -2616,7 +2629,7 @@ function openReviews(productId){
     return;
   }
 
-  alert("Deneyim desteğin kaydedildi 🔥");
+  showToast("Deneyim desteğin kaydedildi 🔥");
 loadActionReviews(actionType || "comment");
 loadDiscover();
 }
