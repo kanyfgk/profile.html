@@ -1321,6 +1321,7 @@ font-size:22px;
 font-weight:700;
 color:#ffd280;
 ">
+<div id="brandHealthStatus">
 Topluluk incelemesinde
 </div>
 
@@ -1330,7 +1331,8 @@ font-size:13px;
 color:rgba(255,255,255,.6);
 line-height:20px;
 ">
- 124 negatif yorum · 1.284 topluluk desteği
+ <div id="brandHealthMeta">
+124 negatif yorum · 1.284 topluluk desteği
 </div>
 
 </div>
@@ -1460,7 +1462,24 @@ Bu soru önce markayı daha önce tercih eden doğrulanmış kullanıcılara gö
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
+<script>
+const brandHealthStatus =
+document.getElementById("brandHealthStatus");
 
+const brandHealthMeta =
+document.getElementById("brandHealthMeta");
+
+if(brandHealthStatus){
+
+brandHealthStatus.innerText =
+"Topluluk incelemesinde";
+
+brandHealthMeta.innerText =
+"124 negatif yorum · 1.284 topluluk desteği";
+
+}
+</script>
 <script>
 const SUPABASE_URL = "https://wpfiszzxlwkmaqcqmywa.supabase.co";  
 const SUPABASE_KEY = "sb_publishable_eTspasegbb8PbX2hEGMD5w_ggrWRuYN";
@@ -2197,7 +2216,18 @@ async function loadLiveRatings(){
     console.error("Supabase error:", error);
     return;
   }
+const lowRatings =
+data.filter(x => x.rating && x.rating <= 2);
 
+const supportTotal =
+lowRatings.reduce(
+(total, item)=>
+total + (item.vaero_review_supports?.length || 0),
+0
+);
+
+const lowRatio =
+lowRatings.length / (data.length || 1);
   const grouped = {};
 
   data.forEach(item => {
@@ -2516,6 +2546,11 @@ loadDiscover();
   }
 
   const discover = document.getElementById("discoverGrid");
+    const brandHealthStatus =
+document.getElementById("brandHealthStatus");
+
+const brandHealthMeta =
+document.getElementById("brandHealthMeta");
     const topSupported = [...data]
   .sort((a,b)=>
     (b.vaero_review_supports?.length || 0) -
@@ -2603,6 +2638,39 @@ const hottestTrend = trendingReviews[0];
   hottestTrend
     ? getProductName(hottestTrend.product_id)
     : "Henüz trend ürün yok";
+    if(brandHealthStatus && brandHealthMeta){
+
+if(lowRatio >= 0.25 && supportTotal >= 10){
+
+brandHealthStatus.innerText = "KRİTİK";
+brandHealthStatus.style.color = "#ff8080";
+
+brandHealthMeta.innerText =
+lowRatings.length +
+" negatif yorum · " +
+supportTotal +
+" topluluk desteği";
+
+}else if(lowRatio >= 0.12){
+
+brandHealthStatus.innerText = "İZLEMEDE";
+brandHealthStatus.style.color = "#ffd280";
+
+brandHealthMeta.innerText =
+lowRatings.length +
+" negatif yorum algılandı";
+
+}else{
+
+brandHealthStatus.innerText = "SAĞLIKLI";
+brandHealthStatus.style.color = "#8fffaa";
+
+brandHealthMeta.innerText =
+"Toplulukta kritik sinyal yok";
+
+}
+
+}
   if(!discover) return;
 
   const nightDrive = data.filter(x=>x.experience_type==="night_drive").length;
