@@ -1531,6 +1531,16 @@ if(verifiedBox){
 if(profileNameEl){
     profileNameEl.innerText = id;
 }
+  const membershipType = profile.membership_type || "visitor";
+const aeStatus = profile.ae_status || "none";
+const brandActive = profile.brand_active;
+
+window.currentProfile = {
+    membershipType,
+    aeStatus,
+    brandActive
+}; 
+  console.log("CURRENT PROFILE:", window.currentProfile);
   const verifiedOwnership = document.getElementById("verifiedOwnership");
 
 if(verifiedOwnership){
