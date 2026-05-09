@@ -2119,22 +2119,24 @@ async function loadActionReviews(type){
   },2000);
 }
 async function saveAction(){
+
   const experienceValue = document.getElementById("experienceType").value;
-const buyAgainValue = document.getElementById("wouldBuyAgain").value;
-const textValue = document.getElementById("actionText").value.trim();
+  const buyAgainValue = document.getElementById("wouldBuyAgain").value;
+  const textValue = document.getElementById("actionText").value.trim();
 
-if(!experienceValue || !buyAgainValue || !textValue){
-  showToast("Deneyim tipi, tekrar alma seçimi ve yorum alanı doldurulmalı.");
-  return;
-}
+  if(!experienceValue || !buyAgainValue || !textValue){
+    showToast("Deneyim tipi, tekrar alma seçimi ve yorum alanı doldurulmalı.");
+    return;
+  }
+
   const saveBtn =
-document.querySelector("#actionModal .confirm");
+  document.querySelector("#actionModal .confirm");
 
-if(saveBtn){
-  saveBtn.disabled = true;
-  saveBtn.style.opacity = ".6";
-  saveBtn.innerText = "Kaydediliyor...";
-}
+  if(saveBtn){
+    saveBtn.disabled = true;
+    saveBtn.style.opacity = ".6";
+    saveBtn.innerText = "Kaydediliyor...";
+  }
   if(window.currentProfile && window.currentProfile.membershipExpired){
   alert("Bu Platform ID’nin üyelik süresi dolmuş. İşlem kaydedilemez.");
   return;
