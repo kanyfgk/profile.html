@@ -1710,6 +1710,37 @@ ${Math.floor(Math.random()*12)+3} doğrulanmış deneyim
   viewer.classList.add("show");
 }
 
+function openReviewFromDiscover(productId){
+
+  const related = contents.find(c => c.product === productId);
+
+  if(related){
+    closeDiscover();
+    openViewer(related.id);
+    return;
+  }
+
+  closeDiscover();
+
+  activeContent = {
+    id: productId,
+    product: productId,
+    type: "Ürün",
+    title: getProductName(productId),
+    desc: "Bu ürün için topluluk deneyimleri."
+  };
+
+  mediaText.innerText = "Ürün";
+  viewerTitle.innerText = activeContent.title;
+  viewerDesc.innerText = activeContent.desc;
+  verifiedText.innerText =
+  "Ürün: " + getProductName(productId);
+
+  loadReviews(productId);
+
+  lockBody();
+  viewer.classList.add("show");
+}
 function closeViewer(){
 
   viewer.classList.remove("show");
@@ -2314,7 +2345,7 @@ function openReviews(productId){
   if(error){
 
     if(error.message.includes("duplicate")){
-  alert("Bu deneyimi daha önce desteklemiştin. Tekrar destek sayılmaz ama görüşün sistemde zaten kayıtlı.");
+ alert("Bu deneyimi daha önce desteklemiştin. Tekrar destek sayılmaz ama görüşün sistemde zaten kayıtlı.");
   loadActionReviews(actionType || "comment");
   loadDiscover();
   return;
@@ -2563,7 +2594,16 @@ function finishIdFocus(){
 
   const { data, error } = await supabaseClient
     .from("vaero_reviews")
-    .select("id, comment, rating, is_verified, product_id, experience_type, would_buy_again")
+    .select(`
+      id,
+      comment,
+      rating,
+      is_verified,
+      product_id,
+      experience_type,
+      would_buy_again,
+      vaero_review_supports(id)
+    `)
     .order("id", { ascending:false })
     .limit(100);
 
@@ -2582,23 +2622,44 @@ function finishIdFocus(){
 
   list.innerHTML = filtered.length
     ? filtered.map(x => `
-      <div style="padding:10px;border-radius:12px;background:rgba(255,255,255,.06);margin-bottom:8px;">
-        <div style="font-size:13px;line-height:19px;">${x.comment || "—"}</div>
+      <div style="
+        padding:10px;
+        border-radius:12px;
+        background:rgba(255,255,255,.06);
+        margin-bottom:8px;
+        border:1px solid rgba(255,255,255,.08);
+      ">
+        <div
+onclick="openReviewFromDiscover('${x.product_id}')"
+style="
+font-size:13px;
+line-height:19px;
+cursor:pointer;
+"
+>
+          ${x.comment || "—"}
+        </div>
+
         <div style="font-size:10px;color:#e6d7b0;margin-top:6px;">
           ${x.is_verified ? "★ Doğrulanmış" : "Deneyim notu"}
         </div>
+
+        <div style="font-size:10px;color:rgba(255,255,255,.55);margin-top:5px;">
+          ${(x.vaero_review_supports?.length || 0)} kişi aynı deneyimi yaşadı
+        </div>
+
         <button onclick="supportReview('${x.id}')" style="
-  margin-top:7px;
-  border:0;
-  border-radius:999px;
-  padding:7px 9px;
-  background:rgba(230,215,176,.14);
-  color:#e6d7b0;
-  font-size:11px;
-  font-weight:700;
-">
-  Ben de bunu yaşadım
-</button>
+          margin-top:8px;
+          border:0;
+          border-radius:999px;
+          padding:7px 10px;
+          background:rgba(230,215,176,.14);
+          color:#e6d7b0;
+          font-size:11px;
+          font-weight:800;
+        ">
+          Ben de bunu yaşadım
+        </button>
       </div>
     `).join("")
     : `<div style="font-size:13px;color:rgba(255,255,255,.65);">Topluluk ilk deneyimi bekliyor.</div>`;
