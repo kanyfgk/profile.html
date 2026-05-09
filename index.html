@@ -2378,14 +2378,16 @@ loadDiscover();
 
   const discover = document.getElementById("discoverGrid");
     const topSupported = [...data]
-      const hottestComment =
-        const risingCount =
-topSupported?.vaero_review_supports?.length || 0;
-topSupported?.comment || "Topluluk ilk büyük deneyimi bekliyor.";
   .sort((a,b)=>
     (b.vaero_review_supports?.length || 0) -
     (a.vaero_review_supports?.length || 0)
   )[0];
+
+const hottestComment =
+  topSupported?.comment || "Topluluk ilk büyük deneyimi bekliyor.";
+
+const risingCount =
+  topSupported?.vaero_review_supports?.length || 0;
   if(!discover) return;
 
   const nightDrive = data.filter(x=>x.experience_type==="night_drive").length;
@@ -2408,13 +2410,13 @@ border:1px solid rgba(230,215,176,.25);
   </div>
 
   <div style="
-  margin-top:8px;
-  font-size:14px;
-  line-height:21px;
-  font-weight:600;
-  ">
-    “🔥 ${hottestComment}”
-  </div>
+font-size:11px;
+color:#c8a96a;
+margin-top:6px;
+opacity:.9;
+">
+🔥 ${risingCount} kişi aynı deneyimi yaşadı
+</div>
 
   <div style="
   margin-top:8px;
