@@ -1497,8 +1497,8 @@ const profile = profiles && profiles.length > 0 ? profiles[0] : null;
   }
 
   if(!profile){
-    alert("Bu Platform ID henüz kayıtlı görünmüyor.");
-    return;
+    alert("Bu Platform ID bulunamadı. Lütfen ID’ni kontrol et.");
+return;
   }
 
   const { data: purchases, error: purchaseError } = await supabaseClient
