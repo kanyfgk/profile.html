@@ -1399,7 +1399,8 @@ const customers={
 let activeId=null;
 let activeContent=null;
 let actionType=null;
-
+  let globalTrendingReviews = [];
+let globalHottestProductName = "Henüz trend ürün yok";
 function renderProducts(){
   productGrid.innerHTML=products.map(p=>`
     <button class="product-tile ${p.rec?'recommended':''}" data-product="${p.id}" onclick="openProduct('${p.id}')">
@@ -1596,14 +1597,6 @@ if(badge){
   !["brand"].includes(p.id)
 ).length;
 
-const trendingProducts =
-  trendingReviews
-    .filter(x => x.product_id)
-    .map(x => x.product_id);
-
-const uniqueTrending =
-  [...new Set(trendingProducts)];
-
     badge.innerText = "Æ VERIFIED";
 
     badge.style.background =
@@ -1687,14 +1680,15 @@ if(statusText){
   !["brand"].includes(p.id)
 ).length;
 
-const trendingProducts =
-  trendingReviews
+    const trendingProducts =
+  globalTrendingReviews
     .filter(x => x.product_id)
     .map(x => x.product_id);
 
 const uniqueTrending =
   [...new Set(trendingProducts)];
 
+const hottestProductName = globalHottestProductName;
 productStat.innerHTML =
 `
 <b id="verifiedOwnership">
