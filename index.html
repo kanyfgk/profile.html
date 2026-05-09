@@ -2439,6 +2439,51 @@ border:1px solid rgba(230,215,176,.25);
 ">
   <div style="font-size:11px;color:#e6d7b0;font-weight:800;">
     TOPLULUKÇA ÖNE ÇIKAN
+    ${hottestTrend ? `
+<div style="
+margin-top:14px;
+padding-top:12px;
+border-top:1px solid rgba(255,255,255,.08);
+">
+
+<div style="
+font-size:11px;
+font-weight:800;
+color:#ffcc66;
+margin-bottom:6px;
+">
+🔥 ŞU AN YÜKSELEN DENEYİM
+</div>
+
+<div style="
+font-size:13px;
+line-height:20px;
+font-weight:700;
+">
+${hottestTrend.comment || "Topluluk hareketleniyor."}
+</div>
+
+<div style="
+margin-top:6px;
+font-size:11px;
+opacity:.7;
+">
+Trend skor: ${hottestTrend.trendScore}
+</div>
+<button onclick="featureReviewFromDiscover('${hottestTrend.id}')" style="
+margin-top:10px;
+border:0;
+border-radius:999px;
+padding:8px 12px;
+background:#e6d7b0;
+color:#07111d;
+font-size:11px;
+font-weight:900;
+">
+  Bunu Öne Çıkar
+</button>
+</div>
+` : ``}
   </div>
 <div style="
 margin-top:8px;
@@ -2780,7 +2825,9 @@ onmouseout="this.style.background='transparent'"
     `).join("")
     : `<div style="font-size:13px;color:rgba(255,255,255,.65);">Topluluk ilk deneyimi bekliyor.</div>`;
 }
-
+function featureReviewFromDiscover(reviewId){
+  alert("Bu deneyim öne çıkarma listesine alındı. Sonraki aşamada admin karar paneline bağlanacak. Review ID: " + reviewId);
+}
 function closeDiscover(){
   document.getElementById("discoverModal").classList.remove("show");
 }
