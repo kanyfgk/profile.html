@@ -1933,6 +1933,13 @@ function openAction(type){
   }
 
   actionType = type;
+  const saveBtn = document.querySelector("#actionModal .confirm");
+
+if(saveBtn){
+  saveBtn.disabled = false;
+  saveBtn.style.opacity = "1";
+  saveBtn.innerText = "Kaydet";
+}
 
   document.getElementById("ratingBox").style.display =
     type === "rate" ? "block" : "none";
@@ -1963,6 +1970,13 @@ if(actionNotice){
   document.getElementById("actionModal").classList.add("show");
 }
 function closeAction(){
+  const saveBtn = document.querySelector("#actionModal .confirm");
+
+if(saveBtn){
+  saveBtn.disabled = false;
+  saveBtn.style.opacity = "1";
+  saveBtn.innerText = "Kaydet";
+}
   document.getElementById("actionModal").classList.remove("show");
 
   setTimeout(()=>{
