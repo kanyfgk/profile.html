@@ -1592,6 +1592,17 @@ console.log("CURRENT PROFILE:", window.currentProfile);
 if(badge){
 
   if(aeStatus !== "none"){
+    const activeSaleProducts = products.filter(p =>
+  !["brand"].includes(p.id)
+).length;
+
+const trendingProducts =
+  trendingReviews
+    .filter(x => x.product_id)
+    .map(x => x.product_id);
+
+const uniqueTrending =
+  [...new Set(trendingProducts)];
 
     badge.innerText = "Æ VERIFIED";
 
@@ -1664,24 +1675,61 @@ if(statusText){
   console.log("CURRENT PROFILE:", window.currentProfile);
   const verifiedOwnership = document.getElementById("verifiedOwnership");
 
-if(verifiedOwnership){
-  verifiedOwnership.parentElement.style.transition =
-"all .25s ease";
+ if(verifiedOwnership){
+
+  const productStat = verifiedOwnership.parentElement;
+
+  productStat.style.transition = "all .25s ease";
+
+  if(aeStatus !== "none"){
+
+    const activeSaleProducts = products.filter(p =>
+  !["brand"].includes(p.id)
+).length;
+
+const trendingProducts =
+  trendingReviews
+    .filter(x => x.product_id)
+    .map(x => x.product_id);
+
+const uniqueTrending =
+  [...new Set(trendingProducts)];
+
+productStat.innerHTML =
+`
+<b id="verifiedOwnership">
+${activeSaleProducts} ÜRÜN
+</b>
+
+<div style="
+font-size:10px;
+opacity:.75;
+margin-top:2px;
+">
+${uniqueTrending.length} trendde 🔥
+<div style="
+font-size:9px;
+opacity:.55;
+margin-top:3px;
+">
+Şu an öne çıkan:
+${hottestProductName}
+</div>
+</div>
+`;
+
+    productStat.style.background = "rgba(230,215,176,.12)";
+    productStat.style.border = "1px solid rgba(230,215,176,.22)";
+
+  }else{
+
     if(purchases && purchases.length > 0){
-        verifiedOwnership.innerText = purchases.length + " ÜRÜN";
-      verifiedOwnership.parentElement.style.background =
-"rgba(230,215,176,.12)";
-
-verifiedOwnership.parentElement.style.border =
-"1px solid rgba(230,215,176,.22)";
+      verifiedOwnership.innerText = purchases.length + " ÜRÜN";
     }else{
-        verifiedOwnership.innerText = "0 ÜRÜN";
-      verifiedOwnership.parentElement.style.background =
-"rgba(255,255,255,.05)";
-
-verifiedOwnership.parentElement.style.border =
-"1px solid rgba(255,255,255,.05)";
+      verifiedOwnership.innerText = "0 ÜRÜN";
     }
+
+  }
 }
   
 
@@ -2420,6 +2468,10 @@ const risingCount =
   );
 
 const hottestTrend = trendingReviews[0];
+    const hottestProductName =
+  hottestTrend
+    ? getProductName(hottestTrend.product_id)
+    : "Henüz trend ürün yok";
   if(!discover) return;
 
   const nightDrive = data.filter(x=>x.experience_type==="night_drive").length;
