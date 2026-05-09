@@ -2639,7 +2639,9 @@ const hottestTrend = trendingReviews[0];
     ? getProductName(hottestTrend.product_id)
     : "Henüz trend ürün yok";
     if(brandHealthStatus && brandHealthMeta){
-
+const lowRatio =
+lowRatings.length / (data.length || 1);
+      
 if(lowRatio >= 0.25 && supportTotal >= 10){
 
 brandHealthStatus.innerText = "KRİTİK";
