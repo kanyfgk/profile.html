@@ -1208,6 +1208,9 @@ line-height:18px;
 
     <div class="profile-card">
       <div style="color:#e6d7b0;font-size:12px;">DOĞRULANMIŞ PROFİL</div>
+      <div id="profileStatusText" style="margin-top:8px;color:#e6d7b0;font-size:12px;letter-spacing:1px;">
+  STATÜ KONTROL EDİLİYOR
+</div>
       <div class="profile-name" id="profileName">VA-001</div>
       <p style="color:rgba(255,255,255,.65);line-height:22px;margin-top:8px;">
         Deneyim paylaş, vizyon üret, topluluğun içinde değer kazan.
@@ -1546,6 +1549,17 @@ window.currentProfile = {
 };
 
 console.log("CURRENT PROFILE:", window.currentProfile); 
+  const statusText = document.getElementById("profileStatusText");
+
+if(statusText){
+  if(aeStatus !== "none"){
+    statusText.innerText = "Æ MARKA STATÜSÜ · " + aeStatus.toUpperCase();
+  }else if(membershipType === "VA"){
+    statusText.innerText = "VA PLATFORM ÜYESİ";
+  }else{
+    statusText.innerText = "ZİYARETÇİ MODU";
+  }
+}
   console.log("CURRENT PROFILE:", window.currentProfile);
   const verifiedOwnership = document.getElementById("verifiedOwnership");
 
