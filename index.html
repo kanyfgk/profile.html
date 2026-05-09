@@ -1549,6 +1549,12 @@ window.currentProfile = {
     warningCount: profile.ae_warning_count || 0,
     verified: profile.is_verified || false,
     expiresAt: profile.membership_expires_at || null
+  const membershipExpired =
+  profile.membership_expires_at
+    ? new Date(profile.membership_expires_at) < new Date()
+    : false;
+
+window.currentProfile.membershipExpired = membershipExpired;
 };
 
 console.log("CURRENT PROFILE:", window.currentProfile); 
@@ -1556,13 +1562,15 @@ console.log("CURRENT PROFILE:", window.currentProfile);
   const warningBox = document.getElementById("warningBox");
 
 if(statusText){
-  if(aeStatus !== "none"){
+  if(window.currentProfile.membershipExpired){
+    statusText.innerText = "ÜYELİK SÜRESİ DOLDU";
+}else if(aeStatus !== "none"){
     statusText.innerText = "Æ MARKA STATÜSÜ · " + aeStatus.toUpperCase();
-  }else if(membershipType === "VA"){
+}else if(membershipType === "VA"){
     statusText.innerText = "VA PLATFORM ÜYESİ";
-  }else{
+}else{
     statusText.innerText = "ZİYARETÇİ MODU";
-  }
+}
 }
   if(warningBox && window.currentProfile.warningCount > 0){
   warningBox.style.display = "block";
