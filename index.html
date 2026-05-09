@@ -1829,7 +1829,7 @@ experience_type: document.getElementById("experienceType").value || null,
     .select();
 
   if(error){
-    console.error("INSERT ERROR:", error);
+    console.log("INSERT BLOCKED:", error.message);
     if(
   error.message &&
   error.message.includes("unique_verified_customer_product_review")
