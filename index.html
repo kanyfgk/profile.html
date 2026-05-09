@@ -1549,7 +1549,9 @@ window.currentProfile = {
     warningCount: profile.ae_warning_count || 0,
     verified: profile.is_verified || false,
     expiresAt: profile.membership_expires_at || null
-  const membershipExpired =
+};
+
+const membershipExpired =
   profile.membership_expires_at
     ? new Date(profile.membership_expires_at) < new Date()
     : false;
