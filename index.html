@@ -1492,14 +1492,18 @@ const profile = profiles && profiles.length > 0 ? profiles[0] : null;
 
   if(profileError){
     console.error("PROFILE LOOKUP ERROR:", profileError);
-    alert("Platform ID şu an kontrol edilemedi.");
+    localStorage.removeItem("vaero_id");
+    activeId = null;
+    alert("Platform ID şu an kontrol edilemedi. Lütfen tekrar dene.");
     return;
-  }
+}
 
   if(!profile){
+    localStorage.removeItem("vaero_id");
+    activeId = null;
     alert("Bu Platform ID bulunamadı. Lütfen ID’ni kontrol et.");
-return;
-  }
+    return;
+}
 
   const { data: purchases, error: purchaseError } = await supabaseClient
     .from("vaero_profiles")
