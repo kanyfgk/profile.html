@@ -2378,6 +2378,10 @@ loadDiscover();
 
   const discover = document.getElementById("discoverGrid");
     const topSupported = [...data]
+      const hottestComment =
+        const risingCount =
+topSupported?.vaero_review_supports?.length || 0;
+topSupported?.comment || "Topluluk ilk büyük deneyimi bekliyor.";
   .sort((a,b)=>
     (b.vaero_review_supports?.length || 0) -
     (a.vaero_review_supports?.length || 0)
@@ -2409,7 +2413,7 @@ border:1px solid rgba(230,215,176,.25);
   line-height:21px;
   font-weight:600;
   ">
-    “${topSupported.comment || 'Deneyim notu'}”
+    “🔥 ${hottestComment}”
   </div>
 
   <div style="
@@ -2417,7 +2421,7 @@ border:1px solid rgba(230,215,176,.25);
   font-size:11px;
   color:rgba(255,255,255,.6);
   ">
-    ${topSupported.vaero_review_supports?.length || 0} kişi aynı deneyimi yaşadı
+    Bugün ${risingCount} kişi bu deneyimi doğruladı
   </div>
 </div>
 ` : ``}
@@ -2624,6 +2628,72 @@ function finishIdFocus(){
     ? filtered.map(x => `
       <div style="
         padding:10px;
+        <div style="
+display:flex;
+align-items:center;
+gap:8px;
+margin-bottom:8px;
+">
+  <div style="
+  width:28px;
+  height:28px;
+  border-radius:50%;
+  background:rgba(230,215,176,.14);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:11px;
+  color:#e6d7b0;
+  font-weight:800;
+  ">
+    ${x.is_verified ? "★" : "•"}
+  </div>
+
+  <div>
+    <div style="
+    font-size:11px;
+    color:#fff;
+    font-weight:700;
+    ">
+      ${x.is_verified ? "Doğrulanmış kullanıcı" : "Topluluk üyesi"}
+    </div>
+
+    <div style="
+    font-size:10px;
+    color:rgba(255,255,255,.45);
+    ">
+      ${getProductName(x.product_id)}
+      <div style="
+margin-top:6px;
+display:flex;
+gap:6px;
+flex-wrap:wrap;
+">
+  <span style="
+  padding:4px 7px;
+  border-radius:999px;
+  background:rgba(230,215,176,.12);
+  color:#e6d7b0;
+  font-size:9px;
+  font-weight:800;
+  ">
+    ${x.is_verified ? "VERIFIED" : "COMMUNITY"}
+  </span>
+
+  <span style="
+  padding:4px 7px;
+  border-radius:999px;
+  background:rgba(255,255,255,.06);
+  color:rgba(255,255,255,.65);
+  font-size:9px;
+  font-weight:700;
+  ">
+    ${x.rating ? x.rating + "/5" : "NO RATE"}
+  </span>
+</div>
+    </div>
+  </div>
+</div>
         border-radius:12px;
         background:rgba(255,255,255,.06);
         margin-bottom:8px;
@@ -2635,17 +2705,22 @@ style="
 font-size:13px;
 line-height:19px;
 cursor:pointer;
+padding:8px;
+border-radius:10px;
+transition:all .18s ease;
 "
+onmouseover="this.style.background='rgba(255,255,255,.05)'"
+onmouseout="this.style.background='transparent'"
 >
           ${x.comment || "—"}
         </div>
 
         <div style="font-size:10px;color:#e6d7b0;margin-top:6px;">
-          ${x.is_verified ? "★ Doğrulanmış" : "Deneyim notu"}
+          ${x.is_verified ? "★ Doğrulanmış satın alım" : "Topluluk deneyim notu"}
         </div>
 
         <div style="font-size:10px;color:rgba(255,255,255,.55);margin-top:5px;">
-          ${(x.vaero_review_supports?.length || 0)} kişi aynı deneyimi yaşadı
+          ${(x.vaero_review_supports?.length || 0)} destek · ${x.rating ? x.rating + "/5" : "puan yok"}
         </div>
 
         <button onclick="supportReview('${x.id}')" style="
