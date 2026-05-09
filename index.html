@@ -2634,43 +2634,29 @@ negativeRatio >= 0.25;
   );
 
 const hottestTrend = trendingReviews[0];
-    const hottestProductName =
+
+const hottestProductName =
   hottestTrend
     ? getProductName(hottestTrend.product_id)
     : "Henüz trend ürün yok";
-    if(brandHealthStatus && brandHealthMeta){
-const lowRatio =
-lowRatings.length / (data.length || 1);
-      
-if(lowRatio >= 0.25 && supportTotal >= 10){
 
-brandHealthStatus.innerText = "KRİTİK";
-brandHealthStatus.style.color = "#ff8080";
+if(brandHealthStatus && brandHealthMeta){
 
-brandHealthMeta.innerText =
-lowRatings.length +
-" negatif yorum · " +
-supportTotal +
-" topluluk desteği";
+  brandHealthStatus.innerText = brandSignal.status;
 
-}else if(lowRatio >= 0.12){
+  if(brandSignal.status === "KRİTİK"){
+    brandHealthStatus.style.color = "#ff8080";
+  }else if(brandSignal.status === "İZLEMEDE"){
+    brandHealthStatus.style.color = "#ffd280";
+  }else{
+    brandHealthStatus.style.color = "#8fffaa";
+  }
 
-brandHealthStatus.innerText = "İZLEMEDE";
-brandHealthStatus.style.color = "#ffd280";
-
-brandHealthMeta.innerText =
-lowRatings.length +
-" negatif yorum algılandı";
-
-}else{
-
-brandHealthStatus.innerText = "SAĞLIKLI";
-brandHealthStatus.style.color = "#8fffaa";
-
-brandHealthMeta.innerText =
-"Toplulukta kritik sinyal yok";
-
-}
+  brandHealthMeta.innerText =
+    brandSignal.negativeReviews +
+    " negatif yorum · " +
+    brandSignal.negativeSupportCount +
+    " topluluk desteği";
 
 }
   if(!discover) return;
