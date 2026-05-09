@@ -1455,7 +1455,19 @@ Bu soru önce markayı daha önce tercih eden doğrulanmış kullanıcılara gö
   <option value="false">Hayır</option>
 </select>
 
-<textarea id="actionText" placeholder="Yaz..."></textarea> 
+<textarea id="actionText" placeholder="Yaz..."></textarea>
+    <div id="actionNotice" style="
+display:none;
+margin-top:10px;
+padding:10px 12px;
+border-radius:14px;
+background:rgba(230,215,176,.12);
+border:1px solid rgba(230,215,176,.22);
+color:#e6d7b0;
+font-size:12px;
+line-height:18px;
+font-weight:700;
+"></div> 
     <div class="modal-actions">
       <button class="cancel" onclick="closeAction()">Kapat</button>
       <button class="confirm" onclick="saveAction()">Kaydet</button>
@@ -1940,6 +1952,12 @@ function openAction(type){
   }[type];
 
   document.getElementById("actionText").value = "";
+  const actionNotice = document.getElementById("actionNotice");
+
+if(actionNotice){
+  actionNotice.style.display = "none";
+  actionNotice.innerText = "";
+}
   loadActionReviews(type);
   lockBody();
   document.getElementById("actionModal").classList.add("show");
@@ -2145,7 +2163,13 @@ experience_type: document.getElementById("experienceType").value || null,
 
     if(fallback.error){
       console.log("FALLBACK INSERT ERROR:", fallback.error.message);
-      alert("Bu ürüne daha önce doğrulanmış puan verilmiş. Ek yorum da kaydedilemedi.");
+      const actionNotice = document.getElementById("actionNotice");
+
+if(actionNotice){
+  actionNotice.style.display = "block";
+  actionNotice.innerText =
+  "Bu ürüne daha önce doğrulanmış yıldız verilmişti. Yeni giriş normal deneyim yorumu olarak kaydedildi.";
+}
       return;
     }
 
