@@ -2178,7 +2178,11 @@ if(actionNotice){
   actionNotice.innerText =
   "Bu ürüne daha önce doğrulanmış yıldız verilmiş. Yeni yorum normal deneyim notu olarak kaydedilebilir.";
 }
-
+if(saveBtn){
+  saveBtn.disabled = false;
+  saveBtn.style.opacity = "1";
+  saveBtn.innerText = "Kaydet";
+}
 return;
   }
 
