@@ -2314,9 +2314,11 @@ function openReviews(productId){
   if(error){
 
     if(error.message.includes("duplicate")){
-      alert("Bu yorumu zaten destekledin.");
-      return;
-    }
+  alert("Bu deneyimi daha önce desteklemiştin. Tekrar destek sayılmaz ama görüşün sistemde zaten kayıtlı.");
+  loadActionReviews(actionType || "comment");
+  loadDiscover();
+  return;
+}
 
     console.error(error);
     alert("Destek gönderilemedi.");
@@ -2561,7 +2563,7 @@ function finishIdFocus(){
 
   const { data, error } = await supabaseClient
     .from("vaero_reviews")
-    .select("comment, rating, is_verified, product_id, experience_type, would_buy_again")
+    .select("id, comment, rating, is_verified, product_id, experience_type, would_buy_again")
     .order("id", { ascending:false })
     .limit(100);
 
@@ -2585,6 +2587,18 @@ function finishIdFocus(){
         <div style="font-size:10px;color:#e6d7b0;margin-top:6px;">
           ${x.is_verified ? "★ Doğrulanmış" : "Deneyim notu"}
         </div>
+        <button onclick="supportReview('${x.id}')" style="
+  margin-top:7px;
+  border:0;
+  border-radius:999px;
+  padding:7px 9px;
+  background:rgba(230,215,176,.14);
+  color:#e6d7b0;
+  font-size:11px;
+  font-weight:700;
+">
+  Ben de bunu yaşadım
+</button>
       </div>
     `).join("")
     : `<div style="font-size:13px;color:rgba(255,255,255,.65);">Topluluk ilk deneyimi bekliyor.</div>`;
