@@ -2589,86 +2589,17 @@ function closeProfile(){
 
 function openModeCreate(){
 
-if(!activeId){
-openIdModal();
-return;
-}
-
-if(window.currentProfile && window.currentProfile.membershipExpired){
-alert("Moda Yarat alanı için aktif Platform ID üyeliği gerekir.");
-return;
-}
-
-alert("Vizyon yaratma stüdyosu sonraki aşamada aktif edilecek.");
-
-}
-
-  alert("Vizyon yaratma stüdyosu sonraki aşamada aktif edilecek. Burada kullanıcı ürün/fikir konsepti oluşturabilecek.");
-}
-
-function openBrandHub(){
-
   if(!activeId){
     openIdModal();
     return;
   }
 
   if(window.currentProfile && window.currentProfile.membershipExpired){
-    alert("Marka merkezi için aktif üyelik gerekir.");
+    alert("Moda Yarat alanı için aktif Platform ID üyeliği gerekir.");
     return;
   }
 
-  closeFlow();
-  closeViewer();
-  closeAction();
-  closeAllScreens();
-
-  setActiveNav("brands");
-
-  document.getElementById("brandHubScreen").classList.add("show");
-}
-
-setActiveNav("brands");
-
-document
-.getElementById("brandHubScreen")
-.classList.add("show");
-
-}
-
-  closeFlow();
-  closeViewer();
-  closeAction();
-  closeAllScreens();
-
-  setActiveNav("brands");
-
-  document.getElementById("brandHubScreen").classList.add("show");
-}
-
-function closeBrandHub(){
-  document.getElementById("brandHubScreen").classList.remove("show");
-  setActiveNav("home");
-}
-if(!activeId){
-  openIdModal();
-  return;
-}
-function openCommunity(){
-
-  closeFlow();
-  closeViewer();
-  closeAction();
-  closeAllScreens();
-
-  setActiveNav("community");
-
-  document.getElementById("communityScreen").classList.add("show");
-}
-function closeCommunity(){
-  document.getElementById("communityScreen").classList.remove("show");
-  setActiveNav("home");
-}
+  alert("Vizyon yaratma stüdyosu sonraki aşamada aktif edilecek
   function setActiveNav(name){
   document.querySelectorAll(".nav-btn").forEach(btn=>{
     btn.classList.remove("active");
