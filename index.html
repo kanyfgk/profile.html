@@ -2118,8 +2118,15 @@ const wouldBuyAgain =
     .maybeSingle();
 
   if(oldReview && actionType === "rate" && verified){
-    alert("Bu Platform ID’si bu ürüne daha önce puan vermiş. Aynı ürüne ikinci kez yıldızlı yorum yapılamaz.");
-    return;
+    const actionNotice = document.getElementById("actionNotice");
+
+if(actionNotice){
+  actionNotice.style.display = "block";
+  actionNotice.innerText =
+  "Bu ürüne daha önce doğrulanmış yıldız verilmiş. Yeni yorum normal deneyim notu olarak kaydedilebilir.";
+}
+
+return;
   }
 
   const { data, error } = await supabaseClient
@@ -2173,7 +2180,13 @@ if(actionNotice){
       return;
     }
 
-    alert("Bu ürüne daha önce doğrulanmış yıldız verilmişti. Yeni giriş normal deneyim yorumu olarak kaydedildi.");
+    const actionNotice = document.getElementById("actionNotice");
+
+if(actionNotice){
+  actionNotice.style.display = "block";
+  actionNotice.innerText =
+  "Bu ürüne daha önce doğrulanmış yıldız verilmişti. Yeni giriş normal deneyim yorumu olarak kaydedildi.";
+}
 
     loadLiveRatings();
     loadDiscover();
@@ -2191,12 +2204,29 @@ if(actionNotice){
   return;
 }
 
+  const actionNotice = document.getElementById("actionNotice");
+
+if(actionNotice){
+
+  actionNotice.style.display = "block";
+
   if(verified){
-  alert("★ Doğrulanmış puan kaydedildi.");
-}else if(bought && !isValidDate){
-  alert("Bu ID sistemde görünüyor ancak doğrulanmış puan süresi dolmuş. Son 12 ay içindeki güncel Platform ID’niz varsa onunla devam edin.");
-}else{
-  alert("Yorum kaydedildi. Bu ürün bu ID ile doğrulanmış satın alım olarak görünmediği için yıldızlı puan sayılmadı.");
+
+    actionNotice.innerText =
+    "★ Doğrulanmış puan başarıyla kaydedildi.";
+
+  }else if(bought && !isValidDate){
+
+    actionNotice.innerText =
+    "Bu Platform ID’nin doğrulanmış puan süresi dolmuş görünüyor.";
+
+  }else{
+
+    actionNotice.innerText =
+    "Yorum kaydedildi. Bu giriş topluluk deneyimi olarak işlendi.";
+
+  }
+
 }
 
   loadLiveRatings();
