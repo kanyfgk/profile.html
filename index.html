@@ -1485,7 +1485,7 @@ async function login(){
   const { data: profiles, error: profileError } = await supabaseClient
     .from("vaero_profiles")
     .select("*")
-    .eq("customer_code", "VA-001")
+    .eq("customer_code", id)
     .limit(1);
 
 const profile = profiles && profiles.length > 0 ? profiles[0] : null;
@@ -1506,8 +1506,8 @@ const profile = profiles && profiles.length > 0 ? profiles[0] : null;
 }
 
   const { data: purchases, error: purchaseError } = await supabaseClient
-    .from("vaero_profiles")
-    .select("*")
+    .from("vaero_customer_products")
+    .select("id, customer_code, product_id")
     .eq("customer_code", id);
 
   if(purchaseError){
