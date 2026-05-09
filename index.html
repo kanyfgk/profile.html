@@ -1538,8 +1538,14 @@ const brandActive = profile.brand_active;
 window.currentProfile = {
     membershipType,
     aeStatus,
-    brandActive
-}; 
+    brandActive,
+    visionLevel: profile.vision_level || 0,
+    warningCount: profile.ae_warning_count || 0,
+    verified: profile.is_verified || false,
+    expiresAt: profile.membership_expires_at || null
+};
+
+console.log("CURRENT PROFILE:", window.currentProfile); 
   console.log("CURRENT PROFILE:", window.currentProfile);
   const verifiedOwnership = document.getElementById("verifiedOwnership");
 
