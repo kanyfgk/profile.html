@@ -1294,6 +1294,56 @@ ${liveVerificationSignal
 : "Şu anda aktif doğrulama yok"}
 </h3>
       ${liveVerificationSignal ? `
+ <div style="
+margin-top:10px;
+font-size:12px;
+color:#ffb3b3;
+letter-spacing:.5px;
+">
+● CANLI · 1.284 doğrulanmış kullanıcı şu an oyluyor
+   <div style="
+margin-top:14px;
+padding:12px;
+border-radius:14px;
+background:rgba(255,255,255,.03);
+border:1px solid rgba(255,255,255,.06);
+">
+
+<div style="
+font-size:11px;
+letter-spacing:1px;
+color:rgba(255,255,255,.45);
+margin-bottom:6px;
+">
+MARKA DURUMU
+</div>
+
+<div style="
+font-size:22px;
+font-weight:700;
+color:
+${brandSignal.status === "KRİTİK"
+? "#ff8080"
+: brandSignal.status === "İZLEMEDE"
+? "#ffd280"
+: "#8fffaa"};
+">
+${brandSignal.status}
+</div>
+
+<div style="
+margin-top:6px;
+font-size:13px;
+color:rgba(255,255,255,.6);
+line-height:20px;
+">
+${brandSignal.negativeReviews} negatif yorum ·
+${brandSignal.negativeSupportCount} topluluk desteği
+</div>
+
+</div>
+</div>
+      
 <div style="
 margin-top:10px;
 display:flex;
@@ -2498,8 +2548,36 @@ const risingCount =
   );
 });
 
+const negativeReviews = data.filter(x =>
+x.rating <= 2
+);
+
+const negativeSupportCount = negativeReviews.reduce(
+(total, review) =>
+total + (review.vaero_review_supports?.length || 0),
+0
+);
+
+const negativeRatio =
+negativeReviews.length / (data.length || 1);
+
 const liveVerificationSignal =
-  complaintQueue[0] || null;
+negativeReviews.length >= 3 &&
+negativeSupportCount >= 10 &&
+negativeRatio >= 0.25;
+    const brandSignal = {
+  name: "VAERO",
+  totalReviews: data.length,
+  negativeReviews: negativeReviews.length,
+  negativeRatio,
+  negativeSupportCount,
+  status:
+    negativeRatio >= 0.25 && negativeSupportCount >= 10
+      ? "KRİTİK"
+      : negativeRatio >= 0.12
+        ? "İZLEMEDE"
+        : "SAĞLIKLI"
+};
     const trendingReviews = [...data]
   .map(x => {
 
