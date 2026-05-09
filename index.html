@@ -1289,9 +1289,11 @@ VA MEMBER
     <div class="profile-card" style="border-color:rgba(255,120,120,.25);">
       <div style="color:#ffb3b3;font-size:12px;letter-spacing:2px;">CANLI ELEŞTİRİ DOĞRULAMA</div>
       <h3 style="margin-top:8px;">
-${liveVerificationSignal
-? "Bu eleştiri doğru mu?"
-: "Şu anda aktif doğrulama yok"}
+${liveVerificationSignal ? `
+Bu eleştiri doğru mu?
+` : `
+Şu anda aktif doğrulama yok
+`}
 </h3>
       ${liveVerificationSignal ? `
  <div style="
@@ -1394,12 +1396,8 @@ color:#8fffaa;
 </div>
 
 </div>
-${liveVerificationSignal ? `
-` : ``}
       <p style="color:rgba(255,255,255,.65);line-height:22px;margin-top:8px;">
-${liveVerificationSignal
-? "Bu soru önce markayı daha önce tercih eden doğrulanmış kullanıcılara gösterilir."
-: "Sistem şu anda kritik bir topluluk doğrulaması algılamadı."}
+Bu soru önce markayı daha önce tercih eden doğrulanmış kullanıcılara gösterilir.
 </p>
       <button class="mode-btn" style="background:#ffb3b3;" onclick="alert('Canlı eleştiri doğrulama anketi sonraki aşamada aktif edilecek.')">Anketi İncele →</button>
     </div>
