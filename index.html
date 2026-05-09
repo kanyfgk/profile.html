@@ -2623,13 +2623,28 @@ function closeBrandHub(){
   document.getElementById("brandHubScreen").classList.remove("show");
   setActiveNav("home");
 }
+function openCommunity(){
 
+  closeFlow();
+  closeViewer();
+  closeAction();
+  closeAllScreens();
+
+  setActiveNav("community");
+
+  document.getElementById("communityScreen").classList.add("show");
+}
+
+function closeCommunity(){
+  document.getElementById("communityScreen").classList.remove("show");
+  setActiveNav("home");
+}
 function setActiveNav(name){
   document.querySelectorAll(".nav-btn").forEach(btn=>{
     btn.classList.remove("active");
   });
 
-  const active = document.querySelector([data-nav="${name}"]);
+  const active = document.querySelector(`[data-nav="${name}"]`);
 
   if(active){
     active.classList.add("active");
