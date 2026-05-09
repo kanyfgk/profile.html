@@ -2612,9 +2612,23 @@ alert("Vizyon yaratma stüdyosu sonraki aşamada aktif edilecek.");
 }
 
 function openBrandHub(){
-  if(window.currentProfile && window.currentProfile.membershipExpired){
-  alert("Marka merkezi için aktif üyelik gerekir.");
-  return;
+
+if(window.currentProfile && window.currentProfile.membershipExpired){
+alert("Marka merkezi için aktif üyelik gerekir.");
+return;
+}
+
+closeFlow();
+closeViewer();
+closeAction();
+closeAllScreens();
+
+setActiveNav("brands");
+
+document
+.getElementById("brandHubScreen")
+.classList.add("show");
+
 }
 
   closeFlow();
