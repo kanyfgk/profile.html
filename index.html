@@ -3306,10 +3306,18 @@ function closeEverything(){
 
   unlockBody();
 }
-
 function goHome(){
+  closeAllScreens();
+  document.getElementById("flowScreen").classList.remove("show");
+  document.getElementById("viewer").classList.remove("show");
+  document.getElementById("actionModal").classList.remove("show");
+  document.getElementById("brandModal").classList.remove("show");
+  document.getElementById("idModal").classList.remove("show");
+  document.getElementById("idFocusModal").classList.remove("show");
+  document.getElementById("discoverModal").classList.remove("show");
 
-  closeEverything();
+  document.body.style.overflow = "";
+  document.body.classList.remove("modal-open");
 
   setActiveNav("home");
 }
