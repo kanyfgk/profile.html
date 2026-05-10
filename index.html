@@ -1921,6 +1921,31 @@ function closeViewer(){
     unlockBody();
   },240);
 }
+  let viewerTouchStartX = 0;
+let viewerTouchStartY = 0;
+
+const viewerEl = document.getElementById("viewer");
+
+if(viewerEl){
+
+  viewerEl.addEventListener("touchstart", function(e){
+    viewerTouchStartX = e.touches[0].clientX;
+    viewerTouchStartY = e.touches[0].clientY;
+  });
+
+  viewerEl.addEventListener("touchend", function(e){
+    const endX = e.changedTouches[0].clientX;
+    const endY = e.changedTouches[0].clientY;
+
+    const diffX = endX - viewerTouchStartX;
+    const diffY = Math.abs(endY - viewerTouchStartY);
+
+    if(diffX > 90 && diffY < 80){
+      closeViewer();
+    }
+  });
+
+}
 
 function openAction(type){
   if(window.currentProfile && window.currentProfile.membershipExpired){
