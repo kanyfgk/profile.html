@@ -1878,17 +1878,38 @@ ${hottestProductName}
   }
 }
 
-function openViewer(contentId){
+async function openViewer(contentId){
   activeContent=contents.find(c=>c.id===contentId);
   mediaText.innerText=activeContent.type;
   viewerTitle.innerText=activeContent.title;
   viewerDesc.innerText=activeContent.desc;
   document.getElementById("viewerMeta").innerHTML = `
-${Math.floor(Math.random()*40)+10} topluluk etkileşimi ·
-${Math.floor(Math.random()*12)+3} doğrulanmış deneyim
+Yükleniyor...
 `;
   verifiedText.innerText="Ürün: "+getProductName(activeContent.product);
   loadReviews(activeContent.product);
+  const { data: productReviews } = await supabaseClient
+  .from("vaero_reviews")
+  .select(`
+    *,
+    vaero_review_supports(id)
+  `)
+  .eq("product_id", activeContent.product);
+
+const verifiedCount =
+  productReviews.filter(x => x.is_verified).length;
+
+const supportCount =
+  productReviews.reduce(
+    (total, review) =>
+      total + (review.vaero_review_supports?.length || 0),
+    0
+  );
+
+document.getElementById("viewerMeta").innerHTML = `
+${supportCount} topluluk etkileşimi ·
+${verifiedCount} doğrulanmış deneyim
+`;
   lockBody();
   viewer.classList.add("show");
 }
