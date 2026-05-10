@@ -2563,7 +2563,8 @@ rating,
 comment,
 is_verified,
 type,
-id
+id,
+vaero_review_supports(id)
 `)
     .eq("product_id", productId)
     .order("is_verified", { ascending: false })
