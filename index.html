@@ -1244,7 +1244,12 @@ VA MEMBER
       <div id="brandStatusBox" style="display:none;margin-top:12px;padding:12px;border-radius:14px;background:rgba(230,215,176,0.08);border:1px solid rgba(230,215,176,0.18);color:#e6d7b0;font-size:13px;line-height:1.5;">
   MARKA DURUMU KONTROL EDİLİYOR
 </div>
-      <p style="font-size:13px;color:rgba(255,255,255,.7);line-height:22px;">
+      <p style="
+font-size:13px;
+line-height:1.5;
+letter-spacing:0.2px;
+color:rgba(255,255,255,.7);
+">
         White Tea deneyimi paylaşıldı.<br>
         Topluluğa yeni yorum eklendi.<br>
         Marka anketine katılım sağlandı.
@@ -1281,7 +1286,13 @@ VA MEMBER
     <div class="profile-card">
       <b>VAERO</b>
       <div style="color:#e6d7b0;font-size:26px;margin-top:8px;">4.9 ★</div>
-      <p style="color:rgba(255,255,255,.6);font-size:13px;margin-top:6px;">
+      <p style="
+color:rgba(255,255,255,.6);
+font-size:13px;
+line-height:1.5;
+letter-spacing:0.2px;
+margin-top:6px;
+">
         124 doğrulanmış deneyim · Trend atmosfer: White Tea
       </p>
     </div>
@@ -2597,7 +2608,7 @@ Gerçek satın alım doğrulaması yapılmış kullanıcı yorumları.
         background:linear-gradient(145deg,rgba(230,215,176,.16),rgba(143,122,79,.18));
         border:1px solid rgba(230,215,176,.45);
       ">
-        <div style="font-size:13px;">
+        <div style="font-size:13px;line-height:1.5;letter-spacing:0.2px;">
           ${item.comment || '—'}
         </div>
         <div style="font-size:12px; margin-top:6px; color:#e6d7b0;">
@@ -2642,18 +2653,33 @@ Tüm yorumları gör (${verified.length})
     <div style="margin-top:16px; margin-bottom:10px;">
   <div style="font-size:12px; color:#ffb3b3;">
     Eleştiriler (${criticism.length})
+    <div 
+  onclick="showToast('Yakında tüm eleştiriler açılabilecek')"
+  style="
+    font-size:11px;
+    color:#c8a97e;
+    margin-top:4px;
+    cursor:pointer;
+  "
+>
+  Tümünü Gör →
+</div>
   </div>
 </div>
 
-${criticism.map(item => `
+${criticism.slice(0,2).map(item => `
   <div style="
     margin-bottom:8px;
-    padding:8px;
-    border-radius:8px;
+    padding:10px 12px;
+border-radius:14px;
     background:rgba(120,20,20,.35);
     border:1px solid rgba(255,120,120,.15);
   ">
-    <div style="font-size:13px;">
+    <div style="
+font-size:13px;
+line-height:1.5;
+letter-spacing:0.2px;
+">
       ${item.comment || '—'}
     </div>
   </div>
@@ -2664,15 +2690,19 @@ ${criticism.map(item => `
   </div>
 </div>
 
-${complaints.map(item => `
+${complaints.slice(0,2).map(item => `
   <div style="
     margin-bottom:8px;
-    padding:8px;
-    border-radius:8px;
+    padding:10px 12px;
+border-radius:14px;
     background:rgba(120,70,20,.35);
     border:1px solid rgba(255,180,100,.15);
   ">
-    <div style="font-size:13px;">
+    <div style="
+font-size:13px;
+line-height:1.5;
+letter-spacing:0.2px;
+">
       ${item.comment || '—'}
     </div>
   </div>
@@ -2684,15 +2714,19 @@ ${complaints.map(item => `
   </div>
 </div>
 
-${comparisons.map(item => `
+${comparisons.slice(0,2).map(item => `
   <div style="
     margin-bottom:8px;
-    padding:8px;
-    border-radius:8px;
+    padding:10px 12px;
+border-radius:14px;
     background:rgba(30,70,120,.35);
     border:1px solid rgba(120,180,255,.15);
   ">
-    <div style="font-size:13px;">
+    <div style="
+font-size:13px;
+line-height:1.5;
+letter-spacing:0.2px;
+">
       ${item.comment || '—'}
     </div>
   </div>
@@ -2703,14 +2737,19 @@ ${comparisons.map(item => `
   </div>
 </div>
 
-${normal.map(item => `
+${normal.slice(0,2).map(item => `
   <div style="
     margin-bottom:8px;
-    padding:8px;
-    border-radius:8px;
+    padding:10px 12px;
+border-radius:14px;
     background:#111;
+    backdrop-filter:blur(8px);
   ">
-    <div style="font-size:13px;">
+    <div style="
+font-size:13px;
+line-height:1.5;
+letter-spacing:0.2px;
+">
       ${item.comment || '—'}
     </div>
   </div>
@@ -2918,6 +2957,8 @@ grid-column:1 / -1;
 padding:14px;
 border-radius:18px;
 background:#111;
+backdrop-filter:blur(8px);
+backdrop-filter:blur(8px);
 color:white;
 border:1px solid rgba(230,215,176,.25);
 ">
@@ -2941,8 +2982,8 @@ margin-bottom:6px;
 
 <div style="
 font-size:13px;
-line-height:20px;
-font-weight:700;
+line-height:1.5;
+letter-spacing:0.2px;
 ">
 ${hottestTrend.comment || "Topluluk hareketleniyor."}
 </div>
@@ -3273,7 +3314,8 @@ flex-wrap:wrap;
 onclick="openReviewFromDiscover('${x.product_id}')"
 style="
 font-size:13px;
-line-height:19px;
+line-height:1.5;
+letter-spacing:0.2px;
 cursor:pointer;
 padding:8px;
 border-radius:10px;
