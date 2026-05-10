@@ -2662,7 +2662,7 @@ Tüm yorumları gör (${verified.length})
     Eleştiriler (${criticism.length})
 
     <div
-      onclick="alert('Eleştiri butonu çalışıyor')"
+      onclick="toggleCriticisms()"
       style="
         font-size:11px;
         color:#c8a97e;
@@ -2773,7 +2773,9 @@ letter-spacing:0.2px;
   }
 }
   function toggleCriticisms(){
-  window.criticismExpanded = !window.criticismExpanded;
+
+  window.criticismExpanded =
+  !window.criticismExpanded;
 
   if(activeContent){
     loadReviews(activeContent.product);
