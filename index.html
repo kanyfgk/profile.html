@@ -2188,7 +2188,14 @@ async function saveAction(){
     saveBtn.innerText = "Kaydediliyor...";
   }
   if(window.currentProfile && window.currentProfile.membershipExpired){
-  alert("Bu Platform ID’nin üyelik süresi dolmuş. İşlem kaydedilemez.");
+  showToast("Bu ürün için doğrulanmış yıldız hakkı daha önce kullanıldı.");
+
+  if(saveBtn){
+    saveBtn.disabled = false;
+    saveBtn.style.opacity = "1";
+    saveBtn.innerText = "Kaydet";
+  }
+
   return;
 }
   const customer = customers[activeId];
