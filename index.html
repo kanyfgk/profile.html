@@ -2675,7 +2675,7 @@ Tüm yorumları gör (${verified.length})
   </div>
 </div>
 
-${criticism.slice(0,2).map(item => `
+${(window.criticismExpanded ? criticism : criticism.slice(0,2)).map(item =>
   <div style="
     margin-bottom:8px;
     padding:10px 12px;
@@ -2773,12 +2773,7 @@ letter-spacing:0.2px;
   }
 }
   function toggleCriticisms(){
-
-  const box = document.getElementById("criticismList");
-
-  if(!box) return;
-
-  box.classList.toggle("expanded");
+  window.criticismExpanded = !window.criticismExpanded;
 
   if(activeContent){
     loadReviews(activeContent.product);
