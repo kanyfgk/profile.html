@@ -2589,6 +2589,10 @@ id
 const complaints = data
   .filter(item => item.type === "complaint")
   .sort((a,b)=>{
+    if(Number(b.is_verified) !== Number(a.is_verified)){
+      return Number(b.is_verified) - Number(a.is_verified);
+    }
+
     const aSupports = a.vaero_review_supports?.length || 0;
     const bSupports = b.vaero_review_supports?.length || 0;
     return bSupports - aSupports;
@@ -2596,10 +2600,16 @@ const complaints = data
 const comparisons = data
   .filter(item => item.type === "compare")
   .sort((a,b)=>{
-    const aSupports = a.vaero_review_supports?.length || 0;
-    const bSupports = b.vaero_review_supports?.length || 0;
-    return bSupports - aSupports;
-  });
+
+  if(Number(b.is_verified) !== Number(a.is_verified)){
+    return Number(b.is_verified) - Number(a.is_verified);
+  }
+
+  const aSupports = a.vaero_review_supports?.length || 0;
+  const bSupports = b.vaero_review_supports?.length || 0;
+
+  return bSupports - aSupports;
+}); 
 const normal = data
   .filter(item => !item.is_verified && item.type !== "rate")
   .sort((a,b)=>{
@@ -2636,10 +2646,48 @@ Gerçek satın alım doğrulaması yapılmış kullanıcı yorumları.
         background:linear-gradient(145deg,rgba(230,215,176,.16),rgba(143,122,79,.18));
         border:1px solid rgba(230,215,176,.45);
       ">
-        <div style="font-size:13px;line-height:1.5;letter-spacing:0.2px;">
+        <div style="
+font-size:14px;
+font-weight:500;
+line-height:1.5;
+letter-spacing:0.2px;
+">
+        <div style="
+  font-size:11px;
+  color:#e6d7b0;
+  margin-bottom:6px;
+  font-weight:700;
+">
+  <div style="
+  display:inline-flex;
+  align-items:center;
+  gap:5px;
+  padding:4px 8px;
+  border-radius:999px;
+  background:rgba(230,215,176,.12);
+  border:1px solid rgba(230,215,176,.28);
+  font-size:11px;
+  color:#e6d7b0;
+  margin-bottom:8px;
+  font-weight:700;
+">
+  ★ Doğrulanmış ürün sahibi
+</div>
           ${item.comment || '—'}
         </div>
-        <div style="font-size:12px; margin-top:6px; color:#e6d7b0;">
+        <div style="
+display:inline-flex;
+align-items:center;
+gap:5px;
+margin-top:8px;
+padding:5px 10px;
+border-radius:999px;
+background:rgba(230,215,176,.10);
+border:1px solid rgba(230,215,176,.22);
+font-size:11px;
+color:#e6d7b0;
+font-weight:700;
+">
           ★ ${item.rating}/5 doğrulanmış puan
         </div>
       </div>
@@ -2709,6 +2757,16 @@ font-size:13px;
 line-height:1.5;
 letter-spacing:0.2px;
 ">
+${item.is_verified ? `
+<div style="
+  font-size:11px;
+  color:#e6d7b0;
+  margin-bottom:6px;
+  font-weight:700;
+">
+  Doğrulanmış ürün sahibi
+</div>
+` : ``}
       ${item.comment || '—'}
     </div>
   </div>
@@ -2743,6 +2801,16 @@ font-size:13px;
 line-height:1.5;
 letter-spacing:0.2px;
 ">
+${item.is_verified ? `
+<div style="
+  font-size:11px;
+  color:#ffcc99;
+  margin-bottom:6px;
+  font-weight:700;
+">
+  Doğrulanmış ürün sahibi
+</div>
+` : ``}
       ${item.comment || '—'}
     </div>
   </div>
@@ -2767,6 +2835,16 @@ font-size:13px;
 line-height:1.5;
 letter-spacing:0.2px;
 ">
+${item.is_verified ? `
+<div style="
+  font-size:11px;
+  color:#e6d7b0;
+  margin-bottom:6px;
+  font-weight:700;
+">
+  Doğrulanmış ürün sahibi
+</div>
+` : ``}
       ${item.comment || '—'}
     </div>
   </div>
