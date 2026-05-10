@@ -2802,14 +2802,6 @@ function toggleComplaints(){
     loadReviews(activeContent.product);
   }
 }
-
-  window.criticismExpanded =
-  !window.criticismExpanded;
-
-  if(activeContent){
-    loadReviews(activeContent.product);
-  }
-}
 function openReviews(productId){
   document.getElementById("reviewSection").style.display = "block";
   loadReviews(productId);
