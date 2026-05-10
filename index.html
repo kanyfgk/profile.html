@@ -2660,17 +2660,18 @@ Tüm yorumları gör (${verified.length})
     <div style="margin-top:16px; margin-bottom:10px;">
   <div style="font-size:12px; color:#ffb3b3;">
     Eleştiriler (${criticism.length})
-    <div 
-  onclick="showToast('Yakında tüm eleştiriler açılabilecek')"
-  style="
-    font-size:11px;
-    color:#c8a97e;
-    margin-top:4px;
-    cursor:pointer;
-  "
->
-  Tümünü Gör →
-</div>
+
+    <div
+      onclick="toggleCriticisms()"
+      style="
+        font-size:11px;
+        color:#c8a97e;
+        margin-top:4px;
+        cursor:pointer;
+      "
+    >
+      Tümünü Gör →
+    </div>
   </div>
 </div>
 
@@ -2765,6 +2766,18 @@ letter-spacing:0.2px;
 }
   function toggleVerifiedReviews(){
   const box = document.getElementById("reviewList");
+  box.classList.toggle("expanded");
+
+  if(activeContent){
+    loadReviews(activeContent.product);
+  }
+}
+  function toggleCriticisms(){
+
+  const box = document.getElementById("criticismList");
+
+  if(!box) return;
+
   box.classList.toggle("expanded");
 
   if(activeContent){
