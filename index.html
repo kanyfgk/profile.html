@@ -2646,11 +2646,10 @@ function openReviews(productId){
   if(error){
 
     if(error.message.includes("duplicate")){
- alert("Bu deneyimi daha önce desteklemiştin. Tekrar destek sayılmaz ama görüşün sistemde zaten kayıtlı.");
-  loadActionReviews(actionType || "comment");
-  loadDiscover();
-  return;
-}
+ showToast("Bu deneyimi zaten desteklemiştin.");
+loadActionReviews(actionType || "comment");
+loadDiscover();
+return;
 
     console.error(error);
     alert("Destek gönderilemedi.");
