@@ -2108,6 +2108,17 @@ async function loadActionReviews(type){
     `;
     return;
   }
+  filtered.sort((a,b)=>{
+
+  if(Number(b.is_verified) !== Number(a.is_verified)){
+    return Number(b.is_verified) - Number(a.is_verified);
+  }
+
+  const aSupports = a.vaero_review_supports?.length || 0;
+  const bSupports = b.vaero_review_supports?.length || 0;
+
+  return bSupports - aSupports;
+});
 
   box.innerHTML = filtered.map(item => `
     <div style="
