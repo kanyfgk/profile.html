@@ -2547,7 +2547,13 @@ id
     const bSupports = b.vaero_review_supports?.length || 0;
     return bSupports - aSupports;
   });
-const complaints = data.filter(item => item.type === "complaint");
+const complaints = data
+  .filter(item => item.type === "complaint")
+  .sort((a,b)=>{
+    const aSupports = a.vaero_review_supports?.length || 0;
+    const bSupports = b.vaero_review_supports?.length || 0;
+    return bSupports - aSupports;
+  });
 const comparisons = data
   .filter(item => item.type === "compare")
   .sort((a,b)=>{
@@ -2555,7 +2561,18 @@ const comparisons = data
     const bSupports = b.vaero_review_supports?.length || 0;
     return bSupports - aSupports;
   });
-const normal = data.filter(item => !item.is_verified && item.type === "rate");
+const normal = data
+  .filter(item => !item.is_verified && item.type !== "rate")
+  .sort((a,b)=>{
+    const aSupports = a.vaero_review_supports?.length || 0;
+    const bSupports = b.vaero_review_supports?.length || 0;
+
+    if(bSupports !== aSupports){
+      return bSupports - aSupports;
+    }
+
+    return new Date(b.created_at) - new Date(a.created_at);
+  });
 
   list.innerHTML = `
     <div style="margin-bottom:12px;">
