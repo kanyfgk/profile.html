@@ -2649,10 +2649,10 @@ function openReviews(productId){
   loadReviews(productId);
 }
   async function supportReview(reviewId){
-    if(window.currentProfile && window.currentProfile.membershipExpired){
-  alert("Bu Platform ID’nin üyelik süresi dolmuş. Deneyim desteği için üyeliği yenilemen gerekir.");
-  return;
-}
+  if(window.currentProfile && window.currentProfile.membershipExpired){
+    alert("Bu Platform ID’nin üyelik süresi dolmuş. Deneyim desteği için üyeliği yenilemen gerekir.");
+    return;
+  }
 
   if(!activeId){
     openIdModal();
@@ -2671,19 +2671,20 @@ function openReviews(productId){
   if(error){
 
     if(error.message.includes("duplicate")){
- showToast("Bu deneyimi zaten desteklemiştin.");
-loadActionReviews(actionType || "comment");
-loadDiscover();
-return;
+      showToast("Bu deneyimi zaten desteklemiştin.");
+      loadActionReviews(actionType || "comment");
+      loadDiscover();
+      return;
+    }
 
     console.error(error);
-    alert("Destek gönderilemedi.");
+    showToast("Destek gönderilemedi.");
     return;
   }
 
   showToast("Deneyim desteğin kaydedildi 🔥");
-loadActionReviews(actionType || "comment");
-loadDiscover();
+  loadActionReviews(actionType || "comment");
+  loadDiscover();
 }
   async function loadDiscover(){
 
