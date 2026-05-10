@@ -2527,12 +2527,34 @@ id
   const list = document.getElementById("reviewList");
     const reviewExpanded = list.classList.contains("expanded");
 
-  const verified = data.filter(item => item.is_verified);
-  const criticism = data.filter(
-  item => item.type === "comment" && !item.is_verified
-);
+  const verified = data
+  .filter(item => item.is_verified)
+  .sort((a,b)=>{
+
+    const aSupports =
+      a.vaero_review_supports?.length || 0;
+
+    const bSupports =
+      b.vaero_review_supports?.length || 0;
+
+    return bSupports - aSupports;
+
+  });
+  const criticism = data
+  .filter(item => item.type === "comment" && !item.is_verified)
+  .sort((a,b)=>{
+    const aSupports = a.vaero_review_supports?.length || 0;
+    const bSupports = b.vaero_review_supports?.length || 0;
+    return bSupports - aSupports;
+  });
 const complaints = data.filter(item => item.type === "complaint");
-const comparisons = data.filter(item => item.type === "compare");
+const comparisons = data
+  .filter(item => item.type === "compare")
+  .sort((a,b)=>{
+    const aSupports = a.vaero_review_supports?.length || 0;
+    const bSupports = b.vaero_review_supports?.length || 0;
+    return bSupports - aSupports;
+  });
 const normal = data.filter(item => !item.is_verified && item.type === "rate");
 
   list.innerHTML = `
