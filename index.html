@@ -2525,6 +2525,7 @@ id
   }
 
   const list = document.getElementById("reviewList");
+    const reviewExpanded = list.classList.contains("expanded");
 
   const verified = data.filter(item => item.is_verified);
   const criticism = data.filter(
@@ -2549,7 +2550,7 @@ Gerçek satın alım doğrulaması yapılmış kullanıcı yorumları.
       </div>
     </div>
 
-    ${verified.map(item => `
+    ${(reviewExpanded ? verified : verified.slice(0,2)).map(item => `
       <div style="
         margin-bottom:10px;
         padding:10px;
@@ -2565,7 +2566,40 @@ Gerçek satın alım doğrulaması yapılmış kullanıcı yorumları.
         </div>
       </div>
     `).join("")}
-
+    ${verified.length > 2 ? `
+<button
+onclick="toggleVerifiedReviews()"
+style="
+margin-top:8px;
+border:0;
+border-radius:999px;
+padding:9px 14px;
+background:rgba(230,215,176,.12);
+color:#e6d7b0;
+font-size:11px;
+font-weight:800;
+width:100%;
+">
+${reviewExpanded ? "Yorumları gizle" : "Tüm yorumları gör (" + verified.length + ")"}
+</button>
+` : ``}
+${verified.length > 2 ? `
+<button
+onclick="toggleVerifiedReviews()"
+style="
+margin-top:8px;
+border:0;
+border-radius:999px;
+padding:9px 14px;
+background:rgba(230,215,176,.12);
+color:#e6d7b0;
+font-size:11px;
+font-weight:800;
+width:100%;
+">
+Tüm yorumları gör (${verified.length})
+</button>
+` : ``}
     <div style="margin-top:16px; margin-bottom:10px;">
   <div style="font-size:12px; color:#ffb3b3;">
     Eleştiriler (${criticism.length})
@@ -2643,6 +2677,21 @@ ${normal.map(item => `
   </div>
 `).join("")}
   `;
+}
+  function toggleVerifiedReviews(){
+
+  const box =
+  document.getElementById("reviewList");
+
+  box.classList.toggle("expanded");
+}
+  function toggleVerifiedReviews(){
+  const box = document.getElementById("reviewList");
+  box.classList.toggle("expanded");
+
+  if(activeContent){
+    loadReviews(activeContent.product);
+  }
 }
 function openReviews(productId){
   document.getElementById("reviewSection").style.display = "block";
