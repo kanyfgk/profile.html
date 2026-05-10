@@ -2784,7 +2784,16 @@ letter-spacing:0.2px;
   }
 }
   function toggleCriticisms(){
-    function toggleComplaints(){
+
+  window.criticismExpanded =
+  !window.criticismExpanded;
+
+  if(activeContent){
+    loadReviews(activeContent.product);
+  }
+}
+
+function toggleComplaints(){
 
   window.complaintsExpanded =
   !window.complaintsExpanded;
