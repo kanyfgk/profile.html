@@ -3071,15 +3071,15 @@ const hottestLabel = {
   comment: "Topluluk deneyimi",
   rate: "Doğrulanmış puan"
 }[hottestType] || "Topluluk deneyimi";
+
+const risingCount =
+  topSupported?.vaero_review_supports?.length || 0;
     const signalIntensity =
   risingCount >= 15
     ? "Yüksek yoğunluk"
     : risingCount >= 7
       ? "Orta yoğunluk"
       : "Düşük yoğunluk";
-
-const risingCount =
-  topSupported?.vaero_review_supports?.length || 0;
     const complaintQueue = data.filter(x => {
   const supportCount =
     x.vaero_review_supports?.length || 0;
