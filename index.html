@@ -2004,14 +2004,14 @@ if(saveBtn){
   document.getElementById("actionTitle").innerText = {
     rate:"Puan ver",
     comment:"Eleştiri yaz",
-    complaint:"Şikayet bildir",
+    complaint:"Doğrulanmış şikayet",
     compare:"Karşılaştır"
   }[type];
 
   document.getElementById("actionHint").innerText = {
     rate:"Satın aldığın ürüne ilk puanın doğrulanmış yıldız olarak VAERO ürününe yansır.",
     comment:"Yorumun ID ile görünür. Satın alınmamış üründe yıldızlı sayılmaz.",
-    complaint:"Şikayet içeriğin ID ile inceleme alanına düşer.",
+    complaint:"Şikayet yalnızca ürünü satın alan Platform ID tarafından oluşturulabilir. Markalar satış yöntemini otomatik ödeme veya mesajla onaylı sipariş olarak seçebilir.",
     compare:"Kullandığın ürünleri karşılaştır."
   }[type];
 
@@ -2246,6 +2246,18 @@ console.log("PURCHASE ERROR:", purchaseError);
 let bought = purchases && purchases.length > 0;
 let isValidDate = bought;
 const verified = actionType === "rate" && bought && isValidDate;
+  if(actionType === "complaint" && !bought){
+
+  showToast("Şikayet yalnızca bu ürünü satın alan Platform ID tarafından oluşturulabilir.");
+
+  if(saveBtn){
+    saveBtn.disabled = false;
+    saveBtn.style.opacity = "1";
+    saveBtn.innerText = "Kaydet";
+  }
+
+  return;
+}
   const wouldBuyAgainValue = document.getElementById("wouldBuyAgain").value;
 
 const wouldBuyAgain =
@@ -2703,6 +2715,7 @@ font-weight:700;
           ★ ${item.rating}/5 doğrulanmış puan
         </div>
       </div>
+    </div>
     `).join("")}
     ${verified.length > 2 ? `
 <button
@@ -2721,26 +2734,17 @@ width:100%;
 ${reviewExpanded ? "Yorumları gizle" : "Tüm yorumları gör (" + verified.length + ")"}
 </button>
 ` : ``}
-${verified.length > 2 ? `
-<button
-onclick="toggleVerifiedReviews()"
-style="
-margin-top:8px;
-border:0;
-border-radius:999px;
-padding:9px 14px;
-background:rgba(230,215,176,.12);
-color:#e6d7b0;
-font-size:11px;
-font-weight:800;
-width:100%;
-">
-Tüm yorumları gör (${verified.length})
-</button>
-` : ``}
     <div style="margin-top:16px; margin-bottom:10px;">
   <div style="font-size:12px; color:#ffb3b3;">
     Eleştiriler (${criticism.length})
+    <div style="
+font-size:11px;
+color:rgba(255,180,180,.62);
+margin-top:4px;
+line-height:16px;
+">
+Bu alan topluluk deneyim akışıdır. Resmi doğrulanmış şikayet sistemi ayrı çalışır.
+</div> 
 
     <div
       onclick="toggleCriticisms()"
@@ -2771,21 +2775,79 @@ letter-spacing:0.2px;
 ">
 ${item.is_verified ? `
 <div style="
+  display:inline-flex;
+  align-items:center;
+  gap:5px;
+  padding:4px 8px;
+  border-radius:999px;
+  background:rgba(230,215,176,.12);
+  border:1px solid rgba(230,215,176,.28);
   font-size:11px;
   color:#e6d7b0;
-  margin-bottom:6px;
+  margin-bottom:8px;
   font-weight:700;
 ">
-  Doğrulanmış ürün sahibi
+  ★ Doğrulanmış ürün sahibi
 </div>
 ` : ``}
-      ${item.comment || '—'}
-    </div>
+
+${item.comment || '—'}
+${(item.vaero_review_supports?.length || 0) > 0 ? `
+<div style="
+margin-top:8px;
+display:inline-flex;
+align-items:center;
+gap:5px;
+padding:5px 9px;
+border-radius:999px;
+background:rgba(255,180,100,.10);
+border:1px solid rgba(255,180,100,.18);
+font-size:10px;
+color:#ffcc99;
+font-weight:700;
+">
+🔥 ${item.vaero_review_supports.length} kişi aynı sorunu yaşadı
+</div>
+` : ``}
+<div style="
+margin-top:8px;
+font-size:10px;
+color:rgba(255,220,170,.72);
+line-height:15px;
+">
+Bu şikayet doğrulanmış ürün sahipliği üzerinden oluşturuldu.
+</div>
   </div>
+</div>
 `).join("")}
 <div style="margin-top:16px; margin-bottom:10px;">
   <div style="font-size:12px; color:#ffcc99;">
     Şikayetler (${complaints.length})
+
+${complaints.filter(x =>
+(x.vaero_review_supports?.length || 0) > 0
+).length > 0 ? `
+
+<div style="
+margin-top:4px;
+font-size:10px;
+color:#ffcc99;
+font-weight:700;
+">
+🔥 ${complaints.filter(x =>
+(x.vaero_review_supports?.length || 0) > 0
+).length} yüksek topluluk sinyali
+</div>
+
+` : ``}
+    <div style="
+font-size:11px;
+color:rgba(255,220,170,.68);
+margin-top:4px;
+line-height:16px;
+">
+Yalnızca ürünü satın alan Platform ID’ler doğrulanmış şikayet oluşturabilir.
+</div>
     <div
   onclick="toggleComplaints()"
   style="
@@ -2820,7 +2882,7 @@ ${item.is_verified ? `
   margin-bottom:6px;
   font-weight:700;
 ">
-  Doğrulanmış ürün sahibi
+  ★ Doğrulanmış ürün sahibi
 </div>
 ` : ``}
       ${item.comment || '—'}
@@ -2831,6 +2893,14 @@ ${item.is_verified ? `
 <div style="margin-top:16px; margin-bottom:10px;">
   <div style="font-size:12px; color:#b8d7ff;">
     Kıyaslar (${comparisons.length})
+    <div style="
+font-size:11px;
+color:rgba(180,220,255,.62);
+margin-top:4px;
+line-height:16px;
+">
+Topluluğun farklı deneyim sinyallerini karşılaştırdığı analiz alanı.
+</div>
   </div>
 </div>
 
@@ -2854,7 +2924,7 @@ ${item.is_verified ? `
   margin-bottom:6px;
   font-weight:700;
 ">
-  Doğrulanmış ürün sahibi
+  ★ Doğrulanmış kıyas sahibi
 </div>
 ` : ``}
       ${item.comment || '—'}
@@ -2927,6 +2997,12 @@ function openReviews(productId){
     openIdModal();
     return;
   }
+    if(window.currentProfile?.membershipType !== "VA" &&
+   window.currentProfile?.aeStatus === "none"){
+
+  showToast("Deneyim desteği için doğrulanmış Platform ID gerekir.");
+  return;
+}
 
   const { error } = await supabaseClient
     .from("vaero_review_supports")
@@ -2984,7 +3060,23 @@ document.getElementById("brandHealthMeta");
   )[0];
 
 const hottestComment =
-  topSupported?.comment || "Topluluk ilk büyük deneyimi bekliyor.";
+  topSupported?.comment || "Radar henüz güçlü bir topluluk sinyali algılamadı.";
+
+const hottestType =
+  topSupported?.type || "comment";
+
+const hottestLabel = {
+  complaint: "Topluluk şikayeti",
+  compare: "Topluluk kıyası",
+  comment: "Topluluk deneyimi",
+  rate: "Doğrulanmış puan"
+}[hottestType] || "Topluluk deneyimi";
+    const signalIntensity =
+  risingCount >= 15
+    ? "Yüksek yoğunluk"
+    : risingCount >= 7
+      ? "Orta yoğunluk"
+      : "Düşük yoğunluk";
 
 const risingCount =
   topSupported?.vaero_review_supports?.length || 0;
@@ -2997,6 +3089,11 @@ const risingCount =
     supportCount >= 2
   );
 });
+    const topComplaint = [...complaintQueue]
+.sort((a,b)=>
+  (b.vaero_review_supports?.length || 0) -
+  (a.vaero_review_supports?.length || 0)
+)[0];
 
 const negativeReviews = data.filter(x =>
 x.rating <= 2
@@ -3069,6 +3166,8 @@ const hottestProductName =
 if(brandHealthStatus && brandHealthMeta){
 
   brandHealthStatus.innerText = brandSignal.status;
+  brandHealthStatus.style.letterSpacing = ".8px";
+brandHealthStatus.style.fontWeight = "900";
 
   if(brandSignal.status === "KRİTİK"){
     brandHealthStatus.style.color = "#ff8080";
@@ -3080,9 +3179,9 @@ if(brandHealthStatus && brandHealthMeta){
 
   brandHealthMeta.innerText =
     brandSignal.negativeReviews +
-    " negatif yorum · " +
+    " risk sinyal · " +
     brandSignal.negativeSupportCount +
-    " topluluk desteği";
+    " topluluk hareketi";
 
 }
   if(!discover) return;
@@ -3099,13 +3198,20 @@ grid-column:1 / -1;
 padding:14px;
 border-radius:18px;
 background:#111;
+box-shadow:0 18px 50px rgba(0,0,0,.28);
 backdrop-filter:blur(8px);
 backdrop-filter:blur(8px);
 color:white;
 border:1px solid rgba(230,215,176,.25);
 ">
-  <div style="font-size:11px;color:#e6d7b0;font-weight:800;">
-    TOPLULUKÇA ÖNE ÇIKAN
+  <div style="
+font-size:11px;
+color:#e6d7b0;
+font-weight:800;
+letter-spacing:.8px;
+text-transform:uppercase;
+">
+    CANLI TOPLULUK RADARI
     ${hottestTrend ? `
 <div style="
 margin-top:14px;
@@ -3118,10 +3224,35 @@ font-size:11px;
 font-weight:800;
 color:#ffcc66;
 margin-bottom:6px;
+letter-spacing:.6px;
+text-transform:uppercase;
 ">
-🔥 ŞU AN YÜKSELEN DENEYİM
+⚡ CANLI YÜKSELEN SİNYAL
 </div>
 
+<div style="
+margin-top:4px;
+font-size:10px;
+color:rgba(255,255,255,.45);
+line-height:15px;
+">
+Topluluk yoğunluğu, destek hareketleri ve doğrulanmış deneyimler analiz ediliyor.
+</div>
+${topComplaint ? `
+<div style="
+margin-top:10px;
+padding:8px 10px;
+border-radius:12px;
+background:rgba(255,140,100,.10);
+border:1px solid rgba(255,140,100,.16);
+font-size:10px;
+color:#ffb199;
+font-weight:800;
+line-height:16px;
+">
+⚠️ Topluluk yoğunluğu bu konuda olağan dışı hareket algılıyor.
+</div>
+` : ``}
 <div style="
 font-size:13px;
 line-height:1.5;
@@ -3135,7 +3266,7 @@ margin-top:6px;
 font-size:11px;
 opacity:.7;
 ">
-Trend skor: ${hottestTrend.trendScore}
+${signalIntensity} · Sinyal skoru ${hottestTrend.trendScore}
 </div>
 <button onclick="featureReviewFromDiscover('${hottestTrend.id}')" style="
 margin-top:10px;
@@ -3143,11 +3274,13 @@ border:0;
 border-radius:999px;
 padding:8px 12px;
 background:#e6d7b0;
+box-shadow:0 10px 25px rgba(230,215,176,.18);
 color:#07111d;
 font-size:11px;
 font-weight:900;
+letter-spacing:.4px;
 ">
-  Bunu Öne Çıkar
+  Sinyali İncele
 </button>
 </div>
 ` : ``}
@@ -3158,6 +3291,17 @@ font-size:14px;
 line-height:21px;
 font-weight:700;
 ">
+<div style="
+margin-bottom:6px;
+font-size:10px;
+color:#c8a96a;
+font-weight:800;
+letter-spacing:.4px;
+text-transform:uppercase;
+">
+${hottestLabel}
+</div>
+
 🔥 ${hottestComment}
 </div>
   <div style="
@@ -3174,7 +3318,7 @@ opacity:.9;
   font-size:11px;
   color:rgba(255,255,255,.6);
   ">
-    Bugün ${risingCount} kişi bu deneyimi doğruladı
+    Sistem son saatlerde olağan dışı topluluk hareketi algıladı
   </div>
 </div>
 ` : ``}
