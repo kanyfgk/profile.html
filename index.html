@@ -1011,7 +1011,7 @@ transform:translateY(0);
   </div>
 
   <div class="notice">
-    Ürünler herkese görünür. Puan, eleştiri ve doğrulanmış yorum için Platform ID gerekir.
+    Ürünler herkese görünür. Puan ve eleştiri için Platform ID gerekir. Doğrulanmış şikayet yalnızca ürünü satın alan kullanıcılar tarafından oluşturulabilir.
   </div>
 <div class="section-label">MARKALAR</div>
 
@@ -1152,7 +1152,7 @@ line-height:18px;
 <div class="overlay" id="idModal">
   <div class="modal">
     <h2>Platform ID</h2>
-    <p>Yorum, puanlama ve doğrulanmış eleştiri için Müşteri ID ile devam et.</p>
+    <p>Yorum, puanlama ve doğrulanmış şikayet sistemi için Platform ID ile devam et.</p>
 
     <input id="customerId" placeholder="VA-001" autocomplete="off" autocapitalize="characters">
 
@@ -1293,14 +1293,14 @@ line-height:1.5;
 letter-spacing:0.2px;
 margin-top:6px;
 ">
-        124 doğrulanmış deneyim · Trend atmosfer: White Tea
+        124 doğrulanmış deneyim · Yükselen atmosfer: White Tea
       </p>
     </div>
 
     <div class="profile-card" style="border-color:rgba(255,120,120,.25);">
-      <div style="color:#ffb3b3;font-size:12px;letter-spacing:2px;">CANLI ELEŞTİRİ DOĞRULAMA</div>
+      <div style="color:#ffb3b3;font-size:12px;letter-spacing:2px;">CANLI TOPLULUK</div>
       <h3 style="margin-top:8px;">
-Bu eleştiri doğru mu?
+Sen de bu deneyimi yaşadın mı?
 </h3>
       
  <div style="
@@ -1309,7 +1309,7 @@ font-size:12px;
 color:#ffb3b3;
 letter-spacing:.5px;
 ">
-● CANLI · 1.284 doğrulanmış kullanıcı şu an oyluyor
+● CANLI · 1.284 doğrulanmış kullanıcı şu an etkileşimde
    <div style="
 margin-top:14px;
 padding:12px;
@@ -1333,7 +1333,7 @@ font-weight:700;
 color:#ffd280;
 ">
 <div id="brandHealthStatus">
-Topluluk incelemesinde
+Canlı topluluk analizi
 </div>
 
 <div style="
@@ -1343,7 +1343,7 @@ color:rgba(255,255,255,.6);
 line-height:20px;
 ">
  <div id="brandHealthMeta">
-124 negatif yorum · 1.284 topluluk desteği
+124 risk sinyali · 1.284 topluluk doğrulama
 </div>
 
 </div>
@@ -1366,7 +1366,7 @@ padding:14px;
 border-radius:14px;
 ">
 <div style="font-size:13px;color:#ffb3b3;">
-Memnun değil
+Olumsuz deneyim
 </div>
 
 <div style="
@@ -1418,7 +1418,7 @@ Bu soru önce markayı daha önce tercih eden doğrulanmış kullanıcılara gö
     </div>
 
     <div class="profile-card">
-      <div style="color:#e6d7b0;font-size:12px;letter-spacing:2px;">TOPLULUK GÜCÜ</div>
+      <div style="color:#e6d7b0;font-size:12px;letter-spacing:2px;">CANLI TOPLULUK</div>
       <h2 style="font-family:Oswald;font-size:32px;margin-top:8px;">Deneyim, tek kişide kalmaz.</h2>
       <p style="color:rgba(255,255,255,.65);line-height:22px;margin-top:8px;">
         Kullanıcılar deneyimleri destekler, doğrular, yükseltir veya sorgular.
@@ -1426,8 +1426,8 @@ Bu soru önce markayı daha önce tercih eden doğrulanmış kullanıcılara gö
     </div>
 
     <div class="profile-stats">
-      <div class="profile-stat"><b>12.847</b>Aktif kullanıcı</div>
-      <div class="profile-stat"><b>98.6%</b>Doğrulama</div>
+      <div class="profile-stat"><b>12.847</b>Topluluk yoğunluğu</div>
+      <div class="profile-stat"><b>98.6%</b>Doğrulama oranı</div>
       <div class="profile-stat"><b>White Tea</b>Trend</div>
     </div>
   </div>
@@ -1498,10 +1498,10 @@ document.getElementById("brandHealthMeta");
 if(brandHealthStatus){
 
 brandHealthStatus.innerText =
-"Topluluk incelemesinde";
+"Canlı topluluk analizi";
 
 brandHealthMeta.innerText =
-"124 negatif yorum · 1.284 topluluk desteği";
+"124 risk sinyali · 1.284 topluluk doğrulaması";
 
 }
 </script>
@@ -1541,7 +1541,7 @@ let activeId=null;
 let activeContent=null;
 let actionType=null;
   let globalTrendingReviews = [];
-let globalHottestProductName = "Henüz trend ürün yok";
+let globalHottestProductName = "Henüz öne çıkan ürün yok";
 function renderProducts(){
   productGrid.innerHTML=products.map(p=>`
     <button class="product-tile ${p.rec?'recommended':''}" data-product="${p.id}" onclick="openProduct('${p.id}')">
@@ -2086,12 +2086,18 @@ async function loadActionReviews(type){
     item.comment && item.comment.trim() !== ""
   );
 
+}else if(type === "complaint"){
+
+  filtered = filtered.filter(item =>
+    item.type === "complaint" &&
+    item.is_verified
+  );
+
 }else{
 
   filtered = filtered.filter(item => item.type === type);
 
 }
-
   box.style.display = "block";
 
   if(filtered.length === 0){
@@ -2160,7 +2166,7 @@ async function loadActionReviews(type){
   font-size:11px;
   font-weight:700;
 ">
-  🔥 ${item.vaero_review_supports?.length || 0} kişi bunu yaşadı
+  🔥 ${item.vaero_review_supports?.length || 0} kişi aynı sorunu işaretledi
 </button> 
     </div>
   `).join("");
@@ -2758,7 +2764,7 @@ Bu alan topluluk deneyim akışıdır. Resmi doğrulanmış şikayet sistemi ayr
         cursor:pointer;
       "
     >
-      Tümünü Gör →
+      Akışı aç →
     </div>
   </div>
 </div>
@@ -2835,7 +2841,7 @@ Yalnızca ürünü satın alan Platform ID’ler doğrulanmış şikayet oluştu
     cursor:pointer;
   "
 >
-  Tümünü Gör →
+  Canlı akışı aç →
 </div>
   </div>
 </div>
@@ -3098,10 +3104,10 @@ negativeRatio >= 0.25;
   negativeSupportCount,
   status:
     negativeRatio >= 0.25 && negativeSupportCount >= 10
-      ? "KRİTİK"
+      ? "YÜKSELEN SİNYAL"
       : negativeRatio >= 0.12
-        ? "İZLEMEDE"
-        : "SAĞLIKLI"
+        ? "CANLI ANALİZ"
+        : "STABİL SİNYAL"
 };
     const trendingReviews = [...data]
   .map(x => {
@@ -3139,7 +3145,7 @@ const hottestTrend = trendingReviews[0];
 const hottestProductName =
   hottestTrend
     ? getProductName(hottestTrend.product_id)
-    : "Henüz trend ürün yok";
+    : "Henüz öne çıkan ürün yok";
 
 if(brandHealthStatus && brandHealthMeta){
 
@@ -3147,19 +3153,19 @@ if(brandHealthStatus && brandHealthMeta){
   brandHealthStatus.style.letterSpacing = ".8px";
 brandHealthStatus.style.fontWeight = "900";
 
-  if(brandSignal.status === "KRİTİK"){
-    brandHealthStatus.style.color = "#ff8080";
-  }else if(brandSignal.status === "İZLEMEDE"){
-    brandHealthStatus.style.color = "#ffd280";
+  if(brandSignal.status === "YÜKSELEN SİNYAL"){
+    brandHealthStatus.style.color = "#f4b37a";
+  }else if(brandSignal.status === "Sistem aktif"){
+    brandHealthStatus.style.color = "#d4b061";
   }else{
-    brandHealthStatus.style.color = "#8fffaa";
+    brandHealthStatus.style.color = "#a7d8b4";
   }
 
   brandHealthMeta.innerText =
     brandSignal.negativeReviews +
     " risk sinyal · " +
     brandSignal.negativeSupportCount +
-    " topluluk hareketi";
+    " topluluk doğrulaması";
 
 }
   if(!discover) return;
@@ -3189,7 +3195,7 @@ font-weight:800;
 letter-spacing:.8px;
 text-transform:uppercase;
 ">
-    CANLI TOPLULUK RADARI
+    CANLI TOPLULUK AKIŞI
     ${hottestTrend ? `
 <div style="
 margin-top:14px;
@@ -3236,7 +3242,7 @@ font-size:13px;
 line-height:1.5;
 letter-spacing:0.2px;
 ">
-${hottestTrend.comment || "Topluluk hareketleniyor."}
+${hottestTrend.comment || "Sinyal güçleniyor."}
 </div>
 
 <div style="
@@ -3244,7 +3250,7 @@ margin-top:6px;
 font-size:11px;
 opacity:.7;
 ">
-${signalIntensity} · Sinyal skoru ${hottestTrend.trendScore}
+${signalIntensity} · Topluluk aktivitesi ${hottestTrend.trendScore}
 </div>
 <button onclick="featureReviewFromDiscover('${hottestTrend.id}')" style="
 margin-top:10px;
@@ -3258,7 +3264,7 @@ font-size:11px;
 font-weight:900;
 letter-spacing:.4px;
 ">
-  Sinyali İncele
+  Detayı Aç
 </button>
 </div>
 ` : ``}
@@ -3609,7 +3615,7 @@ onmouseout="this.style.background='transparent'"
           font-size:11px;
           font-weight:800;
         ">
-          Ben de bunu yaşadım
+          Bu deneyimi bende yaşadım
         </button>
       </div>
     `).join("")
