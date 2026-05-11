@@ -2611,7 +2611,10 @@ vaero_review_supports(id)
     return bSupports - aSupports;
   });
 const complaints = data
-  .filter(item => item.type === "complaint")
+  .filter(item =>
+    item.type === "complaint" &&
+    item.is_verified
+  )
   .sort((a,b)=>{
     if(Number(b.is_verified) !== Number(a.is_verified)){
       return Number(b.is_verified) - Number(a.is_verified);
@@ -2792,31 +2795,6 @@ ${item.is_verified ? `
 ` : ``}
 
 ${item.comment || '—'}
-${(item.vaero_review_supports?.length || 0) > 0 ? `
-<div style="
-margin-top:8px;
-display:inline-flex;
-align-items:center;
-gap:5px;
-padding:5px 9px;
-border-radius:999px;
-background:rgba(255,180,100,.10);
-border:1px solid rgba(255,180,100,.18);
-font-size:10px;
-color:#ffcc99;
-font-weight:700;
-">
-🔥 ${item.vaero_review_supports.length} kişi aynı sorunu yaşadı
-</div>
-` : ``}
-<div style="
-margin-top:8px;
-font-size:10px;
-color:rgba(255,220,170,.72);
-line-height:15px;
-">
-Bu şikayet doğrulanmış ürün sahipliği üzerinden oluşturuldu.
-</div>
   </div>
 </div>
 `).join("")}
