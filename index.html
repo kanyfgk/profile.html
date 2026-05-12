@@ -3454,11 +3454,41 @@ negativeRatio >= 0.25;
   negativeRatio,
   negativeSupportCount,
   status:
-    negativeRatio >= 0.25 && negativeSupportCount >= 10
-      ? "YÜKSELEN SİNYAL"
-      : negativeRatio >= 0.12
+  trustScore >= 90
+    ? "YÜKSEK GÜVEN"
+
+    : trustScore >= 75
+      ? "STABİL GÜVEN"
+
+      : trustScore >= 55
         ? "CANLI ANALİZ"
-        : "STABİL SİNYAL"
+
+        : "RİSK ARTIYOR" 
+     riskLevel:
+  trustScore >= 75
+    ? "LOW"
+
+    : trustScore >= 55
+      ? "MEDIUM"
+
+      : "HIGH",
+   riskLevel:
+  trustScore >= 75
+    ? "LOW"
+
+    : trustScore >= 55
+      ? "MEDIUM"
+
+      : "HIGH",
+
+signalStrength:
+  negativeSupportCount >= 15
+    ? "YÜKSEK SİNYAL"
+
+    : negativeSupportCount >= 7
+      ? "ORTA SİNYAL"
+
+      : "ZAYIF SİNYAL",
 };
     const trendingReviews = [...data]
   .map(x => {
@@ -3501,6 +3531,29 @@ const hottestProductName =
 if(brandHealthStatus && brandHealthMeta){
 
   brandHealthStatus.innerText = brandSignal.status;
+
+brandHealthStatus.setAttribute(
+  "data-risk",
+  brandSignal.riskLevel
+);
+
+brandHealthStatus.style.color =
+  brandSignal.riskLevel === "LOW"
+    ? "#57d68d"
+
+    : brandSignal.riskLevel === "MEDIUM"
+      ? "#ffb347"
+
+      : "#ff6b6b";
+
+brandHealthStatus.style.textShadow =
+  brandSignal.riskLevel === "LOW"
+    ? "0 0 12px rgba(87,214,141,0.45)"
+
+    : brandSignal.riskLevel === "MEDIUM"
+      ? "0 0 12px rgba(255,179,71,0.45)"
+
+      : "0 0 12px rgba(255,107,107,0.45)";
   brandHealthStatus.style.letterSpacing = ".8px";
 brandHealthStatus.style.fontWeight = "900";
 
@@ -3511,12 +3564,39 @@ brandHealthStatus.style.fontWeight = "900";
   }else{
     brandHealthStatus.style.color = "#a7d8b4";
   }
+ if(trustScore >= 85){
+  brandHealthStatus.style.textShadow =
+  "0 0 18px rgba(92,184,92,.35)";
+}
+
+if(trustScore < 70){
+  brandHealthStatus.style.textShadow =
+  "0 0 18px rgba(255,107,107,.35)";
+}
 
   brandHealthMeta.innerText =
-    brandSignal.negativeReviews +
-    " risk sinyal · " +
-    brandSignal.negativeSupportCount +
-    " topluluk doğrulaması";
+"Trust Score " +
+trustScore +
+" · " +
+brandSignal.negativeReviews +
+" risk sinyali · " +
+brandSignal.negativeSupportCount +
+" topluluk doğrulaması";
+ brandHealthMeta.innerText +=
+  " · " +
+
+(
+  brandSignal.riskLevel === "LOW"
+    ? "Düşük Risk"
+
+    : brandSignal.riskLevel === "MEDIUM"
+      ? "İzleniyor"
+
+      : "Kritik Sinyal"
+);
+
+brandHealthMeta.innerText +=
+  " · " + brandSignal.signalStrength;
 
 }
   if(!discover) return;
