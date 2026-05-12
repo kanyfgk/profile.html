@@ -2370,10 +2370,27 @@ if(actionNotice){
   }
 
   alert("Kayıt eklenemedi.");
-  return;
+return;
 }
 
-  const actionNotice = document.getElementById("actionNotice");
+await supabaseClient
+  .from("vaero_profile_activity")
+  .insert([
+    {
+      profile_code: activeId,
+      activity_type: verified ? "verified_rating_created" : actionType + "_created",
+      target_type: "review",
+      target_id: data?.[0]?.id || null,
+      score: verified ? 8 : 1,
+      activity_meta: {
+        product_id: productId,
+        action_type: actionType,
+        is_verified: verified
+      }
+    }
+  ]);
+
+const actionNotice = document.getElementById("actionNotice");
 
 if(actionNotice){
 
@@ -3011,9 +3028,24 @@ function openReviews(productId){
     return;
   }
 
-  showToast("Deneyim desteğin kaydedildi 🔥");
-  loadActionReviews(actionType || "comment");
-  loadDiscover();
+  await supabaseClient
+  .from("vaero_profile_activity")
+  .insert([
+    {
+      profile_code: activeId,
+      activity_type: "support_given",
+      target_type: "review",
+      target_id: reviewId,
+      score: 2,
+      activity_meta: {
+        source: "support_button"
+      }
+    }
+  ]);
+
+showToast("Deneyim desteğin kaydedildi.");
+loadActionReviews(actionType || "comment");
+loadDiscover();
 }
   async function loadDiscover(){
 
