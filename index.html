@@ -990,6 +990,80 @@ transform:translateY(0);
 }
 
 }
+ .internal-problems{
+margin-top:18px;
+display:flex;
+flex-direction:column;
+gap:12px;
+}
+
+.internal-item{
+background:rgba(255,255,255,0.04);
+border:1px solid rgba(255,255,255,0.06);
+border-radius:16px;
+padding:14px;
+backdrop-filter:blur(10px);
+}
+
+.internal-type{
+font-size:12px;
+font-weight:700;
+color:#ffcc81;
+margin-bottom:8px;
+letter-spacing:0.3px;
+text-transform:uppercase;
+}
+
+.internal-comment{
+font-size:14px;
+line-height:1.5;
+color:rgba(255,255,255,0.88);
+}
+
+.internal-empty{
+background:rgba(255,255,255,0.04);
+border:1px dashed rgba(255,255,255,0.08);
+padding:14px;
+border-radius:14px;
+font-size:13px;
+color:rgba(255,255,255,0.55);
+text-align:center;
+}
+ .internal-meta{
+margin-top:10px;
+font-size:11px;
+letter-spacing:0.4px;
+text-transform:uppercase;
+color:rgba(255,255,255,0.42);
+}
+ .internal-header{
+display:flex;
+justify-content:space-between;
+align-items:center;
+margin-bottom:12px;
+padding:12px 14px;
+border-radius:16px;
+background:rgba(255,204,129,0.08);
+border:1px solid rgba(255,204,129,0.12);
+}
+
+.internal-title{
+font-size:13px;
+font-weight:800;
+color:#ffcc81;
+}
+
+.internal-subtitle{
+font-size:11px;
+color:rgba(255,255,255,0.5);
+margin-top:3px;
+}
+
+.internal-count{
+font-size:18px;
+font-weight:900;
+color:#ffcc81;
+}
 </style>
 </head>
 
@@ -2465,6 +2539,24 @@ document.getElementById("wouldBuyAgain").value = "";
 
   console.log("INTERNAL COMPLAINTS:", data);
   const repeatedProblems = {};
+  const groupedProblems = {};
+
+(data || []).forEach(item => {
+
+const key = (item.comment || "").trim().toLowerCase();
+
+if(!key) return;
+
+if(!groupedProblems[key]){
+groupedProblems[key] = {
+count: 0,
+data: item
+};
+}
+
+groupedProblems[key].count++;
+
+});
 
 (data || []).forEach(item => {
 
@@ -2491,19 +2583,32 @@ internalBox.innerHTML = `
 `;
 return;
 }
-
-internalBox.innerHTML = data.map(item => `
+const internalHeader = `
+<div class="internal-header">
+  <div>
+    <div class="internal-title">İç Risk Sinyalleri</div>
+    <div class="internal-subtitle">Ziyaretçilere görünmeyen marka kalite takibi</div>
+  </div>
+  <div class="internal-count">${data.length}</div>
+</div>
+`;
+internalBox.innerHTML = internalHeader + Object.values(groupedProblems).map(problem => `
 <div class="internal-item">
+
 <div class="internal-type">
-${item.experience_type || "Belirtilmemiş"}
+${problem.data.experience_type || "Belirtilmemiş"}
 </div>
 
 <div class="internal-comment">
-${item.comment || ""}
+${problem.data.comment || ""}
 </div>
+
+<div class="internal-meta">
+${problem.count} kişi aynı problemi işaretledi
+</div>
+
 </div>
 `).join("");
-
 }
   return data || [];
 }
@@ -2513,6 +2618,11 @@ ${item.comment || ""}
     brandTitle.innerText = "VAERO";
     brandText.innerText =
     "Doğrulanmış kullanıcı deneyimleri, ürün yorumları ve atmosfer sistemi değerlendirmeleri.";
+   if(!document.getElementById("internalProblems")){
+  brandText.insertAdjacentHTML("afterend", `
+    <div id="internalProblems" class="internal-problems"></div>
+  `);
+} 
    loadInternalComplaints("white-tea");
   }
 
@@ -2527,6 +2637,12 @@ ${item.comment || ""}
 
 function closeBrand(){
   brandModal.classList.remove("show");
+
+  const internalBox = document.getElementById("internalProblems");
+
+  if(internalBox){
+    internalBox.remove();
+  }
 
   setTimeout(()=>{
     unlockBody();
