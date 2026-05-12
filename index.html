@@ -2373,14 +2373,18 @@ if(actionNotice){
 return;
 }
 
-await supabaseClient
+const activityInsert = await supabaseClient
   .from("vaero_profile_activity")
   .insert([
     {
       profile_code: activeId,
-      activity_type: verified ? "verified_rating_created" : actionType + "_created",
+      activity_type: verified
+        ? "verified_rating_created"
+        : actionType + "_created",
       target_type: "review",
-      target_id: data?.[0]?.id || null,
+      target_id: data?.[0]?.id
+        ? String(data[0].id)
+        : null,
       score: verified ? 8 : 1,
       activity_meta: {
         product_id: productId,
@@ -2390,7 +2394,7 @@ await supabaseClient
     }
   ]);
 
-const actionNotice = document.getElementById("actionNotice");
+console.log("ACTIVITY INSERT:", activityInsert);
 
 if(actionNotice){
 
