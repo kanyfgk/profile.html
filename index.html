@@ -2374,7 +2374,7 @@ return;
 }
 
 const activityInsert = await supabaseClient
-  .from("vaero_profile_activity")
+  .from("vaero_profile_activity0")
   .insert([
     {
       profile_code: activeId,
@@ -3033,7 +3033,7 @@ function openReviews(productId){
   }
 
   await supabaseClient
-  .from("vaero_profile_activity")
+  .from("vaero_profile_activity0")
   .insert([
     {
       profile_code: activeId,
