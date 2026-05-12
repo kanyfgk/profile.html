@@ -1152,7 +1152,7 @@ line-height:18px;
 <div class="overlay" id="idModal">
   <div class="modal">
     <h2>Platform ID</h2>
-    <p>Yorum, puanlama ve doğrulanmış şikayet sistemi için Platform ID ile devam et.</p>
+    <p>Yorum ve eleştiri için Platform ID gerekir. Puanlama ve doğrulanmış deneyim yalnızca ürünü satın alan kullanıcılar tarafından oluşturulabilir.</p>
 
     <input id="customerId" placeholder="VA-001" autocomplete="off" autocapitalize="characters">
 
@@ -2353,9 +2353,8 @@ if(actionNotice){
 }
 
     loadLiveRatings();
-    loadDiscover();
-    loadReviews(productId);
-    loadActionReviews(actionType);
+loadReviews(productId);
+loadActionReviews(actionType);
 
     document.getElementById("actionText").value = "";
     document.getElementById("experienceType").value = "";
@@ -2422,7 +2421,6 @@ showToast("Yorum kaydedildi. Topluluk deneyimi olarak işlendi.");
 }
 
   loadLiveRatings();
-  loadDiscover();
 loadReviews(productId);
 loadActionReviews(actionType);
 document.getElementById("actionText").value = "";
@@ -3030,7 +3028,6 @@ function openReviews(productId){
     if(error.message.includes("duplicate")){
       showToast("Bu deneyimi zaten desteklemiştin.");
       loadActionReviews(actionType || "comment");
-      loadDiscover();
       return;
     }
 
@@ -3056,7 +3053,6 @@ function openReviews(productId){
 
 showToast("Deneyim desteğin kaydedildi.");
 loadActionReviews(actionType || "comment");
-loadDiscover();
 }
   async function loadDiscover(){
     const { data: topProfiles, error: topProfilesError } = await supabaseClient
