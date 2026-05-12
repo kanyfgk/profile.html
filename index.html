@@ -2444,12 +2444,76 @@ document.getElementById("actionText").value = "";
   document.getElementById("experienceType").value = "";
 document.getElementById("wouldBuyAgain").value = "";
   }
+ async function loadInternalComplaints(productId){
+
+  const { data, error } = await supabaseClient
+    .from("vaero_reviews")
+    .select(`
+      id,
+      comment,
+      created_at,
+      experience_type
+    `)
+    .eq("product_id", productId)
+    .eq("internal_only", true)
+    .order("id", { ascending:false });
+
+  if(error){
+    console.error("INTERNAL COMPLAINT ERROR:", error);
+    return [];
+  }
+
+  console.log("INTERNAL COMPLAINTS:", data);
+  const repeatedProblems = {};
+
+(data || []).forEach(item => {
+
+  if(!item.experience_type) return;
+
+  if(!repeatedProblems[item.experience_type]){
+    repeatedProblems[item.experience_type] = 0;
+  }
+
+  repeatedProblems[item.experience_type] += 1;
+
+});
+
+console.log("REPEATED PROBLEMS:", repeatedProblems);
+const internalBox = document.getElementById("internalProblems");
+
+if(internalBox){
+
+if(!data || data.length === 0){
+internalBox.innerHTML = `
+<div class="internal-empty">
+İç risk sinyali henüz oluşmadı.
+</div>
+`;
+return;
+}
+
+internalBox.innerHTML = data.map(item => `
+<div class="internal-item">
+<div class="internal-type">
+${item.experience_type || "Belirtilmemiş"}
+</div>
+
+<div class="internal-comment">
+${item.comment || ""}
+</div>
+</div>
+`).join("");
+
+}
+  return data || [];
+}
   function openBrand(type){
 
   if(type === "vaero"){
     brandTitle.innerText = "VAERO";
     brandText.innerText =
     "Doğrulanmış kullanıcı deneyimleri, ürün yorumları ve atmosfer sistemi değerlendirmeleri.";
+   loadInternalComplaints("white-tea");
   }
 
   if(type === "future"){
