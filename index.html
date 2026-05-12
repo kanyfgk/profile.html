@@ -2212,7 +2212,7 @@ async function saveAction(){
   const buyAgainValue = document.getElementById("wouldBuyAgain").value;
   const textValue = document.getElementById("actionText").value.trim();
 
-  if(!experienceValue || !buyAgainValue || !textValue){
+  if((actionType !== "complaint" && (!experienceValue || !buyAgainValue)) || !textValue){
     showToast("Deneyim tipi, tekrar alma seçimi ve yorum alanı doldurulmalı.");
     return;
   }
@@ -2274,8 +2274,9 @@ const wouldBuyAgain =
     .from("vaero_reviews")
     .select("id,is_verified")
     .eq("customer_code", activeId)
-    .eq("product_id", productId)
-    .maybeSingle();
+.eq("product_id", productId)
+.eq("is_verified", true)
+.maybeSingle();
 
   if(oldReview && actionType === "rate" && verified){
     const actionNotice = document.getElementById("actionNotice");
