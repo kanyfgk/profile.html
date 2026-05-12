@@ -1045,6 +1045,32 @@ padding:12px 14px;
 border-radius:16px;
 background:rgba(255,204,129,0.08);
 border:1px solid rgba(255,204,129,0.12);
+  position:relative;
+overflow:hidden;
+}
+ .internal-header::after{
+content:"";
+position:absolute;
+top:0;
+left:-40%;
+width:40%;
+height:100%;
+background:linear-gradient(
+90deg,
+transparent,
+rgba(255,255,255,.08),
+transparent
+);
+animation:internalPulse 4s linear infinite;
+}
+
+@keyframes internalPulse{
+0%{
+left:-40%;
+}
+100%{
+left:120%;
+}
 }
 
 .internal-title{
@@ -2543,7 +2569,10 @@ document.getElementById("wouldBuyAgain").value = "";
 
 (data || []).forEach(item => {
 
-const key = (item.comment || "").trim().toLowerCase();
+const key =
+(item.experience_type || "unknown")
+.trim()
+.toLowerCase();
 
 if(!key) return;
 
@@ -2584,18 +2613,48 @@ internalBox.innerHTML = `
 return;
 }
 const internalHeader = `
+let riskLevel = "LOW";
+let riskColor = "#5cb85c";
+
+if(data.length >= 3){
+riskLevel = "MEDIUM";
+riskColor = "#ffb347";
+}
+
+if(data.length >= 6){
+riskLevel = "HIGH";
+riskColor = "#ff6b6b";
+}
 <div class="internal-header">
   <div>
     <div class="internal-title">İç Risk Sinyalleri</div>
     <div class="internal-subtitle">Ziyaretçilere görünmeyen marka kalite takibi</div>
   </div>
-  <div class="internal-count">${data.length}</div>
+  <div class="internal-count" style="color:${riskColor}">
+${riskLevel}
+<span style="
+display:block;
+font-size:10px;
+font-weight:700;
+color:rgba(255,255,255,.45);
+margin-top:3px;
+">
+${data.length} sinyal
+</span>
+</div>
 </div>
 `;
 internalBox.innerHTML = internalHeader + Object.values(groupedProblems).map(problem => `
 <div class="internal-item">
 
-<div class="internal-type">
+<div class="internal-type" style="
+color:
+${problem.count >= 5
+  ? "#ff6b6b"
+  : problem.count >= 3
+    ? "#ffb347"
+    : "#ffcc81"};
+">
 ${problem.data.experience_type || "Belirtilmemiş"}
 </div>
 
@@ -2604,8 +2663,12 @@ ${problem.data.comment || ""}
 </div>
 
 <div class="internal-meta">
-${problem.count} kişi aynı problemi işaretledi
+${problem.count} tekrar eden sinyal algılandı
 </div>
+
+<div class="internal-meta">
+Son kayıt: ${new Date(problem.data.created_at).toLocaleDateString("tr-TR")}
+</div> 
 
 </div>
 `).join("");
@@ -3342,7 +3405,41 @@ const negativeSupportCount = negativeReviews.reduce(
 total + (review.vaero_review_supports?.length || 0),
 0
 );
+const verifiedRatings =
+data.filter(x =>
+x.is_verified &&
+x.rating
+);
 
+const avgVerifiedRating =
+verifiedRatings.length > 0
+? (
+verifiedRatings.reduce(
+(total,item)=>total + item.rating,
+0
+) / verifiedRatings.length
+).toFixed(1)
+: "0.0";
+
+let trustScore = 100;
+
+trustScore -= negativeReviews.length * 4;
+trustScore -= negativeSupportCount * 2;
+
+trustScore += data.filter(x=>x.would_buy_again===true).length * 3;
+
+if(avgVerifiedRating >= 4.5){
+trustScore += 8;
+}
+
+if(avgVerifiedRating <= 2){
+trustScore -= 15;
+}
+
+trustScore = Math.max(
+0,
+Math.min(100, trustScore)
+);
 const negativeRatio =
 negativeReviews.length / (data.length || 1);
 
