@@ -3052,10 +3052,10 @@ loadActionReviews(actionType || "comment");
 loadDiscover();
 }
   async function loadDiscover(){
-    const { data: topProfiles } = await supabaseClient
+    const { data: topProfiles, error: topProfilesError } = await supabaseClient
   .from("vaero_profiles")
   .select(`
-    profile_code,
+    customer_code,
     profile_energy,
     trust_signals,
     reputation_momentum
@@ -3064,6 +3064,10 @@ loadDiscover();
     ascending:false
   })
   .limit(3);
+
+if(topProfilesError){
+  console.log("TOP PROFILES ERROR:", topProfilesError);
+}
 
   const { data, error } = await supabaseClient
     .from("vaero_reviews")
@@ -3255,7 +3259,7 @@ font-size:13px;
 font-weight:800;
 color:white;
 ">
-${p.profile_code}
+${p.customer_code}
 </div>
 
 <div style="
