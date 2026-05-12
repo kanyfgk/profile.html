@@ -3052,6 +3052,18 @@ loadActionReviews(actionType || "comment");
 loadDiscover();
 }
   async function loadDiscover(){
+    const { data: topProfiles } = await supabaseClient
+  .from("vaero_profiles")
+  .select(`
+    profile_code,
+    profile_energy,
+    trust_signals,
+    reputation_momentum
+  `)
+  .order("reputation_momentum", {
+    ascending:false
+  })
+  .limit(3);
 
   const { data, error } = await supabaseClient
     .from("vaero_reviews")
@@ -3206,12 +3218,78 @@ brandHealthStatus.style.fontWeight = "900";
 }
   if(!discover) return;
 
-  const nightDrive = data.filter(x=>x.experience_type==="night_drive").length;
+const topProfilesHtml = `
+<div style="
+grid-column:1 / -1;
+margin-bottom:14px;
+padding:14px;
+border-radius:18px;
+background:#111;
+border:1px solid rgba(230,215,176,.14);
+">
+
+<div style="
+font-size:11px;
+font-weight:800;
+letter-spacing:.7px;
+color:#e6d7b0;
+margin-bottom:10px;
+text-transform:uppercase;
+">
+TOPLULUK MOMENTUMU
+</div>
+
+${(topProfiles || []).map((p,index)=>`
+
+<div style="
+display:flex;
+justify-content:space-between;
+align-items:center;
+padding:10px 0;
+border-bottom:${index !== 2 ? "1px solid rgba(255,255,255,.06)" : "0"};
+">
+
+<div>
+<div style="
+font-size:13px;
+font-weight:800;
+color:white;
+">
+${p.profile_code}
+</div>
+
+<div style="
+font-size:10px;
+color:rgba(255,255,255,.55);
+margin-top:3px;
+">
+Trust ${p.trust_signals || 0}
+* Energy ${p.profile_energy || 0}
+</div>
+</div>
+
+<div style="
+font-size:12px;
+font-weight:900;
+color:#e6d7b0;
+">
+⚡ ${p.reputation_momentum || 0}
+</div>
+
+</div>
+
+`).join("")}
+
+</div>
+`;
+
+const nightDrive = data.filter(x=>x.experience_type==="night_drive").length;
   const longRoad = data.filter(x=>x.experience_type==="long_road").length;
   const repeatBuy = data.filter(x=>x.would_buy_again===true).length;
   const firstTry = data.filter(x=>x.experience_type==="first_try").length;
 
-  discover.innerHTML = `
+  discover.innerHTML =
+topProfilesHtml + `
   ${topSupported ? `
 <div style="
 grid-column:1 / -1;
