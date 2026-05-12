@@ -2270,6 +2270,21 @@ const wouldBuyAgain =
   wouldBuyAgainValue === ""
     ? null
     : wouldBuyAgainValue === "true";
+ let internalOnly = false;
+
+if(actionType === "complaint"){
+  const { data: previousComplaints } = await supabaseClient
+    .from("vaero_reviews")
+    .select("id, created_at")
+    .eq("customer_code", activeId)
+    .eq("product_id", productId)
+    .eq("type", "complaint")
+    .order("created_at", { ascending:false });
+
+  if(previousComplaints && previousComplaints.length >= 1){
+    internalOnly = true;
+  }
+}
   const { data: oldReview } = await supabaseClient
     .from("vaero_reviews")
     .select("id,is_verified")
@@ -2305,7 +2320,8 @@ comment: document.getElementById("actionText").value,
 is_verified: verified,
 type: actionType,
 experience_type: document.getElementById("experienceType").value || null,
-        would_buy_again: wouldBuyAgain
+        would_buy_again: wouldBuyAgain,
+internal_only: internalOnly
       }
     ])
     .select();
@@ -2609,9 +2625,11 @@ comment,
 is_verified,
 type,
 id,
+internal_only,
 vaero_review_supports(id)
 `)
-    .eq("product_id", productId)
+.eq("product_id", productId)
+.eq("internal_only", false) 
     .order("is_verified", { ascending: false })
     .order("id", { ascending: false });
 
