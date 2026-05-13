@@ -2725,9 +2725,15 @@ Son yorum:
     brandText.innerText =
     "Doğrulanmış kullanıcı deneyimleri, ürün yorumları ve atmosfer sistemi değerlendirmeleri.";
    if(!document.getElementById("internalProblems")){
-  brandText.insertAdjacentHTML("afterend", `
-    <div id="internalProblems" class="internal-problems"></div>
-  `);
+  setTimeout(() => {
+
+if(!document.getElementById("internalProblems")){
+document.body.insertAdjacentHTML("beforeend", `
+<div id="internalProblems" class="internal-problems"></div>
+`);
+}
+
+}, 300);
 } 
    loadInternalComplaints("white-tea");
   }
