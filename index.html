@@ -2612,7 +2612,6 @@ internalBox.innerHTML = `
 `;
 return;
 }
-const internalHeader = `
 let riskLevel = "LOW";
 let riskColor = "#5cb85c";
 
@@ -2625,6 +2624,7 @@ if(data.length >= 6){
 riskLevel = "HIGH";
 riskColor = "#ff6b6b";
 }
+internalProblems.innerHTML = `
 <div class="internal-header">
   <div>
     <div class="internal-title">İç Risk Sinyalleri</div>
@@ -2644,7 +2644,7 @@ ${data.length} sinyal
 </div>
 </div>
 `;
-internalBox.innerHTML = internalHeader + Object.values(groupedProblems).map(problem => `
+internalProblems.innerHTML += Object.values(groupedProblems).map(problem => `
 <div class="internal-item">
 
 <div class="internal-type" style="
