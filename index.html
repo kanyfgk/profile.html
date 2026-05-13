@@ -2546,6 +2546,18 @@ document.getElementById("wouldBuyAgain").value = "";
   }
  async function loadInternalComplaints(productId){
 
+  let internalBox = document.getElementById("internalProblems");
+
+  if(!internalBox){
+
+    document.body.insertAdjacentHTML("beforeend", `
+      <div id="internalProblems" class="internal-problems"></div>
+    `);
+
+    internalBox = document.getElementById("internalProblems");
+
+  }
+
   const { data, error } = await supabaseClient
     .from("vaero_reviews")
     .select(`
@@ -2562,6 +2574,12 @@ document.getElementById("wouldBuyAgain").value = "";
     console.error("INTERNAL COMPLAINT ERROR:", error);
     return [];
   }
+
+  console.log("INTERNAL COMPLAINTS:", data);
+
+  return data || [];
+
+}
 
   console.log("INTERNAL COMPLAINTS:", data);
   const repeatedProblems = {};
