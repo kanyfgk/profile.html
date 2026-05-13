@@ -2592,14 +2592,30 @@ groupedProblems[key].count++;
   if(!item.experience_type) return;
 
   if(!repeatedProblems[item.experience_type]){
-    repeatedProblems[item.experience_type] = 0;
-  }
+  repeatedProblems[item.experience_type] = {
+    count: 0,
+    lastSeen: item.created_at,
+    latestComment: item.comment || ""
+  };
+}
 
-  repeatedProblems[item.experience_type] += 1;
+repeatedProblems[item.experience_type].count += 1;
 
 });
 
 console.log("REPEATED PROBLEMS:", repeatedProblems);
+  Object.entries(repeatedProblems).forEach(([type, data]) => {
+
+  console.log(
+    "SIGNAL:",
+    type,
+    "| COUNT:",
+    data.count,
+    "| LAST:",
+    data.lastSeen
+  );
+
+});
 const internalBox = document.getElementById("internalProblems");
 
 if(internalBox){
@@ -2663,13 +2679,40 @@ ${problem.data.comment || ""}
 </div>
 
 <div class="internal-meta">
+
 ${problem.count} tekrar eden sinyal algılandı
+
+<span style="
+display:block;
+margin-top:4px;
+font-size:10px;
+font-weight:700;
+letter-spacing:.5px;
+color:
+${problem.count >= 5
+  ? "#ff6b6b"
+  : problem.count >= 3
+    ? "#ffb347"
+    : "#8bc34a"};
+">
+
+${problem.count >= 5
+  ? "KRİTİK TEKRAR"
+  : problem.count >= 3
+    ? "İZLENİYOR"
+    : "DÜŞÜK YOĞUNLUK"}
+
+</span>
+
 </div>
 
 <div class="internal-meta">
 Son kayıt: ${new Date(problem.data.created_at).toLocaleDateString("tr-TR")}
 </div> 
-
+<div class="internal-meta">
+Son yorum:
+"${problem.latestComment}"
+</div>
 </div>
 `).join("");
 }
@@ -2877,7 +2920,7 @@ vaero_review_supports(id)
     .order("id", { ascending: false });
 
   if(error){
-    console.error(error);
+    console.warn("Duplicate support blocked"); 
     return;
   }
 
