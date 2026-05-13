@@ -2640,7 +2640,7 @@ if(data.length >= 6){
 riskLevel = "HIGH";
 riskColor = "#ff6b6b";
 }
-internalProblems.innerHTML = `
+internalBox.innerHTML = ` 
 <div class="internal-header">
   <div>
     <div class="internal-title">İç Risk Sinyalleri</div>
@@ -2660,7 +2660,7 @@ ${data.length} sinyal
 </div>
 </div>
 `;
-internalProblems.innerHTML += Object.values(groupedProblems).map(problem => `
+internalBox.innerHTML += Object.values(repeatedProblems).map(problem => `
 <div class="internal-item">
 
 <div class="internal-type" style="
