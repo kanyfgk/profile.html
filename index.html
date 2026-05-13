@@ -3275,6 +3275,17 @@ function openReviews(productId){
   return;
 }
 
+    const { data: existingSupport } = await supabaseClient
+  .from("vaero_review_supports")
+  .select("id")
+  .eq("review_id", reviewId)
+  .eq("customer_code", activeId)
+  .maybeSingle();
+
+if(existingSupport){
+  showToast("Bu deneyimi zaten desteklemiştin.");
+  return;
+}
   const { error } = await supabaseClient
     .from("vaero_review_supports")
     .insert([
