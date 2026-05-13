@@ -2549,13 +2549,11 @@ document.getElementById("wouldBuyAgain").value = "";
   let internalBox = document.getElementById("internalProblems");
 
   if(!internalBox){
-
     document.body.insertAdjacentHTML("beforeend", `
       <div id="internalProblems" class="internal-problems"></div>
     `);
 
     internalBox = document.getElementById("internalProblems");
-
   }
 
   const { data, error } = await supabaseClient
@@ -2572,162 +2570,104 @@ document.getElementById("wouldBuyAgain").value = "";
 
   if(error){
     console.error("INTERNAL COMPLAINT ERROR:", error);
-    return [];
+    return;
   }
 
   console.log("INTERNAL COMPLAINTS:", data);
-  const repeatedProblems = {};
+
   const groupedProblems = {};
 
-(data || []).forEach(item => {
+  (data || []).forEach(item => {
+    const key = (item.experience_type || "unknown").trim().toLowerCase();
 
-const key =
-(item.experience_type || "unknown")
-.trim()
-.toLowerCase();
+    if(!groupedProblems[key]){
+      groupedProblems[key] = {
+        count: 0,
+        data: item,
+        latestComment: item.comment || "",
+        lastSeen: item.created_at
+      };
+    }
 
-if(!key) return;
+    groupedProblems[key].count += 1;
+  });
 
-if(!groupedProblems[key]){
-groupedProblems[key] = {
-count: 0,
-data: item
-};
+  console.log("REPEATED PROBLEMS:", groupedProblems);
+
+  if(!data || data.length === 0){
+    internalBox.innerHTML = `
+      <div class="internal-empty">
+        İç risk sinyali henüz oluşmadı.
+      </div>
+    `;
+    return;
+  }
+
+  let riskLevel = "LOW";
+  let riskColor = "#5cb85c";
+
+  if(data.length >= 3){
+    riskLevel = "MEDIUM";
+    riskColor = "#ffb347";
+  }
+
+  if(data.length >= 6){
+    riskLevel = "HIGH";
+    riskColor = "#ff6b6b";
+  }
+
+  internalBox.innerHTML = `
+    <div class="internal-header">
+      <div>
+        <div class="internal-title">İç Risk Sinyalleri</div>
+        <div class="internal-subtitle">Ziyaretçilere görünmeyen marka kalite takibi</div>
+      </div>
+      <div class="internal-count" style="color:${riskColor}">
+        ${riskLevel}
+        <span style="
+          display:block;
+          font-size:10px;
+          font-weight:700;
+          color:rgba(255,255,255,.45);
+          margin-top:3px;
+        ">
+          ${data.length} sinyal
+        </span>
+      </div>
+    </div>
+  `;
+
+  internalBox.innerHTML += Object.values(groupedProblems).map(problem => `
+    <div class="internal-item">
+
+      <div class="internal-type" style="
+        color:${
+          problem.count >= 5
+            ? "#ff6b6b"
+            : problem.count >= 3
+              ? "#ffb347"
+              : "#ffcc81"
+        };
+      ">
+        ${problem.data.experience_type || "Belirtilmemiş"}
+      </div>
+
+      <div class="internal-comment">
+        ${problem.latestComment || ""}
+      </div>
+
+      <div class="internal-meta">
+        ${problem.count} tekrar eden sinyal algılandı
+      </div>
+
+      <div class="internal-meta">
+        Son kayıt: ${new Date(problem.lastSeen).toLocaleDateString("tr-TR")}
+      </div>
+
+    </div>
+  `).join("");
+
 }
-
-groupedProblems[key].count++;
-
-});
-
-(data || []).forEach(item => {
-
-  if(!item.experience_type) return;
-
-  if(!repeatedProblems[item.experience_type]){
-  repeatedProblems[item.experience_type] = {
-    count: 0,
-    lastSeen: item.created_at,
-    latestComment: item.comment || ""
-  };
-}
-
-repeatedProblems[item.experience_type].count += 1;
-
-});
-
-console.log("REPEATED PROBLEMS:", repeatedProblems);
-  Object.entries(repeatedProblems).forEach(([type, data]) => {
-
-  console.log(
-    "SIGNAL:",
-    type,
-    "| COUNT:",
-    data.count,
-    "| LAST:",
-    data.lastSeen
-  );
-
-});
-const internalBox = document.getElementById("internalProblems");
-
-if(internalBox){
-
-if(!data || data.length === 0){
-internalBox.innerHTML = `
-<div class="internal-empty">
-İç risk sinyali henüz oluşmadı.
-</div>
-`;
-}
-let riskLevel = "LOW";
-let riskColor = "#5cb85c";
-
-if(data.length >= 3){
-riskLevel = "MEDIUM";
-riskColor = "#ffb347";
-}
-
-if(data.length >= 6){
-riskLevel = "HIGH";
-riskColor = "#ff6b6b";
-}
-internalBox.innerHTML = ` 
-<div class="internal-header">
-  <div>
-    <div class="internal-title">İç Risk Sinyalleri</div>
-    <div class="internal-subtitle">Ziyaretçilere görünmeyen marka kalite takibi</div>
-  </div>
-  <div class="internal-count" style="color:${riskColor}">
-${riskLevel}
-<span style="
-display:block;
-font-size:10px;
-font-weight:700;
-color:rgba(255,255,255,.45);
-margin-top:3px;
-">
-${data.length} sinyal
-</span>
-</div>
-</div>
-`;
-internalBox.innerHTML += Object.values(repeatedProblems).map(problem => `
-<div class="internal-item">
-
-<div class="internal-type" style="
-color:
-${problem.count >= 5
-  ? "#ff6b6b"
-  : problem.count >= 3
-    ? "#ffb347"
-    : "#ffcc81"};
-">
-${problem.data.experience_type || "Belirtilmemiş"}
-</div>
-
-<div class="internal-comment">
-${problem.data.comment || ""}
-</div>
-
-<div class="internal-meta">
-
-${problem.count} tekrar eden sinyal algılandı
-
-<span style="
-display:block;
-margin-top:4px;
-font-size:10px;
-font-weight:700;
-letter-spacing:.5px;
-color:
-${problem.count >= 5
-  ? "#ff6b6b"
-  : problem.count >= 3
-    ? "#ffb347"
-    : "#8bc34a"};
-">
-
-${problem.count >= 5
-  ? "KRİTİK TEKRAR"
-  : problem.count >= 3
-    ? "İZLENİYOR"
-    : "DÜŞÜK YOĞUNLUK"}
-
-</span>
-
-</div>
-
-<div class="internal-meta">
-Son kayıt: ${new Date(problem.data.created_at).toLocaleDateString("tr-TR")}
-</div> 
-<div class="internal-meta">
-Son yorum:
-"${problem.latestComment}"
-</div>
-</div>
-`).join("");
-}
-
 function openBrand(type){
 
   if(type === "vaero"){
