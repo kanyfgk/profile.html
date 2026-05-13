@@ -216,10 +216,16 @@ position:fixed;
 inset:0;
 background:#07111d;
 z-index:40;
+
+overflow-x:hidden;
 overflow-y:auto;
+
+-webkit-overflow-scrolling:touch;
+
 opacity:0;
 pointer-events:none;
 transform:translateY(18px);
+
 transition:
 opacity .36s cubic-bezier(.22,.8,.24,1),
 transform .36s cubic-bezier(.22,.8,.24,1);
@@ -235,7 +241,7 @@ transform:translateY(0);
 .flow-grid{
 max-width:560px;
 margin:0 auto;
-padding:0 14px 110px;
+padding:0 14px 95px;
 
 display:grid;
 grid-template-columns:repeat(3,1fr);
@@ -629,14 +635,22 @@ white-space:nowrap;
   .profile-screen{
 position:fixed;
 inset:0;
+
 background:#06101a;
 color:white;
+
 z-index:120;
+
+overflow-x:hidden;
 overflow-y:auto;
+
+-webkit-overflow-scrolling:touch;
 
 opacity:0;
 pointer-events:none;
+
 transform:translateY(18px) scale(.985);
+
 transition:
 opacity .42s cubic-bezier(.22,.8,.24,1),
 transform .42s cubic-bezier(.22,.8,.24,1);
@@ -1007,7 +1021,7 @@ transform:translate(40px,30px) scale(1.08);
   .profile-wrap{
 max-width:560px;
 margin:0 auto;
-padding:22px 14px 120px;
+padding:22px 14px 95px;
 }
   .profile-screen:before{
 content:"";
