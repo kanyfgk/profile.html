@@ -4651,7 +4651,22 @@ function unlockBody(){
 }
   </script>
   
-  <div class="bottom-nav">
+  <div class="bottom-nav" style="
+position:fixed !important;
+left:50% !important;
+bottom:18px !important;
+transform:translateX(-50%) !important;
+width:calc(100% - 28px) !important;
+max-width:520px !important;
+height:78px !important;
+display:flex !important;
+justify-content:space-around !important;
+align-items:center !important;
+z-index:999999 !important;
+opacity:1 !important;
+visibility:visible !important;
+pointer-events:auto !important;
+">
   <div class="nav-glow"></div>
 
 <button class="nav-btn active" data-nav="home" onclick="goHome()">
