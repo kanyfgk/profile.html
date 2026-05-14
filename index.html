@@ -1465,6 +1465,27 @@ rgba(230,215,176,.42),
 rgba(230,215,176,.18)
 );
 }
+
+  .overlay:not(.show),
+.full:not(.show),
+.viewer:not(.show),
+.profile-screen:not(.show){
+  display:none !important;
+}
+
+.overlay.show{
+  display:flex !important;
+}
+
+.full.show,
+.viewer.show,
+.profile-screen.show{
+  display:block !important;
+}
+
+.bottom-nav{
+  display:flex !important;
+}
   
 </style>
 </head>
