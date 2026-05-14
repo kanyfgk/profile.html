@@ -64,7 +64,9 @@ animation:ambientMove 18s ease-in-out infinite alternate;
 }
 .app{
 max-width:560px;
+
 margin:0 auto;
+
 padding:18px 12px 90px;
 
 background:
@@ -74,6 +76,14 @@ rgba(255,255,255,.025),
 rgba(255,255,255,.01)
 );
 
+background-attachment:fixed;
+
+overflow:hidden;
+
+position:relative;
+
+isolation:isolate;
+
 backdrop-filter:blur(14px);
 
 border-left:1px solid rgba(255,255,255,.04);
@@ -82,6 +92,30 @@ border-right:1px solid rgba(255,255,255,.04);
 box-shadow:
 0 0 60px rgba(0,0,0,.22);
 }
+
+  .app:before{
+content:"";
+
+position:absolute;
+inset:0;
+
+background:
+radial-gradient(
+circle at top right,
+rgba(230,215,176,.06),
+transparent 32%
+);
+
+pointer-events:none;
+
+z-index:0;
+}
+
+  .app > *{
+position:relative;
+z-index:1;
+}
+  
 .brand-head{display:flex;align-items:center;gap:14px;margin-bottom:18px}
 .mark{width:58px;height:58px;border-radius:50%;background:#8f7a4f;color:white;font-family:"Oswald";display:flex;align-items:center;justify-content:center;font-size:26px}
 .brand-name{
@@ -294,17 +328,20 @@ transform:translateY(0);
 .flow-grid{
 max-width:560px;
 margin:0 auto;
-padding:0 14px 95px;
+padding:0 18px 110px;
 
 display:grid;
 grid-template-columns:repeat(3,1fr);
 
-gap:8px;
+gap:16px;
 } 
 .flow-tile{
-aspect-ratio:1/1.38;
-border:1px solid rgba(255,255,255,.08);
-border-radius:12px;
+aspect-ratio:1/1.42;
+border:
+1px solid rgba(255,255,255,.06);
+outline:
+1px solid rgba(255,255,255,.025);  
+border-radius:18px;
 background:
 radial-gradient(
 circle at top right,
@@ -322,10 +359,10 @@ box-shadow:
 position:relative;
 color:white;
 text-align:left;
-padding:8px;
+padding:12px;
 overflow:hidden;
-backdrop-filter:blur(10px);
--webkit-backdrop-filter:blur(10px);  
+backdrop-filter:blur(18px);
+-webkit-backdrop-filter:blur(18px);  
 cursor:pointer;
 
 opacity:0;
@@ -345,11 +382,11 @@ isolation:isolate;
 .flow-tile .live-dot{
 position:absolute;
 
-top:12px;
-right:74px;
+top:18px;
+right:68px;
 
-width:8px;
-height:8px;
+width:6px;
+height:6px;
 
 border-radius:50%;
 
@@ -366,36 +403,47 @@ animation:liveDotPulse 2.2s ease-in-out infinite;
 .flow-meta{
 position:absolute;
 
-top:10px;
-right:10px;
+top:12px;
+right:12px;
 
-padding:5px 9px;
+display:flex;
+align-items:center;
+gap:6px;
+
+padding:5px 10px;
 
 border-radius:999px;
 
 background:
 linear-gradient(
 180deg,
-rgba(255,255,255,.10),
-rgba(255,255,255,.03)
+rgba(255,255,255,.14),
+rgba(255,255,255,.05)
 );
 
-border:1px solid rgba(255,255,255,.08);
+border:1px solid rgba(255,255,255,.10);
 
-backdrop-filter:blur(12px);
--webkit-backdrop-filter:blur(12px);
+backdrop-filter:blur(16px);
+-webkit-backdrop-filter:blur(16px);
 
-font-size:9px;
-font-weight:700;
-letter-spacing:.35px;
+font-size:8.5px;
+line-height:1;  
+font-weight:800;
+
+letter-spacing:.6px;
 text-transform:uppercase;
 
-color:rgba(255,255,255,.82);
+color:#e6d7b0;
 
 z-index:4;
 
 box-shadow:
-0 6px 18px rgba(0,0,0,.18);
+0 8px 24px rgba(0,0,0,.22),
+0 0 0 1px rgba(255,255,255,.03) inset;
+
+text-shadow:
+0 1px 8px rgba(0,0,0,.35);  
+  
 }
 
   .flow-tile:hover:after{
@@ -405,13 +453,14 @@ opacity:1;
   .flow-tile:hover{
 transform:
 translateY(-4px)
-scale(1.015);
+scale(1.012);
 
 border-color:
 rgba(230,215,176,.24);
 
 box-shadow:
-0 20px 42px rgba(0,0,0,.24);
+0 18px 40px rgba(0,0,0,.22),
+0 0 0 1px rgba(255,255,255,.03) inset; 
 }
   
   .flow-tile:active{
@@ -442,7 +491,12 @@ rgba(120,140,255,.10),
 transparent 32%
 );
 
-opacity:.75;
+opacity:.42;
+
+animation:
+ambientMove 9s ease-in-out infinite alternate;  
+
+filter:blur(18px);  
 
 pointer-events:none;
 z-index:0;
@@ -456,10 +510,10 @@ inset:0;
 background:
 linear-gradient(
 180deg,
-rgba(255,255,255,.02) 0%,
-rgba(0,0,0,0) 28%,
-rgba(0,0,0,.08) 55%,
-rgba(0,0,0,.58) 100%
+rgba(255,255,255,.01) 0%,
+rgba(0,0,0,0) 24%,
+rgba(0,0,0,.12) 58%,
+rgba(0,0,0,.72) 100%
 );
 
 z-index:1;
@@ -540,14 +594,14 @@ animation:typeShine 4.5s linear infinite;
 .flow-tile b{
 position:absolute;
 
-left:10px;
-right:10px;
-bottom:24px;
+left:12px;
+right:12px;
+bottom:30px;
 
-font-size:12px;
-font-weight:700;
+font-size:15px;
+font-weight:800;
 
-line-height:1.35;
+line-height:1.22;
 letter-spacing:.25px;
 
 z-index:2;
@@ -555,7 +609,7 @@ z-index:2;
 color:#f5f1e8;
 
 text-shadow:
-0 2px 10px rgba(0,0,0,.45);
+0 4px 18px rgba(0,0,0,.42);
 
 display:-webkit-box;
 -webkit-line-clamp:2;
@@ -563,6 +617,7 @@ display:-webkit-box;
 
 overflow:hidden;
 }
+  
 .product-tile span{
 position:absolute;
 left:8px;
@@ -576,6 +631,28 @@ backdrop-filter:blur(10px);
 border:1px solid rgba(255,255,255,.08);
 box-shadow:0 4px 14px rgba(0,0,0,.18);  
 }
+
+.flow-sub{
+position:absolute;
+
+left:12px;
+right:12px;
+bottom:14px;
+
+font-size:10px;
+font-weight:600;
+
+letter-spacing:.25px;
+
+color:rgba(255,255,255,.58);
+
+z-index:2;
+
+white-space:nowrap;
+overflow:hidden;
+text-overflow:ellipsis;
+}
+  
 .viewer{
 position:fixed;
 inset:0;
@@ -586,19 +663,21 @@ circle at top,
 rgba(230,215,176,.08),
 transparent 28%
 ),
+
 radial-gradient(
 circle at bottom right,
 rgba(120,140,255,.08),
 transparent 30%
 ),
+
 linear-gradient(
 180deg,
 #05080d 0%,
 #08111a 100%
+);
 
 backdrop-filter:blur(12px);
--webkit-backdrop-filter:blur(12px);  
-);
+-webkit-backdrop-filter:blur(12px);
 
 z-index:70;
 color:white;
@@ -611,7 +690,6 @@ transition:
 opacity .24s ease,
 transform .24s ease;
 }
-
 .viewer:before{
 content:"";
 position:absolute;
@@ -1265,18 +1343,17 @@ height:78px;
 
 border-radius:28px;
 
+backdrop-filter:blur(24px);
 background:
 linear-gradient(
 180deg,
-rgba(255,255,255,.08),
-rgba(255,255,255,.02)
-),
-rgba(7,17,29,.78);
-
-backdrop-filter:blur(24px);
+rgba(8,12,18,.72),
+rgba(8,12,18,.88)
+);    
 -webkit-backdrop-filter:blur(24px);
 
-border:1px solid rgba(255,255,255,.08);
+border:
+1px solid rgba(255,255,255,.08);
 
 display:flex;
 justify-content:space-around;
@@ -1285,7 +1362,7 @@ align-items:center;
 z-index:9999;
 
 box-shadow:
-0 10px 40px rgba(0,0,0,.35),
+0 18px 44px rgba(0,0,0,.38),
 0 0 0 1px rgba(255,255,255,.03) inset;
 
 overflow:hidden;
@@ -1309,6 +1386,20 @@ justify-content:center;
 gap:4px;
 height:100%;
 min-width:58px;
+
+transition:
+transform .22s ease,
+background .22s ease,
+border-color .22s ease,
+box-shadow .22s ease,
+opacity .22s ease;
+
+will-change:
+transform,
+box-shadow;
+
+transform:
+translateZ(0);  
 }
 
 .nav-btn.active{
@@ -1324,14 +1415,21 @@ border-radius:14px;
 display:flex;
 align-items:center;
 justify-content:center;
-background:rgba(255,255,255,.045);
+background:
+linear-gradient(
+180deg,
+rgba(255,255,255,.05),
+rgba(255,255,255,.02)
+  
+);
 font-size:17px;
 backdrop-filter:blur(10px);
 
 border:1px solid rgba(255,255,255,.05);
 
 box-shadow:
-0 6px 18px rgba(0,0,0,.18);  
+0 4px 14px rgba(0,0,0,.16),
+0 0 0 1px rgba(255,255,255,.02) inset;  
 }
   .nav-btn{
 transition:
@@ -1357,9 +1455,13 @@ linear-gradient(
 rgba(230,215,176,.24),
 rgba(230,215,176,.10)
 );
-box-shadow:0 0 18px rgba(230,215,176,.16);
+box-shadow:
+0 10px 28px rgba(230,215,176,.14),
+0 0 0 1px rgba(255,255,255,.03) inset;
   border:1px solid rgba(230,215,176,.18);
-transform:translateY(-2px);
+transform:
+translateY(-3px)
+scale(1.03);
 }
  .nav-btn.active .nav-icon{
 
@@ -1492,12 +1594,26 @@ filter:brightness(1.04);
 
 @keyframes flowIn{
 
-to{
-opacity:1;
-transform:translateY(0);
+from{
+opacity:0;
+
+transform:
+translateY(24px)
+scale(.94);
+
+filter:blur(10px);
 }
 
+to{
+opacity:1;
+
+transform:
+translateY(0)
+scale(1);
+
+filter:blur(0);
 }
+} 
   @keyframes viewerTextIn{
 
 to{
@@ -2514,7 +2630,10 @@ function renderFlow(){
 CANLI
 </div>
       <b>${c.title}</b>
-      <span>${getProductName(c.product)}</span>
+
+<div class="flow-sub">
+${getProductName(c.product)}
+</div>
     </button>
   `).join("");
 }
