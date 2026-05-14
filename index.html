@@ -526,9 +526,7 @@ pointer-events:none;
 mix-blend-mode:screen;
 opacity:.45;
 }
-    .flow-tile:nth-child(even){
-transform:translateY(2px);
-}
+    
 .flow-tile .type{
 position:absolute;
 
@@ -626,6 +624,10 @@ font-size:9px;
 color:rgba(255,255,255,.58);
 z-index:2;
 letter-spacing:.2px;
+
+  background:rgba(0,0,0,.18);
+padding:4px 8px;
+border-radius:999px;
 
 backdrop-filter:blur(10px);
 border:1px solid rgba(255,255,255,.08);
@@ -1234,7 +1236,7 @@ rgba(230,215,176,.08),
 transparent 40%
 );
 
-opacity:42;
+opacity:.42;
 animation:profileAura 6s ease-in-out infinite;  
 transition:opacity .25s ease;
 pointer-events:none;
