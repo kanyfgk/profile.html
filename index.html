@@ -601,7 +601,11 @@ transition:transform .24s ease, opacity .24s ease;
 opacity:0;
 
 backdrop-filter:blur(18px);
--webkit-backdrop-filter:blur(18px);  
+-webkit-backdrop-filter:blur(18px); 
+
+max-height:82vh;
+overflow-y:auto;
+padding-bottom:24px;  
 }
 
 .overlay.show .modal{
@@ -657,7 +661,27 @@ transform:translateY(-1px);
 }
 select option{color:#111}
 textarea{min-height:88px}
-.modal-actions{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:12px}
+.modal-actions{
+display:grid;
+grid-template-columns:1fr 1fr;
+gap:9px;
+margin-top:12px;
+
+position:sticky;
+bottom:0;
+z-index:20;
+
+background:
+linear-gradient(
+180deg,
+rgba(16,27,40,0),
+#101b28 28%,
+#101b28 100%
+);
+
+padding-top:18px;
+padding-bottom:6px;
+}
 .modal button{border:0;border-radius:12px;padding:13px}
 .confirm{background:#e6d7b0;color:#07111d;font-weight:800}
 .cancel{background:rgba(255,255,255,.09);color:white}
