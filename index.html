@@ -4980,119 +4980,125 @@ function finishIdFocus(){
   }
 
   list.innerHTML = filtered.length
-    ? filtered.map(x => `
-      <div style="
-        padding:10px;
-        <div style="
-display:flex;
-align-items:center;
-gap:8px;
-margin-bottom:8px;
-">
-  <div style="
-  width:28px;
-  height:28px;
-  border-radius:50%;
-  background:rgba(230,215,176,.14);
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  font-size:11px;
-  color:#e6d7b0;
-  font-weight:800;
-  ">
-    ${x.is_verified ? "★" : "•"}
-  </div>
-
-  <div>
+  ? filtered.map(x => `
     <div style="
-    font-size:11px;
-    color:#fff;
-    font-weight:700;
+      padding:12px;
+      border-radius:16px;
+      background:rgba(255,255,255,.06);
+      margin-bottom:10px;
+      border:1px solid rgba(255,255,255,.08);
     ">
-      ${x.is_verified ? "Doğrulanmış kullanıcı" : "Topluluk üyesi"}
-    </div>
-
-    <div style="
-    font-size:10px;
-    color:rgba(255,255,255,.45);
-    ">
-      ${getProductName(x.product_id)}
       <div style="
-margin-top:6px;
-display:flex;
-gap:6px;
-flex-wrap:wrap;
-">
-  <span style="
-  padding:4px 7px;
-  border-radius:999px;
-  background:rgba(230,215,176,.12);
-  color:#e6d7b0;
-  font-size:9px;
-  font-weight:800;
-  ">
-    ${x.is_verified ? "VERIFIED" : "COMMUNITY"}
-  </span>
-
-  <span style="
-  padding:4px 7px;
-  border-radius:999px;
-  background:rgba(255,255,255,.06);
-  color:rgba(255,255,255,.65);
-  font-size:9px;
-  font-weight:700;
-  ">
-    ${x.rating ? x.rating + "/5" : "NO RATE"}
-  </span>
-</div>
-    </div>
-  </div>
-</div>
-        border-radius:12px;
-        background:rgba(255,255,255,.06);
+        display:flex;
+        align-items:center;
+        gap:8px;
         margin-bottom:8px;
-        border:1px solid rgba(255,255,255,.08);
       ">
-        <div
-onclick="openReviewFromDiscover('${x.product_id}')"
-style="
-font-size:13px;
-line-height:1.5;
-letter-spacing:0.2px;
-cursor:pointer;
-padding:8px;
-border-radius:10px;
-transition:all .18s ease;
-"
-onmouseover="this.style.background='rgba(255,255,255,.05)'"
-onmouseout="this.style.background='transparent'"
->
-          ${x.comment || "—"}
-        </div>
-
-        <div style="font-size:10px;color:#e6d7b0;margin-top:6px;">
-          ${x.is_verified ? "★ Doğrulanmış satın alım" : "Topluluk deneyim notu"}
-        </div>
-
-        <div style="font-size:10px;color:rgba(255,255,255,.55);margin-top:5px;">
-          ${(x.vaero_review_supports?.length || 0)} destek · ${x.rating ? x.rating + "/5" : "puan yok"}
-        </div>
-
-        <button onclick="supportReview('${x.id}')" style="
-          margin-top:8px;
-          border:0;
-          border-radius:999px;
-          padding:7px 10px;
+        <div style="
+          width:28px;
+          height:28px;
+          border-radius:50%;
           background:rgba(230,215,176,.14);
-          color:#e6d7b0;
+          display:flex;
+          align-items:center;
+          justify-content:center;
           font-size:11px;
+          color:#e6d7b0;
+          font-weight:800;
+          flex-shrink:0;
+        ">
+          ${x.is_verified ? "★" : "•"}
+        </div>
+
+        <div>
+          <div style="font-size:11px;color:#fff;font-weight:700;">
+            ${x.is_verified ? "Doğrulanmış kullanıcı" : "Topluluk üyesi"}
+          </div>
+          <div style="font-size:10px;color:rgba(255,255,255,.45);">
+            ${getProductName(x.product_id)}
+          </div>
+        </div>
+      </div>
+
+      <div style="
+        margin-top:6px;
+        display:flex;
+        gap:6px;
+        flex-wrap:wrap;
+      ">
+        <span style="
+          padding:4px 7px;
+          border-radius:999px;
+          background:rgba(230,215,176,.12);
+          color:#e6d7b0;
+          font-size:9px;
           font-weight:800;
         ">
-          Bu deneyimi bende yaşadım
-        </button>
+          ${x.is_verified ? "VERIFIED" : "COMMUNITY"}
+        </span>
+
+        <span style="
+          padding:4px 7px;
+          border-radius:999px;
+          background:rgba(255,255,255,.06);
+          color:rgba(255,255,255,.65);
+          font-size:9px;
+          font-weight:700;
+        ">
+          ${x.rating ? x.rating + "/5" : "NO RATE"}
+        </span>
       </div>
-    `).join("")
+
+      <div
+        onclick="openReviewFromDiscover('${x.product_id}')"
+        style="
+          margin-top:10px;
+          font-size:13px;
+          line-height:1.5;
+          letter-spacing:0.2px;
+          cursor:pointer;
+          padding:8px;
+          border-radius:10px;
+          transition:all .18s ease;
+        "
+        onmouseover="this.style.background='rgba(255,255,255,.05)'"
+        onmouseout="this.style.background='transparent'"
+      >
+        ${x.comment || "—"}
+      </div>
+
+      <div style="font-size:10px;color:#e6d7b0;margin-top:6px;">
+        ${x.is_verified ? "★ Doğrulanmış satın alım" : "Topluluk deneyim notu"}
+      </div>
+
+      <div style="font-size:10px;color:rgba(255,255,255,.55);margin-top:5px;">
+        ${(x.vaero_review_supports?.length || 0)} destek · ${x.rating ? x.rating + "/5" : "puan yok"}
+      </div>
+
+      <button onclick="supportReview('${x.id}')" style="
+        margin-top:8px;
+        border:0;
+        border-radius:999px;
+        padding:7px 10px;
+        background:rgba(230,215,176,.14);
+        color:#e6d7b0;
+        font-size:11px;
+        font-weight:800;
+      ">
+        Bu deneyimi ben de yaşadım
+      </button>
+    </div>
+  `).join("")
+  : `<div style="
+      padding:14px;
+      border-radius:14px;
+      background:rgba(255,255,255,.04);
+      color:rgba(255,255,255,.55);
+      font-size:13px;
+      text-align:center;
+    ">
+      Bu başlıkta henüz deneyim yok.
+    </div>`;
     : `<div style="font-size:13px;color:rgba(255,255,255,.65);">Topluluk ilk deneyimi bekliyor.</div>`;
 }
 function featureReviewFromDiscover(reviewId){
