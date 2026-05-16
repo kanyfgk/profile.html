@@ -550,14 +550,14 @@ rgba(120,140,255,.10),
 transparent 32%
 );
 
-opacity:.42;
+opacity:.16;
 
 animation:
 ambientMove 9s ease-in-out infinite alternate;  
 
 filter:
-blur(24px)
-saturate(1.08); 
+blur(14px)
+saturate(1.02); 
 
 pointer-events:none;
 z-index:0;
@@ -1237,33 +1237,45 @@ color:rgba(255,255,255,.62);
 margin-bottom:14px;
 }
   
-input,textarea,select{
-width:100%;
-padding:13px;
+input,
+textarea,
+select{
+color:#f5f1e8 !important;
+background:rgba(255,255,255,.055) !important;
+border:1px solid rgba(255,255,255,.10) !important;
+}
 
-border-radius:14px;
+input::placeholder,
+textarea::placeholder{
+color:rgba(245,241,232,.62) !important;
+}
 
-border:1px solid rgba(255,255,255,.12);
+select{
+color:#f5f1e8 !important;
+}
 
+select option{
+color:#111 !important;
+background:#f5f1e8 !important;
+}
+
+   .modal select{
+color:#f5f1e8 !important;
 background:
 linear-gradient(
 180deg,
-rgba(255,255,255,.07),
-rgba(255,255,255,.03)
-);
+rgba(255,255,255,.085),
+rgba(255,255,255,.035)
+) !important;
 
-color:f6efe3;
-
-margin-top:9px;
-outline:none;
-
-font-size:16px;
-
-transition:
-border-color .18s ease,
-box-shadow .18s ease,
-transform .18s ease;
+border:1px solid rgba(245,241,232,.16) !important;
+text-shadow:none !important;
 }
+
+.modal select option{
+color:#111 !important;
+background:#f5f1e8 !important;
+} 
   
     input:focus,
 textarea:focus,
@@ -1286,7 +1298,7 @@ margin-bottom:86px;
 display:grid;
 grid-template-columns:1fr 1fr;
 gap:9px;
-margin-top:10px;
+margin-top:14px;
 
 position:relative;
 z-index:20;
@@ -1300,7 +1312,7 @@ rgba(16,27,40,0),
 );
 
 padding-top:18px;
-padding-bottom:6px;
+padding-bottom:14px;
 
 border-radius:18px;  
 }
@@ -3521,6 +3533,7 @@ function openIdModal(){
   
 
 function closeIdModal(){
+  
   document.getElementById("idModal").classList.remove("show");
 
   setTimeout(()=>{
