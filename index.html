@@ -1237,11 +1237,11 @@ color:rgba(255,255,255,.62);
 margin-bottom:14px;
 }
   
-input,
-textarea,
-select{
+.modal input,
+.modal textarea,
+.modal select{
 width:100%;
-min-height:58px;
+min-height:52px;
 
 padding:0 18px;
 
@@ -1275,8 +1275,28 @@ textarea{
 min-height:110px;
 padding:18px;
 resize:none;
-margin-bottom:96px;
+margin-bottom:70px;
+margin-top:12px;  
 line-height:1.45;
+}
+
+    .modal textarea{
+min-height:110px;
+padding:18px;
+resize:none;
+margin-bottom:70px;
+margin-top:12px;
+line-height:1.45;
+}
+
+.modal select{
+display:block;
+width:100%;
+margin-bottom:12px;
+}
+
+.modal textarea{
+margin-top:12px;
 }
 
 input::placeholder,
