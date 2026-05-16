@@ -1203,7 +1203,7 @@ grid-template-columns:1fr 1fr;
 gap:9px;
 margin-top:12px;
 
-position:sticky;
+position:relative;
 bottom:84px;
 z-index:20;
 
@@ -1220,6 +1220,13 @@ padding-bottom:6px;
 
 border-radius:18px;  
 }
+
+    .review-modal .modal-actions{
+position:sticky;
+bottom:84px;
+z-index:20;
+}
+    
 .modal button{border:0;border-radius:12px;padding:13px}
 .confirm{background:#e6d7b0;color:#07111d;font-weight:800}
 .cancel{background:rgba(255,255,255,.09);color:white}
@@ -4627,10 +4634,21 @@ function toggleComplaints(){
     loadReviews(activeContent.product);
   }
 }
+  
 function openReviews(productId){
-  document.getElementById("reviewSection").style.display = "block";
-  loadReviews(productId);
+  requestAnimationFrame(()=>{
+    document.getElementById("reviewSection").style.display = "block";
+    loadReviews(productId);
+    document.getElementById("reviewSection")
+.scrollIntoView({
+behavior:"smooth",
+block:"start"
+});
+    
+});
+  
 }
+  
   async function supportReview(reviewId){
   if(window.currentProfile && window.currentProfile.membershipExpired){
     alert("Bu Platform ID’nin üyelik süresi dolmuş. Deneyim desteği için üyeliği yenilemen gerekir.");
@@ -4641,6 +4659,7 @@ function openReviews(productId){
     openIdModal();
     return;
   }
+    
     if(window.currentProfile?.membershipType !== "VA" &&
    window.currentProfile?.aeStatus === "none"){
 
