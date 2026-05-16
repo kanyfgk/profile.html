@@ -2480,19 +2480,172 @@ transform:translateX(120%);
 }
 
   .id-modal{
-max-height:369px !important;
-height:auto !important;
-min-height:0 !important;
-padding-bottom:28px !important;
-overflow:visible !important;    
+position:relative;
+
+width:min(92vw,520px);
+min-height:auto;
+
+padding:28px 22px 26px;
+
+border-radius:34px;
+
+background:
+linear-gradient(
+180deg,
+rgba(10,16,26,.94),
+rgba(7,12,20,.98)
+);
+
+border:
+1px solid rgba(255,255,255,.06);
+
+box-shadow:
+0 40px 90px rgba(0,0,0,.52),
+0 0 0 1px rgba(255,255,255,.03) inset,
+0 0 80px rgba(230,215,176,.04);
+
+backdrop-filter:blur(26px);
+-webkit-backdrop-filter:blur(26px);
+
+overflow:hidden;
+
+z-index:999999;
+isolation:isolate;
+}
+
+  .id-modal:before{
+content:"";
+
+position:absolute;
+inset:-20%;
+
+background:
+radial-gradient(
+circle at 20% 10%,
+rgba(230,215,176,.08),
+transparent 28%
+),
+radial-gradient(
+circle at 80% 0%,
+rgba(120,140,255,.08),
+transparent 24%
+);
+
+filter:blur(34px);
+
+opacity:.85;
+
+pointer-events:none;
+z-index:0;
+
+animation:
+ambientMove 14s ease-in-out infinite alternate;
+}
+
+.id-modal > *{
+position:relative;
+z-index:1;
 }
 
 .id-modal .modal-actions{
 position:relative !important;
 bottom:auto !important;
+
 margin-top:18px !important;
-padding-top:0 !important;  
+
+padding-top:0 !important;
 padding-bottom:0 !important;
+
+display:grid;
+grid-template-columns:1fr 1fr;
+
+gap:12px;
+}
+
+.id-modal .cancel,
+.id-modal .confirm{
+
+height:56px;
+
+border-radius:18px;
+
+font-weight:700;
+font-size:16px;
+
+transition:
+transform .16s ease,
+box-shadow .16s ease,
+border-color .16s ease;
+
+will-change:transform;
+}
+
+.id-modal .cancel{
+
+background:
+linear-gradient(
+180deg,
+rgba(255,255,255,.07),
+rgba(255,255,255,.03)
+);
+
+border:
+1px solid rgba(255,255,255,.05);
+
+color:#f2f2f2;
+
+box-shadow:
+0 10px 26px rgba(0,0,0,.18);
+}
+
+.id-modal .confirm{
+
+background:
+linear-gradient(
+180deg,
+#eadcb6,
+#d8c89c
+);
+
+color:#111;
+
+box-shadow:
+0 14px 34px rgba(230,215,176,.18);
+}
+
+.id-modal .cancel:hover,
+.id-modal .confirm:hover{
+
+transform:
+translateY(-2px);
+}
+
+  .id-modal h2{
+
+font-size:52px;
+
+line-height:.92;
+
+letter-spacing:1px;
+
+margin-bottom:18px;
+
+color:#f6efe3;
+
+text-shadow:
+0 4px 18px rgba(0,0,0,.28);
+}
+
+.id-modal p{
+
+font-size:15px;
+
+line-height:1.7;
+
+color:
+rgba(255,255,255,.62);
+
+max-width:92%;
 }
   .id-btn{
 font-weight:900;
@@ -2606,6 +2759,180 @@ badgeSweep 5s linear infinite;
 
 pointer-events:none;
 opacity:.5;
+}
+
+  .id-input{
+width:100%;
+
+height:58px;
+
+margin-top:18px;
+
+padding:0 18px;
+
+border-radius:18px;
+
+background:
+linear-gradient(
+180deg,
+rgba(255,255,255,.08),
+rgba(255,255,255,.03)
+);
+
+border:
+1px solid rgba(230,215,176,.14);
+
+outline:none;
+
+font-size:17px;
+font-weight:700;
+
+letter-spacing:.8px;
+
+color:#f6efe3;
+
+text-align:center;
+
+box-shadow:
+0 12px 30px rgba(0,0,0,.22),
+0 0 0 1px rgba(255,255,255,.02) inset;
+
+transition:
+transform .16s ease,
+border-color .16s ease,
+box-shadow .16s ease,
+background .16s ease;
+}
+
+.id-input::placeholder{
+color:
+rgba(255,255,255,.34);
+
+letter-spacing:1.4px;
+}
+
+.id-input:focus{
+
+transform:
+translateY(-1px);
+
+border-color:
+rgba(230,215,176,.28);
+
+background:
+linear-gradient(
+180deg,
+rgba(255,255,255,.11),
+rgba(255,255,255,.04)
+);
+
+box-shadow:
+0 0 0 4px rgba(230,215,176,.06),
+0 16px 34px rgba(0,0,0,.28);
+
+}
+
+  .id-modal h2{
+
+font-size:52px;
+
+line-height:.92;
+
+letter-spacing:1px;
+
+margin-bottom:18px;
+
+color:#f6efe3;
+
+text-shadow:
+0 4px 18px rgba(0,0,0,.28);
+}
+
+.id-modal p{
+
+font-size:15px;
+
+line-height:1.7;
+
+color:
+rgba(255,255,255,.62);
+
+max-width:92%;
+}
+
+  #idModal.show{
+backdrop-filter:blur(18px);
+-webkit-backdrop-filter:blur(18px);
+
+background:
+radial-gradient(
+circle at top,
+rgba(230,215,176,.06),
+transparent 26%
+),
+rgba(0,0,0,.74);
+}
+
+  .id-modal:after{
+content:"";
+
+position:absolute;
+top:-120px;
+right:-120px;
+
+width:240px;
+height:240px;
+
+border-radius:50%;
+
+background:
+radial-gradient(
+circle,
+rgba(230,215,176,.10),
+transparent 70%
+);
+
+pointer-events:none;
+
+filter:blur(26px);
+
+opacity:.9;
+
+animation:
+idPulse 6s ease-in-out infinite alternate;
+}
+
+@keyframes idPulse{
+
+0%{
+transform:
+scale(1)
+translate3d(0,0,0);
+}
+
+100%{
+transform:
+scale(1.08)
+translate3d(-10px,8px,0);
+}
+
+}
+
+  .modal,
+.viewer,
+.flow-tile,
+.bottom-nav,
+.id-modal{
+
+transform:translateZ(0);
+
+backface-visibility:hidden;
+
+-webkit-font-smoothing:antialiased;
+
+will-change:
+transform,
+opacity;
 }
   
 </style>
@@ -2774,11 +3101,11 @@ line-height:18px;
   </div>
 </div>
 <div class="overlay" id="idModal">
-  <div class="modal">
+  <div class="modal id-modal">
     <h2>Platform ID</h2>
     <p>Yorum ve eleştiri için Platform ID gerekir. Puanlama ve doğrulanmış deneyim yalnızca ürünü satın alan kullanıcılar tarafından oluşturulabilir.</p>
 
-    <input id="customerId" placeholder="VA-001" autocomplete="off" autocapitalize="characters">
+   <input class="id-input" id="customerId" placeholder="VA-001" autocomplete="off" autocapitalize="characters">
 
     <div class="modal-actions">
       <button class="cancel" onclick="closeIdModal()">Kapat</button>
