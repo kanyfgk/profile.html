@@ -68,7 +68,7 @@ top:-20%;
 left:-20%;
 
 width:70vw;
-height:70vw;
+height:82vw;
 
 background:
 radial-gradient(
@@ -84,6 +84,9 @@ transparent 20%
 
 pointer-events:none;
 z-index:-1;
+filter:blur(18px);
+
+opacity:.92;    
 
 animation:ambientMove 18s ease-in-out infinite alternate;
 }
@@ -372,6 +375,8 @@ radial-gradient(
 circle at top right,
 rgba(230,215,176,.14),
 transparent 24%
+backdrop-filter:blur(14px);
+-webkit-backdrop-filter:blur(14px);  
 ),
 linear-gradient(
 145deg,
@@ -1751,8 +1756,8 @@ button{
 touch-action:manipulation;
 
 transition:
-transform .18s ease,
-filter .18s ease;
+transform .12s ease,
+filter .12s ease;
 }
 
   button,
@@ -2465,6 +2470,139 @@ visibility:hidden;
 }
 
 }
+
+  @keyframes badgeSweep{
+
+100%{
+transform:translateX(120%);
+}
+
+}
+
+  .id-modal{
+min-height:auto !important;
+padding-bottom:34px !important;
+}
+
+.id-modal .modal-actions{
+position:relative !important;
+bottom:auto !important;
+margin-top:22px;
+}
+
+  .id-btn{
+font-weight:900;
+letter-spacing:.2px;
+
+box-shadow:
+0 12px 28px rgba(230,215,176,.16),
+0 0 0 1px rgba(255,255,255,.08) inset;
+}
+
+.id-btn:active{
+transform:scale(.97);
+filter:brightness(1.04);
+}
+
+  .quick .soft{
+font-weight:900;
+letter-spacing:.2px;
+
+transition:
+transform .12s ease,
+filter .12s ease,
+box-shadow .18s ease;
+
+box-shadow:
+0 10px 24px rgba(0,0,0,.18),
+0 0 0 1px rgba(255,255,255,.04) inset;
+}
+
+.quick .soft:hover{
+filter:brightness(1.03);
+}
+
+.quick .soft:active{
+transform:scale(.97);
+filter:brightness(1.06);
+}
+
+  .id-trigger{
+display:flex;
+align-items:center;
+justify-content:center;
+gap:8px;
+}
+
+.id-trigger span{
+width:26px;
+height:26px;
+
+border-radius:999px;
+
+display:flex;
+align-items:center;
+justify-content:center;
+
+background:
+linear-gradient(
+180deg,
+rgba(230,215,176,.22),
+rgba(230,215,176,.08)
+);
+
+border:
+1px solid rgba(230,215,176,.18);
+
+font-size:11px;
+font-weight:900;
+
+color:#f0e4bf;
+
+box-shadow:
+0 0 18px rgba(230,215,176,.10);
+}
+
+  [class*="badge"],
+[class*="live"]{
+
+backdrop-filter:blur(10px);
+-webkit-backdrop-filter:blur(10px);
+
+box-shadow:
+0 4px 18px rgba(0,0,0,.18),
+0 0 0 1px rgba(255,255,255,.04) inset;
+
+position:relative;
+overflow:hidden;
+}
+
+[class*="badge"]:before,
+[class*="live"]:before{
+
+content:"";
+
+position:absolute;
+inset:0;
+
+border-radius:inherit;
+
+background:
+linear-gradient(
+120deg,
+transparent,
+rgba(255,255,255,.10),
+transparent
+);
+
+transform:translateX(-120%);
+
+animation:
+badgeSweep 5s linear infinite;
+
+pointer-events:none;
+opacity:.5;
+}
   
 </style>
 </head>
@@ -2483,8 +2621,10 @@ visibility:hidden;
 
   <div class="quick">
     <a class="main" href="https://wa.me/905391152765" target="_blank">Mesaj gönder</a>
-    <button class="soft" onclick="openIdModal()">Platform ID
-    </button>
+    <button class="soft id-trigger" onclick="openIdModal()">
+<span>ID</span>
+Platform ID
+</button>
   </div>
 
   <div class="notice">
