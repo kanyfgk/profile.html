@@ -59,7 +59,22 @@ color:#f3efe7;
 -moz-osx-font-smoothing:grayscale;
 
 text-rendering:optimizeLegibility;
+
+touch-action:pan-y;
+-webkit-overflow-scrolling:touch;  
 }
+
+  button,
+.bottom-nav,
+.card,
+.modal,
+input{
+transform:translateZ(0);
+will-change:transform,opacity;
+backface-visibility:hidden;
+-webkit-font-smoothing:antialiased;
+}
+  
   body:before{
 content:"";
 
@@ -113,6 +128,8 @@ position:relative;
 isolation:isolate;
 
 backdrop-filter:blur(14px);
+-webkit-backdrop-filter:blur(14px);
+contain:paint;
 
 border-left:1px solid rgba(255,255,255,.04);
 border-right:1px solid rgba(255,255,255,.04);
@@ -223,13 +240,16 @@ padding:8px;
 cursor:pointer;
 
 transition:
-transform .22s ease,
-box-shadow .22s ease,
-border-color .22s ease;
+transform .16s ease-out,
+border-color .16s ease-out;
+
+backface-visibility:hidden;
+-webkit-backface-visibility:hidden;
 
 transform-style:preserve-3d;
 will-change:transform;
 }
+  
   .product-tile:before{
 content:"";
 
@@ -377,7 +397,8 @@ circle at top right,
 rgba(230,215,176,.14),
 transparent 24%
 backdrop-filter:blur(14px);
--webkit-backdrop-filter:blur(14px);  
+-webkit-backdrop-filter:blur(14px);
+contain:paint;
 ),
 linear-gradient(
 145deg,
@@ -393,8 +414,9 @@ color:#f6efe3;
 text-align:left;
 padding:12px;
 overflow:hidden;
-backdrop-filter:blur(18px);
--webkit-backdrop-filter:blur(18px);  
+backdrop-filter:blur(10px);
+-webkit-backdrop-filter:blur(10px);
+contain:paint;
 cursor:pointer;
 
 opacity:0;
@@ -459,9 +481,9 @@ rgba(255,255,255,.05)
 
 border:1px solid rgba(255,255,255,.10);
 
-backdrop-filter:blur(16px);
--webkit-backdrop-filter:blur(16px);
-
+backdrop-filter:blur(10px);
+-webkit-backdrop-filter:blur(10px);
+contain:paint;
 font-size:8.5px;
 line-height:1;  
 font-weight:800;
@@ -592,8 +614,9 @@ rgba(255,255,255,.03)
 
 border:1px solid rgba(255,255,255,.08);
 
-backdrop-filter:blur(12px);
--webkit-backdrop-filter:blur(12px);
+backdrop-filter:blur(10px);
+-webkit-backdrop-filter:blur(10px);
+contain:paint;
 
 font-size:9px;
 font-weight:700;
@@ -678,6 +701,8 @@ padding:4px 8px;
 border-radius:999px;
 
 backdrop-filter:blur(10px);
+-webkit-backdrop-filter:blur(10px);
+contain:paint;
 border:1px solid rgba(255,255,255,.08);
 box-shadow:0 4px 14px rgba(0,0,0,.18);  
 }
@@ -730,8 +755,9 @@ linear-gradient(
 #08111a 100%
 );
 
-backdrop-filter:blur(12px);
--webkit-backdrop-filter:blur(12px);
+backdrop-filter:blur(10px);
+-webkit-backdrop-filter:blur(10px);
+contain:paint;
 
 z-index:70;
 color:#7571e8;
@@ -902,9 +928,9 @@ rgba(10,14,20,.10),
 rgba(10,14,20,.34)
 );
 
-backdrop-filter:blur(18px);
--webkit-backdrop-filter:blur(18px);
-
+backdrop-filter:blur(10px);
+-webkit-backdrop-filter:blur(10px);
+contain:paint;
 border:1px solid rgba(255,255,255,.06);
 
 box-shadow:
@@ -952,6 +978,7 @@ padding:10px 0;
 
 backdrop-filter:blur(10px);
 -webkit-backdrop-filter:blur(10px);
+contain:paint;
 
 border-radius:28px;
 
@@ -987,8 +1014,9 @@ rgba(255,255,255,.02)
 ),
 rgba(8,12,18,.62);
 
-backdrop-filter:blur(12px);
--webkit-backdrop-filter:blur(12px);
+backdrop-filter:blur(8px);
+-webkit-backdrop-filter:blur(8px);
+contain:paint;
 
 color:f5f1e8;
 font-size:19px;
@@ -1098,37 +1126,86 @@ background .24s ease;
 display:flex;
 opacity:1;
 pointer-events:auto;
-backdrop-filter:blur(10px);
--webkit-backdrop-filter:blur(10px);
+backdrop-filter:blur(8px);
+-webkit-backdrop-filter:blur(8px);
+contain:paint;
 }
 .modal{
 width:100%;
 max-width:410px;
-background:#101b28;
-border:1px solid rgba(255,255,255,.08);
-border-radius:22px;
-padding:22px;
-transform:translateY(18px) scale(.96);
-transition:transform .24s ease, opacity .24s ease;
-opacity:0;
 
-backdrop-filter:blur(18px);
--webkit-backdrop-filter:blur(18px); 
+position:relative;
+overflow:hidden;
+
+background:
+linear-gradient(
+145deg,
+rgba(13,22,36,.94),
+rgba(7,14,24,.96)
+);
+
+border:1px solid rgba(255,255,255,.07);
+
+border-radius:24px;
+
+padding:22px;
+
+box-shadow:
+0 30px 80px rgba(0,0,0,.42),
+0 0 0 1px rgba(255,255,255,.03) inset,
+0 0 40px rgba(32,78,140,.06);
+
+backdrop-filter:blur(8px);
+-webkit-backdrop-filter:blur(8px);
+
+transform:translateY(18px) scale(.96);
+transition:transform .18s ease, opacity .18s ease;
+
+opacity:0;
 
 max-height:82vh;
 overflow-y:auto;
-padding-bottom:24px;  
 
 overscroll-behavior:contain;
 
 scrollbar-width:none;
--ms-overflow-style:none; 
+-ms-overflow-style:none;
 
-box-shadow:
-0 30px 80px rgba(0,0,0,.42),
-0 0 0 1px rgba(255,255,255,.03) inset;  
+contain:paint;
+isolation:isolate;
 }
 
+    .modal::before{
+content:"";
+
+position:absolute;
+inset:0;
+
+border-radius:inherit;
+
+padding:1px;
+
+background:
+linear-gradient(
+145deg,
+rgba(255,255,255,.14),
+rgba(255,255,255,.02),
+rgba(255,255,255,.06)
+);
+
+-webkit-mask:
+linear-gradient(#fff 0 0) content-box,
+linear-gradient(#fff 0 0);
+
+-webkit-mask-composite:xor;
+mask-composite:exclude;
+
+pointer-events:none;
+
+opacity:.55;
+mix-blend-mode:screen;      
+}
+    
   .modal::-webkit-scrollbar{
 display:none;
 }
@@ -1361,8 +1438,9 @@ box-shadow:
 
 position:relative;
 overflow:hidden;
-backdrop-filter:blur(18px);
--webkit-backdrop-filter:blur(18px);  
+backdrop-filter:blur(12px);
+-webkit-backdrop-filter:blur(12px);
+contain:paint; 
 
 opacity:0;
 transform:translateY(18px);
@@ -1530,8 +1608,9 @@ rgba(8,12,18,.72),
 rgba(8,12,18,.90)
 );
 
-backdrop-filter:blur(20px);
--webkit-backdrop-filter:blur(20px);
+backdrop-filter:blur(16px);
+-webkit-backdrop-filter:blur(16x);
+contain:paint;
 
 border:
 1px solid rgba(255,255,255,.06);
@@ -1554,18 +1633,7 @@ pointer-events:auto;
 .nav-btn{
 border:0;
 background:none;
-color:rgba(255,255,255,.55);
-font-size:10px;
-display:flex;
-flex-direction:column;
-align-items:center;
-justify-content:center;
-gap:4px;
-height:100%;
-min-width:58px;
-
-transition:
-transform .22s ease,
+color:rgba(255,255,255,.55);form .22s ease,
 background .22s ease,
 border-color .22s ease,
 box-shadow .22s ease,
@@ -1678,8 +1746,9 @@ rgba(12,14,18,.82);
 
 border:1px solid rgba(255,255,255,.05);
 
-backdrop-filter:blur(16px);
--webkit-backdrop-filter:blur(16px);
+backdrop-filter:blur(12px);
+-webkit-backdrop-filter:blur(12px);
+contain:paint;
 
 box-shadow:
 0 10px 30px rgba(0,0,0,.16);
@@ -1716,8 +1785,9 @@ rgba(255,255,255,.16),
 rgba(255,255,255,.04)
 );
 border:1px solid rgba(255,255,255,.08);
-backdrop-filter:blur(12px);
--webkit-backdrop-filter:blur(12px);
+backdrop-filter:blur(8px);
+-webkit-backdrop-filter:blur(8px);
+contain:paint;
 box-shadow:0 8px 20px rgba(0,0,0,.18);
 border-radius:18px;
 display:flex;
@@ -1747,7 +1817,29 @@ animation:navGlowMove 3.8s ease-in-out infinite;
 overflow:hidden;
 
 animation:navFloat 5.5s ease-in-out infinite;
+
+touch-action:manipulation;
+-webkit-tap-highlight-color:transparent;
+
+transform:translateZ(0);
+
+will-change:transform;
+
+backface-visibility:hidden;  
 }
+
+    .bottom-nav button{
+touch-action:manipulation;
+cursor:pointer;
+
+transform:translateZ(0);
+
+will-change:transform,opacity;
+
+-webkit-user-select:none;
+user-select:none;
+}
+    
   button, a{
 -webkit-tap-highlight-color:transparent;
 }
@@ -1994,6 +2086,8 @@ border:1px solid rgba(255,255,255,0.06);
 border-radius:16px;
 padding:14px;
 backdrop-filter:blur(10px);
+-webkit-backdrop-filter:blur(10px);
+contain:paint;
 }
 
 .internal-type{
@@ -2505,8 +2599,9 @@ box-shadow:
 0 0 0 1px rgba(255,255,255,.03) inset,
 0 0 80px rgba(230,215,176,.04);
 
-backdrop-filter:blur(26px);
--webkit-backdrop-filter:blur(26px);
+backdrop-filter:blur(22px);
+-webkit-backdrop-filter:blur(22px);
+contain:paint;
 
 overflow:hidden;
 
@@ -2670,6 +2765,7 @@ box-shadow:
 
 backdrop-filter:blur(10px);
 -webkit-backdrop-filter:blur(10px);
+contain:paint;
 
 box-shadow:
 0 4px 18px rgba(0,0,0,.18),
@@ -4697,6 +4793,7 @@ margin-bottom:6px;
 font-weight:600;
 backdrop-filter:blur(10px);
 -webkit-backdrop-filter:blur(10px);
+contain:paint;
 ">
   ★ Doğrulanmış ürün sahibi
 </div>
@@ -4717,6 +4814,7 @@ font-weight:600;
 
 backdrop-filter:blur(10px);
 -webkit-backdrop-filter:blur(10px);
+contain:paint;
 ">
           ★ ${item.rating}/5 doğrulanmış puan
         </div>
@@ -4925,6 +5023,8 @@ ${normal.slice(0,2).map(item => `
 border-radius:14px;
     background:#111;
     backdrop-filter:blur(8px);
+-webkit-backdrop-filter:blur(8px);
+contain:paint;
   ">
     <div style="
 font-size:13px;
@@ -5414,7 +5514,8 @@ border-radius:18px;
 background:#111;
 box-shadow:0 18px 50px rgba(0,0,0,.28);
 backdrop-filter:blur(8px);
-backdrop-filter:blur(8px);
+-webkit-backdrop-filter:blur(8px);
+contain:paint;
 color:white;
 border:1px solid rgba(230,215,176,.25);
 ">
