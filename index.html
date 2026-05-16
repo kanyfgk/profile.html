@@ -54,6 +54,11 @@ color:#f3efe7;
   min-height:100vh;
 
   overscroll-behavior-y:none;
+
+  -webkit-font-smoothing:antialiased;
+-moz-osx-font-smoothing:grayscale;
+
+text-rendering:optimizeLegibility;
 }
   body:before{
 content:"";
@@ -378,7 +383,7 @@ box-shadow:
 0 0 0 1px rgba(255,255,255,.03) inset,
 0 30px 60px rgba(0,0,0,.08);
 position:relative;
-color:white;
+color:#f6efe3;
 text-align:left;
 padding:12px;
 overflow:hidden;
@@ -481,20 +486,23 @@ translateY(-4px)
 scale(1.008);
 
 border-color:
-rgba(230,215,176,.24);
+rgba(230,215,176,.16);
 
 box-shadow:
-0 18px 40px rgba(0,0,0,.22),
-0 0 0 1px rgba(255,255,255,.03) inset; 
+0 20px 48px rgba(0,0,0,.34),
+0 0 0 1px rgba(255,255,255,.04) inset; 
+0 0 24px rgba(230,215,176,.06);    
 }
   
-  .flow-tile:active{
-transform:scale(.97);
-border-color:rgba(230,215,176,.28);
-box-shadow:0 0 22px rgba(230,215,176,.12);
+.flow-tile:active{
 
-filter:brightness(1.05);    
+transform:
+scale(.985);
+
+transition:
+transform .08s ease;
 }
+
 
 .flow-tile:before{
 content:"";
@@ -534,7 +542,11 @@ content:"";
 position:absolute;
 inset:0;
 
-background:
+background:200% 200%
+
+animation:
+flowLight 12s ease-in-out infinite alternate;
+   
 linear-gradient(
 180deg,
 rgba(255,255,255,.01) 0%,
@@ -553,6 +565,7 @@ pointer-events:none;
 mix-blend-mode:screen;
 opacity:.45;
 }
+
     
 .flow-tile .type{
 position:absolute;
@@ -715,7 +728,7 @@ backdrop-filter:blur(12px);
 -webkit-backdrop-filter:blur(12px);
 
 z-index:70;
-color:white;
+color:#7571e8;
 
 opacity:0;
 pointer-events:none;
@@ -752,7 +765,11 @@ transparent 26%
 pointer-events:none;
 z-index:1;
 
-opacity:.92;  
+opacity:.78;  
+
+filter:
+blur(2px)
+saturate(1.04);  
 }
 
 .viewer:after{
@@ -967,7 +984,7 @@ rgba(8,12,18,.62);
 backdrop-filter:blur(12px);
 -webkit-backdrop-filter:blur(12px);
 
-color:white;
+color:f5f1e8;
 font-size:19px;
 
 display:flex;
@@ -1153,7 +1170,7 @@ rgba(255,255,255,.07),
 rgba(255,255,255,.03)
 );
 
-color:white;
+color:f6efe3;
 
 margin-top:9px;
 outline:none;
@@ -1319,8 +1336,8 @@ transform:translateY(0) scale(1);
 border:1px solid rgba(230,215,176,.24);
 background:linear-gradient(145deg,rgba(255,255,255,.06),rgba(255,255,255,.02));
 
-border-radius:24px;
-padding:18px;
+border-radius:28px;
+padding:20px;
 margin-bottom:14px;
 
 transition:transform .22s ease, border-color .22s ease, background .22s ease;
@@ -2154,6 +2171,18 @@ width:28%;
 
 }
 
+  @keyframes navGlassMove{
+
+0%{
+transform:translateX(-120%);
+}
+
+100%{
+transform:translateX(140%);
+}
+
+}
+
   @keyframes profileAura{
 
 0%{
@@ -2218,6 +2247,42 @@ scale(1.02);
 
 }  
 
+    @keyframes flowLight{
+
+0%{
+background-position:
+0% 0%;
+}
+
+100%{
+background-position:
+100% 100%;
+}
+
+}  
+
+.bottom-nav:before{
+content:"";
+
+position:absolute;
+inset:0;
+
+background:
+linear-gradient(
+120deg,
+transparent 0%,
+rgba(255,255,255,.05) 22%,
+transparent 42%
+);
+
+opacity:.9;
+
+pointer-events:none;
+
+animation:
+navGlassMove 7s linear infinite;
+}
+  
   .product-tile b{
 position:relative;
 z-index:2;
@@ -2282,6 +2347,28 @@ rgba(230,215,176,.18)
   visibility:visible !important;
 }
 
+  .bottom-nav:before{
+content:"";
+
+position:absolute;
+inset:0;
+
+background:
+linear-gradient(
+120deg,
+transparent 0%,
+rgba(255,255,255,.05) 22%,
+transparent 42%
+);
+
+opacity:.9;
+
+pointer-events:none;
+
+animation:
+navGlassMove 7s linear infinite;
+}
+
   .overlay:not(.show),
 .full:not(.show),
 .viewer:not(.show),
@@ -2310,11 +2397,73 @@ rgba(230,215,176,.18)
   position:fixed !important;
   z-index:999999 !important;
 }
+
+    .flow-tile,
+.modal,
+.viewer,
+.act{
+color:#f5f1e8;
+}
+
+    .overlay:not(.show),
+.full:not(.show),
+.viewer:not(.show),
+.profile-screen:not(.show){
+display:none !important;
+}
+
+.overlay.show{
+display:flex !important;
+}
+
+.full.show,
+.viewer.show,
+.profile-screen.show{
+display:block !important;
+}
+
+.bottom-nav{
+display:flex !important;
+}
+
+    .boot-fade{
+position:fixed;
+inset:0;
+
+background:
+radial-gradient(
+circle at top,
+rgba(230,215,176,.05),
+transparent 30%
+),
+#07111d;
+
+z-index:999999;
+
+pointer-events:none;
+
+animation:
+bootFade .9s ease forwards;
+}
+
+@keyframes bootFade{
+
+0%{
+opacity:1;
+}
+
+100%{
+opacity:0;
+visibility:hidden;
+}
+
+}
   
 </style>
 </head>
 
 <body>
+  <div class="boot-fade"></div>
 
 <div class="app">
   <div class="brand-head">
@@ -5227,7 +5376,7 @@ function finishIdFocus(){
   if(error){
     list.innerHTML = "Deneyimler yüklenemedi.";
     return;
-  }
+  } 
 
   let filtered = data || [];
 
