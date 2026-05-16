@@ -1116,7 +1116,7 @@ backdrop-filter:blur(18px);
 
 max-height:82vh;
 overflow-y:auto;
-padding-bottom:140px;  
+padding-bottom:24px;  
 
 overscroll-behavior:contain;
 
@@ -2513,35 +2513,6 @@ z-index:999999;
 isolation:isolate;
 }
 
-  .id-modal:before{
-content:"";
-
-position:absolute;
-inset:-20%;
-
-background:
-radial-gradient(
-circle at 20% 10%,
-rgba(230,215,176,.08),
-transparent 28%
-),
-radial-gradient(
-circle at 80% 0%,
-rgba(120,140,255,.08),
-transparent 24%
-);
-
-filter:blur(34px);
-
-opacity:.85;
-
-pointer-events:none;
-z-index:0;
-
-animation:
-ambientMove 14s ease-in-out infinite alternate;
-}
-
 .id-modal > *{
 position:relative;
 z-index:1;
@@ -2620,33 +2591,6 @@ transform:
 translateY(-2px);
 }
 
-  .id-modal h2{
-
-font-size:52px;
-
-line-height:.92;
-
-letter-spacing:1px;
-
-margin-bottom:18px;
-
-color:#f6efe3;
-
-text-shadow:
-0 4px 18px rgba(0,0,0,.28);
-}
-
-.id-modal p{
-
-font-size:15px;
-
-line-height:1.7;
-
-color:
-rgba(255,255,255,.62);
-
-max-width:92%;
-}
   .id-btn{
 font-weight:900;
 letter-spacing:.2px;
@@ -2829,92 +2773,6 @@ rgba(255,255,255,.04)
 box-shadow:
 0 0 0 4px rgba(230,215,176,.06),
 0 16px 34px rgba(0,0,0,.28);
-
-}
-
-  .id-modal h2{
-
-font-size:52px;
-
-line-height:.92;
-
-letter-spacing:1px;
-
-margin-bottom:18px;
-
-color:#f6efe3;
-
-text-shadow:
-0 4px 18px rgba(0,0,0,.28);
-}
-
-.id-modal p{
-
-font-size:15px;
-
-line-height:1.7;
-
-color:
-rgba(255,255,255,.62);
-
-max-width:92%;
-}
-
-  #idModal.show{
-backdrop-filter:blur(18px);
--webkit-backdrop-filter:blur(18px);
-
-background:
-radial-gradient(
-circle at top,
-rgba(230,215,176,.06),
-transparent 26%
-),
-rgba(0,0,0,.74);
-}
-
-  .id-modal:after{
-content:"";
-
-position:absolute;
-top:-120px;
-right:-120px;
-
-width:240px;
-height:240px;
-
-border-radius:50%;
-
-background:
-radial-gradient(
-circle,
-rgba(230,215,176,.10),
-transparent 70%
-);
-
-pointer-events:none;
-
-filter:blur(26px);
-
-opacity:.9;
-
-animation:
-idPulse 6s ease-in-out infinite alternate;
-}
-
-@keyframes idPulse{
-
-0%{
-transform:
-scale(1)
-translate3d(0,0,0);
-}
-
-100%{
-transform:
-scale(1.08)
-translate3d(-10px,8px,0);
-}
 
 }
 
