@@ -129,8 +129,8 @@ isolation:isolate;
 
 contain:paint;
 
-border-left:1px solid rgba(255,255,255,.04);
-border-right:1px solid rgba(255,255,255,.04);
+border-left:1px solid rgba(255,255,255,.015);
+border-right:1px solid rgba(255,255,255,.015);
 
 box-shadow:
 0 0 60px rgba(0,0,0,.22);
@@ -169,7 +169,7 @@ line-height:1;
 color:#f3efe7;
 
 text-shadow:
-0 1px 0 rgba(255,255,255,.04),
+0 1px 0 rgba(255,255,255,.015),
 0 8px 30px rgba(0,0,0,.35);
 
 text-shadow:
@@ -516,7 +516,7 @@ rgba(230,215,176,.16);
 
 box-shadow:
 0 20px 48px rgba(0,0,0,.34),
-0 0 0 1px rgba(255,255,255,.04) inset; 
+0 0 0 1px rgba(255,255,255,.015) inset; 
 0 0 24px rgba(230,215,176,.06);    
 }
   
@@ -987,7 +987,7 @@ rgba(255,255,255,.03),
 rgba(255,255,255,.01)
 );
 
-border:1px solid rgba(255,255,255,.04);
+border:1px solid rgba(255,255,255,.015);
 
 box-shadow:
 0 18px 38px rgba(0,0,0,.22);
@@ -1278,15 +1278,17 @@ box-shadow:
 transform:translateY(-1px);
 }
 select option{color:#111}
-textarea{min-height:88px}
+textarea{
+min-height:88px;
+margin-bottom:86px;
+}
 .modal-actions{
 display:grid;
 grid-template-columns:1fr 1fr;
 gap:9px;
-margin-top:12px;
+margin-top:10px;
 
 position:relative;
-bottom:84px;
 z-index:20;
 
 background:
@@ -1736,7 +1738,7 @@ transition:transform .22s ease, border-color .22s ease;
     background:
 linear-gradient(
 180deg,
-rgba(255,255,255,.04),
+rgba(255,255,255,.015),
 rgba(255,255,255,.015)
 ),
 rgba(12,14,18,.82);
@@ -1779,7 +1781,7 @@ background:
 linear-gradient(
 145deg,
 rgba(255,255,255,.16),
-rgba(255,255,255,.04)
+rgba(255,255,255,.015)
 );
 border:1px solid rgba(255,255,255,.08);
 backdrop-filter:blur(8px);
@@ -2709,7 +2711,7 @@ box-shadow .18s ease;
 
 box-shadow:
 0 10px 24px rgba(0,0,0,.18),
-0 0 0 1px rgba(255,255,255,.04) inset;
+0 0 0 1px rgba(255,255,255,.015) inset;
 }
 
 .quick .soft:hover{
@@ -2764,7 +2766,7 @@ contain:paint;
 
 box-shadow:
 0 4px 18px rgba(0,0,0,.18),
-0 0 0 1px rgba(255,255,255,.04) inset;
+0 0 0 1px rgba(255,255,255,.015) inset;
 
 position:relative;
 overflow:hidden;
@@ -2859,7 +2861,7 @@ background:
 linear-gradient(
 180deg,
 rgba(255,255,255,.11),
-rgba(255,255,255,.04)
+rgba(255,255,255,.015)
 );
 
 box-shadow:
@@ -5944,7 +5946,7 @@ function finishIdFocus(){
   : `<div style="
       padding:14px;
       border-radius:14px;
-      background:rgba(255,255,255,.04);
+      background:rgba(255,255,255,.015);
       color:rgba(255,255,255,.55);
       font-size:13px;
       text-align:center;
