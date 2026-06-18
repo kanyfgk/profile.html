@@ -3245,6 +3245,14 @@ color:#e6d7b0;
 Kontrol ediliyor...
 </div>
 
+        <div id="membershipPlanText" style="
+margin-top:8px;
+font-size:12px;
+color:rgba(255,255,255,.55);
+">
+Plan kontrol ediliyor...
+</div>
+
 </div>
     </div> 
 
@@ -3722,11 +3730,13 @@ if(profileNameEl){
 }
 }
   const membershipType = profile.membership_type || "visitor";
+  const membershipPlan = profile.membership_plan || "monthly";
 const aeStatus = profile.ae_status || "none";
 const brandActive = profile.brand_active;
 
 window.currentProfile = {
     membershipType,
+  membershipPlan,
     aeStatus,
     brandActive,
     visionLevel: profile.vision_level || 0,
@@ -3743,8 +3753,18 @@ const membershipExpired =
 window.currentProfile.membershipExpired = membershipExpired;
   const membershipRemaining =
 document.getElementById("membershipRemaining");
+  const membershipPlanText =
+document.getElementById("membershipPlanText");
   const membershipBox =
 document.getElementById("membershipBox");
+  if(membershipPlanText){
+
+  membershipPlanText.innerText =
+  membershipPlan === "yearly"
+    ? "Plan: VA Yearly"
+    : "Plan: VA Monthly";
+
+}
 
 if(membershipRemaining){
 
