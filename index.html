@@ -3220,6 +3220,32 @@ VA MEMBER
         <div class="profile-stat"><b>246</b>Topluluk</div>
         <div class="profile-stat"><b id="verifiedOwnership">KONTROL</b>Doğrulanmış</div>
       </div>
+      <div id="membershipBox" style="
+margin-top:14px;
+padding:14px;
+border-radius:16px;
+background:rgba(230,215,176,.06);
+border:1px solid rgba(230,215,176,.18);
+">
+
+<div style="
+font-size:11px;
+letter-spacing:1px;
+color:rgba(255,255,255,.55);
+">
+ÜYELİK DURUMU
+</div>
+
+<div id="membershipRemaining" style="
+margin-top:6px;
+font-size:18px;
+font-weight:700;
+color:#e6d7b0;
+">
+Kontrol ediliyor...
+</div>
+
+</div>
     </div> 
 
     <div class="profile-card">
@@ -3584,6 +3610,14 @@ function openProduct(productId){
   viewer.classList.add("show");
 }
 
+  function openMembershipRenew(){
+
+alert(
+"Üyelik yenileme sistemi sonraki aşamada aktif edilecek."
+);
+
+}
+
 function openFlow(){
   closeAllScreens();
   setActiveNav("flow");
@@ -3707,6 +3741,89 @@ const membershipExpired =
     : false;
 
 window.currentProfile.membershipExpired = membershipExpired;
+  const membershipRemaining =
+document.getElementById("membershipRemaining");
+  const membershipBox =
+document.getElementById("membershipBox");
+
+if(membershipRemaining){
+
+  if(profile.membership_expires_at){
+
+    const expireDate =
+    new Date(profile.membership_expires_at);
+
+    const now = new Date();
+
+    const diffDays =
+    Math.ceil(
+      (expireDate - now) /
+      (1000 * 60 * 60 * 24)
+    );
+
+    if(diffDays <= 0){
+
+      membershipRemaining.innerText =
+      "Üyelik süresi doldu";
+      if(membershipBox){
+
+membershipBox.innerHTML += `
+<button
+id="renewMembershipBtn"
+style="
+margin-top:12px;
+width:100%;
+padding:12px;
+border:none;
+border-radius:12px;
+background:#e6d7b0;
+color:#07111d;
+font-weight:800;
+cursor:pointer;
+"
+onclick="openMembershipRenew()"
+>
+Üyeliği Yenile
+</button>
+`;
+}
+      if(membershipBox){
+
+  const expireDateText =
+  expireDate.toLocaleDateString("tr-TR");
+
+  membershipBox.innerHTML += `
+  <div style="
+    margin-top:8px;
+    font-size:12px;
+    color:rgba(255,255,255,.55);
+  ">
+    Yenileme Tarihi: ${expireDateText}
+  </div>
+  `;
+}
+
+      membershipRemaining.style.color =
+      "#ffb3b3";
+
+    }else{
+
+      membershipRemaining.innerText =
+      diffDays + " gün kaldı";
+
+      membershipRemaining.style.color =
+      "#e6d7b0";
+
+    }
+
+  }else{
+
+    membershipRemaining.innerText =
+    "Üyelik bilgisi bulunamadı";
+
+  }
+
+}
 
 console.log("CURRENT PROFILE:", window.currentProfile); 
   const statusText = document.getElementById("profileStatusText");
@@ -3729,6 +3846,8 @@ if(badge){
   }else if(membershipType === "VA"){
 
     badge.innerText = "VA MEMBER";
+    badge.title =
+"Platform üyeliği aktif";
 
     badge.style.background =
     "rgba(255,255,255,.08)";
@@ -3766,6 +3885,8 @@ if(statusText){
 "1px solid rgba(255,80,80,.28)";
     if(badge){
   badge.innerText = "MEMBERSHIP EXPIRED";
+      badge.title =
+"Platform üyeliği sona erdi";
   badge.style.background = "rgba(255,80,80,.16)";
   badge.style.color = "#ffb3b3";
 }
