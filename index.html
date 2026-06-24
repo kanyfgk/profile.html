@@ -3770,118 +3770,53 @@ if(membershipRemaining){
 
   if(profile.membership_expires_at){
 
-    const expireDate =
-    new Date(profile.membership_expires_at);
-
+    const expireDate = new Date(profile.membership_expires_at);
     const now = new Date();
 
-    const diffDays =
-    Math.ceil(
-      (expireDate - now) /
-      (1000 * 60 * 60 * 24)
+    const diffDays = Math.ceil(
+      (expireDate - now) / (1000 * 60 * 60 * 24)
     );
+
+    const expireDateText = expireDate.toLocaleDateString("tr-TR");
 
     if(diffDays <= 0){
 
-      membershipRemaining.innerText =
-      "Üyelik süresi doldu";
+      membershipRemaining.innerText = "Üyelik süresi doldu";
+      membershipRemaining.style.color = "#ffb3b3";
+
       if(membershipBox){
-
-membershipBox.innerHTML += `
-<button
-id="renewMembershipBtn"
-style="
-margin-top:12px;
-width:100%;
-padding:12px;
-border:none;
-border-radius:12px;
-background:#e6d7b0;
-color:#07111d;
-font-weight:800;
-cursor:pointer;
-"
-onclick="openMembershipRenew()"
->
-Üyeliği Yenile
-</button>
-`;
-}
-      if(membershipBox){
-
-  const expireDateText =
-  expireDate.toLocaleDateString("tr-TR");
-
-  membershipBox.innerHTML += `
-  <div style="
-    margin-top:8px;
-    font-size:12px;
-    color:rgba(255,255,255,.55);
-  ">
-    Yenileme Tarihi: ${expireDateText}
-  </div>
-  `;
-}
-
-      membershipRemaining.style.color =
-      "#ffb3b3";
+        membershipBox.insertAdjacentHTML("beforeend", `
+          <div style="margin-top:8px;font-size:12px;color:rgba(255,255,255,.55);">
+            Yenileme Tarihi: ${expireDateText}
+          </div>
+          <button
+            id="renewMembershipBtn"
+            style="margin-top:12px;width:100%;padding:12px;border:none;border-radius:12px;background:#e6d7b0;color:#07111d;font-weight:800;cursor:pointer;"
+            onclick="openMembershipRenew()"
+          >
+            Üyeliği Yenile
+          </button>
+        `);
+      }
 
     }else{
 
-      membershipRemaining.innerText =
-      diffDays + " gün kaldı";
+      membershipRemaining.innerText = diffDays + " gün kaldı";
+      membershipRemaining.style.color = "#e6d7b0";
 
-      membershipRemaining.style.color =
-      "#e6d7b0";
+      if(membershipBox){
+        membershipBox.insertAdjacentHTML("beforeend", `
+          <div style="margin-top:8px;font-size:12px;color:rgba(255,255,255,.55);">
+            Yenileme Tarihi: ${expireDateText}
+          </div>
+        `);
+      }
 
     }
 
   }else{
 
-    membershipRemaining.innerText =
-    "Üyelik bilgisi bulunamadı";
-
-  }
-
-}
-
-console.log("CURRENT PROFILE:", window.currentProfile); 
-  const statusText = document.getElementById("profileStatusText");
-  const badge = document.getElementById("profileBadge");
-
-if(badge){
-
-  if(aeStatus !== "none"){
-    const activeSaleProducts = products.filter(p =>
-  !["brand"].includes(p.id)
-).length;
-
-    badge.innerText = "Æ VERIFIED";
-
-    badge.style.background =
-    "rgba(230,215,176,.18)";
-
-    badge.style.color = "#e6d7b0";
-
-  }else if(membershipType === "VA"){
-
-    badge.innerText = "VA MEMBER";
-    badge.title =
-"Platform üyeliği aktif";
-
-    badge.style.background =
-    "rgba(255,255,255,.08)";
-
-    badge.style.color = "#fff";
-
-  }else{
-
-    badge.innerText = "VISITOR";
-
-    badge.style.background =
-    "rgba(255,120,120,.12)";
-
-    badge.style.color = "#ffb3b3";
+    membershipRemaining.innerText = "Üyelik bilgisi bulunamadı";
 
   }
 
