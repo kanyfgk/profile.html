@@ -3844,7 +3844,9 @@ if(statusText){
 "Platform üyeliği sona erdi";
   badge.style.background = "rgba(255,80,80,.16)";
   badge.style.color = "#ffb3b3";
-}
+}"profileStatusText");
+
+    const statusText = document.getElementById(
     statusText.innerText = "ÜYELİK SÜRESİ DOLDU";
 }else if(aeStatus !== "none"){
     document.querySelector(".profile-card").style.boxShadow =
