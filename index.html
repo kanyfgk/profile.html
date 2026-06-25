@@ -3683,11 +3683,25 @@ function openProduct(productId){
 
   localStorage.setItem("selectedMembershipPlan", plan);
 
-  alert(
-    plan === "monthly"
-    ? "Aylık üyelik seçildi. Ödeme ekranı sonraki adımda bağlanacak."
-    : "Yıllık üyelik seçildi. Ödeme ekranı sonraki adımda bağlanacak."
-  );
+  const monthlyBtn =
+  document.querySelector('button[onclick="selectMembershipPlan(\'monthly\')"]');
+
+  const yearlyBtn =
+  document.querySelector('button[onclick="selectMembershipPlan(\'yearly\')"]');
+
+  if(monthlyBtn){
+    monthlyBtn.innerText =
+      plan === "monthly"
+      ? "✓ Seçildi"
+      : "Aylık Üyeliği Seç";
+  }
+
+  if(yearlyBtn){
+    yearlyBtn.innerText =
+      plan === "yearly"
+      ? "✓ Seçildi"
+      : "Yıllık Üyeliği Seç";
+  }
 
 }
 function openFlow(){
