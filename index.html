@@ -3322,9 +3322,27 @@ color:rgba(255,255,255,.7);
           <div style="color:#e6d7b0;font-size:12px;letter-spacing:2px;font-weight:800;">YEARLY</div>
           <div style="margin-top:10px;font-size:28px;font-weight:900;color:#fff;">2.490 TL</div>
           <div style="margin-top:8px;color:#bbb;font-size:13px;line-height:1.6;">Tüm VA hakları, daha uzun erişim ve yıllık üyelik avantajı.</div>
-          <button onclick="selectMembershipPlan('yearly')" style="margin-top:16px;width:100%;padding:14px;border-radius:999px;border:none;font-weight:900;">Yıllık Üyeliği Seç</button>
+          <button onclick="selectMembershipPlan('yearly')" style="margin-top:16px;width:100%;padding:14px;border-radius:999px;border:none;font-weight:900;">
+  Yıllık Üyeliği Seç
+</button>
         </div>
       </div>
+
+<button onclick="continueMembershipPayment()" style="
+margin-top:18px;
+width:100%;
+padding:16px;
+border-radius:999px;
+border:none;
+background:#e6d7b0;
+color:#07111d;
+font-weight:900;
+font-size:14px;
+cursor:pointer;
+">
+Devam Et →
+</button>
+
     </div>
   </div>
 </div>
@@ -3704,11 +3722,33 @@ function openProduct(productId){
   }
 
 }
+
+function continueMembershipPayment(){
+
+  const plan =
+  localStorage.getItem("selectedMembershipPlan");
+
+  if(!plan){
+    alert("Lütfen önce bir üyelik planı seç.");
+    return;
+  }
+
+  alert(
+    plan === "monthly"
+    ? "Aylık üyelik ödeme özeti sonraki adımda açılacak."
+    : "Yıllık üyelik ödeme özeti sonraki adımda açılacak."
+  );
+
+}
+
 function openFlow(){
   closeAllScreens();
   setActiveNav("flow");
   document.getElementById("flowScreen").classList.add("show");
 }
+
+    
+
 
 function closeFlow(){
   document.getElementById("flowScreen").classList.remove("show");
