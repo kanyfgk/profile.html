@@ -3685,15 +3685,14 @@ function openProduct(productId){
 
   function openMembershipRenew(){
 
-  document.querySelectorAll(".profile-screen").forEach(function(screen){
-    screen.style.display = "none";
-  });
+  closeFlow();
+  closeViewer();
+  closeAction();
+  closeAllScreens();
 
-  const membershipRenew = document.getElementById("membershipRenew");
+  setActiveNav("profile");
 
-  if(membershipRenew){
-    membershipRenew.style.display = "block";
-  }
+  document.getElementById("membershipRenew").classList.add("show");
 
 }
 
