@@ -3211,6 +3211,43 @@ letter-spacing:1px;
 ">
 VA MEMBER
 </div>
+
+      <div class="profile-screen" id="membershipRenew" style="display:none;">
+  <div class="profile-wrap">
+
+    <div class="profile-top">
+      <button class="back" onclick="openScreen('profileScreen')">‹</button>
+      <div style="font-family:Oswald;letter-spacing:4px;">
+        ÜYELİĞİ YENİLE
+      </div>
+      <div style="width:36px;"></div>
+    </div>
+
+    <div class="profile-card">
+
+      <div style="color:#e6d7b0;font-size:12px;">
+        VA MEMBERSHIP
+      </div>
+
+      <div class="profile-name" style="font-size:26px;margin-top:12px;">
+        Üyeliğini Yenile
+      </div>
+
+      <div style="
+      margin-top:16px;
+      color:#bbb;
+      line-height:1.7;
+      font-size:14px;">
+        Platform üyeliğin sona ermiş durumda.
+        Üyeliğini yenileyerek Platform ID avantajlarını,
+        doğrulanmış üyelik haklarını ve gelecekteki
+        premium özellikleri tekrar aktif edebilirsin.
+      </div>
+
+    </div>
+
+  </div>
+</div>
       <p style="color:rgba(255,255,255,.65);line-height:22px;margin-top:8px;">
         Deneyim paylaş, vizyon üret, topluluğun içinde değer kazan.
       </p>
@@ -3620,12 +3657,9 @@ function openProduct(productId){
 
   function openMembershipRenew(){
 
-alert(
-"Üyelik yenileme sistemi sonraki aşamada aktif edilecek."
-);
+openScreen("membershipRenew");
 
 }
-
 function openFlow(){
   closeAllScreens();
   setActiveNav("flow");
