@@ -3216,7 +3216,10 @@ VA MEMBER
   <div class="profile-wrap">
 
     <div class="profile-top">
-      <button class="back" onclick="openScreen('profileScreen')">‹</button>
+      <button class="back" onclick="
+document.getElementById('membershipRenew').style.display='none';
+document.getElementById('profileScreen').style.display='block';
+">‹</button>
       <div style="font-family:Oswald;letter-spacing:4px;">
         ÜYELİĞİ YENİLE
       </div>
@@ -3682,7 +3685,27 @@ function openProduct(productId){
 
   function openMembershipRenew(){
 
-openScreen("membershipRenew");
+  document.querySelectorAll(".profile-screen").forEach(function(screen){
+    screen.style.display = "none";
+  });
+
+  const membershipRenew = document.getElementById("membershipRenew");
+
+  if(membershipRenew){
+    membershipRenew.style.display = "block";
+  }
+
+}
+
+  function selectMembershipPlan(plan){
+
+  localStorage.setItem("selectedMembershipPlan", plan);
+
+  alert(
+    plan === "monthly"
+    ? "Aylık üyelik seçildi. Ödeme ekranı sonraki adımda bağlanacak."
+    : "Yıllık üyelik seçildi. Ödeme ekranı sonraki adımda bağlanacak."
+  );
 
 }
 function openFlow(){
