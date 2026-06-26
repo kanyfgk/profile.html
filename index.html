@@ -3814,7 +3814,8 @@ function continueMembershipPayment(){
     return;
   }
 
-  closeMembershipRenew();
+  document.getElementById("membershipRenew").classList.remove("show");
+document.getElementById("profileScreen").classList.remove("show");
 
   const paymentPlanText =
   document.getElementById("paymentPlanText");
@@ -6412,6 +6413,7 @@ function openBrandHub(){
   closeViewer();
   closeAction();
   closeAllScreens();
+  document.querySelector(".app").style.display = "none";
 
   setActiveNav("brands");
 
@@ -6420,6 +6422,7 @@ function openBrandHub(){
 
 function closeBrandHub(){
   document.getElementById("brandHubScreen").classList.remove("show");
+  document.querySelector(".app").style.display = "block";
   setActiveNav("home");
 }
 function openCommunity(){
