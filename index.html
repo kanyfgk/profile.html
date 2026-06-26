@@ -6361,30 +6361,78 @@ function closeDiscover(){
   document.getElementById("discoverModal").classList.remove("show");
 }
   function closeAllScreens(){
+
   document.querySelectorAll(".profile-screen").forEach(screen=>{
     screen.classList.remove("show");
   });
+
+  document.querySelectorAll(".full").forEach(screen=>{
+    screen.classList.remove("show");
+  });
+
+  document.querySelectorAll(".viewer").forEach(screen=>{
+    screen.classList.remove("show");
+  });
+
+  document.querySelectorAll(".overlay").forEach(screen=>{
+    screen.classList.remove("show");
+  });
+
+}
+
+function showApp(){
+  const app = document.querySelector(".app");
+  if(app){
+    app.style.display = "block";
+  }
+}
+
+function hideApp(){
+  const app = document.querySelector(".app");
+  if(app){
+    app.style.display = "none";
+  }
+}
+
+function navigateTo(screenId, navName){
+
+  closeAllScreens();
+
+  if(screenId === "home"){
+    showApp();
+    setActiveNav("home");
+    return;
+  }
+
+  hideApp();
+
+  const screen = document.getElementById(screenId);
+
+  if(screen){
+    screen.classList.add("show");
+  }
+
+  if(navName){
+    setActiveNav(navName);
+  }
+
 }
 
 function openProfile(){
 
-  closeFlow();
   if(!activeId){
-  openIdModal();
-  return;
-}
- closeViewer();
-closeAction();
-closeAllScreens();
+    openIdModal();
+    return;
+  }
 
-setActiveNav("profile");
+  navigateTo("profileScreen","profile");
 
-document.getElementById("profileScreen").classList.add("show");
 }
 
 function closeProfile(){
-  document.getElementById("profileScreen").classList.remove("show");
-  setActiveNav("home");
+
+  navigateTo("home","home");
+
 }
 
 function openModeCreate(){
@@ -6409,37 +6457,23 @@ function openBrandHub(){
     return;
   }
 
-  closeFlow();
-  closeViewer();
-  closeAction();
-  closeAllScreens();
-  document.querySelector(".app").style.display = "none";
+  navigateTo("brandHubScreen","brands");
 
-  setActiveNav("brands");
-
-  document.getElementById("brandHubScreen").classList.add("show");
 }
-
 function closeBrandHub(){
-  document.getElementById("brandHubScreen").classList.remove("show");
-  document.querySelector(".app").style.display = "block";
-  setActiveNav("home");
+
+  navigateTo("home","home");
+
 }
 function openCommunity(){
 
-  closeFlow();
-  closeViewer();
-  closeAction();
-  closeAllScreens();
+  navigateTo("communityScreen","community");
 
-  setActiveNav("community");
-
-  document.getElementById("communityScreen").classList.add("show");
 }
-
 function closeCommunity(){
-  document.getElementById("communityScreen").classList.remove("show");
-  setActiveNav("home");
+
+  navigateTo("home","home");
+
 }
 function setActiveNav(name){
   document.querySelectorAll(".nav-btn").forEach(btn=>{
