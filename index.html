@@ -3767,17 +3767,6 @@ function openProduct(productId){
 
 }
 
-  document.getElementById("profileScreen").classList.remove("show");
-
-  const membershipRenew = document.getElementById("membershipRenew");
-
-  if(membershipRenew){
-    membershipRenew.style.display = "block";
-    membershipRenew.classList.add("show");
-  }
-
-}
-
   function selectMembershipPlan(plan){
 
   localStorage.setItem("selectedMembershipPlan", plan);
@@ -3814,7 +3803,34 @@ function continueMembershipPayment(){
     return;
   }
 
-  function startMembershipCheckout(){
+  closeMembershipRenew();
+
+  const paymentPlanText =
+  document.getElementById("paymentPlanText");
+
+  if(paymentPlanText){
+    paymentPlanText.innerText =
+      plan === "monthly"
+      ? "Aylık VA Membership · 249 TL"
+      : "Yıllık VA Membership · 2.490 TL";
+  }
+
+  const paymentTotal =
+  document.getElementById("paymentTotal");
+
+  if(paymentTotal){
+    paymentTotal.innerText =
+      plan === "monthly"
+      ? "249 TL"
+      : "2.490 TL";
+  }
+
+  document.getElementById("paymentSummaryScreen")
+  .classList.add("show");
+
+}
+
+function startMembershipCheckout(){
 
   const plan =
   localStorage.getItem("selectedMembershipPlan");
@@ -3830,31 +3846,6 @@ function continueMembershipPayment(){
     : "Stripe / ödeme bağlantısı burada açılacak: Yearly · 2.490 TL"
   );
 
-}
-
-  closeMembershipRenew();
-  const paymentPlanText =
-document.getElementById("paymentPlanText");
-
-if(paymentPlanText){
-  paymentPlanText.innerText =
-    plan === "monthly"
-    ? "Aylık VA Membership · 249 TL"
-    : "Yıllık VA Membership · 2.490 TL";
-}
-
-  const paymentTotal =
-document.getElementById("paymentTotal");
-
-if(paymentTotal){
-  paymentTotal.innerText =
-    plan === "monthly"
-    ? "249 TL"
-    : "2.490 TL";
-}
-
-document.getElementById("paymentSummaryScreen")
-.classList.add("show");
 }
 
 function openFlow(){
