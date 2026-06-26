@@ -3350,10 +3350,7 @@ Devam Et →
   <div class="profile-screen" id="paymentSummaryScreen">
   <div class="profile-wrap">
     <div class="profile-top">
-      <button class="back" onclick="
-document.getElementById('paymentSummaryScreen').classList.remove('show');
-openMembershipRenew();
-">‹</button>
+      <button class="back" onclick="openMembershipRenew()">‹</button>
       <div style="font-family:Oswald;letter-spacing:4px;">ÖDEME ÖZETİ</div>
       <div style="width:36px;"></div>
     </div>
@@ -3418,6 +3415,8 @@ font-weight:900;
 font-size:14px;
 cursor:pointer;
 ">
+  Ödemeye Geç →
+</button>
 
 <div style="
 margin-top:12px;
@@ -3427,7 +3426,12 @@ text-align:center;
 ">
 Kart • Apple Pay • Google Pay • Banka Kartı
 </div>
-  <div class="profile-screen" id="brandHubScreen">
+
+</div>
+</div>
+</div>
+
+<div class="profile-screen" id="brandHubScreen">
   <div class="profile-wrap">
     <div class="profile-top">
       <button class="back" onclick="closeBrandHub()">‹</button>
@@ -3760,21 +3764,12 @@ function openProduct(productId){
 
   function openMembershipRenew(){
 
-  document.getElementById("profileScreen").classList.remove("show");
-
-  const membershipRenew = document.getElementById("membershipRenew");
-
-  if(membershipRenew){
-    membershipRenew.style.display = "block";
-    membershipRenew.classList.add("show");
-  }
+  navigateTo("membershipRenew","profile");
 
 }
     function closeMembershipRenew(){
 
-  document.getElementById("membershipRenew").classList.remove("show");
-
-  openProfile();
+  navigateTo("profileScreen","profile");
 
 }
 
@@ -3860,17 +3855,18 @@ function startMembershipCheckout(){
 }
 
 function openFlow(){
-  closeAllScreens();
-  setActiveNav("flow");
-  document.getElementById("flowScreen").classList.add("show");
+
+  navigateTo("flowScreen","flow");
+
 }
 
     
 
 
 function closeFlow(){
-  document.getElementById("flowScreen").classList.remove("show");
-  setActiveNav("home");
+
+  navigateTo("home","home");
+
 }
 
 function openIdModal(){
@@ -4206,6 +4202,8 @@ document.getElementById("viewerMeta").innerHTML = `
 ${supportCount} topluluk desteği ·
 ${verifiedCount} doğrulanmış deneyim
 `;
+  closeAllScreens();
+hideApp();
   lockBody();
   viewer.classList.add("show");
 }
@@ -4247,7 +4245,9 @@ function closeViewer(){
 
   setTimeout(()=>{
     unlockBody();
+    navigateTo("home","home");
   },240);
+
 }
   let viewerTouchStartX = 0;
 let viewerTouchStartY = 0;
@@ -6500,21 +6500,10 @@ function closeEverything(){
   unlockBody();
 }
 function goHome(){
-  closeAllScreens();
-  document.getElementById("flowScreen").classList.remove("show");
-  document.getElementById("viewer").classList.remove("show");
-  document.getElementById("actionModal").classList.remove("show");
-  document.getElementById("brandModal").classList.remove("show");
-  document.getElementById("idModal").classList.remove("show");
-  document.getElementById("idFocusModal").classList.remove("show");
-  document.getElementById("discoverModal").classList.remove("show");
 
-  document.body.style.overflow = "";
-  document.body.classList.remove("modal-open");
+  navigateTo("home","home");
 
-  setActiveNav("home");
 }
-
 function lockBody(){
 
   document.body.style.overflow = "hidden";
