@@ -3759,6 +3759,17 @@ function openProduct(productId){
 }
 
   function openMembershipRenew(){
+
+  document.getElementById("profileScreen").classList.remove("show");
+
+  const membershipRenew = document.getElementById("membershipRenew");
+
+  if(membershipRenew){
+    membershipRenew.style.display = "block";
+    membershipRenew.classList.add("show");
+  }
+
+}
     function closeMembershipRenew(){
 
   document.getElementById("membershipRenew").classList.remove("show");
