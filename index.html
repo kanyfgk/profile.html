@@ -4072,16 +4072,17 @@ if(brandStatusBox && aeStatus !== "none"){
 
 if(statusText){
   if(window.currentProfile.membershipExpired){
-    document.querySelector(".profile-card").style.border =
-"1px solid rgba(255,80,80,.28)";
-    if(badge){
-  badge.innerText = "MEMBERSHIP EXPIRED";
-      badge.title =
-"Platform üyeliği sona erdi";
-  badge.style.background = "rgba(255,80,80,.16)";
-  badge.style.color = "#ffb3b3";
-}
-    statusText.innerText = "ÜYELİK SÜRESİ DOLDU";
+  document.querySelector(".profile-card").style.border =
+"1px solid rgba(230,215,176,.24)";
+
+  if(badge){
+    badge.innerText = "VA EARLY MEMBER";
+    badge.title = "VAERO erken erişim üyesi";
+    badge.style.background = "rgba(230,215,176,.12)";
+    badge.style.color = "#e6d7b0";
+  }
+
+  statusText.innerText = "ERKEN ERİŞİM PROFİLİ";
 }else if(aeStatus !== "none"){
     document.querySelector(".profile-card").style.boxShadow =
 "0 0 32px rgba(230,215,176,.08)";
