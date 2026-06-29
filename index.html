@@ -434,55 +434,49 @@ gap:16px;
 } 
 .flow-tile{
 aspect-ratio:1/1.42;
-border:
-1px solid rgba(255,255,255,.06);
-outline:
-1px solid rgba(255,255,255,.025);  
+border:1px solid rgba(255,255,255,.06);
+outline:1px solid rgba(255,255,255,.025);
 border-radius:18px;
+
 background:
 radial-gradient(
 circle at top right,
 rgba(230,215,176,.14),
 transparent 24%
-backdrop-filter:blur(14px);
--webkit-backdrop-filter:blur(14px);
-contain:paint;
 ),
 linear-gradient(
 145deg,
 rgba(16,28,44,.82),
 rgba(48,70,92,.78)
 );
+
 box-shadow:
 0 14px 34px rgba(0,0,0,.22),
 0 0 0 1px rgba(255,255,255,.03) inset,
 0 30px 60px rgba(0,0,0,.08);
+
 position:relative;
 color:#f6efe3;
 text-align:left;
 padding:12px;
 overflow:hidden;
+
 backdrop-filter:blur(10px);
 -webkit-backdrop-filter:blur(10px);
-contain:paint;
-cursor:pointer;
 
+cursor:pointer;
 opacity:0;
-transform:
-translateY(18px)
-scale(.985);
-animation:flowIn .45s ease forwards;  
+
+transform:translateY(18px) scale(.985);
+animation:flowIn .45s ease forwards;
 
 transition:
 transform .22s ease,
 border-color .22s ease,
 box-shadow .22s ease;
 
-will-change:transform, box-shadow;  
-
-isolation:isolate;  
-
-transform-style:preserve-3d;  
+will-change:transform, box-shadow;
+isolation:isolate;
 }
 
 .flow-tile .live-dot{
@@ -552,17 +546,23 @@ text-shadow:
   
 }
 
-  .flow-tile:hover:after{
-opacity:1;
+  .flow-tile:hover{
+
+    transform:translateY(-3px) scale(1.01);
+
+    border-color:rgba(230,215,176,.24);
+
+    box-shadow:
+    0 14px 36px rgba(0,0,0,.28),
+    0 0 22px rgba(230,215,176,.07);
+
 }
 
-  transform:translateY(-3px) scale(1.01);
+.flow-tile:hover:after{
 
-border-color:rgba(230,215,176,.24);
+    opacity:1;
 
-box-shadow:
-0 14px 36px rgba(0,0,0,.28),
-0 0 22px rgba(230,215,176,.07);
+}
   
 .flow-tile:active{
 
