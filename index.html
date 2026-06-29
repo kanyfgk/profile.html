@@ -4319,22 +4319,21 @@ const profile = profiles && profiles.length > 0 ? profiles[0] : null;
     alert("Ürün doğrulama bilgisi şu an kontrol edilemedi.");
     return;
   }
-verifiedBox = document.querySelector(".verified-value");
+const verifiedAnimBox = document.querySelector(".verified-value");
 
-if(verifiedBox){
+if(verifiedAnimBox){
     if(profile.is_verified){
-        verifiedBox.innerText = "GERÇEK";
+        verifiedAnimBox.innerText = "GERÇEK";
     } else {
-        verifiedBox.innerText = "YOK";
+        verifiedAnimBox.innerText = "YOK";
     }
 }
   activeId = id;
   localStorage.setItem("vaero_id", id);
-  const verifiedBox = document.querySelector(".verified-value");
 
-if(verifiedBox){
+if(verifiedAnimBox){
 
-verifiedBox.animate(
+verifiedAnimBox.animate(
 [
 {transform:"scale(.9)",opacity:.5},
 {transform:"scale(1.08)",opacity:1},
