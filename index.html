@@ -4020,19 +4020,18 @@ const membershipExpired =
     : false;
 
 window.currentProfile.membershipExpired = membershipExpired;
-  const membershipRemaining =
+
+const membershipRemaining =
 document.getElementById("membershipRemaining");
-  const membershipPlanText =
+
+const membershipPlanText =
 document.getElementById("membershipPlanText");
-  const membershipBox =
+
+const membershipBox =
 document.getElementById("membershipBox");
-  if(membershipPlanText){
 
-  membershipPlanText.innerText =
-  membershipPlan === "yearly"
-    ? "Plan: VA Yearly"
-    membershipPlanText.innerText = "Plan: VA Early Access";
-
+if(membershipPlanText){
+  membershipPlanText.innerText = "Plan: VA Early Access";
 }
 
 if(membershipRemaining){
