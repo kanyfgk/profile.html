@@ -2233,7 +2233,9 @@ transform:translateX(-50%) translateY(0);
 animation:appReveal .55s ease;
 
 position:relative;
-overflow:hidden;
+overflow-y:auto;
+overflow-x:hidden;
+-webkit-overflow-scrolling:touch;
     
 }
 
@@ -7111,12 +7113,11 @@ function unlockBody(){
   const anyOpen =
     document.querySelector(".overlay.show") ||
     document.querySelector(".viewer.show") ||
-    document.querySelector(".full.show") ||
-    document.querySelector(".profile-screen.show");
+    document.querySelector(".full.show");
 
   if(anyOpen) return;
 
-  document.body.style.overflow = "";
+  document.body.style.overflow = "auto";
   document.body.classList.remove("modal-open");
 }
 
