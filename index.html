@@ -3689,12 +3689,48 @@ const products=[
 ];
 
 const contents=[
-  {id:"f1",product:"white-tea",type:"Video",title:"White Tea deneyimi",desc:"Temiz ve ağır olmayan atmosfer yorumu."},
-  {id:"f2",product:"device",type:"Gönderi",title:"Cihaz kullanımı",desc:"Araç içi kullanım hissi ve ilk izlenim."},
-  {id:"f3",product:"ocean",type:"Eleştiri",title:"Ocean yorumu",desc:"Serinlik hissi ve kullanım farkı."},
-  {id:"f4",product:"cologne",type:"Şikayet",title:"Cologne yoğunluğu",desc:"Bazı kullanıcılara güçlü gelebilecek yapı."},
-  {id:"f5",product:"bundle",type:"Kıyas",title:"Paket kullanımı",desc:"Tek koku yerine çoklu kullanım karşılaştırması."},
-  {id:"f6",product:"brand",type:"Marka",title:"VAERO genel deneyim",desc:"Destek, yenileme ve marka güveni üzerine yorum."}
+  {
+    id:"f1",
+    product:"white-tea",
+    type:"Deneyim",
+    title:"White Tea atmosferi doğrulanıyor",
+    desc:"VAERO White Tea, araç içinde temiz, hafif ve dengeli bir atmosfer hissi oluşturmasıyla öne çıkıyor."
+  },
+  {
+    id:"f2",
+    product:"device",
+    type:"Kullanım",
+    title:"Cihaz kullanımı ilk deneyimlerde",
+    desc:"VAERO cihazı, kokuyu sürekli yoğun vermek yerine belirli aralıklarla dengeli bir atmosfer oluşturmak için tasarlandı."
+  },
+  {
+    id:"f3",
+    product:"brand",
+    type:"VAERO Care",
+    title:"Satıştan sonra da destek devam eder",
+    desc:"VAERO Care; kullanım desteği, kurulum yönlendirmesi, bakım önerileri ve uygun durumlarda çözüm desteği sunar."
+  },
+  {
+    id:"f4",
+    product:"ocean",
+    type:"Yakında",
+    title:"Ocean atmosferi topluluk testine hazırlanıyor",
+    desc:"White Tea sonrası daha ferah ve serin bir atmosfer deneyimi için Ocean seçeneği VAERO topluluğuna açılacak."
+  },
+  {
+    id:"f5",
+    product:"bundle",
+    type:"Kıyas",
+    title:"Tek koku değil, kişisel atmosfer sistemi",
+    desc:"VAERO, tek bir kokuyla sınırlı kalmak yerine zamanla yenilenebilen ve kişiselleştirilebilen bir atmosfer deneyimi sunar."
+  },
+  {
+    id:"f6",
+    product:"brand",
+    type:"Platform",
+    title:"VAERO Early Access başladı",
+    desc:"İlk VAERO kullanıcıları, ürün deneyiminden platform kimliğine uzanan erken erişim sürecinin parçası oluyor."
+  }
 ];
 
 const customers={
@@ -3995,7 +4031,7 @@ document.getElementById("membershipBox");
   membershipPlanText.innerText =
   membershipPlan === "yearly"
     ? "Plan: VA Yearly"
-    : "Plan: VA Monthly";
+    membershipPlanText.innerText = "Plan: VA Early Access";
 
 }
 
@@ -4014,7 +4050,7 @@ if(membershipRemaining){
 
     if(diffDays <= 0){
 
-      membershipRemaining.innerText = "Üyelik süresi doldu";
+      membershipRemaining.innerText = "Erken erişim üyeliği aktif";
       membershipRemaining.style.color = "#ffb3b3";
 
       if(membershipBox){
@@ -4027,7 +4063,7 @@ if(membershipRemaining){
             style="margin-top:12px;width:100%;padding:12px;border:none;border-radius:12px;background:#e6d7b0;color:#07111d;font-weight:800;cursor:pointer;"
             onclick="openMembershipRenew()"
           >
-            Üyeliği Yenile
+            Üyeliği Yönet
           </button>
         `);
       }
