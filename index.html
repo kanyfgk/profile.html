@@ -4388,7 +4388,7 @@ bootText.innerText=
 bootMessages[Math.floor(Math.random()*bootMessages.length)];
 
   setTimeout(()=>{
-  showToast("VAERO hazır ✓");
+  showVaeroToast("VAERO hazır ✓");
 },1200);
 }
 
@@ -7103,13 +7103,13 @@ function unlockBody(){
   document.body.classList.remove("modal-open");
 }
 
-  function showToast(message){
+  function showVaeroToast(message){
 
-  let toast = document.querySelector(".vaero-toast");
+  let toast = document.querySelector(".vaero-toast-new");
 
   if(!toast){
     toast = document.createElement("div");
-    toast.className = "vaero-toast";
+    toast.className = "vaero-toast-new";
     document.body.appendChild(toast);
   }
 
