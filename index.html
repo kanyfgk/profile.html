@@ -7104,8 +7104,15 @@ function goHome(){
 }
 function lockBody(){
 
-  document.body.style.overflow = "hidden";
+  const isRealModalOpen =
+    document.querySelector(".overlay.show") ||
+    document.querySelector(".viewer.show") ||
+    document.querySelector(".full.show") ||
+    document.querySelector(".id-modal.show");
 
+  if(!isRealModalOpen) return;
+
+  document.body.style.overflow = "hidden";
   document.body.classList.add("modal-open");
 }
 function unlockBody(){
