@@ -302,23 +302,29 @@ will-change:transform;
   
   .product-tile:before{
 content:"";
-
 position:absolute;
-inset:-40%;
-
+inset:-45%;
 background:
 radial-gradient(
-circle at top right,
-rgba(230,215,176,.22),
-transparent 32%
+circle at 75% 18%,
+rgba(230,215,176,.24),
+transparent 30%
+),
+radial-gradient(
+circle at 20% 85%,
+rgba(120,140,255,.10),
+transparent 34%
 );
-
-opacity:0;
-transition:opacity .22s ease;
-
+opacity:.22;
+filter:blur(14px);
 pointer-events:none;
+z-index:0;
+transition:opacity .25s ease, transform .35s ease;
+}
 
-mix-blend-mode:screen;
+.product-tile:hover:before{
+opacity:.42;
+transform:translateY(-6px) scale(1.04);
 }
   .product-tile:hover{
 
@@ -733,24 +739,49 @@ max-width:92%;
   
 .product-tile span{
 position:absolute;
-left:8px;
-bottom:8px;
-font-size:9px;
-color:rgba(255,255,255,.58);
-z-index:2;
-letter-spacing:.2px;
+left:10px;
+bottom:10px;
 
-  background:rgba(0,0,0,.18);
-padding:4px 8px;
+z-index:2;
+
+display:inline-flex;
+align-items:center;
+
+padding:5px 10px;
+
 border-radius:999px;
 
-backdrop-filter:blur(10px);
--webkit-backdrop-filter:blur(10px);
-contain:paint;
+font-size:9px;
+font-weight:600;
+letter-spacing:.35px;
+
+color:rgba(255,255,255,.72);
+
+background:rgba(8,14,22,.34);
+
 border:1px solid rgba(255,255,255,.08);
-box-shadow:0 4px 14px rgba(0,0,0,.18);  
+
+backdrop-filter:blur(14px);
+-webkit-backdrop-filter:blur(14px);
+
+box-shadow:
+0 8px 20px rgba(0,0,0,.20);
+
+transition:
+background .25s ease,
+color .25s ease,
+border-color .25s ease;
 }
 
+.product-tile:hover span{
+
+background:rgba(230,215,176,.10);
+
+border-color:rgba(230,215,176,.18);
+
+color:#e6d7b0;
+
+}
 .flow-sub{
 position:absolute;
 
@@ -2156,6 +2187,48 @@ transform:translateX(-50%) translateY(0);
 }
 
 }
+
+  .vaero-toast{
+
+position:fixed;
+left:50%;
+bottom:26px;
+transform:translateX(-50%) translateY(20px);
+
+padding:12px 18px;
+border-radius:999px;
+
+background:rgba(9,16,24,.88);
+
+border:1px solid rgba(255,255,255,.08);
+
+backdrop-filter:blur(18px);
+-webkit-backdrop-filter:blur(18px);
+
+color:#fff;
+font-size:13px;
+letter-spacing:.25px;
+
+box-shadow:
+0 18px 40px rgba(0,0,0,.28);
+
+opacity:0;
+pointer-events:none;
+
+transition:
+opacity .28s,
+transform .35s;
+
+z-index:999999;
+}
+
+.vaero-toast.show{
+
+opacity:1;
+transform:translateX(-50%) translateY(0);
+
+}
+  
   .app{
 animation:appReveal .55s ease;
 
@@ -2574,10 +2647,27 @@ position:relative;
 z-index:2;
 
 font-size:13px;
-letter-spacing:.25px;
+font-weight:700;
+
+letter-spacing:.45px;
+
+color:#f5f1e8;
 
 text-shadow:
-0 1px 2px rgba(0,0,0,.22);
+0 1px 0 rgba(255,255,255,.04),
+0 2px 6px rgba(0,0,0,.24);
+
+transition:
+letter-spacing .25s ease,
+transform .25s ease;
+}
+
+.product-tile:hover b{
+
+letter-spacing:.7px;
+
+transform:translateY(-1px);
+
 }
 
   ::-webkit-scrollbar{
@@ -3099,6 +3189,44 @@ opacity:0;
 visibility:hidden;
 }
 
+}
+
+  .vaero-toast{
+position:fixed;
+top:18px;
+left:50%;
+transform:translateX(-50%) translateY(-16px);
+z-index:9999999;
+
+padding:12px 16px;
+border-radius:999px;
+
+background:rgba(8,14,22,.86);
+border:1px solid rgba(230,215,176,.18);
+
+color:#f5f1e8;
+font-size:12px;
+font-weight:700;
+letter-spacing:.3px;
+
+box-shadow:
+0 18px 42px rgba(0,0,0,.34),
+0 0 24px rgba(230,215,176,.08);
+
+backdrop-filter:blur(16px);
+-webkit-backdrop-filter:blur(16px);
+
+opacity:0;
+pointer-events:none;
+
+transition:
+opacity .28s ease,
+transform .28s ease;
+}
+
+.vaero-toast.show{
+opacity:1;
+transform:translateX(-50%) translateY(0);
 }
   
 </style>
@@ -4949,6 +5077,7 @@ async function loadActionReviews(type){
   },2000);
 }
 async function saveAction(){
+  showToast("Kaydedildi ✓");
 
   const experienceValue = document.getElementById("experienceType").value;
   const buyAgainValue = document.getElementById("wouldBuyAgain").value;
@@ -6968,6 +7097,27 @@ function unlockBody(){
 
   document.body.style.overflow = "";
   document.body.classList.remove("modal-open");
+}
+
+  function showToast(message){
+
+  let toast = document.querySelector(".vaero-toast");
+
+  if(!toast){
+    toast = document.createElement("div");
+    toast.className = "vaero-toast";
+    document.body.appendChild(toast);
+  }
+
+  toast.innerText = message;
+  toast.classList.add("show");
+
+  clearTimeout(window.vaeroToastTimer);
+
+  window.vaeroToastTimer = setTimeout(()=>{
+    toast.classList.remove("show");
+  },2600);
+
 }
   </script>
   
