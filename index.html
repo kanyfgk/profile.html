@@ -4493,6 +4493,16 @@ if(verifiedAnimBox){
 }
   activeId = id;
   localStorage.setItem("vaero_id", id);
+ if(window.pendingScreen){
+
+  closeIdModal();
+
+  navigateTo(window.pendingScreen, window.pendingNav);
+
+  window.pendingScreen = null;
+  window.pendingNav = null;
+
+}
   setTimeout(()=>{
   showVaeroToast("Platform ID doğrulandı ✓");
 },600);
@@ -7046,6 +7056,8 @@ function navigateTo(screenId, navName){
 function openProfile(){
 
   if(!activeId){
+    window.pendingScreen = "profileScreen";
+    window.pendingNav = "profile";
     openIdModal();
     return;
   }
@@ -7078,6 +7090,8 @@ function openModeCreate(){
 function openBrandHub(){
 
   if(!activeId){
+    window.pendingScreen = "brandHubScreen";
+    window.pendingNav = "brands";
     openIdModal();
     return;
   }
