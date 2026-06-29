@@ -4386,6 +4386,10 @@ const bootText=document.getElementById("bootText");
 if(bootText){
 bootText.innerText=
 bootMessages[Math.floor(Math.random()*bootMessages.length)];
+
+  setTimeout(()=>{
+  showToast("VAERO hazır ✓");
+},1200);
 }
 
 });
