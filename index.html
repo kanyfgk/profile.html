@@ -4319,7 +4319,7 @@ const profile = profiles && profiles.length > 0 ? profiles[0] : null;
     alert("Ürün doğrulama bilgisi şu an kontrol edilemedi.");
     return;
   }
-const verifiedBox = document.querySelector(".verified-value");
+verifiedBox = document.querySelector(".verified-value");
 
 if(verifiedBox){
     if(profile.is_verified){
