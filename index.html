@@ -35,6 +35,7 @@ radial-gradient(
 circle at top left,
 rgba(230,215,176,.10),
 transparent 34%  
+  cursor:default;
 ),
 radial-gradient(
 circle at 85% 20%,
@@ -159,8 +160,57 @@ position:relative;
 z-index:1;
 }
   
-.brand-head{display:flex;align-items:center;gap:14px;margin-bottom:18px}
-.mark{width:58px;height:58px;border-radius:50%;background:#8f7a4f;color:white;font-family:"Oswald";display:flex;align-items:center;justify-content:center;font-size:26px}
+.brand-head{
+display:flex;
+align-items:center;
+gap:18px;
+margin-bottom:22px;
+position:relative;
+}
+.mark{
+width:58px;
+height:58px;
+border-radius:50%;
+
+display:flex;
+align-items:center;
+justify-content:center;
+
+font-family:"Oswald";
+font-size:26px;
+font-weight:500;
+color:#ffffff;
+
+background:
+linear-gradient(
+145deg,
+#a7905d,
+#7f6b43
+);
+
+border:1px solid rgba(255,255,255,.08);
+
+box-shadow:
+0 12px 28px rgba(0,0,0,.28),
+0 0 24px rgba(230,215,176,.10),
+inset 0 1px 1px rgba(255,255,255,.12);
+
+transition:
+transform .25s ease,
+box-shadow .25s ease;
+}
+
+  .mark:hover{
+
+transform:scale(1.04);
+
+box-shadow:
+0 18px 36px rgba(0,0,0,.34),
+0 0 34px rgba(230,215,176,.16),
+inset 0 1px 1px rgba(255,255,255,.14);
+
+}
+  
 .brand-name{
 font-family:"Oswald";
 font-size:34px;
@@ -182,7 +232,8 @@ font-size:13px;
 color:rgba(235,231,223,.72);
 line-height:21px;
 margin-top:6px;
-letter-spacing:.2px;
+letter-spacing:.6px;
+  opacity:.71;
 }
 .quick{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:16px 0 18px}
 .quick a,.quick button{border:0;border-radius:999px;padding:12px;text-align:center;text-decoration:none;font-size:13px}
@@ -238,8 +289,9 @@ padding:8px;
 cursor:pointer;
 
 transition:
-transform .16s ease-out,
-border-color .16s ease-out;
+transform .22s ease,
+box-shadow .22s ease,
+border-color .22s ease;
 
 backface-visibility:hidden;
 -webkit-backface-visibility:hidden;
@@ -269,15 +321,15 @@ pointer-events:none;
 mix-blend-mode:screen;
 }
   .product-tile:hover{
-transform:
-translateY(-3px)
-scale(1.01);
+
+transform:translateY(-3px) scale(1.01);
+
+border-color:rgba(230,215,176,.28);
 
 box-shadow:
-0 18px 38px rgba(0,0,0,.22);
+0 14px 36px rgba(0,0,0,.28),
+0 0 22px rgba(230,215,176,.08);
 
-border-color:
-rgba(230,215,176,.22);
 }
 
 .product-tile:active{
@@ -506,19 +558,13 @@ text-shadow:
 opacity:1;
 }
 
-  .flow-tile:hover{
-transform:
-translateY(-4px)
-scale(1.008);
+  transform:translateY(-3px) scale(1.01);
 
-border-color:
-rgba(230,215,176,.16);
+border-color:rgba(230,215,176,.24);
 
 box-shadow:
-0 20px 48px rgba(0,0,0,.34),
-0 0 0 1px rgba(255,255,255,.015) inset; 
-0 0 24px rgba(230,215,176,.06);    
-}
+0 14px 36px rgba(0,0,0,.28),
+0 0 22px rgba(230,215,176,.07);
   
 .flow-tile:active{
 
@@ -1527,8 +1573,53 @@ contain:paint;
 opacity:0;
 transform:translateY(18px);
 
-animation:profileCardIn .5s ease forwards;
+animation:profileCardIn .55s cubic-bezier(.22,1,.36,1) forwards;
 }  
+
+  .profile-card::before{
+
+content:"";
+
+position:absolute;
+
+top:0;
+left:-120%;
+
+width:70%;
+height:100%;
+
+background:linear-gradient(
+90deg,
+transparent,
+rgba(255,255,255,.05),
+transparent
+);
+
+transform:skewX(-25deg);
+
+transition:left .8s ease;
+
+pointer-events:none;
+
+}
+
+.profile-card:hover::before{
+
+left:160%;
+
+}
+
+  .profile-card:hover{
+
+transform:translateY(-4px);
+
+border-color:rgba(230,215,176,.28);
+
+box-shadow:
+0 20px 46px rgba(0,0,0,.30),
+0 0 26px rgba(230,215,176,.08);
+
+}
 
 .app:before{
 content:"";
@@ -2150,9 +2241,14 @@ transform:translateY(0);
 
 @keyframes profileCardIn{
 
-to{
+0%{
+opacity:0;
+transform:translateY(18px) scale(.985);
+}
+
+100%{
 opacity:1;
-transform:translateY(0);
+transform:translateY(0) scale(1);
 }
 
 }
@@ -2631,6 +2727,8 @@ transparent 30%
 z-index:999999;
 
 pointer-events:none;
+opacity:1;
+animation:bootFade 1.15s ease forwards;      
 
 animation:
 bootFade .9s ease forwards;
@@ -2645,6 +2743,24 @@ opacity:1;
 100%{
 opacity:0;
 visibility:hidden;
+}
+
+}
+  @keyframes pulseOnline{
+
+0%{
+transform:scale(1);
+opacity:1;
+}
+
+50%{
+transform:scale(1.35);
+opacity:.55;
+}
+
+100%{
+transform:scale(1);
+opacity:1;
 }
 
 }
@@ -2970,19 +3086,106 @@ will-change:
 transform,
 opacity;
 }
+
+  @keyframes bootFade{
+
+0%{
+opacity:1;
+}
+
+65%{
+opacity:1;
+}
+
+100%{
+opacity:0;
+visibility:hidden;
+}
+
+}
   
 </style>
 </head>
 
 <body>
-  <div class="boot-fade"></div>
+  
+  <div class="boot-fade">
+  <div id="bootText" style="
+    position:absolute;
+    left:50%;
+    top:50%;
+    transform:translate(-50%,-50%);
+    font-family:Oswald, sans-serif;
+    letter-spacing:2px;
+    font-size:13px;
+    color:#e6d7b0;
+    opacity:.88;
+    white-space:nowrap;
+  ">
+    Synchronizing Identity...
+  </div>
+</div>
 
 <div class="app">
   <div class="brand-head">
     <div class="mark">V</div>
     <div>
       <div class="brand-name">VAERO</div>
-      <div class="bio">Araç içi kişisel atmosfer sistemi.</div>
+      <div class="bio">Atmosphere. Identity. Trust.</div>
+      <div style="
+font-size:10px;
+letter-spacing:3px;
+opacity:.45;
+margin-top:3px;
+text-transform:uppercase;
+">
+PRIVATE PREVIEW
+</div>
+      <div style="
+margin-top:10px;
+display:inline-flex;
+align-items:center;
+gap:8px;
+padding:6px 12px;
+border-radius:999px;
+background:rgba(110,231,168,.08);
+border:1px solid rgba(110,231,168,.18);
+font-size:11px;
+color:#6ee7a8;
+font-weight:700;
+">
+<span style="
+width:8px;
+height:8px;
+border-radius:50%;
+background:#6ee7a8;
+box-shadow:0 0 10px rgba(110,231,168,.6);
+"></span>
+EARLY ACCESS · BUILD 0.1
+</div>
+      <div style="
+margin-top:10px;
+display:inline-flex;
+align-items:center;
+gap:8px;
+padding:6px 12px;
+border-radius:999px;
+background:rgba(110,231,168,.08);
+border:1px solid rgba(110,231,168,.18);
+font-size:11px;
+color:#6ee7a8;
+font-weight:700;
+">
+<div style="
+width:8px;
+height:8px;
+border-radius:50%;
+background:#6ee7a8;
+box-shadow:0 0 10px rgba(110,231,168,.6);
+"></div>
+
+EARLY ACCESS · BUILD 0.1
+</div>
     </div>
   </div>
 
@@ -2993,11 +3196,122 @@ opacity;
 Platform ID
 </button>
   </div>
+<div style="
+margin-top:18px;
+padding:16px;
+border-radius:18px;
+background:linear-gradient(135deg,rgba(230,215,176,.08),rgba(255,255,255,.02));
+border:1px solid rgba(230,215,176,.12);
+">
 
+<div style="
+font-size:11px;
+letter-spacing:2px;
+color:#8f7a4f;
+font-weight:700;
+margin-bottom:10px;
+">
+SYSTEM STATUS
+</div>
+
+  <div style="
+margin-top:14px;
+padding-top:12px;
+border-top:1px solid rgba(255,255,255,.08);
+display:flex;
+justify-content:space-between;
+font-size:11px;
+opacity:.7;
+">
+<span>Version</span>
+<span>v0.1 Early Access</span>
+</div>
+
+<div style="display:flex;justify-content:space-between;margin-bottom:8px;">
+<span>Platform</span>
+<span style="color:#6ee7a8;">● Online</span>
+</div>
+
+<div style="display:flex;justify-content:space-between;margin-bottom:8px;">
+<span>Community</span>
+<span id="communityStatus">Loading...</span>
+</div>
+
+<div style="display:flex;justify-content:space-between;margin-bottom:8px;">
+<span>Verified Brands</span>
+<span id="brandCount">Loading...</span>
+</div>
+
+<div style="display:flex;justify-content:space-between;">
+<span>Live Reviews</span>
+<span id="reviewCount">Loading...</span>
+</div>
+
+</div>
   <div class="notice">
-    Ürünler herkese görünür. Yorum ve eleştiri için Platform ID gerekir. Puanlama ve doğrulanmış deneyimler yalnızca ürünü satın alan kullanıcılar tarafından oluşturulabilir.
+    VAERO yalnızca bir ürün platformu değildir.
+
+Her kullanıcı doğrulanabilir bir Platform ID ile sisteme katılır, deneyimlerini paylaşabilir, markaları keşfedebilir ve güven temelli bir topluluğun parçası olabilir.
   </div>
-<div class="section-label">MARKALAR</div>
+  <div style="
+margin:18px 0;
+padding:16px;
+border:1px solid rgba(230,215,176,.14);
+border-radius:18px;
+background:rgba(255,255,255,.025);
+">
+
+<div style="
+font-size:11px;
+letter-spacing:2px;
+color:#8f7a4f;
+margin-bottom:12px;
+font-weight:700;
+">
+VAERO CORE
+</div>
+
+<div style="display:flex;flex-direction:column;gap:10px;font-size:13px;">
+
+<div style="display:flex;justify-content:space-between;">
+<span>Identity</span>
+<span style="color:#6ee7a8;">● Aktif</span>
+</div>
+
+<div style="display:flex;justify-content:space-between;">
+<span>Platform ID</span>
+<span style="color:#6ee7a8;">● Hazır</span>
+</div>
+
+<div style="display:flex;justify-content:space-between;">
+<span>Care</span>
+<span style="color:#6ee7a8;">● Hazır</span>
+</div>
+
+<div style="display:flex;justify-content:space-between;">
+<span>Community</span>
+<span style="color:#6ee7a8;">● Aktif</span>
+</div>
+
+<div style="display:flex;justify-content:space-between;">
+<span>Memory</span>
+<span style="color:#bbb;">Yakında</span>
+</div>
+
+<div style="display:flex;justify-content:space-between;">
+<span>Bridge</span>
+<span style="color:#bbb;">Yakında</span>
+</div>
+
+<div style="display:flex;justify-content:space-between;">
+<span>AI</span>
+<span style="color:#bbb;">Yakında</span>
+</div>
+
+</div>
+
+</div>
+<div class="section-label">DOĞRULANMIŞ MARKALAR</div>
 
 <div class="product-grid" style="margin-bottom:16px;">
   <button class="product-tile brand-box" onclick="openBrand('vaero')">
@@ -3042,7 +3356,7 @@ BAŞVURU AÇIK
     <span>İlk partner markalar aranıyor</span>
   </button>
 </div>
-  <div class="section-label">VAERO ÜRÜNLERİ</div>
+  <div class="section-label">DOĞRULANMIŞ ATMOSFERLER</div>
   <div class="product-grid" id="productGrid"></div>
 
 <div id="reviewSection" style="display:none; margin-top:20px;">
@@ -3307,9 +3621,8 @@ color:rgba(255,255,255,.7);
       </div>
 
       <div style="margin-top:16px;color:#bbb;line-height:1.7;font-size:14px;">
-        Platform üyeliğin sona ermiş durumda. Üyeliğini yenileyerek Platform ID avantajlarını,
-        doğrulanmış üyelik haklarını ve gelecekteki premium özellikleri tekrar aktif edebilirsin.
-      </div>
+VAERO erken erişim üyeliğini buradan yönetebilirsin. Bu alan, Platform ID haklarını, doğrulanmış üyelik durumunu ve gelecekte sunulacak premium özellikleri yönetmek için hazırlanmıştır. Üyeliğini yenileyerek tüm haklarını kesintisiz kullanmaya devam edebilirsin.
+</div> 
 
       <div style="margin-top:22px;display:grid;gap:14px;">
         <div style="border:1px solid rgba(230,215,176,.18);border-radius:22px;padding:18px;background:rgba(255,255,255,.04);">
@@ -3932,6 +4245,39 @@ savedId.toUpperCase();
         await login();
     }
 });
+
+  window.addEventListener("load",()=>{
+
+const bootMessages = [
+  "Synchronizing Identity...",
+  "Loading Trust Graph...",
+  "Checking Membership...",
+  "Loading Atmospheres...",
+  "Preparing Experience..."
+];
+
+const bootText=document.getElementById("bootText");
+
+if(bootText){
+bootText.innerText=
+bootMessages[Math.floor(Math.random()*bootMessages.length)];
+}
+
+});
+
+  window.addEventListener("load",()=>{
+
+setTimeout(()=>{
+
+const boot=document.querySelector(".boot-fade");
+
+if(boot){
+boot.remove();
+}
+
+},1200);
+
+});
 async function login(){
   const id = document.getElementById("customerId").value.trim().toUpperCase();
 
@@ -3984,10 +4330,37 @@ if(verifiedBox){
 }
   activeId = id;
   localStorage.setItem("vaero_id", id);
+  const verifiedBox = document.querySelector(".verified-value");
+
+if(verifiedBox){
+
+verifiedBox.animate(
+[
+{transform:"scale(.9)",opacity:.5},
+{transform:"scale(1.08)",opacity:1},
+{transform:"scale(1)",opacity:1}
+],
+{
+duration:450,
+easing:"cubic-bezier(.22,1,.36,1)"
+}
+);
+
+}
   const profileNameEl = document.getElementById("profileName");
 
 if(profileNameEl){
     profileNameEl.innerText = id;
+  profileNameEl.animate(
+[
+{opacity:.6,transform:"translateY(6px)"},
+{opacity:1,transform:"translateY(0)"}
+],
+{
+duration:500,
+easing:"cubic-bezier(.22,1,.36,1)"
+}
+);
   if(window.currentProfile && !window.currentProfile.verified){
 
   profileNameEl.style.opacity = ".72";
@@ -4136,6 +4509,46 @@ if(statusText){
     " adet aktivite uyarısı aldı.";
 }
   console.log("CURRENT PROFILE:", window.currentProfile);
+  const communityStatus = document.getElementById("communityStatus");
+const brandCount = document.getElementById("brandCount");
+const reviewCount = document.getElementById("reviewCount");
+
+if(communityStatus){
+
+    communityStatus.innerHTML = `
+<span style="
+display:inline-flex;
+align-items:center;
+color:#6ee7a8;
+font-weight:700;
+">
+
+<span style="
+display:inline-block;
+width:8px;
+height:8px;
+border-radius:50%;
+background:#6ee7a8;
+margin-right:6px;
+animation:pulseOnline 1.8s infinite;
+"></span>
+
+Operational
+
+</span>
+`;
+
+}
+
+if(brandCount){
+  brandCount.innerText = "1";
+  brandCount.style.color = "#e6d7b0";
+}
+
+if(reviewCount){
+  reviewCount.innerText = globalTrendingReviews.length + " canlı";
+  reviewCount.style.color = "#e6d7b0";
+}
   const verifiedOwnership = document.getElementById("verifiedOwnership");
 
  if(verifiedOwnership){
