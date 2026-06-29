@@ -4552,9 +4552,12 @@ if(membershipRemaining){
       membershipRemaining.innerText = "Erken erişim üyeliği aktif";
       membershipRemaining.style.color = "#ffb3b3";
 
+      const oldRenewBlocks = membershipBox.querySelectorAll(".renew-block");
+
+oldRenewBlocks.forEach(item => item.remove());
       if(membershipBox){
         membershipBox.insertAdjacentHTML("beforeend", `
-          <div style="margin-top:8px;font-size:12px;color:rgba(255,255,255,.55);">
+          <div class="renew-block" style="margin-top:8px;font-size:12px;color:rgba(255,255,255,.55);">
             Yenileme Tarihi: ${expireDateText}
           </div>
           <button
