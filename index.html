@@ -4294,9 +4294,9 @@ function continueMembershipPayment(){
   localStorage.getItem("selectedMembershipPlan");
 
   if(!plan){
-    alert("Lütfen önce bir üyelik planı seç.");
-    return;
-  }
+  showVaeroToast("Önce bir üyelik seç");
+  return;
+}
 
   document.getElementById("membershipRenew").classList.remove("show");
 document.getElementById("profileScreen").classList.remove("show");
@@ -4375,6 +4375,7 @@ function closeIdModal(){
   },250);
 }
 window.addEventListener("load", async () => {
+  localStorage.removeItem("selectedMembershipPlan");
     const savedId = localStorage.getItem("vaero_id");
 
     if(savedId){
