@@ -7006,9 +7006,16 @@ function closeDiscover(){
 
 function showApp(){
   const app = document.querySelector(".app");
+
   if(app){
     app.style.display = "block";
+    app.style.overflowY = "visible";
+    app.style.touchAction = "pan-y";
   }
+
+  document.body.style.overflowY = "auto";
+  document.body.style.overflowX = "hidden";
+  document.body.classList.remove("modal-open");
 }
 
 function hideApp(){
