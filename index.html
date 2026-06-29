@@ -3242,9 +3242,9 @@ transform:translateX(-50%) translateY(0);
     transform:translate(-50%,-50%);
     font-family:Oswald, sans-serif;
     letter-spacing:2px;
-    font-size:13px;
+    font-size:10px;
     color:#e6d7b0;
-    opacity:.88;
+    opacity:.55;
     white-space:nowrap;
   ">
     Synchronizing Identity...
@@ -4374,11 +4374,9 @@ savedId.toUpperCase();
   window.addEventListener("load",()=>{
 
 const bootMessages = [
-  "Synchronizing Identity...",
-  "Loading Trust Graph...",
-  "Checking Membership...",
-  "Loading Atmospheres...",
-  "Preparing Experience..."
+  "VAERO Loading...",
+  "Identity Sync...",
+  "Trust Graph..."
 ];
 
 const bootText=document.getElementById("bootText");
@@ -4386,10 +4384,7 @@ const bootText=document.getElementById("bootText");
 if(bootText){
 bootText.innerText=
 bootMessages[Math.floor(Math.random()*bootMessages.length)];
-
-  setTimeout(()=>{
-  showVaeroToast("VAERO hazır ✓");
-},1200);
+   
 }
 
 });
@@ -4411,9 +4406,9 @@ async function login(){
   const id = document.getElementById("customerId").value.trim().toUpperCase();
 
   if(!id){
-    alert("Platform ID girin.");
+    showVaeroToast("Platform ID girin");
     return;
-  }
+}
 
   const { data: profiles, error: profileError } = await supabaseClient
     .from("vaero_profiles")
@@ -4427,14 +4422,14 @@ const profile = profiles && profiles.length > 0 ? profiles[0] : null;
     console.error("PROFILE LOOKUP ERROR:", profileError);
     localStorage.removeItem("vaero_id");
     activeId = null;
-    alert("Platform ID şu an kontrol edilemedi. Lütfen tekrar dene.");
+    showVaeroToast("Platform ID şu an kontrol edilemedi");
     return;
 }
 
   if(!profile){
     localStorage.removeItem("vaero_id");
     activeId = null;
-    alert("Bu Platform ID bulunamadı. Lütfen ID’ni kontrol et.");
+    showVaeroToast("Bu Platform ID bulunamadı");
     return;
 }
 
@@ -4445,10 +4440,11 @@ const profile = profiles && profiles.length > 0 ? profiles[0] : null;
 
   if(purchaseError){
     console.error("PURCHASE LOOKUP ERROR:", purchaseError);
-    alert("Ürün doğrulama bilgisi şu an kontrol edilemedi.");
+    showVaeroToast("Ürün doğrulama bilgisi kontrol edilemedi");
     return;
   }
 const verifiedAnimBox = document.querySelector(".verified-value");
+  showVaeroToast("Kimlik senkronize ediliyor...");
 
 if(verifiedAnimBox){
     if(profile.is_verified){
@@ -4459,6 +4455,9 @@ if(verifiedAnimBox){
 }
   activeId = id;
   localStorage.setItem("vaero_id", id);
+  setTimeout(()=>{
+  showVaeroToast("Platform ID doğrulandı ✓");
+},600);
 
 if(verifiedAnimBox){
 
