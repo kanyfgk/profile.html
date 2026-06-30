@@ -462,6 +462,11 @@ border-color .22s ease,
 box-shadow .22s ease;
 
 will-change:transform, box-shadow;
+ 
+ backface-visibility:hidden;
+-webkit-font-smoothing:antialiased;
+transform-style:preserve-3d;
+ 
 isolation:isolate;
 }
 
@@ -625,7 +630,6 @@ mix-blend-mode:screen;
 opacity:.45;
 
 }
-
     
 .flow-tile .type{
 position:absolute;
@@ -2005,7 +2009,7 @@ user-select:none;
 button{
 -webkit-tap-highlight-color:transparent;
 touch-action:manipulation;
-
+ 
 transition:
 transform .12s ease,
 filter .12s ease;
