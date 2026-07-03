@@ -21,15 +21,27 @@ const vaeroEntity = entityManager.create({
 
     status:"online",
 
-    organs:[
-        {name:"Identity",status:"active"},
-        {name:"Engine",status:"active"},
-        {name:"Renderer",status:"active"},
-        {name:"Bridge",status:"pending"}
-    ]
+    organs:[]
 
 });
 
+        const organSystem = VAERO.get("organSystem");
+
+vaeroEntity.addOrgan(
+    organSystem.create("Identity","active")
+);
+
+vaeroEntity.addOrgan(
+    organSystem.create("Engine","active")
+);
+
+vaeroEntity.addOrgan(
+    organSystem.create("Renderer","active")
+);
+
+vaeroEntity.addOrgan(
+    organSystem.create("Bridge","active")
+);
         const bridge = VAERO.get("bridge");
 
 bridge.connect(
