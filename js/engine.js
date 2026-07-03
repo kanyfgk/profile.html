@@ -55,6 +55,12 @@ bridge.connect(
     "vaero-community",
     "root-community"
 );
+        const guardian = VAERO.get("guardian");
+
+if(!guardian.validate(vaeroEntity)){
+    console.error("Entity rejected by Guardian");
+    return;
+}
         this.mount(vaeroEntity);
 
         console.log("VAERO Engine Started");
