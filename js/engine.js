@@ -1,77 +1,74 @@
 const Engine = {
 
     currentEntity: null,
+    renderer: null,
 
     start(){
 
         VAERO.engine = this;
         VAERO.register("engine", this);
 
-        const entityManager = VAERO.get("entityManager");
+        const kernel = VAERO.get("kernel");
 
-const vaeroEntity = entityManager.create({
+        const entityManager = kernel.service("entityManager");
+        const organSystem = kernel.service("organSystem");
+        const memory = kernel.service("memorySystem");
+        const bridge = kernel.service("bridge");
+        const guardian = kernel.service("guardian");
+        const evolution = kernel.service("evolution");
 
-    id:"vaero-root",
+        this.renderer = kernel.service("renderer");
 
-    type:"brand",
+        const vaeroEntity = entityManager.create({
+            id:"vaero-root",
+            type:"brand",
+            name:"VAERO",
+            description:"Living Digital Universe",
+            status:"online",
+            organs:[]
+        });
 
-    name:"VAERO",
+        vaeroEntity.addOrgan(
+            organSystem.create("Identity","active")
+        );
 
-    description:"Living Digital Universe",
+        vaeroEntity.addOrgan(
+            organSystem.create("Engine","active")
+        );
 
-    status:"online",
+        vaeroEntity.addOrgan(
+            organSystem.create("Renderer","active")
+        );
 
-    organs:[]
+        vaeroEntity.addOrgan(
+            organSystem.create("Bridge","active")
+        );
 
-});
+        memory.remember("entity:mounted", {
+            entityId: vaeroEntity.id,
+            entityName: vaeroEntity.name
+        });
 
-        const organSystem = VAERO.get("organSystem");
+        bridge.connect(
+            vaeroEntity.id,
+            "vaero-community",
+            "root-community"
+        );
 
-vaeroEntity.addOrgan(
-    organSystem.create("Identity","active")
-);
+        evolution.record(
+            "engine:start",
+            "VAERO Engine started with root entity",
+            {
+                entityId: vaeroEntity.id,
+                entityName: vaeroEntity.name
+            }
+        );
 
-vaeroEntity.addOrgan(
-    organSystem.create("Engine","active")
-);
+        if(!guardian.validate(vaeroEntity)){
+            console.error("Entity rejected by Guardian");
+            return;
+        }
 
-vaeroEntity.addOrgan(
-    organSystem.create("Renderer","active")
-);
-
-vaeroEntity.addOrgan(
-    organSystem.create("Bridge","active")
-);
-        const memory = VAERO.get("memorySystem");
-
-memory.remember("entity:mounted", {
-    entityId: vaeroEntity.id,
-    entityName: vaeroEntity.name
-});
-        const bridge = VAERO.get("bridge");
-
-bridge.connect(
-    vaeroEntity.id,
-    "vaero-community",
-    "root-community"
-);
-
-        const evolution = VAERO.get("evolution");
-
-evolution.record(
-    "engine:start",
-    "VAERO Engine started with root entity",
-    {
-        entityId: vaeroEntity.id,
-        entityName: vaeroEntity.name
-    }
-);
-        const guardian = VAERO.get("guardian");
-
-if(!guardian.validate(vaeroEntity)){
-    console.error("Entity rejected by Guardian");
-    return;
-}
         this.mount(vaeroEntity);
 
         console.log("VAERO Engine Started");
@@ -82,15 +79,11 @@ if(!guardian.validate(vaeroEntity)){
 
         this.currentEntity = entity;
 
-        Renderer.render(entity);
+        this.renderer.render(entity);
 
     }
 
 };
-
-const kernel = VAERO.get("kernel");
-
-kernel.boot();
 
 const kernel = VAERO.get("kernel");
 
