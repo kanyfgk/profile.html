@@ -100,3 +100,4 @@ const Renderer = {
 };
 
 VAERO.renderer = Renderer;
+VAERO.register("renderer", Renderer);
