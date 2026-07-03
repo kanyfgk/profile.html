@@ -42,6 +42,12 @@ vaeroEntity.addOrgan(
 vaeroEntity.addOrgan(
     organSystem.create("Bridge","active")
 );
+        const memory = VAERO.get("memorySystem");
+
+memory.remember("entity:mounted", {
+    entityId: vaeroEntity.id,
+    entityName: vaeroEntity.name
+});
         const bridge = VAERO.get("bridge");
 
 bridge.connect(
