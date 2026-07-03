@@ -5,6 +5,7 @@ const Engine = {
     start(){
 
         VAERO.engine = this;
+        VAERO.register("engine", this);
 
         const vaeroEntity = new Entity({
             id: "vaero-root",
