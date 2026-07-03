@@ -69,6 +69,22 @@ const Components = {
 
 },
 
+    guardian(){
+
+    const guardian = VAERO.get("guardian");
+
+    return `
+        <div class="section" style="margin-top:24px;padding:18px;">
+            <div class="eyebrow">GUARDIAN</div>
+
+            <p style="color:var(--muted);line-height:1.7;">
+                Guardian active · ${guardian.rules.length} validation rules loaded
+            </p>
+        </div>
+    `;
+
+},
+
     navigation(){
 
         return `
