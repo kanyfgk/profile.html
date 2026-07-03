@@ -12,13 +12,69 @@ const Renderer = {
         }
 
         root.innerHTML = `
-            <main class="vaero-shell">
-                <section class="hero-card">
-                    <div class="eyebrow">VAERO ENGINE</div>
-                    <h1>Living Digital Universe</h1>
-                    <p>Brain, Engine and Interface are now separated.</p>
-                </section>
-            </main>
+        <main class="vaero-shell">
+
+            <section class="section">
+
+                <div class="brand-header">
+
+                    <div class="brand-mark">
+                        V
+                    </div>
+
+                    <div>
+
+                        <div class="brand-title">
+                            VAERO
+                        </div>
+
+                        <div class="brand-subtitle">
+                            Living Digital Universe
+                        </div>
+
+                        <div class="status-pill">
+
+                            <span class="status-dot"></span>
+
+                            Engine Online
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+                <h1>
+                    Every universe begins with an Entity.
+                </h1>
+
+                <p style="margin-top:18px;color:var(--muted);line-height:1.8;">
+
+                    This is the first generation of the new VAERO Engine.
+
+                    Everything from this point forward will be generated through the Brain.
+
+                </p>
+
+                <div style="display:flex;gap:14px;margin-top:32px;">
+
+                    <button class="primary-btn">
+
+                        Continue
+
+                    </button>
+
+                    <button class="secondary-btn">
+
+                        Documentation
+
+                    </button>
+
+                </div>
+
+            </section>
+
+        </main>
         `;
 
     }
