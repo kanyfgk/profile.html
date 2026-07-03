@@ -51,6 +51,24 @@ const Components = {
 
     },
 
+    memory(){
+
+    const memory = VAERO.get("memorySystem");
+
+    return `
+        <div class="section" style="margin-top:24px;padding:18px;">
+            <div class="eyebrow">MEMORY</div>
+
+            ${memory.all().map(record=>`
+                <div style="margin-top:10px;color:var(--muted);line-height:1.6;">
+                    ${record.type}
+                </div>
+            `).join("")}
+        </div>
+    `;
+
+},
+
     navigation(){
 
         return `
