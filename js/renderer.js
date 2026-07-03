@@ -11,116 +11,67 @@ const Renderer = {
             return;
         }
 
-        root.innerHTML = `
-        <main class="vaero-shell">
+        const components = VAERO.get("components");
 
-            <section class="section">
+root.innerHTML = `
+<main class="vaero-shell">
 
-                <div class="brand-header">
+    <section class="section">
 
-                    <div class="brand-mark">
-                        ${entity.name.charAt(0)}
-                    </div>
+        ${components.hero(entity)}
 
-                    <div>
+        <h1>
+            Every universe begins with an Entity.
+        </h1>
 
-                        <div class="brand-title">
-                            ${entity.name}
-                        </div>
+        <p style="margin-top:18px;color:var(--muted);line-height:1.8;">
+            This entity was created by VAERO Engine and rendered through the new interface layer.
+        </p>
 
-                        <div class="brand-subtitle">
-                            ${entity.description}
-                        </div>
+        ${components.organs(entity)}
 
-                        <div class="status-pill">
+        ${components.bridge()}
 
-                            <span class="status-dot"></span>
+        <div style="display:flex;gap:14px;margin-top:32px;">
 
-                            ${entity.status === "online" ? "Engine Online" : entity.status}
+            <button class="primary-btn">
+                Continue
+            </button>
 
-                        </div>
+            <button class="secondary-btn">
+                Documentation
+            </button>
 
-                    </div>
+        </div>
 
-                </div>
+    </section>
 
-                <h1>
-                    Every universe begins with an Entity.
-                </h1>
+    <nav class="bottom-nav">
 
-                <p style="margin-top:18px;color:var(--muted);line-height:1.8;">
-                    This entity was created by VAERO Engine and rendered through the new interface layer.
-                </p>
+        <button class="nav-btn active">
+            <div class="nav-icon">⌂</div>
+            Home
+        </button>
 
-                <div class="section" style="margin-top:24px;padding:18px;">
+        <button class="nav-btn">
+            <div class="nav-icon">ID</div>
+            Identity
+        </button>
 
-                    <div class="eyebrow">
-                        CONNECTED ORGANS
-                    </div>
+        <button class="nav-btn">
+            <div class="nav-icon">＋</div>
+            Create
+        </button>
 
-                    ${entity.organs.map(organ => `
-                        <div style="display:flex;justify-content:space-between;margin-top:10px;color:var(--muted);">
-                            <span>${organ.name}</span>
-                            <span style="color:var(--green);">
-                                ${organ.status}
-                            </span>
-                        </div>
-                    `).join("")}
+        <button class="nav-btn">
+            <div class="nav-icon">◌</div>
+            World
+        </button>
 
-                </div>
+    </nav>
 
-                <div class="section" style="margin-top:24px;padding:18px;">
-
-                    <div class="eyebrow">
-                        FIRST BRIDGE
-                    </div>
-
-                    <p style="color:var(--muted);line-height:1.7;">
-                        VAERO is now connected to its first community bridge.
-                    </p>
-
-                </div>
-
-                <div style="display:flex;gap:14px;margin-top:32px;">
-
-                    <button class="primary-btn">
-                        Continue
-                    </button>
-
-                    <button class="secondary-btn">
-                        Documentation
-                    </button>
-
-                </div>
-
-            </section>
-
-            <nav class="bottom-nav">
-
-                <button class="nav-btn active">
-                    <div class="nav-icon">⌂</div>
-                    Home
-                </button>
-
-                <button class="nav-btn">
-                    <div class="nav-icon">ID</div>
-                    Identity
-                </button>
-
-                <button class="nav-btn">
-                    <div class="nav-icon">＋</div>
-                    Create
-                </button>
-
-                <button class="nav-btn">
-                    <div class="nav-icon">◌</div>
-                    World
-                </button>
-
-            </nav>
-
-        </main>
-        `;
+</main>
+`;
 
     }
 
