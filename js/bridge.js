@@ -22,7 +22,7 @@ const Bridge = {
     all(){
 
         return this.links;
-
+ 
     }
 
 };
