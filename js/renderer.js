@@ -24,3 +24,5 @@ const Renderer = {
     }
 
 };
+
+VAERO.renderer = Renderer;
