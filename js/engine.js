@@ -92,4 +92,8 @@ const kernel = VAERO.get("kernel");
 
 kernel.boot();
 
+const kernel = VAERO.get("kernel");
+
+kernel.boot();
+
 Engine.start();
