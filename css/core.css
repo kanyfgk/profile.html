@@ -1,24 +1,110 @@
 :root{
-  --bg:#07111d;
-  --surface:#101b28;
-  --text:#f3efe7;
-  --muted:rgba(243,239,231,.62);
-  --gold:#e6d7b0;
-  --green:#6ee7a8;
+
+--bg:#07111d;
+--surface:#0f1926;
+--surface-2:#162434;
+
+--gold:#e6d7b0;
+--text:#f5f1e9;
+--muted:rgba(245,241,233,.65);
+
 }
 
 *{
-  box-sizing:border-box;
-  margin:0;
-  padding:0;
+margin:0;
+padding:0;
+box-sizing:border-box;
 }
 
-html,body{
-  min-height:100%;
+html,
+body{
+
+width:100%;
+min-height:100%;
+
+background:var(--bg);
+
+font-family:
+Inter,
+Arial,
+sans-serif;
+
+color:var(--text);
+
 }
 
 body{
-  background:var(--bg);
-  color:var(--text);
-  font-family:Arial, sans-serif;
+
+display:flex;
+justify-content:center;
+
+padding:48px 20px;
+
+}
+
+#engine{
+
+width:100%;
+max-width:560px;
+
+}
+
+.vaero-shell{
+
+display:flex;
+flex-direction:column;
+gap:24px;
+
+}
+
+.hero-card{
+
+background:
+linear-gradient(
+180deg,
+var(--surface),
+var(--surface-2)
+);
+
+border:1px solid rgba(255,255,255,.06);
+
+border-radius:28px;
+
+padding:36px;
+
+box-shadow:
+0 20px 60px rgba(0,0,0,.35);
+
+}
+
+.eyebrow{
+
+font-size:11px;
+
+letter-spacing:2px;
+
+color:var(--gold);
+
+margin-bottom:18px;
+
+}
+
+.hero-card h1{
+
+font-size:40px;
+
+line-height:1.1;
+
+margin-bottom:18px;
+
+}
+
+.hero-card p{
+
+font-size:16px;
+
+line-height:1.8;
+
+color:var(--muted);
+
 }
