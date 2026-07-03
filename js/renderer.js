@@ -74,6 +74,29 @@ const Renderer = {
 
             </section>
 
+<nav class="bottom-nav">
+
+  <button class="nav-btn active">
+    <div class="nav-icon">⌂</div>
+    Home
+  </button>
+
+  <button class="nav-btn">
+    <div class="nav-icon">ID</div>
+    Identity
+  </button>
+
+  <button class="nav-btn">
+    <div class="nav-icon">＋</div>
+    Create
+  </button>
+
+  <button class="nav-btn">
+    <div class="nav-icon">◌</div>
+    World
+  </button>
+
+</nav> 
         </main>
         `;
 
