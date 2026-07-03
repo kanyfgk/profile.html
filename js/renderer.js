@@ -51,6 +51,12 @@ const Renderer = {
                 <p style="margin-top:18px;color:var(--muted);line-height:1.8;">
 
                     This entity was created by VAERO Engine and rendered through the new interface layer.
+                    <div class="section" style="margin-top:24px;padding:18px;">
+  <div class="eyebrow">FIRST BRIDGE</div>
+  <p style="color:var(--muted);line-height:1.7;">
+    VAERO is now connected to its first community bridge.
+  </p>
+</div>
 
                 </p>
 
