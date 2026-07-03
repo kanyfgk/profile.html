@@ -1,12 +1,12 @@
 const Engine = {
 
-    version: "0.1",
-
     start(){
 
-        console.log("VAERO Engine Started");
+        VAERO.engine = this;
 
         Renderer.render();
+
+        console.log("VAERO Engine Started");
 
     }
 
