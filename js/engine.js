@@ -7,19 +7,28 @@ const Engine = {
         VAERO.engine = this;
         VAERO.register("engine", this);
 
-        const vaeroEntity = new Entity({
-            id: "vaero-root",
-            type: "brand",
-            name: "VAERO",
-            description: "Living Digital Universe",
-            status: "online",
-            organs: [
-                { name: "Identity", status: "active" },
-                { name: "Engine", status: "active" },
-                { name: "Renderer", status: "active" },
-                { name: "Bridge", status: "pending" }
-            ]
-        });
+        const entityManager = VAERO.get("entityManager");
+
+const vaeroEntity = entityManager.create({
+
+    id:"vaero-root",
+
+    type:"brand",
+
+    name:"VAERO",
+
+    description:"Living Digital Universe",
+
+    status:"online",
+
+    organs:[
+        {name:"Identity",status:"active"},
+        {name:"Engine",status:"active"},
+        {name:"Renderer",status:"active"},
+        {name:"Bridge",status:"pending"}
+    ]
+
+});
 
         this.mount(vaeroEntity);
 
