@@ -30,6 +30,13 @@ const vaeroEntity = entityManager.create({
 
 });
 
+        const bridge = VAERO.get("bridge");
+
+bridge.connect(
+    vaeroEntity.id,
+    "vaero-community",
+    "root-community"
+);
         this.mount(vaeroEntity);
 
         console.log("VAERO Engine Started");
