@@ -31,6 +31,7 @@ root.innerHTML = `
         ${components.organs(entity)}
 
         ${components.bridge()}
+        ${components.memory()}
 
         <div style="display:flex;gap:14px;margin-top:32px;">
 
