@@ -1,0 +1,52 @@
+body{
+
+display:flex;
+justify-content:center;
+align-items:flex-start;
+
+padding:40px 20px;
+
+background:
+radial-gradient(circle at top,#122235,#07111d 60%);
+
+}
+
+#engine{
+
+width:100%;
+max-width:560px;
+
+display:flex;
+flex-direction:column;
+gap:24px;
+
+}
+
+.vaero-shell{
+
+display:flex;
+flex-direction:column;
+gap:24px;
+
+min-height:100vh;
+
+}
+
+.section{
+
+background:linear-gradient(
+180deg,
+rgba(18,28,42,.95),
+rgba(11,18,30,.96)
+);
+
+border:1px solid rgba(255,255,255,.06);
+
+border-radius:28px;
+
+padding:28px;
+
+box-shadow:
+0 20px 60px rgba(0,0,0,.35);
+
+}
