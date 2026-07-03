@@ -88,4 +88,8 @@ if(!guardian.validate(vaeroEntity)){
 
 };
 
+const kernel = VAERO.get("kernel");
+
+kernel.boot();
+
 Engine.start();
