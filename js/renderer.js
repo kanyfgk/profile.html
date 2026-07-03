@@ -2,7 +2,7 @@ const Renderer = {
 
     mountId: "engine",
 
-    render(){
+    render(entity){
 
         const root = document.getElementById(this.mountId);
 
@@ -19,24 +19,24 @@ const Renderer = {
                 <div class="brand-header">
 
                     <div class="brand-mark">
-                        V
+                        ${entity.name.charAt(0)}
                     </div>
 
                     <div>
 
                         <div class="brand-title">
-                            VAERO
+                            ${entity.name}
                         </div>
 
                         <div class="brand-subtitle">
-                            Living Digital Universe
+                            ${entity.description}
                         </div>
 
                         <div class="status-pill">
 
                             <span class="status-dot"></span>
 
-                            Engine Online
+                            ${entity.status === "online" ? "Engine Online" : entity.status}
 
                         </div>
 
@@ -50,53 +50,48 @@ const Renderer = {
 
                 <p style="margin-top:18px;color:var(--muted);line-height:1.8;">
 
-                    This is the first generation of the new VAERO Engine.
-
-                    Everything from this point forward will be generated through the Brain.
+                    This entity was created by VAERO Engine and rendered through the new interface layer.
 
                 </p>
 
                 <div style="display:flex;gap:14px;margin-top:32px;">
 
                     <button class="primary-btn">
-
                         Continue
-
                     </button>
 
                     <button class="secondary-btn">
-
                         Documentation
-
                     </button>
 
                 </div>
 
             </section>
 
-<nav class="bottom-nav">
+            <nav class="bottom-nav">
 
-  <button class="nav-btn active">
-    <div class="nav-icon">⌂</div>
-    Home
-  </button>
+                <button class="nav-btn active">
+                    <div class="nav-icon">⌂</div>
+                    Home
+                </button>
 
-  <button class="nav-btn">
-    <div class="nav-icon">ID</div>
-    Identity
-  </button>
+                <button class="nav-btn">
+                    <div class="nav-icon">ID</div>
+                    Identity
+                </button>
 
-  <button class="nav-btn">
-    <div class="nav-icon">＋</div>
-    Create
-  </button>
+                <button class="nav-btn">
+                    <div class="nav-icon">＋</div>
+                    Create
+                </button>
 
-  <button class="nav-btn">
-    <div class="nav-icon">◌</div>
-    World
-  </button>
+                <button class="nav-btn">
+                    <div class="nav-icon">◌</div>
+                    World
+                </button>
 
-</nav> 
+            </nav>
+
         </main>
         `;
 
