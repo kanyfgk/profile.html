@@ -1,0 +1,46 @@
+const Kernel = {
+
+    services: {},
+
+    boot(){
+
+        console.log("VAERO Kernel Booting...");
+
+        this.load("entityManager");
+        this.load("bridge");
+        this.load("organSystem");
+        this.load("memorySystem");
+        this.load("guardian");
+        this.load("evolution");
+        this.load("components");
+        this.load("renderer");
+        this.load("engine");
+
+        console.log("VAERO Kernel Ready");
+
+    },
+
+    load(name){
+
+        const service = VAERO.get(name);
+
+        if(!service){
+
+            console.warn("Kernel: service not found ->", name);
+            return;
+
+        }
+
+        this.services[name] = service;
+
+    },
+
+    service(name){
+
+        return this.services[name] || null;
+
+    }
+
+};
+
+VAERO.register("kernel", Kernel);
