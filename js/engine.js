@@ -6,6 +6,8 @@ const Engine = {
 
         console.log("VAERO Engine Started");
 
+        Renderer.render();
+
     }
 
 };
