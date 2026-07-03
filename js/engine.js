@@ -55,6 +55,17 @@ bridge.connect(
     "vaero-community",
     "root-community"
 );
+
+        const evolution = VAERO.get("evolution");
+
+evolution.record(
+    "engine:start",
+    "VAERO Engine started with root entity",
+    {
+        entityId: vaeroEntity.id,
+        entityName: vaeroEntity.name
+    }
+);
         const guardian = VAERO.get("guardian");
 
 if(!guardian.validate(vaeroEntity)){
