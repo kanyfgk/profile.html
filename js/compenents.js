@@ -1,6 +1,6 @@
 const Components = {
 
-    hero(entity){
+    hero(entity){ 
 
         return `
             <div class="brand-header">
