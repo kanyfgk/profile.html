@@ -8,12 +8,14 @@ const World = {
 
         events.on("engine.started", (data) => {
 
-            this.create({
+            const world = this.create({
                 id: "vaero-world",
                 name: "VAERO World",
                 type: "root-world",
                 owner: data.entityId
             });
+
+            events.emit("world.created", world);
 
         });
 
