@@ -13,7 +13,8 @@ const Kernel = {
     this.load("profile");
     this.load("bridge");
     this.load("graph"); 
-    this.load("world");    
+    this.load("world");  
+    this.load("runtime");    
     this.load("organSystem");
     this.load("memorySystem");
     this.load("timeline");
