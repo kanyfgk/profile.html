@@ -20,6 +20,7 @@ const Engine = {
         const guardian = kernel.service("guardian");
         const evolution = kernel.service("evolution");
         const brain = kernel.service("brain");
+        const events = kernel.service("events");
 
         this.renderer = kernel.service("renderer");
 
