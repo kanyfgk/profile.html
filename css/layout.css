@@ -4,7 +4,7 @@ display:flex;
 justify-content:center;
 align-items:flex-start;
 
-padding:40px 20px;
+padding:40px 20px; 
 
 background:
 radial-gradient(circle at top,#122235,#07111d 60%);
