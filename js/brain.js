@@ -2,7 +2,7 @@ const Brain = {
 
     report(){
 
-        const identity = VAERO.get("identity");
+        const identity = VAERO.get("identity"); 
         const memory = VAERO.get("memorySystem");
         const guardian = VAERO.get("guardian");
         const bridge = VAERO.get("bridge");
