@@ -29,6 +29,7 @@ const Engine = {
         memory.boot();
         timeline.boot();
         bridge.boot();
+        graph.boot();
 
         const vaeroEntity = entityManager.create({
             id:"vaero-root",
