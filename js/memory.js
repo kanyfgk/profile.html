@@ -2,6 +2,20 @@ const MemorySystem = {
 
     records: [],
 
+    boot(){
+
+        const events = VAERO.get("events");
+
+        if(!events) return;
+
+        events.on("entity.mounted", (data) => {
+
+            this.remember("entity:mounted", data);
+
+        });
+
+    },
+
     remember(type, payload){
 
         const record = {
@@ -13,8 +27,6 @@ const MemorySystem = {
 
         this.records.push(record);
 
-        VAERO.emit("memory:recorded", record);
-
         return record;
 
     },
@@ -22,6 +34,12 @@ const MemorySystem = {
     all(){
 
         return this.records;
+
+    },
+
+    clear(){
+
+        this.records = [];
 
     }
 
