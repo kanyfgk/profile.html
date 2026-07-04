@@ -17,6 +17,7 @@ const Engine = {
         const timeline = kernel.service("timeline");
         const bridge = kernel.service("bridge");
         const graph = kernel.service("graph");
+        const universe = kernel.service("universe");
         const world = kernel.service("world");
         const runtime = kernel.service("runtime");
         const guardian = kernel.service("guardian");
@@ -32,6 +33,7 @@ const Engine = {
         timeline.boot();
         bridge.boot();
         graph.boot();
+        universe.boot();
         world.boot();
         runtime.boot();
 
