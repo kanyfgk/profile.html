@@ -5,7 +5,7 @@ const Guardian = {
     addRule(name, validator){
 
         this.rules.push({
-            name,
+            name, 
             validator
         });
 
