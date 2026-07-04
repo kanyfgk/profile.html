@@ -12,6 +12,7 @@ const Kernel = {
         this.load("bridge");
         this.load("organSystem");
         this.load("memorySystem");
+        this.load("timeline");
         this.load("guardian");
         this.load("evolution");
         this.load("brain");
