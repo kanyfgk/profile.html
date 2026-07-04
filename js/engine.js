@@ -15,6 +15,7 @@ const Engine = {
         const profile = kernel.service("profile");
         const organSystem = kernel.service("organSystem");
         const memory = kernel.service("memorySystem");
+        const timeline = kernel.service("timeline");
         const bridge = kernel.service("bridge");
         const guardian = kernel.service("guardian");
         const evolution = kernel.service("evolution");
@@ -55,6 +56,14 @@ identity.verify(vaeroEntity.identity);
             entityId: vaeroEntity.id,
             entityName: vaeroEntity.name
         });
+        timeline.add(
+    "entity",
+    "VAERO root entity mounted",
+    {
+        entityId: vaeroEntity.id,
+        entityName: vaeroEntity.name
+    }
+);
 
         bridge.connect(
             vaeroEntity.id,
