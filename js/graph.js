@@ -6,7 +6,7 @@ const Graph = {
     boot(){
 
         const events = VAERO.get("events");
-
+ 
         events.on("entity.mounted", (data) => {
 
             this.addNode({
