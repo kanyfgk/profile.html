@@ -26,25 +26,25 @@ const Kernel = {
 
     boot(){
 
-    console.log("VAERO Kernel Booting...");
+        console.log("VAERO Kernel Booting...");
 
-    const dna = VAERO.get("dna");
+        const dna = VAERO.get("dna");
 
-    if(!dna){
-        throw new Error("VAERO DNA not found.");
-    }
+        if(!dna){
+            throw new Error("VAERO DNA not found.");
+        }
 
-    console.log("DNA Loaded:", dna.name);
+        console.log("DNA Loaded:", dna.name);
 
-    this.serviceList.forEach(name=>{
-        this.load(name);
-    });
+        this.serviceList.forEach(name=>{
+            this.load(name);
+        });
 
-    this.booted = true;
+        this.booted = true;
 
-    console.log("VAERO Kernel Ready");
+        console.log("VAERO Kernel Ready");
 
-}
+    },
 
     load(name){
 
@@ -78,6 +78,20 @@ const Kernel = {
         return {
             booted: this.booted,
             services: Object.keys(this.services),
+            total: Object.keys(this.services).length
+        };
+
+    },
+
+    health(){
+
+        const required = this.serviceList;
+        const missing = required.filter(name => !this.services[name]);
+
+        return {
+            status: missing.length === 0 ? "healthy" : "degraded",
+            missing,
+            loaded: Object.keys(this.services),
             total: Object.keys(this.services).length
         };
 
