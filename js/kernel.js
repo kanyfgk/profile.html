@@ -20,7 +20,6 @@ const Kernel = {
     this.load("brain");
     this.load("components");
     this.load("renderer");
-    this.load("engine");
 
     console.log("VAERO Kernel Ready");
 
