@@ -1,7 +1,7 @@
 const Evolution = {
 
     history: [],
-
+ 
     record(type, description, payload = {}){
 
         const event = {
