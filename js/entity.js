@@ -12,7 +12,7 @@ class Entity{
 
         this.status = data.status || "active";
 
-        this.organs = data.organs || [];
+        this.organs = data.organs || []; 
 
         this.bridges = data.bridges || [];
 
