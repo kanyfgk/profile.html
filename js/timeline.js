@@ -2,6 +2,32 @@ const Timeline = {
 
     events: [],
 
+    boot(){
+
+        const events = VAERO.get("events");
+
+        events.on("entity.mounted", (data)=>{
+
+            this.add(
+                "entity",
+                "Entity Mounted",
+                data
+            );
+
+        });
+
+        events.on("engine.started", (data)=>{
+
+            this.add(
+                "engine",
+                "Engine Started",
+                data
+            );
+
+        });
+
+    },
+
     add(type, title, payload = {}){
 
         const event = {
