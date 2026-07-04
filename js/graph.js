@@ -17,6 +17,22 @@ const Graph = {
 
         });
 
+        events.on("world.created", (data) => {
+
+            this.addNode({
+                id: data.id,
+                type: "world",
+                label: data.name
+            });
+
+            this.addEdge({
+                from: data.owner,
+                to: data.id,
+                type: "owns"
+            });
+
+        });
+
         events.on("bridge.created", (data) => {
 
             this.addEdge({
@@ -31,7 +47,9 @@ const Graph = {
 
     addNode(node){
 
-        if(this.nodes.find(item => item.id === node.id)) return;
+        if(this.nodes.find(item => item.id === node.id)){
+            return;
+        }
 
         this.nodes.push({
             ...node,
@@ -47,6 +65,20 @@ const Graph = {
             ...edge,
             createdAt: Date.now()
         });
+
+    },
+
+    node(id){
+
+        return this.nodes.find(node => node.id === id) || null;
+
+    },
+
+    neighbors(id){
+
+        return this.edges.filter(edge =>
+            edge.from === id || edge.to === id
+        );
 
     },
 
