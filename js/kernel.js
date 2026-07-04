@@ -1,51 +1,75 @@
 const Kernel = {
 
     services: {},
+    booted: false,
+
+    serviceList: [
+        "events",
+        "entityManager",
+        "identity",
+        "profile",
+        "bridge",
+        "graph",
+        "world",
+        "runtime",
+        "organSystem",
+        "memorySystem",
+        "timeline",
+        "guardian",
+        "evolution",
+        "brain",
+        "components",
+        "renderer"
+    ],
 
     boot(){
 
-    console.log("VAERO Kernel Booting...");
+        console.log("VAERO Kernel Booting...");
 
-    this.load("events");          // <-- yeni
+        this.serviceList.forEach(name => {
+            this.load(name);
+        });
 
-    this.load("entityManager");
-    this.load("identity");
-    this.load("profile");
-    this.load("bridge");
-    this.load("graph"); 
-    this.load("world");  
-    this.load("runtime");    
-    this.load("organSystem");
-    this.load("memorySystem");
-    this.load("timeline");
-    this.load("guardian");
-    this.load("evolution");
-    this.load("brain");
-    this.load("components");
-    this.load("renderer");
+        this.booted = true;
 
-    console.log("VAERO Kernel Ready");
+        console.log("VAERO Kernel Ready");
 
-},
+    },
 
     load(name){
 
         const service = VAERO.get(name);
 
         if(!service){
-
             console.warn("Kernel: service not found ->", name);
-            return;
-
+            return null;
         }
 
         this.services[name] = service;
+
+        return service;
 
     },
 
     service(name){
 
         return this.services[name] || null;
+
+    },
+
+    has(name){
+
+        return !!this.services[name];
+
+    },
+
+    report(){
+
+        return {
+            booted: this.booted,
+            services: Object.keys(this.services),
+            total: Object.keys(this.services).length
+        };
 
     }
 
