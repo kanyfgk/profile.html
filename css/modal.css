@@ -1,0 +1,39 @@
+.vaero-modal{
+  position:fixed;
+  inset:0;
+  display:none;
+  align-items:center;
+  justify-content:center;
+  padding:20px;
+  background:rgba(0,0,0,.72);
+  backdrop-filter:blur(12px);
+  z-index:2000;
+}
+
+.vaero-modal.show{
+  display:flex;
+}
+
+.modal-card{
+  width:100%;
+  max-width:420px;
+  border-radius:28px;
+  padding:28px;
+  background:linear-gradient(180deg,#101b28,#07111d);
+  border:1px solid rgba(255,255,255,.08);
+  box-shadow:0 30px 80px rgba(0,0,0,.45);
+}
+
+.modal-card h2{
+  margin-bottom:12px;
+}
+
+.modal-card p{
+  color:var(--muted);
+  line-height:1.7;
+}
+
+.modal-close{
+  margin-top:24px;
+  width:100%;
+}
