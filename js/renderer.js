@@ -30,6 +30,7 @@ root.innerHTML = `
 
         ${components.organs(entity)}
         ${components.profile(entity)}
+        ${components.identityCard(entity)}
 
         ${components.bridge()}
         ${components.memory()}
