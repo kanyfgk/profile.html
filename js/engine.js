@@ -84,6 +84,7 @@ const Engine = {
         );
 
         brain.boot();
+        memory.boot();
 
         if(!guardian.validate(vaeroEntity)){
             console.error("Entity rejected by Guardian");
