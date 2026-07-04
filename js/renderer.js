@@ -5,7 +5,7 @@ const Renderer = {
     render(entity){
 
         const root = document.getElementById(this.mountId);
-
+ 
         if(!root){
             console.error("Engine root not found");
             return;
