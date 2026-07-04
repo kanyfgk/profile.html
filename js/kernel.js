@@ -11,6 +11,7 @@ const Kernel = {
         "profile",
         "bridge",
         "graph",
+        "universe",
         "world",
         "runtime",
         "organSystem",
