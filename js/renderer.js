@@ -36,19 +36,7 @@ root.innerHTML = `
         ${components.guardian()}
         ${components.brain()}
 
-        <div style="display:flex;gap:14px;margin-top:32px;">
-
-            <button
-    class="primary-btn"
-    onclick="Actions.openProfile(VAERO.engine.currentEntity)">
-    Continue
-</button>
-
-            <button class="secondary-btn">
-                Documentation
-            </button>
-
-        </div>
+        ${components.actions()}
 
     </section>
 
