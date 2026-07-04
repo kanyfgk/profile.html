@@ -34,6 +34,7 @@ root.innerHTML = `
 
         ${components.bridge()}
         ${components.memory()}
+        ${components.timeline()}
         ${components.guardian()}
         ${components.brain()}
 
