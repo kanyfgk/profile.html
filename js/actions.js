@@ -9,11 +9,27 @@ const Actions = {
             profileName: entity.profile.name
         });
 
-        alert(
-            `${entity.profile.name}\n\nType: ${entity.profile.type}\nIdentity: ${
-                entity.profile.identity.verified ? "Verified" : "Unverified"
-            }`
-        );
+        const modal = document.getElementById("profileModal");
+        const title = document.getElementById("modalTitle");
+        const text = document.getElementById("modalText");
+
+        title.innerText = entity.profile.name;
+
+        text.innerText =
+            `Type: ${entity.profile.type}
+Identity: ${entity.profile.identity.verified ? "Verified" : "Unverified"}`;
+
+        modal.classList.add("show");
+
+    },
+
+    closeModal(){
+
+        const modal = document.getElementById("profileModal");
+
+        if(modal){
+            modal.classList.remove("show");
+        }
 
     }
 
@@ -31,6 +47,10 @@ document.addEventListener("click", event => {
 
     if(action === "profile:open"){
         Actions.openProfile(VAERO.engine.currentEntity);
+    }
+
+    if(action === "modal:close"){
+        Actions.closeModal();
     }
 
 });
