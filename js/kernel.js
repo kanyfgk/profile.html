@@ -7,6 +7,7 @@ const Kernel = {
         console.log("VAERO Kernel Booting...");
 
         this.load("entityManager");
+        this.load("identity");
         this.load("bridge");
         this.load("organSystem");
         this.load("memorySystem");
