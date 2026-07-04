@@ -32,9 +32,10 @@ const Engine = {
             status:"online",
             organs:[]
         });
-        vaeroEntity.identity = identity.create(vaeroEntity);
 
-identity.verify(vaeroEntity.identity);
+        vaeroEntity.identity = identity.create(vaeroEntity);
+        identity.verify(vaeroEntity.identity);
+
         vaeroEntity.profile = profile.create(vaeroEntity);
 
         vaeroEntity.addOrgan(
@@ -57,14 +58,15 @@ identity.verify(vaeroEntity.identity);
             entityId: vaeroEntity.id,
             entityName: vaeroEntity.name
         });
+
         timeline.add(
-    "entity",
-    "VAERO root entity mounted",
-    {
-        entityId: vaeroEntity.id,
-        entityName: vaeroEntity.name
-    }
-);
+            "entity",
+            "VAERO root entity mounted",
+            {
+                entityId: vaeroEntity.id,
+                entityName: vaeroEntity.name
+            }
+        );
 
         bridge.connect(
             vaeroEntity.id,
@@ -89,6 +91,12 @@ identity.verify(vaeroEntity.identity);
         }
 
         this.mount(vaeroEntity);
+
+        events.emit("engine.started", {
+            time: Date.now(),
+            entityId: vaeroEntity.id,
+            entityName: vaeroEntity.name
+        });
 
         console.log("VAERO Engine Started");
 
