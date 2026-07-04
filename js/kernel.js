@@ -12,6 +12,7 @@ const Kernel = {
         this.load("memorySystem");
         this.load("guardian");
         this.load("evolution");
+        this.load("brain");
         this.load("components");
         this.load("renderer");
         this.load("engine");
