@@ -7,7 +7,7 @@ const Kernel = {
         "dna",
         "events",
         "entityManager", 
-        "identity",
+        "identity", 
         "profile",
         "bridge",
         "graph",
