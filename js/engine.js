@@ -12,6 +12,7 @@ const Engine = {
 
         const entityManager = kernel.service("entityManager");
         const identity = kernel.service("identity");
+        const profile = kernel.service("profile");
         const organSystem = kernel.service("organSystem");
         const memory = kernel.service("memorySystem");
         const bridge = kernel.service("bridge");
@@ -32,6 +33,7 @@ const Engine = {
         vaeroEntity.identity = identity.create(vaeroEntity);
 
 identity.verify(vaeroEntity.identity);
+        vaeroEntity.profile = profile.create(vaeroEntity);
 
         vaeroEntity.addOrgan(
             organSystem.create("Identity","active")
