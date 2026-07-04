@@ -5,7 +5,7 @@ const VAERO = {
     engine: null,
     renderer: null,
 
-    registry: {},
+    registry: {}, 
 
     events: {},
 
