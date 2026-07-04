@@ -16,6 +16,7 @@ const Engine = {
         const bridge = kernel.service("bridge");
         const guardian = kernel.service("guardian");
         const evolution = kernel.service("evolution");
+        const brain = kernel.service("brain");
 
         this.renderer = kernel.service("renderer");
 
@@ -63,6 +64,8 @@ const Engine = {
                 entityName: vaeroEntity.name
             }
         );
+
+        brain.boot();
 
         if(!guardian.validate(vaeroEntity)){
             console.error("Entity rejected by Guardian");
