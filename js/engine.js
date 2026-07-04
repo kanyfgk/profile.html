@@ -26,6 +26,7 @@ const Engine = {
 
         brain.boot();
         memory.boot();
+        timeline.boot();
 
         const vaeroEntity = entityManager.create({
             id:"vaero-root",
@@ -51,14 +52,6 @@ const Engine = {
             entityName: vaeroEntity.name
         });
 
-        timeline.add(
-            "entity",
-            "VAERO root entity mounted",
-            {
-                entityId: vaeroEntity.id,
-                entityName: vaeroEntity.name
-            }
-        );
 
         bridge.connect(
             vaeroEntity.id,
