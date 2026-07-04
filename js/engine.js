@@ -11,6 +11,7 @@ const Engine = {
         const kernel = VAERO.get("kernel");
 
         const entityManager = kernel.service("entityManager");
+        const identity = kernel.service("identity");
         const organSystem = kernel.service("organSystem");
         const memory = kernel.service("memorySystem");
         const bridge = kernel.service("bridge");
@@ -28,6 +29,9 @@ const Engine = {
             status:"online",
             organs:[]
         });
+        vaeroEntity.identity = identity.create(vaeroEntity);
+
+identity.verify(vaeroEntity.identity);
 
         vaeroEntity.addOrgan(
             organSystem.create("Identity","active")
