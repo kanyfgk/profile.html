@@ -1,6 +1,6 @@
 const OrganSystem = {
 
-    organs: {},
+    organs: {}, 
 
     create(name, status = "active", meta = {}){
 
