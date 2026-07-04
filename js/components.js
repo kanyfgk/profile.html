@@ -132,6 +132,22 @@ const Components = {
 
 },
 
+    actions(){
+
+    return `
+        <div style="display:flex;gap:14px;margin-top:32px;">
+            <button class="primary-btn" data-action="profile:open">
+                Continue
+            </button>
+
+            <button class="secondary-btn" data-action="docs:open">
+                Documentation
+            </button>
+        </div>
+    `;
+
+},
+
     navigation(){
 
         return `
