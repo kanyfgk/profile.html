@@ -29,6 +29,7 @@ root.innerHTML = `
         </p>
 
         ${components.organs(entity)}
+        ${components.profile(entity)}
 
         ${components.bridge()}
         ${components.memory()}
