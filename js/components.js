@@ -164,7 +164,7 @@ const Components = {
 
     dashboard(entity){
         return `
-            <div class="section" style="margin-top:24px;">
+            <div class="dashboard-shell">
                 ${this.identityCard(entity)}
                 ${this.profile(entity)}
                 ${this.memory()}
