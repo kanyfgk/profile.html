@@ -8,7 +8,7 @@ const Universe = {
     boot(){
 
         const events = VAERO.get("events");
-
+ 
         events.on("engine.started", (data)=>{
 
             events.emit("universe.created", {
