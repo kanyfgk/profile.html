@@ -12,7 +12,8 @@ const Kernel = {
     this.load("identity");
     this.load("profile");
     this.load("bridge");
-    this.load("graph");    
+    this.load("graph"); 
+    this.load("world");    
     this.load("organSystem");
     this.load("memorySystem");
     this.load("timeline");
