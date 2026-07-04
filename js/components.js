@@ -64,6 +64,36 @@ const Components = {
 
 },
 
+    identityCard(entity){
+
+    return `
+        <div class="section" style="margin-top:24px;padding:18px;">
+            <div class="eyebrow">VAERO IDENTITY</div>
+
+            <div style="font-size:26px;font-weight:900;margin-top:10px;">
+                ${entity.profile.name}
+            </div>
+
+            <div style="margin-top:8px;color:var(--muted);">
+                ${entity.profile.type.toUpperCase()} · ${entity.profile.identity.verified ? "VERIFIED" : "UNVERIFIED"}
+            </div>
+
+            <div style="margin-top:18px;display:grid;gap:10px;">
+                <div style="display:flex;justify-content:space-between;color:var(--muted);">
+                    <span>Entity ID</span>
+                    <span>${entity.id}</span>
+                </div>
+
+                <div style="display:flex;justify-content:space-between;color:var(--muted);">
+                    <span>Status</span>
+                    <span style="color:var(--green);">${entity.status}</span>
+                </div>
+            </div>
+        </div>
+    `;
+
+},
+
     bridge(){
 
         return `
