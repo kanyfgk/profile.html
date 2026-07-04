@@ -5,7 +5,7 @@ const MemorySystem = {
     boot(){
 
         const events = VAERO.get("events");
-
+ 
         if(!events) return;
 
         events.on("entity.mounted", (data) => {
