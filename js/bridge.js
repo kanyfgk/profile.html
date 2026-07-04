@@ -10,7 +10,7 @@ const Bridge = {
 
             this.connect(
                 data.entityId,
-                "vaero-community",
+                "vaero-community", 
                 "root-community"
             );
 
