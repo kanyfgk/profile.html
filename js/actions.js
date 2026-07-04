@@ -19,4 +19,20 @@ const Actions = {
 
 };
 
+document.addEventListener("click", event => {
+
+    const button = event.target.closest("[data-action]");
+
+    if(!button){
+        return;
+    }
+
+    const action = button.dataset.action;
+
+    if(action === "profile:open"){
+        Actions.openProfile(VAERO.engine.currentEntity);
+    }
+
+});
+
 VAERO.register("actions", Actions);
