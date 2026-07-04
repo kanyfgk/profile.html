@@ -148,6 +148,23 @@ const Components = {
 
 },
 
+    modal(){
+
+    return `
+        <div class="vaero-modal" id="profileModal">
+            <div class="modal-card">
+                <h2 id="modalTitle">Profile</h2>
+                <p id="modalText"></p>
+
+                <button class="primary-btn modal-close" data-action="modal:close">
+                    Close
+                </button>
+            </div>
+        </div>
+    `;
+
+},
+
     navigation(){
 
         return `
