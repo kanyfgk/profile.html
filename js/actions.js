@@ -8,7 +8,7 @@ const Actions = {
             entityId: entity.id,
             profileName: entity.profile.name
         });
-
+ 
         const modal = document.getElementById("profileModal");
         const title = document.getElementById("modalTitle");
         const text = document.getElementById("modalText");
