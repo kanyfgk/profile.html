@@ -17,6 +17,7 @@ const Engine = {
         const timeline = kernel.service("timeline");
         const bridge = kernel.service("bridge");
         const graph = kernel.service("graph");
+        const world = kernel.service("world");
         const guardian = kernel.service("guardian");
         const evolution = kernel.service("evolution");
         const brain = kernel.service("brain");
@@ -30,6 +31,7 @@ const Engine = {
         timeline.boot();
         bridge.boot();
         graph.boot();
+        world.boot();
 
         const vaeroEntity = entityManager.create({
             id:"vaero-root",
