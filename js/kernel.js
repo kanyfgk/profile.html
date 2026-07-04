@@ -8,6 +8,7 @@ const Kernel = {
 
         this.load("entityManager");
         this.load("identity");
+        this.load("profile");
         this.load("bridge");
         this.load("organSystem");
         this.load("memorySystem");
