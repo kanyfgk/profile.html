@@ -126,6 +126,24 @@ const Components = {
 
 },
 
+    timeline(){
+
+    const timeline = VAERO.get("timeline");
+
+    return `
+        <div class="section" style="margin-top:24px;padding:18px;">
+            <div class="eyebrow">TIMELINE</div>
+
+            ${timeline.all().map(event=>`
+                <div style="margin-top:10px;color:var(--muted);line-height:1.6;">
+                    ${event.title}
+                </div>
+            `).join("")}
+        </div>
+    `;
+
+},
+
     guardian(){
 
     const guardian = VAERO.get("guardian");
