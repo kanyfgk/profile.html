@@ -71,3 +71,11 @@
   color:var(--text);
   border:1px solid rgba(255,255,255,.08);
 }
+
+.dashboard-shell{
+  margin-top:24px;
+  padding:18px;
+  border-radius:28px;
+  background:rgba(255,255,255,.025);
+  border:1px solid rgba(255,255,255,.06);
+}
