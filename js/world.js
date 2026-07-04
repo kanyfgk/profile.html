@@ -10,7 +10,7 @@ const World = {
 
             const world = this.create({
                 id: "vaero-world",
-                name: "VAERO World",
+                name: "VAERO World", 
                 type: "root-world",
                 owner: data.entityId
             });
