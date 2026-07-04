@@ -4,6 +4,7 @@ const Kernel = {
     booted: false,
 
     serviceList: [
+        "dna",
         "events",
         "entityManager",
         "identity",
@@ -24,17 +25,25 @@ const Kernel = {
 
     boot(){
 
-        console.log("VAERO Kernel Booting...");
+    console.log("VAERO Kernel Booting...");
 
-        this.serviceList.forEach(name => {
-            this.load(name);
-        });
+    const dna = VAERO.get("dna");
 
-        this.booted = true;
+    if(!dna){
+        throw new Error("VAERO DNA not found.");
+    }
 
-        console.log("VAERO Kernel Ready");
+    console.log("DNA Loaded:", dna.name);
 
-    },
+    this.serviceList.forEach(name=>{
+        this.load(name);
+    });
+
+    this.booted = true;
+
+    console.log("VAERO Kernel Ready");
+
+}
 
     load(name){
 
