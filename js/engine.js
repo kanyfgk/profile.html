@@ -54,10 +54,10 @@ const Engine = {
             organSystem.create("Bridge","active")
         );
 
-        memory.remember("entity:mounted", {
-            entityId: vaeroEntity.id,
-            entityName: vaeroEntity.name
-        });
+        events.emit("entity.mounted", {
+    entityId: vaeroEntity.id,
+    entityName: vaeroEntity.name
+});
 
         timeline.add(
             "entity",
