@@ -165,6 +165,45 @@ const Components = {
 
 },
 
+    idModal(){
+
+    return `
+        <div class="vaero-modal" id="idModal">
+            <div class="modal-card">
+                <h2>Platform ID</h2>
+
+                <p>
+                    Enter your VAERO Platform ID to connect your identity.
+                </p>
+
+                <input
+                    id="platformIdInput"
+                    placeholder="VA-001"
+                    style="
+                        width:100%;
+                        margin-top:18px;
+                        padding:16px;
+                        border-radius:18px;
+                        border:1px solid rgba(255,255,255,.10);
+                        background:rgba(255,255,255,.06);
+                        color:var(--text);
+                        font-weight:800;
+                    "
+                >
+
+                <button class="primary-btn modal-close" data-action="identity:connect">
+                    Connect Identity
+                </button>
+
+                <button class="secondary-btn modal-close" data-action="idmodal:close" style="width:100%;margin-top:10px;">
+                    Close
+                </button>
+            </div>
+        </div>
+    `;
+
+},
+
     navigation(){
 
         return `
