@@ -10,7 +10,7 @@ const Timeline = {
 
             this.add(
                 "entity",
-                "Entity Mounted",
+                "Entity Mounted", 
                 data
             );
 
