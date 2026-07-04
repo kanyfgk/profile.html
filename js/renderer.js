@@ -33,6 +33,7 @@ root.innerHTML = `
         ${components.bridge()}
         ${components.memory()}
         ${components.guardian()}
+        ${components.brain()}
 
         <div style="display:flex;gap:14px;margin-top:32px;">
 
