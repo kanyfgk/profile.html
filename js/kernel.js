@@ -4,25 +4,27 @@ const Kernel = {
 
     boot(){
 
-        console.log("VAERO Kernel Booting...");
+    console.log("VAERO Kernel Booting...");
 
-        this.load("entityManager");
-        this.load("identity");
-        this.load("profile");
-        this.load("bridge");
-        this.load("organSystem");
-        this.load("memorySystem");
-        this.load("timeline");
-        this.load("guardian");
-        this.load("evolution");
-        this.load("brain");
-        this.load("components");
-        this.load("renderer");
-        this.load("engine");
+    this.load("events");          // <-- yeni
 
-        console.log("VAERO Kernel Ready");
+    this.load("entityManager");
+    this.load("identity");
+    this.load("profile");
+    this.load("bridge");
+    this.load("organSystem");
+    this.load("memorySystem");
+    this.load("timeline");
+    this.load("guardian");
+    this.load("evolution");
+    this.load("brain");
+    this.load("components");
+    this.load("renderer");
+    this.load("engine");
 
-    },
+    console.log("VAERO Kernel Ready");
+
+},
 
     load(name){
 
