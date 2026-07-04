@@ -2,7 +2,7 @@ const Engine = {
 
     currentEntity: null,
     renderer: null,
-
+ 
     start(){
 
         VAERO.engine = this;
