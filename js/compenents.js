@@ -37,6 +37,33 @@ const Components = {
 
     },
 
+    profile(entity){
+
+    return `
+        <div class="section" style="margin-top:24px;padding:18px;">
+            <div class="eyebrow">PROFILE</div>
+
+            <div style="display:flex;justify-content:space-between;margin-top:10px;color:var(--muted);">
+                <span>Name</span>
+                <span>${entity.profile.name}</span>
+            </div>
+
+            <div style="display:flex;justify-content:space-between;margin-top:10px;color:var(--muted);">
+                <span>Type</span>
+                <span>${entity.profile.type}</span>
+            </div>
+
+            <div style="display:flex;justify-content:space-between;margin-top:10px;color:var(--muted);">
+                <span>Identity</span>
+                <span style="color:var(--green);">
+                    ${entity.profile.identity.verified ? "Verified" : "Unverified"}
+                </span>
+            </div>
+        </div>
+    `;
+
+},
+
     bridge(){
 
         return `
