@@ -16,6 +16,7 @@ const Engine = {
         const organSystem = kernel.service("organSystem");
         const timeline = kernel.service("timeline");
         const bridge = kernel.service("bridge");
+        const graph = kernel.service("graph");
         const guardian = kernel.service("guardian");
         const evolution = kernel.service("evolution");
         const brain = kernel.service("brain");
