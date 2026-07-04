@@ -5,7 +5,7 @@ const EntityManager = {
     create(data){
 
         const entity = new Entity(data);
-
+ 
         this.entities[entity.id] = entity;
 
         VAERO.emit("entity:created", entity);
