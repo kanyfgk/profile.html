@@ -9,7 +9,7 @@ const Runtime = {
         this.status = "running";
         this.startedAt = Date.now();
 
-        const events = VAERO.get("events");
+        const events = VAERO.get("events"); 
 
         events.emit("runtime.started", {
             status: this.status,
