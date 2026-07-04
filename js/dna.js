@@ -11,7 +11,7 @@ const DNA = {
         "Everything has Memory",
         "Everything has a Timeline",
         "Everything Evolves",
-        "Nothing depends on a single technology",
+        "Nothing depends on a single technology", 
         "Everything can be reconstructed"
     ],
 
