@@ -14,15 +14,18 @@ const Engine = {
         const identity = kernel.service("identity");
         const profile = kernel.service("profile");
         const organSystem = kernel.service("organSystem");
-        const memory = kernel.service("memorySystem");
         const timeline = kernel.service("timeline");
         const bridge = kernel.service("bridge");
         const guardian = kernel.service("guardian");
         const evolution = kernel.service("evolution");
         const brain = kernel.service("brain");
+        const memory = kernel.service("memorySystem");
         const events = kernel.service("events");
 
         this.renderer = kernel.service("renderer");
+
+        brain.boot();
+        memory.boot();
 
         const vaeroEntity = entityManager.create({
             id:"vaero-root",
@@ -38,26 +41,15 @@ const Engine = {
 
         vaeroEntity.profile = profile.create(vaeroEntity);
 
-        vaeroEntity.addOrgan(
-            organSystem.create("Identity","active")
-        );
-
-        vaeroEntity.addOrgan(
-            organSystem.create("Engine","active")
-        );
-
-        vaeroEntity.addOrgan(
-            organSystem.create("Renderer","active")
-        );
-
-        vaeroEntity.addOrgan(
-            organSystem.create("Bridge","active")
-        );
+        vaeroEntity.addOrgan(organSystem.create("Identity","active"));
+        vaeroEntity.addOrgan(organSystem.create("Engine","active"));
+        vaeroEntity.addOrgan(organSystem.create("Renderer","active"));
+        vaeroEntity.addOrgan(organSystem.create("Bridge","active"));
 
         events.emit("entity.mounted", {
-    entityId: vaeroEntity.id,
-    entityName: vaeroEntity.name
-});
+            entityId: vaeroEntity.id,
+            entityName: vaeroEntity.name
+        });
 
         timeline.add(
             "entity",
@@ -83,9 +75,6 @@ const Engine = {
             }
         );
 
-        brain.boot();
-        memory.boot();
-
         if(!guardian.validate(vaeroEntity)){
             console.error("Entity rejected by Guardian");
             return;
@@ -106,7 +95,6 @@ const Engine = {
     mount(entity){
 
         this.currentEntity = entity;
-
         this.renderer.render(entity);
 
     }
