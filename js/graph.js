@@ -17,6 +17,22 @@ const Graph = {
 
         });
 
+        events.on("universe.created", (data) => {
+
+            this.addNode({
+                id: data.id,
+                type: "universe",
+                label: data.name
+            });
+
+            this.addEdge({
+                from: data.owner,
+                to: data.id,
+                type: "creates"
+            });
+
+        });
+
         events.on("world.created", (data) => {
 
             this.addNode({
@@ -26,9 +42,9 @@ const Graph = {
             });
 
             this.addEdge({
-                from: data.owner,
+                from: "vaero-universe",
                 to: data.id,
-                type: "owns"
+                type: "contains"
             });
 
         });
