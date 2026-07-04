@@ -33,6 +33,22 @@ const Graph = {
 
         });
 
+        events.on("runtime.started", (data) => {
+
+            this.addNode({
+                id: "vaero-runtime",
+                type: "runtime",
+                label: "VAERO Runtime"
+            });
+
+            this.addEdge({
+                from: "vaero-root",
+                to: "vaero-runtime",
+                type: "runs"
+            });
+
+        });
+
         events.on("bridge.created", (data) => {
 
             this.addEdge({
@@ -88,6 +104,13 @@ const Graph = {
             nodes: this.nodes,
             edges: this.edges
         };
+
+    },
+
+    clear(){
+
+        this.nodes = [];
+        this.edges = [];
 
     }
 
