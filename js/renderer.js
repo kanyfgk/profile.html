@@ -43,6 +43,7 @@ root.innerHTML = `
     ${components.navigation()}
 
 ${components.modal()}
+${components.idModal()}
 </main>
 `;
 
