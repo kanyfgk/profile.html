@@ -27,6 +27,7 @@ const Engine = {
         brain.boot();
         memory.boot();
         timeline.boot();
+        bridge.boot();
 
         const vaeroEntity = entityManager.create({
             id:"vaero-root",
@@ -51,13 +52,6 @@ const Engine = {
             entityId: vaeroEntity.id,
             entityName: vaeroEntity.name
         });
-
-
-        bridge.connect(
-            vaeroEntity.id,
-            "vaero-community",
-            "root-community"
-        );
 
         evolution.record(
             "engine:start",
