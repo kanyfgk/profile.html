@@ -6,7 +6,7 @@ const Profile = {
 
             id: entity.id,
 
-            name: entity.name,
+            name: entity.name, 
 
             type: entity.type,
 
