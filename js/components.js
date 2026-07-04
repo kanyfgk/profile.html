@@ -144,6 +144,28 @@ const Components = {
 
 },
 
+    dashboard(entity){
+
+    return `
+        <div class="section" style="margin-top:24px;">
+
+            ${this.identityCard(entity)}
+
+            ${this.profile(entity)}
+
+            ${this.memory()}
+
+            ${this.timeline()}
+
+            ${this.guardian()}
+
+            ${this.brain()}
+
+        </div>
+    `;
+
+},
+
     guardian(){
 
     const guardian = VAERO.get("guardian");
