@@ -26,7 +26,15 @@ const Brain = {
         console.log("VAERO Brain Online");
         console.log(status);
 
-        VAERO.emit("brain:online", status);
+        const events = VAERO.get("events");
+
+        if(events){
+            events.on("engine.started", (data) => {
+                console.log("Brain received:", data);
+            });
+
+            events.emit("brain.online", status);
+        }
 
         return status;
 
