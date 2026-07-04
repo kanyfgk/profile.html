@@ -13,7 +13,7 @@ const Renderer = {
 
         const components = VAERO.get("components");
 
-root.innerHTML = `
+        root.innerHTML = `
 <main class="vaero-shell">
 
     <section class="section">
@@ -29,14 +29,10 @@ root.innerHTML = `
         </p>
 
         ${components.organs(entity)}
-        ${components.profile(entity)}
-        ${components.identityCard(entity)}
 
         ${components.bridge()}
-        ${components.memory()}
-        ${components.timeline()}
-        ${components.guardian()}
-        ${components.brain()}
+
+        ${components.dashboard(entity)}
 
         ${components.actions()}
 
@@ -44,8 +40,10 @@ root.innerHTML = `
 
     ${components.navigation()}
 
-${components.modal()}
-${components.idModal()}
+    ${components.modal()}
+
+    ${components.idModal()}
+
 </main>
 `;
 
