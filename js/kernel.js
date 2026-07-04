@@ -6,7 +6,7 @@ const Kernel = {
     serviceList: [
         "dna",
         "events",
-        "entityManager",
+        "entityManager", 
         "identity",
         "profile",
         "bridge",
