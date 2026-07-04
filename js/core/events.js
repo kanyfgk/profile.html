@@ -8,7 +8,7 @@ class EventSystem {
     on(name, callback) {
 
         if (!this.events[name]) {
-            this.events[name] = [];
+            this.events[name] = []; 
         }
 
         this.events[name].push(callback);
