@@ -85,6 +85,26 @@ const Components = {
 
 },
 
+    brain(){
+
+    const brain = VAERO.get("brain");
+    const report = brain.report();
+
+    return `
+        <div class="section" style="margin-top:24px;padding:18px;">
+            <div class="eyebrow">BRAIN STATUS</div>
+
+            ${Object.entries(report).map(([key,value])=>`
+                <div style="display:flex;justify-content:space-between;margin-top:10px;color:var(--muted);">
+                    <span>${key}</span>
+                    <span style="color:var(--green);">${value}</span>
+                </div>
+            `).join("")}
+        </div>
+    `;
+
+},
+
     navigation(){
 
         return `
