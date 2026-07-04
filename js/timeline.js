@@ -26,6 +26,26 @@ const Timeline = {
 
         });
 
+        events.on("runtime.started", (data)=>{
+
+            this.add(
+                "runtime",
+                "Runtime Started",
+                data
+            );
+
+        });
+
+        events.on("runtime.tick", (data)=>{
+
+            this.add(
+                "runtime",
+                "Runtime Tick",
+                data
+            );
+
+        });
+
     },
 
     add(type, title, payload = {}){
@@ -40,8 +60,6 @@ const Timeline = {
 
         this.events.push(event);
 
-        VAERO.emit("timeline:added", event);
-
         return event;
 
     },
@@ -49,6 +67,12 @@ const Timeline = {
     all(){
 
         return this.events;
+
+    },
+
+    clear(){
+
+        this.events = [];
 
     }
 
