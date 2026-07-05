@@ -206,16 +206,24 @@ const Components = {
                             No custom worlds yet.
                         </p>
                     ` : worlds.map(item=>`
-                        <div style="
-                            margin-top:10px;
-                            padding:14px;
-                            border-radius:16px;
-                            background:rgba(255,255,255,.05);
-                            color:var(--text);
-                            font-weight:800;
-                        ">
-                            🌍 ${item.name}
-                        </div>
+                        <button
+    data-action="world:open"
+    data-world-id="${item.id}"
+    style="
+        width:100%;
+        text-align:left;
+        margin-top:10px;
+        padding:14px;
+        border-radius:16px;
+        border:0;
+        background:rgba(255,255,255,.05);
+        color:var(--text);
+        font-weight:800;
+        cursor:pointer;
+    "
+>
+    🟢 ${item.name}
+</button>
                     `).join("")}
                 </div>
             </div>
