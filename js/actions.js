@@ -103,6 +103,10 @@ document.addEventListener("click", event => {
         Actions.openWorld(worldId);
     }
 
+    if(action === "entity:create:first"){
+    alert("First Entity Creator coming next.");
+}
+
 });
 
 VAERO.register("actions", Actions);
