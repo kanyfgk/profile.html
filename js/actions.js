@@ -103,6 +103,13 @@ document.addEventListener("click", event => {
         Actions.openWorld(worldId);
     }
 
+    if(action === "entity:type:select"){
+    const type = button.dataset.entityType;
+
+    VAERO.engine.entityType = type;
+    VAERO.engine.mount(VAERO.engine.currentEntity);
+}
+
     if(action === "entity:create:first"){
     VAERO.engine.entityCreateMode = true;
     VAERO.engine.mount(VAERO.engine.currentEntity);
