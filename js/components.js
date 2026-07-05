@@ -9,7 +9,7 @@ const Components = {
                     <div class="brand-title">${entity.name}</div>
                     <div class="brand-subtitle">${entity.description}</div>
 
-                    <div class="status-pill">
+                    <div class="status-pill"> 
                         <span class="status-dot"></span>
                         ${entity.status === "online" ? "Engine Online" : entity.status}
                     </div>
