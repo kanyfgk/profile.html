@@ -349,6 +349,36 @@ const Components = {
         `;
     },
 
+    entityView(entity){
+
+    return `
+        <div class="section" style="margin-top:24px;padding:24px;">
+
+            <div class="eyebrow">${entity.type.toUpperCase()}</div>
+
+            <h2 style="margin-top:10px;">
+                ${entity.name}
+            </h2>
+
+            <p style="margin-top:12px;color:var(--muted);">
+                Bu varlık başarıyla oluşturuldu.
+            </p>
+
+            <div style="
+                margin-top:20px;
+                padding:16px;
+                border-radius:16px;
+                background:rgba(255,255,255,.05);
+            ">
+                <div><b>ID:</b> ${entity.id}</div>
+                <div style="margin-top:8px;"><b>Type:</b> ${entity.type}</div>
+            </div>
+
+        </div>
+    `;
+
+},
+
     actions(){
         return `
             <div style="display:flex;gap:14px;margin-top:32px;">
