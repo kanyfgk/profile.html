@@ -48,7 +48,8 @@ Identity: ${entity.profile.identity.verified ? "Verified" : "Unverified"}`;
             id: crypto.randomUUID(),
             name: input.value,
             type: "custom-world",
-            owner: VAERO.engine.currentEntity.id
+            owner: VAERO.engine.currentEntity.id,
+            entities: []
         });
 
         alert(`World "${input.value}" created.`);
@@ -69,9 +70,50 @@ Identity: ${entity.profile.identity.verified ? "Verified" : "Unverified"}`;
             return;
         }
 
-        VAERO.engine.currentWorld = world;
+        if(!world.entities){
+            world.entities = [];
+        }
 
-VAERO.engine.mount(VAERO.engine.currentEntity);
+        VAERO.engine.currentWorld = world;
+        VAERO.engine.mount(VAERO.engine.currentEntity);
+
+    },
+
+    createEntity(){
+
+        const input = document.getElementById("entityNameInput");
+
+        if(!input || input.value.trim() === ""){
+            alert("Please enter a name.");
+            return;
+        }
+
+        const currentWorld = VAERO.engine.currentWorld;
+
+        if(!currentWorld){
+            alert("No world selected.");
+            return;
+        }
+
+        if(!currentWorld.entities){
+            currentWorld.entities = [];
+        }
+
+        const entityManager = VAERO.get("entityManager");
+
+        const entity = entityManager.create({
+            id: crypto.randomUUID(),
+            name: input.value,
+            type: VAERO.engine.entityType
+        });
+
+        currentWorld.entities.push(entity);
+
+        VAERO.engine.entityCreateMode = false;
+        VAERO.engine.entityType = null;
+
+        VAERO.engine.mount(VAERO.engine.currentEntity);
+
     }
 
 };
@@ -103,41 +145,20 @@ document.addEventListener("click", event => {
         Actions.openWorld(worldId);
     }
 
-    if(action === "entity:type:select"){
-    const type = button.dataset.entityType;
-
-    VAERO.engine.entityType = type;
-    VAERO.engine.mount(VAERO.engine.currentEntity);
-}
-
     if(action === "entity:create:first"){
-    VAERO.engine.entityCreateMode = true;
-    VAERO.engine.mount(VAERO.engine.currentEntity);
-}
-
-    if(action === "entity:create"){
-
-    const input = document.getElementById("entityNameInput");
-
-    if(!input || input.value.trim() === ""){
-        alert("Please enter a name.");
-        return;
+        VAERO.engine.entityCreateMode = true;
+        VAERO.engine.mount(VAERO.engine.currentEntity);
     }
 
-    const entityManager = VAERO.get("entityManager");
+    if(action === "entity:type:select"){
+        const type = button.dataset.entityType;
+        VAERO.engine.entityType = type;
+        VAERO.engine.mount(VAERO.engine.currentEntity);
+    }
 
-    const entity = entityManager.create({
-        id: crypto.randomUUID(),
-        name: input.value,
-        type: VAERO.engine.entityType
-    });
-
-    VAERO.engine.currentEntity = entity;
-    VAERO.engine.entityCreateMode = false;
-    VAERO.engine.entityType = null;
-
-    VAERO.engine.mount(entity);
-}
+    if(action === "entity:create"){
+        Actions.createEntity();
+    }
 
 });
 
