@@ -2,7 +2,7 @@ const Renderer = {
 
     mountId: "engine",
 
-    render(entity){
+    render(entity){ 
 
         const root = document.getElementById(this.mountId);
  
