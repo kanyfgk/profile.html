@@ -262,11 +262,12 @@ const Components = {
             </p>
 
             <button
-                class="primary-btn"
-                style="margin-top:20px;"
-            >
-                + Create First Entity
-            </button>
+    class="primary-btn"
+    data-action="entity:create:first"
+    style="margin-top:20px;"
+>
+    + İlk Varlığı Oluştur
+</button>
 
         </div>
     `;
