@@ -313,6 +313,19 @@ const Components = {
                 ${world.name}
             </h2>
 
+            ${VAERO.engine.currentEntity && VAERO.engine.currentEntity.name !== "VAERO" ? `
+    <div style="
+        margin-top:16px;
+        padding:14px;
+        border-radius:16px;
+        background:rgba(255,255,255,.05);
+        color:var(--text);
+        font-weight:800;
+    ">
+        ${VAERO.engine.currentEntity.type} · ${VAERO.engine.currentEntity.name}
+    </div>
+` : ""}
+
             <p style="margin-top:12px;color:var(--muted);line-height:1.7;">
                 This world has no entities yet.
             </p>
