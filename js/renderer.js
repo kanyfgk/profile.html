@@ -3,7 +3,7 @@ const Renderer = {
     mountId: "engine",
 
     render(entity){ 
-
+ 
         const root = document.getElementById(this.mountId);
  
         if(!root){
