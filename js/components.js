@@ -246,12 +246,34 @@ const Components = {
 
     worldView(world){
 
+    if(VAERO.engine.entityCreateMode){
+        return `
+            <div class="section" style="margin-top:24px;padding:24px;">
+                <div class="eyebrow">CREATE ENTITY</div>
+
+                <h2 style="margin-top:10px;">
+                    What would you like to create?
+                </h2>
+
+                <div style="display:grid;gap:10px;margin-top:18px;">
+                    ${["Person","Company","AI","Device","Knowledge","Community","Planet","Custom"].map(type=>`
+                        <button
+                            class="secondary-btn"
+                            data-action="entity:type:select"
+                            data-entity-type="${type}"
+                            style="width:100%;text-align:left;"
+                        >
+                            ${type}
+                        </button>
+                    `).join("")}
+                </div>
+            </div>
+        `;
+    }
+
     return `
         <div class="section" style="margin-top:24px;padding:24px;">
-
-            <div class="eyebrow">
-                WORLD
-            </div>
+            <div class="eyebrow">WORLD</div>
 
             <h2 style="margin-top:10px;">
                 ${world.name}
@@ -262,18 +284,16 @@ const Components = {
             </p>
 
             <button
-    class="primary-btn"
-    data-action="entity:create:first"
-    style="margin-top:20px;"
->
-    + İlk Varlığı Oluştur
-</button>
-
+                class="primary-btn"
+                data-action="entity:create:first"
+                style="margin-top:20px;"
+            >
+                + İlk Varlığı Oluştur
+            </button>
         </div>
     `;
 
 },
-
     actions(){
         return `
             <div style="display:flex;gap:14px;margin-top:32px;">
