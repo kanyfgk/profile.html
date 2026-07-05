@@ -14,6 +14,7 @@ const Renderer = {
         const components = VAERO.get("components");
         const currentWorld = VAERO.engine.currentWorld;
         const rootEntity = VAERO.engine.rootEntity || entity;
+        const openedEntity = VAERO.engine.currentOpenedEntity;
 
         root.innerHTML = `
 <main class="vaero-shell">
@@ -23,7 +24,9 @@ const Renderer = {
         ${components.hero(rootEntity)}
 
         ${
-            currentWorld
+    openedEntity
+        ? components.entityView(openedEntity)
+        : currentWorld
             ? components.worldView(currentWorld)
             : `
                 <h1>
