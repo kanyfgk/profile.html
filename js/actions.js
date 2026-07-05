@@ -115,6 +115,26 @@ Identity: ${entity.profile.identity.verified ? "Verified" : "Unverified"}`;
         VAERO.engine.mount(VAERO.engine.currentEntity);
 
     }
+ openEntity(entityId){
+
+    const world = VAERO.engine.currentWorld;
+
+    if(!world){
+        return;
+    }
+
+    const entity = (world.entities || []).find(item => item.id === entityId);
+
+    if(!entity){
+        alert("Entity not found.");
+        return;
+    }
+
+    VAERO.engine.currentOpenedEntity = entity;
+
+    VAERO.engine.mount(VAERO.engine.currentEntity);
+
+},
 
 };
 
@@ -159,6 +179,11 @@ document.addEventListener("click", event => {
     if(action === "entity:create"){
         Actions.createEntity();
     }
+
+ if(action === "entity:open"){
+    const entityId = button.dataset.entityId;
+    Actions.openEntity(entityId);
+}
 
 });
 
