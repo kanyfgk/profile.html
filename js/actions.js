@@ -31,11 +31,9 @@ Identity: ${entity.profile.identity.verified ? "Verified" : "Unverified"}`;
             modal.classList.remove("show");
         }
 
-    }
+    },
 
-};
-
-createWorld(){
+    createWorld(){
 
         const input = document.getElementById("worldNameInput");
 
@@ -54,11 +52,14 @@ createWorld(){
         });
 
         alert(`World "${input.value}" created.`);
-    VAERO.engine.mount(VAERO.engine.currentEntity);
+
+        VAERO.engine.mount(VAERO.engine.currentEntity);
 
         input.value = "";
 
-    },
+    }
+
+};
 
 document.addEventListener("click", event => {
 
