@@ -353,6 +353,13 @@ const Components = {
 
     return `
         <div class="section" style="margin-top:24px;padding:24px;">
+        <button
+    class="secondary-btn"
+    data-action="world:back"
+    style="margin-bottom:18px;"
+>
+    ← Dünyaya Dön
+</button>
 
             <div class="eyebrow">${entity.type.toUpperCase()}</div>
 
