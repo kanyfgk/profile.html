@@ -1,13 +1,13 @@
 const Components = {
 
     hero(entity){
-        return ` 
+        return `
             <div class="brand-header">
-                <div class="brand-mark">${entity.name.charAt(0)}</div> 
- 
+                <div class="brand-mark">${entity.name.charAt(0)}</div>
+
                 <div>
                     <div class="brand-title">${entity.name}</div>
-                    <div class="brand-subtitle">${entity.description}</div> 
+                    <div class="brand-subtitle">${entity.description}</div>
 
                     <div class="status-pill">
                         <span class="status-dot"></span>
@@ -23,7 +23,7 @@ const Components = {
             <div class="section" style="margin-top:24px;padding:18px;">
                 <div class="eyebrow">CONNECTED ORGANS</div>
 
-                ${entity.organs.map(organ=>`
+                ${(entity.organs || []).map(organ=>`
                     <div style="display:flex;justify-content:space-between;margin-top:10px;color:var(--muted);">
                         <span>${organ.name}</span>
                         <span style="color:var(--green);">${organ.status}</span>
@@ -90,7 +90,6 @@ const Components = {
         return `
             <div class="section" style="margin-top:24px;padding:18px;">
                 <div class="eyebrow">FIRST BRIDGE</div>
-
                 <p style="color:var(--muted);line-height:1.7;">
                     VAERO is now connected to its first community bridge.
                 </p>
@@ -136,7 +135,6 @@ const Components = {
         return `
             <div class="section" style="margin-top:24px;padding:18px;">
                 <div class="eyebrow">GUARDIAN</div>
-
                 <p style="color:var(--muted);line-height:1.7;">
                     Guardian active · ${guardian.rules.length} validation rules loaded
                 </p>
@@ -171,17 +169,15 @@ const Components = {
             <div class="section" style="margin-top:24px;padding:18px;">
                 <div class="eyebrow">VAERO ALPHA</div>
 
-                <h2 style="margin-top:10px;">
-                    Create your first World
-                </h2>
+                <h2 style="margin-top:10px;">İlk dünyanızı yaratın</h2>
 
                 <p style="color:var(--muted);line-height:1.7;margin-top:10px;">
-                    Start building inside the VAERO Universe.
+                    VAERO Evreni içinde inşa etmeye başlayın.
                 </p>
 
                 <input
                     id="worldNameInput"
-                    placeholder="My First World"
+                    placeholder="Benim İlk Dünyam"
                     style="
                         width:100%;
                         margin-top:18px;
@@ -195,35 +191,35 @@ const Components = {
                 >
 
                 <button class="primary-btn" data-action="world:create" style="width:100%;margin-top:14px;">
-                    Create World
+                    Dünyayı Yarat
                 </button>
 
                 <div style="margin-top:22px;">
-                    <div class="eyebrow">YOUR WORLDS</div>
+                    <div class="eyebrow">SİZİN DÜNYALARINIZ</div>
 
                     ${worlds.length === 0 ? `
                         <p style="color:var(--muted);line-height:1.7;margin-top:10px;">
-                            No custom worlds yet.
+                            Henüz özel dünyalar yok.
                         </p>
                     ` : worlds.map(item=>`
                         <button
-    data-action="world:open"
-    data-world-id="${item.id}"
-    style="
-        width:100%;
-        text-align:left;
-        margin-top:10px;
-        padding:14px;
-        border-radius:16px;
-        border:0;
-        background:rgba(255,255,255,.05);
-        color:var(--text);
-        font-weight:800;
-        cursor:pointer;
-    "
->
-    🟢 ${item.name}
-</button>
+                            data-action="world:open"
+                            data-world-id="${item.id}"
+                            style="
+                                width:100%;
+                                text-align:left;
+                                margin-top:10px;
+                                padding:14px;
+                                border-radius:16px;
+                                border:0;
+                                background:rgba(255,255,255,.05);
+                                color:var(--text);
+                                font-weight:800;
+                                cursor:pointer;
+                            "
+                        >
+                            🟢 ${item.name}
+                        </button>
                     `).join("")}
                 </div>
             </div>
@@ -246,142 +242,105 @@ const Components = {
 
     worldView(world){
 
-    const entities = world.entities || [];
+        const entities = world.entities || [];
 
-    if(VAERO.engine.entityCreateMode){
+        if(VAERO.engine.entityCreateMode){
 
-        if(VAERO.engine.entityType){
+            if(VAERO.engine.entityType){
+                return `
+                    <div class="section" style="margin-top:24px;padding:24px;">
+                        <div class="eyebrow">${VAERO.engine.entityType} OLUŞTUR</div>
+
+                        <h2 style="margin-top:10px;">
+                            ${VAERO.engine.entityType} adını belirtin.
+                        </h2>
+
+                        <input
+                            id="entityNameInput"
+                            placeholder="${VAERO.engine.entityType} adı"
+                            style="
+                                width:100%;
+                                margin-top:18px;
+                                padding:16px;
+                                border-radius:18px;
+                                border:1px solid rgba(255,255,255,.10);
+                                background:rgba(255,255,255,.06);
+                                color:var(--text);
+                                font-weight:800;
+                            "
+                        >
+
+                        <button
+                            class="primary-btn"
+                            data-action="entity:create"
+                            style="width:100%;margin-top:14px;"
+                        >
+                            ${VAERO.engine.entityType} Oluştur
+                        </button>
+                    </div>
+                `;
+            }
+
             return `
                 <div class="section" style="margin-top:24px;padding:24px;">
-                    <div class="eyebrow">${VAERO.engine.entityType} OLUŞTUR</div>
+                    <div class="eyebrow">CREATE ENTITY</div>
 
                     <h2 style="margin-top:10px;">
-                        ${VAERO.engine.entityType} adını belirtin.
+                        Ne oluşturmak istiyorsun?
                     </h2>
 
-                    <input
-                        id="entityNameInput"
-                        placeholder="${VAERO.engine.entityType} adı"
-                        style="
-                            width:100%;
-                            margin-top:18px;
-                            padding:16px;
-                            border-radius:18px;
-                            border:1px solid rgba(255,255,255,.10);
-                            background:rgba(255,255,255,.06);
-                            color:var(--text);
-                            font-weight:800;
-                        "
-                    >
-
-                    <button
-                        class="primary-btn"
-                        data-action="entity:create"
-                        style="width:100%;margin-top:14px;"
-                    >
-                        ${VAERO.engine.entityType} Oluştur
-                    </button>
+                    <div style="display:grid;gap:10px;margin-top:18px;">
+                        ${["Person","Company","AI","Device","Knowledge","Community","Planet","Custom"].map(type=>`
+                            <button
+                                class="secondary-btn"
+                                data-action="entity:type:select"
+                                data-entity-type="${type}"
+                                style="width:100%;text-align:left;"
+                            >
+                                ${type}
+                            </button>
+                        `).join("")}
+                    </div>
                 </div>
             `;
         }
 
         return `
             <div class="section" style="margin-top:24px;padding:24px;">
-                <div class="eyebrow">CREATE ENTITY</div>
+                <div class="eyebrow">DÜNYA</div>
 
                 <h2 style="margin-top:10px;">
-                    What would you like to create?
+                    ${world.name}
                 </h2>
 
-                <div style="display:grid;gap:10px;margin-top:18px;">
-                    ${["Person","Company","AI","Device","Knowledge","Community","Planet","Custom"].map(type=>`
-                        <button
-                            class="secondary-btn"
-                            data-action="entity:type:select"
-                            data-entity-type="${type}"
-                            style="width:100%;text-align:left;"
-                        >
-                            ${type}
-                        </button>
-                    `).join("")}
-                </div>
+                ${entities.length === 0 ? `
+                    <p style="margin-top:12px;color:var(--muted);line-height:1.7;">
+                        Bu dünyada henüz hiçbir varlık yok.
+                    </p>
+                ` : entities.map(entity=>`
+                    <div style="
+                        margin-top:12px;
+                        padding:14px;
+                        border-radius:16px;
+                        background:rgba(255,255,255,.05);
+                        color:var(--text);
+                        font-weight:800;
+                    ">
+                        ${entity.type} · ${entity.name}
+                    </div>
+                `).join("")}
+
+                <button
+                    class="primary-btn"
+                    data-action="entity:create:first"
+                    style="margin-top:20px;"
+                >
+                    + İlk Varlığı Oluştur
+                </button>
             </div>
         `;
-    }
+    },
 
-    return `
-        <div class="section" style="margin-top:24px;padding:24px;">
-            <div class="eyebrow">DÜNYA</div>
-
-            <h2 style="margin-top:10px;">
-                ${world.name}
-            </h2>
-
-            ${entities.length === 0 ? `
-                <p style="margin-top:12px;color:var(--muted);line-height:1.7;">
-                    Bu dünyada henüz hiçbir varlık yok.
-                </p>
-            ` : entities.map(entity=>`
-                <div style="
-                    margin-top:12px;
-                    padding:14px;
-                    border-radius:16px;
-                    background:rgba(255,255,255,.05);
-                    color:var(--text);
-                    font-weight:800;
-                ">
-                    ${entity.type} · ${entity.name}
-                </div>
-            `).join("")}
-
-            <button
-                class="primary-btn"
-                data-action="entity:create:first"
-                style="margin-top:20px;"
-            >
-                + İlk Varlığı Oluştur
-            </button>
-        </div>
-    `;
-
-},
-
-    return `
-        <div class="section" style="margin-top:24px;padding:24px;">
-            <div class="eyebrow">WORLD</div>
-
-            <h2 style="margin-top:10px;">
-                ${world.name}
-            </h2>
-
-            ${VAERO.engine.currentEntity && VAERO.engine.currentEntity.name !== "VAERO" ? `
-    <div style="
-        margin-top:16px;
-        padding:14px;
-        border-radius:16px;
-        background:rgba(255,255,255,.05);
-        color:var(--text);
-        font-weight:800;
-    ">
-        ${VAERO.engine.currentEntity.type} · ${VAERO.engine.currentEntity.name}
-    </div>
-` : ""}
-
-            <p style="margin-top:12px;color:var(--muted);line-height:1.7;">
-                This world has no entities yet.
-            </p>
-
-            <button
-                class="primary-btn"
-                data-action="entity:create:first"
-                style="margin-top:20px;"
-            >
-                + İlk Varlığı Oluştur
-            </button>
-        </div>
-    `;
-
-},
     actions(){
         return `
             <div style="display:flex;gap:14px;margin-top:32px;">
@@ -453,22 +412,22 @@ const Components = {
             <nav class="bottom-nav">
                 <button class="nav-btn active">
                     <div class="nav-icon">⌂</div>
-                    Home
+                    Ev
                 </button>
 
                 <button class="nav-btn">
                     <div class="nav-icon">ID</div>
-                    Identity
+                    Kimlik
                 </button>
 
                 <button class="nav-btn">
                     <div class="nav-icon">＋</div>
-                    Create
+                    Yaratmak
                 </button>
 
                 <button class="nav-btn">
                     <div class="nav-icon">◌</div>
-                    World
+                    Dünya
                 </button>
             </nav>
         `;
