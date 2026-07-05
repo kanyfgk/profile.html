@@ -35,6 +35,30 @@ Identity: ${entity.profile.identity.verified ? "Verified" : "Unverified"}`;
 
 };
 
+createWorld(){
+
+        const input = document.getElementById("worldNameInput");
+
+        if(!input || input.value.trim() === ""){
+            alert("Please enter a world name.");
+            return;
+        }
+
+        const world = VAERO.get("world");
+
+        world.create({
+            id: crypto.randomUUID(),
+            name: input.value,
+            type: "custom-world",
+            owner: VAERO.engine.currentEntity.id
+        });
+
+        alert(`World "${input.value}" created.`);
+
+        input.value = "";
+
+    },
+
 document.addEventListener("click", event => {
 
     const button = event.target.closest("[data-action]");
@@ -51,6 +75,10 @@ document.addEventListener("click", event => {
 
     if(action === "modal:close"){
         Actions.closeModal();
+    }
+
+    if(action === "world:create"){
+        Actions.createWorld();
     }
 
 });
