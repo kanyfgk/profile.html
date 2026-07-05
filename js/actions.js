@@ -54,6 +54,7 @@ createWorld(){
         });
 
         alert(`World "${input.value}" created.`);
+    VAERO.engine.mount(VAERO.engine.currentEntity);
 
         input.value = "";
 
