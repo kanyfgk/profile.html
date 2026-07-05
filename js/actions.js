@@ -69,8 +69,9 @@ Identity: ${entity.profile.identity.verified ? "Verified" : "Unverified"}`;
             return;
         }
 
-        alert(`Entering "${world.name}"`);
+        VAERO.engine.currentWorld = world;
 
+VAERO.engine.mount(VAERO.engine.currentEntity);
     }
 
 };
