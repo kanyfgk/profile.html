@@ -247,6 +247,40 @@ const Components = {
     worldView(world){
 
     if(VAERO.engine.entityCreateMode){
+        if(VAERO.engine.entityType){
+            return `
+                <div class="section" style="margin-top:24px;padding:24px;">
+                    <div class="eyebrow">CREATE ${VAERO.engine.entityType}</div>
+
+                    <h2 style="margin-top:10px;">
+                        Name your ${VAERO.engine.entityType}
+                    </h2>
+
+                    <input
+                        id="entityNameInput"
+                        placeholder="${VAERO.engine.entityType} name"
+                        style="
+                            width:100%;
+                            margin-top:18px;
+                            padding:16px;
+                            border-radius:18px;
+                            border:1px solid rgba(255,255,255,.10);
+                            background:rgba(255,255,255,.06);
+                            color:var(--text);
+                            font-weight:800;
+                        "
+                    >
+
+                    <button
+                        class="primary-btn"
+                        data-action="entity:create"
+                        style="width:100%;margin-top:14px;"
+                    >
+                        Create ${VAERO.engine.entityType}
+                    </button>
+                </div>
+            `;
+        }
         return `
             <div class="section" style="margin-top:24px;padding:24px;">
                 <div class="eyebrow">CREATE ENTITY</div>
