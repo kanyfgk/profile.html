@@ -13,13 +13,14 @@ const Renderer = {
 
         const components = VAERO.get("components");
         const currentWorld = VAERO.engine.currentWorld;
+        const rootEntity = VAERO.engine.rootEntity || entity;
 
         root.innerHTML = `
 <main class="vaero-shell">
 
     <section class="section">
 
-        ${components.hero(entity)}
+        ${components.hero(rootEntity)}
 
         ${
             currentWorld
@@ -33,11 +34,11 @@ const Renderer = {
                     This entity was created by VAERO Engine and rendered through the new interface layer.
                 </p>
 
-                ${components.organs(entity)}
+                ${components.organs(rootEntity)}
 
                 ${components.bridge()}
 
-                ${components.dashboard(entity)}
+                ${components.dashboard(rootEntity)}
 
                 ${components.actions()}
             `
