@@ -226,7 +226,6 @@ const Components = {
         return `
             <div class="dashboard-shell">
                 ${this.alphaCreateWorld()}
-                ${this.alphaCreateWorld()}
                 ${this.identityCard(entity)}
                 ${this.profile(entity)}
                 ${this.memory()}
