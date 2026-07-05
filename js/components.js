@@ -246,19 +246,22 @@ const Components = {
 
     worldView(world){
 
+    const entities = world.entities || [];
+
     if(VAERO.engine.entityCreateMode){
+
         if(VAERO.engine.entityType){
             return `
                 <div class="section" style="margin-top:24px;padding:24px;">
-                    <div class="eyebrow">CREATE ${VAERO.engine.entityType}</div>
+                    <div class="eyebrow">${VAERO.engine.entityType} OLUŞTUR</div>
 
                     <h2 style="margin-top:10px;">
-                        Name your ${VAERO.engine.entityType}
+                        ${VAERO.engine.entityType} adını belirtin.
                     </h2>
 
                     <input
                         id="entityNameInput"
-                        placeholder="${VAERO.engine.entityType} name"
+                        placeholder="${VAERO.engine.entityType} adı"
                         style="
                             width:100%;
                             margin-top:18px;
@@ -276,11 +279,12 @@ const Components = {
                         data-action="entity:create"
                         style="width:100%;margin-top:14px;"
                     >
-                        Create ${VAERO.engine.entityType}
+                        ${VAERO.engine.entityType} Oluştur
                     </button>
                 </div>
             `;
         }
+
         return `
             <div class="section" style="margin-top:24px;padding:24px;">
                 <div class="eyebrow">CREATE ENTITY</div>
@@ -304,6 +308,43 @@ const Components = {
             </div>
         `;
     }
+
+    return `
+        <div class="section" style="margin-top:24px;padding:24px;">
+            <div class="eyebrow">DÜNYA</div>
+
+            <h2 style="margin-top:10px;">
+                ${world.name}
+            </h2>
+
+            ${entities.length === 0 ? `
+                <p style="margin-top:12px;color:var(--muted);line-height:1.7;">
+                    Bu dünyada henüz hiçbir varlık yok.
+                </p>
+            ` : entities.map(entity=>`
+                <div style="
+                    margin-top:12px;
+                    padding:14px;
+                    border-radius:16px;
+                    background:rgba(255,255,255,.05);
+                    color:var(--text);
+                    font-weight:800;
+                ">
+                    ${entity.type} · ${entity.name}
+                </div>
+            `).join("")}
+
+            <button
+                class="primary-btn"
+                data-action="entity:create:first"
+                style="margin-top:20px;"
+            >
+                + İlk Varlığı Oluştur
+            </button>
+        </div>
+    `;
+
+},
 
     return `
         <div class="section" style="margin-top:24px;padding:24px;">
