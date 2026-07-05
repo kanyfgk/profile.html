@@ -115,6 +115,30 @@ document.addEventListener("click", event => {
     VAERO.engine.mount(VAERO.engine.currentEntity);
 }
 
+    if(action === "entity:create"){
+
+    const input = document.getElementById("entityNameInput");
+
+    if(!input || input.value.trim() === ""){
+        alert("Please enter a name.");
+        return;
+    }
+
+    const entityManager = VAERO.get("entityManager");
+
+    const entity = entityManager.create({
+        id: crypto.randomUUID(),
+        name: input.value,
+        type: VAERO.engine.entityType
+    });
+
+    VAERO.engine.currentEntity = entity;
+    VAERO.engine.entityCreateMode = false;
+    VAERO.engine.entityType = null;
+
+    VAERO.engine.mount(entity);
+}
+
 });
 
 VAERO.register("actions", Actions);
