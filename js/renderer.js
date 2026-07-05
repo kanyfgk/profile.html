@@ -12,6 +12,7 @@ const Renderer = {
         }
 
         const components = VAERO.get("components");
+        const currentWorld = VAERO.engine.currentWorld;
 
         root.innerHTML = `
 <main class="vaero-shell">
@@ -20,21 +21,27 @@ const Renderer = {
 
         ${components.hero(entity)}
 
-        <h1>
-            Every universe begins with an Entity.
-        </h1>
+        ${
+            currentWorld
+            ? components.worldView(currentWorld)
+            : `
+                <h1>
+                    Every universe begins with an Entity.
+                </h1>
 
-        <p style="margin-top:18px;color:var(--muted);line-height:1.8;">
-            This entity was created by VAERO Engine and rendered through the new interface layer.
-        </p>
+                <p style="margin-top:18px;color:var(--muted);line-height:1.8;">
+                    This entity was created by VAERO Engine and rendered through the new interface layer.
+                </p>
 
-        ${components.organs(entity)}
+                ${components.organs(entity)}
 
-        ${components.bridge()}
+                ${components.bridge()}
 
-        ${components.dashboard(entity)}
+                ${components.dashboard(entity)}
 
-        ${components.actions()}
+                ${components.actions()}
+            `
+        }
 
     </section>
 
