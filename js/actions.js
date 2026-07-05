@@ -42,9 +42,9 @@ Identity: ${entity.profile.identity.verified ? "Verified" : "Unverified"}`;
             return;
         }
 
-        const world = VAERO.get("world");
+        const worldService = VAERO.get("world");
 
-        world.create({
+        worldService.create({
             id: crypto.randomUUID(),
             name: input.value,
             type: "custom-world",
@@ -56,6 +56,20 @@ Identity: ${entity.profile.identity.verified ? "Verified" : "Unverified"}`;
         VAERO.engine.mount(VAERO.engine.currentEntity);
 
         input.value = "";
+
+    },
+
+    openWorld(worldId){
+
+        const worldService = VAERO.get("world");
+        const world = worldService.all().find(item => item.id === worldId);
+
+        if(!world){
+            alert("World not found.");
+            return;
+        }
+
+        alert(`Entering "${world.name}"`);
 
     }
 
@@ -81,6 +95,11 @@ document.addEventListener("click", event => {
 
     if(action === "world:create"){
         Actions.createWorld();
+    }
+
+    if(action === "world:open"){
+        const worldId = button.dataset.worldId;
+        Actions.openWorld(worldId);
     }
 
 });
