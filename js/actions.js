@@ -166,6 +166,11 @@ document.addEventListener("click", event => {
         Actions.openWorld(worldId);
     }
 
+ if(action === "world:back"){
+    VAERO.engine.currentOpenedEntity = null;
+    VAERO.engine.mount(VAERO.engine.currentEntity);
+}
+
     if(action === "entity:create:first"){
         VAERO.engine.entityCreateMode = true;
         VAERO.engine.mount(VAERO.engine.currentEntity);
