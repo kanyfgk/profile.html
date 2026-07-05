@@ -318,16 +318,24 @@ const Components = {
                         Bu dünyada henüz hiçbir varlık yok.
                     </p>
                 ` : entities.map(entity=>`
-                    <div style="
-                        margin-top:12px;
-                        padding:14px;
-                        border-radius:16px;
-                        background:rgba(255,255,255,.05);
-                        color:var(--text);
-                        font-weight:800;
-                    ">
-                        ${entity.type} · ${entity.name}
-                    </div>
+                    <button
+    data-action="entity:open"
+    data-entity-id="${entity.id}"
+    style="
+        width:100%;
+        text-align:left;
+        margin-top:12px;
+        padding:14px;
+        border-radius:16px;
+        border:0;
+        background:rgba(255,255,255,.05);
+        color:var(--text);
+        font-weight:800;
+        cursor:pointer;
+    "
+>
+    ${entity.type} · ${entity.name}
+</button>
                 `).join("")}
 
                 <button
