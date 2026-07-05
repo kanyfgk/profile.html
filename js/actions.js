@@ -104,7 +104,8 @@ document.addEventListener("click", event => {
     }
 
     if(action === "entity:create:first"){
-    alert("First Entity Creator coming next.");
+    VAERO.engine.entityCreateMode = true;
+    VAERO.engine.mount(VAERO.engine.currentEntity);
 }
 
 });
