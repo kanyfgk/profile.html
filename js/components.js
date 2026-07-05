@@ -244,6 +244,35 @@ const Components = {
         `;
     },
 
+    worldView(world){
+
+    return `
+        <div class="section" style="margin-top:24px;padding:24px;">
+
+            <div class="eyebrow">
+                WORLD
+            </div>
+
+            <h2 style="margin-top:10px;">
+                ${world.name}
+            </h2>
+
+            <p style="margin-top:12px;color:var(--muted);line-height:1.7;">
+                This world has no entities yet.
+            </p>
+
+            <button
+                class="primary-btn"
+                style="margin-top:20px;"
+            >
+                + Create First Entity
+            </button>
+
+        </div>
+    `;
+
+},
+
     actions(){
         return `
             <div style="display:flex;gap:14px;margin-top:32px;">
