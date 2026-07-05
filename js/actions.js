@@ -1,6 +1,6 @@
 const Actions = {
  
-    openProfile(entity){
+    openProfile(entity){  
 
         const memory = VAERO.get("memorySystem");
 
