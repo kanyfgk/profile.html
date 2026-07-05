@@ -162,9 +162,46 @@ const Components = {
         `;
     },
 
+    alphaCreateWorld(){
+        return `
+            <div class="section" style="margin-top:24px;padding:18px;">
+                <div class="eyebrow">VAERO ALPHA</div>
+
+                <h2 style="margin-top:10px;">
+                    Create your first World
+                </h2>
+
+                <p style="color:var(--muted);line-height:1.7;margin-top:10px;">
+                    Start building inside the VAERO Universe.
+                </p>
+
+                <input
+                    id="worldNameInput"
+                    placeholder="My First World"
+                    style="
+                        width:100%;
+                        margin-top:18px;
+                        padding:16px;
+                        border-radius:18px;
+                        border:1px solid rgba(255,255,255,.10);
+                        background:rgba(255,255,255,.06);
+                        color:var(--text);
+                        font-weight:800;
+                    "
+                >
+
+                <button class="primary-btn" data-action="world:create" style="width:100%;margin-top:14px;">
+                    Create World
+                </button>
+            </div>
+        `;
+    },
+
     dashboard(entity){
         return `
             <div class="dashboard-shell">
+                ${this.alphaCreateWorld()}
+                ${this.alphaCreateWorld()}
                 ${this.identityCard(entity)}
                 ${this.profile(entity)}
                 ${this.memory()}
