@@ -163,6 +163,10 @@ const Components = {
     },
 
     alphaCreateWorld(){
+
+        const world = VAERO.get("world");
+        const worlds = world ? world.all() : [];
+
         return `
             <div class="section" style="margin-top:24px;padding:18px;">
                 <div class="eyebrow">VAERO ALPHA</div>
@@ -193,6 +197,27 @@ const Components = {
                 <button class="primary-btn" data-action="world:create" style="width:100%;margin-top:14px;">
                     Create World
                 </button>
+
+                <div style="margin-top:22px;">
+                    <div class="eyebrow">YOUR WORLDS</div>
+
+                    ${worlds.length === 0 ? `
+                        <p style="color:var(--muted);line-height:1.7;margin-top:10px;">
+                            No custom worlds yet.
+                        </p>
+                    ` : worlds.map(item=>`
+                        <div style="
+                            margin-top:10px;
+                            padding:14px;
+                            border-radius:16px;
+                            background:rgba(255,255,255,.05);
+                            color:var(--text);
+                            font-weight:800;
+                        ">
+                            🌍 ${item.name}
+                        </div>
+                    `).join("")}
+                </div>
             </div>
         `;
     },
