@@ -1,7 +1,7 @@
 const Components = {
 
     hero(entity){
-        return `
+        return ` 
             <div class="brand-header">
                 <div class="brand-mark">${entity.name.charAt(0)}</div> 
  
