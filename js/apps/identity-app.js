@@ -12,7 +12,7 @@ const IdentityApp = {
                     ← Varlık Kontrol Paneli
                 </button>
 
-                <div class="eyebrow">IDENTITY APP</div>
+                <div class="eyebrow">KİMLİK UYGULAMASI</div>
 
                 <h2 style="margin-top:10px;">
                     ${entity.name}
@@ -21,29 +21,38 @@ const IdentityApp = {
                 <div class="card" style="margin-top:18px;padding:18px;">
                     <div class="eyebrow">VA KİMLİĞİ</div>
 
-                    <p style="margin-top:12px;color:var(--muted);line-height:1.7;">
-                        Bu varlığın temel kimlik bilgileri burada yönetilecek.
+                    <h3 style="margin-top:12px;word-break:break-all;">
+                        ${entity.id}
+                    </h3>
+
+                    <p style="margin-top:10px;color:var(--muted);line-height:1.7;">
+                        Bu kimlik, varlığın VAERO Evreni içindeki temel varoluş kaydıdır.
                     </p>
 
-                    <div style="margin-top:16px;">
-                        <div><b>ID:</b></div>
-                        <p style="margin-top:6px;color:var(--muted);word-break:break-all;">
-                            ${entity.id}
-                        </p>
+                    <div style="margin-top:16px;color:#4ade80;font-weight:800;">
+                        Doğrulandı
                     </div>
+                </div>
 
-                    <div style="margin-top:16px;">
-                        <div><b>Tür:</b></div>
-                        <p style="margin-top:6px;color:var(--muted);">
-                            ${entity.type}
-                        </p>
-                    </div>
+                <div class="card" style="margin-top:18px;padding:18px;">
+                    <div class="eyebrow">KİMLİK TÜRÜ</div>
 
-                    <div style="margin-top:16px;">
-                        <div><b>Durum:</b></div>
-                        <p style="margin-top:6px;color:#4ade80;font-weight:700;">
-                            Doğrulandı
-                        </p>
+                    <h3 style="margin-top:12px;">
+                        ${entity.type}
+                    </h3>
+
+                    <p style="margin-top:10px;color:var(--muted);line-height:1.7;">
+                        Bu varlığın sistem içindeki tipi ve yetki kapsamı burada yönetilir.
+                    </p>
+                </div>
+
+                <div class="card" style="margin-top:18px;padding:18px;">
+                    <div class="eyebrow">KİMLİK KATMANLARI</div>
+
+                    <div style="margin-top:14px;display:grid;gap:10px;">
+                        <div class="card">VA ID · Aktif</div>
+                        <div class="card">AE ID · Henüz yok</div>
+                        <div class="card">EA ID · Henüz yok</div>
                     </div>
                 </div>
 
