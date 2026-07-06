@@ -422,25 +422,144 @@ const Components = {
             <button class="secondary-btn"
                 data-action="entity:dashboard"
                 style="margin-bottom:18px;">
-                ← Entity Dashboard
+                ← Varlık Kontrol Paneli
             </button>
 
-            <div class="eyebrow">ENTITY PROFILE</div>
+            <div class="eyebrow">VARLIK PROFİLİ</div>
+            <div style="
+    margin-top:18px;
+    margin-bottom:18px;
+    height:1px;
+    background:rgba(255,255,255,.08);
+"></div>
+            <div style="
+    margin-top:14px;
+    display:flex;
+    gap:8px;
+    flex-wrap:wrap;
+">
+
+    <span class="badge">VA ID</span>
+
+    <span class="badge">Verified</span>
+
+    <span class="badge">${entity.type}</span>
+
+</div>
 
             <h2 style="margin-top:10px;">
                 ${entity.name}
             </h2>
 
+            <p style="
+    margin-top:10px;
+    color:var(--muted);
+    line-height:1.7;
+">
+    Bu sayfa varlığın temel kimliğini ve sistem içerisindeki profil bilgilerini gösterir.
+</p>
+
             <div class="card" style="margin-top:18px;padding:16px;">
-                <div><b>ID:</b> ${entity.id}</div>
-                <div style="margin-top:8px;"><b>Type:</b> ${entity.type}</div>
-                <div style="margin-top:8px;"><b>Status:</b> Active</div>
+                <div class="grid grid-2">
+                <div class="card">
+    <div class="eyebrow">OLUŞTURULMA</div>
+    <h3>Yakında</h3>
+</div>
+
+<div class="card">
+    <div class="eyebrow">SON GÜNCELLEME</div>
+    <h3>Yakında</h3>
+</div>
+
+    <div class="card">
+        <div class="eyebrow">KİMLİK</div>
+        <p style="
+    margin:0;
+    word-break:break-all;
+    color:var(--muted);
+">
+    ${entity.id}
+</p>
+    </div>
+
+    <div class="card">
+        <div class="eyebrow">TÜR</div>
+        <p style="
+    margin:0;
+    color:var(--muted);
+">
+    ${entity.type}
+</p>
+    </div>
+
+    <div class="card">
+        <div class="eyebrow">DURUM</div>
+        <p style="
+    margin:0;
+    color:#4ade80;
+    font-weight:600;
+">
+    Aktif
+</p>
+    </div>
+
+    <div class="card">
+        <div class="eyebrow">KAYNAK</div>
+        <p style="
+    margin:0;
+    color:var(--muted);
+">
+    VAERO Engine
+</p>
+    </div>
+
+</div>
             </div>
+
+            <div class="card" style="margin-top:18px;padding:16px;">
+
+    <div><b>İsim</b></div>
+    <div style="margin-top:6px;color:var(--muted);">
+        ${entity.name}
+    </div>
+
+    <hr style="margin:16px 0;opacity:.15;">
+
+    <div><b>Tür</b></div>
+    <div style="margin-top:6px;color:var(--muted);">
+        ${entity.type}
+    </div>
+
+    <hr style="margin:16px 0;opacity:.15;">
+
+    <div><b>Roller</b></div>
+    <p style="
+    margin-top:8px;
+    color:var(--muted);
+    font-size:13px;
+">
+    Bu rozetler varlığın sistem içerisindeki mevcut durumunu temsil eder.
+</p>
+
+<div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap;">
+
+    <span class="badge">Entity</span>
+
+    <span class="badge">
+        ${entity.type}
+    </span>
+
+    <span class="badge">
+        Active
+    </span>
+
+</div>
+
+</div>
 
         </div>
     `;
 },
-
     entityOrgans(entity){
     return `
         <div class="section" style="margin-top:24px;padding:24px;">
