@@ -172,6 +172,11 @@ document.addEventListener("click", event => {
     VAERO.engine.mount(VAERO.engine.currentEntity);
 }
 
+ if (action === "entity:identity") {
+    VAERO.engine.currentEntityPage = "identity";
+    VAERO.engine.mount(VAERO.engine.currentEntity);
+}
+
  if (action === "entity:profile") {
     VAERO.engine.currentEntityPage = "profile";
     VAERO.engine.mount(VAERO.engine.currentEntity);
@@ -184,6 +189,36 @@ document.addEventListener("click", event => {
  
 if (action === "entity:organs") {
     VAERO.engine.currentEntityPage = "organs";
+    VAERO.engine.mount(VAERO.engine.currentEntity);
+}
+
+ if (action === "entity:timeline") {
+    VAERO.engine.currentEntityPage = "timeline";
+    VAERO.engine.mount(VAERO.engine.currentEntity);
+}
+
+if (action === "entity:memory") {
+    VAERO.engine.currentEntityPage = "memory";
+    VAERO.engine.mount(VAERO.engine.currentEntity);
+}
+
+if (action === "entity:bridge") {
+    VAERO.engine.currentEntityPage = "bridge";
+    VAERO.engine.mount(VAERO.engine.currentEntity);
+}
+
+if (action === "entity:settings") {
+    VAERO.engine.currentEntityPage = "settings";
+    VAERO.engine.mount(VAERO.engine.currentEntity);
+}
+
+ if (action === "entity:profile") {
+    VAERO.engine.currentEntityPage = "profile";
+    VAERO.engine.mount(VAERO.engine.currentEntity);
+}
+
+if (action === "entity:dashboard") {
+    VAERO.engine.currentEntityPage = "dashboard";
     VAERO.engine.mount(VAERO.engine.currentEntity);
 }
 
