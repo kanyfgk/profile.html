@@ -11,7 +11,7 @@ const IdentityApp = {
     "🪪"
 )}
 
-                ${UI.identityCard(entity)}
+                ${UI.identityCard(entity)} 
 
                 <div class="card" style="margin-top:18px;padding:18px;">
                     <div class="eyebrow">KİMLİK TÜRÜ</div>
