@@ -201,6 +201,11 @@ if (action === "entity:settings") {
 VAERO.engine.mount(VAERO.engine.currentEntity);
 }
 
+ if(action === "entity:dashboard"){
+    VAERO.engine.currentEntityPage = null;
+    VAERO.engine.mount(VAERO.engine.currentEntity);
+}
+
     if(action === "entity:create:first"){
         VAERO.engine.entityCreateMode = true;
         VAERO.engine.mount(VAERO.engine.currentEntity);
