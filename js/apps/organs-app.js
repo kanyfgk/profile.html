@@ -26,7 +26,7 @@ const OrgansApp = {
 
                 <div class="grid grid-2" style="margin-top:20px;">
 
-                    ${AppRegistry.all().map(app => UI.launcherCard(app)).join("")}
+                    ${OrganRegistry.all().map(app => UI.launcherCard(app)).join("")}
 
                 </div>
 
