@@ -11,7 +11,7 @@ const BridgeApp = {
                     style="margin-bottom:18px;">
                     ← Varlık Kontrol Paneli
                 </button>
-
+ 
                 <div class="eyebrow">BRIDGE APP</div>
 
                 <h2 style="margin-top:10px;">
