@@ -448,24 +448,7 @@ const Components = {
 },
 
     entityMemory(entity){
-    return `
-        <div class="section" style="margin-top:24px;padding:24px;">
-            <button class="secondary-btn" data-action="entity:dashboard" style="margin-bottom:18px;">
-                ← Entity Dashboard
-            </button>
-
-            <div class="eyebrow">ENTITY MEMORY</div>
-
-            <h2 style="margin-top:10px;">
-                ${entity.name}
-            </h2>
-
-            <div class="card" style="margin-top:18px;padding:16px;">
-                Memory sistemi yakında burada yönetilecek.
-            </div>
-
-        </div>
-    `;
+    return MemoryApp.render(entity);
 },
 
     entitySettings(entity){
