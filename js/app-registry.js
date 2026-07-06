@@ -7,8 +7,12 @@ const OrganRegistry = {
     },
 
     all(){
-        return this.apps;
-    }
+    return this.apps;
+},
+
+find(id){
+    return this.apps.find(app => app.id === id);
+}
 
 };
 
