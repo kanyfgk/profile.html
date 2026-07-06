@@ -2,7 +2,7 @@ const UI = {
 
     appHeader(
     title,
-    subtitle,
+    subtitle, 
     icon = "◌",
     backAction = "entity:dashboard"
 ){
