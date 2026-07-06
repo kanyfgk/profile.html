@@ -152,4 +152,24 @@ const UI = {
     `;
 
 },
+
+    infoRow(label, value){
+
+    return `
+        <div style="margin-top:14px;">
+
+            <b>${label}</b>
+
+            <p style="
+                margin-top:6px;
+                color:var(--muted);
+                word-break:break-all;
+            ">
+                ${value}
+            </p>
+
+        </div>
+    `;
+
+},
 };
