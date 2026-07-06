@@ -51,25 +51,13 @@ const ProfileApp = {
 
                 <div class="grid grid-2" style="margin-top:${Theme.spacing.md}px;">
 
-                    <div class="card" style="${Theme.card}">
-                        <div class="eyebrow">TAKİPÇİ</div>
-                        <h3 style="margin-top:8px;">0</h3>
-                    </div>
+                    ${UI.statsCard("TAKİPÇİ", "0")}
 
-                    <div class="card" style="${Theme.card}">
-                        <div class="eyebrow">TAKİP EDİLEN</div>
-                        <h3 style="margin-top:8px;">0</h3>
-                    </div>
+${UI.statsCard("TAKİP EDİLEN", "0")}
 
-                    <div class="card" style="${Theme.card}">
-                        <div class="eyebrow">SEVİYE</div>
-                        <h3 style="margin-top:8px;">1</h3>
-                    </div>
+${UI.statsCard("SEVİYE", "1")}
 
-                    <div class="card" style="${Theme.card}">
-                        <div class="eyebrow">XP</div>
-                        <h3 style="margin-top:8px;">0 XP</h3>
-                    </div>
+${UI.statsCard("XP", "0 XP")}
 
                 </div>
 
