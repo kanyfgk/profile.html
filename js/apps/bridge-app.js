@@ -4,33 +4,17 @@ const BridgeApp = {
 
         return `
             <div class="section" style="margin-top:24px;padding:24px;">
- 
-                <button
-                    class="secondary-btn"
-                    data-action="entity:dashboard"
-                    style="margin-bottom:18px;">
-                    ← Varlık Kontrol Paneli
-                </button>
- 
-                <div class="eyebrow">BRIDGE APP</div>
 
-                <h2 style="margin-top:10px;">
-                    ${entity.name}
-                </h2>
+                ${UI.appHeader(
+                    entity.name,
+                    "BRIDGE APP",
+                    "🌉"
+                )}
 
-                <div class="card" style="margin-top:18px;padding:18px;">
-
-                    <div class="eyebrow">BAĞLANTILAR</div>
-
-                    <p style="
-                        margin-top:12px;
-                        color:var(--muted);
-                        line-height:1.7;
-                    ">
-                        Bu varlığın kişiler, şirketler, ürünler ve diğer varlıklarla olan bağlantıları burada yönetilecek.
-                    </p>
-
-                </div>
+                ${UI.appCard(
+                    "BAĞLANTILAR",
+                    "Bu varlığın kişiler, şirketler, ürünler ve diğer varlıklarla olan bağlantıları burada yönetilir."
+                )}
 
             </div>
         `;
