@@ -25,7 +25,21 @@ const Renderer = {
 
         ${
     openedEntity
-        ? components.entityView(openedEntity)
+        ? (
+    VAERO.engine.currentEntityPage === "profile"
+        ? components.entityProfile(openedEntity)
+    : VAERO.engine.currentEntityPage === "organs"
+        ? components.entityOrgans(openedEntity)
+    : VAERO.engine.currentEntityPage === "timeline"
+        ? components.entityTimeline(openedEntity)
+    : VAERO.engine.currentEntityPage === "bridge"
+        ? components.entityBridge(openedEntity)
+    : VAERO.engine.currentEntityPage === "memory"
+        ? components.entityMemory(openedEntity)
+    : VAERO.engine.currentEntityPage === "settings"
+        ? components.entitySettings(openedEntity)
+    : components.entityView(openedEntity)
+)
         : currentWorld
             ? components.worldView(currentWorld)
             : `
