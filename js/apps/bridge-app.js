@@ -8,7 +8,7 @@ const BridgeApp = {
                 ${UI.appHeader(
                     entity.name,
                     "BRIDGE APP",
-                    "🌉"
+                    "🌉" 
                 )}
 
                 ${UI.appCard(
