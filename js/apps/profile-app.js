@@ -19,45 +19,26 @@ const ProfileApp = {
                 <div class="card" style="margin-top:${Theme.spacing.md}px;${Theme.card}">
                     <div class="eyebrow">PROFİL BİLGİLERİ</div>
 
-                    <div style="margin-top:14px;display:grid;gap:12px;">
+                    ${UI.infoRow("İsim", entity.name)}
 
-                        <div>
-                            <b>İsim</b>
-                            <p style="margin-top:6px;color:var(--muted);">
-                                ${entity.name}
-                            </p>
-                        </div>
+                    <hr style="opacity:.12;">
 
-                        <hr style="opacity:.12;">
+                    ${UI.infoRow("Tür", entity.type)}
 
-                        <div>
-                            <b>Tür</b>
-                            <p style="margin-top:6px;color:var(--muted);">
-                                ${entity.type}
-                            </p>
-                        </div>
+                    <hr style="opacity:.12;">
 
-                        <hr style="opacity:.12;">
-
-                        <div>
-                            <b>Kimlik</b>
-                            <p style="margin-top:6px;color:var(--muted);word-break:break-all;">
-                                ${entity.id}
-                            </p>
-                        </div>
-
-                    </div>
+                    ${UI.infoRow("Kimlik", entity.id)}
                 </div>
 
                 <div class="grid grid-2" style="margin-top:${Theme.spacing.md}px;">
 
                     ${UI.statsCard("TAKİPÇİ", "0")}
 
-${UI.statsCard("TAKİP EDİLEN", "0")}
+                    ${UI.statsCard("TAKİP EDİLEN", "0")}
 
-${UI.statsCard("SEVİYE", "1")}
+                    ${UI.statsCard("SEVİYE", "1")}
 
-${UI.statsCard("XP", "0 XP")}
+                    ${UI.statsCard("XP", "0 XP")}
 
                 </div>
 
