@@ -441,6 +441,25 @@ const Components = {
     `;
 },
 
+    entityOrgans(entity){
+    return `
+        <div class="section" style="margin-top:24px;padding:24px;">
+            <button class="secondary-btn" data-action="entity:dashboard" style="margin-bottom:18px;">
+                ← Entity Dashboard
+            </button>
+
+            <div class="eyebrow">ENTITY ORGANS</div>
+            <h2 style="margin-top:10px;">${entity.name}</h2>
+
+            <div class="card" style="margin-top:18px;padding:16px;">
+                <p style="color:var(--muted);line-height:1.7;">
+                    Bu varlığın organ sistemi burada yönetilecek.
+                </p>
+            </div>
+        </div>
+    `;
+},
+
     actions(){
         return `
             <div style="display:flex;gap:14px;margin-top:32px;">
