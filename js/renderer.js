@@ -8,7 +8,7 @@ const Renderer = {
  
         if(!root){
             console.error("Engine root not found");
-            return;
+            return; 
         }
 
         const components = VAERO.get("components");
