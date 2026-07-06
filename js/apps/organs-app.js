@@ -4,7 +4,7 @@ const OrgansApp = {
 
         return `
             <div class="section" style="margin-top:24px;padding:24px;">
- 
+  
                 <button
                     class="secondary-btn"
                     data-action="entity:dashboard"
