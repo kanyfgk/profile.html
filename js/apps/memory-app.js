@@ -3,7 +3,7 @@ const MemoryApp = {
     render(entity){
 
         return `
-            <div class="section" style="margin-top:24px;padding:24px;">
+            <div class="section" style="margin-top:24px;padding:24px;"> 
 
                 <button
                     class="secondary-btn"
