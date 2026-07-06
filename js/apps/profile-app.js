@@ -8,7 +8,7 @@ const ProfileApp = {
                 ${UI.appHeader(
                     entity.name,
                     "PROFILE APP",
-                    "👤"
+                    "👤" 
                 )}
 
                 ${UI.appCard(
