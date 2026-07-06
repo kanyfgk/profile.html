@@ -62,43 +62,7 @@ const OrgansApp = {
 
                 <div class="grid grid-2" style="margin-top:20px;">
 
-                    ${apps.map(app => `
-    <div
-        class="card"
-        data-action="${app.action}"
-        style="
-    cursor:pointer;
-    padding:22px;
-    text-align:center;
-    min-height:150px;
-    display:flex;
-    flex-direction:column;
-    align-items:center;
-    justify-content:center;
-"
-    >
-        <div style="font-size:46px;">
-            ${app.icon}
-        </div>
-
-        <h3 style="
-    margin-top:16px;
-    font-size:20px;
-    font-weight:600;
-">
-            ${app.title}
-        </h3>
-
-        <div style="
-    color:var(--muted);
-    margin-top:8px;
-    font-size:14px;
-    line-height:1.5;
-">
-            ${app.subtitle}
-        </div>
-    </div>
-`).join("")}
+                    ${apps.map(app => UI.launcherCard(app)).join("")}
 </div>
 
                 </div>
