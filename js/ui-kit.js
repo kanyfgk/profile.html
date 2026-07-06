@@ -1,12 +1,6 @@
 const UI = {
 
-    appHeader(
-    title,
-    subtitle, 
-    icon = "◌",
-    backAction = "entity:dashboard"
-){
-
+    appHeader(title, subtitle, icon = "◌", backAction = "entity:dashboard"){
 
         return `
             <button
@@ -25,23 +19,17 @@ const UI = {
                     justify-content:space-between;
                 "
             >
-
                 <div>
-
-                    <div class="eyebrow">
-                        ${subtitle}
-                    </div>
+                    <div class="eyebrow">${subtitle}</div>
 
                     <h2 style="margin-top:8px;">
                         ${title}
                     </h2>
-
                 </div>
 
                 <div style="${Theme.appIcon}">
                     ${icon}
                 </div>
-
             </div>
         `;
 
@@ -51,19 +39,11 @@ const UI = {
 
         return `
             <div class="card" style="margin-top:${Theme.spacing.md}px;${Theme.card}">
+                <div class="eyebrow">${title}</div>
 
-                <div class="eyebrow">
-                    ${title}
-                </div>
-
-                <p style="
-                    margin-top:12px;
-                    color:var(--muted);
-                    line-height:1.7;
-                ">
+                <p style="margin-top:12px;color:var(--muted);line-height:1.7;">
                     ${text}
                 </p>
-
             </div>
         `;
 
@@ -73,7 +53,6 @@ const UI = {
 
         return `
             <div class="card" style="margin-top:${Theme.spacing.md}px;${Theme.card}">
-
                 <div class="eyebrow">VA KİMLİĞİ</div>
 
                 <h3 style="margin-top:12px;word-break:break-all;">
@@ -87,89 +66,70 @@ const UI = {
                 <div style="margin-top:16px;color:${Theme.colors.success};font-weight:800;">
                     Doğrulandı
                 </div>
+            </div>
+        `;
 
+    },
+
+    launcherCard(app){
+
+        return `
+            <div
+                class="card"
+                data-action="${app.action}"
+                style="
+                    ${Theme.card}
+                    cursor:pointer;
+                    min-height:150px;
+                    display:flex;
+                    flex-direction:column;
+                    align-items:center;
+                    justify-content:center;
+                    text-align:center;
+                "
+            >
+                <div style="font-size:${Theme.icon.large}px;">
+                    ${app.icon}
+                </div>
+
+                <h3 style="margin-top:16px;font-size:20px;font-weight:600;">
+                    ${app.title}
+                </h3>
+
+                <div style="color:var(--muted);margin-top:8px;font-size:14px;line-height:1.5;">
+                    ${app.subtitle}
+                </div>
+            </div>
+        `;
+
+    },
+
+    statsCard(title, value){
+
+        return `
+            <div class="card" style="${Theme.card}">
+                <div class="eyebrow">${title}</div>
+
+                <h3 style="margin-top:8px;">
+                    ${value}
+                </h3>
+            </div>
+        `;
+
+    },
+
+    infoRow(label, value){
+
+        return `
+            <div style="margin-top:14px;">
+                <b>${label}</b>
+
+                <p style="margin-top:6px;color:var(--muted);word-break:break-all;">
+                    ${value}
+                </p>
             </div>
         `;
 
     }
 
-    launcherCard(app){
-
-    return `
-        <div
-            class="card"
-            data-action="${app.action}"
-            style="
-                ${Theme.card}
-                cursor:pointer;
-                min-height:150px;
-                display:flex;
-                flex-direction:column;
-                align-items:center;
-                justify-content:center;
-                text-align:center;
-            "
-        >
-            <div style="font-size:${Theme.icon.large}px;">
-                ${app.icon}
-            </div>
-
-            <h3 style="
-                margin-top:16px;
-                font-size:20px;
-                font-weight:600;
-            ">
-                ${app.title}
-            </h3>
-
-            <div style="
-                color:var(--muted);
-                margin-top:8px;
-                font-size:14px;
-                line-height:1.5;
-            ">
-                ${app.subtitle}
-            </div>
-        </div>
-    `;
-
-},
-
-    statsCard(title, value){
-
-    return `
-        <div class="card" style="${Theme.card}">
-
-            <div class="eyebrow">
-                ${title}
-            </div>
-
-            <h3 style="margin-top:8px;">
-                ${value}
-            </h3>
-
-        </div>
-    `;
-
-},
-
-    infoRow(label, value){
-
-    return `
-        <div style="margin-top:14px;">
-
-            <b>${label}</b>
-
-            <p style="
-                margin-top:6px;
-                color:var(--muted);
-                word-break:break-all;
-            ">
-                ${value}
-            </p>
-
-        </div>
-    `;
-
-},
 };
