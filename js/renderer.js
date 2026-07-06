@@ -6,7 +6,7 @@ const Renderer = {
  
         const root = document.getElementById(this.mountId);
  
-        if(!root){
+        if(!root){ 
             console.error("Engine root not found");
             return; 
         }
