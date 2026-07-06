@@ -1,40 +1,20 @@
 const Actions = {
- 
-    openProfile(entity){  
 
+    openProfile(entity){
         const memory = VAERO.get("memorySystem");
 
         memory.remember("profile:opened", {
             entityId: entity.id,
             profileName: entity.profile.name
         });
-   
-        const modal = document.getElementById("profileModal");
-        const title = document.getElementById("modalTitle");
-        const text = document.getElementById("modalText");
-
-        title.innerText = entity.profile.name;
-
-        text.innerText =
-            `Type: ${entity.profile.type}
-Identity: ${entity.profile.identity.verified ? "Verified" : "Unverified"}`;
-
-        modal.classList.add("show");
-
     },
 
     closeModal(){
-
         const modal = document.getElementById("profileModal");
-
-        if(modal){
-            modal.classList.remove("show");
-        }
-
+        if(modal) modal.classList.remove("show");
     },
 
     createWorld(){
-
         const input = document.getElementById("worldNameInput");
 
         if(!input || input.value.trim() === ""){
@@ -52,16 +32,11 @@ Identity: ${entity.profile.identity.verified ? "Verified" : "Unverified"}`;
             entities: []
         });
 
-        alert(`World "${input.value}" created.`);
-
         VAERO.engine.mount(VAERO.engine.currentEntity);
-
         input.value = "";
-
     },
 
     openWorld(worldId){
-
         const worldService = VAERO.get("world");
         const world = worldService.all().find(item => item.id === worldId);
 
@@ -70,17 +45,13 @@ Identity: ${entity.profile.identity.verified ? "Verified" : "Unverified"}`;
             return;
         }
 
-        if(!world.entities){
-            world.entities = [];
-        }
+        if(!world.entities) world.entities = [];
 
         VAERO.engine.currentWorld = world;
         VAERO.engine.mount(VAERO.engine.currentEntity);
-
     },
 
     createEntity(){
-
         const input = document.getElementById("entityNameInput");
 
         if(!input || input.value.trim() === ""){
@@ -95,9 +66,7 @@ Identity: ${entity.profile.identity.verified ? "Verified" : "Unverified"}`;
             return;
         }
 
-        if(!currentWorld.entities){
-            currentWorld.entities = [];
-        }
+        if(!currentWorld.entities) currentWorld.entities = [];
 
         const entityManager = VAERO.get("entityManager");
 
@@ -113,16 +82,11 @@ Identity: ${entity.profile.identity.verified ? "Verified" : "Unverified"}`;
         VAERO.engine.entityType = null;
 
         VAERO.engine.mount(VAERO.engine.currentEntity);
-
     },
 
     openEntity(entityId){
-
         const world = VAERO.engine.currentWorld;
-
-        if(!world){
-            return;
-        }
+        if(!world) return;
 
         const entity = (world.entities || []).find(item => item.id === entityId);
 
@@ -132,9 +96,14 @@ Identity: ${entity.profile.identity.verified ? "Verified" : "Unverified"}`;
         }
 
         VAERO.engine.currentOpenedEntity = entity;
+        VAERO.engine.currentEntityPage = null;
 
         VAERO.engine.mount(VAERO.engine.currentEntity);
+    },
 
+    openEntityPage(page){
+        VAERO.engine.currentEntityPage = page;
+        VAERO.engine.mount(VAERO.engine.currentEntity);
     }
 
 };
@@ -142,10 +111,7 @@ Identity: ${entity.profile.identity.verified ? "Verified" : "Unverified"}`;
 document.addEventListener("click", event => {
 
     const button = event.target.closest("[data-action]");
-
-    if(!button){
-        return;
-    }
+    if(!button) return;
 
     const action = button.dataset.action;
 
@@ -162,85 +128,46 @@ document.addEventListener("click", event => {
     }
 
     if(action === "world:open"){
-        const worldId = button.dataset.worldId;
-        Actions.openWorld(worldId);
+        Actions.openWorld(button.dataset.worldId);
     }
 
- if(action === "world:back"){
-    VAERO.engine.currentEntityPage = null;
-    VAERO.engine.currentOpenedEntity = null;
-    VAERO.engine.mount(VAERO.engine.currentEntity);
-}
+    if(action === "world:back"){
+        VAERO.engine.currentEntityPage = null;
+        VAERO.engine.currentOpenedEntity = null;
+        VAERO.engine.mount(VAERO.engine.currentEntity);
+    }
 
- if (action === "entity:identity") {
-    VAERO.engine.currentEntityPage = "identity";
-    VAERO.engine.mount(VAERO.engine.currentEntity);
-}
+    if(action === "entity:dashboard"){
+        Actions.openEntityPage(null);
+    }
 
- if (action === "entity:profile") {
-    VAERO.engine.currentEntityPage = "profile";
-    VAERO.engine.mount(VAERO.engine.currentEntity);
-}
- 
-if (action === "entity:organs") {
-    VAERO.engine.currentEntityPage = "organs";
-    VAERO.engine.mount(VAERO.engine.currentEntity);
-}
+    if(action === "entity:identity"){
+        Actions.openEntityPage("identity");
+    }
 
- if (action === "entity:timeline") {
-    VAERO.engine.currentEntityPage = "timeline";
-    VAERO.engine.mount(VAERO.engine.currentEntity);
-}
+    if(action === "entity:profile"){
+        Actions.openEntityPage("profile");
+    }
 
-if (action === "entity:memory") {
-    VAERO.engine.currentEntityPage = "memory";
-    VAERO.engine.mount(VAERO.engine.currentEntity);
-}
+    if(action === "entity:organs"){
+        Actions.openEntityPage("organs");
+    }
 
-if (action === "entity:bridge") {
-    VAERO.engine.currentEntityPage = "bridge";
-    VAERO.engine.mount(VAERO.engine.currentEntity);
-}
+    if(action === "entity:timeline"){
+        Actions.openEntityPage("timeline");
+    }
 
-if (action === "entity:settings") {
-    VAERO.engine.currentEntityPage = "settings";
-    VAERO.engine.mount(VAERO.engine.currentEntity);
-}
+    if(action === "entity:memory"){
+        Actions.openEntityPage("memory");
+    }
 
- if (action === "entity:profile") {
-    VAERO.engine.currentEntityPage = "profile";
-    VAERO.engine.mount(VAERO.engine.currentEntity);
-}
+    if(action === "entity:bridge"){
+        Actions.openEntityPage("bridge");
+    }
 
-if (action === "entity:dashboard") {
-    VAERO.engine.currentEntityPage = "dashboard";
-    VAERO.engine.mount(VAERO.engine.currentEntity);
-}
-
-if (action === "entity:timeline") {
-    VAERO.engine.currentEntityPage = "timeline";
-VAERO.engine.mount(VAERO.engine.currentEntity);
-}
-
-if (action === "entity:bridge") {
-    VAERO.engine.currentEntityPage = "bridge";
-VAERO.engine.mount(VAERO.engine.currentEntity);
-}
-
-if (action === "entity:memory") {
-    VAERO.engine.currentEntityPage = "memory";
-VAERO.engine.mount(VAERO.engine.currentEntity);
-}
-
-if (action === "entity:settings") {
-    VAERO.engine.currentEntityPage = "settings";
-VAERO.engine.mount(VAERO.engine.currentEntity);
-}
-
- if(action === "entity:dashboard"){
-    VAERO.engine.currentEntityPage = null;
-    VAERO.engine.mount(VAERO.engine.currentEntity);
-}
+    if(action === "entity:settings"){
+        Actions.openEntityPage("settings");
+    }
 
     if(action === "entity:create:first"){
         VAERO.engine.entityCreateMode = true;
@@ -248,8 +175,7 @@ VAERO.engine.mount(VAERO.engine.currentEntity);
     }
 
     if(action === "entity:type:select"){
-        const type = button.dataset.entityType;
-        VAERO.engine.entityType = type;
+        VAERO.engine.entityType = button.dataset.entityType;
         VAERO.engine.mount(VAERO.engine.currentEntity);
     }
 
@@ -257,10 +183,9 @@ VAERO.engine.mount(VAERO.engine.currentEntity);
         Actions.createEntity();
     }
 
- if(action === "entity:open"){
-    const entityId = button.dataset.entityId;
-    Actions.openEntity(entityId);
-}
+    if(action === "entity:open"){
+        Actions.openEntity(button.dataset.entityId);
+    }
 
 });
 
