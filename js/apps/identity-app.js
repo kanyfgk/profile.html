@@ -5,18 +5,10 @@ const IdentityApp = {
         return `
             <div class="section" style="margin-top:24px;padding:24px;"> 
 
-                <button
-                    class="secondary-btn"
-                    data-action="entity:dashboard"
-                    style="margin-bottom:18px;">
-                    ← Varlık Kontrol Paneli
-                </button>
-
-                <div class="eyebrow">KİMLİK UYGULAMASI</div>
-
-                <h2 style="margin-top:10px;">
-                    ${entity.name}
-                </h2>
+                ${UI.appHeader(
+    entity.name,
+    "KİMLİK UYGULAMASI"
+)}
 
                 <div class="card" style="margin-top:18px;padding:18px;">
                     <div class="eyebrow">VA KİMLİĞİ</div>
