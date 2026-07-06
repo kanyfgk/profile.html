@@ -3,28 +3,14 @@ const UI = {
     appHeader(title, subtitle, icon = "◌", backAction = "entity:dashboard"){
 
         return `
-            <button
-                class="secondary-btn"
-                data-action="${backAction}" 
-                style="margin-bottom:18px;">
+            <button class="secondary-btn" data-action="${backAction}" style="margin-bottom:18px;">
                 ← Geri
             </button>
 
-            <div
-                class="card"
-                style="
-                    ${Theme.card}
-                    display:flex;
-                    align-items:center;
-                    justify-content:space-between;
-                "
-            >
+            <div class="card" style="${Theme.card}display:flex;align-items:center;justify-content:space-between;">
                 <div>
                     <div class="eyebrow">${subtitle}</div>
-
-                    <h2 style="margin-top:8px;">
-                        ${title}
-                    </h2>
+                    <h2 style="margin-top:8px;">${title}</h2>
                 </div>
 
                 <div style="${Theme.appIcon}">
@@ -32,25 +18,20 @@ const UI = {
                 </div>
             </div>
         `;
-
     },
 
     appCard(title, text){
-
         return `
             <div class="card" style="margin-top:${Theme.spacing.md}px;${Theme.card}">
                 <div class="eyebrow">${title}</div>
-
                 <p style="margin-top:12px;color:var(--muted);line-height:1.7;">
                     ${text}
                 </p>
             </div>
         `;
-
     },
 
     identityCard(entity){
-
         return `
             <div class="card" style="margin-top:${Theme.spacing.md}px;${Theme.card}">
                 <div class="eyebrow">VA KİMLİĞİ</div>
@@ -68,26 +49,11 @@ const UI = {
                 </div>
             </div>
         `;
-
     },
 
     launcherCard(app){
-
         return `
-            <div
-                class="card"
-                data-action="${app.action}"
-                style="
-                    ${Theme.card}
-                    cursor:pointer;
-                    min-height:150px;
-                    display:flex;
-                    flex-direction:column;
-                    align-items:center;
-                    justify-content:center;
-                    text-align:center;
-                "
-            >
+            <div class="card" data-action="${app.action}" style="${Theme.card}cursor:pointer;min-height:150px;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;">
                 <div style="font-size:${Theme.icon.large}px;">
                     ${app.icon}
                 </div>
@@ -101,35 +67,26 @@ const UI = {
                 </div>
             </div>
         `;
-
     },
 
     statsCard(title, value){
-
         return `
             <div class="card" style="${Theme.card}">
                 <div class="eyebrow">${title}</div>
-
-                <h3 style="margin-top:8px;">
-                    ${value}
-                </h3>
+                <h3 style="margin-top:8px;">${value}</h3>
             </div>
         `;
-
     },
 
     infoRow(label, value){
-
         return `
             <div style="margin-top:14px;">
                 <b>${label}</b>
-
                 <p style="margin-top:6px;color:var(--muted);word-break:break-all;">
                     ${value}
                 </p>
             </div>
         `;
-
     }
 
 };
