@@ -18,6 +18,38 @@ const Components = {
         `;
     },
 
+    entityApp(entity){
+
+    switch(VAERO.engine.currentEntityPage){
+
+        case "identity":
+            return this.entityIdentity(entity);
+
+        case "profile":
+            return this.entityProfile(entity);
+
+        case "organs":
+            return this.entityOrgans(entity);
+
+        case "memory":
+            return this.entityMemory(entity);
+
+        case "timeline":
+            return this.entityTimeline(entity);
+
+        case "bridge":
+            return this.entityBridge(entity);
+
+        case "settings":
+            return this.entitySettings(entity);
+
+        default:
+            return this.entityView(entity);
+
+    }
+
+},
+
     organs(entity){
         return `
             <div class="section" style="margin-top:24px;padding:18px;">
