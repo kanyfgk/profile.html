@@ -6,9 +6,10 @@ const IdentityApp = {
             <div class="section" style="margin-top:24px;padding:24px;">
 
                 ${UI.appHeader(
-                    entity.name,
-                    "KİMLİK UYGULAMASI"
-                )}
+    entity.name,
+    "KİMLİK UYGULAMASI",
+    "🪪"
+)}
 
                 ${UI.identityCard(entity)}
 
