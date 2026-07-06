@@ -6,7 +6,7 @@ const SettingsApp = {
             <div class="section" style="margin-top:24px;padding:24px;">
 
                 <button
-                    class="secondary-btn"
+                    class="secondary-btn" 
                     data-action="entity:dashboard"
                     style="margin-bottom:18px;">
                     ← Varlık Kontrol Paneli
