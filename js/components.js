@@ -423,24 +423,7 @@ const Components = {
 },
 
     entityTimeline(entity){
-    return `
-        <div class="section" style="margin-top:24px;padding:24px;">
-            <button class="secondary-btn" data-action="entity:dashboard" style="margin-bottom:18px;">
-                ← Entity Dashboard
-            </button>
-
-            <div class="eyebrow">ENTITY TIMELINE</div>
-
-            <h2 style="margin-top:10px;">
-                ${entity.name}
-            </h2>
-
-            <div class="card" style="margin-top:18px;padding:16px;">
-                Timeline yakında burada gösterilecek.
-            </div>
-
-        </div>
-    `;
+    return TimelineApp.render(entity);
 },
 
     entityBridge(entity){
