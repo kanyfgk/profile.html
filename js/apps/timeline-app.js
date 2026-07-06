@@ -10,7 +10,7 @@ const TimelineApp = {
                     data-action="entity:dashboard" 
                     style="margin-bottom:18px;">
                     ← Varlık Kontrol Paneli
-                </button>
+                </button> 
 
                 <div class="eyebrow">TIMELINE APP</div>
 
