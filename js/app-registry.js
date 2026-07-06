@@ -1,4 +1,4 @@
-const AppRegistry = {
+const OrganRegistry = {
 
     apps: [],
 
@@ -12,7 +12,7 @@ const AppRegistry = {
 
 };
 
-AppRegistry.register({
+OrganRegistry.register({
     id: "identity",
     icon: "🪪",
     title: "Kimlik",
@@ -20,7 +20,7 @@ AppRegistry.register({
     action: "entity:identity"
 });
 
-AppRegistry.register({
+OrganRegistry.register({
     id: "profile",
     icon: "👤",
     title: "Profil",
@@ -28,7 +28,7 @@ AppRegistry.register({
     action: "entity:profile"
 });
 
-AppRegistry.register({
+OrganRegistry.register({
     id: "memory",
     icon: "💾",
     title: "Hafıza",
@@ -36,7 +36,7 @@ AppRegistry.register({
     action: "entity:memory"
 });
 
-AppRegistry.register({
+OrganRegistry.register({
     id: "timeline",
     icon: "🕓",
     title: "Timeline",
@@ -44,7 +44,7 @@ AppRegistry.register({
     action: "entity:timeline"
 });
 
-AppRegistry.register({
+OrganRegistry.register({
     id: "bridge",
     icon: "🌉",
     title: "Bridge",
@@ -52,7 +52,7 @@ AppRegistry.register({
     action: "entity:bridge"
 });
 
-AppRegistry.register({
+OrganRegistry.register({
     id: "settings",
     icon: "⚙️",
     title: "Ayarlar",
