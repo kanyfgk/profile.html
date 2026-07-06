@@ -10,7 +10,7 @@ const UI = {
                 ← Geri
             </button>
 
-            <div class="card" style="padding:20px;">
+            <div class="card" style="${Theme.card}">
 
                 <div class="eyebrow">
                     ${subtitle}
@@ -28,7 +28,7 @@ const UI = {
     appCard(title, text){
 
         return `
-            <div class="card" style="margin-top:18px;padding:18px;">
+            <div class="card" style="margin-top:${Theme.spacing.md}px;${Theme.card}">
 
                 <div class="eyebrow">
                     ${title}
@@ -50,7 +50,7 @@ const UI = {
     identityCard(entity){
 
     return `
-        <div class="card" style="margin-top:18px;padding:18px;">
+        <div class="card" style="margin-top:${Theme.spacing.md}px;${Theme.card}">
 
             <div class="eyebrow">VA KİMLİĞİ</div>
 
