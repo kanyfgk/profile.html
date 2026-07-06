@@ -384,28 +384,8 @@ const Components = {
 <div class="card" style="margin-top:18px;">
     <div class="grid grid-2">
 
-        <button class="secondary-btn" data-action="entity:profile">
-    👤 Profil
-</button>
-
-<button class="secondary-btn" data-action="entity:organs">
-    🧠 Organlar
-</button>
-
-<button class="secondary-btn" data-action="entity:timeline">
-    🕓 Timeline
-</button>
-
-<button class="secondary-btn" data-action="entity:bridge">
-    🌉 Bridge
-</button>
-
-<button class="secondary-btn" data-action="entity:memory">
-    💾 Memory
-</button>
-
-<button class="secondary-btn" data-action="entity:settings">
-    ⚙️ Ayarlar
+        <button class="secondary-btn" data-action="entity:organs" style="grid-column:1 / -1;">
+    📱 Organ Launcher
 </button>
 
     </div>
