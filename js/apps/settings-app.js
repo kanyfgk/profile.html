@@ -6,7 +6,7 @@ const SettingsApp = {
             <div class="section" style="margin-top:24px;padding:24px;">
 
                 ${UI.appHeader(
-                    entity.name,
+                    entity.name, 
                     "SETTINGS",
                     "⚙️"
                 )}
