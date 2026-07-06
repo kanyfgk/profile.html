@@ -2,7 +2,7 @@ const Components = {
 
     hero(entity){
         return `
-            <div class="brand-header"> 
+            <div class="brand-header">  
                 <div class="brand-mark">${entity.name.charAt(0)}</div>
 
                 <div>
