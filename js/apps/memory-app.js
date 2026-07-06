@@ -12,7 +12,7 @@ const MemoryApp = {
                     ← Varlık Kontrol Paneli
                 </button>
 
-                <div class="eyebrow">MEMORY APP</div>
+                <div class="eyebrow">MEMORY APP</div> 
 
                 <h2 style="margin-top:10px;">
                     ${entity.name}
