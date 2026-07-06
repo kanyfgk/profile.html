@@ -134,4 +134,22 @@ const UI = {
     `;
 
 },
+
+    statsCard(title, value){
+
+    return `
+        <div class="card" style="${Theme.card}">
+
+            <div class="eyebrow">
+                ${title}
+            </div>
+
+            <h3 style="margin-top:8px;">
+                ${value}
+            </h3>
+
+        </div>
+    `;
+
+},
 };
