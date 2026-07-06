@@ -427,26 +427,8 @@ const Components = {
 },
 
     entityBridge(entity){
-    return `
-        <div class="section" style="margin-top:24px;padding:24px;">
-            <button class="secondary-btn" data-action="entity:dashboard" style="margin-bottom:18px;">
-                ← Entity Dashboard
-            </button>
-
-            <div class="eyebrow">ENTITY BRIDGE</div>
-
-            <h2 style="margin-top:10px;">
-                ${entity.name}
-            </h2>
-
-            <div class="card" style="margin-top:18px;padding:16px;">
-                Bridge sistemi yakında burada yönetilecek.
-            </div>
-
-        </div>
-    `;
+    return BridgeApp.render(entity);
 },
-
     entityMemory(entity){
     return MemoryApp.render(entity);
 },
