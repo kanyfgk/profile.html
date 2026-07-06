@@ -1,10 +1,48 @@
 const OrgansApp = {
 
     render(entity){
+        const apps = [
+    {
+        icon: "🪪",
+        title: "Kimlik",
+        subtitle: "Kimliğini yönet",
+        action: "entity:identity"
+    },
+    {
+        icon: "👤",
+        title: "Profil",
+        subtitle: "Profilini yönet",
+        action: "entity:profile"
+    },
+    {
+        icon: "💾",
+        title: "Hafıza",
+        subtitle: "Hafızayı yönet",
+        action: "entity:memory"
+    },
+    {
+        icon: "🕓",
+        title: "Timeline",
+        subtitle: "Geçmişi görüntüle",
+        action: "entity:timeline"
+    },
+    {
+        icon: "🌉",
+        title: "Bridge",
+        subtitle: "Bağlantıları yönet",
+        action: "entity:bridge"
+    },
+    {
+        icon: "⚙️",
+        title: "Ayarlar",
+        subtitle: "Sistemi yönet",
+        action: "entity:settings"
+    }
+];
 
         return `
             <div class="section" style="margin-top:24px;padding:24px;">
-  
+
                 <button
                     class="secondary-btn"
                     data-action="entity:dashboard"
@@ -12,71 +50,56 @@ const OrgansApp = {
                     ← Varlık Kontrol Paneli
                 </button>
 
-                <div class="eyebrow">ENTITY ORGANS</div>
+                <div class="card" style="padding:20px;">
+                    <div class="eyebrow">ORGAN LAUNCHER</div>
 
-                <h2 style="margin-top:10px;">
-                    ${entity.name}
-                </h2>
+                    <h2 style="margin-top:8px;">Organlar</h2>
 
-                <p style="
-                    margin-top:10px;
-                    color:var(--muted);
-                    line-height:1.7;
-                ">
-                    Organlar, bu varlığın çalışan sistemlerini temsil eder.
-                </p>
+                    <p style="margin-top:10px;color:var(--muted);line-height:1.7;">
+                        Her organ bağımsız çalışan bir uygulamadır.
+                    </p>
+                </div>
 
                 <div class="grid grid-2" style="margin-top:20px;">
 
-                    <div class="card" style="grid-column:1 / -1;">
+                    ${apps.map(app => `
+    <div
+        class="card"
+        data-action="${app.action}"
+        style="
+    cursor:pointer;
+    padding:22px;
+    text-align:center;
+    min-height:150px;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+"
+    >
+        <div style="font-size:46px;">
+            ${app.icon}
+        </div>
 
-                        <div class="eyebrow">ORGAN SİSTEMİ</div>
+        <h3 style="
+    margin-top:16px;
+    font-size:20px;
+    font-weight:600;
+">
+            ${app.title}
+        </h3>
 
-                        <p style="
-                            margin-top:12px;
-                            color:var(--muted);
-                            line-height:1.7;
-                        ">
-                            Her organ bağımsız çalışan bir sistemdir.
-                        </p>
-
-                    </div>
-
-                    <div class="card">
-                        <div class="eyebrow">IDENTITY</div>
-                        <p style="font-size:42px;margin:18px 0 10px;">🪪</p>
-                        <div style="color:var(--muted);">Kimlik</div>
-                    </div>
-
-                    <div class="card">
-                        <div class="eyebrow">PROFILE</div>
-                        <p style="font-size:42px;margin:18px 0 10px;">👤</p>
-                        <div style="color:var(--muted);">Profil</div>
-                    </div>
-
-                    <div class="card">
-                        <div class="eyebrow">MEMORY</div>
-                        <p style="font-size:42px;margin:18px 0 10px;">💾</p>
-                        <div style="color:var(--muted);">Hafıza</div>
-                    </div>
-
-                    <div class="card">
-                        <div class="eyebrow">TIMELINE</div>
-                        <p style="font-size:42px;margin:18px 0 10px;">🕓</p>
-                        <div style="color:var(--muted);">Zaman Akışı</div>
-                    </div>
-
-                    <div class="card">
-                        <div class="eyebrow">BRIDGE</div>
-                        <p style="font-size:42px;margin:18px 0 10px;">🌉</p>
-                        <div style="color:var(--muted);">Bağlantılar</div>
-                    </div>
-
-                    <div class="card">
-                        <div class="eyebrow">GUARDIAN</div>
-                        <p style="font-size:42px;margin:18px 0 10px;">🛡️</p>
-                        <div style="color:var(--muted);">Koruyucu</div>
-                    </div>
+        <div style="
+    color:var(--muted);
+    margin-top:8px;
+    font-size:14px;
+    line-height:1.5;
+">
+            ${app.subtitle}
+        </div>
+    </div>
+`).join("")}
+</div>
 
                 </div>
 
