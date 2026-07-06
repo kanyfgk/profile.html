@@ -7,12 +7,12 @@ const OrganRegistry = {
     },
 
     all(){
-    return this.apps;
-},
+        return this.apps;
+    },
 
-find(id){
-    return this.apps.find(app => app.id === id); 
-}
+    find(id){
+        return this.apps.find(app => app.id === id);
+    }
 
 };
 
@@ -63,3 +63,5 @@ OrganRegistry.register({
     subtitle: "Sistemi yönet",
     action: "entity:settings"
 });
+
+window.OrganRegistry = OrganRegistry;
