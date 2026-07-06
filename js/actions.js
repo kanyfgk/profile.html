@@ -172,27 +172,33 @@ document.addEventListener("click", event => {
 }
 
  if (action === "entity:profile") {
-    console.log("👤 Profil açıldı");
+    VAERO.engine.currentEntityPage = "profile";
+    VAERO.engine.mount(VAERO.engine.currentEntity);
 }
-
+ 
 if (action === "entity:organs") {
-    console.log("🧠 Organlar açıldı");
+    VAERO.engine.currentEntityPage = "organs";
+    VAERO.engine.mount(VAERO.engine.currentEntity);
 }
 
 if (action === "entity:timeline") {
-    console.log("🕓 Timeline açıldı");
+    VAERO.engine.currentEntityPage = "timeline";
+VAERO.engine.mount(VAERO.engine.currentEntity);
 }
 
 if (action === "entity:bridge") {
-    console.log("🌉 Bridge açıldı");
+    VAERO.engine.currentEntityPage = "bridge";
+VAERO.engine.mount(VAERO.engine.currentEntity);
 }
 
 if (action === "entity:memory") {
-    console.log("💾 Memory açıldı");
+    VAERO.engine.currentEntityPage = "memory";
+VAERO.engine.mount(VAERO.engine.currentEntity);
 }
 
 if (action === "entity:settings") {
-    console.log("⚙️ Ayarlar açıldı");
+    VAERO.engine.currentEntityPage = "settings";
+VAERO.engine.mount(VAERO.engine.currentEntity);
 }
 
     if(action === "entity:create:first"){
