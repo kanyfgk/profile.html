@@ -3,7 +3,7 @@ const Theme = {
     radius: 22,
 
     spacing: {
-        xs: 6,
+        xs: 6, 
         sm: 10,
         md: 18,
         lg: 24,
