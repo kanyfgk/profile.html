@@ -11,7 +11,7 @@ const OrganRegistry = {
 },
 
 find(id){
-    return this.apps.find(app => app.id === id);
+    return this.apps.find(app => app.id === id); 
 }
 
 };
