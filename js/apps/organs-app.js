@@ -1,7 +1,7 @@
 const OrgansApp = {
 
     render(entity){
-
+ 
         return `
             <div class="section" style="margin-top:24px;padding:24px;">
 
