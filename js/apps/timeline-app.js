@@ -7,7 +7,7 @@ const TimelineApp = {
 
                 <button
                     class="secondary-btn"
-                    data-action="entity:dashboard"
+                    data-action="entity:dashboard" 
                     style="margin-bottom:18px;">
                     ← Varlık Kontrol Paneli
                 </button>
