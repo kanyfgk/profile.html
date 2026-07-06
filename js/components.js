@@ -425,25 +425,35 @@ const Components = {
                 ← Varlık Kontrol Paneli
             </button>
 
-            <div class="eyebrow">VARLIK PROFİLİ</div>
             <div style="
-    margin-top:18px;
-    margin-bottom:18px;
-    height:1px;
-    background:rgba(255,255,255,.08);
-"></div>
-            <div style="
-    margin-top:14px;
     display:flex;
-    gap:8px;
-    flex-wrap:wrap;
+    align-items:center;
+    justify-content:space-between;
+    margin-bottom:20px;
 ">
 
-    <span class="badge">VA ID</span>
+    <div>
 
-    <span class="badge">Verified</span>
+        <div class="eyebrow">PROFILE APP</div>
 
-    <span class="badge">${entity.type}</span>
+        <h2 style="margin-top:6px;">
+            ${entity.name}
+        </h2>
+
+    </div>
+
+    <div style="
+        width:56px;
+        height:56px;
+        border-radius:18px;
+        background:rgba(255,255,255,.08);
+        display:flex;
+        align-items:center;
+        justify-content:center;
+        font-size:28px;
+    ">
+        👤
+    </div>
 
 </div>
 
@@ -451,16 +461,43 @@ const Components = {
                 ${entity.name}
             </h2>
 
-            <p style="
-    margin-top:10px;
-    color:var(--muted);
-    line-height:1.7;
-">
-    Bu sayfa varlığın temel kimliğini ve sistem içerisindeki profil bilgilerini gösterir.
-</p>
+            <div class="card" style="margin-top:18px;padding:18px;">
+
+    <div class="eyebrow">HIZLI İŞLEMLER</div>
+
+    <div class="grid grid-2" style="margin-top:16px;">
+
+        <button class="secondary-btn">
+            Düzenle
+        </button>
+
+        <button class="secondary-btn">
+            Paylaş
+        </button>
+
+        <button class="secondary-btn">
+            Kimlik
+        </button>
+
+        <button class="secondary-btn">
+            Rozetler
+        </button>
+
+    </div>
+
+</div>
 
             <div class="card" style="margin-top:18px;padding:16px;">
                 <div class="grid grid-2">
+                <div class="card">
+    <div class="eyebrow">TAKİPÇİLER</div>
+    <p style="margin:0;color:var(--muted);">0</p>
+</div>
+
+<div class="card">
+    <div class="eyebrow">TAKİP EDİLEN</div>
+    <p style="margin:0;color:var(--muted);">0</p>
+</div>
                 <div class="card">
     <div class="eyebrow">OLUŞTURULMA</div>
     <h3>Yakında</h3>
@@ -502,6 +539,21 @@ const Components = {
     Aktif
 </p>
     </div>
+    <div class="card">
+
+    <div class="eyebrow">SEVİYE</div>
+
+    <h3>1</h3>
+
+</div>
+
+<div class="card">
+
+    <div class="eyebrow">XP</div>
+
+    <h3>0 XP</h3>
+
+</div>
 
     <div class="card">
         <div class="eyebrow">KAYNAK</div>
@@ -519,9 +571,19 @@ const Components = {
             <div class="card" style="margin-top:18px;padding:16px;">
 
     <div><b>İsim</b></div>
-    <div style="margin-top:6px;color:var(--muted);">
+    <div style="margin-top:6px;">
+    <div style="font-size:20px;font-weight:700;">
         ${entity.name}
     </div>
+
+    <div style="
+        margin-top:6px;
+        color:var(--muted);
+        font-size:13px;
+    ">
+        VA Kimliği Doğrulandı • ${entity.type}
+    </div>
+</div>
 
     <hr style="margin:16px 0;opacity:.15;">
 
