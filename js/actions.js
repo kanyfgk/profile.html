@@ -167,6 +167,7 @@ document.addEventListener("click", event => {
     }
 
  if(action === "world:back"){
+    VAERO.engine.currentEntityPage = null;
     VAERO.engine.currentOpenedEntity = null;
     VAERO.engine.mount(VAERO.engine.currentEntity);
 }
