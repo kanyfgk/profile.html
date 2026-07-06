@@ -10,7 +10,7 @@ const TimelineApp = {
                     "TIMELINE APP",
                     "🕓"
                 )}
-
+ 
                 ${UI.appCard(
                     "ZAMAN AKIŞI",
                     "Bu varlığa ait olaylar kronolojik olarak burada gösterilir."
