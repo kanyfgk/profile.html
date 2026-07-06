@@ -93,4 +93,45 @@ const UI = {
 
     }
 
+    launcherCard(app){
+
+    return `
+        <div
+            class="card"
+            data-action="${app.action}"
+            style="
+                ${Theme.card}
+                cursor:pointer;
+                min-height:150px;
+                display:flex;
+                flex-direction:column;
+                align-items:center;
+                justify-content:center;
+                text-align:center;
+            "
+        >
+            <div style="font-size:${Theme.icon.large}px;">
+                ${app.icon}
+            </div>
+
+            <h3 style="
+                margin-top:16px;
+                font-size:20px;
+                font-weight:600;
+            ">
+                ${app.title}
+            </h3>
+
+            <div style="
+                color:var(--muted);
+                margin-top:8px;
+                font-size:14px;
+                line-height:1.5;
+            ">
+                ${app.subtitle}
+            </div>
+        </div>
+    `;
+
+},
 };
