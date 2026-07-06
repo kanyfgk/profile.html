@@ -5,7 +5,7 @@ const UI = {
         return `
             <button
                 class="secondary-btn"
-                data-action="${backAction}"
+                data-action="${backAction}" 
                 style="margin-bottom:18px;">
                 ← Geri
             </button>
