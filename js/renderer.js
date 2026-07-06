@@ -26,6 +26,9 @@ const Renderer = {
         ${
     openedEntity
         ? (
+            VAERO.engine.currentEntityPage === "identity"
+    ? components.entityIdentity(openedEntity)
+:
     VAERO.engine.currentEntityPage === "profile"
         ? components.entityProfile(openedEntity)
     : VAERO.engine.currentEntityPage === "organs"
