@@ -181,11 +181,6 @@ document.addEventListener("click", event => {
     VAERO.engine.currentEntityPage = "profile";
     VAERO.engine.mount(VAERO.engine.currentEntity);
 }
-
- case "entity:identity":
-    VAERO.engine.currentEntityPage = "identity";
-    VAERO.render();
-    break;
  
 if (action === "entity:organs") {
     VAERO.engine.currentEntityPage = "organs";
