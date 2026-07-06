@@ -5,7 +5,7 @@ const Components = {
             <div class="brand-header">  
                 <div class="brand-mark">${entity.name.charAt(0)}</div>
 
-                <div>
+                <div> 
                     <div class="brand-title">${entity.name}</div> 
                     <div class="brand-subtitle">${entity.description}</div>
 
