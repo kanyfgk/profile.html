@@ -10,7 +10,7 @@ const ProfileApp = {
                     style="margin-bottom:18px;">
                     ← Varlık Kontrol Paneli
                 </button>
-
+ 
                 <div style="
                     display:flex; 
                     align-items:center;
