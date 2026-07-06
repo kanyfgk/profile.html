@@ -171,6 +171,30 @@ document.addEventListener("click", event => {
     VAERO.engine.mount(VAERO.engine.currentEntity);
 }
 
+ if (action === "entity:profile") {
+    console.log("👤 Profil açıldı");
+}
+
+if (action === "entity:organs") {
+    console.log("🧠 Organlar açıldı");
+}
+
+if (action === "entity:timeline") {
+    console.log("🕓 Timeline açıldı");
+}
+
+if (action === "entity:bridge") {
+    console.log("🌉 Bridge açıldı");
+}
+
+if (action === "entity:memory") {
+    console.log("💾 Memory açıldı");
+}
+
+if (action === "entity:settings") {
+    console.log("⚙️ Ayarlar açıldı");
+}
+
     if(action === "entity:create:first"){
         VAERO.engine.entityCreateMode = true;
         VAERO.engine.mount(VAERO.engine.currentEntity);
