@@ -1,7 +1,7 @@
 const VAERO_BUILD = {
-    id: "build-001",
+    id: "build-002",
     date: "2026-07-07",
-    note: "deploy verification active"
+    note: "brain panel start"
 };
 
 window.VAERO_BUILD = VAERO_BUILD;
