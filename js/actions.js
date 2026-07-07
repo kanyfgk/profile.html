@@ -1,7 +1,7 @@
 const Actions = {
 
     openProfile(entity){
-        const memory = VAERO.get("memorySystem");
+        const memory = VAERO.get("memorySystem"); 
 
         memory.remember("profile:opened", {
             entityId: entity.id,
