@@ -1,6 +1,7 @@
 const IdentityApp = {
 
     render(entity){
+        VAERO.get("brainAwareness").enter("identity");
 
         return `
             <div class="section" style="margin-top:24px;padding:24px;">
