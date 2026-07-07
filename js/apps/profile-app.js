@@ -43,6 +43,8 @@ const ProfileApp = {
 
                 </div>
 
+                ${UI.brainButton()}
+
             </div>
         `;
 
