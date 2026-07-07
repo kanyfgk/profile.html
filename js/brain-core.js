@@ -9,7 +9,9 @@ const BrainCore = {
     async ask(prompt, context = {}){
 
         if(!this.provider){
-            throw new Error("Brain provider not registered.");
+            return {
+                reply: "Brain provider henüz bağlı değil."
+            };
         }
 
         return await this.provider.ask(prompt, context);
@@ -19,3 +21,4 @@ const BrainCore = {
 };
 
 VAERO.register("brainCore", BrainCore);
+window.BrainCore = BrainCore;
