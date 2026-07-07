@@ -1,5 +1,7 @@
 const Brain = {
 
+    history: [],
+
     report(){
 
         const identity = VAERO.get("identity"); 
@@ -16,6 +18,19 @@ const Brain = {
             evolution: evolution ? "OK" : "MISSING",
             integrity: "100%"
         };
+
+    },
+
+    receive(message){
+
+        this.history.push({
+            role: "user",
+            text: message,
+            createdAt: Date.now()
+        });
+
+        console.log("Brain received:", message);
+        console.log("Brain history:", this.history);
 
     },
 
