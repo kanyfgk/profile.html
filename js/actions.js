@@ -149,6 +149,14 @@ const Actions = {
             console.warn("Brain receive fonksiyonu bulunamadı.");
         }
 
+        const history = document.getElementById("brainHistory");
+
+if(history && brain && brain.history){
+    history.innerHTML = brain.history
+        .map(item => `<div>👤 ${item.text}</div>`)
+        .join("");
+}
+
         input.value = "";
     }
 
