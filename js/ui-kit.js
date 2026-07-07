@@ -169,7 +169,6 @@ const UI = {
             </button>
 
             <div
-            <div
     id="brainHistory"
     style="
         margin-top:14px;
