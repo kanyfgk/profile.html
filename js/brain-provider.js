@@ -2,11 +2,11 @@ const BrainProvider = {
 
     async ask(prompt, context){
 
-        console.log("Prompt:", prompt);
-        console.log("Context:", context);
+        console.log("BRAIN PROMPT:", prompt);
+        console.log("BRAIN CONTEXT:", context);
 
         return {
-            reply: "Henüz AI bağlı değil."
+            reply: "VAERO Brain aktif. Henüz dış AI motoru bağlı değil."
         };
 
     }
@@ -14,3 +14,4 @@ const BrainProvider = {
 };
 
 VAERO.get("brainCore").register(BrainProvider);
+window.BrainProvider = BrainProvider;
