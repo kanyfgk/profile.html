@@ -170,6 +170,37 @@ document.addEventListener("click", event => {
 
 }
 
+    if(action === "brain:send"){
+
+    const input = document.getElementById("brainPromptInput");
+    const reply = document.getElementById("brainReply");
+
+    if(!input || !reply){
+        console.warn("Brain input veya reply alanı bulunamadı.");
+        return;
+    }
+
+    const prompt = input.value.trim();
+
+    if(prompt === ""){
+        reply.innerText = "Önce Brain'e ne yapmak istediğini yaz.";
+        return;
+    }
+
+    reply.innerText = "Düşünüyorum...";
+
+    VAERO.get("brainService")
+        .ask(prompt)
+        .then(result => {
+            reply.innerText = result.reply || "Brain cevap üretemedi.";
+        })
+        .catch(error => {
+            console.error("Brain send error:", error);
+            reply.innerText = "Brain şu an cevap veremedi.";
+        });
+
+}
+
     if(action === "entity:identity"){
         Actions.openEntityPage("identity");
     }
