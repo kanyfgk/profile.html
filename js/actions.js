@@ -143,13 +143,30 @@ document.addEventListener("click", event => {
 
     if(action === "brain:open"){
 
-    VAERO.get("brainService")
-        .ask("Merhaba Brain")
-        .then(result => {
+    const panel = document.getElementById("brainPanel");
 
-            alert(result.reply);
+    if(!panel){
+        console.warn("Brain panel bulunamadı.");
+        return;
+    }
 
-        });
+    panel.style.display = "block";
+
+    const contextText = document.getElementById("brainContextText");
+
+    if(contextText){
+        const context = VAERO.get("brainContext").build();
+        contextText.innerText = `Şu an ${context.app || "bilinmeyen"} ekranındasın.`;
+    }
+
+}
+    if(action === "brain:close"){
+
+    const panel = document.getElementById("brainPanel");
+
+    if(panel){
+        panel.style.display = "none";
+    }
 
 }
 
