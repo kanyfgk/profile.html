@@ -2,7 +2,7 @@ const Brain = {
 
     history: [],
 
-    report(){
+    report(){ 
 
         const identity = VAERO.get("identity"); 
         const memory = VAERO.get("memorySystem");
