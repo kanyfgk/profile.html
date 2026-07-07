@@ -141,6 +141,18 @@ document.addEventListener("click", event => {
         Actions.openEntityPage(null);
     }
 
+    if(action === "brain:open"){
+
+    VAERO.get("brainService")
+        .ask("Merhaba Brain")
+        .then(result => {
+
+            alert(result.reply);
+
+        });
+
+}
+
     if(action === "entity:identity"){
         Actions.openEntityPage("identity");
     }
