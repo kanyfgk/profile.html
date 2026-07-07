@@ -87,29 +87,27 @@ const UI = {
                 </p>
             </div>
         `;
-    }
+    },
 
     brainButton(){
-
-    return `
-        <button
-            class="primary-btn"
-            data-action="brain:open"
-            style="
-                position:fixed;
-                right:24px;
-                bottom:24px;
-                width:62px;
-                height:62px;
-                border-radius:50%;
-                font-size:28px;
-                z-index:999;
-            ">
-            ✨
-        </button>
-    `;
-
-},
+        return `
+            <button
+                class="primary-btn"
+                data-action="brain:open"
+                style="
+                    position:fixed;
+                    right:24px;
+                    bottom:24px;
+                    width:62px;
+                    height:62px;
+                    border-radius:50%;
+                    font-size:28px;
+                    z-index:999;
+                ">
+                ✨
+            </button>
+        `;
+    }
 
 };
 
