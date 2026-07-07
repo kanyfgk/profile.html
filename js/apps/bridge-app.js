@@ -1,6 +1,7 @@
 const BridgeApp = {
 
     render(entity){
+        VAERO.get("brainAwareness").enter("bridge");
 
         return `
             <div class="section" style="margin-top:24px;padding:24px;">
