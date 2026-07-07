@@ -3,7 +3,6 @@ const BrainService = {
     async ask(prompt){
 
         const context = VAERO.get("brainContext").build();
-
         const brain = VAERO.get("brainCore");
 
         return await brain.ask(prompt, context);
@@ -13,3 +12,4 @@ const BrainService = {
 };
 
 VAERO.register("brainService", BrainService);
+window.BrainService = BrainService;
