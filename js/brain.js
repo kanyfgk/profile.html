@@ -21,6 +21,20 @@ const Brain = {
 
     },
 
+    renderHistory(){
+
+        const history = document.getElementById("brainHistory");
+
+        if(!history){
+            return;
+        }
+
+        history.innerHTML = this.history
+            .map(item => `<div style="margin-bottom:8px;">👤 ${item.text}</div>`)
+            .join("");
+
+    },
+
     receive(message){
 
         this.history.push({
@@ -31,6 +45,8 @@ const Brain = {
 
         console.log("Brain received:", message);
         console.log("Brain history:", this.history);
+
+        this.renderHistory();
 
     },
 
