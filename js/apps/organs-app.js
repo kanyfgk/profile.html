@@ -1,8 +1,11 @@
 const OrgansApp = {
 
     render(entity){
+
         VAERO.get("brainAwareness").enter("organs");
- 
+
+        const UIX = window.UI;
+
         return `
             <div class="section" style="margin-top:24px;padding:24px;">
 
@@ -27,9 +30,11 @@ const OrgansApp = {
 
                 <div class="grid grid-2" style="margin-top:20px;">
 
-                    ${OrganRegistry.all().map(app => UI.launcherCard(app)).join("")}
+                    ${OrganRegistry.all().map(app => UIX.launcherCard(app)).join("")}
 
                 </div>
+
+                ${UIX.brainButton()}
 
             </div>
         `;
