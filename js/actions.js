@@ -122,6 +122,11 @@ const Actions = {
             const context = VAERO.get("brainContext").build();
             contextText.innerText = Şu an ${context.app || "bilinmeyen"} ekranındasın.;
         }
+        const brain = VAERO.get("brain");
+
+if(brain && brain.history.length === 0){
+    brain.receive("Merhaba");
+}
     },
 
     closeBrain(){
