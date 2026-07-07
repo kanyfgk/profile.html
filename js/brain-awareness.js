@@ -5,7 +5,7 @@ const BrainAwareness = {
     enter(app){
 
         this.currentApp = app;
-
+ 
     },
 
     current(){
