@@ -104,6 +104,52 @@ const Actions = {
     openEntityPage(page){
         VAERO.engine.currentEntityPage = page;
         VAERO.engine.mount(VAERO.engine.currentEntity);
+    },
+
+    openBrain(){
+        const panel = document.getElementById("brainPanel");
+
+        if(!panel){
+            console.warn("Brain panel bulunamadı.");
+            return;
+        }
+
+        panel.style.display = "block";
+
+        const contextText = document.getElementById("brainContextText");
+
+        if(contextText && VAERO.get("brainContext")){
+            const context = VAERO.get("brainContext").build();
+            contextText.innerText = Şu an ${context.app || "bilinmeyen"} ekranındasın.;
+        }
+    },
+
+    closeBrain(){
+        const panel = document.getElementById("brainPanel");
+
+        if(panel){
+            panel.style.display = "none";
+        }
+    },
+
+    sendBrainMessage(){
+        const input = document.getElementById("brainInput");
+
+        if(!input) return;
+
+        const text = input.value.trim();
+
+        if(text === "") return;
+
+        const brain = VAERO.get("brain");
+
+        if(brain && typeof brain.receive === "function"){
+            brain.receive(text);
+        }else{
+            console.warn("Brain receive fonksiyonu bulunamadı.");
+        }
+
+        input.value = "";
     }
 
 };
@@ -142,64 +188,16 @@ document.addEventListener("click", event => {
     }
 
     if(action === "brain:open"){
-
-    const panel = document.getElementById("brainPanel");
-
-    if(!panel){
-        console.warn("Brain panel bulunamadı.");
-        return;
+        Actions.openBrain();
     }
 
-    panel.style.display = "block";
-
-    const contextText = document.getElementById("brainContextText");
-
-    if(contextText){
-        const context = VAERO.get("brainContext").build();
-        contextText.innerText = `Şu an ${context.app || "bilinmeyen"} ekranındasın.`;
-    }
-
-}
     if(action === "brain:close"){
-
-    const panel = document.getElementById("brainPanel");
-
-    if(panel){
-        panel.style.display = "none";
+        Actions.closeBrain();
     }
-
-}
 
     if(action === "brain:send"){
-
-    const input = document.getElementById("brainPromptInput");
-    const reply = document.getElementById("brainReply");
-
-    if(!input || !reply){
-        console.warn("Brain input veya reply alanı bulunamadı.");
-        return;
+        Actions.sendBrainMessage();
     }
-
-    const prompt = input.value.trim();
-
-    if(prompt === ""){
-        reply.innerText = "Önce Brain'e ne yapmak istediğini yaz.";
-        return;
-    }
-
-    reply.innerText = "Düşünüyorum...";
-
-    VAERO.get("brainService")
-        .ask(prompt)
-        .then(result => {
-            reply.innerText = result.reply || "Brain cevap üretemedi.";
-        })
-        .catch(error => {
-            console.error("Brain send error:", error);
-            reply.innerText = "Brain şu an cevap veremedi.";
-        });
-
-}
 
     if(action === "entity:identity"){
         Actions.openEntityPage("identity");
