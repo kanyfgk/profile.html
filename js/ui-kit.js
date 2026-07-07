@@ -169,6 +169,17 @@ const UI = {
             </button>
 
             <div
+            <div
+    id="brainHistory"
+    style="
+        margin-top:14px;
+        max-height:180px;
+        overflow:auto;
+        color:var(--muted);
+        line-height:1.6;
+        font-size:14px;
+    ">
+</div>
                 id="brainReply"
                 style="margin-top:14px;color:var(--muted);line-height:1.6;">
             </div>
