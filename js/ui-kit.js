@@ -107,7 +107,74 @@ const UI = {
                 ✨
             </button>
         `;
-    }
+    },
+
+    brainPanel(){
+    return `
+        <div
+            id="brainPanel"
+            class="card"
+            style="
+                ${Theme.card}
+                position:fixed;
+                right:24px;
+                bottom:100px;
+                width:340px;
+                max-width:calc(100vw - 48px);
+                z-index:1000;
+                display:none;
+            "
+        >
+            <div style="display:flex;align-items:center;justify-content:space-between;">
+                <div>
+                    <div class="eyebrow">VAERO BRAIN</div>
+                    <h3 style="margin-top:6px;">Yanındayım</h3>
+                </div>
+
+                <button
+                    class="secondary-btn"
+                    data-action="brain:close"
+                    style="padding:8px 12px;">
+                    ×
+                </button>
+            </div>
+
+            <p
+                id="brainContextText"
+                style="margin-top:14px;color:var(--muted);line-height:1.6;">
+                Bulunduğun ekranı algılıyorum.
+            </p>
+
+            <textarea
+                id="brainPromptInput"
+                placeholder="Brain'e ne yapmak istediğini yaz..."
+                style="
+                    width:100%;
+                    min-height:90px;
+                    margin-top:14px;
+                    border-radius:18px;
+                    padding:14px;
+                    background:rgba(255,255,255,.06);
+                    color:white;
+                    border:1px solid rgba(255,255,255,.12);
+                    outline:none;
+                    resize:none;
+                "></textarea>
+
+            <button
+                class="primary-btn"
+                data-action="brain:send"
+                style="margin-top:12px;width:100%;">
+                Gönder
+            </button>
+
+            <div
+                id="brainReply"
+                style="margin-top:14px;color:var(--muted);line-height:1.6;">
+            </div>
+        </div>
+    `;
+}
 
 };
 
