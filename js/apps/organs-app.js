@@ -4,14 +4,12 @@ const OrgansApp = {
 
         VAERO.get("brainAwareness").enter("organs");
 
-        const cardStyle = Theme.card;
-
-        const launcherCard = app => `
+        const makeCard = app => `
             <div
                 class="card"
                 data-action="${app.action}"
                 style="
-                    ${cardStyle}
+                    ${Theme.card}
                     cursor:pointer;
                     min-height:150px;
                     display:flex;
@@ -45,7 +43,7 @@ const OrgansApp = {
                     ← Varlık Kontrol Paneli
                 </button>
 
-                <div class="card" style="${cardStyle}">
+                <div class="card" style="${Theme.card}">
                     <div class="eyebrow">ORGAN LAUNCHER</div>
 
                     <h2 style="margin-top:8px;">
@@ -58,7 +56,7 @@ const OrgansApp = {
                 </div>
 
                 <div class="grid grid-2" style="margin-top:20px;">
-                    ${OrganRegistry.all().map(app => launcherCard(app)).join("")}
+                    ${OrganRegistry.all().map(app => makeCard(app)).join("")}
                 </div>
 
                 <button
