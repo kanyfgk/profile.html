@@ -1,9 +1,14 @@
 const VAERO_BUILD = {
-    id: "build-003",
-    date: "2026-07-07",
-    note: "brain send action"
+    id: "build-004",
+    date: "2026-07-08",
+    note: "openBrain syntax fixed"
 };
 
 window.VAERO_BUILD = VAERO_BUILD;
 
-console.log("VAERO BUILD:", VAERO_BUILD.id, VAERO_BUILD.date, VAERO_BUILD.note);
+console.log(
+    "VAERO BUILD:",
+    VAERO_BUILD.id,
+    VAERO_BUILD.date,
+    VAERO_BUILD.note
+);
