@@ -125,49 +125,50 @@ const Actions = {
         contextText.innerText = "Şu an " + appName + " ekranındasın.";
     }
 
-    const brain = VAERO.get("brain");
+    this.renderBrainHistory();
+},
 
-    if(brain && brain.history && brain.history.length === 0){
-        brain.receive("Merhaba");
+closeBrain(){
+    const panel = document.getElementById("brainPanel");
+
+    if(panel){
+        panel.style.display = "none";
     }
 },
 
-    closeBrain(){
-        const panel = document.getElementById("brainPanel");
+sendBrainMessage(){
+    const input = document.getElementById("brainInput");
+    if(!input) return;
 
-        if(panel){
-            panel.style.display = "none";
-        }
-    },
+    const text = input.value.trim();
+    if(text === "") return;
 
-    sendBrainMessage(){
-        const input = document.getElementById("brainInput");
+    const brain = VAERO.get("brain");
+    const brainContext = VAERO.get("brainContext");
+    const context = brainContext ? brainContext.build() : null;
 
-        if(!input) return;
-
-        const text = input.value.trim();
-
-        if(text === "") return;
-
-        const brain = VAERO.get("brain");
-
-        if(brain && typeof brain.receive === "function"){
-            brain.receive(text);
-        }else{
-            console.warn("Brain receive fonksiyonu bulunamadı.");
-        }
-
-        const history = document.getElementById("brainHistory");
-
-if(history && brain && brain.history){
-    history.innerHTML = brain.history
-        .map(item => `<div>👤 ${item.text}</div>`)
-        .join("");
-}
-
-        input.value = "";
+    if(brain && typeof brain.receive === "function"){
+        brain.receive(text, context);
+    }else{
+        console.warn("Brain receive fonksiyonu bulunamadı.");
     }
 
+    input.value = "";
+    this.renderBrainHistory();
+},
+
+renderBrainHistory(){
+    const history = document.getElementById("brainHistory");
+    const brain = VAERO.get("brain");
+
+    if(!history || !brain || !brain.history) return;
+
+    history.innerHTML = brain.history
+        .map(item => {
+            const icon = item.role === "brain" ? "🧠" : "👤";
+            return `<div>${icon} ${item.text}</div>`;
+        })
+        .join("");
 };
 
 document.addEventListener("click", event => {
