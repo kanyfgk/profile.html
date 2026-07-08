@@ -552,18 +552,20 @@ brainPanel(){
                 display:none;
                 position:fixed;
                 left:50%;
-right:auto;
-bottom:120px;
-transform:translateX(-50%);
-width:calc(100vw - 40px);
-max-width:360px;
-                max-width:90vw;
+                right:auto;
+                bottom:110px;
+                transform:translateX(-50%);
+                width:calc(100vw - 32px);
+                max-width:420px;
+                max-height:58vh;
+                overflow:hidden;
                 background:rgba(15,23,42,0.96);
                 border:1px solid rgba(255,255,255,0.14);
                 border-radius:24px;
-                padding:18px;
+                padding:16px;
                 z-index:99999;
                 box-shadow:0 20px 60px rgba(0,0,0,0.45);
+                box-sizing:border-box;
             "
         >
             <button
@@ -573,24 +575,43 @@ max-width:360px;
             </button>
 
             <div class="eyebrow">VAERO BRAIN</div>
-            <h3 style="margin-top:8px;">Brain Panel</h3>
+            <h3 style="margin-top:8px;font-size:28px;">Brain Panel</h3>
 
-            <p id="brainContextText" style="color:var(--muted);font-size:14px;">
+            <p id="brainContextText" style="color:var(--muted);font-size:15px;">
                 Bağlam bekleniyor.
             </p>
 
-            <div id="brainHistory" style="margin-top:12px;color:white;font-size:14px;line-height:1.6;"></div>
+            <div
+                id="brainHistory"
+                style="
+                    margin-top:12px;
+                    color:white;
+                    font-size:15px;
+                    line-height:1.5;
+                    max-height:180px;
+                    overflow-y:auto;
+                    word-break:break-word;
+                "
+            ></div>
 
             <input
                 id="brainInput"
                 placeholder="Brain'e yaz..."
-                style="width:100%;margin-top:12px;padding:12px;border-radius:14px;border:0;"
+                style="
+                    width:100%;
+                    margin-top:12px;
+                    padding:12px;
+                    border-radius:14px;
+                    border:0;
+                    font-size:16px;
+                    box-sizing:border-box;
+                "
             />
 
             <button
                 class="primary-btn"
                 data-action="brain:send"
-                style="margin-top:10px;width:100%;">
+                style="margin-top:10px;width:100%;font-size:16px;">
                 Gönder
             </button>
         </div>
