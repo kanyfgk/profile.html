@@ -120,7 +120,7 @@ const Actions = {
 
         if(contextText && VAERO.get("brainContext")){
             const context = VAERO.get("brainContext").build();
-            contextText.innerText = Şu an ${context.app || "bilinmeyen"} ekranındasın.;
+            contextText.innerText = `Şu an ${context.app || "bilinmeyen"} ekranındasın.`;
         }
         const brain = VAERO.get("brain");
 
