@@ -18,12 +18,17 @@ const BrainIntent = {
             };
         }
 
-        if(text.includes("kimlik") || text.includes("identity") || text.includes("id")){
-            return {
-                type: "navigate",
-                target: "identity"
-            };
-        }
+        if(
+    text.includes("kimlik") ||
+    text.includes("kimligi") ||
+    text.includes("identity") ||
+    text.includes("id")
+){
+    return {
+        type: "navigate",
+        target: "identity"
+    };
+}
 
         if(text.includes("profil") || text.includes("profile")){
             return {
