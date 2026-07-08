@@ -546,74 +546,38 @@ const Components = {
 
 brainPanel(){
     return `
-        <div
-            id="brainPanel"
-            style="
-                display:none;
-                position:fixed;
-                left:50%;
-                right:auto;
-                bottom:110px;
-                transform:translateX(-50%);
-                width:calc(100vw - 32px);
-                max-width:420px;
-                max-height:58vh;
-                overflow:hidden;
-                background:rgba(15,23,42,0.96);
-                border:1px solid rgba(255,255,255,0.14);
-                border-radius:24px;
-                padding:16px;
-                z-index:99999;
-                box-shadow:0 20px 60px rgba(0,0,0,0.45);
-                box-sizing:border-box;
-            "
-        >
+        <div id="brainPanel" class="brain-panel">
+
             <button
-                data-action="brain:close"
-                style="float:right;background:none;border:0;color:white;font-size:20px;">
+                class="brain-close"
+                data-action="brain:close">
                 ×
             </button>
 
             <div class="eyebrow">VAERO BRAIN</div>
-            <h3 style="margin-top:8px;font-size:28px;">Brain Panel</h3>
 
-            <p id="brainContextText" style="color:var(--muted);font-size:15px;">
+            <h3 class="brain-title">
+                Brain Panel
+            </h3>
+
+            <p id="brainContextText" class="brain-context">
                 Bağlam bekleniyor.
             </p>
 
-            <div
-                id="brainHistory"
-                style="
-                    margin-top:12px;
-                    color:white;
-                    font-size:15px;
-                    line-height:1.5;
-                    max-height:180px;
-                    overflow-y:auto;
-                    word-break:break-word;
-                "
-            ></div>
+            <div id="brainHistory" class="brain-history"></div>
 
             <input
                 id="brainInput"
+                class="brain-input"
                 placeholder="Brain'e yaz..."
-                style="
-                    width:100%;
-                    margin-top:12px;
-                    padding:12px;
-                    border-radius:14px;
-                    border:0;
-                    font-size:16px;
-                    box-sizing:border-box;
-                "
             />
 
             <button
-                class="primary-btn"
-                data-action="brain:send"
-                style="margin-top:10px;width:100%;font-size:16px;">
+                class="primary-btn brain-send"
+                data-action="brain:send">
                 Gönder
             </button>
+
         </div>
     `;
 }
