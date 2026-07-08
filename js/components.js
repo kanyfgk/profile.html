@@ -519,30 +519,80 @@ const Components = {
     },
 
     navigation(){
-        return `
-            <nav class="bottom-nav">
-                <button class="nav-btn active">
-                    <div class="nav-icon">⌂</div>
-                    Ev
-                </button>
+    return `
+        <nav class="bottom-nav">
+            <button class="nav-btn active">
+                <div class="nav-icon">⌂</div>
+                Ev
+            </button>
 
-                <button class="nav-btn">
-                    <div class="nav-icon">ID</div>
-                    Kimlik
-                </button>
+            <button class="nav-btn">
+                <div class="nav-icon">ID</div>
+                Kimlik
+            </button>
 
-                <button class="nav-btn">
-                    <div class="nav-icon">＋</div>
-                    Yaratmak
-                </button>
+            <button class="nav-btn">
+                <div class="nav-icon">＋</div>
+                Yaratmak
+            </button>
 
-                <button class="nav-btn">
-                    <div class="nav-icon">◌</div>
-                    Dünya
-                </button>
-            </nav>
-        `;
-    }
+            <button class="nav-btn">
+                <div class="nav-icon">◌</div>
+                Dünya
+            </button>
+        </nav>
+    `;
+},
+
+brainPanel(){
+    return `
+        <div
+            id="brainPanel"
+            style="
+                display:none;
+                position:fixed;
+                right:20px;
+                bottom:100px;
+                width:320px;
+                max-width:90vw;
+                background:rgba(15,23,42,0.96);
+                border:1px solid rgba(255,255,255,0.14);
+                border-radius:24px;
+                padding:18px;
+                z-index:9999;
+                box-shadow:0 20px 60px rgba(0,0,0,0.45);
+            "
+        >
+            <button
+                data-action="brain:close"
+                style="float:right;background:none;border:0;color:white;font-size:20px;">
+                ×
+            </button>
+
+            <div class="eyebrow">VAERO BRAIN</div>
+            <h3 style="margin-top:8px;">Brain Panel</h3>
+
+            <p id="brainContextText" style="color:var(--muted);font-size:14px;">
+                Bağlam bekleniyor.
+            </p>
+
+            <div id="brainHistory" style="margin-top:12px;color:white;font-size:14px;line-height:1.6;"></div>
+
+            <input
+                id="brainInput"
+                placeholder="Brain'e yaz..."
+                style="width:100%;margin-top:12px;padding:12px;border-radius:14px;border:0;"
+            />
+
+            <button
+                class="primary-btn"
+                data-action="brain:send"
+                style="margin-top:10px;width:100%;">
+                Gönder
+            </button>
+        </div>
+    `;
+}
 
 };
 
