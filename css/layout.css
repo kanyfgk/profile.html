@@ -50,3 +50,29 @@ box-shadow:
 0 20px 60px rgba(0,0,0,.35);
 
 }
+
+html,
+body{
+    width:100%;
+    max-width:100%;
+    overflow-x:hidden;
+    touch-action:pan-y;
+}
+
+*{
+    box-sizing:border-box;
+}
+
+#engine,
+.vaero-shell,
+.section{
+    width:100%;
+    max-width:100%;
+    overflow-x:hidden;
+}
+
+input,
+textarea,
+select{
+    font-size:16px !important;
+}
