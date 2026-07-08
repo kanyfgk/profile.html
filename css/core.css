@@ -108,3 +108,38 @@ line-height:1.8;
 color:var(--muted);
 
 }
+
+html,
+body{
+    width:100%;
+    max-width:100%;
+    overflow-x:hidden;
+    touch-action:pan-y;
+}
+
+*{
+    box-sizing:border-box;
+}
+
+#engine{
+    width:100%;
+    max-width:100%;
+    overflow-x:hidden;
+}
+
+.vaero-shell{
+    width:100%;
+    max-width:100%;
+    overflow-x:hidden;
+}
+
+.section{
+    max-width:100%;
+    overflow-x:hidden;
+}
+
+input,
+textarea,
+select{
+    font-size:16px !important;
+}
