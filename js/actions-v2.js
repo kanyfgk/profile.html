@@ -169,6 +169,8 @@ renderBrainHistory(){
             return `<div>${icon} ${item.text}</div>`;
         })
         .join("");
+    }
+    
 };
 
 document.addEventListener("click", event => {
