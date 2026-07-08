@@ -1,7 +1,7 @@
 const VAERO_BUILD = {
-    id: "build-004",
+    id: "build-005",
     date: "2026-07-08",
-    note: "brain chat memory test"
+    note: "actions v2 loaded"
 };
 
 window.VAERO_BUILD = VAERO_BUILD;
