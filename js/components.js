@@ -551,15 +551,18 @@ brainPanel(){
             style="
                 display:none;
                 position:fixed;
-                right:20px;
-                bottom:100px;
-                width:320px;
+                left:50%;
+right:auto;
+bottom:120px;
+transform:translateX(-50%);
+width:calc(100vw - 40px);
+max-width:360px;
                 max-width:90vw;
                 background:rgba(15,23,42,0.96);
                 border:1px solid rgba(255,255,255,0.14);
                 border-radius:24px;
                 padding:18px;
-                z-index:9999;
+                z-index:99999;
                 box-shadow:0 20px 60px rgba(0,0,0,0.45);
             "
         >
