@@ -65,16 +65,15 @@ reply(message, context, intent){
     const app = context?.app || "unknown";
 
     if(intent && intent.type === "navigate"){
+    const brainActions = VAERO.get("brainActions");
+    const executed = brainActions ? brainActions.execute(intent) : false;
 
-        if(VAERO.engine.currentOpenedEntity){
-            VAERO.engine.currentEntityPage = intent.target;
-            VAERO.engine.mount(VAERO.engine.currentEntity);
-
-            return `${intent.target} ekranı açıldı.`;
-        }
-
-        return "Önce bir varlık açmalısınız. Sonra Kimlik, Profil, Hafıza, Timeline, Bridge veya Ayarlar ekranına geçebilirim.";
+    if(executed){
+        return ${intent.target} ekranı açıldı.;
     }
+
+    return "Önce bir varlık açmalısınız.";
+}
 
     if(intent && intent.type === "clarify"){
         return "Şunu demek istiyorum: Bulunduğunuz ekrana göre size yön gösterebilir veya komut verirseniz ilgili bölümü açabilirim.";
