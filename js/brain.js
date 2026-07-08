@@ -23,69 +23,94 @@ const Brain = {
 
     receive(message, context){
 
-        const cleanMessage = String(message || "").trim();
+    const cleanMessage = String(message || "").trim();
 
-        if(cleanMessage === "") return null;
+    if(cleanMessage === "") return null;
 
-        this.history.push({
-            role: "user",
-            text: cleanMessage,
-            context: context || null,
-            createdAt: Date.now()
-        });
+    const intentService = VAERO.get("brainIntent");
+    const intent = intentService ? intentService.detect(cleanMessage) : {
+        type: "chat",
+        target: null
+    };
 
-        const reply = this.reply(cleanMessage, context);
+    this.history.push({
+        role: "user",
+        text: cleanMessage,
+        context: context || null,
+        intent: intent,
+        createdAt: Date.now()
+    });
 
-        this.history.push({
-            role: "brain",
-            text: reply,
-            context: context || null,
-            createdAt: Date.now()
-        });
+    const reply = this.reply(cleanMessage, context, intent);
 
-        console.log("Brain received:", cleanMessage);
-        console.log("Brain reply:", reply);
-        console.log("Brain history:", this.history);
+    this.history.push({
+        role: "brain",
+        text: reply,
+        context: context || null,
+        intent: intent,
+        createdAt: Date.now()
+    });
 
-        return reply;
+    console.log("Brain received:", cleanMessage);
+    console.log("Brain intent:", intent);
+    console.log("Brain reply:", reply);
+    console.log("Brain history:", this.history);
 
-    },
+    return reply;
 
-    reply(message, context){
+},
 
-        const app = context?.app || "unknown";
+reply(message, context, intent){
 
-        if(app === "organs"){
-            return "Organ Launcher ekranındasınız. Buradan Kimlik, Profil, Hafıza, Timeline, Bridge ve Ayarlar uygulamalarına geçebilirsiniz.";
+    const app = context?.app || "unknown";
+
+    if(intent && intent.type === "navigate"){
+
+        if(VAERO.engine.currentOpenedEntity){
+            VAERO.engine.currentEntityPage = intent.target;
+            VAERO.engine.mount(VAERO.engine.currentEntity);
+
+            return `${intent.target} ekranı açıldı.`;
         }
 
-        if(app === "identity"){
-            return "Kimlik ekranındasınız. Bu alan varlığın VAERO Evreni içindeki temel kimlik kaydını gösterir.";
-        }
+        return "Önce bir varlık açmalısınız. Sonra Kimlik, Profil, Hafıza, Timeline, Bridge veya Ayarlar ekranına geçebilirim.";
+    }
 
-        if(app === "profile"){
-            return "Profil ekranındasınız. Burada varlığın görünen adı, türü ve tanımı yönetilir.";
-        }
+    if(intent && intent.type === "clarify"){
+        return "Şunu demek istiyorum: Bulunduğunuz ekrana göre size yön gösterebilir veya komut verirseniz ilgili bölümü açabilirim.";
+    }
 
-        if(app === "memory"){
-            return "Hafıza ekranındasınız. Bu alan varlığın geçmiş kayıtlarını ve hatırlamalarını taşır.";
-        }
+    if(app === "organs"){
+        return "Organ Launcher ekranındasınız. Buradan Kimlik, Profil, Hafıza, Timeline, Bridge ve Ayarlar uygulamalarına geçebilirsiniz.";
+    }
 
-        if(app === "timeline"){
-            return "Timeline ekranındasınız. Burada varlığın zaman içindeki olay akışı görüntülenir.";
-        }
+    if(app === "identity"){
+        return "Kimlik ekranındasınız. Bu alan varlığın VAERO Evreni içindeki temel kimlik kaydını gösterir.";
+    }
 
-        if(app === "bridge"){
-            return "Bridge ekranındasınız. Bu alan varlıklar ve dünyalar arasındaki bağlantıları yönetir.";
-        }
+    if(app === "profile"){
+        return "Profil ekranındasınız. Burada varlığın görünen adı, türü ve tanımı yönetilir.";
+    }
 
-        if(app === "settings"){
-            return "Ayarlar ekranındasınız. Burada sistem davranışları ve varlık tercihleri yönetilir.";
-        }
+    if(app === "memory"){
+        return "Hafıza ekranındasınız. Bu alan varlığın geçmiş kayıtlarını ve hatırlamalarını taşır.";
+    }
 
-        return "VAERO Brain aktif. Bulunduğunuz ekrana göre size rehberlik edebilirim.";
+    if(app === "timeline"){
+        return "Timeline ekranındasınız. Burada varlığın zaman içindeki olay akışı görüntülenir.";
+    }
 
-    },
+    if(app === "bridge"){
+        return "Bridge ekranındasınız. Bu alan varlıklar ve dünyalar arasındaki bağlantıları yönetir.";
+    }
+
+    if(app === "settings"){
+        return "Ayarlar ekranındasınız. Burada sistem davranışları ve varlık tercihleri yönetilir.";
+    }
+
+    return "VAERO Brain aktif. Bulunduğunuz ekrana göre size rehberlik edebilirim.";
+
+},
 
     boot(){
 
