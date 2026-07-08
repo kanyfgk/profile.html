@@ -1,5 +1,4 @@
 const BrainIntent = {
-
     detect(message){
         const raw = String(message || "").toLowerCase().trim();
 
@@ -12,64 +11,40 @@ const BrainIntent = {
             .replaceAll("ç", "c");
 
         if(text === ""){
-            return {
-                type: "empty",
-                target: null
-            };
+            return { type: "empty", target: null };
         }
 
         if(
-    text.includes("kimlik") ||
-    text.includes("kimligi") ||
-    text.includes("identity") ||
-    text.includes("id")
-){
-    return {
-        type: "navigate",
-        target: "identity"
-    };
-}
+            text.includes("kimlik") ||
+            text.includes("kimligi") ||
+            text.includes("identity") ||
+            text.includes("id")
+        ){
+            return { type: "navigate", target: "identity" };
+        }
 
         if(text.includes("profil") || text.includes("profile")){
-            return {
-                type: "navigate",
-                target: "profile"
-            };
+            return { type: "navigate", target: "profile" };
         }
 
         if(text.includes("hafiza") || text.includes("memory")){
-            return {
-                type: "navigate",
-                target: "memory"
-            };
+            return { type: "navigate", target: "memory" };
         }
 
         if(text.includes("timeline") || text.includes("zaman")){
-            return {
-                type: "navigate",
-                target: "timeline"
-            };
+            return { type: "navigate", target: "timeline" };
         }
 
         if(text.includes("bridge") || text.includes("baglanti")){
-            return {
-                type: "navigate",
-                target: "bridge"
-            };
+            return { type: "navigate", target: "bridge" };
         }
 
         if(text.includes("ayar") || text.includes("settings")){
-            return {
-                type: "navigate",
-                target: "settings"
-            };
+            return { type: "navigate", target: "settings" };
         }
 
         if(text.includes("organ")){
-            return {
-                type: "navigate",
-                target: "organs"
-            };
+            return { type: "navigate", target: "organs" };
         }
 
         if(
@@ -78,18 +53,11 @@ const BrainIntent = {
             text.includes("ne demek") ||
             text.includes("anlamadim")
         ){
-            return {
-                type: "clarify",
-                target: null
-            };
+            return { type: "clarify", target: null };
         }
 
-        return {
-            type: "chat",
-            target: null
-        };
+        return { type: "chat", target: null };
     }
-
 };
 
 VAERO.register("brainIntent", BrainIntent);
