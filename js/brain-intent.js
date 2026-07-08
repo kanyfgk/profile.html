@@ -12,82 +12,47 @@ const BrainIntent = {
             .replaceAll("ö","o")
             .replaceAll("ç","c");
 
+        const words = text.split(/[^a-z0-9]+/).filter(Boolean);
+
         if(text === ""){
-            return {
-                type: "empty",
-                target: null
-            };
+            return { type: "empty", target: null };
+        }
+
+        if(
+            text.includes("bridge") ||
+            text.includes("baglanti") ||
+            text.includes("kopru")
+        ){
+            return { type: "navigate", target: "bridge" };
         }
 
         if(
             text.includes("kimlik") ||
             text.includes("kimligi") ||
             text.includes("identity") ||
-            text.includes("id")
+            words.includes("id")
         ){
-            return {
-                type: "navigate",
-                target: "identity"
-            };
+            return { type: "navigate", target: "identity" };
         }
 
-        if(
-            text.includes("profil") ||
-            text.includes("profile")
-        ){
-            return {
-                type: "navigate",
-                target: "profile"
-            };
+        if(text.includes("profil") || text.includes("profile")){
+            return { type: "navigate", target: "profile" };
         }
 
-        if(
-            text.includes("hafiza") ||
-            text.includes("memory")
-        ){
-            return {
-                type: "navigate",
-                target: "memory"
-            };
+        if(text.includes("hafiza") || text.includes("memory")){
+            return { type: "navigate", target: "memory" };
         }
 
-        if(
-            text.includes("timeline") ||
-            text.includes("zaman")
-        ){
-            return {
-                type: "navigate",
-                target: "timeline"
-            };
+        if(text.includes("timeline") || text.includes("zaman")){
+            return { type: "navigate", target: "timeline" };
         }
 
-        if(
-            text.includes("bridge") ||
-            text.includes("baglanti")
-        ){
-            return {
-                type: "navigate",
-                target: "bridge"
-            };
+        if(text.includes("ayar") || text.includes("settings")){
+            return { type: "navigate", target: "settings" };
         }
 
-        if(
-            text.includes("ayar") ||
-            text.includes("settings")
-        ){
-            return {
-                type: "navigate",
-                target: "settings"
-            };
-        }
-
-        if(
-            text.includes("organ")
-        ){
-            return {
-                type: "navigate",
-                target: "organs"
-            };
+        if(text.includes("organ")){
+            return { type: "navigate", target: "organs" };
         }
 
         if(
@@ -96,17 +61,10 @@ const BrainIntent = {
             text.includes("ne demek") ||
             text.includes("anlamadim")
         ){
-            return {
-                type: "clarify",
-                target: null
-            };
+            return { type: "clarify", target: null };
         }
 
-        return {
-            type: "chat",
-            target: null
-        };
-
+        return { type: "chat", target: null };
     }
 
 };
