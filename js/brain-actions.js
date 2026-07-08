@@ -1,27 +1,18 @@
 const BrainActions = {
 
-    actions: {},
+    execute(intent){
+        if(!intent || intent.type !== "navigate") return false;
 
-    register(name, handler){
-        this.actions[name] = handler;
-    },
-
-    run(name, payload = {}){
-
-        const action = this.actions[name];
-
-        if(!action){
-            return {
-                success: false,
-                message: "Brain action bulunamadı."
-            };
+        if(!VAERO.engine.currentOpenedEntity){
+            return false;
         }
 
-        return action(payload);
+        VAERO.engine.currentEntityPage = intent.target;
+        VAERO.engine.mount(VAERO.engine.currentEntity);
 
+        return true;
     }
 
 };
 
 VAERO.register("brainActions", BrainActions);
-window.BrainActions = BrainActions;
