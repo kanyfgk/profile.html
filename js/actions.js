@@ -107,27 +107,30 @@ const Actions = {
     },
 
     openBrain(){
-        const panel = document.getElementById("brainPanel");
+    const panel = document.getElementById("brainPanel");
 
-        if(!panel){
-            console.warn("Brain panel bulunamadı.");
-            return;
-        }
+    if(!panel){
+        console.warn("Brain panel bulunamadı.");
+        return;
+    }
 
-        panel.style.display = "block";
+    panel.style.display = "block";
 
-        const contextText = document.getElementById("brainContextText");
+    const contextText = document.getElementById("brainContextText");
+    const brainContext = VAERO.get("brainContext");
 
-        if(contextText && VAERO.get("brainContext")){
-            const context = VAERO.get("brainContext").build();
-            contextText.innerText = `Şu an ${context.app || "bilinmeyen"} ekranındasın.`;
-        }
-        const brain = VAERO.get("brain");
+    if(contextText && brainContext){
+        const context = brainContext.build();
+        const appName = context.app || "bilinmeyen";
+        contextText.innerText = "Şu an " + appName + " ekranındasın.";
+    }
 
-if(brain && brain.history.length === 0){
-    brain.receive("Merhaba");
-}
-    },
+    const brain = VAERO.get("brain");
+
+    if(brain && brain.history && brain.history.length === 0){
+        brain.receive("Merhaba");
+    }
+},
 
     closeBrain(){
         const panel = document.getElementById("brainPanel");
