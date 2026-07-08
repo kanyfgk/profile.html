@@ -4,7 +4,7 @@ const BrainActions = {
         if(!intent || intent.type !== "navigate") return false;
 
         if(!VAERO.engine.currentOpenedEntity){
-            return false;
+            return false; 
         }
 
         VAERO.engine.currentEntityPage = intent.target;
