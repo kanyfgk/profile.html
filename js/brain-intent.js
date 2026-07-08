@@ -2,6 +2,13 @@ const BrainIntent = {
 
     detect(message){
         const text = String(message || "").toLowerCase().trim();
+        const normalized = text
+    .replaceAll("ı", "i")
+    .replaceAll("ğ", "g")
+    .replaceAll("ü", "u")
+    .replaceAll("ş", "s")
+    .replaceAll("ö", "o")
+    .replaceAll("ç", "c");
 
         if(text === ""){
             return {
@@ -10,7 +17,7 @@ const BrainIntent = {
             };
         }
 
-        if(text.includes("kimlik") || text.includes("identity")){
+        if(text.includes("kimlik") || text.includes("kimliği") || text.includes("identity")){
             return {
                 type: "navigate",
                 target: "identity"
