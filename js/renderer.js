@@ -56,6 +56,8 @@ const Renderer = {
     ${components.modal()}
 
     ${components.idModal()}
+    
+    ${components.brainPanel()}
 
 </main>
 `;
