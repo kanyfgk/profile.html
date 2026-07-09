@@ -27,13 +27,15 @@ const BrainIntent = {
         }
 
         if(
-            text.includes("kimlik") ||
-            text.includes("kimligi") ||
-            text.includes("identity") ||
-            words.includes("id")
-        ){
-            return { type: "navigate", target: "identity" };
-        }
+    text.includes("kimlik") ||
+    text.includes("kimligi") ||
+    text.includes("identity") ||
+    text === "id" ||
+    text === "id ac" ||
+    text === "id aç"
+){
+    return { type: "navigate", target: "identity" };
+}
 
         if(text.includes("profil") || text.includes("profile")){
             return { type: "navigate", target: "profile" };
