@@ -107,7 +107,12 @@ const Actions = {
     },
 
     openBrain(){
-    const panel = document.getElementById("brainPanel");
+    let panel = document.getElementById("brainPanel");
+
+    if(!panel && window.BrainApp){
+        document.body.insertAdjacentHTML("beforeend", BrainApp.render());
+        panel = document.getElementById("brainPanel");
+    }
 
     if(!panel){
         console.warn("Brain panel bulunamadı.");
@@ -127,7 +132,6 @@ const Actions = {
 
     this.renderBrainHistory();
 },
-
 closeBrain(){
     const panel = document.getElementById("brainPanel");
 
