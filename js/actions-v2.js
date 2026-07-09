@@ -176,105 +176,110 @@ sendBrainMessage(){
     }, 50);
 },
 renderBrainHistory() {
-  const history = document.getElementById("brainHistory");
-  const brain = VAERO.get("brain");
+    const history = document.getElementById("brainHistory");
+    const brain = VAERO.get("brain");
 
-  if (!history || !brain || !brain.history) return;
+    if (!history || !brain || !brain.history) return;
 
-  history.innerHTML = "";
+    history.innerHTML = "";
 
-  const cleanHistory = brain.history
-    .filter(item => item && item.text)
-    .filter(item => !String(item.text).includes("brainReply"));
+    const cleanHistory = brain.history
+        .filter(item => item && item.text)
+        .filter(item => !String(item.text).includes("brainReply"));
 
-  const sessions = [];
+    const sessions = [];
 
-  cleanHistory.forEach(item => {
-    const text = String(item.text).trim();
-    if (!text) return;
+    cleanHistory.forEach(item => {
 
-    let title = text;
+        const text = String(item.text).trim();
+        if (!text) return;
 
-    if (text.includes("Hafıza")) title = "Hafıza Oturumu";
-    else if (text.includes("Profil")) title = "Profil Oturumu";
-    else if (text.includes("Köprü") || text.includes("Bridge")) title = "Bridge Oturumu";
-    else if (text.includes("Kimlik")) title = "Kimlik Oturumu";
-    else if (text.includes("Organ")) title = "Organ Oturumu";
-    else title = "Brain Oturumu";
+        let title = "Brain Oturumu";
 
-    let session = sessions.find(s => s.title === title);
+        if (text.includes("Profil")) title = "Profil Oturumu";
+        else if (text.includes("Kimlik")) title = "Kimlik Oturumu";
+        else if (text.includes("Hafıza")) title = "Hafıza Oturumu";
+        else if (text.includes("Bridge") || text.includes("Köprü")) title = "Bridge Oturumu";
+        else if (text.includes("Organ")) title = "Organ Oturumu";
 
-    if (!session) {
-      session = {
-        title,
-        date: new Date(item.time || Date.now()),
-        status: "progress",
-        actions: []
-      };
-      sessions.push(session);
-    }
+        let session = sessions.find(s => s.title === title);
 
-    if (!session.actions.includes(text)) {
-      session.actions.push(text);
-    }
-  });
+        if (!session) {
+            session = {
+                title,
+                status: "progress",
+                date: new Date(item.time || Date.now()),
+                actions: []
+            };
+            sessions.push(session);
+        }
 
-  sessions.slice(-8).reverse().forEach((session, index) => {
-    const card = document.createElement("div");
-    card.className = "brain-session-card";
-    card.dataset.open = "false";
-
-    const statusMap = {
-      done: "🟢 Tamamlandı",
-      progress: "🟡 Devam ediyor",
-      error: "🔴 Sorun"
-    };
-
-    const dateText = session.date.toLocaleDateString("tr-TR", {
-      day: "2-digit",
-      month: "2-digit",
-      year: "numeric"
+        if (!session.actions.includes(text)) {
+            session.actions.push(text);
+        }
     });
 
-    const timeText = session.date.toLocaleTimeString("tr-TR", {
-      hour: "2-digit",
-      minute: "2-digit"
-    });
+    sessions
+        .slice(-8)
+        .reverse()
+        .forEach(session => {
 
-    card.innerHTML = `
-      <div class="brain-session-head">
-        <div>
-          <strong>${session.title}</strong>
-          <small>${dateText} · ${timeText}</small>
-        </div>
-        <span>${statusMap[session.status]}</span>
-      </div>
+            const card = document.createElement("div");
+            card.className = "brain-session-card";
+            card.dataset.open = "false";
 
-      <div class="brain-session-body">
-        ${session.actions.map(action => <p>- ${action}</p>).join("")}
-      </div>
-    `;
+            const date = session.date.toLocaleDateString("tr-TR");
+            const time = session.date.toLocaleTimeString("tr-TR", {
+                hour: "2-digit",
+                minute: "2-digit"
+            });
 
-    card.addEventListener("click", () => {
-      const isOpen = card.dataset.open === "true";
+            const status = {
+                done: "🟢 Tamamlandı",
+                progress: "🟡 Devam Ediyor",
+                error: "🔴 Sorun"
+            };
 
-      document.querySelectorAll(".brain-session-card").forEach(other => {
-        if (other !== card) other.dataset.open = "false";
-      });
+            card.innerHTML = `
+                <div class="brain-session-head">
+                    <div>
+                        <strong>${session.title}</strong>
+                        <small>${date} · ${time}</small>
+                    </div>
 
-      if (!isOpen) {
-        card.dataset.open = "true";
-        return;
-      }
+                    <span>${status[session.status]}</span>
+                </div>
 
-      console.log("Brain Session Detail:", session);
-    });
+                <div class="brain-session-body">
+                    ${session.actions.map(a => <p>- ${a}</p>).join("")}
+                </div>
+            `;
 
-    history.appendChild(card);
-  });
+            card.addEventListener("click", () => {
+
+                const isOpen = card.dataset.open === "true";
+
+                document
+                    .querySelectorAll(".brain-session-card")
+                    .forEach(other => {
+                        if (other !== card) {
+                            other.dataset.open = "false";
+                        }
+                    });
+
+                if (!isOpen) {
+                    card.dataset.open = "true";
+                    return;
+                }
+
+                console.log("Brain Session Detail:", session);
+
+            });
+
+            history.appendChild(card);
+
+        });
 },
-    
-};
 
 document.addEventListener("click", event => {
 
