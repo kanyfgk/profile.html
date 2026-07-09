@@ -69,7 +69,7 @@ reply(message, context, intent){
     const executed = brainActions ? brainActions.execute(intent) : false;
 
     if(executed){
-        return ${intent.target} ekranı açıldı.;
+        return `${intent.target} ekranı açıldı.`;
     }
 
     return "Önce bir varlık açmalısınız.";
