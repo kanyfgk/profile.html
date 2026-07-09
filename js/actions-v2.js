@@ -172,7 +172,7 @@ renderBrainHistory(){
         row.textContent = (item.role === "brain" ? "🧠 " : "👤 ") + item.text;
         history.appendChild(row);
     });
-}
+},
     
 };
 
