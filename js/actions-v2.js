@@ -103,6 +103,7 @@ const Actions = {
 
     openEntityPage(page){
     VAERO.engine.currentEntityPage = page;
+    console.log("OPEN ENTITY PAGE:", page);    
     console.log("openEntityPage çalıştı:", page);    
     VAERO.engine.mount(VAERO.engine.currentEntity);
 
