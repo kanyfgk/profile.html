@@ -126,6 +126,19 @@
   display: block;
 }
 
+.brain-session-card.is-dragging,
+.brain-panel.is-dragging .brain-session-card[data-open="true"] {
+  opacity: .65;
+}
+
+.brain-panel.is-dragging .brain-session-card[data-open="true"] .brain-session-body {
+  display: none;
+}
+
+.brain-panel.is-dragging .brain-session-card[data-open="true"] {
+  transform: scale(.98);
+}
+
 @media (min-width:768px){
 
     .brain-panel{
