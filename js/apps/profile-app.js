@@ -43,7 +43,6 @@ const ProfileApp = {
 
                 </div>
 
-                ${UI.brainButton()}
                 ${UI.brainPanel()}
 
             </div>
