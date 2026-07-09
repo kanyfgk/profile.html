@@ -4,7 +4,7 @@
     inset:auto 16px 96px 16px;
     width:auto;
     max-width:none;
-    max-height:60dvh;
+    max-height:82dvh;
     overflow:hidden;
     background:rgba(15,23,42,0.96);
     border:1px solid rgba(255,255,255,0.14);
@@ -35,11 +35,19 @@
 
 .brain-history{
     margin-top:12px;
+    margin-bottom:14px;
     color:white;
     font-size:15px;
     line-height:1.5;
-    max-height:180px;
+    max-height:220px;
     overflow-y:auto;
+    word-break:break-word;
+    padding-right:6px;
+}
+
+.brain-message{
+    margin-bottom:8px;
+    white-space:pre-wrap;
     word-break:break-word;
 }
 
@@ -59,11 +67,13 @@
     font-size:16px;
 }
 
-@media (min-width: 768px){
+@media (min-width:768px){
+
     .brain-panel{
         inset:auto auto 110px 50%;
         width:420px;
         max-width:420px;
         transform:translateX(-50%);
     }
+
 }
