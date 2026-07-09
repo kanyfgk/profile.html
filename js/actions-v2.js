@@ -163,13 +163,17 @@ renderBrainHistory(){
 
     if(!history || !brain || !brain.history) return;
 
-    history.innerHTML = brain.history
-        .map(item => {
-            const icon = item.role === "brain" ? "🧠" : "👤";
-            return `<div>${icon} ${item.text}</div>`;
-        })
-        .join("");
-    }
+    history.innerHTML = "";
+
+    brain.history.forEach(item => {
+        const row = document.createElement("div");
+
+        row.className = "brain-message";
+        row.textContent = `${item.role === "brain" ? "🧠" : "👤"} ${item.text}`;
+
+        history.appendChild(row);
+    });
+}
     
 };
 
