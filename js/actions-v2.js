@@ -150,9 +150,31 @@ sendBrainMessage(){
     }
 
     input.value = "";
-    this.renderBrainHistory();
-},
 
+    setTimeout(() => {
+
+        document.querySelectorAll("#brainPanel").forEach(panel => panel.remove());
+
+        if(window.BrainApp){
+            document.body.insertAdjacentHTML("beforeend", BrainApp.render());
+        }
+
+        const panel = document.getElementById("brainPanel");
+        if(panel){
+            panel.style.display = "block";
+        }
+
+        const contextText = document.getElementById("brainContextText");
+        const newContext = brainContext ? brainContext.build() : null;
+
+        if(contextText && newContext){
+            contextText.innerText = "Şu an " + (newContext.app || "bilinmeyen") + " ekranındasın.";
+        }
+
+        this.renderBrainHistory();
+
+    }, 50);
+},
 renderBrainHistory(){
     const history = document.getElementById("brainHistory");
     const brain = VAERO.get("brain");
