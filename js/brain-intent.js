@@ -12,30 +12,17 @@ const BrainIntent = {
             .replaceAll("ö","o")
             .replaceAll("ç","c");
 
-        const words = text.split(/[^a-z0-9]+/).filter(Boolean);
-
         if(text === ""){
             return { type: "empty", target: null };
         }
 
-        if(
-            text.includes("bridge") ||
-            text.includes("baglanti") ||
-            text.includes("kopru")
-        ){
+        if(text.includes("bridge") || text.includes("baglanti") || text.includes("kopru")){
             return { type: "navigate", target: "bridge" };
         }
 
-        if(
-    text.includes("kimlik") ||
-    text.includes("kimligi") ||
-    text.includes("identity") ||
-    text === "id" ||
-    text === "id ac" ||
-    text === "id aç"
-){
-    return { type: "navigate", target: "identity" };
-}
+        if(text.includes("kimlik") || text.includes("kimligi") || text.includes("identity") || text === "id" || text === "id ac"){
+            return { type: "navigate", target: "identity" };
+        }
 
         if(text.includes("profil") || text.includes("profile")){
             return { type: "navigate", target: "profile" };
