@@ -162,10 +162,13 @@ sendBrainMessage(){
 },
 
 renderBrainHistory(){
+
     const history = document.getElementById("brainHistory");
     const brain = VAERO.get("brain");
 
-    if(!history || !brain || !brain.history) return;
+    if(!history || !brain || !brain.history){
+        return;
+    }
 
     history.innerHTML = "";
 
@@ -176,10 +179,13 @@ renderBrainHistory(){
 
     cleanHistory.forEach(item => {
         const row = document.createElement("div");
+
         row.className = "brain-message";
-        row.textContent = `${item.role === "brain" ? "🧠" : "👤"} ${item.text}`;
+        row.textContent = (item.role === "brain" ? "🧠 " : "👤 ") + item.text;
+
         history.appendChild(row);
     });
+
 },
     
 };
