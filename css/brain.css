@@ -67,6 +67,21 @@
     font-size:16px;
 }
 
+.brain-fab{
+    position:fixed;
+    right:18px;
+    bottom:96px;
+    width:56px;
+    height:56px;
+    border-radius:999px;
+    border:0;
+    z-index:99998;
+    background:#efe1ad;
+    color:#111827;
+    font-size:22px;
+    box-shadow:0 16px 40px rgba(0,0,0,0.35);
+}
+
 @media (min-width:768px){
 
     .brain-panel{
