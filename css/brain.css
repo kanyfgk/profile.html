@@ -82,6 +82,50 @@
     box-shadow:0 16px 40px rgba(0,0,0,0.35);
 }
 
+.brain-session-card {
+  padding: 14px;
+  border-radius: 16px;
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.08);
+  margin-bottom: 10px;
+  cursor: pointer;
+}
+
+.brain-session-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: flex-start;
+}
+
+.brain-session-head strong {
+  display: block;
+  font-size: 14px;
+}
+
+.brain-session-head small {
+  display: block;
+  opacity: .6;
+  margin-top: 4px;
+  font-size: 12px;
+}
+
+.brain-session-head span {
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+.brain-session-body {
+  display: none;
+  margin-top: 12px;
+  opacity: .85;
+  font-size: 13px;
+}
+
+.brain-session-card[data-open="true"] .brain-session-body {
+  display: block;
+}
+
 @media (min-width:768px){
 
     .brain-panel{
