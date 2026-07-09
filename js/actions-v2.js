@@ -102,9 +102,71 @@ const Actions = {
     },
 
     openEntityPage(page){
-        VAERO.engine.currentEntityPage = page;
-        VAERO.engine.mount(VAERO.engine.currentEntity);
-    },
+    VAERO.engine.currentEntityPage = page;
+    VAERO.engine.mount(VAERO.engine.currentEntity);
+
+    this.trackBrainSession(page);
+},
+
+    trackBrainSession(page){
+    const brain = VAERO.get("brain");
+    if(!brain) return;
+
+    if(!brain.sessions){
+        brain.sessions = [];
+    }
+
+    const titleMap = {
+        profile: "Profil Oturumu",
+        identity: "Kimlik Oturumu",
+        organs: "Organ Oturumu",
+        timeline: "Timeline Oturumu",
+        memory: "Hafıza Oturumu",
+        bridge: "Bridge Oturumu",
+        settings: "Ayarlar Oturumu"
+    };
+
+    const actionMap = {
+        profile: "Profili açtı",
+        identity: "Kimliğe geçti",
+        organs: "Organları görüntüledi",
+        timeline: "Zaman çizelgesini açtı",
+        memory: "Hafızayı görüntüledi",
+        bridge: "Bridge bölümüne geçti",
+        settings: "Ayarları açtı"
+    };
+
+    const title = titleMap[page] || "Entity Oturumu";
+    const action = actionMap[page] || "Entity ekranına geçti";
+
+    let session = brain.sessions.find(s =>
+        s.title === title &&
+        s.status === "progress"
+    );
+
+    if(!session){
+        session = {
+            id: crypto.randomUUID(),
+            title,
+            status: "progress",
+            startedAt: Date.now(),
+            updatedAt: Date.now(),
+            actions: [],
+            favorite: false,
+            summary: null
+        };
+
+        brain.sessions.unshift(session);
+    }
+
+    session.updatedAt = Date.now();
+
+    if(!session.actions.includes(action)){
+        session.actions.push(action);
+    }
+
+    this.renderBrainHistory();
+},
 
     openBrain(){
     document.querySelectorAll("#brainPanel").forEach(panel => panel.remove());
