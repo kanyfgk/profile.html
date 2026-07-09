@@ -210,8 +210,14 @@ sendBrainMessage(){
 
     if(brain && typeof brain.receive === "function"){
     brain.receive(text, context);
-        this.dispatchBrainIntent(text);
 
+const handledByIntent = this.dispatchBrainIntent(text);
+
+    if (handledByIntent) {
+    input.value = "";
+    this.renderBrainHistory();
+    return;
+}
     if (!brain.sessions) {
         brain.sessions = [];
     }
@@ -272,6 +278,27 @@ sendBrainMessage(){
 
     dispatchBrainIntent(text){
     const command = String(text || "").toLowerCase();
+        if (
+    command.includes("burada kaldık") ||
+    command.includes("burda kaldık") ||
+    command.includes("sonra devam") ||
+    command.includes("bunu kaydet") ||
+    command.includes("kaldığımız yeri kaydet")
+) {
+    this.saveBrainResumePoint(text);
+    return true;
+}
+
+        if (
+    command.includes("nerede kalmıştık") ||
+    command.includes("kaldığımız yer") ||
+    command.includes("devam et") ||
+    command.includes("kaldığım yer")
+) {
+    this.restoreBrainResumePoint();
+    return true;
+}
+        
 
     if(command.includes("profil")){
         this.openEntityPage("profile");
@@ -309,6 +336,61 @@ sendBrainMessage(){
     }
 
     return false;
+},
+
+    saveBrainResumePoint(note){
+    const brain = VAERO.get("brain");
+    const brainContext = VAERO.get("brainContext");
+    if(!brain) return;
+
+    const context = brainContext ? brainContext.build() : null;
+
+    const activeSession = (brain.sessions || []).find(s => 
+        s.status === "progress"
+    );
+
+    brain.resumePoint = {
+        id: crypto.randomUUID(),
+        sessionId: activeSession ? activeSession.id : null,
+        sessionTitle: activeSession ? activeSession.title : null,
+        app: context ? context.app : null,
+        page: VAERO.engine.currentEntityPage || null,
+        note: note,
+        savedAt: Date.now()
+    };
+
+    if(activeSession){
+        activeSession.updatedAt = Date.now();
+
+        if(!activeSession.actions.includes("Devam noktası kaydedildi")){
+            activeSession.actions.push("Devam noktası kaydedildi");
+        }
+    }
+
+    this.renderBrainHistory();
+
+    console.log("Brain Resume Point:", brain.resumePoint);
+},
+
+    restoreBrainResumePoint(){
+
+    const brain = VAERO.get("brain");
+
+    if(!brain || !brain.resumePoint){
+        alert("Kayıtlı bir devam noktası bulunamadı.");
+        return;
+    }
+
+    const point = brain.resumePoint;
+
+    if(point.page){
+        VAERO.engine.currentEntityPage = point.page;
+    }
+
+    VAERO.engine.mount(VAERO.engine.currentEntity);
+
+    console.log("Brain Resume:", point);
+
 },
     
 renderBrainHistory() {
