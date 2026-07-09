@@ -107,17 +107,14 @@ const Actions = {
     },
 
     openBrain(){
-    let panel = document.getElementById("brainPanel");
+    document.querySelectorAll("#brainPanel").forEach(panel => panel.remove());
 
-    if(!panel && window.BrainApp){
+    if(window.BrainApp){
         document.body.insertAdjacentHTML("beforeend", BrainApp.render());
-        panel = document.getElementById("brainPanel");
     }
 
-    if(!panel){
-        console.warn("Brain panel bulunamadı.");
-        return;
-    }
+    const panel = document.getElementById("brainPanel");
+    if(!panel) return;
 
     panel.style.display = "block";
 
@@ -132,12 +129,9 @@ const Actions = {
 
     this.renderBrainHistory();
 },
-closeBrain(){
-    const panel = document.getElementById("brainPanel");
 
-    if(panel){
-        panel.style.display = "none";
-    }
+closeBrain(){
+    document.querySelectorAll("#brainPanel").forEach(panel => panel.remove());
 },
 
 sendBrainMessage(){
@@ -153,8 +147,6 @@ sendBrainMessage(){
 
     if(brain && typeof brain.receive === "function"){
         brain.receive(text, context);
-    }else{
-        console.warn("Brain receive fonksiyonu bulunamadı.");
     }
 
     input.value = "";
@@ -162,13 +154,10 @@ sendBrainMessage(){
 },
 
 renderBrainHistory(){
-
     const history = document.getElementById("brainHistory");
     const brain = VAERO.get("brain");
 
-    if(!history || !brain || !brain.history){
-        return;
-    }
+    if(!history || !brain || !brain.history) return;
 
     history.innerHTML = "";
 
@@ -179,14 +168,11 @@ renderBrainHistory(){
 
     cleanHistory.forEach(item => {
         const row = document.createElement("div");
-
         row.className = "brain-message";
         row.textContent = (item.role === "brain" ? "🧠 " : "👤 ") + item.text;
-
         history.appendChild(row);
     });
-
-},
+}
     
 };
 
