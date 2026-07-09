@@ -215,7 +215,22 @@ const handledByIntent = this.dispatchBrainIntent(text);
 
     if (handledByIntent) {
     input.value = "";
-    this.renderBrainHistory();
+
+    setTimeout(() => {
+        document.querySelectorAll("#brainPanel").forEach(panel => panel.remove());
+
+        if(window.BrainApp){
+            document.body.insertAdjacentHTML("beforeend", BrainApp.render());
+        }
+
+        const panel = document.getElementById("brainPanel");
+        if(panel){
+            panel.style.display = "block";
+        }
+
+        this.renderBrainHistory();
+    }, 50);
+
     return;
 }
     if (!brain.sessions) {
