@@ -117,6 +117,7 @@ const Actions = {
     if(!panel) return;
 
     panel.style.display = "block";
+        this.initBrainSessionDragClose();
 
     const contextText = document.getElementById("brainContextText");
     const brainContext = VAERO.get("brainContext");
@@ -146,8 +147,38 @@ sendBrainMessage(){
     const context = brainContext ? brainContext.build() : null;
 
     if(brain && typeof brain.receive === "function"){
-        brain.receive(text, context);
+    brain.receive(text, context);
+
+    if (!brain.sessions) {
+        brain.sessions = [];
     }
+
+    let session = brain.sessions.find(s =>
+        s.title === text &&
+        s.status === "progress"
+    );
+
+    if (!session) {
+        session = {
+            id: crypto.randomUUID(),
+            title: text,
+            status: "progress",
+            startedAt: Date.now(),
+            updatedAt: Date.now(),
+            actions: [text],
+            favorite: false,
+            summary: null
+        };
+
+        brain.sessions.unshift(session);
+    } else {
+        session.updatedAt = Date.now();
+
+        if (!session.actions.includes(text)) {
+            session.actions.push(text);
+        }
+    }
+}
 
     input.value = "";
 
@@ -179,45 +210,11 @@ renderBrainHistory() {
     const history = document.getElementById("brainHistory");
     const brain = VAERO.get("brain");
 
-    if (!history || !brain || !brain.history) return;
+    if (!history || !brain) return;
 
     history.innerHTML = "";
 
-    const cleanHistory = brain.history
-        .filter(item => item && item.text)
-        .filter(item => !String(item.text).includes("brainReply"));
-
-    const sessions = [];
-
-    cleanHistory.forEach(item => {
-
-        const text = String(item.text).trim();
-        if (!text) return;
-
-        let title = "Brain Oturumu";
-
-        if (text.includes("Profil")) title = "Profil Oturumu";
-        else if (text.includes("Kimlik")) title = "Kimlik Oturumu";
-        else if (text.includes("Hafıza")) title = "Hafıza Oturumu";
-        else if (text.includes("Bridge") || text.includes("Köprü")) title = "Bridge Oturumu";
-        else if (text.includes("Organ")) title = "Organ Oturumu";
-
-        let session = sessions.find(s => s.title === title);
-
-        if (!session) {
-            session = {
-                title,
-                status: "progress",
-                date: new Date(item.time || Date.now()),
-                actions: []
-            };
-            sessions.push(session);
-        }
-
-        if (!session.actions.includes(text)) {
-            session.actions.push(text);
-        }
-    });
+    const sessions = brain.sessions || [];
 
     sessions
         .slice(-8)
@@ -228,8 +225,9 @@ renderBrainHistory() {
             card.className = "brain-session-card";
             card.dataset.open = "false";
 
-            const date = session.date.toLocaleDateString("tr-TR");
-            const time = session.date.toLocaleTimeString("tr-TR", {
+            const sessionDate = new Date(session.updatedAt || session.startedAt || Date.now());
+            const date = sessionDate.toLocaleDateString("tr-TR");
+            const time = sessionDate.toLocaleTimeString("tr-TR", {
                 hour: "2-digit",
                 minute: "2-digit"
             });
@@ -251,7 +249,7 @@ renderBrainHistory() {
                 </div>
 
                 <div class="brain-session-body">
-                    ${session.actions.map(a => <p>- ${a}</p>).join("")}
+                    ${session.actions.map(a => `<p>- ${a}</p>`).join("")}
                 </div>
             `;
 
@@ -280,6 +278,44 @@ renderBrainHistory() {
 
         });
 },
+
+    initBrainSessionDragClose() {
+    const panel = document.querySelector(".brain-panel");
+    if (!panel) return;
+
+    let startX = 0;
+    let startY = 0;
+
+    panel.addEventListener("pointerdown", event => {
+        startX = event.clientX;
+        startY = event.clientY;
+    });
+
+    panel.addEventListener("pointermove", event => {
+        const movedX = Math.abs(event.clientX - startX);
+        const movedY = Math.abs(event.clientY - startY);
+
+        if (movedX < 8 && movedY < 8) return;
+
+        panel.classList.add("is-dragging");
+
+        panel
+            .querySelectorAll('.brain-session-card[data-open="true"]')
+            .forEach(card => {
+                card.dataset.open = "false";
+            });
+    });
+
+    panel.addEventListener("pointerup", () => {
+        panel.classList.remove("is-dragging");
+    });
+
+    panel.addEventListener("pointerleave", () => {
+        panel.classList.remove("is-dragging");
+    });
+},
+
+};
 
 document.addEventListener("click", event => {
 
