@@ -210,6 +210,7 @@ sendBrainMessage(){
 
     if(brain && typeof brain.receive === "function"){
     brain.receive(text, context);
+        this.dispatchBrainIntent(text);
 
     if (!brain.sessions) {
         brain.sessions = [];
@@ -268,6 +269,48 @@ sendBrainMessage(){
 
     }, 50);
 },
+
+    dispatchBrainIntent(text){
+    const command = String(text || "").toLowerCase();
+
+    if(command.includes("profil")){
+        this.openEntityPage("profile");
+        return true;
+    }
+
+    if(command.includes("kimlik")){
+        this.openEntityPage("identity");
+        return true;
+    }
+
+    if(command.includes("hafıza") || command.includes("hafiza") || command.includes("memory")){
+        this.openEntityPage("memory");
+        return true;
+    }
+
+    if(command.includes("köprü") || command.includes("kopru") || command.includes("bridge")){
+        this.openEntityPage("bridge");
+        return true;
+    }
+
+    if(command.includes("timeline") || command.includes("zaman")){
+        this.openEntityPage("timeline");
+        return true;
+    }
+
+    if(command.includes("organ")){
+        this.openEntityPage("organs");
+        return true;
+    }
+
+    if(command.includes("ayar")){
+        this.openEntityPage("settings");
+        return true;
+    }
+
+    return false;
+},
+    
 renderBrainHistory() {
     const history = document.getElementById("brainHistory");
     const brain = VAERO.get("brain");
