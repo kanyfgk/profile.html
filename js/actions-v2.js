@@ -169,15 +169,18 @@ renderBrainHistory(){
 
     history.innerHTML = "";
 
-    brain.history.forEach(item => {
-        const row = document.createElement("div");
+    const cleanHistory = brain.history
+        .filter(item => item && item.text)
+        .filter(item => !String(item.text).includes("brainReply"))
+        .slice(-8);
 
+    cleanHistory.forEach(item => {
+        const row = document.createElement("div");
         row.className = "brain-message";
         row.textContent = `${item.role === "brain" ? "🧠" : "👤"} ${item.text}`;
-
         history.appendChild(row);
     });
-}
+},
     
 };
 
