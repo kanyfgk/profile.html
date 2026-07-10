@@ -620,7 +620,7 @@ card.innerHTML = `
 
     <div class="brain-session-body">
         ${(session.actions || [])
-            .map(action => <p>- ${action}</p>)
+            .map(action => `<p>- ${action}</p>`)
             .join("")}
     </div>
 
