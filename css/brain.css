@@ -192,6 +192,24 @@
 
 }
 
+.brain-suggestion{
+    margin-top:12px;
+    padding:12px 14px;
+    border-radius:14px;
+    background:rgba(255,255,255,.05);
+    color:#d7dbe4;
+    font-size:14px;
+    line-height:1.45;
+}
+
+.brain-mini-history{
+    margin-top:14px;
+}
+
+.brain-mini-history .brain-session-card:nth-child(n+3){
+    display:none;
+}
+
 @media (min-width:768px){
 
     .brain-panel{
