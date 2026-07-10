@@ -65,14 +65,7 @@ reply(message, context, intent){
     const app = context?.app || "unknown";
 
     if(intent && intent.type === "navigate"){
-    const brainActions = VAERO.get("brainActions");
-    const executed = brainActions ? brainActions.execute(intent) : false;
-
-    if(executed){
-        return `${intent.target} ekranı açıldı.`;
-    }
-
-    return "Önce bir varlık açmalısınız.";
+    return `${intent.target} komutu algılandı.`;
 }
 
     if(intent && intent.type === "clarify"){
