@@ -206,6 +206,24 @@ const Actions = {
         const appName = appNameMap[appKey] || appKey;
 
         contextText.innerText = `Şu an ${appName} ekranındasın.`;
+        const suggestionText = document.getElementById("brainSuggestion");
+
+const suggestionMap = {
+    identity: "💡 Kimlik katmanlarını inceleyebilir veya Profil ekranına geçebilirsin.",
+    profile: "💡 Profil bilgilerini tamamlayabilir veya Kimlik ekranını açabilirsin.",
+    organs: "💡 Buradan Kimlik, Profil, Hafıza, Timeline, Bridge ve Ayarlar uygulamalarına geçebilirsin.",
+    timeline: "💡 Geçmiş olayları inceleyebilir veya kaldığın noktayı Brain’e kaydedebilirsin.",
+    memory: "💡 Hafıza kayıtlarını inceleyebilir veya yeni bir devam noktası oluşturabilirsin.",
+    bridge: "💡 Varlıklar ve dünyalar arasındaki bağlantıları inceleyebilirsin.",
+    settings: "💡 Sistem ve varlık tercihlerini buradan yönetebilirsin.",
+    unknown: "💡 Bir uygulama açabilir veya Brain’e ne yapmak istediğini yazabilirsin."
+};
+
+if(suggestionText){
+    suggestionText.innerText =
+        suggestionMap[appKey] ||
+        suggestionMap.unknown;
+} 
     }
 
     this.renderBrainHistory();
@@ -289,7 +307,15 @@ sendBrainMessage(){
     }
 },
     dispatchBrainIntent(text){
-    const command = String(text || "").toLowerCase();
+    const command = String(text || "")
+    .toLowerCase()
+    .trim()
+    .replaceAll("ı", "i")
+    .replaceAll("ğ", "g")
+    .replaceAll("ü", "u")
+    .replaceAll("ş", "s")
+    .replaceAll("ö", "o")
+    .replaceAll("ç", "c");
         if (
     command.includes("burada kaldık") ||
     command.includes("burda kaldık") ||
@@ -320,8 +346,8 @@ sendBrainMessage(){
 
     if(
     command.includes("kimlik") ||
-    command.includes("kimliği") ||
-    command.includes("kimligi")
+    command.includes("kimligi") ||
+    command.includes("identity")
 ){
     this.openEntityPage("identity");
     this.closeBrain();
