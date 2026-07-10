@@ -112,6 +112,118 @@
     cursor:pointer;
 }
 
+/* Uygulama komutları */
+
+.brain-session-action{
+    background:
+        linear-gradient(
+            135deg,
+            rgba(239,225,173,.15),
+            rgba(255,255,255,.055)
+        );
+    border-color:rgba(239,225,173,.34);
+    box-shadow:
+        inset 0 0 0 1px rgba(239,225,173,.04),
+        0 8px 24px rgba(0,0,0,.12);
+}
+
+.brain-session-action:active{
+    transform:scale(.985);
+}
+
+.brain-action-label{
+    color:#efe1ad;
+    border:1px solid rgba(239,225,173,.30);
+    background:rgba(239,225,173,.10);
+    padding:7px 10px;
+    border-radius:999px;
+    font-size:12px;
+    font-weight:700;
+    white-space:nowrap;
+}
+
+/* Strateji ve normal sohbet */
+
+.brain-session-conversation{
+    background:rgba(255,255,255,.045);
+    border-color:rgba(255,255,255,.08);
+    cursor:default;
+}
+
+.brain-conversation-label{
+    color:rgba(255,255,255,.55);
+    font-size:11px;
+    letter-spacing:.08em;
+    text-transform:uppercase;
+}
+
+/* Önemsiz veya yarım giriş */
+
+.brain-session-noise{
+    padding:10px 12px;
+    opacity:.72;
+    background:rgba(255,255,255,.025);
+    border-style:dashed;
+    cursor:default;
+}
+
+.brain-session-noise .brain-session-body{
+    display:none !important;
+}
+
+.brain-noise-remove{
+    width:30px;
+    height:30px;
+    border-radius:999px;
+    border:1px solid rgba(255,255,255,.12);
+    background:rgba(255,255,255,.05);
+    color:rgba(255,255,255,.7);
+    font-size:18px;
+    cursor:pointer;
+}
+
+.brain-delete-confirm{
+    display:none;
+    margin-top:10px;
+    padding-top:10px;
+    border-top:1px solid rgba(255,255,255,.08);
+    font-size:12px;
+    color:rgba(255,255,255,.72);
+}
+
+.brain-session-card.is-confirming-delete .brain-delete-confirm{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:10px;
+    flex-wrap:wrap;
+}
+
+.brain-delete-confirm div{
+    display:flex;
+    gap:7px;
+}
+
+.brain-delete-approve,
+.brain-delete-cancel{
+    border-radius:999px;
+    padding:6px 9px;
+    font-size:11px;
+    cursor:pointer;
+}
+
+.brain-delete-approve{
+    border:1px solid rgba(239,225,173,.30);
+    background:rgba(239,225,173,.12);
+    color:#efe1ad;
+}
+
+.brain-delete-cancel{
+    border:1px solid rgba(255,255,255,.10);
+    background:rgba(255,255,255,.04);
+    color:rgba(255,255,255,.65);
+}
+
 .brain-session-head{
     display:flex;
     justify-content:space-between;
