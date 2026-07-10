@@ -596,7 +596,7 @@ card.classList.add(`brain-session-${kind}`);
             statusMap.progress;
 
         const rightContent = kind === "action"
-    ? <span class="brain-action-label">Aç →</span>
+    ? `<span class="brain-action-label">Aç →</span>`
     : kind === "noise"
         ? `
             <button
@@ -606,7 +606,7 @@ card.classList.add(`brain-session-${kind}`);
                 ×
             </button>
         `
-        : <span class="brain-conversation-label">Sohbet</span>;
+        : `<span class="brain-conversation-label">Sohbet</span>`;
 
 card.innerHTML = `
     <div class="brain-session-head">
