@@ -182,6 +182,7 @@ const Actions = {
 
     panel.style.display = "block";
         this.initBrainSessionDragClose();
+        this.initBrainPanelAdaptiveSize();
 
     const contextText = document.getElementById("brainContextText");
     const brainContext = VAERO.get("brainContext");
@@ -537,6 +538,48 @@ requestAnimationFrame(() => {
 });
 },
 
+    initBrainPanelAdaptiveSize(){
+    const panel = document.querySelector(".brain-panel");
+    const input = document.getElementById("brainInput");
+    const history = document.getElementById("brainHistory");
+
+    if(!panel) return;
+
+    panel.classList.remove("is-expanded");
+    panel.classList.add("is-compact");
+
+    const expandPanel = () => {
+        panel.classList.remove("is-compact");
+        panel.classList.add("is-expanded");
+    };
+
+    const compactPanel = event => {
+        if(panel.contains(event.target)) return;
+
+        const openSession = panel.querySelector(
+            '.brain-session-card[data-open="true"]'
+        );
+
+        if(openSession) return;
+
+        panel.classList.remove("is-expanded");
+        panel.classList.add("is-compact");
+    };
+
+    if(input){
+        input.addEventListener("focus", expandPanel);
+        input.addEventListener("click", expandPanel);
+    }
+
+    if(history){
+        history.addEventListener("click", expandPanel);
+    }
+
+    document.addEventListener("pointerdown", compactPanel, {
+        once: true
+    });
+},
+    
     initBrainSessionDragClose() {
     const panel = document.querySelector(".brain-panel");
     if (!panel) return;
