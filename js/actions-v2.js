@@ -481,13 +481,57 @@ renderBrainHistory() {
                     return;
                 }
 
-                console.log("Brain Session Detail:", session);
+                this.openBrainSession(session);
 
             });
 
             history.appendChild(card);
 
         });
+},
+
+    openBrainSession(session){
+    if(!session) return;
+
+    const source = `${session.title || ""} ${(session.actions || []).join(" ")}`
+        .toLowerCase();
+
+    let page = null;
+
+    if(source.includes("profil")){
+        page = "profile";
+    } else if(source.includes("kimlik")){
+        page = "identity";
+    } else if(
+        source.includes("hafıza") ||
+        source.includes("hafiza") ||
+        source.includes("memory")
+    ){
+        page = "memory";
+    } else if(
+        source.includes("köprü") ||
+        source.includes("kopru") ||
+        source.includes("bridge")
+    ){
+        page = "bridge";
+    } else if(
+        source.includes("timeline") ||
+        source.includes("zaman")
+    ){
+        page = "timeline";
+    } else if(source.includes("organ")){
+        page = "organs";
+    } else if(source.includes("ayar")){
+        page = "settings";
+    }
+
+    if(!page){
+        console.log("Brain Session için yönlendirme bulunamadı:", session);
+        return;
+    }
+
+    this.openEntityPage(page);
+    this.closeBrain();
 },
 
     initBrainSessionDragClose() {
