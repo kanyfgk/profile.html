@@ -419,12 +419,18 @@ const handledByIntent = this.dispatchBrainIntent(text);
 },
     
 renderBrainHistory() {
+
     const history = document.getElementById("brainHistory");
+    const miniHistory = document.getElementById("brainMiniHistory");
     const brain = VAERO.get("brain");
 
     if (!history || !brain) return;
 
     history.innerHTML = "";
+
+    if (miniHistory) {
+        miniHistory.innerHTML = "";
+    }
 
     const sessions = brain.sessions || [];
 
@@ -437,7 +443,12 @@ renderBrainHistory() {
             card.className = "brain-session-card";
             card.dataset.open = "false";
 
-            const sessionDate = new Date(session.updatedAt || session.startedAt || Date.now());
+            const sessionDate = new Date(
+                session.updatedAt ||
+                session.startedAt ||
+                Date.now()
+            );
+
             const date = sessionDate.toLocaleDateString("tr-TR");
             const time = sessionDate.toLocaleTimeString("tr-TR", {
                 hour: "2-digit",
@@ -488,9 +499,14 @@ renderBrainHistory() {
 
             history.appendChild(card);
 
-        });
-},
+if (miniHistory && miniHistory.children.length < 2) {
+    miniHistory.appendChild(card.cloneNode(true));
+}
 
+});
+
+},
+    
     openBrainSession(session){
     if(!session) return;
 
