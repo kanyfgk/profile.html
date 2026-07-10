@@ -276,42 +276,41 @@ sendBrainMessage(){
     }
 
     let session = brain.sessions.find(item =>
-        item.title === text &&
-        item.status === "progress"
-    );
+    item.title === text &&
+    item.status === "progress"
+);
 
+if(!session){
     session = {
-    id: crypto.randomUUID(),
-    title: text,
-    kind: this.isBrainNoise(text) ? "noise" : "conversation",
-    target: null,    
-    kind: this.isBrainNoise(text) ? "noise" : "conversation",
-    target: null,
-    status: "progress",
-    startedAt: Date.now(),
-    updatedAt: Date.now(),
-    actions: [text],
-    favorite: false,
-    summary: null
-};
+        id: crypto.randomUUID(),
+        title: text,
+        kind: this.isBrainNoise(text) ? "noise" : "conversation",
+        target: null,
+        status: "progress",
+        startedAt: Date.now(),
+        updatedAt: Date.now(),
+        actions: [text],
+        favorite: false,
+        summary: null
+    };
 
-        brain.sessions.unshift(session);
-   else {
-        session.updatedAt = Date.now();
+    brain.sessions.unshift(session);
+} else {
+    session.updatedAt = Date.now();
 
-        if(!session.actions.includes(text)){
-            session.actions.push(text);
-        }
+    if(!session.actions.includes(text)){
+        session.actions.push(text);
     }
+}
 
-    this.renderBrainHistory();
+this.renderBrainHistory();
 
-    const panel = document.getElementById("brainPanel");
+const panel = document.getElementById("brainPanel");
 
-    if(panel){
-        panel.classList.remove("is-compact");
-        panel.classList.add("is-expanded");
-    }
+if(panel){
+    panel.classList.remove("is-compact");
+    panel.classList.add("is-expanded");
+}
 },
     dispatchBrainIntent(text){
     const command = String(text || "")
