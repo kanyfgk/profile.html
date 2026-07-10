@@ -211,41 +211,39 @@ sendBrainMessage(){
     const brainContext = VAERO.get("brainContext");
     const context = brainContext ? brainContext.build() : null;
 
-    if(brain && typeof brain.receive === "function"){
+    if(!brain || typeof brain.receive !== "function") return;
+
     brain.receive(text, context);
 
-const handledByIntent = this.dispatchBrainIntent(text);
+    const handledByIntent = this.dispatchBrainIntent(text);
 
-    if (handledByIntent) {
     input.value = "";
 
-    setTimeout(() => {
-        document.querySelectorAll("#brainPanel").forEach(panel => panel.remove());
+    /*
+     * Navigasyon, devam noktası veya başka bir sistem komutuysa
+     * dispatchBrainIntent gerekli işlemi zaten yaptı.
+     *
+     * Burada Brain panelini tekrar oluşturmuyoruz.
+     * Aksi hâlde closeBrain() sonrasında panel yeniden açılıyordu.
+     */
+    if(handledByIntent){
+        return;
+    }
 
-        if(window.BrainApp){
-            document.body.insertAdjacentHTML("beforeend", BrainApp.render());
-        }
-
-        const panel = document.getElementById("brainPanel");
-        if(panel){
-            panel.style.display = "block";
-        }
-
-        this.renderBrainHistory();
-    }, 50);
-
-    return;
-}
-    if (!brain.sessions) {
+    /*
+     * Herhangi bir uygulama komutu olmayan normal Brain mesajları
+     * kendi oturumu olarak saklanabilir.
+     */
+    if(!brain.sessions){
         brain.sessions = [];
     }
 
-    let session = brain.sessions.find(s =>
-        s.title === text &&
-        s.status === "progress"
+    let session = brain.sessions.find(item =>
+        item.title === text &&
+        item.status === "progress"
     );
 
-    if (!session) {
+    if(!session){
         session = {
             id: crypto.randomUUID(),
             title: text,
@@ -261,39 +259,20 @@ const handledByIntent = this.dispatchBrainIntent(text);
     } else {
         session.updatedAt = Date.now();
 
-        if (!session.actions.includes(text)) {
+        if(!session.actions.includes(text)){
             session.actions.push(text);
         }
     }
-}
 
-    input.value = "";
+    this.renderBrainHistory();
 
-    setTimeout(() => {
+    const panel = document.getElementById("brainPanel");
 
-        document.querySelectorAll("#brainPanel").forEach(panel => panel.remove());
-
-        if(window.BrainApp){
-            document.body.insertAdjacentHTML("beforeend", BrainApp.render());
-        }
-
-        const panel = document.getElementById("brainPanel");
-        if(panel){
-            panel.style.display = "block";
-        }
-
-        const contextText = document.getElementById("brainContextText");
-        const newContext = brainContext ? brainContext.build() : null;
-
-        if(contextText && newContext){
-            contextText.innerText = "Şu an " + (newContext.app || "bilinmeyen") + " ekranındasın.";
-        }
-
-        this.renderBrainHistory();
-
-    }, 50);
+    if(panel){
+        panel.classList.remove("is-compact");
+        panel.classList.add("is-expanded");
+    }
 },
-
     dispatchBrainIntent(text){
     const command = String(text || "").toLowerCase();
         if (
@@ -418,93 +397,109 @@ const handledByIntent = this.dispatchBrainIntent(text);
 
 },
     
-renderBrainHistory() {
-
+renderBrainHistory(){
     const history = document.getElementById("brainHistory");
     const miniHistory = document.getElementById("brainMiniHistory");
     const brain = VAERO.get("brain");
 
-    if (!history || !brain) return;
+    if(!history || !brain) return;
 
     history.innerHTML = "";
 
-    if (miniHistory) {
+    if(miniHistory){
         miniHistory.innerHTML = "";
     }
 
-    const sessions = brain.sessions || [];
+    const sessions = (brain.sessions || []).slice(0, 8);
 
-    sessions
-        .slice(-8)
-        .reverse()
-        .forEach(session => {
+    sessions.forEach((session, index) => {
+        const card = document.createElement("div");
 
-            const card = document.createElement("div");
-            card.className = "brain-session-card";
-            card.dataset.open = "false";
+        card.className = "brain-session-card";
+        card.dataset.open = "false";
 
-            const sessionDate = new Date(
-                session.updatedAt ||
-                session.startedAt ||
-                Date.now()
-            );
+        const sessionDate = new Date(
+            session.updatedAt ||
+            session.startedAt ||
+            Date.now()
+        );
 
-            const date = sessionDate.toLocaleDateString("tr-TR");
-            const time = sessionDate.toLocaleTimeString("tr-TR", {
-                hour: "2-digit",
-                minute: "2-digit"
-            });
+        const date = sessionDate.toLocaleDateString("tr-TR");
 
-            const status = {
-                done: "🟢 Tamamlandı",
-                progress: "🟡 Devam Ediyor",
-                error: "🔴 Sorun"
-            };
+        const time = sessionDate.toLocaleTimeString("tr-TR", {
+            hour: "2-digit",
+            minute: "2-digit"
+        });
 
-            card.innerHTML = `
-                <div class="brain-session-head">
-                    <div>
-                        <strong>${session.title}</strong>
-                        <small>${date} · ${time}</small>
-                    </div>
+        const statusMap = {
+            done: "🟢 Tamamlandı",
+            progress: "🟡 Devam Ediyor",
+            error: "🔴 Sorun"
+        };
 
-                    <span>${status[session.status]}</span>
+        const statusText =
+            statusMap[session.status] ||
+            statusMap.progress;
+
+        card.innerHTML = `
+            <div class="brain-session-head">
+                <div>
+                    <strong>${session.title || "Brain Oturumu"}</strong>
+                    <small>${date} · ${time}</small>
                 </div>
 
-                <div class="brain-session-body">
-                    ${session.actions.map(a => `<p>- ${a}</p>`).join("")}
-                </div>
-            `;
+                <span>${statusText}</span>
+            </div>
 
-            card.addEventListener("click", () => {
+            <div class="brain-session-body">
+                ${(session.actions || [])
+                    .map(action => `<p>- ${action}</p>`)
+                    .join("")}
+            </div>
+        `;
 
-                const isOpen = card.dataset.open === "true";
+        card.addEventListener("click", () => {
+            const isOpen = card.dataset.open === "true";
 
-                document
-                    .querySelectorAll(".brain-session-card")
-                    .forEach(other => {
-                        if (other !== card) {
-                            other.dataset.open = "false";
-                        }
-                    });
+            document
+                .querySelectorAll(".brain-session-card")
+                .forEach(otherCard => {
+                    if(otherCard !== card){
+                        otherCard.dataset.open = "false";
+                    }
+                });
 
-                if (!isOpen) {
-                    card.dataset.open = "true";
-                    return;
+            if(!isOpen){
+                card.dataset.open = "true";
+                return;
+            }
+
+            this.openBrainSession(session);
+        });
+
+        history.appendChild(card);
+
+        /*
+         * Mini geçmişte yalnızca son iki oturumu göster.
+         * Mini kart ilk tıklamada paneli büyütür.
+         */
+        if(miniHistory && index < 2){
+            const miniCard = card.cloneNode(true);
+
+            miniCard.dataset.open = "false";
+
+            miniCard.addEventListener("click", () => {
+                const panel = document.getElementById("brainPanel");
+
+                if(panel){
+                    panel.classList.remove("is-compact");
+                    panel.classList.add("is-expanded");
                 }
-
-                this.openBrainSession(session);
-
             });
 
-            history.appendChild(card);
-
-if (miniHistory && miniHistory.children.length < 2) {
-    miniHistory.appendChild(card.cloneNode(true));
-}
-
-});
-
+            miniHistory.appendChild(miniCard);
+        }
+    });
 },
     
     openBrainSession(session){
@@ -558,6 +553,7 @@ requestAnimationFrame(() => {
     const panel = document.querySelector(".brain-panel");
     const input = document.getElementById("brainInput");
     const history = document.getElementById("brainHistory");
+    const miniHistory = document.getElementById("brainMiniHistory");
 
     if(!panel) return;
 
@@ -570,6 +566,7 @@ requestAnimationFrame(() => {
     };
 
     const compactPanel = event => {
+        if(!document.body.contains(panel)) return;
         if(panel.contains(event.target)) return;
 
         const openSession = panel.querySelector(
@@ -591,9 +588,11 @@ requestAnimationFrame(() => {
         history.addEventListener("click", expandPanel);
     }
 
-    document.addEventListener("pointerdown", compactPanel, {
-        once: true
-    });
+    if(miniHistory){
+        miniHistory.addEventListener("click", expandPanel);
+    }
+
+    document.addEventListener("pointerdown", compactPanel);
 },
     
     initBrainSessionDragClose() {
