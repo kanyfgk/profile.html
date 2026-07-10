@@ -170,6 +170,32 @@
     max-height:430px;
 }
 
+/* Kompakt mod: yalnızca son iki oturum */
+.brain-panel.is-compact #brainMiniHistory{
+    display:block;
+}
+
+.brain-panel.is-compact #brainHistory{
+    display:none;
+}
+
+/* Geniş mod: bütün oturumlar */
+.brain-panel.is-expanded #brainMiniHistory{
+    display:none;
+}
+
+.brain-panel.is-expanded #brainHistory{
+    display:block;
+}
+
+/* Komut alanı her iki görünümde de erişilebilir kalsın */
+.brain-panel.is-compact .brain-input,
+.brain-panel.is-compact .brain-send,
+.brain-panel.is-expanded .brain-input,
+.brain-panel.is-expanded .brain-send{
+    display:block;
+}
+
 @media (max-width:767px){
 
     .brain-panel.is-compact{
