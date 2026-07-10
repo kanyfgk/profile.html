@@ -181,16 +181,31 @@ const Actions = {
     if(!panel) return;
 
     panel.style.display = "block";
-        this.initBrainSessionDragClose();
-        this.initBrainPanelAdaptiveSize();
+
+    this.initBrainSessionDragClose();
+    this.initBrainPanelAdaptiveSize();
 
     const contextText = document.getElementById("brainContextText");
     const brainContext = VAERO.get("brainContext");
 
     if(contextText && brainContext){
         const context = brainContext.build();
-        const appName = context.app || "bilinmeyen";
-        contextText.innerText = "Şu an " + appName + " ekranındasın.";
+        const appKey = context.app || "unknown";
+
+        const appNameMap = {
+            identity: "Kimlik",
+            profile: "Profil",
+            organs: "Organlar",
+            timeline: "Zaman Çizelgesi",
+            memory: "Hafıza",
+            bridge: "Köprü",
+            settings: "Ayarlar",
+            unknown: "bilinmeyen bir"
+        };
+
+        const appName = appNameMap[appKey] || appKey;
+
+        contextText.innerText = `Şu an ${appName} ekranındasın.`;
     }
 
     this.renderBrainHistory();
@@ -303,11 +318,15 @@ sendBrainMessage(){
         return true;
     }
 
-    if(command.includes("kimlik")){
-        this.openEntityPage("identity");
-        this.closeBrain();
-        return true;
-    }
+    if(
+    command.includes("kimlik") ||
+    command.includes("kimliği") ||
+    command.includes("kimligi")
+){
+    this.openEntityPage("identity");
+    this.closeBrain();
+    return true;
+}
 
     if(command.includes("hafıza") || command.includes("hafiza") || command.includes("memory")){
         this.openEntityPage("memory");
@@ -512,8 +531,12 @@ renderBrainHistory(){
 
     if(source.includes("profil")){
         page = "profile";
-    } else if(source.includes("kimlik")){
-        page = "identity";
+    } else if(
+    source.includes("kimlik") ||
+    source.includes("kimliği") ||
+    source.includes("kimligi")
+){
+    page = "identity";
     } else if(
         source.includes("hafıza") ||
         source.includes("hafiza") ||
