@@ -530,8 +530,11 @@ renderBrainHistory() {
         return;
     }
 
-    this.openEntityPage(page);
     this.closeBrain();
+
+requestAnimationFrame(() => {
+    this.openEntityPage(page);
+});
 },
 
     initBrainSessionDragClose() {
