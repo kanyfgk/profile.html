@@ -147,19 +147,23 @@ const Actions = {
     );
 
     if(!session){
-        session = {
-            id: crypto.randomUUID(),
-            title,
-            status: "progress",
-            startedAt: Date.now(),
-            updatedAt: Date.now(),
-            actions: [],
-            favorite: false,
-            summary: null
-        };
+    session = {
+        id: crypto.randomUUID(),
+        title,
 
-        brain.sessions.unshift(session);
-    }
+        kind: "action",
+        target: page,
+
+        status: "progress",
+        startedAt: Date.now(),
+        updatedAt: Date.now(),
+        actions: [],
+        favorite: false,
+        summary: null
+    };
+
+    brain.sessions.unshift(session);
+}
 
     session.updatedAt = Date.now();
 
@@ -276,17 +280,20 @@ sendBrainMessage(){
         item.status === "progress"
     );
 
-    if(!session){
-        session = {
-            id: crypto.randomUUID(),
-            title: text,
-            status: "progress",
-            startedAt: Date.now(),
-            updatedAt: Date.now(),
-            actions: [text],
-            favorite: false,
-            summary: null
-        };
+    session = {
+    id: crypto.randomUUID(),
+    title: text,
+    kind: this.isBrainNoise(text) ? "noise" : "conversation",
+    target: null,    
+    kind: this.isBrainNoise(text) ? "noise" : "conversation",
+    target: null,
+    status: "progress",
+    startedAt: Date.now(),
+    updatedAt: Date.now(),
+    actions: [text],
+    favorite: false,
+    summary: null
+};
 
         brain.sessions.unshift(session);
     } else {
@@ -441,6 +448,104 @@ sendBrainMessage(){
     console.log("Brain Resume:", point);
 
 },
+
+    isBrainNoise(text){
+    const clean = String(text || "").trim();
+
+    if(!clean) return true;
+
+    const normalized = clean
+        .toLowerCase()
+        .replaceAll("ı", "i")
+        .replaceAll("ğ", "g")
+        .replaceAll("ü", "u")
+        .replaceAll("ş", "s")
+        .replaceAll("ö", "o")
+        .replaceAll("ç", "c");
+
+    const words = normalized.split(/\s+/);
+
+    // “Pro”, “asd”, “buu” gibi tek başına kalmış kısa parçalar
+    if(words.length === 1 && normalized.length <= 4){
+        return true;
+    }
+
+    const intentService = VAERO.get("brainIntent");
+    const intent = intentService
+        ? intentService.detect(clean)
+        : { type: "chat" };
+
+    // “Bu aç”, “şu ac” gibi hedefi olmayan yarım komutlar
+    if(
+        intent.type === "chat" &&
+        words.length <= 2 &&
+        normalized.length <= 10 &&
+        (normalized.includes(" ac") || normalized.endsWith("ac"))
+    ){
+        return true;
+    }
+
+    return false;
+},
+
+removeBrainSession(sessionId){
+    const brain = VAERO.get("brain");
+    if(!brain || !brain.sessions) return;
+
+    brain.sessions = brain.sessions.filter(
+        session => session.id !== sessionId
+    );
+
+    this.renderBrainHistory();
+},
+
+isBrainNoise(text){
+    const clean = String(text || "").trim();
+
+    if(!clean) return true;
+
+    const normalized = clean
+        .toLowerCase()
+        .replaceAll("ı", "i")
+        .replaceAll("ğ", "g")
+        .replaceAll("ü", "u")
+        .replaceAll("ş", "s")
+        .replaceAll("ö", "o")
+        .replaceAll("ç", "c");
+
+    const words = normalized.split(/\s+/);
+
+    if(words.length === 1 && normalized.length <= 4){
+        return true;
+    }
+
+    const intentService = VAERO.get("brainIntent");
+    const intent = intentService
+        ? intentService.detect(clean)
+        : { type: "chat" };
+
+    if(
+        intent.type === "chat" &&
+        words.length <= 2 &&
+        normalized.length <= 10 &&
+        (normalized.includes(" ac") || normalized.endsWith("ac"))
+    ){
+        return true;
+    }
+
+    return false;
+},
+
+removeBrainSession(sessionId){
+    const brain = VAERO.get("brain");
+    if(!brain || !brain.sessions) return;
+
+    brain.sessions = brain.sessions.filter(
+        session => session.id !== sessionId
+    );
+
+    this.renderBrainHistory();
+},
     
 renderBrainHistory(){
     const history = document.getElementById("brainHistory");
@@ -461,6 +566,11 @@ renderBrainHistory(){
         const card = document.createElement("div");
 
         card.className = "brain-session-card";
+        const kind =
+    session.kind ||
+    (session.target ? "action" : "conversation");
+
+card.classList.add(`brain-session-${kind}`);
         card.dataset.open = "false";
 
         const sessionDate = new Date(
@@ -486,41 +596,99 @@ renderBrainHistory(){
             statusMap[session.status] ||
             statusMap.progress;
 
-        card.innerHTML = `
-            <div class="brain-session-head">
-                <div>
-                    <strong>${session.title || "Brain Oturumu"}</strong>
-                    <small>${date} · ${time}</small>
-                </div>
+        const rightContent = kind === "action"
+    ? <span class="brain-action-label">Aç →</span>
+    : kind === "noise"
+        ? `
+            <button
+                type="button"
+                class="brain-noise-remove"
+                aria-label="Önemsiz mesajı sil">
+                ×
+            </button>
+        `
+        : <span class="brain-conversation-label">Sohbet</span>;
 
-                <span>${statusText}</span>
-            </div>
+card.innerHTML = `
+    <div class="brain-session-head">
+        <div class="brain-session-main">
+            <strong>${session.title || "Brain Oturumu"}</strong>
+            <small>${date} · ${time}</small>
+        </div>
 
-            <div class="brain-session-body">
-                ${(session.actions || [])
-                    .map(action => `<p>- ${action}</p>`)
-                    .join("")}
-            </div>
-        `;
+        ${rightContent}
+    </div>
 
-        card.addEventListener("click", () => {
-            const isOpen = card.dataset.open === "true";
+    <div class="brain-session-body">
+        ${(session.actions || [])
+            .map(action => <p>- ${action}</p>)
+            .join("")}
+    </div>
 
-            document
-                .querySelectorAll(".brain-session-card")
-                .forEach(otherCard => {
-                    if(otherCard !== card){
-                        otherCard.dataset.open = "false";
-                    }
-                });
+    <div class="brain-delete-confirm">
+        <span>Silmek istediğine emin misin?</span>
 
-            if(!isOpen){
-                card.dataset.open = "true";
-                return;
+        <div>
+            <button type="button" class="brain-delete-approve">
+                Önemsiz, sil
+            </button>
+
+            <button type="button" class="brain-delete-cancel">
+                Vazgeç
+            </button>
+        </div>
+    </div>
+`;
+        const removeButton = card.querySelector(".brain-noise-remove");
+const approveButton = card.querySelector(".brain-delete-approve");
+const cancelButton = card.querySelector(".brain-delete-cancel");
+
+if(removeButton){
+    removeButton.addEventListener("click", event => {
+        event.stopPropagation();
+        card.classList.add("is-confirming-delete");
+    });
+}
+
+if(approveButton){
+    approveButton.addEventListener("click", event => {
+        event.stopPropagation();
+        this.removeBrainSession(session.id);
+    });
+}
+
+if(cancelButton){
+    cancelButton.addEventListener("click", event => {
+        event.stopPropagation();
+        card.classList.remove("is-confirming-delete");
+    });
+}
+
+card.addEventListener("click", event => {
+
+    if(event.target.closest("button")) return;
+
+    if(kind === "action"){
+        this.openBrainSession(session);
+        return;
+    }
+
+    if(kind === "noise"){
+        return;
+    }
+
+    const isOpen = card.dataset.open === "true";
+
+    document
+        .querySelectorAll(".brain-session-card")
+        .forEach(other => {
+            if(other !== card){
+                other.dataset.open = "false";
             }
-
-            this.openBrainSession(session);
         });
+
+    card.dataset.open = isOpen ? "false" : "true";
+});
 
         history.appendChild(card);
 
