@@ -296,7 +296,7 @@ sendBrainMessage(){
 };
 
         brain.sessions.unshift(session);
-    } else {
+   else {
         session.updatedAt = Date.now();
 
         if(!session.actions.includes(text)){
