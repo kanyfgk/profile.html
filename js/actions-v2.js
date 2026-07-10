@@ -103,11 +103,30 @@ const Actions = {
 
     openEntityPage(page){
     VAERO.engine.currentEntityPage = page;
-    console.log("OPEN ENTITY PAGE:", page);    
-    console.log("openEntityPage çalıştı:", page);    
+
+    console.log("OPEN ENTITY PAGE:", page);
+    console.log("openEntityPage çalıştı:", page);
+
     VAERO.engine.mount(VAERO.engine.currentEntity);
 
-    this.trackBrainSession(page);
+    /*
+     * Dashboard'a dönüşte page null olur.
+     * Null veya tanınmayan sayfalar Brain oturumu üretmemeli.
+     */
+    const trackablePages = [
+        "profile",
+        "identity",
+        "organs",
+        "timeline",
+        "memory",
+        "bridge",
+        "settings"
+    ];
+
+    if(trackablePages.includes(page)){
+        this.saveBrainState();
+this.renderBrainHistory();
+    }
 },
 
     trackBrainSession(page){
@@ -138,8 +157,12 @@ const Actions = {
         settings: "Ayarları açtı"
     };
 
-    const title = titleMap[page] || "Entity Oturumu";
-    const action = actionMap[page] || "Entity ekranına geçti";
+    const title = titleMap[page];
+const action = actionMap[page];
+
+if(!title || !action){
+    return;
+}
 
     let session = brain.sessions.find(s =>
         s.title === title &&
@@ -174,19 +197,101 @@ const Actions = {
     this.renderBrainHistory();
 },
 
+    getBrainStorageKey(){
+    const entityId =
+        VAERO.engine.currentOpenedEntity?.id ||
+        VAERO.engine.currentEntity?.id ||
+        "global";
+
+    return `vaero:brain:${entityId}`;
+},
+
+loadBrainState(){
+    const brain = VAERO.get("brain");
+    if(!brain) return;
+
+    const storageKey = this.getBrainStorageKey();
+    const savedState = localStorage.getItem(storageKey);
+
+    if(!savedState){
+        if(!Array.isArray(brain.sessions)){
+            brain.sessions = [];
+        }
+
+        return;
+    }
+
+    try {
+        const parsedState = JSON.parse(savedState);
+
+        brain.sessions = Array.isArray(parsedState.sessions)
+            ? parsedState.sessions
+            : [];
+
+        brain.resumePoint = parsedState.resumePoint || null;
+    } catch(error){
+        console.error("Brain geçmişi okunamadı:", error);
+
+        if(!Array.isArray(brain.sessions)){
+            brain.sessions = [];
+        }
+    }
+},
+
+saveBrainState(){
+    const brain = VAERO.get("brain");
+    if(!brain) return;
+
+    const storageKey = this.getBrainStorageKey();
+
+    const state = {
+        sessions: Array.isArray(brain.sessions)
+            ? brain.sessions
+            : [],
+        resumePoint: brain.resumePoint || null,
+        savedAt: Date.now()
+    };
+
+    try {
+        localStorage.setItem(
+            storageKey,
+            JSON.stringify(state)
+        );
+    } catch(error){
+        console.error("Brain geçmişi kaydedilemedi:", error);
+    }
+},
+
     openBrain(){
-    document.querySelectorAll("#brainPanel").forEach(panel => panel.remove());
+
+    this.loadBrainState();
+
+    document
+
+        .querySelectorAll("#brainPanel")
+
+        .forEach(panel => panel.remove());
 
     if(window.BrainApp){
-        document.body.insertAdjacentHTML("beforeend", BrainApp.render());
+
+        document.body.insertAdjacentHTML(
+
+            "beforeend",
+
+            BrainApp.render()
+
+        );
+
     }
 
     const panel = document.getElementById("brainPanel");
+
     if(!panel) return;
 
     panel.style.display = "block";
 
     this.initBrainSessionDragClose();
+
     this.initBrainPanelAdaptiveSize();
 
     const contextText = document.getElementById("brainContextText");
@@ -303,6 +408,8 @@ if(!session){
     }
 }
 
+this.saveBrainState();  
+    console.log("Brain Sessions:", brain.sessions);
 this.renderBrainHistory();
 
 const panel = document.getElementById("brainPanel");
@@ -422,9 +529,10 @@ if(panel){
         }
     }
 
-    this.renderBrainHistory();
+    this.saveBrainState();
+this.renderBrainHistory();
 
-    console.log("Brain Resume Point:", brain.resumePoint);
+console.log("Brain Resume Point:", brain.resumePoint);
 },
 
     restoreBrainResumePoint(){
@@ -489,60 +597,16 @@ if(panel){
 
 removeBrainSession(sessionId){
     const brain = VAERO.get("brain");
-    if(!brain || !brain.sessions) return;
+
+    if(!brain || !Array.isArray(brain.sessions)){
+        return;
+    }
 
     brain.sessions = brain.sessions.filter(
         session => session.id !== sessionId
     );
 
-    this.renderBrainHistory();
-},
-
-isBrainNoise(text){
-    const clean = String(text || "").trim();
-
-    if(!clean) return true;
-
-    const normalized = clean
-        .toLowerCase()
-        .replaceAll("ı", "i")
-        .replaceAll("ğ", "g")
-        .replaceAll("ü", "u")
-        .replaceAll("ş", "s")
-        .replaceAll("ö", "o")
-        .replaceAll("ç", "c");
-
-    const words = normalized.split(/\s+/);
-
-    if(words.length === 1 && normalized.length <= 4){
-        return true;
-    }
-
-    const intentService = VAERO.get("brainIntent");
-    const intent = intentService
-        ? intentService.detect(clean)
-        : { type: "chat" };
-
-    if(
-        intent.type === "chat" &&
-        words.length <= 2 &&
-        normalized.length <= 10 &&
-        (normalized.includes(" ac") || normalized.endsWith("ac"))
-    ){
-        return true;
-    }
-
-    return false;
-},
-
-removeBrainSession(sessionId){
-    const brain = VAERO.get("brain");
-    if(!brain || !brain.sessions) return;
-
-    brain.sessions = brain.sessions.filter(
-        session => session.id !== sessionId
-    );
-
+    this.saveBrainState();
     this.renderBrainHistory();
 },
     
@@ -559,7 +623,12 @@ renderBrainHistory(){
         miniHistory.innerHTML = "";
     }
 
-    const sessions = (brain.sessions || []).slice(0, 8);
+    const sessions = [...(brain.sessions || [])].sort((a, b) => {
+    const aTime = a.updatedAt || a.startedAt || 0;
+    const bTime = b.updatedAt || b.startedAt || 0;
+
+    return bTime - aTime;
+});  
 
     sessions.forEach((session, index) => {
         const card = document.createElement("div");
