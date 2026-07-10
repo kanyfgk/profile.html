@@ -319,36 +319,43 @@ const handledByIntent = this.dispatchBrainIntent(text);
 
     if(command.includes("profil")){
         this.openEntityPage("profile");
+        this.closeBrain();
         return true;
     }
 
     if(command.includes("kimlik")){
         this.openEntityPage("identity");
+        this.closeBrain();
         return true;
     }
 
     if(command.includes("hafıza") || command.includes("hafiza") || command.includes("memory")){
         this.openEntityPage("memory");
+        this.closeBrain();
         return true;
     }
 
     if(command.includes("köprü") || command.includes("kopru") || command.includes("bridge")){
         this.openEntityPage("bridge");
+        this.closeBrain();
         return true;
     }
 
     if(command.includes("timeline") || command.includes("zaman")){
         this.openEntityPage("timeline");
+        this.closeBrain();
         return true;
     }
 
     if(command.includes("organ")){
         this.openEntityPage("organs");
+        this.closeBrain();
         return true;
     }
 
     if(command.includes("ayar")){
         this.openEntityPage("settings");
+        this.closeBrain();
         return true;
     }
 
