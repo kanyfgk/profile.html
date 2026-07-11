@@ -428,7 +428,9 @@ loadBrainState(){
     brain.resumePoint = null;
 
     return false;
+
 }
+ },  
 
 saveBrainState(){
     const brain = VAERO.get("brain");
