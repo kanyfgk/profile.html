@@ -1275,87 +1275,101 @@ const lastMessagePreview =
         ? `${lastMessage.slice(0, 70)}…`
         : lastMessage;
 
+        const sortedActions = [...(session.actions || [])].sort(
+    (a, b) =>
+        (a.createdAt || 0) -
+        (b.createdAt || 0)
+);
+
 card.innerHTML = `
     <div class="brain-session-head">
         <div class="brain-session-main">
             <strong>${
-    this.escapeBrainHTML(
-        session.title || "Brain Oturumu"
-    )
-}</strong>
+                this.escapeBrainHTML(
+                    session.title || "Brain Oturumu"
+                )
+            }</strong>
+
             <small>${date} · ${time}</small>
 
-<span class="brain-session-status brain-status-${session.status || "progress"}">
-    ${statusText}
-</span>
+            <span class="brain-session-status brain-status-${session.status || "progress"}">
+                ${statusText}
+            </span>
 
-${
-    kind === "conversation" && lastMessagePreview
-        ? `<span class="brain-session-preview">
-            ${this.escapeBrainHTML(lastMessagePreview)}
-           </span>`
-        : ""
-}
+            ${
+                kind === "conversation" && lastMessagePreview
+                    ? `
+                        <span class="brain-session-preview">
+                            ${this.escapeBrainHTML(lastMessagePreview)}
+                        </span>
+                    `
+                    : ""
+            }
         </div>
 
         ${rightContent}
     </div>
 
     <div class="brain-session-body">
-    const sortedActions = [...(session.actions || [])].sort(
-    (a, b) =>
-        (a.createdAt || 0) -
-        (b.createdAt || 0)
-);
-        ${sortedActions 
-    .map(action => {
-        const rawContent = this.getBrainActionText(action);
-const content = this.escapeBrainHTML(rawContent);
+        ${sortedActions
+            .map(action => {
+                const rawContent =
+                    this.getBrainActionText(action);
 
-        if(!rawContent.trim()){
-    return "";
-}
+                const content =
+                    this.escapeBrainHTML(rawContent);
 
-        const role =
-            action &&
-            typeof action === "object"
-                ? action.role
-                : null;
-
-        const roleLabel =
-            role === "user"
-                ? "Sen"
-                : role === "brain"
-                    ? "Brain"
-                    : role === "system"
-                        ? "Sistem"
-                        : "";
-
-        return `
-            <p class="brain-session-message${
-                role ? ` brain-message-${role}` : ""
-            }">
-                ${
-                    roleLabel
-                        ? `<strong>${roleLabel}:</strong> `
-                        : "- "
+                if(!rawContent.trim()){
+                    return "";
                 }
-                ${content}
-            </p>
-        `;
-    })
-    .join("")}
+
+                const role =
+                    action &&
+                    typeof action === "object"
+                        ? action.role
+                        : null;
+
+                const roleLabel =
+                    role === "user"
+                        ? "Sen"
+                        : role === "brain"
+                            ? "Brain"
+                            : role === "system"
+                                ? "Sistem"
+                                : "";
+
+                return `
+                    <p class="brain-session-message${
+                        role
+                            ? ` brain-message-${role}`
+                            : ""
+                    }">
+                        ${
+                            roleLabel
+                                ? `<strong>${roleLabel}:</strong> `
+                                : "- "
+                        }
+
+                        ${content}
+                    </p>
+                `;
+            })
+            .join("")}
     </div>
 
     <div class="brain-delete-confirm">
         <span>Silmek istediğine emin misin?</span>
 
         <div>
-            <button type="button" class="brain-delete-approve">
+            <button
+                type="button"
+                class="brain-delete-approve">
                 Önemsiz, sil
             </button>
 
-            <button type="button" class="brain-delete-cancel">
+            <button
+                type="button"
+                class="brain-delete-cancel">
                 Vazgeç
             </button>
         </div>
