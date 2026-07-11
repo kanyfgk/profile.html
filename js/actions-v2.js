@@ -811,6 +811,15 @@ removeBrainSession(sessionId){
 
     return "";
 },
+
+    escapeBrainHTML(value){
+    return String(value ?? "")
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+},
     
 renderBrainHistory(){
     const history = document.getElementById("brainHistory");
@@ -866,7 +875,15 @@ card.classList.add(`brain-session-${kind}`);
             statusMap[session.status] ||
             statusMap.progress;
 
-        const rightContent = kind === "action"
+        const validActions = Array.isArray(session.actions)
+    ? session.actions.filter(item =>
+        this.getBrainActionText(item).trim() !== ""
+    )
+    : [];
+
+const messageCount = validActions.length;
+
+const rightContent = kind === "action"
     ? `<span class="brain-action-label">Aç →</span>`
     : kind === "noise"
         ? `
@@ -877,13 +894,40 @@ card.classList.add(`brain-session-${kind}`);
                 ×
             </button>
         `
-        : `<span class="brain-conversation-label">Sohbet</span>`;
+        : `
+            <span class="brain-conversation-label">
+                Sohbet · ${messageCount}
+            </span>
+        `;
+
+        const lastMessage = validActions.length
+    ? this.getBrainActionText(
+        validActions[validActions.length - 1]
+    )
+    : "";
+
+const lastMessagePreview =
+    lastMessage.length > 70
+        ? `${lastMessage.slice(0, 70)}…`
+        : lastMessage;
 
 card.innerHTML = `
     <div class="brain-session-head">
         <div class="brain-session-main">
-            <strong>${session.title || "Brain Oturumu"}</strong>
+            <strong>${
+    this.escapeBrainHTML(
+        session.title || "Brain Oturumu"
+    )
+}</strong>
             <small>${date} · ${time}</small>
+
+${
+    kind === "conversation" && lastMessagePreview
+        ? `<span class="brain-session-preview">
+            ${this.escapeBrainHTML(lastMessagePreview)}
+           </span>`
+        : ""
+}   
         </div>
 
         ${rightContent}
@@ -892,11 +936,12 @@ card.innerHTML = `
     <div class="brain-session-body">
         ${(session.actions || [])
     .map(action => {
-        const content = this.getBrainActionText(action);
+        const rawContent = this.getBrainActionText(action);
+const content = this.escapeBrainHTML(rawContent);
 
-        if(!content){
-            return "";
-        }
+        if(!rawContent.trim()){
+    return "";
+}
 
         const role =
             action &&
