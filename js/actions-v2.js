@@ -235,6 +235,156 @@ if(!actionAlreadyExists){
     return `vaero:brain:${entityId}`;
 },
 
+    normalizeBrainSessions(sessions){
+    if(!Array.isArray(sessions)){
+        return [];
+    }
+
+    return sessions
+        .filter(session =>
+            session &&
+            typeof session === "object"
+        )
+        .map(session => {
+            const target = session.target || null;
+
+            let kind = session.kind;
+
+            if(!["conversation", "action", "noise"].includes(kind)){
+                kind = target
+                    ? "action"
+                    : "conversation";
+            }
+
+            const rawActions = Array.isArray(session.actions)
+                ? session.actions
+                : [];
+
+            const actions = rawActions
+                .map(action => {
+                    if(typeof action === "string"){
+                        return {
+                            id: crypto.randomUUID(),
+                            role: kind === "action"
+                                ? "system"
+                                : "user",
+                            type: kind === "action"
+                                ? "activity"
+                                : "message",
+                            content: action,
+                            createdAt:
+                                session.updatedAt ||
+                                session.startedAt ||
+                                Date.now()
+                        };
+                    }
+
+                    if(
+                        action &&
+                        typeof action === "object"
+                    ){
+                        const content = String(
+                            action.content ||
+                            action.text ||
+                            action.message ||
+                            ""
+                        ).trim();
+
+                        if(!content){
+                            return null;
+                        }
+
+                        return {
+                            id:
+                                action.id ||
+                                crypto.randomUUID(),
+
+                            role:
+                                action.role ||
+                                (
+                                    kind === "action"
+                                        ? "system"
+                                        : "user"
+                                ),
+
+                            type:
+                                action.type ||
+                                (
+                                    kind === "action"
+                                        ? "activity"
+                                        : "message"
+                                ),
+
+                            content,
+
+                            createdAt:
+                                action.createdAt ||
+                                session.updatedAt ||
+                                session.startedAt ||
+                                Date.now()
+                        };
+                    }
+
+                    return null;
+                })
+                .filter(Boolean);
+
+            const startedAt =
+                Number(session.startedAt) ||
+                Number(session.updatedAt) ||
+                Date.now();
+
+            const updatedAt =
+                Number(session.updatedAt) ||
+                startedAt;
+
+            return {
+                id:
+                    session.id ||
+                    crypto.randomUUID(),
+
+                title:
+                    String(
+                        session.title ||
+                        (
+                            kind === "conversation"
+                                ? "Brain Sohbeti"
+                                : "Brain Oturumu"
+                        )
+                    ),
+
+                kind,
+                target,
+
+                status:
+                    ["progress", "done", "error"].includes(
+                        session.status
+                    )
+                        ? session.status
+                        : "progress",
+
+                startedAt,
+                updatedAt,
+                actions,
+
+                favorite:
+                    Boolean(session.favorite),
+
+                summary:
+                    session.summary || null,
+
+                topic:
+                    session.topic || null,
+
+                migratedAt:
+                    session.migratedAt || Date.now()
+            };
+        })
+        .sort((a, b) =>
+            b.updatedAt - a.updatedAt
+        );
+},
+
 loadBrainState(){
     const brain = VAERO.get("brain");
     if(!brain) return false;
@@ -253,28 +403,32 @@ loadBrainState(){
     }
 
     try {
-        const parsedState = JSON.parse(savedState);
+    const parsedState = JSON.parse(savedState);
 
-        brain.sessions = Array.isArray(parsedState.sessions)
-            ? parsedState.sessions
-            : [];
+    brain.sessions = this.normalizeBrainSessions(
+        parsedState.sessions
+    );
 
-        brain.resumePoint =
-            parsedState.resumePoint || null;
+    brain.resumePoint =
+        parsedState.resumePoint || null;
 
-        return true;
-    } catch(error){
-        console.error(
-            "Brain geçmişi okunamadı:",
-            error
-        );
+    /*
+     * Eski kayıt biçimini yeni sürüme kalıcı olarak geçir.
+     */
+    this.saveBrainState();
 
-        brain.sessions = [];
-        brain.resumePoint = null;
+    return true;
+} catch(error){
+    console.error(
+        "Brain geçmişi okunamadı:",
+        error
+    );
 
-        return false;
-    }
-},
+    brain.sessions = [];
+    brain.resumePoint = null;
+
+    return false;
+}
 
 saveBrainState(){
     const brain = VAERO.get("brain");
@@ -383,18 +537,214 @@ closeBrain(){
     document.querySelectorAll("#brainPanel").forEach(panel => panel.remove());
 },
 
+    createBrainConversationTitle(text){
+
+    const clean = String(text || "")
+        .toLowerCase()
+        .replace(/[?.!,;:]/g, " ")
+        .replace(/\s+/g, " ")
+        .trim();
+
+    const topicMap = [
+
+        {
+            words: ["profil","profile"],
+            title: "Profil"
+        },
+
+        {
+            words: ["kimlik","identity"],
+            title: "Kimlik"
+        },
+
+        {
+            words: ["hafiza","hafıza","memory"],
+            title: "Hafıza"
+        },
+
+        {
+            words: ["timeline","zaman"],
+            title: "Timeline"
+        },
+
+        {
+            words: ["bridge","kopru","köprü"],
+            title: "Bridge"
+        },
+
+        {
+            words: ["organ"],
+            title: "Organlar"
+        },
+
+        {
+            words: ["ayar","settings"],
+            title: "Ayarlar"
+        },
+
+        {
+            words: ["brain","beyin"],
+            title: "Brain"
+        }
+
+    ];
+
+    for(const topic of topicMap){
+
+        if(
+            topic.words.some(word =>
+                clean.includes(word)
+            )
+        ){
+            return topic.title;
+        }
+
+    }
+
+    const firstSentence = String(text || "")
+        .trim()
+        .replace(/\s+/g," ");
+
+    if(firstSentence.length <= 40){
+    return firstSentence || "Brain Sohbeti";
+}
+
+    return `${firstSentence.slice(0,40).trim()}…`;
+},
+updateBrainConversationMetadata(session, text){
+    if(!session || session.kind !== "conversation"){
+        return;
+    }
+
+    const cleanText = String(text || "").trim();
+
+    if(!cleanText){
+        return;
+    }
+
+    /*
+     * Yalnızca varsayılan veya eski anlamsız başlıkları değiştir.
+     * Sonradan özel olarak verilmiş başlıklara dokunma.
+     */
+    const currentTitle = String(session.title || "").trim();
+
+    const genericTitles = [
+        "",
+        "Brain Sohbeti",
+        "Brain Oturumu"
+    ];
+
+    if(genericTitles.includes(currentTitle)){
+        session.title =
+            this.createBrainConversationTitle(cleanText);
+    }
+
+    /*
+     * Şimdilik konu, ilk anlamlı kullanıcı mesajıdır.
+     * Gerçek düşünme katmanında daha sonra yeniden analiz edilir.
+     */
+    if(!session.topic){
+        session.topic = cleanText;
+    }
+
+    session.updatedAt = Date.now();
+},
+
+    updateBrainConversationSummary(session){
+    if(!session || session.kind !== "conversation"){
+        return;
+    }
+
+    const userMessages = (session.actions || [])
+        .filter(action =>
+            action &&
+            typeof action === "object" &&
+            action.role === "user"
+        )
+        .map(action =>
+            this.getBrainActionText(action).trim()
+        )
+        .filter(Boolean);
+
+    if(userMessages.length === 0){
+        session.summary = null;
+        return;
+    }
+
+    const recentMessages = userMessages.slice(-3);
+
+    const summaryText = recentMessages.join(" · ");
+
+    session.summary =
+        summaryText.length > 160
+            ? `${summaryText.slice(0, 160).trim()}…`
+            : summaryText;
+},
+
+    completeActiveBrainConversation(exceptSessionId = null){
+    const brain = VAERO.get("brain");
+
+    if(!brain || !Array.isArray(brain.sessions)){
+        return;
+    }
+
+    brain.sessions.forEach(session => {
+
+        if(session.kind !== "conversation"){
+            return;
+        }
+
+        if(session.id === exceptSessionId){
+            return;
+        }
+
+        if(session.status !== "progress"){
+            return;
+        }
+
+        session.status = "done";
+        session.updatedAt = Date.now();
+    });
+},
+    
     getActiveBrainConversationSession(){
     const brain = VAERO.get("brain");
+
     if(!brain || !Array.isArray(brain.sessions)){
         return null;
     }
 
-    return brain.sessions.find(session =>
-        session.kind === "conversation" &&
-        session.status === "progress"
-    ) || null;
-},
+    const session = brain.sessions.find(item =>
+        item.kind === "conversation" &&
+        item.status === "progress"
+    );
 
+    if(!session){
+        return null;
+    }
+
+    /*
+     * Son mesajdan itibaren 30 dakikadan fazla geçtiyse
+     * eski sohbeti aktif kabul etme.
+     */
+    const lastActivity =
+        Number(session.updatedAt) ||
+        Number(session.startedAt) ||
+        0;
+
+    const inactivityLimit = 30 * 60 * 1000;
+
+    if(Date.now() - lastActivity > inactivityLimit){
+        session.status = "done";
+        session.updatedAt = Date.now();
+
+        this.saveBrainState();
+
+        return null;
+    }
+
+    return session;
+},
 sendBrainMessage(){
     const input = document.getElementById("brainInput");
     if(!input) return;
@@ -433,6 +783,7 @@ let session = isNoise
     : this.getActiveBrainConversationSession();
 
 if(!session){
+    this.completeActiveBrainConversation();
     session = {
         id: crypto.randomUUID(),
         title: isNoise
@@ -465,6 +816,17 @@ session.actions.push({
     content: text,
     createdAt: Date.now()
 });
+
+    if(!isNoise){
+    this.updateBrainConversationMetadata(
+        session,
+        text
+    );
+
+        if(!isNoise){
+    this.updateBrainConversationSummary(session);
+}
+}
 
     /*
      * Brain cevap döndürüyorsa aynı oturumun içine ekle.
@@ -921,20 +1283,29 @@ card.innerHTML = `
 }</strong>
             <small>${date} · ${time}</small>
 
+<span class="brain-session-status brain-status-${session.status || "progress"}">
+    ${statusText}
+</span>
+
 ${
     kind === "conversation" && lastMessagePreview
         ? `<span class="brain-session-preview">
             ${this.escapeBrainHTML(lastMessagePreview)}
            </span>`
         : ""
-}   
+}
         </div>
 
         ${rightContent}
     </div>
 
     <div class="brain-session-body">
-        ${(session.actions || [])
+    const sortedActions = [...(session.actions || [])].sort(
+    (a, b) =>
+        (a.createdAt || 0) -
+        (b.createdAt || 0)
+);
+        ${sortedActions 
     .map(action => {
         const rawContent = this.getBrainActionText(action);
 const content = this.escapeBrainHTML(rawContent);
