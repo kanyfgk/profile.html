@@ -102,17 +102,37 @@ const Actions = {
     },
 
     openEntityPage(page){
+    /*
+     * Brain doğrudan bir uygulama açmak istediğinde
+     * henüz currentOpenedEntity seçilmemiş olabilir.
+     *
+     * Bu durumda mevcut aktif entity'yi hedef olarak kullan.
+     */
+    if(page && !VAERO.engine.currentOpenedEntity){
+        const activeEntity = VAERO.engine.currentEntity;
+
+        if(!activeEntity){
+            console.error(
+                "Uygulama açılamadı: aktif entity bulunamadı.",
+                page
+            );
+
+            return false;
+        }
+
+        VAERO.engine.currentOpenedEntity = activeEntity;
+    }
+
     VAERO.engine.currentEntityPage = page;
 
     console.log("OPEN ENTITY PAGE:", page);
-    console.log("openEntityPage çalıştı:", page);
+    console.log(
+        "OPENED ENTITY:",
+        VAERO.engine.currentOpenedEntity
+    );
 
     VAERO.engine.mount(VAERO.engine.currentEntity);
 
-    /*
-     * Dashboard'a dönüşte page null olur.
-     * Null veya tanınmayan sayfalar Brain oturumu üretmemeli.
-     */
     const trackablePages = [
         "profile",
         "identity",
@@ -124,11 +144,11 @@ const Actions = {
     ];
 
     if(trackablePages.includes(page)){
-        this.saveBrainState();
-this.renderBrainHistory();
+        this.trackBrainSession(page);
     }
-},
 
+    return true;
+},
     trackBrainSession(page){
     const brain = VAERO.get("brain");
     if(!brain) return;
@@ -190,10 +210,19 @@ if(!title || !action){
 
     session.updatedAt = Date.now();
 
-    if(!session.actions.includes(action)){
-        session.actions.push(action);
-    }
+if(!Array.isArray(session.actions)){
+    session.actions = [];
+}
 
+const actionAlreadyExists = session.actions.some(item =>
+    this.getBrainActionText(item) === action
+);
+
+if(!actionAlreadyExists){
+    session.actions.push(action);
+}
+
+        this.saveBrainState();
     this.renderBrainHistory();
 },
 
@@ -208,17 +237,19 @@ if(!title || !action){
 
 loadBrainState(){
     const brain = VAERO.get("brain");
-    if(!brain) return;
+    if(!brain) return false;
 
     const storageKey = this.getBrainStorageKey();
     const savedState = localStorage.getItem(storageKey);
 
+    /*
+     * Bu entity için kayıt yoksa önceki entity'nin
+     * bellekte kalan geçmişini gösterme.
+     */
     if(!savedState){
-        if(!Array.isArray(brain.sessions)){
-            brain.sessions = [];
-        }
-
-        return;
+        brain.sessions = [];
+        brain.resumePoint = null;
+        return true;
     }
 
     try {
@@ -228,13 +259,20 @@ loadBrainState(){
             ? parsedState.sessions
             : [];
 
-        brain.resumePoint = parsedState.resumePoint || null;
-    } catch(error){
-        console.error("Brain geçmişi okunamadı:", error);
+        brain.resumePoint =
+            parsedState.resumePoint || null;
 
-        if(!Array.isArray(brain.sessions)){
-            brain.sessions = [];
-        }
+        return true;
+    } catch(error){
+        console.error(
+            "Brain geçmişi okunamadı:",
+            error
+        );
+
+        brain.sessions = [];
+        brain.resumePoint = null;
+
+        return false;
     }
 },
 
@@ -261,6 +299,9 @@ saveBrainState(){
         console.error("Brain geçmişi kaydedilemedi:", error);
     }
 },
+
+    
+
 
     openBrain(){
 
@@ -342,6 +383,18 @@ closeBrain(){
     document.querySelectorAll("#brainPanel").forEach(panel => panel.remove());
 },
 
+    getActiveBrainConversationSession(){
+    const brain = VAERO.get("brain");
+    if(!brain || !Array.isArray(brain.sessions)){
+        return null;
+    }
+
+    return brain.sessions.find(session =>
+        session.kind === "conversation" &&
+        session.status === "progress"
+    ) || null;
+},
+
 sendBrainMessage(){
     const input = document.getElementById("brainInput");
     if(!input) return;
@@ -351,150 +404,261 @@ sendBrainMessage(){
 
     const brain = VAERO.get("brain");
     const brainContext = VAERO.get("brainContext");
-    const context = brainContext ? brainContext.build() : null;
 
-    if(!brain || typeof brain.receive !== "function") return;
-
-    brain.receive(text, context);
-
-    const handledByIntent = this.dispatchBrainIntent(text);
-
-    input.value = "";
-
-    /*
-     * Navigasyon, devam noktası veya başka bir sistem komutuysa
-     * dispatchBrainIntent gerekli işlemi zaten yaptı.
-     *
-     * Burada Brain panelini tekrar oluşturmuyoruz.
-     * Aksi hâlde closeBrain() sonrasında panel yeniden açılıyordu.
-     */
-    if(handledByIntent){
+    if(!brain || typeof brain.receive !== "function"){
         return;
     }
 
-    /*
-     * Herhangi bir uygulama komutu olmayan normal Brain mesajları
-     * kendi oturumu olarak saklanabilir.
-     */
-    if(!brain.sessions){
+    if(!Array.isArray(brain.sessions)){
         brain.sessions = [];
     }
 
-    let session = brain.sessions.find(item =>
-    item.title === text &&
-    item.status === "progress"
-);
+    const context = brainContext
+        ? brainContext.build()
+        : null;
+
+    /*
+     * Her gönderilen mesaj önce Brain'e iletilir.
+     */
+    const brainReply = brain.receive(text, context);
+
+    /*
+     * Normal sohbet ve komutlar artık aynı oturum kayıt
+     * sisteminden geçer.
+     */
+    const isNoise = this.isBrainNoise(text);
+
+let session = isNoise
+    ? null
+    : this.getActiveBrainConversationSession();
 
 if(!session){
     session = {
         id: crypto.randomUUID(),
-        title: text,
-        kind: this.isBrainNoise(text) ? "noise" : "conversation",
+        title: isNoise
+            ? text
+            : "Brain Sohbeti",
+        kind: isNoise
+            ? "noise"
+            : "conversation",
         target: null,
         status: "progress",
         startedAt: Date.now(),
         updatedAt: Date.now(),
-        actions: [text],
+        actions: [],
         favorite: false,
         summary: null
     };
 
     brain.sessions.unshift(session);
-} else {
+}
+
+session.updatedAt = Date.now();
+     if(!Array.isArray(session.actions)){
+    session.actions = [];
+}
+
+session.actions.push({
+    id: crypto.randomUUID(),
+    role: "user",
+    type: "message",
+    content: text,
+    createdAt: Date.now()
+});
+
+    /*
+     * Brain cevap döndürüyorsa aynı oturumun içine ekle.
+     */
+    if(brainReply){
+        const replyText =
+            typeof brainReply === "string"
+                ? brainReply
+                : brainReply.reply ||
+                  brainReply.message ||
+                  brainReply.text ||
+                  null;
+
+        if(replyText){
+            session.actions.push({
+                id: crypto.randomUUID(),
+                role: "brain",
+                type: "reply",
+                content: replyText,
+                createdAt: Date.now()
+            });
+        }
+    }
+
+
+    /*
+     * Intent kayıttan sonra çalışır.
+     * Böylece "Profili aç" gibi komutlar geçmişten kaybolmaz.
+     */
+    const handledByIntent = this.dispatchBrainIntent(text);
+
+    if(handledByIntent){
     session.updatedAt = Date.now();
 
-    if(!session.actions.includes(text)){
-        session.actions.push(text);
+    session.actions.push({
+        id: crypto.randomUUID(),
+        role: "system",
+        type: "navigation",
+        content: "Komut işlendi.",
+        createdAt: Date.now()
+    });
+}
+
+    input.value = "";
+
+    if(typeof this.saveBrainState === "function"){
+        this.saveBrainState();
     }
-}
 
-this.saveBrainState();  
+    this.renderBrainHistory();
+
+    /*
+     * Komut paneli kapattıysa yeniden açmaya çalışma.
+     */
+    if(handledByIntent){
+        return;
+    }
+
+    const panel = document.getElementById("brainPanel");
+
+    if(panel){
+        panel.classList.remove("is-compact");
+        panel.classList.add("is-expanded");
+    }
+
     console.log("Brain Sessions:", brain.sessions);
-this.renderBrainHistory();
+}, 
 
-const panel = document.getElementById("brainPanel");
+    openBrainTarget(page){
+    const opened = this.openEntityPage(page);
 
-if(panel){
-    panel.classList.remove("is-compact");
-    panel.classList.add("is-expanded");
-}
+    if(opened){
+        this.closeBrain();
+        return true;
+    }
+
+    console.error(
+        "Brain hedefi açılamadı:",
+        page
+    );
+
+    return false;
 },
+    
     dispatchBrainIntent(text){
     const command = String(text || "")
-    .toLowerCase()
-    .trim()
-    .replaceAll("ı", "i")
-    .replaceAll("ğ", "g")
-    .replaceAll("ü", "u")
-    .replaceAll("ş", "s")
-    .replaceAll("ö", "o")
-    .replaceAll("ç", "c");
-        if (
-    command.includes("burada kaldık") ||
-    command.includes("burda kaldık") ||
-    command.includes("sonra devam") ||
-    command.includes("bunu kaydet") ||
-    command.includes("kaldığımız yeri kaydet")
-) {
-    this.saveBrainResumePoint(text);
-    return true;
-}
+        .toLowerCase()
+        .trim()
+        .replaceAll("ı", "i")
+        .replaceAll("ğ", "g")
+        .replaceAll("ü", "u")
+        .replaceAll("ş", "s")
+        .replaceAll("ö", "o")
+        .replaceAll("ç", "c")
+        .replace(/[?.!,;:]+$/g, "")
+        .replace(/\s+/g, " ");
 
-        if (
-    command.includes("nerede kalmıştık") ||
-    command.includes("kaldığımız yer") ||
-    command.includes("devam et") ||
-    command.includes("kaldığım yer")
-) {
-    this.restoreBrainResumePoint();
-    return true;
-}
-        
+    /*
+     * Devam noktası kaydetme komutları
+     */
+    const saveResumeCommands = [
+        "burada kaldik",
+        "burda kaldik",
+        "sonra devam",
+        "bunu kaydet",
+        "kaldigimiz yeri kaydet"
+    ];
 
-    if(command.includes("profil")){
-        this.openEntityPage("profile");
-        this.closeBrain();
+    if(saveResumeCommands.some(item => command.includes(item))){
+        this.saveBrainResumePoint(text);
         return true;
     }
 
-    if(
-    command.includes("kimlik") ||
-    command.includes("kimligi") ||
-    command.includes("identity")
-){
-    this.openEntityPage("identity");
-    this.closeBrain();
-    return true;
-}
+    /*
+     * Devam noktasına dönme komutları
+     */
+    const restoreResumeCommands = [
+        "nerede kalmistik",
+        "kaldigimiz yer",
+        "devam et",
+        "kaldigim yer"
+    ];
 
-    if(command.includes("hafıza") || command.includes("hafiza") || command.includes("memory")){
-        this.openEntityPage("memory");
-        this.closeBrain();
+    if(restoreResumeCommands.some(item => command.includes(item))){
+        this.restoreBrainResumePoint();
         return true;
     }
 
-    if(command.includes("köprü") || command.includes("kopru") || command.includes("bridge")){
-        this.openEntityPage("bridge");
-        this.closeBrain();
-        return true;
-    }
+    /*
+     * Yalnızca gerçek navigasyon ifadelerini kabul et.
+     * Bir kelimenin cümlede geçmesi tek başına yeterli değildir.
+     */
+    const navigationTargets = [
+        {
+            page: "profile",
+            names: ["profil", "profili", "profile"]
+        },
+        {
+            page: "identity",
+            names: ["kimlik", "kimligi", "identity"]
+        },
+        {
+            page: "memory",
+            names: ["hafiza", "hafizayi", "memory"]
+        },
+        {
+            page: "bridge",
+            names: ["kopru", "kopruyu", "bridge"]
+        },
+        {
+            page: "timeline",
+            names: ["timeline", "zaman cizelgesi", "zaman akisi"]
+        },
+        {
+            page: "organs",
+            names: ["organ", "organlar", "organlari"]
+        },
+        {
+            page: "settings",
+            names: ["ayar", "ayarlar", "ayarlari"]
+        }
+    ];
 
-    if(command.includes("timeline") || command.includes("zaman")){
-        this.openEntityPage("timeline");
-        this.closeBrain();
-        return true;
-    }
+    const openVerbs = [
+        "ac",
+        "goster",
+        "goruntule",
+        "git",
+        "gec",
+        "beni gotur"
+    ];
 
-    if(command.includes("organ")){
-        this.openEntityPage("organs");
-        this.closeBrain();
-        return true;
-    }
+    for(const target of navigationTargets){
+        const targetFound = target.names.some(name =>
+            command === name ||
+            command.startsWith(`${name} `) ||
+            command.endsWith(` ${name}`) ||
+            command.includes(` ${name} `)
+        );
 
-    if(command.includes("ayar")){
-        this.openEntityPage("settings");
-        this.closeBrain();
-        return true;
+        if(!targetFound){
+            continue;
+        }
+
+        const verbFound = openVerbs.some(verb =>
+            command === verb ||
+            command.startsWith(`${verb} `) ||
+            command.endsWith(` ${verb}`) ||
+            command.includes(` ${verb} `)
+        );
+
+        if(verbFound){
+            return this.openBrainTarget(target.page);
+        }
     }
 
     return false;
@@ -507,9 +671,15 @@ if(panel){
 
     const context = brainContext ? brainContext.build() : null;
 
-    const activeSession = (brain.sessions || []).find(s => 
-        s.status === "progress"
-    );
+    const activeSession =
+    (brain.sessions || []).find(session =>
+        session.kind === "conversation" &&
+        session.status === "progress"
+    ) ||
+    (brain.sessions || []).find(session =>
+        session.status === "progress"
+    ) ||
+    null;
 
     brain.resumePoint = {
         id: crypto.randomUUID(),
@@ -522,12 +692,27 @@ if(panel){
     };
 
     if(activeSession){
-        activeSession.updatedAt = Date.now();
+    activeSession.updatedAt = Date.now();
 
-        if(!activeSession.actions.includes("Devam noktası kaydedildi")){
-            activeSession.actions.push("Devam noktası kaydedildi");
-        }
+    if(!Array.isArray(activeSession.actions)){
+        activeSession.actions = [];
     }
+
+    const resumeActionExists = activeSession.actions.some(item =>
+        this.getBrainActionText(item) ===
+        "Devam noktası kaydedildi"
+    );
+
+    if(!resumeActionExists){
+        activeSession.actions.push({
+            id: crypto.randomUUID(),
+            role: "system",
+            type: "resume",
+            content: "Devam noktası kaydedildi",
+            createdAt: Date.now()
+        });
+    }
+}
 
     this.saveBrainState();
 this.renderBrainHistory();
@@ -609,6 +794,23 @@ removeBrainSession(sessionId){
     this.saveBrainState();
     this.renderBrainHistory();
 },
+
+    getBrainActionText(action){
+    if(typeof action === "string"){
+        return action;
+    }
+
+    if(action && typeof action === "object"){
+        return String(
+            action.content ||
+            action.text ||
+            action.message ||
+            ""
+        );
+    }
+
+    return "";
+},
     
 renderBrainHistory(){
     const history = document.getElementById("brainHistory");
@@ -689,8 +891,42 @@ card.innerHTML = `
 
     <div class="brain-session-body">
         ${(session.actions || [])
-            .map(action => `<p>- ${action}</p>`)
-            .join("")}
+    .map(action => {
+        const content = this.getBrainActionText(action);
+
+        if(!content){
+            return "";
+        }
+
+        const role =
+            action &&
+            typeof action === "object"
+                ? action.role
+                : null;
+
+        const roleLabel =
+            role === "user"
+                ? "Sen"
+                : role === "brain"
+                    ? "Brain"
+                    : role === "system"
+                        ? "Sistem"
+                        : "";
+
+        return `
+            <p class="brain-session-message${
+                role ? ` brain-message-${role}` : ""
+            }">
+                ${
+                    roleLabel
+                        ? `<strong>${roleLabel}:</strong> `
+                        : "- "
+                }
+                ${content}
+            </p>
+        `;
+    })
+    .join("")}
     </div>
 
     <div class="brain-delete-confirm">
@@ -786,8 +1022,13 @@ card.addEventListener("click", event => {
     openBrainSession(session){
     if(!session) return;
 
-    const source = `${session.title || ""} ${(session.actions || []).join(" ")}`
-        .toLowerCase();
+    const actionText = (session.actions || [])
+    .map(action => this.getBrainActionText(action))
+    .filter(Boolean)
+    .join(" ");
+
+const source = `${session.title || ""} ${actionText}`
+    .toLowerCase();
 
     let page = null;
 
