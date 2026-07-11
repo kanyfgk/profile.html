@@ -170,7 +170,7 @@ const Brain = {
                 targetNameMap[intent.target] ||
                 intent.target;
 
-            return ${targetName} açılıyor.;
+            return `${targetName} açılıyor.`;
         }
 
         if(intent && intent.type === "clarify"){
