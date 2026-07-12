@@ -1590,25 +1590,52 @@ if(cancelButton){
     });
 }
 
-const actionTitle = card.querySelector(
-    ".brain-session-action-title"
-);
-
 const actionLabel = card.querySelector(
     ".brain-action-label"
 );
 
-const conversationTitle = card.querySelector(
-    ".brain-session-conversation-title"
-);
-
 /*
- * Eylem kartında yalnızca başlık yönlendirir.
+ * AÇ → yalnızca gerçek uygulama sayfasına yönlendirir.
  */
-if(actionTitle){
-    actionTitle.addEventListener("click", event => {
+if(actionLabel){
+    actionLabel.addEventListener("click", event => {
         event.stopPropagation();
         this.openBrainSession(session);
+    });
+}
+
+/*
+ * Noise kartları yalnızca silme kontrollerini kullanır.
+ */
+if(kind !== "noise"){
+    card.addEventListener("click", event => {
+
+        /*
+         * AÇ → ve silme butonlarının kartı açıp
+         * kapatmasını engelle.
+         */
+        if(
+            event.target.closest(".brain-action-label") ||
+            event.target.closest("button")
+        ){
+            return;
+        }
+
+        const isOpen =
+            card.dataset.open === "true";
+
+        document
+            .querySelectorAll(
+                "#brainHistory .brain-session-card"
+            )
+            .forEach(other => {
+                if(other !== card){
+                    other.dataset.open = "false";
+                }
+            });
+
+        card.dataset.open =
+            isOpen ? "false" : "true";
     });
 }
 
