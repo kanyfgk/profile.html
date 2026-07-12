@@ -603,3 +603,26 @@
     line-height:1.2;
     white-space:nowrap;
 }
+
+.brain-message-app-links{
+    display:inline-flex;
+    align-items:center;
+    flex-wrap:wrap;
+    gap:6px;
+    margin-left:6px;
+}
+
+.brain-message-app-link{
+    appearance:none;
+    border:0;
+    padding:0;
+    background:transparent;
+    color:#7eb6ff;
+    font:inherit;
+    font-weight:650;
+    cursor:pointer;
+}
+
+.brain-message-app-link:hover{
+    text-decoration:underline;
+}
