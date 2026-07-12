@@ -1061,16 +1061,20 @@ session.actions.push({
                   null;
 
         if(replyText){
-            session.actions.push({
-                id: crypto.randomUUID(),
-                role: "brain",
-                type: "reply",
-                content: replyText,
-                createdAt: Date.now(),
-                context: {
-                    page: contextPage
-                }
-            });
+            const replyAppMentions =
+    this.extractBrainAppMentions(replyText);
+
+session.actions.push({
+    id: crypto.randomUUID(),
+    role: "brain",
+    type: "reply",
+    content: replyText,
+    createdAt: Date.now(),
+    context: {
+        page: contextPage
+    },
+    appLinks: replyAppMentions
+});
         }
     }
 
@@ -1581,6 +1585,67 @@ sortedActions.forEach(action => {
     });
 });
 
+        /*
+ * Kapalı günlük sohbet kartında yalnızca son iki
+ * karşılıklı yazışma gösterilir: en fazla 4 mesaj.
+ */
+const recentConversationActions =
+    validActions
+        .filter(action =>
+            action &&
+            typeof action === "object" &&
+            (
+                action.role === "user" ||
+                action.role === "brain"
+            )
+        )
+        .slice(-4);
+
+const recentConversationHTML =
+    recentConversationActions
+        .map(action => {
+            const roleLabel =
+                action.role === "user"
+                    ? "Sen"
+                    : "Brain";
+
+            const messageTime =
+                new Date(
+                    action.createdAt || Date.now()
+                ).toLocaleTimeString("tr-TR", {
+                    hour: "2-digit",
+                    minute: "2-digit"
+                });
+
+            const contextPage =
+                action.context?.page
+                    ? `
+                        <span class="brain-preview-context">
+                            · ${this.escapeBrainHTML(
+                                action.context.page
+                            )}
+                        </span>
+                    `
+                    : "";
+
+            return `
+                <span class="brain-preview-message">
+                    <small>
+                        ${messageTime}
+                        ${contextPage}
+                    </small>
+
+                    <span>
+                        <strong>${roleLabel}:</strong>
+                        ${this.escapeBrainHTML(
+                            this.getBrainActionText(action)
+                        )}
+                    </span>
+                </span>
+            `;
+        })
+        .join("");
+        
 card.innerHTML = `
     <div class="brain-session-head">
         <div class="brain-session-main">
@@ -1615,20 +1680,15 @@ card.innerHTML = `
             }
 
             ${
-                kind === "conversation" &&
-                (session.summary || lastMessagePreview)
-                    ? `
-                        <span class="brain-session-preview">
-                            ${
-                                this.escapeBrainHTML(
-                                    session.summary ||
-                                    lastMessagePreview
-                                )
-                            }
-                        </span>
-                    `
-                    : ""
-            }
+    kind === "conversation" &&
+    recentConversationHTML
+        ? `
+            <span class="brain-session-preview">
+                ${recentConversationHTML}
+            </span>
+        `
+        : ""
+}
         </div>
 
         ${rightContent}
