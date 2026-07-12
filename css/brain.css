@@ -399,7 +399,7 @@
         inset 0 1px 0 rgba(255, 255, 255, 0.045),
         0 14px 34px rgba(0, 0, 0, 0.16);
 
-    cursor: default;
+    cursor: pointer;
     overflow: hidden;
 
     transition:
@@ -565,16 +565,12 @@
     color: rgba(255, 164, 92, 0.96);
 } 
 
-.brain-session-action-title,
-.brain-session-conversation-title,
-.brain-action-label {
-    cursor: pointer;
+.brain-action-label{
+    cursor:pointer;
 }
 
-.brain-session-action-title:hover,
-.brain-session-conversation-title:hover,
-.brain-action-label:hover {
-    opacity: 0.72;
+.brain-action-label:hover{
+    opacity:.72;
 }
 
 .brain-session-message,
