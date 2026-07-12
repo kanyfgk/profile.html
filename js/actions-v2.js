@@ -1246,7 +1246,11 @@ session.actions.push({
         "kaldigimiz yeri kaydet"
     ];
 
-    if(saveResumeCommands.some(item => command.includes(item))){
+    if(
+        saveResumeCommands.some(item =>
+            command.includes(item)
+        )
+    ){
         this.saveBrainResumePoint(text);
         return true;
     }
@@ -1261,82 +1265,128 @@ session.actions.push({
         "kaldigim yer"
     ];
 
-    if(restoreResumeCommands.some(item => command.includes(item))){
+    if(
+        restoreResumeCommands.some(item =>
+            command.includes(item)
+        )
+    ){
         this.restoreBrainResumePoint();
         return true;
     }
 
-    /*
-     * Yalnızca gerçek navigasyon ifadelerini kabul et.
-     * Bir kelimenin cümlede geçmesi tek başına yeterli değildir.
-     */
     const navigationTargets = [
         {
             page: "profile",
-            names: ["profil", "profili", "profile"]
+            names: [
+                "profil",
+                "profili",
+                "profil uygulamasi",
+                "profile"
+            ]
         },
         {
             page: "identity",
-            names: ["kimlik", "kimligi", "identity"]
+            names: [
+                "kimlik",
+                "kimligi",
+                "kimlik uygulamasi",
+                "identity"
+            ]
         },
         {
             page: "memory",
-            names: ["hafiza", "hafizayi", "memory"]
+            names: [
+                "hafiza",
+                "hafizayi",
+                "hafiza uygulamasi",
+                "memory"
+            ]
         },
         {
             page: "bridge",
-            names: ["kopru", "kopruyu", "bridge"]
+            names: [
+                "kopru",
+                "kopruyu",
+                "kopru uygulamasi",
+                "bridge"
+            ]
         },
         {
             page: "timeline",
-            names: ["timeline", "zaman cizelgesi", "zaman akisi"]
+            names: [
+                "timeline",
+                "zaman cizelgesi",
+                "zaman akisi"
+            ]
         },
         {
             page: "organs",
-            names: ["organ", "organlar", "organlari"]
+            names: [
+                "organ",
+                "organlar",
+                "organlari",
+                "organ uygulamasi"
+            ]
         },
         {
             page: "settings",
-            names: ["ayar", "ayarlar", "ayarlari"]
+            names: [
+                "ayar",
+                "ayarlar",
+                "ayarlari",
+                "ayarlar uygulamasi"
+            ]
         }
     ];
 
-    const openVerbs = [
-        "ac",
-        "goster",
-        "goruntule",
-        "git",
-        "gec",
-        "beni gotur"
+    /*
+     * Emir, rica ve doğal konuşma biçimlerini kapsar.
+     */
+    const navigationPatterns = [
+        /\bac\b/,
+        /\bacar misin\b/,
+        /\acabilir misin\b/,
+        /\acmani istiyorum\b/,
+        /\acmak istiyorum\b/,
+        /\goster\b/,
+        /\gosterir misin\b/,
+        /\goruntule\b/,
+        /\goruntuler misin\b/,
+        /\git\b/,
+        /\gider misin\b/,
+        /\gec\b/,
+        /\gecer misin\b/,
+        /\beni gotur\b/,
+        /\beni .* gotur\b/,
+        /\uygulamasini ac\b/,
+        /\uygulamayi ac\b/
     ];
 
     for(const target of navigationTargets){
-        const targetFound = target.names.some(name =>
-            command === name ||
-            command.startsWith(`${name} `) ||
-            command.endsWith(` ${name}`) ||
-            command.includes(` ${name} `)
-        );
+        const targetFound =
+            target.names.some(name =>
+                command === name ||
+                command.startsWith(`${name} `) ||
+                command.endsWith(` ${name}`) ||
+                command.includes(` ${name} `)
+            );
 
         if(!targetFound){
             continue;
         }
 
-        const verbFound = openVerbs.some(verb =>
-            command === verb ||
-            command.startsWith(`${verb} `) ||
-            command.endsWith(` ${verb}`) ||
-            command.includes(` ${verb} `)
-        );
+        const navigationRequested =
+            navigationPatterns.some(pattern =>
+                pattern.test(command)
+            );
 
-        if(verbFound){
+        if(navigationRequested){
             return this.openBrainTarget(target.page);
         }
     }
 
     return false;
 },
-
     saveBrainResumePoint(note){
     const brain = VAERO.get("brain");
     const brainContext = VAERO.get("brainContext");
