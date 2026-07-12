@@ -641,7 +641,7 @@ closeBrain(){
     .trim()
     .slice(0,120);
 
-}
+},
 
     detectBrainConversationTopic(text){
     const clean = String(text || "")
