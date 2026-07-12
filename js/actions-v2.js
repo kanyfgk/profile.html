@@ -1467,7 +1467,7 @@ card.innerHTML = `
                         <span class="brain-session-status brain-status-${
                             session.status || "progress"
                         }">
-                            ${statusText}
+                            ${session.status || ""}
                         </span>
                     `
                     : ""
