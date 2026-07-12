@@ -1307,14 +1307,9 @@ renderBrainHistory(){
     (session.target ? "action" : "conversation");
 
 card.classList.add(`brain-session-${kind}`);
-        card.dataset.open = "false";
+card.dataset.open = "false";
 
-        const sessionDate = new Date(
-            session.updatedAt ||
-            session.startedAt ||
-            Date.now()
-        );
-        const messageCount =
+const messageCount =
     (session.actions || []).filter(action =>
         action &&
         typeof action === "object" &&
@@ -1323,6 +1318,12 @@ card.classList.add(`brain-session-${kind}`);
             action.role === "brain"
         )
     ).length;
+
+const sessionDate = new Date(
+    session.updatedAt ||
+    session.startedAt ||
+    Date.now()
+);
 
         const date = sessionDate.toLocaleDateString("tr-TR");
 
