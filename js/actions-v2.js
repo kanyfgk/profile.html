@@ -613,6 +613,67 @@ closeBrain(){
 
     return `${firstSentence.slice(0,40).trim()}…`;
 },
+
+    updateBrainConversationSummary(session){
+
+    if(
+        !session ||
+        !Array.isArray(session.actions)
+    ){
+        return;
+    }
+
+    const lastUserMessage = [...session.actions]
+        .reverse()
+        .find(item =>
+            item &&
+            item.role === "user" &&
+            item.content
+        );
+
+    if(!lastUserMessage){
+        return;
+    }
+
+    session.summary = String(
+        lastUserMessage.content
+    )
+    .trim()
+    .slice(0,120);
+
+}
+
+    detectBrainConversationTopic(text){
+    const clean = String(text || "")
+        .toLowerCase()
+        .replaceAll("ı", "i")
+        .replaceAll("ğ", "g")
+        .replaceAll("ü", "u")
+        .replaceAll("ş", "s")
+        .replaceAll("ö", "o")
+        .replaceAll("ç", "c")
+        .replace(/[?.!,;:]/g, " ")
+        .replace(/\s+/g, " ")
+        .trim();
+
+    const topicMap = [
+        { words: ["profil", "profile"], topic: "Profil" },
+        { words: ["kimlik", "identity"], topic: "Kimlik" },
+        { words: ["hafiza", "memory"], topic: "Hafıza" },
+        { words: ["timeline", "zaman cizelgesi"], topic: "Timeline" },
+        { words: ["bridge", "kopru"], topic: "Bridge" },
+        { words: ["organ"], topic: "Organlar" },
+        { words: ["ayar", "settings"], topic: "Ayarlar" },
+        { words: ["brain", "beyin"], topic: "Brain" }
+    ];
+
+    const match = topicMap.find(item =>
+        item.words.some(word => clean.includes(word))
+    );
+
+    return match ? match.topic : null;
+},
+    
 updateBrainConversationMetadata(session, text){
     if(!session || session.kind !== "conversation"){
         return;
@@ -639,14 +700,6 @@ updateBrainConversationMetadata(session, text){
     if(genericTitles.includes(currentTitle)){
         session.title =
             this.createBrainConversationTitle(cleanText);
-    }
-
-    /*
-     * Şimdilik konu, ilk anlamlı kullanıcı mesajıdır.
-     * Gerçek düşünme katmanında daha sonra yeniden analiz edilir.
-     */
-    if(!session.topic){
-        session.topic = cleanText;
     }
 
     session.updatedAt = Date.now();
@@ -709,7 +762,7 @@ updateBrainConversationMetadata(session, text){
     });
 },
     
-    getActiveBrainConversationSession(){
+    getActiveBrainConversationSession(topic = null){
     const brain = VAERO.get("brain");
 
     if(!brain || !Array.isArray(brain.sessions)){
@@ -725,10 +778,6 @@ updateBrainConversationMetadata(session, text){
         return null;
     }
 
-    /*
-     * Son mesajdan itibaren 30 dakikadan fazla geçtiyse
-     * eski sohbeti aktif kabul etme.
-     */
     const lastActivity =
         Number(session.updatedAt) ||
         Number(session.startedAt) ||
@@ -736,12 +785,31 @@ updateBrainConversationMetadata(session, text){
 
     const inactivityLimit = 30 * 60 * 1000;
 
+    /*
+     * 30 dakikadan fazla ara verildiyse
+     * mevcut sohbeti tamamla.
+     */
     if(Date.now() - lastActivity > inactivityLimit){
         session.status = "done";
         session.updatedAt = Date.now();
 
         this.saveBrainState();
+        return null;
+    }
 
+    /*
+     * Yeni mesajın konusu belli ve mevcut oturumun
+     * konusundan farklıysa eski sohbeti tamamla.
+     */
+    if(
+        topic &&
+        session.topic &&
+        session.topic !== topic
+    ){
+        session.status = "done";
+        session.updatedAt = Date.now();
+
+        this.saveBrainState();
         return null;
     }
 
@@ -780,17 +848,28 @@ sendBrainMessage(){
      */
     const isNoise = this.isBrainNoise(text);
 
+const detectedTopic = isNoise
+    ? null
+    : this.detectBrainConversationTopic(text);
+
+const conversationTitle = isNoise
+    ? null
+    : this.createBrainConversationTitle(text);
+
 let session = isNoise
     ? null
-    : this.getActiveBrainConversationSession();
+    : this.getActiveBrainConversationSession(
+    detectedTopic
+);
 
 if(!session){
     this.completeActiveBrainConversation();
+    
     session = {
         id: crypto.randomUUID(),
         title: isNoise
             ? text
-            : "Brain Sohbeti",
+            : conversationTitle,
         kind: isNoise
             ? "noise"
             : "conversation",
@@ -800,10 +879,21 @@ if(!session){
         updatedAt: Date.now(),
         actions: [],
         favorite: false,
-        summary: null
+        summary: null,
+topic: detectedTopic,
+detectedTitle: conversationTitle
     };
 
     brain.sessions.unshift(session);
+}
+
+    if(
+    !isNoise &&
+    detectedTopic &&
+    !session.topic
+){
+    session.topic = detectedTopic;
+    session.title = conversationTitle;
 }
 
 session.updatedAt = Date.now();
@@ -850,6 +940,7 @@ session.actions.push({
                 content: replyText,
                 createdAt: Date.now()
             });
+            this.updateBrainConversationSummary(session);
         }
     }
 
@@ -874,11 +965,13 @@ session.actions.push({
 
     input.value = "";
 
-    if(typeof this.saveBrainState === "function"){
-        this.saveBrainState();
-    }
+this.updateBrainConversationSummary(session);
 
-    this.renderBrainHistory();
+if(typeof this.saveBrainState === "function"){
+    this.saveBrainState();
+}
+
+this.renderBrainHistory();
 
     /*
      * Komut paneli kapattıysa yeniden açmaya çalışma.
@@ -1221,6 +1314,15 @@ card.classList.add(`brain-session-${kind}`);
             session.startedAt ||
             Date.now()
         );
+        const messageCount =
+    (session.actions || []).filter(action =>
+        action &&
+        typeof action === "object" &&
+        (
+            action.role === "user" ||
+            action.role === "brain"
+        )
+    ).length;
 
         const date = sessionDate.toLocaleDateString("tr-TR");
 
@@ -1247,11 +1349,11 @@ card.classList.add(`brain-session-${kind}`);
 
 const messageCount = validActions.length;
 
-const rightContent = kind === "action"
+ const rightContent = kind === "action"
     ? `<span class="brain-action-label">Aç →</span>`
     : kind === "noise"
         ? `
-            <button
+            <button 
                 type="button"
                 class="brain-noise-remove"
                 aria-label="Önemsiz mesajı sil">
@@ -1271,6 +1373,11 @@ const rightContent = kind === "action"
     : "";
 
 const lastMessagePreview =
+    const messageCount =
+    (session.actions || []).filter(action =>
+        action.role === "user" ||
+        action.role === "brain"
+    ).length;
     lastMessage.length > 70
         ? `${lastMessage.slice(0, 70)}…`
         : lastMessage;
@@ -1297,14 +1404,20 @@ card.innerHTML = `
             </span>
 
             ${
-                kind === "conversation" && lastMessagePreview
-                    ? `
-                        <span class="brain-session-preview">
-                            ${this.escapeBrainHTML(lastMessagePreview)}
-                        </span>
-                    `
-                    : ""
-            }
+    kind === "conversation" &&
+    (session.summary || lastMessagePreview)
+        ? `
+            <span class="brain-session-preview">
+                ${
+                    this.escapeBrainHTML(
+                        session.summary ||
+                        lastMessagePreview
+                    )
+                }
+            </span>
+        `
+        : ""
+}
         </div>
 
         ${rightContent}
