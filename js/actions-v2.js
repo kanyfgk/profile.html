@@ -1653,27 +1653,6 @@ if(actionLabel){
  * Sohbet kartında yalnızca başlık alanı
  * içeriği açıp kapatır.
  */
-if(conversationTitle){
-    conversationTitle.addEventListener("click", event => {
-        event.stopPropagation();
-
-        const isOpen =
-            card.dataset.open === "true";
-
-        document
-            .querySelectorAll(
-                "#brainHistory .brain-session-card"
-            )
-            .forEach(other => {
-                if(other !== card){
-                    other.dataset.open = "false";
-                }
-            });
-
-        card.dataset.open =
-            isOpen ? "false" : "true";
-    });
-}
 
         history.appendChild(card);
 
