@@ -1292,45 +1292,38 @@ renderBrainHistory(){
     }
 
     const sessions = [...(brain.sessions || [])].sort((a, b) => {
-    const aTime = a.updatedAt || a.startedAt || 0;
-    const bTime = b.updatedAt || b.startedAt || 0;
+        const aTime = a.updatedAt || a.startedAt || 0;
+        const bTime = b.updatedAt || b.startedAt || 0;
 
-    return bTime - aTime;
-});  
+        return bTime - aTime;
+    });
 
     sessions.forEach((session, index) => {
         const card = document.createElement("div");
 
         card.className = "brain-session-card";
+
         const kind =
-    session.kind ||
-    (session.target ? "action" : "conversation");
+            session.kind ||
+            (session.target ? "action" : "conversation");
 
-card.classList.add(`brain-session-${kind}`);
-card.dataset.open = "false";
+        card.classList.add(`brain-session-${kind}`);
+        card.dataset.open = "false";
 
-const messageCount =
-    (session.actions || []).filter(action =>
-        action &&
-        typeof action === "object" &&
-        (
-            action.role === "user" ||
-            action.role === "brain"
-        )
-    ).length;
+        const sessionDate = new Date(
+            session.updatedAt ||
+            session.startedAt ||
+            Date.now()
+        );
 
-const sessionDate = new Date(
-    session.updatedAt ||
-    session.startedAt ||
-    Date.now()
-);
+        const date =
+            sessionDate.toLocaleDateString("tr-TR");
 
-        const date = sessionDate.toLocaleDateString("tr-TR");
-
-        const time = sessionDate.toLocaleTimeString("tr-TR", {
-            hour: "2-digit",
-            minute: "2-digit"
-        });
+        const time =
+            sessionDate.toLocaleTimeString("tr-TR", {
+                hour: "2-digit",
+                minute: "2-digit"
+            });
 
         const statusMap = {
             done: "🟢 Tamamlandı",
@@ -1342,52 +1335,73 @@ const sessionDate = new Date(
             statusMap[session.status] ||
             statusMap.progress;
 
-        const validActions = Array.isArray(session.actions)
-    ? session.actions.filter(item =>
-        this.getBrainActionText(item).trim() !== ""
-    )
-    : [];
+        /*
+         * Boş veya bozuk kayıtları görünümden çıkar.
+         */
+        const validActions =
+            Array.isArray(session.actions)
+                ? session.actions.filter(item =>
+                    this
+                        .getBrainActionText(item)
+                        .trim() !== ""
+                )
+                : [];
 
-const messageCount = validActions.length;
+        /*
+         * Sohbet sayısına yalnızca kullanıcı ve Brain
+         * mesajları dâhil edilir. Sistem kayıtları sayılmaz.
+         */
+        const messageCount = validActions.filter(action =>
+            action &&
+            typeof action === "object" &&
+            (
+                action.role === "user" ||
+                action.role === "brain"
+            )
+        ).length;
 
- const rightContent = kind === "action"
-    ? `<span class="brain-action-label">Aç →</span>`
-    : kind === "noise"
-        ? `
-            <button 
-                type="button"
-                class="brain-noise-remove"
-                aria-label="Önemsiz mesajı sil">
-                ×
-            </button>
-        `
-        : `
-            <span class="brain-conversation-label">
-                Sohbet · ${messageCount}
-            </span>
-        `;
+        const rightContent =
+            kind === "action"
+                ? `
+                    <span class="brain-action-label">
+                        Aç →
+                    </span>
+                `
+                : kind === "noise"
+                    ? `
+                        <button
+                            type="button"
+                            class="brain-noise-remove"
+                            aria-label="Önemsiz mesajı sil">
+                            ×
+                        </button>
+                    `
+                    : `
+                        <span class="brain-conversation-label">
+                            Sohbet · ${messageCount}
+                        </span>
+                    `;
 
         const lastMessage = validActions.length
-    ? this.getBrainActionText(
-        validActions[validActions.length - 1]
-    )
-    : "";
+            ? this.getBrainActionText(
+                validActions[validActions.length - 1]
+            )
+            : "";
 
-const lastMessagePreview =
-    const messageCount =
-    (session.actions || []).filter(action =>
-        action.role === "user" ||
-        action.role === "brain"
-    ).length;
-    lastMessage.length > 70
-        ? `${lastMessage.slice(0, 70)}…`
-        : lastMessage;
+        const lastMessagePreview =
+            lastMessage.length > 70
+                ? `${lastMessage.slice(0, 70).trim()}…`
+                : lastMessage;
 
-        const sortedActions = [...(session.actions || [])].sort(
-    (a, b) =>
-        (a.createdAt || 0) -
-        (b.createdAt || 0)
-);
+        /*
+         * Mesajları oluşturulma zamanına göre eskiden
+         * yeniye doğru göster.
+         */
+        const sortedActions = [...validActions].sort(
+            (a, b) =>
+                (a?.createdAt || 0) -
+                (b?.createdAt || 0)
+        );
 
 card.innerHTML = `
     <div class="brain-session-head">
