@@ -1595,7 +1595,7 @@ const actionLabel = card.querySelector(
 );
 
 /*
- * AÇ → yalnızca gerçek uygulama sayfasına yönlendirir.
+ * AÇ butonu yalnızca uygulamaya yönlendirir.
  */
 if(actionLabel){
     actionLabel.addEventListener("click", event => {
@@ -1605,22 +1605,22 @@ if(actionLabel){
 }
 
 /*
- * Noise kartları yalnızca silme kontrollerini kullanır.
+ * Kartın tamamı tıklanabilir.
  */
 if(kind !== "noise"){
+
     card.addEventListener("click", event => {
 
         /*
-         * AÇ → ve silme butonlarının kartı açıp
-         * kapatmasını engelle.
+         * Silme butonları çalışsın.
          */
-        if(
-            event.target.closest(".brain-action-label") ||
-            event.target.closest("button")
-        ){
+        if(event.target.closest("button")){
             return;
         }
 
+        /*
+         * Sohbet kartı
+         */
         const isOpen =
             card.dataset.open === "true";
 
@@ -1637,8 +1637,8 @@ if(kind !== "noise"){
         card.dataset.open =
             isOpen ? "false" : "true";
     });
-}
 
+}
 /*
  * Eylem kartında yalnızca "Aç →" yönlendirir.
  */
