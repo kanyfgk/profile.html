@@ -817,17 +817,156 @@ updateBrainConversationMetadata(session, text){
 
     return session;
 },
+
+    getBrainAppDefinitions(){
+    return [
+        {
+            id: "profile",
+            label: "Profil",
+            words: [
+                "profil",
+                "profili",
+                "profile"
+            ]
+        },
+        {
+            id: "identity",
+            label: "Kimlik",
+            words: [
+                "kimlik",
+                "kimliği",
+                "kimligi",
+                "identity"
+            ]
+        },
+        {
+            id: "memory",
+            label: "Hafıza",
+            words: [
+                "hafıza",
+                "hafızayı",
+                "hafiza",
+                "hafizayi",
+                "memory"
+            ]
+        },
+        {
+            id: "bridge",
+            label: "Köprü",
+            words: [
+                "köprü",
+                "köprüyü",
+                "kopru",
+                "kopruyu",
+                "bridge"
+            ]
+        },
+        {
+            id: "timeline",
+            label: "Timeline",
+            words: [
+                "timeline",
+                "zaman çizelgesi",
+                "zaman cizelgesi"
+            ]
+        },
+        {
+            id: "organs",
+            label: "Organlar",
+            words: [
+                "organ",
+                "organlar",
+                "organs"
+            ]
+        },
+        {
+            id: "settings",
+            label: "Ayarlar",
+            words: [
+                "ayar",
+                "ayarlar",
+                "settings"
+            ]
+        }
+    ];
+},
+
+extractBrainAppMentions(text){
+    const normalized =
+        String(text || "")
+            .toLocaleLowerCase("tr-TR");
+
+    const found = [];
+
+    this.getBrainAppDefinitions()
+        .forEach(app => {
+            const matched =
+                app.words.some(word =>
+                    normalized.includes(word)
+                );
+
+            if(matched){
+                found.push({
+                    app: app.id,
+                    label: app.label
+                });
+            }
+        });
+
+    return found;
+},
+    
+getBrainDayKey(timestamp = Date.now()){
+    const date = new Date(timestamp);
+
+    const year = date.getFullYear();
+    const month = String(
+        date.getMonth() + 1
+    ).padStart(2, "0");
+
+    const day = String(
+        date.getDate()
+    ).padStart(2, "0");
+
+    return `${year}-${month}-${day}`;
+},
+
+getTodayBrainConversationSession(brain){
+    if(!brain || !Array.isArray(brain.sessions)){
+        return null;
+    }
+
+    const todayKey =
+        this.getBrainDayKey();
+
+    return brain.sessions.find(session =>
+        session &&
+        session.kind === "conversation" &&
+        session.dayKey === todayKey
+    ) || null;
+},
+
 sendBrainMessage(){
-    const input = document.getElementById("brainInput");
+    const input =
+        document.getElementById("brainInput");
+
     if(!input) return;
 
-    const text = input.value.trim();
+    const text =
+        input.value.trim();
+
     if(text === "") return;
 
-    const brain = VAERO.get("brain");
-    const brainContext = VAERO.get("brainContext");
+    const brain =
+        VAERO.get("brain");
 
-    if(!brain || typeof brain.receive !== "function"){
+    const brainContext =
+        VAERO.get("brainContext");
+
+    if(
+        !brain ||
+        typeof brain.receive !== "function"
+    ){
         return;
     }
 
@@ -835,96 +974,83 @@ sendBrainMessage(){
         brain.sessions = [];
     }
 
-    const context = brainContext
-        ? brainContext.build()
-        : null;
+    const context =
+        brainContext &&
+        typeof brainContext.build === "function"
+            ? brainContext.build()
+            : null;
+
+    const now =
+        Date.now();
+
+    const dayKey =
+        this.getBrainDayKey(now);
 
     /*
-     * Her gönderilen mesaj önce Brain'e iletilir.
+     * Sayfa yalnızca mesaj bağlamıdır.
+     * Sohbetin konusu veya oturumu değildir.
      */
-    const brainReply = brain.receive(text, context);
+    const contextPage =
+        context?.page ||
+        context?.currentPage ||
+        context?.screen ||
+        context?.route ||
+        document.body?.dataset?.page ||
+        null;
 
     /*
-     * Normal sohbet ve komutlar artık aynı oturum kayıt
-     * sisteminden geçer.
+     * Her gün için yalnızca bir Brain sohbeti bulunur.
      */
-    const isNoise = this.isBrainNoise(text);
+    let session =
+        this.getTodayBrainConversationSession(brain);
 
-const detectedTopic = isNoise
-    ? null
-    : this.detectBrainConversationTopic(text);
+    if(!session){
+        session = {
+            id: crypto.randomUUID(),
+            title: "Brain Sohbeti · Bugün",
+            kind: "conversation",
+            target: null,
+            status: "progress",
+            startedAt: now,
+            updatedAt: now,
+            actions: [],
+            favorite: false,
+            summary: null,
+            topic: "daily-brain",
+            dayKey
+        };
 
-const conversationTitle = isNoise
-    ? null
-    : this.createBrainConversationTitle(text);
+        brain.sessions.unshift(session);
+    }
 
-let session = isNoise
-    ? null
-    : this.getActiveBrainConversationSession(
-    detectedTopic
-);
+    if(!Array.isArray(session.actions)){
+        session.actions = [];
+    }
 
-if(!session){
-    this.completeActiveBrainConversation();
-    
-    session = {
-        id: crypto.randomUUID(),
-        title: isNoise
-            ? text
-            : conversationTitle,
-        kind: isNoise
-            ? "noise"
-            : "conversation",
-        target: null,
-        status: "progress",
-        startedAt: Date.now(),
-        updatedAt: Date.now(),
-        actions: [],
-        favorite: false,
-        summary: null,
-topic: detectedTopic,
-detectedTitle: conversationTitle
-    };
-
-    brain.sessions.unshift(session);
-}
-
-    if(
-    !isNoise &&
-    detectedTopic &&
-    !session.topic
-){
-    session.topic = detectedTopic;
-    session.title = conversationTitle;
-}
-
-session.updatedAt = Date.now();
-     if(!Array.isArray(session.actions)){
-    session.actions = [];
-}
+    /*
+     * Kullanıcı mesajı günlük sohbet akışına eklenir.
+     */
+    const appMentions =
+    this.extractBrainAppMentions(text);
 
 session.actions.push({
     id: crypto.randomUUID(),
     role: "user",
     type: "message",
     content: text,
-    createdAt: Date.now()
+    createdAt: now,
+    context: {
+        page: contextPage
+    },
+    appLinks: appMentions
 });
 
-    if(!isNoise){
-    this.updateBrainConversationMetadata(
-        session,
-        text
-    );
-
-        if(!isNoise){
-    this.updateBrainConversationSummary(session);
-}
-}
-
     /*
-     * Brain cevap döndürüyorsa aynı oturumun içine ekle.
+     * Mesaj Brain'e iletilir.
      */
+    const brainReply =
+        brain.receive(text, context);
+
     if(brainReply){
         const replyText =
             typeof brainReply === "string"
@@ -940,57 +1066,72 @@ session.actions.push({
                 role: "brain",
                 type: "reply",
                 content: replyText,
-                createdAt: Date.now()
+                createdAt: Date.now(),
+                context: {
+                    page: contextPage
+                }
             });
-            this.updateBrainConversationSummary(session);
         }
     }
 
+    session.updatedAt =
+        Date.now();
 
     /*
-     * Intent kayıttan sonra çalışır.
-     * Böylece "Profili aç" gibi komutlar geçmişten kaybolmaz.
+     * Aç / geç / götür gibi gerçek komutlar
+     * sohbet kaydedildikten sonra çalıştırılır.
      */
-    const handledByIntent = this.dispatchBrainIntent(text);
+    const handledByIntent =
+        this.dispatchBrainIntent(text);
 
-    if(handledByIntent){
-    session.updatedAt = Date.now();
+    /*
+     * Günlük sohbetin başlığı uygulama adına dönüşmez.
+     */
+    session.title =
+        "Brain Sohbeti · Bugün";
 
-    session.actions.push({
-        id: crypto.randomUUID(),
-        role: "system",
-        type: "navigation",
-        content: "Komut işlendi.",
-        createdAt: Date.now()
-    });
-}
+    session.topic =
+        "daily-brain";
+
+    if(
+        typeof this.updateBrainConversationSummary ===
+        "function"
+    ){
+        this.updateBrainConversationSummary(session);
+    }
 
     input.value = "";
 
-this.updateBrainConversationSummary(session);
+    if(
+        typeof this.saveBrainState ===
+        "function"
+    ){
+        this.saveBrainState();
+    }
 
-if(typeof this.saveBrainState === "function"){
-    this.saveBrainState();
-}
-
-this.renderBrainHistory();
+    this.renderBrainHistory();
 
     /*
-     * Komut paneli kapattıysa yeniden açmaya çalışma.
+     * Komut ilgili uygulamayı açtıysa
+     * paneli yeniden zorla açma.
      */
     if(handledByIntent){
         return;
     }
 
-    const panel = document.getElementById("brainPanel");
+    const panel =
+        document.getElementById("brainPanel");
 
     if(panel){
         panel.classList.remove("is-compact");
         panel.classList.add("is-expanded");
     }
 
-    console.log("Brain Sessions:", brain.sessions);
-}, 
+    console.log(
+        "Brain Daily Conversation:",
+        session
+    );
+},
 
     openBrainTarget(page){
     const opened = this.openEntityPage(page);
@@ -1514,6 +1655,29 @@ card.innerHTML = `
                         ? "Sistem"
                         : "";
 
+        const appLinks =
+    Array.isArray(item.action?.appLinks)
+        ? item.action.appLinks
+        : [];
+
+const appLinksHTML =
+    appLinks.length
+        ? `
+            <span class="brain-message-app-links">
+                ${appLinks
+                    .map(link => `
+                        <button
+                            type="button"
+                            class="brain-message-app-link"
+                            data-brain-app="${this.escapeBrainHTML(link.app)}">
+                            ${this.escapeBrainHTML(link.label)} →
+                        </button>
+                    `)
+                    .join("")}
+            </span>
+        `
+        : "";
+        
         const repeatLabel =
             item.count > 1
                 ? `
@@ -1537,9 +1701,11 @@ card.innerHTML = `
                     }
 
                     ${content}
-                </span>
 
-                ${repeatLabel}
+${appLinksHTML}
+</span>
+
+${repeatLabel}
             </p>
         `;
     })
@@ -1654,6 +1820,25 @@ if(actionLabel){
  * içeriği açıp kapatır.
  */
 
+        card
+    .querySelectorAll(".brain-message-app-link")
+    .forEach(button => {
+        button.addEventListener("click", event => {
+            event.stopPropagation();
+
+            const app =
+                button.dataset.brainApp;
+
+            if(!app) return;
+
+            this.closeBrain();
+
+            requestAnimationFrame(() => {
+                this.openEntityPage(app);
+            });
+        });
+    });
+        
         history.appendChild(card);
 
         /*
