@@ -752,39 +752,11 @@ updateBrainConversationMetadata(session, text){
         return false;
     }
 
-    const actions = Array.isArray(activeSession.actions)
-        ? activeSession.actions
-        : [];
-
     /*
-     * Yalnızca gerçek kullanıcı ve Brain mesajlarını dikkate al.
-     * "Komut işlendi" gibi sistem kayıtları cevaba sayılmaz.
+     * Buradaki status yalnızca sohbetin artık aktif olmadığını belirtir.
+     * Kullanıcı arayüzünde günlük tamamlanma işareti olarak gösterilmez.
      */
-    const conversationActions = actions.filter(action =>
-        action &&
-        typeof action === "object" &&
-        (
-            action.role === "user" ||
-            action.role === "brain"
-        )
-    );
-
-    const lastConversationAction =
-        conversationActions.length > 0
-            ? conversationActions[
-                conversationActions.length - 1
-            ]
-            : null;
-
-    /*
-     * Son anlamlı kayıt kullanıcıya aitse sohbet cevap bekliyordur.
-     * Brain cevap verdiyse oturum tamamlanmış kabul edilir.
-     */
-    activeSession.status =
-        lastConversationAction?.role === "user"
-            ? "waiting"
-            : "done";
-
+    activeSession.status = "closed";
     activeSession.updatedAt = Date.now();
 
     this.saveBrainState();
@@ -1355,16 +1327,6 @@ renderBrainHistory(){
                 minute: "2-digit"
             });
 
-        const statusMap = {
-    done: "🟢 Tamamlandı",
-    progress: "🟡 Devam Ediyor",
-    waiting: "🟠 Yanıt Bekliyor",
-    error: "🔴 Sorun"
-};
-
-        const statusText =
-            statusMap[session.status] ||
-            statusMap.progress;
 
         /*
          * Boş veya bozuk kayıtları görünümden çıkar.
@@ -1379,8 +1341,8 @@ renderBrainHistory(){
                 : [];
 
         /*
-         * Sohbet sayısına yalnızca kullanıcı ve Brain
-         * mesajları dâhil edilir. Sistem kayıtları sayılmaz.
+         * Mesaj sayısına yalnızca kullanıcı ve Brain
+         * kayıtları dâhil edilir. Sistem kayıtları sayılmaz.
          */
         const messageCount = validActions.filter(action =>
             action &&
@@ -1437,33 +1399,51 @@ renderBrainHistory(){
 card.innerHTML = `
     <div class="brain-session-head">
         <div class="brain-session-main">
-            <strong>${
-                this.escapeBrainHTML(
-                    session.title || "Brain Oturumu"
-                )
-            }</strong>
+
+            <strong class="${
+                kind === "action"
+                    ? "brain-session-action-title"
+                    : kind === "conversation"
+                        ? "brain-session-conversation-title"
+                        : ""
+            }">
+                ${
+                    this.escapeBrainHTML(
+                        session.title || "Brain Oturumu"
+                    )
+                }
+            </strong>
 
             <small>${date} · ${time}</small>
 
-            <span class="brain-session-status brain-status-${session.status || "progress"}">
-                ${statusText}
-            </span>
+            ${
+                kind !== "conversation" &&
+                kind !== "noise"
+                    ? `
+                        <span class="brain-session-status brain-status-${
+                            session.status || "progress"
+                        }">
+                            ${statusText}
+                        </span>
+                    `
+                    : ""
+            }
 
             ${
-    kind === "conversation" &&
-    (session.summary || lastMessagePreview)
-        ? `
-            <span class="brain-session-preview">
-                ${
-                    this.escapeBrainHTML(
-                        session.summary ||
-                        lastMessagePreview
-                    )
-                }
-            </span>
-        `
-        : ""
-}
+                kind === "conversation" &&
+                (session.summary || lastMessagePreview)
+                    ? `
+                        <span class="brain-session-preview">
+                            ${
+                                this.escapeBrainHTML(
+                                    session.summary ||
+                                    lastMessagePreview
+                                )
+                            }
+                        </span>
+                    `
+                    : ""
+            }
         </div>
 
         ${rightContent}
@@ -1475,12 +1455,12 @@ card.innerHTML = `
                 const rawContent =
                     this.getBrainActionText(action);
 
-                const content =
-                    this.escapeBrainHTML(rawContent);
-
                 if(!rawContent.trim()){
                     return "";
                 }
+
+                const content =
+                    this.escapeBrainHTML(rawContent);
 
                 const role =
                     action &&
@@ -1559,31 +1539,63 @@ if(cancelButton){
     });
 }
 
-card.addEventListener("click", event => {
+const actionTitle = card.querySelector(
+    ".brain-session-action-title"
+);
 
-    if(event.target.closest("button")) return;
+const actionLabel = card.querySelector(
+    ".brain-action-label"
+);
 
-    if(kind === "action"){
+const conversationTitle = card.querySelector(
+    ".brain-session-conversation-title"
+);
+
+/*
+ * Eylem kartında yalnızca başlık yönlendirir.
+ */
+if(actionTitle){
+    actionTitle.addEventListener("click", event => {
+        event.stopPropagation();
         this.openBrainSession(session);
-        return;
-    }
+    });
+}
 
-    if(kind === "noise"){
-        return;
-    }
+/*
+ * Eylem kartında yalnızca "Aç →" yönlendirir.
+ */
+if(actionLabel){
+    actionLabel.addEventListener("click", event => {
+        event.stopPropagation();
+        this.openBrainSession(session);
+    });
+}
 
-    const isOpen = card.dataset.open === "true";
+/*
+ * Sohbet kartında yalnızca başlık alanı
+ * içeriği açıp kapatır.
+ */
+if(conversationTitle){
+    conversationTitle.addEventListener("click", event => {
+        event.stopPropagation();
 
-    document
-        .querySelectorAll(".brain-session-card")
-        .forEach(other => {
-            if(other !== card){
-                other.dataset.open = "false";
-            }
-        });
+        const isOpen =
+            card.dataset.open === "true";
 
-    card.dataset.open = isOpen ? "false" : "true";
-});
+        document
+            .querySelectorAll(
+                "#brainHistory .brain-session-card"
+            )
+            .forEach(other => {
+                if(other !== card){
+                    other.dataset.open = "false";
+                }
+            });
+
+        card.dataset.open =
+            isOpen ? "false" : "true";
+    });
+}
 
         history.appendChild(card);
 
