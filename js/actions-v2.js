@@ -262,12 +262,12 @@ const Actions = {
 }, 
 
     getBrainStorageKey(){
-    const entityId =
-        VAERO.engine.currentOpenedEntity?.id ||
-        VAERO.engine.currentEntity?.id ||
-        "global";
-
-    return `vaero:brain:${entityId}`;
+    /*
+     * Brain bütün VAERO uygulamalarında tek bir akıştır.
+     * Profil, Köprü, Hafıza veya başka bir entity açılması
+     * kayıt anahtarını değiştirmez.
+     */
+    return "vaero:brain:global";
 },
 
     normalizeBrainSessions(sessions){
@@ -330,34 +330,51 @@ const Actions = {
                         }
 
                         return {
-                            id:
-                                action.id ||
-                                crypto.randomUUID(),
+    id:
+        action.id ||
+        crypto.randomUUID(),
 
-                            role:
-                                action.role ||
-                                (
-                                    kind === "action"
-                                        ? "system"
-                                        : "user"
-                                ),
+    role:
+        action.role ||
+        (
+            kind === "action"
+                ? "system"
+                : "user"
+        ),
 
-                            type:
-                                action.type ||
-                                (
-                                    kind === "action"
-                                        ? "activity"
-                                        : "message"
-                                ),
+    type:
+        action.type ||
+        (
+            kind === "action"
+                ? "activity"
+                : "message"
+        ),
 
-                            content,
+    content,
 
-                            createdAt:
-                                action.createdAt ||
-                                session.updatedAt ||
-                                session.startedAt ||
-                                Date.now()
-                        };
+    createdAt:
+        action.createdAt ||
+        session.updatedAt ||
+        session.startedAt ||
+        Date.now(),
+
+    context:
+        action.context &&
+        typeof action.context === "object"
+            ? action.context
+            : null,
+
+    appLinks:
+        Array.isArray(action.appLinks)
+            ? action.appLinks
+            : [],
+
+    target:
+        action.target || null,
+
+    appLabel:
+        action.appLabel || null
+};
                     }
 
                     return null;
@@ -406,13 +423,21 @@ const Actions = {
                     Boolean(session.favorite),
 
                 summary:
-                    session.summary || null,
+    session.summary || null,
 
-                topic:
-                    session.topic || null,
+topic:
+    session.topic || null,
 
-                migratedAt:
-                    session.migratedAt || Date.now()
+dayKey:
+    session.dayKey ||
+    this.getBrainDayKey(
+        session.startedAt ||
+        session.updatedAt ||
+        Date.now()
+    ),
+
+migratedAt:
+    session.migratedAt || Date.now()
             };
         })
         .sort((a, b) =>
@@ -571,8 +596,17 @@ if(suggestionText){
 },
 
 closeBrain(){
-    document.querySelectorAll("#brainPanel").forEach(panel => panel.remove());
-},
+    /*
+     * Panel kapanmadan önce güncel sohbet akışını koru.
+     */
+    if(typeof this.saveBrainState === "function"){
+        this.saveBrainState();
+    }
+
+    document
+        .querySelectorAll("#brainPanel")
+        .forEach(panel => panel.remove());
+},closeBrain()
 
     createBrainConversationTitle(text){
 
