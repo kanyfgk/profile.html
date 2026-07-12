@@ -606,7 +606,7 @@ closeBrain(){
     document
         .querySelectorAll("#brainPanel")
         .forEach(panel => panel.remove());
-},closeBrain()
+},
 
     createBrainConversationTitle(text){
 
