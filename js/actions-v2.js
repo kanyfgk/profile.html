@@ -736,30 +736,60 @@ updateBrainConversationMetadata(session, text){
             : summaryText;
 },
 
-    completeActiveBrainConversation(exceptSessionId = null){
+    completeActiveBrainConversation(){
     const brain = VAERO.get("brain");
 
     if(!brain || !Array.isArray(brain.sessions)){
-        return;
+        return false;
     }
 
-    brain.sessions.forEach(session => {
+    const activeSession = brain.sessions.find(session =>
+        session.kind === "conversation" &&
+        session.status === "progress"
+    );
 
-        if(session.kind !== "conversation"){
-            return;
-        }
+    if(!activeSession){
+        return false;
+    }
 
-        if(session.id === exceptSessionId){
-            return;
-        }
+    const actions = Array.isArray(activeSession.actions)
+        ? activeSession.actions
+        : [];
 
-        if(session.status !== "progress"){
-            return;
-        }
+    /*
+     * Yalnızca gerçek kullanıcı ve Brain mesajlarını dikkate al.
+     * "Komut işlendi" gibi sistem kayıtları cevaba sayılmaz.
+     */
+    const conversationActions = actions.filter(action =>
+        action &&
+        typeof action === "object" &&
+        (
+            action.role === "user" ||
+            action.role === "brain"
+        )
+    );
 
-        session.status = "done";
-        session.updatedAt = Date.now();
-    });
+    const lastConversationAction =
+        conversationActions.length > 0
+            ? conversationActions[
+                conversationActions.length - 1
+            ]
+            : null;
+
+    /*
+     * Son anlamlı kayıt kullanıcıya aitse sohbet cevap bekliyordur.
+     * Brain cevap verdiyse oturum tamamlanmış kabul edilir.
+     */
+    activeSession.status =
+        lastConversationAction?.role === "user"
+            ? "waiting"
+            : "done";
+
+    activeSession.updatedAt = Date.now();
+
+    this.saveBrainState();
+
+    return true;
 },
     
     getActiveBrainConversationSession(topic = null){
@@ -1326,10 +1356,11 @@ renderBrainHistory(){
             });
 
         const statusMap = {
-            done: "🟢 Tamamlandı",
-            progress: "🟡 Devam Ediyor",
-            error: "🔴 Sorun"
-        };
+    done: "🟢 Tamamlandı",
+    progress: "🟡 Devam Ediyor",
+    waiting: "🟠 Yanıt Bekliyor",
+    error: "🔴 Sorun"
+};
 
         const statusText =
             statusMap[session.status] ||
