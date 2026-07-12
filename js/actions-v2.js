@@ -1709,31 +1709,25 @@ removeBrainSession(sessionId){
             });
 
             const linksHTML =
-                uniqueLinks.length
-                    ? `
-                        <span class="brain-message-app-links">
-                            ${uniqueLinks
-                                .map(link => `
-                                    <button
-                                        type="button"
-                                        class="brain-message-app-link"
-                                        data-brain-app="${
-                                            this.escapeBrainHTML(
-                                                link.app
-                                            )
-                                        }">
-                                        ${
-                                            this.escapeBrainHTML(
-                                                link.label
-                                            )
-                                        } →
-                                    </button>
-                                `)
-                                .join("")}
-                        </span>
-                    `
-                    : "";
+    uniqueLinks.length
+        ? `
+            <span class="brain-message-app-links">
+                ${uniqueLinks
+                    .map(link => `
+                        <button
+                            type="button"
+                            class="brain-message-app-link"
+                            data-brain-app="${this.escapeBrainHTML(link.app)}"
+                            data-brain-label="${this.escapeBrainHTML(link.label)}">
 
+                            ${this.escapeBrainHTML(link.label)}
+
+                        </button>
+                    `)
+                    .join("")}
+            </span>
+        `
+        : "";
             message.innerHTML = `
                 <div class="brain-chat-meta">
                     <span>${messageTime}</span>
