@@ -655,3 +655,137 @@
 .brain-preview-context{
     color:rgba(126,182,255,.72);
 }
+
+/* =========================================================
+   BRAIN DAILY CHAT FLOW
+========================================================= */
+
+.brain-chat-flow{
+    display:flex;
+    flex-direction:column;
+    gap:12px;
+    padding:4px 2px 14px;
+}
+
+.brain-chat-message{
+    display:flex;
+    flex-direction:column;
+    gap:5px;
+    max-width:88%;
+    padding:11px 13px;
+    border-radius:18px;
+    font-size:14px;
+    line-height:1.5;
+}
+
+.brain-chat-user{
+    align-self:flex-end;
+    background:rgba(239,225,173,.13);
+    border:1px solid rgba(239,225,173,.18);
+    border-bottom-right-radius:6px;
+}
+
+.brain-chat-brain{
+    align-self:flex-start;
+    background:rgba(255,255,255,.055);
+    border:1px solid rgba(255,255,255,.07);
+    border-bottom-left-radius:6px;
+}
+
+.brain-chat-meta{
+    display:flex;
+    align-items:center;
+    gap:6px;
+    color:rgba(255,255,255,.38);
+    font-size:10px;
+}
+
+.brain-chat-context{
+    color:rgba(126,182,255,.68);
+}
+
+.brain-chat-content{
+    color:rgba(255,255,255,.88);
+    white-space:pre-wrap;
+    word-break:break-word;
+}
+
+.brain-chat-system{
+    align-self:center;
+    display:flex;
+    align-items:center;
+    gap:7px;
+    max-width:92%;
+    padding:6px 10px;
+    border-radius:999px;
+    color:rgba(255,255,255,.48);
+    background:rgba(255,255,255,.035);
+    font-size:11px;
+    text-align:center;
+}
+
+.brain-chat-system-time{
+    color:rgba(239,225,173,.66);
+}
+
+.brain-chat-empty{
+    display:flex;
+    flex-direction:column;
+    gap:5px;
+    padding:20px;
+    border:1px dashed rgba(255,255,255,.1);
+    border-radius:18px;
+    color:rgba(255,255,255,.55);
+    text-align:center;
+}
+
+.brain-chat-empty strong{
+    color:rgba(255,255,255,.84);
+}
+
+.brain-message-app-links{
+    display:inline-flex;
+    align-items:center;
+    flex-wrap:wrap;
+    gap:7px;
+    margin-left:7px;
+}
+
+.brain-message-app-link{
+    appearance:none;
+    border:0;
+    padding:0;
+    background:transparent;
+    color:#7eb6ff;
+    font:inherit;
+    font-weight:700;
+    cursor:pointer;
+}
+
+.brain-message-app-link:hover{
+    text-decoration:underline;
+}
+
+.brain-mini-chat-flow{
+    display:flex;
+    flex-direction:column;
+    gap:7px;
+    padding:12px 14px;
+    border:1px solid rgba(255,255,255,.08);
+    border-radius:18px;
+    background:rgba(255,255,255,.035);
+    cursor:pointer;
+}
+
+.brain-mini-chat-message{
+    display:flex;
+    gap:5px;
+    color:rgba(255,255,255,.62);
+    font-size:12px;
+    line-height:1.4;
+}
+
+.brain-mini-chat-message strong{
+    color:rgba(255,255,255,.84);
+    flex-shrink:0;
+}
