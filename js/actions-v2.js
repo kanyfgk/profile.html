@@ -153,78 +153,113 @@ const Actions = {
     const brain = VAERO.get("brain");
     if(!brain) return;
 
-    if(!brain.sessions){
+    if(!Array.isArray(brain.sessions)){
         brain.sessions = [];
     }
 
-    const titleMap = {
-        profile: "Profil Oturumu",
-        identity: "Kimlik Oturumu",
-        organs: "Organ Oturumu",
-        timeline: "Timeline Oturumu",
-        memory: "Hafıza Oturumu",
-        bridge: "Bridge Oturumu",
-        settings: "Ayarlar Oturumu"
+    const pageMap = {
+        profile: {
+            label: "Profil",
+            action: "Profil ekranı açıldı"
+        },
+        identity: {
+            label: "Kimlik",
+            action: "Kimlik ekranı açıldı"
+        },
+        organs: {
+            label: "Organlar",
+            action: "Organlar ekranı açıldı"
+        },
+        timeline: {
+            label: "Timeline",
+            action: "Timeline ekranı açıldı"
+        },
+        memory: {
+            label: "Hafıza",
+            action: "Hafıza ekranı açıldı"
+        },
+        bridge: {
+            label: "Köprü",
+            action: "Köprü ekranı açıldı"
+        },
+        settings: {
+            label: "Ayarlar",
+            action: "Ayarlar ekranı açıldı"
+        }
     };
 
-    const actionMap = {
-        profile: "Profili açtı",
-        identity: "Kimliğe geçti",
-        organs: "Organları görüntüledi",
-        timeline: "Zaman çizelgesini açtı",
-        memory: "Hafızayı görüntüledi",
-        bridge: "Bridge bölümüne geçti",
-        settings: "Ayarları açtı"
-    };
+    const pageData = pageMap[page];
 
-    const title = titleMap[page];
-const action = actionMap[page];
+    if(!pageData){
+        return;
+    }
 
-if(!title || !action){
-    return;
-}
+    const now = Date.now();
+    const dayKey = this.getBrainDayKey(now);
 
-    let session = brain.sessions.find(s =>
-        s.title === title &&
-        s.status === "progress"
-    );
+    /*
+     * Uygulama hareketleri ayrı kart oluşturmaz.
+     * O günün tek Brain sohbet akışına eklenir.
+     */
+    let session =
+        this.getTodayBrainConversationSession(brain);
 
     if(!session){
-    session = {
+        session = {
+            id: crypto.randomUUID(),
+            title: "Brain Sohbeti · Bugün",
+            kind: "conversation",
+            target: null,
+            status: "progress",
+            startedAt: now,
+            updatedAt: now,
+            actions: [],
+            favorite: false,
+            summary: null,
+            topic: "daily-brain",
+            dayKey
+        };
+
+        brain.sessions.unshift(session);
+    }
+
+    if(!Array.isArray(session.actions)){
+        session.actions = [];
+    }
+
+    /*
+     * Her ziyaret ayrı ayrı saklanır.
+     * Böylece hangi uygulamanın hangi saatlerde
+     * kaç kez açıldığı sonradan hesaplanabilir.
+     */
+    session.actions.push({
         id: crypto.randomUUID(),
-        title,
-
-        kind: "action",
+        role: "system",
+        type: "navigation",
+        content: pageData.action,
+        createdAt: now,
         target: page,
+        appLabel: pageData.label,
+        context: {
+            page
+        }
+    });
 
-        status: "progress",
-        startedAt: Date.now(),
-        updatedAt: Date.now(),
-        actions: [],
-        favorite: false,
-        summary: null
-    };
+    session.updatedAt = now;
 
-    brain.sessions.unshift(session);
-}
+    if(
+        typeof this.updateBrainConversationSummary ===
+        "function"
+    ){
+        this.updateBrainConversationSummary(session);
+    }
 
-    session.updatedAt = Date.now();
-
-if(!Array.isArray(session.actions)){
-    session.actions = [];
-}
-
-const actionAlreadyExists = session.actions.some(item =>
-    this.getBrainActionText(item) === action
-);
-
-if(!actionAlreadyExists){
-    session.actions.push(action);
-}
-
+    if(typeof this.saveBrainState === "function"){
         this.saveBrainState();
+    }
+
     this.renderBrainHistory();
-},
+}, 
 
     getBrainStorageKey(){
     const entityId =
@@ -1424,13 +1459,20 @@ removeBrainSession(sessionId){
         .replaceAll('"', "&quot;")
         .replaceAll("'", "&#039;");
 },
-    
-renderBrainHistory(){
-    const history = document.getElementById("brainHistory");
-    const miniHistory = document.getElementById("brainMiniHistory");
-    const brain = VAERO.get("brain");
 
-    if(!history || !brain) return;
+    renderBrainHistory(){
+    const history =
+        document.getElementById("brainHistory");
+
+    const miniHistory =
+        document.getElementById("brainMiniHistory");
+
+    const brain =
+        VAERO.get("brain");
+
+    if(!history || !brain){
+        return;
+    }
 
     history.innerHTML = "";
 
@@ -1438,489 +1480,279 @@ renderBrainHistory(){
         miniHistory.innerHTML = "";
     }
 
-    const sessions = [...(brain.sessions || [])].sort((a, b) => {
-        const aTime = a.updatedAt || a.startedAt || 0;
-        const bTime = b.updatedAt || b.startedAt || 0;
+    const sessions =
+        Array.isArray(brain.sessions)
+            ? brain.sessions
+            : [];
 
-        return bTime - aTime;
-    });
-
-    sessions.forEach((session, index) => {
-        const card = document.createElement("div");
-
-        card.className = "brain-session-card";
-
-        const kind =
-            session.kind ||
-            (session.target ? "action" : "conversation");
-
-        card.classList.add(`brain-session-${kind}`);
-        card.dataset.open = "false";
-
-        const sessionDate = new Date(
-            session.updatedAt ||
-            session.startedAt ||
-            Date.now()
-        );
-
-        const date =
-            sessionDate.toLocaleDateString("tr-TR");
-
-        const time =
-            sessionDate.toLocaleTimeString("tr-TR", {
-                hour: "2-digit",
-                minute: "2-digit"
-            });
-
-
-        /*
-         * Boş veya bozuk kayıtları görünümden çıkar.
-         */
-        const validActions =
-            Array.isArray(session.actions)
-                ? session.actions.filter(item =>
-                    this
-                        .getBrainActionText(item)
-                        .trim() !== ""
-                )
-                : [];
-
-        /*
-         * Mesaj sayısına yalnızca kullanıcı ve Brain
-         * kayıtları dâhil edilir. Sistem kayıtları sayılmaz.
-         */
-        const messageCount = validActions.filter(action =>
-            action &&
-            typeof action === "object" &&
-            (
-                action.role === "user" ||
-                action.role === "brain"
-            )
-        ).length;
-
-        const rightContent =
-            kind === "action"
-                ? `
-                    <span class="brain-action-label">
-                        Aç →
-                    </span>
-                `
-                : kind === "noise"
-                    ? `
-                        <button
-                            type="button"
-                            class="brain-noise-remove"
-                            aria-label="Önemsiz mesajı sil">
-                            ×
-                        </button>
-                    `
-                    : `
-                        <span class="brain-conversation-label">
-                            Sohbet · ${messageCount}
-                        </span>
-                    `;
-
-        const lastMessage = validActions.length
-            ? this.getBrainActionText(
-                validActions[validActions.length - 1]
-            )
-            : "";
-
-        const lastMessagePreview =
-            lastMessage.length > 70
-                ? `${lastMessage.slice(0, 70).trim()}…`
-                : lastMessage;
-
-        /*
-         * Mesajları oluşturulma zamanına göre eskiden
-         * yeniye doğru göster.
-         */
-        const sortedActions = [...validActions].sort(
-            (a, b) =>
-                (a?.createdAt || 0) -
-                (b?.createdAt || 0)
-        );
-
-        /*
- * Aynı içerikteki tekrar eden kayıtları görünümde birleştir.
- * session.actions içindeki gerçek kayıtlar korunur.
- */
-const groupedActions = [];
-
-sortedActions.forEach(action => {
-    const rawContent =
-        this.getBrainActionText(action).trim();
-
-    if(!rawContent){
-        return;
-    }
-
-    const role =
-        action &&
-        typeof action === "object"
-            ? action.role || null
-            : null;
-
-    const previous =
-        groupedActions[groupedActions.length - 1];
+    const todayKey =
+        this.getBrainDayKey();
 
     /*
-     * Yalnızca art arda gelen, aynı role ve aynı metne
-     * sahip kayıtlar birleştirilir.
+     * Bugünün tek sohbet oturumu.
      */
-    if(
-        previous &&
-        previous.rawContent === rawContent &&
-        previous.role === role
-    ){
-        previous.count += 1;
-        return;
-    }
+    const todaySession =
+        sessions.find(session =>
+            session &&
+            session.kind === "conversation" &&
+            session.dayKey === todayKey
+        );
 
-    groupedActions.push({
-        action,
-        rawContent,
-        role,
-        count: 1
-    });
-});
+    /*
+     * Eski kart mimarisinden kalan action oturumları
+     * günlük sohbet görünümüne alınmaz.
+     */
+    const todayActions =
+        Array.isArray(todaySession?.actions)
+            ? [...todaySession.actions]
+                .filter(action =>
+                    this
+                        .getBrainActionText(action)
+                        .trim() !== ""
+                )
+                .sort(
+                    (a, b) =>
+                        (a?.createdAt || 0) -
+                        (b?.createdAt || 0)
+                )
+            : [];
 
-        /*
- * Kapalı günlük sohbet kartında yalnızca son iki
- * karşılıklı yazışma gösterilir: en fazla 4 mesaj.
- */
-const recentConversationActions =
-    validActions
-        .filter(action =>
-            action &&
-            typeof action === "object" &&
-            (
-                action.role === "user" ||
-                action.role === "brain"
-            )
-        )
-        .slice(-4);
+    const flow =
+        document.createElement("div");
 
-const recentConversationHTML =
-    recentConversationActions
-        .map(action => {
-            const roleLabel =
-                action.role === "user"
-                    ? "Sen"
-                    : "Brain";
+    flow.className = "brain-chat-flow";
+
+    if(todayActions.length === 0){
+        flow.innerHTML = `
+            <div class="brain-chat-empty">
+                <strong>Bugünün sohbeti</strong>
+                <span>
+                    Brain’e bir şey yazarak başlayabilirsin.
+                </span>
+            </div>
+        `;
+    }else{
+        todayActions.forEach(action => {
+            const content =
+                this.getBrainActionText(action);
+
+            if(!content.trim()){
+                return;
+            }
+
+            const role =
+                action &&
+                typeof action === "object"
+                    ? action.role
+                    : null;
+
+            const createdAt =
+                action?.createdAt || Date.now();
 
             const messageTime =
-                new Date(
-                    action.createdAt || Date.now()
-                ).toLocaleTimeString("tr-TR", {
-                    hour: "2-digit",
-                    minute: "2-digit"
-                });
+                new Date(createdAt)
+                    .toLocaleTimeString("tr-TR", {
+                        hour: "2-digit",
+                        minute: "2-digit"
+                    });
+
+            /*
+             * Uygulama geçişleri sohbeti bölmeyen
+             * küçük sistem hareketleri olarak gösterilir.
+             */
+            if(
+                role === "system" ||
+                action?.type === "navigation"
+            ){
+                const systemRow =
+                    document.createElement("div");
+
+                systemRow.className =
+                    "brain-chat-system";
+
+                systemRow.innerHTML = `
+                    <span class="brain-chat-system-time">
+                        ${messageTime}
+                    </span>
+
+                    <span>
+                        ${this.escapeBrainHTML(content)}
+                    </span>
+                `;
+
+                flow.appendChild(systemRow);
+                return;
+            }
+
+            const message =
+                document.createElement("div");
+
+            message.className =
+                role === "user"
+                    ? "brain-chat-message brain-chat-user"
+                    : "brain-chat-message brain-chat-brain";
 
             const contextPage =
-                action.context?.page
+                action?.context?.page
                     ? `
-                        <span class="brain-preview-context">
-                            · ${this.escapeBrainHTML(
+                        <span class="brain-chat-context">
+                            ${this.escapeBrainHTML(
                                 action.context.page
                             )}
                         </span>
                     `
                     : "";
 
-            return `
-                <span class="brain-preview-message">
-                    <small>
-                        ${messageTime}
-                        ${contextPage}
-                    </small>
+            const appLinks =
+                Array.isArray(action?.appLinks)
+                    ? action.appLinks
+                    : [];
 
-                    <span>
-                        <strong>${roleLabel}:</strong>
-                        ${this.escapeBrainHTML(
-                            this.getBrainActionText(action)
-                        )}
-                    </span>
-                </span>
-            `;
-        })
-        .join("");
-        
-card.innerHTML = `
-    <div class="brain-session-head">
-        <div class="brain-session-main">
+            const uniqueLinks = [];
 
-            <strong class="${
-                kind === "action"
-                    ? "brain-session-action-title"
-                    : kind === "conversation"
-                        ? "brain-session-conversation-title"
-                        : ""
-            }">
-                ${
-                    this.escapeBrainHTML(
-                        session.title || "Brain Oturumu"
+            appLinks.forEach(link => {
+                if(
+                    !link ||
+                    !link.app ||
+                    uniqueLinks.some(
+                        item => item.app === link.app
                     )
+                ){
+                    return;
                 }
-            </strong>
 
-            <small>${date} · ${time}</small>
+                uniqueLinks.push(link);
+            });
 
-            ${
-                kind !== "conversation" &&
-                kind !== "noise"
+            const linksHTML =
+                uniqueLinks.length
                     ? `
-                        <span class="brain-session-status brain-status-${
-                            session.status || "progress"
-                        }">
-                            ${session.status || ""}
+                        <span class="brain-message-app-links">
+                            ${uniqueLinks
+                                .map(link => `
+                                    <button
+                                        type="button"
+                                        class="brain-message-app-link"
+                                        data-brain-app="${
+                                            this.escapeBrainHTML(
+                                                link.app
+                                            )
+                                        }">
+                                        ${
+                                            this.escapeBrainHTML(
+                                                link.label
+                                            )
+                                        } →
+                                    </button>
+                                `)
+                                .join("")}
                         </span>
                     `
-                    : ""
-            }
+                    : "";
 
-            ${
-    kind === "conversation" &&
-    recentConversationHTML
-        ? `
-            <span class="brain-session-preview">
-                ${recentConversationHTML}
-            </span>
-        `
-        : ""
-}
-        </div>
+            message.innerHTML = `
+                <div class="brain-chat-meta">
+                    <span>${messageTime}</span>
+                    ${contextPage}
+                </div>
 
-        ${rightContent}
-    </div>
+                <div class="brain-chat-content">
+                    ${this.escapeBrainHTML(content)}
+                    ${linksHTML}
+                </div>
+            `;
 
-    <div class="brain-session-body">
-        ${groupedActions
-    .map(item => {
-        const rawContent =
-            item.rawContent;
+            flow.appendChild(message);
+        });
+    }
 
-        const content =
-            this.escapeBrainHTML(rawContent);
+    history.appendChild(flow);
 
-        const role =
-            item.role;
+    /*
+     * Uygulama bağlantıları.
+     */
+    history
+        .querySelectorAll(".brain-message-app-link")
+        .forEach(button => {
+            button.addEventListener("click", event => {
+                event.stopPropagation();
 
-        const roleLabel =
-            role === "user"
-                ? "Sen"
-                : role === "brain"
-                    ? "Brain"
-                    : role === "system"
-                        ? "Sistem"
-                        : "";
+                const app =
+                    button.dataset.brainApp;
 
-        const appLinks =
-    Array.isArray(item.action?.appLinks)
-        ? item.action.appLinks
-        : [];
-
-const appLinksHTML =
-    appLinks.length
-        ? `
-            <span class="brain-message-app-links">
-                ${appLinks
-                    .map(link => `
-                        <button
-                            type="button"
-                            class="brain-message-app-link"
-                            data-brain-app="${this.escapeBrainHTML(link.app)}">
-                            ${this.escapeBrainHTML(link.label)} →
-                        </button>
-                    `)
-                    .join("")}
-            </span>
-        `
-        : "";
-        
-        const repeatLabel =
-            item.count > 1
-                ? `
-                    <span class="brain-message-count">
-                        ${item.count} kez
-                    </span>
-                `
-                : "";
-
-        return `
-            <p class="brain-session-message${
-                role
-                    ? ` brain-message-${role}`
-                    : ""
-            }">
-                <span class="brain-message-content">
-                    ${
-                        roleLabel
-                            ? `<strong>${roleLabel}:</strong> `
-                            : "- "
-                    }
-
-                    ${content}
-
-${appLinksHTML}
-</span>
-
-${repeatLabel}
-            </p>
-        `;
-    })
-    .join("")}
-    </div>
-
-    <div class="brain-delete-confirm">
-        <span>Silmek istediğine emin misin?</span>
-
-        <div>
-            <button
-                type="button"
-                class="brain-delete-approve">
-                Önemsiz, sil
-            </button>
-
-            <button
-                type="button"
-                class="brain-delete-cancel">
-                Vazgeç
-            </button>
-        </div>
-    </div>
-`;
-        
-        const removeButton = card.querySelector(".brain-noise-remove");
-const approveButton = card.querySelector(".brain-delete-approve");
-const cancelButton = card.querySelector(".brain-delete-cancel");
-
-if(removeButton){
-    removeButton.addEventListener("click", event => {
-        event.stopPropagation();
-        card.classList.add("is-confirming-delete");
-    });
-}
-
-if(approveButton){
-    approveButton.addEventListener("click", event => {
-        event.stopPropagation();
-        this.removeBrainSession(session.id);
-    });
-}
-
-if(cancelButton){
-    cancelButton.addEventListener("click", event => {
-        event.stopPropagation();
-        card.classList.remove("is-confirming-delete");
-    });
-}
-
-const actionLabel = card.querySelector(
-    ".brain-action-label"
-);
-
-/*
- * AÇ butonu yalnızca uygulamaya yönlendirir.
- */
-if(actionLabel){
-    actionLabel.addEventListener("click", event => {
-        event.stopPropagation();
-        this.openBrainSession(session);
-    });
-}
-
-/*
- * Kartın tamamı tıklanabilir.
- */
-if(kind !== "noise"){
-
-    card.addEventListener("click", event => {
-
-        /*
-         * Silme butonları çalışsın.
-         */
-        if(event.target.closest("button")){
-            return;
-        }
-
-        /*
-         * Sohbet kartı
-         */
-        const isOpen =
-            card.dataset.open === "true";
-
-        document
-            .querySelectorAll(
-                "#brainHistory .brain-session-card"
-            )
-            .forEach(other => {
-                if(other !== card){
-                    other.dataset.open = "false";
+                if(!app){
+                    return;
                 }
-            });
 
-        card.dataset.open =
-            isOpen ? "false" : "true";
-    });
+                this.closeBrain();
 
-}
-/*
- * Eylem kartında yalnızca "Aç →" yönlendirir.
- */
-if(actionLabel){
-    actionLabel.addEventListener("click", event => {
-        event.stopPropagation();
-        this.openBrainSession(session);
-    });
-}
-
-/*
- * Sohbet kartında yalnızca başlık alanı
- * içeriği açıp kapatır.
- */
-
-        card
-    .querySelectorAll(".brain-message-app-link")
-    .forEach(button => {
-        button.addEventListener("click", event => {
-            event.stopPropagation();
-
-            const app =
-                button.dataset.brainApp;
-
-            if(!app) return;
-
-            this.closeBrain();
-
-            requestAnimationFrame(() => {
-                this.openEntityPage(app);
+                requestAnimationFrame(() => {
+                    this.openEntityPage(app);
+                });
             });
         });
-    });
-        
-        history.appendChild(card);
 
-        /*
-         * Mini geçmişte yalnızca son iki oturumu göster.
-         * Mini kart ilk tıklamada paneli büyütür.
-         */
-        if(miniHistory && index < 2){
-            const miniCard = card.cloneNode(true);
+    /*
+     * Kompakt görünümde bugünün son dört gerçek mesajı.
+     */
+    if(miniHistory){
+        const recentMessages =
+            todayActions
+                .filter(action =>
+                    action?.role === "user" ||
+                    action?.role === "brain"
+                )
+                .slice(-4);
 
-            miniCard.dataset.open = "false";
+        const miniFlow =
+            document.createElement("div");
 
-            miniCard.addEventListener("click", () => {
-                const panel = document.getElementById("brainPanel");
+        miniFlow.className =
+            "brain-mini-chat-flow";
 
-                if(panel){
-                    panel.classList.remove("is-compact");
-                    panel.classList.add("is-expanded");
-                }
-            });
+        recentMessages.forEach(action => {
+            const role =
+                action.role === "user"
+                    ? "Sen"
+                    : "Brain";
 
-            miniHistory.appendChild(miniCard);
-        }
+            const message =
+                document.createElement("div");
+
+            message.className =
+                "brain-mini-chat-message";
+
+            message.innerHTML = `
+                <strong>${role}:</strong>
+                <span>
+                    ${this.escapeBrainHTML(
+                        this.getBrainActionText(action)
+                    )}
+                </span>
+            `;
+
+            miniFlow.appendChild(message);
+        });
+
+        miniFlow.addEventListener("click", () => {
+            const panel =
+                document.getElementById("brainPanel");
+
+            if(panel){
+                panel.classList.remove("is-compact");
+                panel.classList.add("is-expanded");
+            }
+        });
+
+        miniHistory.appendChild(miniFlow);
+    }
+
+    /*
+     * Yeni mesaj geldiğinde sohbetin en altına git.
+     */
+    requestAnimationFrame(() => {
+        history.scrollTop =
+            history.scrollHeight;
     });
 },
     
