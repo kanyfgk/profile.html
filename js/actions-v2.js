@@ -1396,6 +1396,50 @@ renderBrainHistory(){
                 (b?.createdAt || 0)
         );
 
+        /*
+ * Aynı içerikteki tekrar eden kayıtları görünümde birleştir.
+ * session.actions içindeki gerçek kayıtlar korunur.
+ */
+const groupedActions = [];
+
+sortedActions.forEach(action => {
+    const rawContent =
+        this.getBrainActionText(action).trim();
+
+    if(!rawContent){
+        return;
+    }
+
+    const role =
+        action &&
+        typeof action === "object"
+            ? action.role || null
+            : null;
+
+    const previous =
+        groupedActions[groupedActions.length - 1];
+
+    /*
+     * Yalnızca art arda gelen, aynı role ve aynı metne
+     * sahip kayıtlar birleştirilir.
+     */
+    if(
+        previous &&
+        previous.rawContent === rawContent &&
+        previous.role === role
+    ){
+        previous.count += 1;
+        return;
+    }
+
+    groupedActions.push({
+        action,
+        rawContent,
+        role,
+        count: 1
+    });
+});
+
 card.innerHTML = `
     <div class="brain-session-head">
         <div class="brain-session-main">
@@ -1450,50 +1494,56 @@ card.innerHTML = `
     </div>
 
     <div class="brain-session-body">
-        ${sortedActions
-            .map(action => {
-                const rawContent =
-                    this.getBrainActionText(action);
+        ${groupedActions
+    .map(item => {
+        const rawContent =
+            item.rawContent;
 
-                if(!rawContent.trim()){
-                    return "";
-                }
+        const content =
+            this.escapeBrainHTML(rawContent);
 
-                const content =
-                    this.escapeBrainHTML(rawContent);
+        const role =
+            item.role;
 
-                const role =
-                    action &&
-                    typeof action === "object"
-                        ? action.role
-                        : null;
+        const roleLabel =
+            role === "user"
+                ? "Sen"
+                : role === "brain"
+                    ? "Brain"
+                    : role === "system"
+                        ? "Sistem"
+                        : "";
 
-                const roleLabel =
-                    role === "user"
-                        ? "Sen"
-                        : role === "brain"
-                            ? "Brain"
-                            : role === "system"
-                                ? "Sistem"
-                                : "";
+        const repeatLabel =
+            item.count > 1
+                ? `
+                    <span class="brain-message-count">
+                        ${item.count} kez
+                    </span>
+                `
+                : "";
 
-                return `
-                    <p class="brain-session-message${
-                        role
-                            ? ` brain-message-${role}`
-                            : ""
-                    }">
-                        ${
-                            roleLabel
-                                ? `<strong>${roleLabel}:</strong> `
-                                : "- "
-                        }
+        return `
+            <p class="brain-session-message${
+                role
+                    ? ` brain-message-${role}`
+                    : ""
+            }">
+                <span class="brain-message-content">
+                    ${
+                        roleLabel
+                            ? `<strong>${roleLabel}:</strong> `
+                            : "- "
+                    }
 
-                        ${content}
-                    </p>
-                `;
-            })
-            .join("")}
+                    ${content}
+                </span>
+
+                ${repeatLabel}
+            </p>
+        `;
+    })
+    .join("")}
     </div>
 
     <div class="brain-delete-confirm">
@@ -1514,6 +1564,7 @@ card.innerHTML = `
         </div>
     </div>
 `;
+        
         const removeButton = card.querySelector(".brain-noise-remove");
 const approveButton = card.querySelector(".brain-delete-approve");
 const cancelButton = card.querySelector(".brain-delete-cancel");
