@@ -626,3 +626,32 @@
 .brain-message-app-link:hover{
     text-decoration:underline;
 }
+
+.brain-session-preview{
+    display:flex;
+    flex-direction:column;
+    gap:8px;
+    margin-top:5px;
+}
+
+.brain-preview-message{
+    display:flex;
+    flex-direction:column;
+    gap:2px;
+    color:rgba(255,255,255,.62);
+    font-size:12px;
+    line-height:1.4;
+}
+
+.brain-preview-message small{
+    color:rgba(255,255,255,.36);
+    font-size:10px;
+}
+
+.brain-preview-message strong{
+    color:rgba(255,255,255,.78);
+}
+
+.brain-preview-context{
+    color:rgba(126,182,255,.72);
+}
