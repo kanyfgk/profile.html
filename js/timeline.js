@@ -54,88 +54,38 @@ const Timeline = {
 
         });
 
-        boot(){
+        events.on("life-event:created", (lifeEvent) => {
 
-    this.load();
-
-    const events = VAERO.get("events");
-
-    if(!events){
-        return;
-    }
-
-    events.on("entity.mounted", (data)=>{
-
-        this.add(
-            "entity",
-            "Entity Mounted",
-            data
-        );
-
-    });
-
-    events.on("engine.started", (data)=>{
-
-        this.add(
-            "engine",
-            "Engine Started",
-            data
-        );
-
-    });
-
-    events.on("runtime.started", (data)=>{
-
-        this.add(
-            "runtime",
-            "Runtime Started",
-            data
-        );
-
-    });
-
-    events.on("runtime.tick", (data)=>{
-
-        this.add(
-            "runtime",
-            "Runtime Tick",
-            data
-        );
-
-    });
-
-    events.on("life-event:created", (lifeEvent) => {
-
-        if(!lifeEvent || !lifeEvent.id){
-            return;
-        }
-
-        const alreadyExists = this.events.some(event =>
-            event.payload &&
-            event.payload.sourceEventId === lifeEvent.id
-        );
-
-        if(alreadyExists){
-            return;
-        }
-
-        this.add(
-            "life-event",
-            lifeEvent.title || "Yaşam Olayı",
-            {
-                sourceEventId: lifeEvent.id
+            if(!lifeEvent || !lifeEvent.id){
+                return;
             }
-        );
 
-    });
+            const alreadyExists = this.events.some(event =>
+                event.payload &&
+                event.payload.sourceEventId === lifeEvent.id
+            );
 
-    events.on("life-event:removed", () => {
+            if(alreadyExists){
+                return;
+            }
 
-        this.cleanOrphanLifeEvents();
+            this.add(
+                "life-event",
+                lifeEvent.title || "Yaşam Olayı",
+                {
+                    sourceEventId: lifeEvent.id
+                }
+            );
 
-    });
+        });
 
-},
+        events.on("life-event:removed", () => {
+
+            this.cleanOrphanLifeEvents();
+
+        });
+
+    },
 
     createId(){
 
@@ -198,45 +148,45 @@ const Timeline = {
 
     cleanOrphanLifeEvents(){
 
-    const evolution = VAERO.get("evolution");
-
-    if(
-        !evolution ||
-        typeof evolution.find !== "function"
-    ){
-        return 0;
-    }
-
-    const beforeCount = this.events.length;
-
-    this.events = this.events.filter(event => {
+        const evolution = VAERO.get("evolution");
 
         if(
-            event.type !== "life-event" ||
-            !event.payload ||
-            !event.payload.sourceEventId
+            !evolution ||
+            typeof evolution.find !== "function"
         ){
-            return true;
+            return 0;
         }
 
-        return Boolean(
-            evolution.find(
-                event.payload.sourceEventId
-            )
-        );
+        const beforeCount = this.events.length;
 
-    });
+        this.events = this.events.filter(event => {
 
-    const removedCount =
-        beforeCount - this.events.length;
+            if(
+                event.type !== "life-event" ||
+                !event.payload ||
+                !event.payload.sourceEventId
+            ){
+                return true;
+            }
 
-    if(removedCount > 0){
-        this.save();
-    }
+            return Boolean(
+                evolution.find(
+                    event.payload.sourceEventId
+                )
+            );
 
-    return removedCount;
+        });
 
-},
+        const removedCount =
+            beforeCount - this.events.length;
+
+        if(removedCount > 0){
+            this.save();
+        }
+
+        return removedCount;
+
+    },
 
     all(){
 
