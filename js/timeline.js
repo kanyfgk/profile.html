@@ -114,6 +114,32 @@ const Timeline = {
 
     },
 
+    resolveLifeEvent(timelineEvent){
+
+    if(
+        !timelineEvent ||
+        timelineEvent.type !== "life-event" ||
+        !timelineEvent.payload ||
+        !timelineEvent.payload.sourceEventId
+    ){
+        return null;
+    }
+
+    const evolution = VAERO.get("evolution");
+
+    if(
+        !evolution ||
+        typeof evolution.find !== "function"
+    ){
+        return null;
+    }
+
+    return evolution.find(
+        timelineEvent.payload.sourceEventId
+    );
+
+},
+
     all(){
 
         return this.events;
