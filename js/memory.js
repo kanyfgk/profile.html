@@ -109,6 +109,48 @@ const MemorySystem = {
 
     },
 
+    cleanOrphanLifeEvents(){
+
+    const evolution = VAERO.get("evolution");
+
+    if(
+        !evolution ||
+        typeof evolution.find !== "function"
+    ){
+        return 0;
+    }
+
+    const beforeCount = this.records.length;
+
+    this.records = this.records.filter(record => {
+
+        if(
+            record.type !== "life-event" ||
+            !record.payload ||
+            !record.payload.sourceEventId
+        ){
+            return true;
+        }
+
+        return Boolean(
+            evolution.find(
+                record.payload.sourceEventId
+            )
+        );
+
+    });
+
+    const removedCount =
+        beforeCount - this.records.length;
+
+    if(removedCount > 0){
+        this.save();
+    }
+
+    return removedCount;
+
+},
+
     all(){
 
         return [...this.records];
