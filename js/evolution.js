@@ -215,6 +215,26 @@ const Evolution = {
 
     },
 
+    createLifeEvent(data = {}){
+
+    return this.record(
+        data.type || "general",
+        data.description || "",
+        {
+            title: data.title || "Yaşam olayı",
+            status: data.status || "completed",
+            importance: data.importance || "medium",
+            source: data.source || "user",
+            tags: data.tags || [],
+            relatedEntityId: data.relatedEntityId || null,
+            relatedWorldId: data.relatedWorldId || null,
+            occurredAt: data.occurredAt || Date.now(),
+            effects: data.effects || {}
+        }
+    );
+
+},
+
     update(eventId, changes = {}){
 
         const event = this.find(eventId);
