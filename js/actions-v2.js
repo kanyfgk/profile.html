@@ -1130,21 +1130,40 @@ session.actions.push({
                   null;
 
         if(replyText){
-            const replyAppMentions =
-    this.extractBrainAppMentions(replyText);
+    const replyAppMentions =
+        this.extractBrainAppMentions(replyText);
 
-session.actions.push({
-    id: crypto.randomUUID(),
-    role: "brain",
-    type: "reply",
-    content: replyText,
-    createdAt: Date.now(),
-    context: {
-        page: contextPage
-    },
-    appLinks: replyAppMentions
-});
-        }
+    const brainAction = {
+        id: crypto.randomUUID(),
+        role: "brain",
+        type: "reply",
+        content: "",
+        fullContent: replyText,
+        isStreaming: true,
+        createdAt: Date.now(),
+        context: {
+            page: contextPage
+        },
+        appLinks: []
+    };
+
+    session.actions.push(brainAction);
+
+    session.updatedAt = Date.now();
+
+    if(typeof this.saveBrainState === "function"){
+        this.saveBrainState();
+    }
+
+    this.renderBrainHistory();
+
+    this.streamBrainReply(
+        session,
+        brainAction,
+        replyText,
+        replyAppMentions
+    );
+}
     }
 
     session.updatedAt =
@@ -1154,8 +1173,30 @@ session.actions.push({
      * Aç / geç / götür gibi gerçek komutlar
      * sohbet kaydedildikten sonra çalıştırılır.
      */
-    const handledByIntent =
+    let handledByIntent = false;
+
+const completeNavigation = () => {
+    handledByIntent =
         this.dispatchBrainIntent(text);
+
+    if(!handledByIntent){
+        return;
+    }
+
+    session.updatedAt = Date.now();
+
+    session.actions.push({
+        id: crypto.randomUUID(),
+        role: "system",
+        type: "navigation",
+        content: "Komut işlendi.",
+        createdAt: Date.now()
+    });
+
+    if(typeof this.saveBrainState === "function"){
+        this.saveBrainState();
+    }
+};
 
     /*
      * Günlük sohbetin başlığı uygulama adına dönüşmez.
@@ -1206,6 +1247,99 @@ session.actions.push({
     );
 },
 
+    streamBrainReply(
+    session,
+    brainAction,
+    replyText,
+    replyAppMentions = []
+){
+    if(
+        !session ||
+        !brainAction ||
+        !replyText
+    ){
+        return;
+    }
+
+    const fullText = String(replyText);
+    let characterIndex = 0;
+
+    /*
+     * Çok uzun cevaplarda gereksiz beklemeyi azalt.
+     */
+    const characterStep =
+        fullText.length > 500
+            ? 4
+            : fullText.length > 220
+                ? 2
+                : 1;
+
+    const intervalDelay =
+        fullText.length > 500
+            ? 8
+            : 14;
+
+    const streamTimer = window.setInterval(() => {
+        characterIndex = Math.min(
+            characterIndex + characterStep,
+            fullText.length
+        );
+
+        brainAction.content =
+            fullText.slice(0, characterIndex);
+
+        brainAction.isStreaming = true;
+        session.updatedAt = Date.now();
+
+        this.renderBrainHistory();
+
+        const history =
+            document.getElementById("brainHistory");
+
+        if(history){
+            history.scrollTop =
+                history.scrollHeight;
+        }
+
+        if(characterIndex < fullText.length){
+            return;
+        }
+
+        window.clearInterval(streamTimer);
+
+        brainAction.content = fullText;
+        brainAction.fullContent = fullText;
+        brainAction.isStreaming = false;
+
+        /*
+         * Uygulama butonları yalnızca cevap tamamen
+         * yazıldıktan sonra görünür.
+         */
+        brainAction.appLinks =
+            Array.isArray(replyAppMentions)
+                ? replyAppMentions
+                : [];
+
+        session.updatedAt = Date.now();
+
+        this.updateBrainConversationSummary(session);
+
+        if(typeof this.saveBrainState === "function"){
+            this.saveBrainState();
+        }
+
+        this.renderBrainHistory();
+
+        const finalHistory =
+            document.getElementById("brainHistory");
+
+        if(finalHistory){
+            finalHistory.scrollTop =
+                finalHistory.scrollHeight;
+        }
+    }, intervalDelay);
+},
+    
     openBrainTarget(page){
     const opened = this.openEntityPage(page);
 
