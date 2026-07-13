@@ -1148,6 +1148,42 @@ session.actions.push({
     };
 
     session.actions.push(brainAction);
+    /*
+ * Gerçek açma / geçiş komutları sohbet cevabının
+ * yazılmasını beklemeden anında uygulanır.
+ */
+const navigationHandled =
+    this.dispatchBrainIntent(text);
+
+if(navigationHandled){
+    /*
+     * Streaming başlamadan yönlendirme yapıldığı için
+     * Brain cevabını tamamlanmış biçimde kaydet.
+     */
+    brainAction.content = replyText;
+    brainAction.fullContent = replyText;
+    brainAction.isStreaming = false;
+    brainAction.appLinks = replyAppMentions;
+
+    session.updatedAt = Date.now();
+    session.title = "Brain Sohbeti · Bugün";
+    session.topic = "daily-brain";
+
+    input.value = "";
+
+    if(
+        typeof this.updateBrainConversationSummary ===
+        "function"
+    ){
+        this.updateBrainConversationSummary(session);
+    }
+
+    if(typeof this.saveBrainState === "function"){
+        this.saveBrainState();
+    }
+
+    return;
+} 
 
     session.updatedAt = Date.now();
 
@@ -1161,8 +1197,7 @@ session.actions.push({
         session,
         brainAction,
         replyText,
-        replyAppMentions,
-        text
+        replyAppMentions
     );
 }
     }
@@ -1229,8 +1264,7 @@ session.actions.push({
     session,
     brainAction,
     replyText,
-    replyAppMentions = [],
-    navigationText = ""
+    replyAppMentions = []
 ){
     if(
         !session ||
@@ -1241,53 +1275,74 @@ session.actions.push({
     }
 
     const fullText = String(replyText);
+
     let characterIndex = 0;
-        let renderTick = 0;
+    let renderTick = 0;
 
     /*
-     * Çok uzun cevaplarda gereksiz beklemeyi azalt.
+     * Uzun cevaplarda yazım süresini gereksiz
+     * şekilde uzatma.
      */
     const characterStep =
         fullText.length > 500
-            ? 4
+            ? 5
             : fullText.length > 220
-                ? 2
-                : 1;
+                ? 3
+                : 2;
 
     const intervalDelay =
         fullText.length > 500
-            ? 8
-            : 14;
+            ? 6
+            : 10;
 
+    /*
+     * Bu fonksiyon yalnızca normal sohbet içindir.
+     * Uygulama açma komutları buraya gelmeden önce
+     * sendBrainMessage içinde anında çalıştırılır.
+     */
     const streamTimer = window.setInterval(() => {
         characterIndex = Math.min(
             characterIndex + characterStep,
             fullText.length
         );
 
-        brainAction.isStreaming = true;
-session.updatedAt = Date.now();
+        /*
+         * Görünen metni gerçekten ilerlet.
+         */
+        brainAction.content =
+            fullText.slice(0, characterIndex);
 
-renderTick += 1;
+        brainAction.fullContent =
+            fullText;
 
-/*
- * Her karakterde bütün geçmişi yeniden çizme.
- * Mobil performans için dört adımda bir render et.
- */
-if(
-    renderTick % 4 === 0 ||
-    characterIndex >= fullText.length
-){
-    this.renderBrainHistory();
+        brainAction.isStreaming =
+            characterIndex < fullText.length;
 
-    const history =
-        document.getElementById("brainHistory");
+        session.updatedAt =
+            Date.now();
 
-    if(history){
-        history.scrollTop =
-            history.scrollHeight;
-    }
-}
+        renderTick += 1;
+
+        /*
+         * Her karakterde bütün paneli yeniden çizme.
+         * Mobil cihazlarda gereksiz yük oluşmasını önler.
+         */
+        if(
+            renderTick % 3 === 0 ||
+            characterIndex >= fullText.length
+        ){
+            this.renderBrainHistory();
+
+            const history =
+                document.getElementById(
+                    "brainHistory"
+                );
+
+            if(history){
+                history.scrollTop =
+                    history.scrollHeight;
+            }
+        }
 
         if(characterIndex < fullText.length){
             return;
@@ -1295,50 +1350,60 @@ if(
 
         window.clearInterval(streamTimer);
 
-        brainAction.content = fullText;
-        brainAction.fullContent = fullText;
-        brainAction.isStreaming = false;
+        /*
+         * Cevabı kesin olarak tamamla.
+         */
+        brainAction.content =
+            fullText;
+
+        brainAction.fullContent =
+            fullText;
+
+        brainAction.isStreaming =
+            false;
 
         /*
-         * Uygulama butonları yalnızca cevap tamamen
-         * yazıldıktan sonra görünür.
+         * Uygulama butonları cevap tamamlandıktan
+         * sonra görünür.
          */
         brainAction.appLinks =
             Array.isArray(replyAppMentions)
                 ? replyAppMentions
                 : [];
 
-        session.updatedAt = Date.now();
+        session.updatedAt =
+            Date.now();
 
-this.updateBrainConversationSummary(session);
+        if(
+            typeof this.updateBrainConversationSummary ===
+            "function"
+        ){
+            this.updateBrainConversationSummary(
+                session
+            );
+        }
 
-if(typeof this.saveBrainState === "function"){
-    this.saveBrainState();
-}
+        if(
+            typeof this.saveBrainState ===
+            "function"
+        ){
+            this.saveBrainState();
+        }
 
-this.renderBrainHistory();
+        this.renderBrainHistory();
 
-const finalHistory =
-    document.getElementById("brainHistory");
+        const finalHistory =
+            document.getElementById(
+                "brainHistory"
+            );
 
-if(finalHistory){
-    finalHistory.scrollTop =
-        finalHistory.scrollHeight;
-}
+        if(finalHistory){
+            finalHistory.scrollTop =
+                finalHistory.scrollHeight;
+        }
 
-/*
- * Brain cevabı tamamen yazıldıktan sonra,
- * mesaj gerçek bir açma/geçiş komutuysa
- * uygulamaya otomatik yönlendir.
- */
-if(navigationText){
-    window.setTimeout(() => {
-        this.dispatchBrainIntent(navigationText);
-    }, 250);
-}
-
-}, intervalDelay);
-},
+    }, intervalDelay);
+} ,
 
 openBrainTarget(page){
     const opened = this.openEntityPage(page);
