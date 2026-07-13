@@ -1161,7 +1161,8 @@ session.actions.push({
         session,
         brainAction,
         replyText,
-        replyAppMentions
+        replyAppMentions,
+        text
     );
 }
     }
@@ -1173,30 +1174,7 @@ session.actions.push({
      * Aç / geç / götür gibi gerçek komutlar
      * sohbet kaydedildikten sonra çalıştırılır.
      */
-    let handledByIntent = false;
-
-const completeNavigation = () => {
-    handledByIntent =
-        this.dispatchBrainIntent(text);
-
-    if(!handledByIntent){
-        return;
-    }
-
-    session.updatedAt = Date.now();
-
-    session.actions.push({
-        id: crypto.randomUUID(),
-        role: "system",
-        type: "navigation",
-        content: "Komut işlendi.",
-        createdAt: Date.now()
-    });
-
-    if(typeof this.saveBrainState === "function"){
-        this.saveBrainState();
-    }
-};
+    const handledByIntent = false; 
 
     /*
      * Günlük sohbetin başlığı uygulama adına dönüşmez.
@@ -1251,7 +1229,8 @@ const completeNavigation = () => {
     session,
     brainAction,
     replyText,
-    replyAppMentions = []
+    replyAppMentions = [],
+    navigationText = ""
 ){
     if(
         !session ||
@@ -1331,25 +1310,37 @@ if(
 
         session.updatedAt = Date.now();
 
-        this.updateBrainConversationSummary(session);
+this.updateBrainConversationSummary(session);
 
-        if(typeof this.saveBrainState === "function"){
-            this.saveBrainState();
-        }
+if(typeof this.saveBrainState === "function"){
+    this.saveBrainState();
+}
 
-        this.renderBrainHistory();
+this.renderBrainHistory();
 
-        const finalHistory =
-            document.getElementById("brainHistory");
+const finalHistory =
+    document.getElementById("brainHistory");
 
-        if(finalHistory){
-            finalHistory.scrollTop =
-                finalHistory.scrollHeight;
-        }
-    }, intervalDelay);
+if(finalHistory){
+    finalHistory.scrollTop =
+        finalHistory.scrollHeight;
+}
+
+/*
+ * Brain cevabı tamamen yazıldıktan sonra,
+ * mesaj gerçek bir açma/geçiş komutuysa
+ * uygulamaya otomatik yönlendir.
+ */
+if(navigationText){
+    window.setTimeout(() => {
+        this.dispatchBrainIntent(navigationText);
+    }, 250);
+}
+
+}, intervalDelay);
 },
-    
-    openBrainTarget(page){
+
+openBrainTarget(page){
     const opened = this.openEntityPage(page);
 
     if(opened){
