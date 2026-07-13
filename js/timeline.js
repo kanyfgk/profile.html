@@ -44,6 +44,31 @@ const Timeline = {
                 data
             );
 
+            events.on("life-event:created", (lifeEvent) => {
+
+    if(!lifeEvent || !lifeEvent.id){
+        return;
+    }
+
+    const alreadyExists = this.events.some(event =>
+        event.payload &&
+        event.payload.sourceEventId === lifeEvent.id
+    );
+
+    if(alreadyExists){
+        return;
+    }
+
+    this.add(
+        "life-event",
+        lifeEvent.title || "Yaşam Olayı",
+        {
+            sourceEventId: lifeEvent.id
+        }
+    );
+
+});
+
         });
 
         events.on("life-event:created", (lifeEvent) => {
