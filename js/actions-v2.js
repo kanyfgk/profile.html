@@ -1263,6 +1263,7 @@ const completeNavigation = () => {
 
     const fullText = String(replyText);
     let characterIndex = 0;
+        let renderTick = 0;
 
     /*
      * Çok uzun cevaplarda gereksiz beklemeyi azalt.
@@ -1285,21 +1286,29 @@ const completeNavigation = () => {
             fullText.length
         );
 
-        brainAction.content =
-            fullText.slice(0, characterIndex);
-
         brainAction.isStreaming = true;
-        session.updatedAt = Date.now();
+session.updatedAt = Date.now();
 
-        this.renderBrainHistory();
+renderTick += 1;
 
-        const history =
-            document.getElementById("brainHistory");
+/*
+ * Her karakterde bütün geçmişi yeniden çizme.
+ * Mobil performans için dört adımda bir render et.
+ */
+if(
+    renderTick % 4 === 0 ||
+    characterIndex >= fullText.length
+){
+    this.renderBrainHistory();
 
-        if(history){
-            history.scrollTop =
-                history.scrollHeight;
-        }
+    const history =
+        document.getElementById("brainHistory");
+
+    if(history){
+        history.scrollTop =
+            history.scrollHeight;
+    }
+}
 
         if(characterIndex < fullText.length){
             return;
