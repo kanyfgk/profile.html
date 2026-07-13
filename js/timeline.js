@@ -60,6 +60,12 @@ const Timeline = {
                 return;
             }
 
+            events.on("life-event:removed", () => {
+
+    this.cleanOrphanLifeEvents();
+
+});
+
             const alreadyExists = this.events.some(event =>
                 event.payload &&
                 event.payload.sourceEventId === lifeEvent.id
