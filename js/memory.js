@@ -14,6 +14,32 @@ const MemorySystem = {
 
         });
 
+        events.on("life-event:created", (lifeEvent) => {
+
+    if(!lifeEvent || !lifeEvent.id){
+        return;
+    }
+
+    const alreadyExists = this.records.some(record =>
+        record.payload &&
+        record.payload.sourceEventId === lifeEvent.id
+    );
+
+    if(alreadyExists){
+        return;
+    }
+
+    this.remember(
+        "life-event",
+        {
+            sourceEventId: lifeEvent.id,
+            title: lifeEvent.title,
+            importance: lifeEvent.importance
+        }
+    );
+
+});
+
     },
 
     remember(type, payload){
