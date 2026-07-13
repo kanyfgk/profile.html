@@ -73,10 +73,18 @@
 .brain-input{
     width:100%;
     margin-top:12px;
-    padding:12px;
+
+    height:46px;
+    min-height:46px;
+
+    padding:0 16px;
+
     border-radius:14px;
     border:0;
+
     font-size:16px;
+    line-height:46px;
+
     box-sizing:border-box;
     flex-shrink:0;
 }
