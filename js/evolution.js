@@ -58,6 +58,22 @@ const Evolution = {
             .slice(2, 10)}`;
     },
 
+    normalizeText(value){
+
+    return String(value || "")
+        .toLowerCase()
+        .trim()
+        .replaceAll("ı", "i")
+        .replaceAll("ğ", "g")
+        .replaceAll("ü", "u")
+        .replaceAll("ş", "s")
+        .replaceAll("ö", "o")
+        .replaceAll("ç", "c")
+        .replace(/[?.!,;:]/g, " ")
+        .replace(/\s+/g, " ");
+
+},
+
     normalizeType(type){
 
         const normalized = String(type || "")
@@ -214,22 +230,141 @@ const Evolution = {
         return event;
 
     },
+    
+
+    analyzeLifeEvent(data = {}){
+
+    const text = this.normalizeText(
+        `${data.title || ""} ${data.description || ""}`
+    );
+
+    let type = "general";
+    let importance = "medium";
+    let tags = [];
+    let effects = {};
+
+    if(
+        text.includes("ilk satis") ||
+        text.includes("basari") ||
+        text.includes("kazandi") ||
+        text.includes("tamamlandi")
+    ){
+        type = "achievement";
+        importance = "high";
+        tags.push("başarı");
+
+        effects = {
+            experience: 10,
+            confidence: 5,
+            reputation: 3
+        };
+    }
+    else if(
+        text.includes("basarisiz") ||
+        text.includes("kaybetti") ||
+        text.includes("olmadi") ||
+        text.includes("hata")
+    ){
+        type = "failure";
+        importance = "high";
+        tags.push("başarısızlık");
+
+        effects = {
+            experience: 8,
+            confidence: -3
+        };
+    }
+    else if(
+        text.includes("karar verdi") ||
+        text.includes("karar aldi") ||
+        text.includes("vazgecti")
+    ){
+        type = "decision";
+        tags.push("karar");
+
+        effects = {
+            awareness: 4
+        };
+    }
+    else if(
+        text.includes("hedef") ||
+        text.includes("planliyor") ||
+        text.includes("yapacak")
+    ){
+        type = "goal";
+        tags.push("hedef");
+
+        effects = {
+            motivation: 3
+        };
+    }
+    else if(
+        text.includes("ise basladi") ||
+        text.includes("is kurdu") ||
+        text.includes("sirket")
+    ){
+        type = "work";
+        importance = "high";
+        tags.push("iş");
+
+        effects = {
+            experience: 7,
+            responsibility: 5
+        };
+    }
+    else if(
+        text.includes("para") ||
+        text.includes("gelir") ||
+        text.includes("borc") ||
+        text.includes("odeme")
+    ){
+        type = "finance";
+        tags.push("finans");
+
+        effects = {
+            financialExperience: 5
+        };
+    }
+
+    return {
+        type,
+        importance,
+        tags,
+        effects
+    };
+
+},
 
     createLifeEvent(data = {}){
 
+    const analysis = this.analyzeLifeEvent(data);
+
     return this.record(
-        data.type || "general",
+        data.type || analysis.type,
         data.description || "",
         {
             title: data.title || "Yaşam olayı",
             status: data.status || "completed",
-            importance: data.importance || "medium",
+            importance:
+                data.importance ||
+                analysis.importance,
             source: data.source || "user",
-            tags: data.tags || [],
-            relatedEntityId: data.relatedEntityId || null,
-            relatedWorldId: data.relatedWorldId || null,
-            occurredAt: data.occurredAt || Date.now(),
-            effects: data.effects || {}
+            tags: [
+                ...analysis.tags,
+                ...(Array.isArray(data.tags)
+                    ? data.tags
+                    : [])
+            ],
+            relatedEntityId:
+                data.relatedEntityId || null,
+            relatedWorldId:
+                data.relatedWorldId || null,
+            occurredAt:
+                data.occurredAt || Date.now(),
+            effects: {
+                ...analysis.effects,
+                ...(data.effects || {})
+            }
         }
     );
 
