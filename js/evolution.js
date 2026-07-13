@@ -335,38 +335,126 @@ const Evolution = {
 
 },
 
+    validateLifeEvent(data = {}){
+
+    const title = String(
+        data.title || ""
+    ).trim();
+
+    const description = String(
+        data.description || ""
+    ).trim();
+
+    if(!title && !description){
+        return {
+            valid: false,
+            reason: "Yaşam olayının başlığı veya açıklaması olmalı."
+        };
+    }
+
+    return {
+        valid: true,
+        reason: null
+    };
+
+},
+
+publishLifeEvent(event){
+
+    if(!event){
+        return false;
+    }
+
+    VAERO.emit("life-event:created", event);
+
+    if(event.importance === "high"){
+        VAERO.emit("life-event:important", event);
+    }
+
+    if(event.importance === "critical"){
+        VAERO.emit("life-event:critical", event);
+    }
+
+    return true;
+
+},
+
     createLifeEvent(data = {}){
 
-    const analysis = this.analyzeLifeEvent(data);
+    const validation =
+        this.validateLifeEvent(data);
 
-    return this.record(
+    if(!validation.valid){
+
+        console.warn(
+            "Life Event oluşturulamadı:",
+            validation.reason
+        );
+
+        VAERO.emit(
+            "life-event:rejected",
+            {
+                data,
+                reason: validation.reason
+            }
+        );
+
+        return null;
+    }
+
+    const analysis =
+        this.analyzeLifeEvent(data);
+
+    const event = this.record(
         data.type || analysis.type,
         data.description || "",
         {
-            title: data.title || "Yaşam olayı",
-            status: data.status || "completed",
+            title:
+                data.title ||
+                data.description ||
+                "Yaşam olayı",
+
+            status:
+                data.status ||
+                "completed",
+
             importance:
                 data.importance ||
                 analysis.importance,
-            source: data.source || "user",
+
+            source:
+                data.source ||
+                "user",
+
             tags: [
                 ...analysis.tags,
                 ...(Array.isArray(data.tags)
                     ? data.tags
                     : [])
             ],
+
             relatedEntityId:
-                data.relatedEntityId || null,
+                data.relatedEntityId ||
+                null,
+
             relatedWorldId:
-                data.relatedWorldId || null,
+                data.relatedWorldId ||
+                null,
+
             occurredAt:
-                data.occurredAt || Date.now(),
+                data.occurredAt ||
+                Date.now(),
+
             effects: {
                 ...analysis.effects,
                 ...(data.effects || {})
             }
         }
     );
+
+    this.publishLifeEvent(event);
+
+    return event;
 
 },
 
