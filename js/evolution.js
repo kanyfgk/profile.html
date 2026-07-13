@@ -566,10 +566,22 @@ publishLifeEvent(event){
 
         this.save();
 
-        VAERO.emit(
-            "evolution:removed",
-            removedEvent
-        );
+const events = VAERO.get("events");
+
+if(
+    events &&
+    typeof events.emit === "function"
+){
+    events.emit(
+        "life-event:removed",
+        removedEvent
+    );
+}
+
+VAERO.emit(
+    "evolution:removed",
+    removedEvent
+);
 
         return true;
 
