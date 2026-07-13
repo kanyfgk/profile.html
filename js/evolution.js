@@ -365,14 +365,27 @@ publishLifeEvent(event){
         return false;
     }
 
-    VAERO.emit("life-event:created", event);
+    const events = VAERO.get("events");
+
+    if(
+        !events ||
+        typeof events.emit !== "function"
+    ){
+        console.warn(
+            "Life Event yayınlanamadı: EventSystem bulunamadı."
+        );
+
+        return false;
+    }
+
+    events.emit("life-event:created", event);
 
     if(event.importance === "high"){
-        VAERO.emit("life-event:important", event);
+        events.emit("life-event:important", event);
     }
 
     if(event.importance === "critical"){
-        VAERO.emit("life-event:critical", event);
+        events.emit("life-event:critical", event);
     }
 
     return true;
