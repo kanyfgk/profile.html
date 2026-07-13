@@ -320,10 +320,15 @@ analyzeMessage(message, context = null, intent = null){
     ];
 
     for(const definition of operationDefinitions){
-        const matched =
-            definition.words.some(word =>
-                normalizedMessage.includes(word)
-            );
+    const matched =
+        definition.words.some(word => {
+            if(word.includes(" ")){
+                return normalizedMessage.includes(word);
+            }
+
+            const messageWords = normalizedMessage.split(" ");
+            return messageWords.includes(word);
+        });
 
         if(matched){
             operation =
