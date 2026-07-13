@@ -2,15 +2,23 @@ const Timeline = {
 
     events: [],
 
+    storageKey: "vaero:timeline:events",
+
     boot(){
 
+        this.load();
+
         const events = VAERO.get("events");
+
+        if(!events){
+            return;
+        }
 
         events.on("entity.mounted", (data)=>{
 
             this.add(
                 "entity",
-                "Entity Mounted", 
+                "Entity Mounted",
                 data
             );
 
@@ -44,64 +52,54 @@ const Timeline = {
                 data
             );
 
-            events.on("life-event:created", (lifeEvent) => {
-
-    if(!lifeEvent || !lifeEvent.id){
-        return;
-    }
-
-    const alreadyExists = this.events.some(event =>
-        event.payload &&
-        event.payload.sourceEventId === lifeEvent.id
-    );
-
-    if(alreadyExists){
-        return;
-    }
-
-    this.add(
-        "life-event",
-        lifeEvent.title || "Yaşam Olayı",
-        {
-            sourceEventId: lifeEvent.id
-        }
-    );
-
-});
-
         });
 
         events.on("life-event:created", (lifeEvent) => {
 
-    if(!lifeEvent || !lifeEvent.id){
-        return;
-    }
+            if(!lifeEvent || !lifeEvent.id){
+                return;
+            }
 
-    const alreadyExists = this.events.some(event =>
-        event.payload &&
-        event.payload.sourceEventId === lifeEvent.id
-    );
+            const alreadyExists = this.events.some(event =>
+                event.payload &&
+                event.payload.sourceEventId === lifeEvent.id
+            );
 
-    if(alreadyExists){
-        return;
-    }
+            if(alreadyExists){
+                return;
+            }
 
-    this.add(
-        "life-event",
-        lifeEvent.title || "Yaşam Olayı",
-        {
-            sourceEventId: lifeEvent.id
+            this.add(
+                "life-event",
+                lifeEvent.title || "Yaşam Olayı",
+                {
+                    sourceEventId: lifeEvent.id
+                }
+            );
+
+        });
+
+    },
+
+    createId(){
+
+        if(
+            typeof crypto !== "undefined" &&
+            typeof crypto.randomUUID === "function"
+        ){
+            return crypto.randomUUID();
         }
-    );
 
-});
+        return `timeline_${Date.now()}_${Math.random()
+            .toString(36)
+            .slice(2, 10)}`;
 
     },
 
     add(type, title, payload = {}){
 
         const event = {
-            id: crypto.randomUUID(),
+            id: this.createId(),
             type,
             title,
             payload,
@@ -110,45 +108,111 @@ const Timeline = {
 
         this.events.push(event);
 
+        this.save();
+
         return event;
 
     },
 
     resolveLifeEvent(timelineEvent){
 
-    if(
-        !timelineEvent ||
-        timelineEvent.type !== "life-event" ||
-        !timelineEvent.payload ||
-        !timelineEvent.payload.sourceEventId
-    ){
-        return null;
-    }
+        if(
+            !timelineEvent ||
+            timelineEvent.type !== "life-event" ||
+            !timelineEvent.payload ||
+            !timelineEvent.payload.sourceEventId
+        ){
+            return null;
+        }
 
-    const evolution = VAERO.get("evolution");
+        const evolution = VAERO.get("evolution");
 
-    if(
-        !evolution ||
-        typeof evolution.find !== "function"
-    ){
-        return null;
-    }
+        if(
+            !evolution ||
+            typeof evolution.find !== "function"
+        ){
+            return null;
+        }
 
-    return evolution.find(
-        timelineEvent.payload.sourceEventId
-    );
+        return evolution.find(
+            timelineEvent.payload.sourceEventId
+        );
 
-},
+    },
 
     all(){
 
-        return this.events;
+        return [...this.events];
+
+    },
+
+    save(){
+
+        try{
+
+            localStorage.setItem(
+                this.storageKey,
+                JSON.stringify(this.events)
+            );
+
+            return true;
+
+        }catch(error){
+
+            console.error(
+                "Timeline kaydedilemedi:",
+                error
+            );
+
+            return false;
+
+        }
+
+    },
+
+    load(){
+
+        try{
+
+            const saved = localStorage.getItem(
+                this.storageKey
+            );
+
+            if(!saved){
+                this.events = [];
+                return this.events;
+            }
+
+            const parsed = JSON.parse(saved);
+
+            this.events = Array.isArray(parsed)
+                ? parsed
+                : [];
+
+            return this.events;
+
+        }catch(error){
+
+            console.error(
+                "Timeline yüklenemedi:",
+                error
+            );
+
+            this.events = [];
+
+            return this.events;
+
+        }
 
     },
 
     clear(){
 
         this.events = [];
+
+        this.save();
+
+        return true;
 
     }
 
