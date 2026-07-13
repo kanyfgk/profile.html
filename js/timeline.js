@@ -140,6 +140,48 @@ const Timeline = {
 
     },
 
+    cleanOrphanLifeEvents(){
+
+    const evolution = VAERO.get("evolution");
+
+    if(
+        !evolution ||
+        typeof evolution.find !== "function"
+    ){
+        return 0;
+    }
+
+    const beforeCount = this.events.length;
+
+    this.events = this.events.filter(event => {
+
+        if(
+            event.type !== "life-event" ||
+            !event.payload ||
+            !event.payload.sourceEventId
+        ){
+            return true;
+        }
+
+        return Boolean(
+            evolution.find(
+                event.payload.sourceEventId
+            )
+        );
+
+    });
+
+    const removedCount =
+        beforeCount - this.events.length;
+
+    if(removedCount > 0){
+        this.save();
+    }
+
+    return removedCount;
+
+},
+
     all(){
 
         return [...this.events];
