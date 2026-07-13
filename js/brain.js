@@ -405,60 +405,8 @@ analyzeMessage(message, context = null, intent = null){
         intent
     );
 
-/*
- * Mesajda açıkça bir uygulamadan söz ediliyorsa,
- * cevap bağlamında açık ekran yerine o uygulama kullanılır.
- */
-const messageAppMap = [
-    {
-        app: "profile",
-        words: ["profil", "profile"]
-    },
-    {
-        app: "identity",
-        words: ["kimlik", "identity"]
-    },
-    {
-        app: "memory",
-        words: ["hafiza", "memory"]
-    },
-    {
-        app: "timeline",
-        words: [
-            "timeline",
-            "zaman cizelgesi",
-            "zaman akisi"
-        ]
-    },
-    {
-        app: "bridge",
-        words: ["kopru", "bridge"]
-    },
-    {
-        app: "organs",
-        words: ["organ", "organlar", "organs"]
-    },
-    {
-        app: "settings",
-        words: ["ayar", "ayarlar", "settings"]
-    }
-];
-
-const mentionedApp =
-    messageAppMap.find(item =>
-        item.words.some(word =>
-            normalizedMessage.includes(word)
-        )
-    )?.app || null;
-
-/*
- * Öncelik:
- * 1. Mesajda adı geçen uygulama
- * 2. Açık olan ekran
- * 3. Bilinmeyen bağlam
- */
 const app =
-    mentionedApp ||
+    analysis.topic ||
     context?.app ||
     "unknown";
 
