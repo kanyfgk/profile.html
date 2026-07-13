@@ -54,38 +54,88 @@ const Timeline = {
 
         });
 
-        events.on("life-event:created", (lifeEvent) => {
+        boot(){
 
-            if(!lifeEvent || !lifeEvent.id){
-                return;
+    this.load();
+
+    const events = VAERO.get("events");
+
+    if(!events){
+        return;
+    }
+
+    events.on("entity.mounted", (data)=>{
+
+        this.add(
+            "entity",
+            "Entity Mounted",
+            data
+        );
+
+    });
+
+    events.on("engine.started", (data)=>{
+
+        this.add(
+            "engine",
+            "Engine Started",
+            data
+        );
+
+    });
+
+    events.on("runtime.started", (data)=>{
+
+        this.add(
+            "runtime",
+            "Runtime Started",
+            data
+        );
+
+    });
+
+    events.on("runtime.tick", (data)=>{
+
+        this.add(
+            "runtime",
+            "Runtime Tick",
+            data
+        );
+
+    });
+
+    events.on("life-event:created", (lifeEvent) => {
+
+        if(!lifeEvent || !lifeEvent.id){
+            return;
+        }
+
+        const alreadyExists = this.events.some(event =>
+            event.payload &&
+            event.payload.sourceEventId === lifeEvent.id
+        );
+
+        if(alreadyExists){
+            return;
+        }
+
+        this.add(
+            "life-event",
+            lifeEvent.title || "Yaşam Olayı",
+            {
+                sourceEventId: lifeEvent.id
             }
+        );
 
-            events.on("life-event:removed", () => {
+    });
 
-    this.cleanOrphanLifeEvents();
+    events.on("life-event:removed", () => {
 
-});
+        this.cleanOrphanLifeEvents();
 
-            const alreadyExists = this.events.some(event =>
-                event.payload &&
-                event.payload.sourceEventId === lifeEvent.id
-            );
+    });
 
-            if(alreadyExists){
-                return;
-            }
-
-            this.add(
-                "life-event",
-                lifeEvent.title || "Yaşam Olayı",
-                {
-                    sourceEventId: lifeEvent.id
-                }
-            );
-
-        });
-
-    },
+},
 
     createId(){
 
