@@ -57,6 +57,32 @@ const MemorySystem = {
 
     },
 
+    resolveLifeEvent(memoryRecord){
+
+    if(
+        !memoryRecord ||
+        memoryRecord.type !== "life-event" ||
+        !memoryRecord.payload ||
+        !memoryRecord.payload.sourceEventId
+    ){
+        return null;
+    }
+
+    const evolution = VAERO.get("evolution");
+
+    if(
+        !evolution ||
+        typeof evolution.find !== "function"
+    ){
+        return null;
+    }
+
+    return evolution.find(
+        memoryRecord.payload.sourceEventId
+    );
+
+},
+
     all(){
 
         return this.records;
