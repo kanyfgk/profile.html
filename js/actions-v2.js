@@ -2242,6 +2242,10 @@ document.addEventListener("click", event => {
         Actions.openEntityPage("bridge");
     }
 
+    if(action === "entity:evolution"){
+    Actions.openEntityPage("evolution");
+}
+
     if(action === "entity:settings"){
         Actions.openEntityPage("settings");
     }
