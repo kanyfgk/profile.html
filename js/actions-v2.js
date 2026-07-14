@@ -2301,6 +2301,31 @@ if(action === "evolution:event:close"){
 
     if(action === "evolution:linked:open"){
 
+    const target = String(
+        button.dataset.target || ""
+    )
+        .trim()
+        .toLowerCase();
+
+    if(
+        target !== "timeline" &&
+        target !== "memory"
+    ){
+        return;
+    }
+
+    if(
+        window.EvolutionApp &&
+        typeof EvolutionApp.clearSelectedEvent === "function"
+    ){
+        EvolutionApp.clearSelectedEvent();
+    }
+
+    Actions.openEntityPage(target);
+}
+
+    if(action === "evolution:linked:open"){
+
     const target = button.dataset.target;
 
     if(
