@@ -156,72 +156,246 @@ clearSelectedEvent(){
 
     getEventXP(event = {}){
 
-    const effects =
-        event.effects &&
-        typeof event.effects === "object"
-            ? event.effects
-            : {};
+    const directXP = Number(event.xp);
 
-    const effectScore = Object.values(effects)
-        .reduce(
-            (total, value) =>
-                total + Math.abs(Number(value) || 0),
-            0
+    if(Number.isFinite(directXP)){
+        return Math.max(0, directXP);
+    }
+
+    const payloadXP = Number(
+        event.payload?.xp
+    );
+
+    if(Number.isFinite(payloadXP)){
+        return Math.max(0, payloadXP);
+    }
+
+    const importanceXP = {
+        low: 5,
+        medium: 10,
+        high: 25,
+        critical: 50
+    };
+
+    return importanceXP[event.importance] || 10;
+
+},
+
+    getEvolutionProgress(totalXP = 0){
+
+    const safeXP = Math.max(
+        0,
+        Number(totalXP) || 0
+    );
+
+    const level = Math.floor(
+        safeXP / 100
+    ) + 1;
+
+    const currentLevelXP =
+        safeXP % 100;
+
+    const nextLevelXP = 100;
+
+    const progressPercent =
+        Math.min(
+            100,
+            Math.round(
+                (
+                    currentLevelXP /
+                    nextLevelXP
+                ) * 100
+            )
         );
 
-    const importanceScore = {
-        low: 2,
-        medium: 5,
-        high: 10,
-        critical: 20
-    }[event.importance] || 5;
-
-    return effectScore + importanceScore;
+    return {
+        level,
+        totalXP: safeXP,
+        currentLevelXP,
+        nextLevelXP,
+        progressPercent
+    };
 
 },
 
+    renderEvolutionProgress(progress = {}){
+
+    return `
+        <section
+            class="card"
+            style="
+                ${Theme.card}
+                margin-top:16px;
+                padding:20px;
+            "
+        >
+            <div
+                style="
+                    display:flex;
+                    align-items:center;
+                    justify-content:space-between;
+                    gap:16px;
+                "
+            >
+                <div>
+                    <div
+                        style="
+                            color:var(--muted);
+                            font-size:12px;
+                        "
+                    >
+                        EVOLUTION SEVİYESİ
+                    </div>
+
+                    <strong
+                        style="
+                            display:block;
+                            margin-top:6px;
+                            font-size:28px;
+                        "
+                    >
+                        Seviye ${progress.level}
+                    </strong>
+                </div>
+
+                <div
+                    style="
+                        color:#f5d796;
+                        font-size:14px;
+                        font-weight:600;
+                    "
+                >
+                    ${progress.totalXP} XP
+                </div>
+            </div>
+
+            <div
+                style="
+                    margin-top:18px;
+                    height:9px;
+                    overflow:hidden;
+                    border-radius:999px;
+                    background:rgba(255,255,255,.06);
+                "
+            >
+                <div
+                    style="
+                        width:${progress.progressPercent}%;
+                        height:100%;
+                        border-radius:999px;
+                        background:linear-gradient(
+                            90deg,
+                            #b89045,
+                            #f5d796
+                        );
+                    "
+                ></div>
+            </div>
+
+            <div
+                style="
+                    display:flex;
+                    justify-content:space-between;
+                    gap:12px;
+                    margin-top:9px;
+                    color:var(--muted);
+                    font-size:11px;
+                "
+            >
+                <span>
+                    ${progress.currentLevelXP} / ${progress.nextLevelXP} XP
+                </span>
+
+                <span>
+                    %${progress.progressPercent}
+                </span>
+            </div>
+        </section>
+    `;
+
+},
+    
 getAffectedOrgans(event = {}){
 
-    const organs = [
-        {
-            id: "memory",
-            icon: "💾",
-            label: "Hafıza"
-        },
-        {
-            id: "timeline",
-            icon: "🕓",
-            label: "Timeline"
-        }
-    ];
+    const organs = new Set(
+        Array.isArray(event.organs)
+            ? event.organs
+            : []
+    );
+
+    const searchableText = [
+        event.type,
+        event.title,
+        event.description,
+        event.source,
+        event.payload?.action,
+        event.payload?.category
+    ]
+        .filter(Boolean)
+        .join(" ")
+        .toLowerCase();
 
     if(
-        event.importance === "high" ||
-        event.importance === "critical"
+        searchableText.includes("memory") ||
+        searchableText.includes("hafıza") ||
+        searchableText.includes("hatıra")
     ){
-        organs.push({
-            id: "brain",
-            icon: "🧠",
-            label: "Brain"
-        });
+        organs.add("memory");
     }
 
     if(
-        event.type === "relationship" ||
-        event.type === "work" ||
-        event.type === "finance"
+        searchableText.includes("timeline") ||
+        searchableText.includes("zaman çizelgesi") ||
+        searchableText.includes("geçmiş")
     ){
-        organs.push({
-            id: "bridge",
-            icon: "🌉",
-            label: "Bridge"
-        });
+        organs.add("timeline");
     }
 
-    return organs;
+    if(
+        searchableText.includes("identity") ||
+        searchableText.includes("kimlik") ||
+        searchableText.includes("doğrulama")
+    ){
+        organs.add("identity");
+    }
+
+    if(
+        searchableText.includes("profile") ||
+        searchableText.includes("profil")
+    ){
+        organs.add("profile");
+    }
+
+    if(
+        searchableText.includes("bridge") ||
+        searchableText.includes("köprü") ||
+        searchableText.includes("bağlantı")
+    ){
+        organs.add("bridge");
+    }
+
+    if(
+        searchableText.includes("finance") ||
+        searchableText.includes("finans") ||
+        searchableText.includes("satış") ||
+        searchableText.includes("ödeme") ||
+        searchableText.includes("gelir")
+    ){
+        organs.add("finance");
+    }
+
+    if(event.type === "achievement"){
+        organs.add("timeline");
+        organs.add("memory");
+    }
+
+    if(event.type === "engine:start"){
+        organs.add("timeline");
+    }
+
+    return [...organs];
 
 },
-
     getLinkedRecordCounts(event = {}){
 
     if(!event.id){
@@ -527,6 +701,44 @@ data-event-id="${event.id}"
                 </div>
 
                 ${this.renderEffects(event.effects)}
+                ${(() => {
+
+    const affectedOrgans =
+        this.getAffectedOrgans(event);
+
+    if(affectedOrgans.length === 0){
+        return "";
+    }
+
+    return `
+        <div
+            style="
+                display:flex;
+                flex-wrap:wrap;
+                gap:8px;
+                margin-top:14px;
+            "
+        >
+            ${affectedOrgans.map(id => `
+                <span
+                    style="
+                        padding:7px 10px;
+                        border-radius:999px;
+                        background:rgba(255,255,255,.035);
+                        border:1px solid rgba(255,255,255,.07);
+                        color:var(--muted);
+                        font-size:12px;
+                    "
+                >
+                    ${this.escapeHTML(
+                        this.getOrganLabel(id)
+                    )}
+                </span>
+            `).join("")}
+        </div>
+    `;
+
+})()}
 
                 <div
                     style="
@@ -605,28 +817,14 @@ data-event-id="${event.id}"
             ).length;
 
         const totalEffects =
-            events.reduce(
-                (total, event) => {
+    events.reduce(
+        (total, event) =>
+            total + this.getEventXP(event),
+        0
+    );
 
-                    const effects =
-                        event.effects &&
-                        typeof event.effects === "object"
-                            ? event.effects
-                            : {};
-
-                    return total +
-                        Object.values(effects)
-                            .reduce(
-                                (sum, value) =>
-                                    sum + (
-                                        Number(value) || 0
-                                    ),
-                                0
-                            );
-
-                },
-                0
-            );
+        const evolutionProgress =
+    this.getEvolutionProgress(totalEffects);
 
         const filteredEvents =
     this.filterEvents(events);
@@ -816,6 +1014,9 @@ const recentEvents =
                         </strong>
                     </div>
                 </section>
+                ${this.renderEvolutionProgress(
+    evolutionProgress
+)}
 
                 <section style="margin-top:24px;">
                     <div
@@ -1395,12 +1596,12 @@ const recentEvents =
     Etkilenen Organlar:
     <strong style="color:var(--text);">
         ${
-            (selectedEvent.organs || []).length
-    ? selectedEvent.organs
-        .map(id => this.getOrganLabel(id))
-        .join(", ")
-    : "Yok"
-        }
+    this.getAffectedOrgans(selectedEvent).length
+        ? this.getAffectedOrgans(selectedEvent)
+            .map(id => this.getOrganLabel(id))
+            .join(", ")
+        : "Yok"
+}
     </strong>
 </div>
 
