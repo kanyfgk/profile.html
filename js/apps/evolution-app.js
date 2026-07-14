@@ -1,4 +1,58 @@
 const EvolutionApp = {
+    activeFilter: "all",
+
+    setFilter(filter){
+
+        const allowedFilters = [
+            "all",
+            "important",
+            "achievement",
+            "goal",
+            "finance"
+        ];
+
+        this.activeFilter = allowedFilters.includes(filter)
+            ? filter
+            : "all";
+
+        return this.activeFilter;
+
+    },
+
+    filterEvents(events = []){
+
+        if(!Array.isArray(events)){
+            return [];
+        }
+
+        if(this.activeFilter === "important"){
+            return events.filter(event =>
+                event.importance === "high" ||
+                event.importance === "critical"
+            );
+        }
+
+        if(this.activeFilter === "achievement"){
+            return events.filter(event =>
+                event.type === "achievement"
+            );
+        }
+
+        if(this.activeFilter === "goal"){
+            return events.filter(event =>
+                event.type === "goal"
+            );
+        }
+
+        if(this.activeFilter === "finance"){
+            return events.filter(event =>
+                event.type === "finance"
+            );
+        }
+
+        return events;
+
+    },
 
     escapeHTML(value){
 
@@ -326,8 +380,11 @@ const EvolutionApp = {
                 0
             );
 
-        const recentEvents =
-            events.slice(0, 8);
+        const filteredEvents =
+    this.filterEvents(events);
+
+const recentEvents =
+    filteredEvents.slice(0, 8);
 
         return `
             <div
@@ -545,6 +602,76 @@ const EvolutionApp = {
                             ${recentEvents.length} gösteriliyor
                         </span>
                     </div>
+
+                    <div
+    style="
+        display:flex;
+        gap:8px;
+        overflow-x:auto;
+        padding:14px 0 4px;
+        scrollbar-width:none;
+    "
+>
+    ${[
+        {
+            id: "all",
+            label: "Tümü"
+        },
+        {
+            id: "important",
+            label: "Önemli"
+        },
+        {
+            id: "achievement",
+            label: "Başarılar"
+        },
+        {
+            id: "goal",
+            label: "Hedefler"
+        },
+        {
+            id: "finance",
+            label: "Finans"
+        }
+    ].map(filter => {
+
+        const isActive =
+            this.activeFilter === filter.id;
+
+        return `
+            <button
+                data-action="evolution:filter"
+                data-filter="${filter.id}"
+                style="
+                    flex:0 0 auto;
+                    border-radius:999px;
+                    padding:9px 13px;
+                    border:1px solid ${
+                        isActive
+                            ? "rgba(245,215,150,.55)"
+                            : "rgba(255,255,255,.08)"
+                    };
+                    background:${
+                        isActive
+                            ? "rgba(245,215,150,.13)"
+                            : "rgba(255,255,255,.025)"
+                    };
+                    color:${
+                        isActive
+                            ? "var(--text)"
+                            : "var(--muted)"
+                    };
+                    cursor:pointer;
+                    font-size:12px;
+                    white-space:nowrap;
+                "
+            >
+                ${filter.label}
+            </button>
+        `;
+
+    }).join("")}
+</div>
 
                     ${
                         recentEvents.length > 0
