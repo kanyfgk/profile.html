@@ -25,31 +25,35 @@ const MemorySystem = {
 
     events.on("life-event:created", (lifeEvent) => {
 
-        if(!lifeEvent || !lifeEvent.id){
-            return;
+    if(!lifeEvent || !lifeEvent.id){
+        return;
+    }
+
+    const alreadyExists = this.records.some(record =>
+        record.payload &&
+        record.payload.sourceEventId === lifeEvent.id
+    );
+
+    if(alreadyExists){
+        return;
+    }
+
+    this.remember(
+        "life-event",
+        {
+            sourceEventId: lifeEvent.id,
+            title:
+                lifeEvent.title ||
+                "Yaşam Olayı",
+            importance:
+                lifeEvent.importance ||
+                "medium"
         }
+    );
 
-        const alreadyExists = this.records.some(record =>
-            record.payload &&
-            record.payload.sourceEventId === lifeEvent.id
-        );
+});
 
-        if(alreadyExists){
-            return;
-        }
-
-        this.remember(
-            "life-event",
-            {
-                sourceEventId: lifeEvent.id,
-                title: lifeEvent.title,
-                importance: lifeEvent.importance
-            }
-        );
-
-    });
-
-        events.on("life-event:updated", (lifeEvent) => {
+events.on("life-event:updated", (lifeEvent) => {
 
     if(!lifeEvent || !lifeEvent.id){
         return;
@@ -77,28 +81,46 @@ const MemorySystem = {
     this.save();
 
 });
-    events.on("life-event:removed", () => {
 
+events.on("life-event:removed", (lifeEvent) => {
+
+    if(!lifeEvent || !lifeEvent.id){
         this.cleanOrphanLifeEvents();
+        return;
+    }
 
-    });
+    const previousLength =
+        this.records.length;
+
+    this.records = this.records.filter(record =>
+        !(
+            record.payload &&
+            record.payload.sourceEventId === lifeEvent.id
+        )
+    );
+
+    if(this.records.length !== previousLength){
+        this.save();
+    }
+
+});
 
 },
 
-    createId(){
+createId(){
 
-        if(
-            typeof crypto !== "undefined" &&
-            typeof crypto.randomUUID === "function"
-        ){
-            return crypto.randomUUID();
-        }
+    if(
+        typeof crypto !== "undefined" &&
+        typeof crypto.randomUUID === "function"
+    ){
+        return crypto.randomUUID();
+    }
 
-        return `memory_${Date.now()}_${Math.random()
-            .toString(36)
-            .slice(2, 10)}`;
+    return `memory_${Date.now()}_${Math.random()
+        .toString(36)
+        .slice(2, 10)}`;
 
-    },
+},
 
     remember(type, payload = {}){
 
@@ -119,31 +141,31 @@ const MemorySystem = {
 
     resolveLifeEvent(memoryRecord){
 
-        if(
-            !memoryRecord ||
-            memoryRecord.type !== "life-event" ||
-            !memoryRecord.payload ||
-            !memoryRecord.payload.sourceEventId
-        ){
-            return null;
-        }
+    if(
+        !memoryRecord ||
+        memoryRecord.type !== "life-event" ||
+        !memoryRecord.payload ||
+        !memoryRecord.payload.sourceEventId
+    ){
+        return null;
+    }
 
-        const evolution = VAERO.get("evolution");
+    const evolution = VAERO.get("evolution");
 
-        if(
-            !evolution ||
-            typeof evolution.find !== "function"
-        ){
-            return null;
-        }
+    if(
+        !evolution ||
+        typeof evolution.find !== "function"
+    ){
+        return null;
+    }
 
-        return evolution.find(
-            memoryRecord.payload.sourceEventId
-        );
+    return evolution.find(
+        memoryRecord.payload.sourceEventId
+    );
 
-    },
+},
 
-    cleanOrphanLifeEvents(){
+cleanOrphanLifeEvents(){
 
     const evolution = VAERO.get("evolution");
 
