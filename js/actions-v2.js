@@ -2267,6 +2267,38 @@ document.addEventListener("click", event => {
         Actions.openEntityPage("settings");
     }
 
+    if(action === "evolution:event:open"){
+
+    if(
+        window.EvolutionApp &&
+        typeof EvolutionApp.selectEvent === "function"
+    ){
+        EvolutionApp.selectEvent(
+            button.dataset.eventId
+        );
+
+        VAERO.engine.mount(
+            VAERO.engine.currentEntity
+        );
+    }
+
+}
+
+if(action === "evolution:event:close"){
+
+    if(
+        window.EvolutionApp &&
+        typeof EvolutionApp.clearSelectedEvent === "function"
+    ){
+        EvolutionApp.clearSelectedEvent();
+
+        VAERO.engine.mount(
+            VAERO.engine.currentEntity
+        );
+    }
+
+}
+
     if(action === "entity:create:first"){
         VAERO.engine.entityCreateMode = true;
         VAERO.engine.mount(VAERO.engine.currentEntity);
