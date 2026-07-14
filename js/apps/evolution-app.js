@@ -154,6 +154,221 @@ clearSelectedEvent(){
 
     },
 
+    getEventXP(event = {}){
+
+    const effects =
+        event.effects &&
+        typeof event.effects === "object"
+            ? event.effects
+            : {};
+
+    const effectScore = Object.values(effects)
+        .reduce(
+            (total, value) =>
+                total + Math.abs(Number(value) || 0),
+            0
+        );
+
+    const importanceScore = {
+        low: 2,
+        medium: 5,
+        high: 10,
+        critical: 20
+    }[event.importance] || 5;
+
+    return effectScore + importanceScore;
+
+},
+
+getAffectedOrgans(event = {}){
+
+    const organs = [
+        {
+            id: "memory",
+            icon: "💾",
+            label: "Hafıza"
+        },
+        {
+            id: "timeline",
+            icon: "🕓",
+            label: "Timeline"
+        }
+    ];
+
+    if(
+        event.importance === "high" ||
+        event.importance === "critical"
+    ){
+        organs.push({
+            id: "brain",
+            icon: "🧠",
+            label: "Brain"
+        });
+    }
+
+    if(
+        event.type === "relationship" ||
+        event.type === "work" ||
+        event.type === "finance"
+    ){
+        organs.push({
+            id: "bridge",
+            icon: "🌉",
+            label: "Bridge"
+        });
+    }
+
+    return organs;
+
+},
+
+    getLinkedRecordCounts(event = {}){
+
+    if(!event.id){
+        return {
+            timeline: 0,
+            memory: 0
+        };
+    }
+
+    const timeline =
+        VAERO.get("timeline");
+
+    const memory =
+        VAERO.get("memorySystem");
+
+    const timelineEvents =
+        timeline &&
+        typeof timeline.all === "function"
+            ? timeline.all()
+            : [];
+
+    const memoryRecords =
+        memory &&
+        typeof memory.all === "function"
+            ? memory.all()
+            : [];
+
+    return {
+        timeline: timelineEvents.filter(item =>
+            item.payload &&
+            item.payload.sourceEventId === event.id
+        ).length,
+
+        memory: memoryRecords.filter(item =>
+            item.payload &&
+            item.payload.sourceEventId === event.id
+        ).length
+    };
+
+},
+
+    getBrainAnalysis(event = {}){
+
+    let summary =
+        "Bu olay varlığın yaşam akışına kaydedildi.";
+
+    let impact = "Orta";
+    let risk = "Düşük";
+    let suggestion =
+        "Olayın gelecekteki etkileri izlenebilir.";
+
+    if(event.type === "achievement"){
+
+        summary =
+            "Bu olay varlığın gelişiminde olumlu bir ilerleme oluşturuyor.";
+
+        impact = "Yüksek";
+
+        suggestion =
+            "Bu başarı yeni bir hedef veya dönüm noktasıyla ilişkilendirilebilir.";
+
+    }
+    else if(event.type === "failure"){
+
+        summary =
+            "Bu olay başarısızlık olarak görünse de deneyim ve öğrenme üretiyor.";
+
+        impact = "Yüksek";
+        risk = "Orta";
+
+        suggestion =
+            "Sebep, sonuç ve çıkarılan dersler Hafıza organına eklenebilir.";
+
+    }
+    else if(event.type === "goal"){
+
+        summary =
+            "Bu olay geleceğe yönelik bir gelişim yönü oluşturuyor.";
+
+        suggestion =
+            "Hedef için ölçülebilir adımlar ve tamamlanma tarihi belirlenebilir.";
+
+    }
+    else if(event.type === "finance"){
+
+        summary =
+            "Bu olay varlığın finansal gelişimini veya yükümlülüklerini etkiliyor.";
+
+        impact = "Yüksek";
+        risk = "Orta";
+
+        suggestion =
+            "Ödeme, gelir, borç ve sonuç bilgileri düzenli olarak güncellenebilir.";
+
+    }
+    else if(event.type === "decision"){
+
+        summary =
+            "Bu karar varlığın sonraki yaşam akışını değiştirebilir.";
+
+        suggestion =
+            "Kararın nedeni ve sonraki sonuçları Timeline üzerinden izlenebilir.";
+
+    }
+
+    if(event.importance === "critical"){
+        impact = "Kritik";
+        risk = "Yüksek";
+    }
+    else if(event.importance === "high"){
+        impact = "Yüksek";
+    }
+
+        if(event.organs?.includes("memory")){
+    suggestion =
+        "Bu olay hafızada uzun süreli iz bırakabilir.";
+}
+
+if(event.organs?.includes("identity")){
+    impact = "Yüksek";
+}
+
+if(event.organs?.includes("timeline")){
+    summary += " Timeline üzerinde önemli bir kayıt oluşturdu.";
+}
+
+    return {
+        summary,
+        impact,
+        risk,
+        suggestion
+    };
+
+},
+
+    getOrganLabel(id){
+
+    const organ = OrganRegistry.find(id);
+
+    if(organ){
+        return `${organ.icon} ${organ.title}`;
+    }
+
+    return id;
+
+},
+
     renderEffects(effects = {}){
 
         const entries = Object.entries(effects);
@@ -373,6 +588,11 @@ data-event-id="${event.id}"
         ? evolution.find(this.selectedEventId)
         : null;
 
+        const selectedEventAnalysis =
+    selectedEvent
+        ? this.getBrainAnalysis(selectedEvent)
+        : null;
+        
         const importantCount =
             events.filter(event =>
                 event.importance === "high" ||
@@ -877,6 +1097,222 @@ const recentEvents =
                     )}
 
                     <div
+    style="
+        margin-top:18px;
+        display:grid;
+        gap:14px;
+    "
+>
+    <div
+        style="
+            padding:16px;
+            border-radius:18px;
+            background:rgba(255,255,255,.035);
+            border:1px solid rgba(255,255,255,.06);
+        "
+    >
+        <div
+            style="
+                color:var(--muted);
+                font-size:12px;
+            "
+        >
+            Kazanılan Deneyim
+        </div>
+
+        <strong
+            style="
+                display:block;
+                margin-top:6px;
+                font-size:24px;
+                color:#f5d796;
+            "
+        >
+            +${this.getEventXP(selectedEvent)} XP
+        </strong>
+    </div>
+
+    <div
+        style="
+            padding:16px;
+            border-radius:18px;
+            background:rgba(255,255,255,.035);
+            border:1px solid rgba(255,255,255,.06);
+        "
+    >
+        <div
+            style="
+                color:var(--muted);
+                font-size:12px;
+                margin-bottom:10px;
+            "
+        >
+            Etkilenen Organlar
+        </div>
+
+        <div
+            style="
+                display:flex;
+                gap:8px;
+                flex-wrap:wrap;
+            "
+        >
+            ${this.getAffectedOrgans(selectedEvent)
+                .map(organ => `
+                    <span
+                        style="
+                            padding:8px 11px;
+                            border-radius:999px;
+                            background:rgba(255,255,255,.04);
+                            border:1px solid rgba(255,255,255,.07);
+                            font-size:12px;
+                        "
+                    >
+                        ${organ.icon}
+                        ${this.escapeHTML(organ.label)}
+                    </span>
+                `)
+                .join("")}
+        </div>
+    </div>
+</div>
+
+<div
+    style="
+        margin-top:14px;
+        padding:18px;
+        border-radius:18px;
+        background:rgba(112,167,255,.055);
+        border:1px solid rgba(112,167,255,.15);
+    "
+>
+    <div
+        style="
+            display:flex;
+            align-items:center;
+            gap:9px;
+        "
+    >
+        <span style="font-size:20px;">
+            🧠
+        </span>
+
+        <strong style="font-size:14px;">
+            Brain Analizi
+        </strong>
+    </div>
+
+    <p
+        style="
+            margin-top:13px;
+            color:var(--muted);
+            line-height:1.7;
+            font-size:14px;
+        "
+    >
+        ${this.escapeHTML(
+    selectedEventAnalysis.summary
+)}
+    </p>
+
+    <div
+        style="
+            display:grid;
+            grid-template-columns:1fr 1fr;
+            gap:10px;
+            margin-top:16px;
+        "
+    >
+        <div
+            style="
+                padding:12px;
+                border-radius:14px;
+                background:rgba(255,255,255,.035);
+            "
+        >
+            <div
+                style="
+                    color:var(--muted);
+                    font-size:11px;
+                "
+            >
+                Etki
+            </div>
+
+            <strong
+                style="
+                    display:block;
+                    margin-top:5px;
+                    font-size:14px;
+                "
+            >
+                ${this.escapeHTML(
+                    selectedEventAnalysis.impact
+                )}
+            </strong>
+        </div>
+
+        <div
+            style="
+                padding:12px;
+                border-radius:14px;
+                background:rgba(255,255,255,.035);
+            "
+        >
+            <div
+                style="
+                    color:var(--muted);
+                    font-size:11px;
+                "
+            >
+                Risk
+            </div>
+
+            <strong
+                style="
+                    display:block;
+                    margin-top:5px;
+                    font-size:14px;
+                "
+            >
+                ${this.escapeHTML(
+                    selectedEventAnalysis.risk
+                )}
+            </strong>
+        </div>
+    </div>
+
+    <div
+        style="
+            margin-top:14px;
+            padding-top:14px;
+            border-top:1px solid rgba(255,255,255,.06);
+        "
+    >
+        <div
+            style="
+                color:var(--muted);
+                font-size:11px;
+                margin-bottom:6px;
+            "
+        >
+            Öneri
+        </div>
+
+        <div
+            style="
+                line-height:1.65;
+                font-size:13px;
+            "
+        >
+            ${this.escapeHTML(
+                selectedEventAnalysis.suggestion
+            )}
+        </div>
+    </div>
+</div>
+
+                    <div
                         style="
                             margin-top:22px;
                             padding-top:18px;
@@ -887,6 +1323,42 @@ const recentEvents =
                             font-size:13px;
                         "
                     >
+
+                    <div
+    style="
+        margin-top:14px;
+        padding:16px;
+        border-radius:18px;
+        background:rgba(245,215,150,.055);
+        border:1px solid rgba(245,215,150,.14);
+    "
+>
+    <div
+        style="
+            color:var(--muted);
+            font-size:11px;
+        "
+    >
+        Gelecek Etkisi
+    </div>
+
+    <strong
+        style="
+            display:block;
+            margin-top:7px;
+            font-size:15px;
+            line-height:1.6;
+        "
+    >
+        ${
+            selectedEventAnalysis.impact === "Kritik"
+                ? "Bu olay gelecekte birden fazla organı doğrudan etkileyebilir."
+                : selectedEventAnalysis.impact === "Yüksek"
+                    ? "Bu olay sonraki kararları ve gelişim yönünü belirleyebilir."
+                    : "Bu olay yaşam akışında izlenmesi gereken bir kayıt oluşturur."
+        }
+    </strong>
+</div>
                         <div>
                             Tarih:
                             <strong style="color:var(--text);">
@@ -919,6 +1391,108 @@ const recentEvents =
                             </strong>
                         </div>
                     </div>
+                    <div>
+    Etkilenen Organlar:
+    <strong style="color:var(--text);">
+        ${
+            (selectedEvent.organs || []).length
+    ? selectedEvent.organs
+        .map(id => this.getOrganLabel(id))
+        .join(", ")
+    : "Yok"
+        }
+    </strong>
+</div>
+
+<div
+    style="
+        margin-top:14px;
+        display:grid;
+        grid-template-columns:1fr 1fr;
+        gap:10px;
+    "
+>
+    <div
+    data-action="evolution:linked:open"
+    data-target="timeline"
+    style="
+        padding:14px;
+        border-radius:16px;
+        background:rgba(255,255,255,.035);
+        border:1px solid rgba(255,255,255,.06);
+        cursor:pointer;
+    "
+>
+        <div
+            style="
+                color:var(--muted);
+                font-size:11px;
+            "
+        >
+            Timeline Bağlantısı
+        </div>
+
+        <strong
+            style="
+                display:block;
+                margin-top:5px;
+                font-size:20px;
+            "
+        >
+            ${
+                this.getLinkedRecordCounts(
+                    selectedEvent
+                ).timeline
+            }
+        </strong>
+    </div>
+
+    <div
+    data-action="evolution:linked:open"
+    data-target="memory"
+    style="
+        padding:14px;
+        border-radius:16px;
+        background:rgba(255,255,255,.035);
+        border:1px solid rgba(255,255,255,.06);
+        cursor:pointer;
+    "
+>
+        <div
+            style="
+                color:var(--muted);
+                font-size:11px;
+            "
+        >
+            Hafıza Bağlantısı
+        </div>
+
+        <strong
+            style="
+                display:block;
+                margin-top:5px;
+                font-size:20px;
+            "
+        >
+            ${
+                this.getLinkedRecordCounts(
+                    selectedEvent
+                ).memory
+            }
+        </strong>
+    </div>
+</div>
+
+<div>
+    Etkilenen Kimlikler:
+    <strong style="color:var(--text);">
+        ${
+            (selectedEvent.identities || []).length
+                ? selectedEvent.identities.join(", ")
+                : "Yok"
+        }
+    </strong>
+</div>
                 </section>
             </div>
         `
