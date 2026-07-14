@@ -49,6 +49,34 @@ const MemorySystem = {
 
     });
 
+        events.on("life-event:updated", (lifeEvent) => {
+
+    if(!lifeEvent || !lifeEvent.id){
+        return;
+    }
+
+    const linkedRecord = this.records.find(record =>
+        record.payload &&
+        record.payload.sourceEventId === lifeEvent.id
+    );
+
+    if(!linkedRecord){
+        return;
+    }
+
+    linkedRecord.payload.title =
+        lifeEvent.title ||
+        linkedRecord.payload.title;
+
+    linkedRecord.payload.importance =
+        lifeEvent.importance ||
+        linkedRecord.payload.importance;
+
+    linkedRecord.updatedAt = Date.now();
+
+    this.save();
+
+});
     events.on("life-event:removed", () => {
 
         this.cleanOrphanLifeEvents();
