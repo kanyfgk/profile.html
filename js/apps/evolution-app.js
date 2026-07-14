@@ -547,7 +547,7 @@ if(event.organs?.includes("timeline")){
     getOrganLabel(id){
 
     const organ = OrganRegistry.find(id);
-
+ 
     if(organ){
         return `${organ.icon} ${organ.title}`;
     }
