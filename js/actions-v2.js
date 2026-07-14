@@ -2246,6 +2246,23 @@ document.addEventListener("click", event => {
     Actions.openEntityPage("evolution");
 }
 
+    if(action === "evolution:filter"){
+
+    if(
+        window.EvolutionApp &&
+        typeof EvolutionApp.setFilter === "function"
+    ){
+        EvolutionApp.setFilter(
+            button.dataset.filter
+        );
+
+        VAERO.engine.mount(
+            VAERO.engine.currentEntity
+        );
+    }
+
+}
+
     if(action === "entity:settings"){
         Actions.openEntityPage("settings");
     }
