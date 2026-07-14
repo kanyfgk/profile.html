@@ -158,16 +158,22 @@ clearSelectedEvent(){
 
     const directXP = Number(event.xp);
 
-    if(Number.isFinite(directXP)){
-        return Math.max(0, directXP);
+    if(
+        Number.isFinite(directXP) &&
+        directXP > 0
+    ){
+        return directXP;
     }
 
     const payloadXP = Number(
         event.payload?.xp
     );
 
-    if(Number.isFinite(payloadXP)){
-        return Math.max(0, payloadXP);
+    if(
+        Number.isFinite(payloadXP) &&
+        payloadXP > 0
+    ){
+        return payloadXP;
     }
 
     const importanceXP = {
@@ -318,9 +324,16 @@ clearSelectedEvent(){
 getAffectedOrgans(event = {}){
 
     const organs = new Set(
-        Array.isArray(event.organs)
+        (Array.isArray(event.organs)
             ? event.organs
             : []
+        )
+            .map(value =>
+                String(value || "")
+                    .trim()
+                    .toLowerCase()
+            )
+            .filter(Boolean)
     );
 
     const searchableText = [
@@ -1359,21 +1372,22 @@ const recentEvents =
             "
         >
             ${this.getAffectedOrgans(selectedEvent)
-                .map(organ => `
-                    <span
-                        style="
-                            padding:8px 11px;
-                            border-radius:999px;
-                            background:rgba(255,255,255,.04);
-                            border:1px solid rgba(255,255,255,.07);
-                            font-size:12px;
-                        "
-                    >
-                        ${organ.icon}
-                        ${this.escapeHTML(organ.label)}
-                    </span>
-                `)
-                .join("")}
+    .map(id => `
+        <span
+            style="
+                padding:8px 11px;
+                border-radius:999px;
+                background:rgba(255,255,255,.04);
+                border:1px solid rgba(255,255,255,.07);
+                font-size:12px;
+            "
+        >
+            ${this.escapeHTML(
+                this.getOrganLabel(id)
+            )}
+        </span>
+    `)
+    .join("")}
         </div>
     </div>
 </div>
