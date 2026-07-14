@@ -383,3 +383,94 @@
     }
 
 }
+
+/* Welcome v1 mobile composition fix */
+
+.vaero-welcome-screen{
+    overflow:hidden;
+}
+
+.welcome-content{
+    height:100svh;
+    min-height:0;
+    overflow:hidden;
+    padding:
+        calc(24px + env(safe-area-inset-top))
+        24px
+        calc(18px + env(safe-area-inset-bottom));
+}
+
+.welcome-brand{
+    margin-top:74px;
+}
+
+.welcome-message{
+    margin-top:92px;
+}
+
+.welcome-message h1{
+    font-size:clamp(35px, 8.7vw, 48px);
+}
+
+.welcome-message p{
+    margin-top:20px;
+    font-size:15px;
+    line-height:1.65;
+}
+
+.welcome-planet{
+    width:145%;
+    height:270px;
+    aspect-ratio:auto;
+    margin:
+        28px
+        -22.5%
+        0;
+    flex:0 0 270px;
+    border-radius:50% 50% 0 0 / 34% 34% 0 0;
+}
+
+.welcome-actions{
+    margin-top:22px;
+    padding-top:0;
+}
+
+.welcome-primary,
+.welcome-secondary{
+    min-height:58px;
+}
+
+.welcome-divider{
+    margin:17px 0;
+}
+
+.welcome-security{
+    margin-top:18px;
+}
+
+@media (max-height:780px){
+
+    .welcome-brand{
+        margin-top:42px;
+    }
+
+    .welcome-message{
+        margin-top:58px;
+    }
+
+    .welcome-planet{
+        height:220px;
+        flex-basis:220px;
+        margin-top:20px;
+    }
+
+    .welcome-actions{
+        margin-top:16px;
+    }
+
+    .welcome-primary,
+    .welcome-secondary{
+        min-height:54px;
+    }
+
+}
