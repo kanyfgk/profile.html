@@ -5,18 +5,19 @@ const Evolution = {
     storageKey: "vaero:evolution:events",
 
     eventTypes: [
-        "achievement",
-        "decision",
-        "failure",
-        "relationship",
-        "work",
-        "health",
-        "finance",
-        "location",
-        "goal",
-        "milestone",
-        "general"
-    ],
+    "achievement",
+    "decision",
+    "failure",
+    "relationship",
+    "work",
+    "health",
+    "finance",
+    "location",
+    "goal",
+    "milestone",
+    "engine:start",
+    "general"
+],
 
     eventStatuses: [
         "planned",
