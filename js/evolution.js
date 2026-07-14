@@ -33,17 +33,45 @@ const Evolution = {
         "critical"
     ],
 
+    cleanupLegacyEngineStarts(){
+
+    const beforeCount = this.history.length;
+
+    this.history = this.history.filter(event =>
+        !(
+            event.type === "general" &&
+            event.title ===
+                "VAERO Engine started with root entity"
+        )
+    );
+
+    const removedCount =
+        beforeCount - this.history.length;
+
+    if(
+        removedCount > 0 &&
+        typeof this.save === "function"
+    ){
+        this.save();
+    }
+
+    return removedCount;
+
+},
+
     init(){
 
-        this.load();
+    this.load();
 
-        VAERO.emit("evolution:ready", {
-            count: this.history.length
-        });
+    this.cleanupLegacyEngineStarts();
 
-        return this;
+    VAERO.emit("evolution:ready", {
+        count: this.history.length
+    });
 
-    },
+    return this;
+
+},
 
     createId(){
 
