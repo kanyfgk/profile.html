@@ -239,6 +239,35 @@ const Evolution = {
                 safePayload.effects
             ),
 
+            xp: Math.max(
+    0,
+    Number(safePayload.xp) || 0
+),
+
+organs: Array.isArray(safePayload.organs)
+    ? [...new Set(
+        safePayload.organs
+            .map(value =>
+                String(value || "")
+                    .trim()
+                    .toLowerCase()
+            )
+            .filter(Boolean)
+    )]
+    : [],
+
+identities: Array.isArray(
+    safePayload.identities
+)
+    ? [...new Set(
+        safePayload.identities
+            .map(value =>
+                String(value || "").trim()
+            )
+            .filter(Boolean)
+    )]
+    : [],
+
             occurredAt:
                 safePayload.occurredAt || now,
 
@@ -488,9 +517,19 @@ publishLifeEvent(event){
                 Date.now(),
 
             effects: {
-                ...analysis.effects,
-                ...(data.effects || {})
-            }
+    ...analysis.effects,
+    ...(data.effects || {})
+},
+
+xp: Number(data.xp) || 0,
+
+organs: Array.isArray(data.organs)
+    ? data.organs
+    : [],
+
+identities: Array.isArray(data.identities)
+    ? data.identities
+    : []
         }
     );
 
@@ -552,6 +591,39 @@ publishLifeEvent(event){
             );
         }
 
+        if(changes.xp !== undefined){
+    event.xp = Math.max(
+        0,
+        Number(changes.xp) || 0
+    );
+}
+
+if(changes.organs !== undefined){
+    event.organs = Array.isArray(changes.organs)
+        ? [...new Set(
+            changes.organs
+                .map(value =>
+                    String(value || "")
+                        .trim()
+                        .toLowerCase()
+                )
+                .filter(Boolean)
+        )]
+        : [];
+}
+
+if(changes.identities !== undefined){
+    event.identities = Array.isArray(changes.identities)
+        ? [...new Set(
+            changes.identities
+                .map(value =>
+                    String(value || "").trim()
+                )
+                .filter(Boolean)
+        )]
+        : [];
+}
+
         if(changes.relatedEntityId !== undefined){
             event.relatedEntityId =
                 changes.relatedEntityId || null;
@@ -571,6 +643,18 @@ publishLifeEvent(event){
 
         this.sort();
         this.save();
+
+        const events = VAERO.get("events");
+
+if(
+    events &&
+    typeof events.emit === "function"
+){
+    events.emit(
+        "life-event:updated",
+        event
+    );
+}
 
         VAERO.emit("evolution:updated", event);
 
