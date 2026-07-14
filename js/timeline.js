@@ -56,30 +56,30 @@ const Timeline = {
 
         events.on("life-event:created", (lifeEvent) => {
 
-            if(!lifeEvent || !lifeEvent.id){
-                return;
-            }
+    if(!lifeEvent || !lifeEvent.id){
+        return;
+    }
 
-            const alreadyExists = this.events.some(event =>
-                event.payload &&
-                event.payload.sourceEventId === lifeEvent.id
-            );
+    const alreadyExists = this.events.some(event =>
+        event.payload &&
+        event.payload.sourceEventId === lifeEvent.id
+    );
 
-            if(alreadyExists){
-                return;
-            }
+    if(alreadyExists){
+        return;
+    }
 
-            this.add(
-                "life-event",
-                lifeEvent.title || "Yaşam Olayı",
-                {
-                    sourceEventId: lifeEvent.id
-                }
-            );
+    this.add(
+        "life-event",
+        lifeEvent.title || "Yaşam Olayı",
+        {
+            sourceEventId: lifeEvent.id
+        }
+    );
 
-        });
+});
 
-        events.on("life-event:updated", (lifeEvent) => {
+events.on("life-event:updated", (lifeEvent) => {
 
     if(!lifeEvent || !lifeEvent.id){
         return;
@@ -103,47 +103,62 @@ const Timeline = {
 
 });
 
-        events.on("life-event:removed", () => {
+events.on("life-event:removed", (lifeEvent) => {
 
-            this.cleanOrphanLifeEvents();
+    if(!lifeEvent || !lifeEvent.id){
+        this.cleanOrphanLifeEvents();
+        return;
+    }
 
-        });
+    const previousLength = this.events.length;
 
-    },
+    this.events = this.events.filter(event =>
+        !(
+            event.payload &&
+            event.payload.sourceEventId === lifeEvent.id
+        )
+    );
 
-    createId(){
-
-        if(
-            typeof crypto !== "undefined" &&
-            typeof crypto.randomUUID === "function"
-        ){
-            return crypto.randomUUID();
-        }
-
-        return `timeline_${Date.now()}_${Math.random()
-            .toString(36)
-            .slice(2, 10)}`;
-
-    },
-
-    add(type, title, payload = {}){
-
-        const event = {
-            id: this.createId(),
-            type,
-            title,
-            payload,
-            createdAt: Date.now()
-        };
-
-        this.events.push(event);
-
+    if(this.events.length !== previousLength){
         this.save();
+    }
 
-        return event;
+});
 
-    },
+},
 
+createId(){
+
+    if(
+        typeof crypto !== "undefined" &&
+        typeof crypto.randomUUID === "function"
+    ){
+        return crypto.randomUUID();
+    }
+
+    return `timeline_${Date.now()}_${Math.random()
+        .toString(36)
+        .slice(2, 10)}`;
+
+},
+
+add(type, title, payload = {}){
+
+    const event = {
+        id: this.createId(),
+        type,
+        title,
+        payload,
+        createdAt: Date.now()
+    };
+
+    this.events.push(event);
+
+    this.save();
+
+    return event;
+
+},
     resolveLifeEvent(timelineEvent){
 
         if(
