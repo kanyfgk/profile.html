@@ -79,6 +79,30 @@ const Timeline = {
 
         });
 
+        events.on("life-event:updated", (lifeEvent) => {
+
+    if(!lifeEvent || !lifeEvent.id){
+        return;
+    }
+
+    const linkedEvent = this.events.find(event =>
+        event.payload &&
+        event.payload.sourceEventId === lifeEvent.id
+    );
+
+    if(!linkedEvent){
+        return;
+    }
+
+    linkedEvent.title =
+        lifeEvent.title || linkedEvent.title;
+
+    linkedEvent.updatedAt = Date.now();
+
+    this.save();
+
+});
+
         events.on("life-event:removed", () => {
 
             this.cleanOrphanLifeEvents();
