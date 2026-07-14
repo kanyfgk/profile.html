@@ -59,11 +59,54 @@ const Evolution = {
 
 },
 
+    migrateLegacyEvents(){
+
+    let changed = false;
+
+    this.history = this.history.map(event => {
+
+        const migratedEvent = {
+            ...event
+        };
+
+        if(!Number.isFinite(Number(migratedEvent.xp))){
+            migratedEvent.xp = 0;
+            changed = true;
+        }
+
+        if(!Array.isArray(migratedEvent.organs)){
+            migratedEvent.organs = [];
+            changed = true;
+        }
+
+        if(!Array.isArray(migratedEvent.identities)){
+            migratedEvent.identities = [];
+            changed = true;
+        }
+
+        if(!migratedEvent.payload || typeof migratedEvent.payload !== "object"){
+            migratedEvent.payload = {};
+            changed = true;
+        }
+
+        return migratedEvent;
+
+    });
+
+    if(changed){
+        this.save();
+    }
+
+    return changed;
+
+},
+
     init(){
 
     this.load();
 
     this.cleanupLegacyEngineStarts();
+    this.migrateLegacyEvents();
 
     VAERO.emit("evolution:ready", {
         count: this.history.length
@@ -72,7 +115,6 @@ const Evolution = {
     return this;
 
 },
-
     createId(){
 
         if(
@@ -191,103 +233,108 @@ const Evolution = {
 
     record(type, description, payload = {}){
 
-        const safePayload =
-            payload &&
-            typeof payload === "object" &&
-            !Array.isArray(payload)
-                ? payload
-                : {};
+    const safePayload =
+        payload &&
+        typeof payload === "object" &&
+        !Array.isArray(payload)
+            ? payload
+            : {};
 
-        const now = Date.now();
+    const now = Date.now();
 
-        const event = {
-            id: this.createId(),
+    const event = {
+        id: this.createId(),
 
-            type: this.normalizeType(type),
+        type: this.normalizeType(type),
 
-            title: String(
-                safePayload.title ||
-                description ||
-                "Yaşam olayı"
-            ).trim(),
+        title: String(
+            safePayload.title ||
+            description ||
+            "Yaşam olayı"
+        ).trim(),
 
-            description: String(description || "").trim(),
+        description: String(
+            description || ""
+        ).trim(),
 
-            status: this.normalizeStatus(
-                safePayload.status
-            ),
+        status: this.normalizeStatus(
+            safePayload.status
+        ),
 
-            importance: this.normalizeImportance(
-                safePayload.importance
-            ),
+        importance: this.normalizeImportance(
+            safePayload.importance
+        ),
 
-            source: String(
-                safePayload.source || "user"
-            ).trim(),
+        source: String(
+            safePayload.source || "user"
+        ).trim(),
 
-            tags: this.normalizeTags(
-                safePayload.tags
-            ),
+        tags: this.normalizeTags(
+            safePayload.tags
+        ),
 
-            relatedEntityId:
-                safePayload.relatedEntityId || null,
+        relatedEntityId:
+            safePayload.relatedEntityId || null,
 
-            relatedWorldId:
-                safePayload.relatedWorldId || null,
+        relatedWorldId:
+            safePayload.relatedWorldId || null,
 
-            effects: this.normalizeEffects(
-                safePayload.effects
-            ),
+        effects: this.normalizeEffects(
+            safePayload.effects
+        ),
 
-            xp: Math.max(
-    0,
-    Number(safePayload.xp) || 0
-),
+        xp: Math.max(
+            0,
+            Number(safePayload.xp) || 0
+        ),
 
-organs: Array.isArray(safePayload.organs)
-    ? [...new Set(
-        safePayload.organs
-            .map(value =>
-                String(value || "")
-                    .trim()
-                    .toLowerCase()
-            )
-            .filter(Boolean)
-    )]
-    : [],
+        organs: Array.isArray(safePayload.organs)
+            ? [...new Set(
+                safePayload.organs
+                    .map(value =>
+                        String(value || "")
+                            .trim()
+                            .toLowerCase()
+                    )
+                    .filter(Boolean)
+            )]
+            : [],
 
-identities: Array.isArray(
-    safePayload.identities
-)
-    ? [...new Set(
-        safePayload.identities
-            .map(value =>
-                String(value || "").trim()
-            )
-            .filter(Boolean)
-    )]
-    : [],
+        identities: Array.isArray(
+            safePayload.identities
+        )
+            ? [...new Set(
+                safePayload.identities
+                    .map(value =>
+                        String(value || "").trim()
+                    )
+                    .filter(Boolean)
+            )]
+            : [],
 
-            occurredAt:
-                safePayload.occurredAt || now,
+        occurredAt:
+            safePayload.occurredAt || now,
 
-            createdAt: now,
+        createdAt: now,
 
-            updatedAt: now,
+        updatedAt: now,
 
-            payload: safePayload
-        };
+        payload: safePayload
+    };
 
-        this.history.push(event);
+    this.history.push(event);
 
-        this.sort();
-        this.save();
+    this.sort();
+    this.save();
 
-        VAERO.emit("evolution:recorded", event);
+    VAERO.emit(
+        "evolution:recorded",
+        event
+    );
 
-        return event;
+    return event;
 
-    },
+},
     
 
     analyzeLifeEvent(data = {}){
@@ -393,6 +440,82 @@ identities: Array.isArray(
 
 },
 
+    inferAffectedOrgans(data = {}, analysis = {}){
+
+    const organs = new Set(
+        (Array.isArray(data.organs)
+            ? data.organs
+            : []
+        )
+            .map(value =>
+                String(value || "")
+                    .trim()
+                    .toLowerCase()
+            )
+            .filter(Boolean)
+    );
+
+    const analysisType = String(
+        analysis.type || ""
+    )
+        .trim()
+        .toLowerCase();
+
+    const importance = this.normalizeImportance(
+        data.importance
+    );
+
+    const text = this.normalizeText(
+        [
+            data.type,
+            analysisType,
+            data.title,
+            data.description
+        ]
+            .filter(Boolean)
+            .join(" ")
+    );
+
+    organs.add("timeline");
+    organs.add("memory");
+
+    if(
+        text.includes("kimlik") ||
+        text.includes("identity") ||
+        text.includes("dogrulama")
+    ){
+        organs.add("identity");
+    }
+
+    if(
+        text.includes("profil") ||
+        text.includes("profile")
+    ){
+        organs.add("profile");
+    }
+
+    if(
+        text.includes("bridge") ||
+        text.includes("kopru") ||
+        text.includes("baglanti") ||
+        analysisType === "relationship"
+    ){
+        organs.add("bridge");
+    }
+
+    if(
+        analysisType === "achievement" ||
+        analysisType === "decision" ||
+        importance === "high" ||
+        importance === "critical"
+    ){
+        organs.add("brain");
+    }
+
+    return [...organs];
+
+}, 
+
     validateLifeEvent(data = {}){
 
     const title = String(
@@ -436,15 +559,19 @@ publishLifeEvent(event){
         return false;
     }
 
+    const importance = this.normalizeImportance(
+    event.importance
+);
+    
     events.emit("life-event:created", event);
 
-    if(event.importance === "high"){
-        events.emit("life-event:important", event);
-    }
+    if(importance === "high"){
+    events.emit("life-event:important", event);
+}
 
-    if(event.importance === "critical"){
-        events.emit("life-event:critical", event);
-    }
+if(importance === "critical"){
+    events.emit("life-event:critical", event);
+}
 
     return true;
 
@@ -523,22 +650,20 @@ publishLifeEvent(event){
 
 xp: Number(data.xp) || 0,
 
-organs: Array.isArray(data.organs)
-    ? data.organs
-    : [],
+organs: this.inferAffectedOrgans(
+    data,
+    analysis
+),
 
 identities: Array.isArray(data.identities)
     ? data.identities
     : []
-        }
-    );
+});
 
-    this.publishLifeEvent(event);
+this.publishLifeEvent(event);
 
-    return event;
-
+return event;
 },
-
     update(eventId, changes = {}){
 
         const event = this.find(eventId);
@@ -592,38 +717,37 @@ identities: Array.isArray(data.identities)
         }
 
         if(changes.xp !== undefined){
-    event.xp = Math.max(
-        0,
-        Number(changes.xp) || 0
-    );
-}
+            event.xp = Math.max(
+                0,
+                Number(changes.xp) || 0
+            );
+        }
 
-if(changes.organs !== undefined){
-    event.organs = Array.isArray(changes.organs)
-        ? [...new Set(
-            changes.organs
-                .map(value =>
-                    String(value || "")
-                        .trim()
-                        .toLowerCase()
-                )
-                .filter(Boolean)
-        )]
-        : [];
-}
+        if(changes.organs !== undefined){
+            event.organs = Array.isArray(changes.organs)
+                ? [...new Set(
+                    changes.organs
+                        .map(value =>
+                            String(value || "")
+                                .trim()
+                                .toLowerCase()
+                        )
+                        .filter(Boolean)
+                )]
+                : [];
+        }
 
-if(changes.identities !== undefined){
-    event.identities = Array.isArray(changes.identities)
-        ? [...new Set(
-            changes.identities
-                .map(value =>
-                    String(value || "").trim()
-                )
-                .filter(Boolean)
-        )]
-        : [];
-}
-
+        if(changes.identities !== undefined){
+            event.identities = Array.isArray(changes.identities)
+                ? [...new Set(
+                    changes.identities
+                        .map(value =>
+                            String(value || "").trim()
+                        )
+                        .filter(Boolean)
+                )]
+                : [];
+        }
         if(changes.relatedEntityId !== undefined){
             event.relatedEntityId =
                 changes.relatedEntityId || null;
@@ -646,15 +770,15 @@ if(changes.identities !== undefined){
 
         const events = VAERO.get("events");
 
-if(
-    events &&
-    typeof events.emit === "function"
-){
-    events.emit(
-        "life-event:updated",
-        event
-    );
-}
+        if(
+            events &&
+            typeof events.emit === "function"
+        ){
+            events.emit(
+                "life-event:updated",
+                event
+            );
+        }
 
         VAERO.emit("evolution:updated", event);
 
