@@ -19,6 +19,25 @@ const EvolutionApp = {
 
     },
 
+    selectedEventId: null,
+
+selectEvent(eventId){
+
+    this.selectedEventId =
+        String(eventId || "").trim() || null;
+
+    return this.selectedEventId;
+
+},
+
+clearSelectedEvent(){
+
+    this.selectedEventId = null;
+
+    return true;
+
+},
+
     filterEvents(events = []){
 
         if(!Array.isArray(events)){
@@ -191,6 +210,8 @@ const EvolutionApp = {
         return `
             <article
                 class="card evolution-event-card"
+                data-action="evolution:event:open"
+data-event-id="${event.id}"
                 style="
                     ${Theme.card}
                     padding:18px;
@@ -344,6 +365,13 @@ const EvolutionApp = {
             typeof evolution.all === "function"
                 ? evolution.all()
                 : [];
+
+        const selectedEvent =
+    this.selectedEventId &&
+    evolution &&
+    typeof evolution.find === "function"
+        ? evolution.find(this.selectedEventId)
+        : null;
 
         const importantCount =
             events.filter(event =>
@@ -712,6 +740,190 @@ const recentEvents =
                             `
                     }
                 </section>
+                ${
+    selectedEvent
+        ? `
+            <div
+                style="
+                    position:fixed;
+                    inset:0;
+                    z-index:9998;
+                    background:rgba(2,8,18,.78);
+                    backdrop-filter:blur(14px);
+                    display:flex;
+                    align-items:flex-end;
+                    justify-content:center;
+                    padding:18px;
+                "
+            >
+                <section
+                    class="card"
+                    style="
+                        ${Theme.card}
+                        width:min(100%,620px);
+                        max-height:82vh;
+                        overflow:auto;
+                        padding:24px;
+                        border-radius:26px 26px 18px 18px;
+                    "
+                >
+                    <div
+                        style="
+                            display:flex;
+                            justify-content:space-between;
+                            gap:16px;
+                            align-items:flex-start;
+                        "
+                    >
+                        <div>
+                            <div class="eyebrow">
+                                YAŞAM OLAYI
+                            </div>
+
+                            <h2 style="margin-top:8px;">
+                                ${this.escapeHTML(
+                                    selectedEvent.title ||
+                                    "Yaşam olayı"
+                                )}
+                            </h2>
+                        </div>
+
+                        <button
+                            data-action="evolution:event:close"
+                            style="
+                                width:40px;
+                                height:40px;
+                                border-radius:50%;
+                                border:1px solid rgba(255,255,255,.09);
+                                background:rgba(255,255,255,.04);
+                                color:var(--text);
+                                cursor:pointer;
+                                font-size:18px;
+                            "
+                        >
+                            ×
+                        </button>
+                    </div>
+
+                    <div
+                        style="
+                            display:flex;
+                            gap:8px;
+                            flex-wrap:wrap;
+                            margin-top:16px;
+                        "
+                    >
+                        <span
+                            style="
+                                padding:7px 10px;
+                                border-radius:999px;
+                                background:rgba(255,255,255,.04);
+                                color:var(--muted);
+                                font-size:12px;
+                            "
+                        >
+                            ${this.escapeHTML(
+                                this.getTypeLabel(
+                                    selectedEvent.type
+                                )
+                            )}
+                        </span>
+
+                        <span
+                            style="
+                                padding:7px 10px;
+                                border-radius:999px;
+                                border:1px solid ${
+                                    this.getImportanceColor(
+                                        selectedEvent.importance
+                                    )
+                                };
+                                color:${
+                                    this.getImportanceColor(
+                                        selectedEvent.importance
+                                    )
+                                };
+                                font-size:12px;
+                            "
+                        >
+                            ${this.escapeHTML(
+                                this.getImportanceLabel(
+                                    selectedEvent.importance
+                                )
+                            )}
+                        </span>
+                    </div>
+
+                    ${
+                        selectedEvent.description
+                            ? `
+                                <p
+                                    style="
+                                        margin-top:18px;
+                                        color:var(--muted);
+                                        line-height:1.75;
+                                    "
+                                >
+                                    ${this.escapeHTML(
+                                        selectedEvent.description
+                                    )}
+                                </p>
+                            `
+                            : ""
+                    }
+
+                    ${this.renderEffects(
+                        selectedEvent.effects
+                    )}
+
+                    <div
+                        style="
+                            margin-top:22px;
+                            padding-top:18px;
+                            border-top:1px solid rgba(255,255,255,.06);
+                            display:grid;
+                            gap:10px;
+                            color:var(--muted);
+                            font-size:13px;
+                        "
+                    >
+                        <div>
+                            Tarih:
+                            <strong style="color:var(--text);">
+                                ${this.escapeHTML(
+                                    this.formatDate(
+                                        selectedEvent.occurredAt ||
+                                        selectedEvent.createdAt
+                                    )
+                                )}
+                            </strong>
+                        </div>
+
+                        <div>
+                            Durum:
+                            <strong style="color:var(--text);">
+                                ${this.escapeHTML(
+                                    selectedEvent.status ||
+                                    "completed"
+                                )}
+                            </strong>
+                        </div>
+
+                        <div>
+                            Kaynak:
+                            <strong style="color:var(--text);">
+                                ${this.escapeHTML(
+                                    selectedEvent.source ||
+                                    "user"
+                                )}
+                            </strong>
+                        </div>
+                    </div>
+                </section>
+            </div>
+        `
+        : ""
+}
             </div>
         `;
 
