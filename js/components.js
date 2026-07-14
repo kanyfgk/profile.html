@@ -40,6 +40,9 @@ const Components = {
         case "bridge":
             return this.entityBridge(entity);
 
+        case "evolution":
+            return this.entityEvolution(entity);
+            
         case "settings":
             return this.entitySettings(entity);
 
