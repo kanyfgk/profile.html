@@ -449,6 +449,10 @@ const Components = {
     return MemoryApp.render(entity);
 },
 
+    entityEvolution(entity){
+    return EvolutionApp.render(entity);
+},
+
     entitySettings(entity){
     return SettingsApp.render(entity);
 },
