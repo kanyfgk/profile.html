@@ -61,15 +61,25 @@ const Engine = {
             entityName: vaeroEntity.name
         });
 
-        evolution.record(
-            "engine:start",
-            "VAERO Engine started with root entity",
-            {
-                entityId: vaeroEntity.id,
-                entityName: vaeroEntity.name
-            }
-        );
+        const engineStartExists =
+    evolution.all().some(event =>
+        event.type === "engine:start" &&
+        event.payload &&
+        event.payload.entityId === vaeroEntity.id
+    );
 
+if (!engineStartExists) {
+
+    evolution.record(
+        "engine:start",
+        "VAERO Engine started with root entity",
+        {
+            entityId: vaeroEntity.id,
+            entityName: vaeroEntity.name
+        }
+    );
+
+}
         if(!guardian.validate(vaeroEntity)){
             console.error("Entity rejected by Guardian");
             return;
