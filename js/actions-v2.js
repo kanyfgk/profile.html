@@ -2299,6 +2299,27 @@ if(action === "evolution:event:close"){
 
 }
 
+    if(action === "evolution:linked:open"){
+
+    const target = button.dataset.target;
+
+    if(
+        window.EvolutionApp &&
+        typeof EvolutionApp.clearSelectedEvent === "function"
+    ){
+        EvolutionApp.clearSelectedEvent();
+    }
+
+    if(target === "timeline"){
+        Actions.openEntityPage("timeline");
+    }
+
+    if(target === "memory"){
+        Actions.openEntityPage("memory");
+    }
+
+}
+
     if(action === "entity:create:first"){
         VAERO.engine.entityCreateMode = true;
         VAERO.engine.mount(VAERO.engine.currentEntity);
