@@ -57,6 +57,14 @@ OrganRegistry.register({
 });
 
 OrganRegistry.register({
+    id: "evolution",
+    icon: "🧬",
+    title: "Evolution",
+    subtitle: "Yaşam olaylarını yönet",
+    action: "entity:evolution"
+});
+
+OrganRegistry.register({
     id: "settings",
     icon: "⚙️",
     title: "Ayarlar",
