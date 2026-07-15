@@ -27,12 +27,22 @@ const WelcomeApp = {
         }
 
         screen.classList.add(
-            "is-closing"
+            "is-entering"
         );
 
         window.setTimeout(() => {
+
+            screen.classList.add(
+                "is-closing"
+            );
+
+        }, 700);
+
+        window.setTimeout(() => {
+
             screen.remove();
-        }, 450);
+
+        }, 1200);
 
     },
 
@@ -59,6 +69,23 @@ const WelcomeApp = {
         screen.innerHTML = `
             <div class="welcome-stars"></div>
 
+            <div
+                class="welcome-scene"
+                aria-hidden="true"
+            >
+                <picture>
+                    <source
+                        media="(max-width: 768px)"
+                        srcset="assets/welcome/vaero-earth-mobile.webp"
+                    >
+
+                    <img
+                        src="assets/welcome/vaero-earth.webp"
+                        alt=""
+                    >
+                </picture>
+            </div>
+
             <main class="welcome-content">
 
                 <div class="welcome-brand">
@@ -67,8 +94,10 @@ const WelcomeApp = {
                 </div>
 
                 <section class="welcome-message">
+
                     <h1>
                         Varlıkların Zekası.
+
                         <span>
                             Seninle Evrilecek.
                         </span>
@@ -79,20 +108,8 @@ const WelcomeApp = {
                         deneyimlerinden öğren
                         ve seninle birlikte geliş.
                     </p>
-                </section>
 
-                <div class="welcome-planet" aria-hidden="true">
-    <picture>
-        <source
-            media="(max-width: 768px)"
-            srcset="assets/welcome/vaero-earth-mobile.webp"
-        >
-        <img
-            src="assets/welcome/vaero-earth.webp"
-            alt=""
-        >
-    </picture>
-</div>
+                </section>
 
                 <section class="welcome-actions">
 
@@ -145,13 +162,14 @@ const WelcomeApp = {
                     return;
                 }
 
-                /*
-                 * v1 sürümünde iki buton da
-                 * mevcut Engine'e giriş yapar.
-                 *
-                 * Kimlik doğrulama geldiğinde
-                 * login action ayrı akışa bağlanacak.
-                 */
+                if(
+                    screen.classList.contains(
+                        "is-entering"
+                    )
+                ){
+                    return;
+                }
+
                 this.complete();
 
             }
@@ -171,7 +189,9 @@ const WelcomeApp = {
 
     init(){
 
-        if(document.readyState === "loading"){
+        if(
+            document.readyState === "loading"
+        ){
 
             document.addEventListener(
                 "DOMContentLoaded",
