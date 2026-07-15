@@ -67,83 +67,92 @@ const WelcomeApp = {
             "vaero-welcome-screen";
 
         screen.innerHTML = `
-            <div class="welcome-stars"></div>
+    <div class="welcome-stars"></div>
 
-            <div
-                class="welcome-scene"
-                aria-hidden="true"
+    <div
+        class="welcome-scene"
+        aria-hidden="true"
+    >
+        <picture>
+
+            <source
+                media="(max-width:768px)"
+                srcset="assets/welcome/vaero-earth-mobile.webp"
             >
-                <picture>
-                    <source
-                        media="(max-width: 768px)"
-                        srcset="assets/welcome/vaero-earth-mobile.webp"
-                    >
 
-                    <img
-                        src="assets/welcome/vaero-earth.webp"
-                        alt=""
-                    >
-                </picture>
+            <img
+                src="assets/welcome/vaero-earth.webp"
+                alt=""
+            >
+
+        </picture>
+    </div>
+
+    <div class="welcome-layout">
+
+        <section class="welcome-left">
+
+            <div class="welcome-brand">
+                <strong>VAERO</strong>
+                <span>ENGINE</span>
             </div>
 
-            <main class="welcome-content">
+            <section class="welcome-message">
 
-                <div class="welcome-brand">
-                    <strong>VAERO</strong>
-                    <span>ENGINE</span>
+                <h1>
+                    Varlıkların Zekası.
+                    <span>
+                        Seninle Evrilecek.
+                    </span>
+                </h1>
+
+                <p>
+                    Varlıklarını yönet,
+                    deneyimlerinden öğren
+                    ve seninle birlikte geliş.
+                </p>
+
+            </section>
+
+        </section>
+
+        <section class="welcome-right">
+
+            <section class="welcome-actions">
+
+                <button
+                    type="button"
+                    class="welcome-primary"
+                    data-welcome-action="start"
+                >
+                    Başla
+                </button>
+
+                <div class="welcome-divider">
+                    <span></span>
+                    <small>veya</small>
+                    <span></span>
                 </div>
 
-                <section class="welcome-message">
+                <button
+                    type="button"
+                    class="welcome-secondary"
+                    data-welcome-action="login"
+                >
+                    Hesabım Var
+                </button>
 
-                    <h1>
-                        Varlıkların Zekası.
+                <p class="welcome-security">
+                    🔒 Güvenli. Özel.
+                    Senin kontrolünde.
+                </p>
 
-                        <span>
-                            Seninle Evrilecek.
-                        </span>
-                    </h1>
+            </section>
 
-                    <p>
-                        Varlıklarını yönet,
-                        deneyimlerinden öğren
-                        ve seninle birlikte geliş.
-                    </p>
+        </section>
 
-                </section>
-
-                <section class="welcome-actions">
-
-                    <button
-                        type="button"
-                        class="welcome-primary"
-                        data-welcome-action="start"
-                    >
-                        Başla
-                    </button>
-
-                    <div class="welcome-divider">
-                        <span></span>
-                        <small>veya</small>
-                        <span></span>
-                    </div>
-
-                    <button
-                        type="button"
-                        class="welcome-secondary"
-                        data-welcome-action="login"
-                    >
-                        Hesabım Var
-                    </button>
-
-                    <p class="welcome-security">
-                        🔒 Güvenli. Özel.
-                        Senin kontrolünde.
-                    </p>
-
-                </section>
-
-            </main>
-        `;
+    </div>
+`;
 
         document.body.appendChild(
             screen
