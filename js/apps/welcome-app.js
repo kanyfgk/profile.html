@@ -84,9 +84,7 @@ const WelcomeApp = {
                 <div
                     class="welcome-planet"
                     aria-hidden="true"
-                >
-                    <div class="welcome-sunrise"></div>
-                </div>
+                ></div>
 
                 <section class="welcome-actions">
 
