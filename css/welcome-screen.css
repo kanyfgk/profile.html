@@ -535,9 +535,36 @@
 
 @media (min-width:769px){
 
+    .vaero-welcome-screen{
+        overflow-y:auto;
+        overflow-x:hidden;
+    }
+
     .welcome-scene img{
-        object-position:center 62%;
-        transform:scale(1.08);
+        object-fit:cover;
+        object-position:center bottom;
+        transform:scale(1);
+    }
+
+    .welcome-content{
+        width:min(100%, 680px);
+        min-height:100vh;
+        padding:28px 42px 30px;
+    }
+
+    .welcome-brand{
+        margin-top:20px;
+    }
+
+    .welcome-message{
+        margin-top:42px;
+    }
+
+    .welcome-actions{
+        margin-top:38px;
+        padding-top:0;
+        padding-bottom:24px;
+        transform:none;
     }
 
 }
