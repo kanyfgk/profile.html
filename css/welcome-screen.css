@@ -159,9 +159,9 @@
 .welcome-planet{
     position:relative;
     width:100vw;
-    height:330px;
+    height:360px;
     margin-top:10px;
-    margin-bottom:-115px;
+    margin-bottom:-105px;
     margin-left:calc(50% - 50vw);
     overflow:hidden;
     z-index:1;
@@ -176,9 +176,8 @@
 
 .welcome-planet img{
     object-fit:cover;
-    object-position:center 82%;
+    object-position:center bottom;
 }
-
 .welcome-actions{
     position:relative;
     z-index:2;
