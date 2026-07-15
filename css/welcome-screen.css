@@ -536,8 +536,7 @@
 @media (min-width:769px){
 
     .vaero-welcome-screen{
-        overflow-y:auto;
-        overflow-x:hidden;
+        overflow:hidden;
     }
 
     .welcome-scene img{
@@ -548,23 +547,58 @@
 
     .welcome-content{
         width:min(100%, 680px);
-        min-height:100vh;
-        padding:28px 42px 30px;
+        height:100svh;
+        min-height:0;
+
+        padding:
+            18px
+            42px
+            18px;
     }
 
     .welcome-brand{
-        margin-top:20px;
+        margin-top:12px;
+    }
+
+    .welcome-brand strong{
+        font-size:48px;
+    }
+
+    .welcome-brand span{
+        margin-top:8px;
     }
 
     .welcome-message{
-        margin-top:42px;
+        margin-top:28px;
+    }
+
+    .welcome-message h1{
+        font-size:42px;
+    }
+
+    .welcome-message p{
+        margin-top:14px;
+        font-size:14px;
+        line-height:1.5;
     }
 
     .welcome-actions{
-        margin-top:38px;
-        padding-top:0;
-        padding-bottom:24px;
+        margin-top:24px;
+        padding:0 0 8px;
         transform:none;
+    }
+
+    .welcome-primary,
+    .welcome-secondary{
+        min-height:52px;
+    }
+
+    .welcome-divider{
+        margin:11px 0;
+    }
+
+    .welcome-security{
+        margin-top:11px;
     }
 
 }
