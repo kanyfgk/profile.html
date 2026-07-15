@@ -159,16 +159,34 @@
 .welcome-planet{
     position:relative;
     width:100vw;
-    height:48vh;
-    margin-top:28px;
+    height:300px;
+    flex:0 0 300px;
+    margin-top:24px;
     margin-left:calc(50% - 50vw);
     overflow:hidden;
 
-    background:url("../assets/welcome/vaero-earth.webp");
-    background-size:cover;
-    background-position:center bottom;
+    background-image:url("../assets/welcome/vaero-earth.webp");
     background-repeat:no-repeat;
+    background-size:100% auto;
+    background-position:center center;
 }
+
+.welcome-planet::before{
+    display:none;
+
+    content:"";
+    position:absolute;
+    inset:0;
+
+    background:
+        linear-gradient(
+            to bottom,
+            rgba(0,0,0,0) 0%,
+            rgba(0,0,0,.12) 65%,
+            rgba(0,0,0,.35) 100%
+        );
+}
+
 .welcome-planet::before{
     content:"";
     position:absolute;
@@ -410,7 +428,12 @@
 @media (max-width:768px){
 
     .welcome-planet{
+        height:280px;
+        flex-basis:280px;
+
         background-image:url("../assets/welcome/vaero-earth-mobile.webp");
+        background-size:100% auto;
+        background-position:center center;
     }
 
 }
