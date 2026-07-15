@@ -1,6 +1,6 @@
 const WelcomeApp = {
 
-    storageKey: "vaero:welcome:completed",
+    storageKey: "vaero:welcome:completed:v2",
 
     hasCompleted(){
 
