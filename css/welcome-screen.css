@@ -475,3 +475,60 @@
     }
 
 }
+
+/* Final mobile polish */
+
+@media (max-width:768px){
+
+    .welcome-message{
+        margin-top:64px;
+    }
+
+    .welcome-actions{
+        padding-top:18px;
+        transform:translateY(-8px);
+    }
+
+    .welcome-divider{
+        margin:15px 0;
+    }
+
+    .welcome-security{
+        margin-top:14px;
+    }
+
+}
+
+/* Portal transition */
+
+.vaero-welcome-screen.is-entering{
+    pointer-events:none;
+}
+
+.vaero-welcome-screen.is-entering .welcome-scene img{
+    transform:scale(1.55) translateY(-3%);
+    filter:brightness(1.22) saturate(1.05);
+}
+
+.vaero-welcome-screen.is-entering .welcome-stars{
+    opacity:0;
+    transform:scale(1.08);
+    transition:
+        opacity .45s ease,
+        transform .8s ease;
+}
+
+.vaero-welcome-screen.is-entering .welcome-brand,
+.vaero-welcome-screen.is-entering .welcome-message,
+.vaero-welcome-screen.is-entering .welcome-actions{
+    opacity:0;
+    transform:translateY(-20px) scale(.985);
+    transition:
+        opacity .38s ease,
+        transform .52s cubic-bezier(.22,.8,.2,1);
+}
+
+.vaero-welcome-screen.is-closing{
+    opacity:0;
+    transform:scale(1.02);
+}
