@@ -546,18 +546,14 @@
     }
 
     .welcome-content{
-        width:min(100%, 680px);
-        height:100svh;
-        min-height:0;
-
-        padding:
-            18px
-            42px
-            18px;
-    }
+    width:min(100%, 720px);
+    height:100vh;
+    min-height:0;
+    padding:16px 42px;
+}
 
     .welcome-brand{
-        margin-top:12px;
+        margin-top:8px;
     }
 
     .welcome-brand strong{
@@ -569,7 +565,7 @@
     }
 
     .welcome-message{
-        margin-top:28px;
+        margin-top:24px;
     }
 
     .welcome-message h1{
@@ -583,8 +579,8 @@
     }
 
     .welcome-actions{
-        margin-top:24px;
-        padding:0 0 8px;
+        margin-top:20px;
+        padding:0;
         transform:none;
     }
 
