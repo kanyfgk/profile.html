@@ -81,10 +81,18 @@ const WelcomeApp = {
                     </p>
                 </section>
 
-                <div
-                    class="welcome-planet"
-                    aria-hidden="true"
-                ></div>
+                <div class="welcome-planet" aria-hidden="true">
+    <picture>
+        <source
+            media="(max-width: 768px)"
+            srcset="assets/welcome/vaero-earth-mobile.webp"
+        >
+        <img
+            src="assets/welcome/vaero-earth.webp"
+            alt=""
+        >
+    </picture>
+</div>
 
                 <section class="welcome-actions">
 
