@@ -158,24 +158,18 @@
 
 .welcome-planet{
     position:relative;
-    width:100vw;
-    height:34vh;
-    min-height:220px;
-    max-height:330px;
 
-    margin-top:-10px;
-    margin-bottom:-35px;
+    width:100vw;
+    height:300px;
+
+    margin-top:20px;
+    margin-bottom:-90px;
     margin-left:calc(50% - 50vw);
 
-    flex:none;
-    overflow:hidden;
+    background:url("../assets/welcome/vaero-earth.webp") center bottom / cover no-repeat;
 
-    background-image:url("../assets/welcome/vaero-earth.webp");
-    background-repeat:no-repeat;
-    background-size:cover;
-    background-position:center center;
+    z-index:1;
 }
-
 .welcome-planet::before{
     display:none;
 
@@ -194,8 +188,10 @@
 
 .welcome-actions{
     width:100%;
-    margin-top:-8px;
-    padding-top:32px;
+    margin-top:0;
+    padding-top:0;
+    position:relative;
+    z-index:2;
 }
 
 .welcome-primary,
@@ -344,9 +340,8 @@
 }
 
 .welcome-content{
-    height:100svh;
-    min-height:0;
-    overflow:hidden;
+    min-height:100svh;
+    overflow:visible;
     padding:
         calc(24px + env(safe-area-inset-top))
         24px
@@ -419,18 +414,13 @@
 @media (max-width:768px){
 
     .welcome-planet{
-        width:calc(100% + 48px);
-        height:245px;
-        flex-basis:245px;
-        margin:
-            20px
-            -24px
-            0;
 
-        background-image:
-            url("../assets/welcome/vaero-earth-mobile.webp");
+        height:280px;
+        margin-bottom:-80px;
+
+        background-image:url("../assets/welcome/vaero-earth-mobile.webp");
         background-size:cover;
-        background-position:center 64%;
+        background-position:center bottom;
     }
 
 }
