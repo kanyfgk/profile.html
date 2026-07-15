@@ -160,13 +160,18 @@
     position:relative;
 
     width:100vw;
-    height:300px;
+    height:420px;
 
-    margin-top:20px;
-    margin-bottom:-90px;
+    margin-top:-30px;
+    margin-bottom:-200px;
     margin-left:calc(50% - 50vw);
 
-    background:url("../assets/welcome/vaero-earth.webp") center bottom / cover no-repeat;
+    overflow:hidden;
+
+    background-image:url("../assets/welcome/vaero-earth-mobile.webp");
+    background-repeat:no-repeat;
+    background-size:100% auto;
+    background-position:center bottom;
 
     z-index:1;
 }
@@ -187,11 +192,13 @@
 }
 
 .welcome-actions{
-    width:100%;
-    margin-top:0;
-    padding-top:0;
     position:relative;
     z-index:2;
+
+    margin-top:-90px;
+
+    width:100%;
+    padding-top:0;
 }
 
 .welcome-primary,
