@@ -532,3 +532,12 @@
     opacity:0;
     transform:scale(1.02);
 }
+
+@media (min-width:769px){
+
+    .welcome-scene img{
+        object-position:center 62%;
+        transform:scale(1.08);
+    }
+
+}
