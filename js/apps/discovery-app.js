@@ -558,7 +558,7 @@ class DiscoveryApp {
 
     }
 
-    complete() {
+    complete(){
 
         const completedAt =
             Date.now();
@@ -572,6 +572,11 @@ class DiscoveryApp {
             "vaero:discovery:completed",
             "true"
         );
+
+        localStorage.setItem(
+    "vaero:welcome:completed:v2",
+    "true"
+);
 
         localStorage.setItem(
             "vaero:discovery:completedAt",
