@@ -1,0 +1,126 @@
+.discovery-screen {
+    position: fixed;
+    inset: 0;
+    z-index: 9998;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    padding: 32px 20px;
+    background:
+        radial-gradient(
+            circle at 50% 0%,
+            rgba(211, 174, 93, 0.16),
+            transparent 38%
+        ),
+        linear-gradient(
+            145deg,
+            #05080d,
+            #0b1320 55%,
+            #101927
+        );
+    color: #fff;
+}
+
+.discovery-content {
+    width: 100%;
+    max-width: 620px;
+    padding: 42px;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 28px;
+    background: rgba(11, 18, 29, 0.82);
+    box-shadow: 0 30px 80px rgba(0, 0, 0, 0.4);
+    backdrop-filter: blur(18px);
+}
+
+.discovery-progress {
+    width: 100%;
+    height: 5px;
+    margin-bottom: 22px;
+    overflow: hidden;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.discovery-progress span {
+    display: block;
+    height: 100%;
+    border-radius: inherit;
+    background: linear-gradient(
+        90deg,
+        #c99b47,
+        #f5d98c
+    );
+    transition: width 0.4s ease;
+}
+
+.discovery-step {
+    margin: 0 0 16px;
+    color: #d8b86c;
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 0.16em;
+}
+
+.discovery-content h1 {
+    margin: 0;
+    font-size: clamp(30px, 5vw, 48px);
+    line-height: 1.08;
+}
+
+.discovery-description {
+    margin: 18px 0 0;
+    color: rgba(255, 255, 255, 0.66);
+    font-size: 16px;
+    line-height: 1.6;
+}
+
+.discovery-options {
+    display: grid;
+    gap: 14px;
+    margin-top: 34px;
+}
+
+.discovery-option {
+    width: 100%;
+    min-height: 62px;
+    padding: 16px 20px;
+    border: 1px solid rgba(255, 255, 255, 0.13);
+    border-radius: 17px;
+    background: rgba(255, 255, 255, 0.055);
+    color: #fff;
+    font: inherit;
+    font-size: 16px;
+    text-align: left;
+    cursor: pointer;
+    transition:
+        transform 0.2s ease,
+        border-color 0.2s ease,
+        background 0.2s ease;
+}
+
+.discovery-option:hover {
+    transform: translateY(-2px);
+    border-color: rgba(229, 195, 111, 0.7);
+    background: rgba(229, 195, 111, 0.12);
+}
+
+.discovery-option:active {
+    transform: scale(0.985);
+}
+
+@media (max-width: 600px) {
+    .discovery-screen {
+        align-items: flex-end;
+        padding: 16px;
+    }
+
+    .discovery-content {
+        padding: 28px 22px;
+        border-radius: 24px;
+    }
+
+    .discovery-options {
+        margin-top: 26px;
+    }
+}
