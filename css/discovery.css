@@ -124,3 +124,29 @@
         margin-top: 26px;
     }
 }
+
+.discovery-option.is-selected {
+    border-color: #e5c36f;
+    background: rgba(229, 195, 111, 0.16);
+    box-shadow:
+        inset 0 0 0 1px rgba(229, 195, 111, 0.22);
+}
+
+.discovery-back {
+    margin-top: 24px;
+    padding: 10px 4px;
+    border: 0;
+    background: transparent;
+    color: rgba(255, 255, 255, 0.62);
+    font: inherit;
+    font-size: 15px;
+    cursor: pointer;
+    transition:
+        color 0.2s ease,
+        transform 0.2s ease;
+}
+
+.discovery-back:hover {
+    color: #f0d17d;
+    transform: translateX(-3px);
+}
