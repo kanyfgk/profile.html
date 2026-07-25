@@ -400,43 +400,89 @@ class DiscoveryApp {
 
     selectOption(answer) {
 
-        const step =
-            this.steps[this.currentStep];
+    const step =
+        this.steps[this.currentStep];
 
-        if(step.type === "multiple"){
+    if(step.type === "multiple"){
 
-            const selected =
-                this.getSelectedAnswers(step);
+        const selected =
+            this.getSelectedAnswers(step);
 
-            if(selected.includes(answer)){
+        if(selected.includes(answer)){
 
-                this.answers[step.id] =
-                    selected.filter(
-                        item => item !== answer
-                    );
+            this.answers[step.id] =
+                selected.filter(
+                    item => item !== answer
+                );
 
-            } else {
+        } else {
 
-                this.answers[step.id] = [
-                    ...selected,
-                    answer
-                ];
+            this.answers[step.id] = [
+                ...selected,
+                answer
+            ];
 
-            }
-
-            this.saveDraft();
-            this.render(this.container);
-
-            return;
         }
 
-        this.answers[step.id] =
-            answer;
-
         this.saveDraft();
-        this.advance();
 
+        const currentAnswers =
+            this.getSelectedAnswers(step);
+
+        this.container
+            .querySelectorAll(
+                "[data-discovery-option]"
+            )
+            .forEach(button => {
+
+                const isSelected =
+                    currentAnswers.includes(
+                        button.dataset
+                            .discoveryOption
+                    );
+
+                button.classList.toggle(
+                    "is-selected",
+                    isSelected
+                );
+
+                button.setAttribute(
+                    "aria-pressed",
+                    String(isSelected)
+                );
+
+                const check =
+                    button.querySelector(
+                        ".discovery-check"
+                    );
+
+                if(check){
+                    check.textContent =
+                        isSelected ? "✓" : "";
+                }
+
+            });
+
+        const continueButton =
+            this.container.querySelector(
+                "[data-discovery-action='continue']"
+            );
+
+        if(continueButton){
+            continueButton.disabled =
+                currentAnswers.length === 0;
+        }
+
+        return;
     }
+
+    this.answers[step.id] =
+        answer;
+
+    this.saveDraft();
+    this.advance();
+
+}
 
     continueJourney() {
 
