@@ -152,6 +152,25 @@ analyzeMessage(message, context = null, intent = null){
 
     const topicDefinitions = [
         {
+            topic: "discovery",
+            words: [
+                "discovery",
+                "kesif",
+                "kesif yolculugu",
+                "yolculugum",
+                "gelis amacim",
+                "ilgi alanim",
+                "ilgi alanlarim",
+                "guclu yonum",
+                "guclu yonlerim",
+                "hedefim",
+                "baglanti beklentim",
+                "kimlerle karsilasmak",
+                "vaero tercihim",
+                "bana nasil eslik"
+            ]
+        },
+        {
             topic: "profile",
             words: [
                 "profil",
@@ -739,6 +758,7 @@ getNavigationReply(analysis, fallbackApp = null){
 },
 
 getQuestionReply(analysis, fallbackApp = null){
+
     const topic =
         analysis?.topic ||
         fallbackApp ||
@@ -753,6 +773,27 @@ getQuestionReply(analysis, fallbackApp = null){
 
     if(!knowledge){
         return "Sorunun konusunu anladım ancak bu alanın bilgi katmanı henüz oluşturulmadı.";
+    }
+
+    if(topic === "discovery"){
+
+        if(!knowledge.completed){
+            return "Discovery Journey henüz tamamlanmadı. Yolculuğu tamamladığında hedeflerini, ilgi alanlarını ve bağlantı beklentilerini birlikte değerlendirebilirim.";
+        }
+
+        return [
+            "Discovery Journey sonuçlarına göre:",
+            "",
+            `• VAERO’ya geliş amacın: ${knowledge.purposeAnswer}`,
+            `• İlgi alanların: ${knowledge.interests}`,
+            `• Güçlü yönlerin: ${knowledge.strengths}`,
+            `• Şu anki hedefin: ${knowledge.goal}`,
+            `• Karşılaşmak istediğin kişiler: ${knowledge.connections}`,
+            `• VAERO’dan beklentin: ${knowledge.guidance}`,
+            "",
+            "Bu bilgileri sana yön gösterirken, fırsatları değerlendirirken ve uygun bağlantıları belirlerken kullanacağım."
+        ].join("\n");
+
     }
 
     if(operation === "explain"){
@@ -784,6 +825,7 @@ getQuestionReply(analysis, fallbackApp = null){
     }
 
     return `${knowledge.label} hakkında hangi işlemi yapmak istediğini biraz daha açık yazabilirsin. Bu alanın temel amacı: ${knowledge.purpose}`;
+
 },
 
 getRequestReply(analysis, fallbackApp = null){
