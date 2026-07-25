@@ -408,29 +408,56 @@ class DiscoveryApp {
 
     if(step.type === "multiple"){
 
-        const selected =
+        const discoveryStrengthOption =
+            "Henüz güçlü yönümü keşfediyorum";
+
+        let selected =
             this.getSelectedAnswers(step);
 
-        if(selected.includes(answer)){
+        if(
+            step.id === "strength" &&
+            answer === discoveryStrengthOption
+        ){
 
-            this.answers[step.id] =
-                selected.filter(
-                    item => item !== answer
-                );
+            selected = [
+                discoveryStrengthOption
+            ];
 
         } else {
 
-            this.answers[step.id] = [
-                ...selected,
-                answer
-            ];
+            if(
+                step.id === "strength"
+            ){
+                selected =
+                    selected.filter(
+                        item =>
+                            item !==
+                            discoveryStrengthOption
+                    );
+            }
+
+            if(selected.includes(answer)){
+
+                selected =
+                    selected.filter(
+                        item => item !== answer
+                    );
+
+            } else {
+
+                selected = [
+                    ...selected,
+                    answer
+                ];
+
+            }
 
         }
 
-        this.saveDraft();
+        this.answers[step.id] =
+            selected;
 
-        const currentAnswers =
-            this.getSelectedAnswers(step);
+        this.saveDraft();
 
         this.container
             .querySelectorAll(
@@ -439,7 +466,7 @@ class DiscoveryApp {
             .forEach(button => {
 
                 const isSelected =
-                    currentAnswers.includes(
+                    selected.includes(
                         button.dataset
                             .discoveryOption
                     );
@@ -473,7 +500,7 @@ class DiscoveryApp {
 
         if(continueButton){
             continueButton.disabled =
-                currentAnswers.length === 0;
+                selected.length === 0;
         }
 
         return;
@@ -486,7 +513,6 @@ class DiscoveryApp {
     this.advance();
 
 }
-
     continueJourney() {
 
         const step =
