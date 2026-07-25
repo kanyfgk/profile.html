@@ -27,4 +27,4 @@ class DiscoveryApp {
 
 }
 
-window.DiscoveryApp = DiscoveryApp;
+window.DiscoveryApp = new DiscoveryApp();
