@@ -105,7 +105,11 @@ const Components = {
 
                     <div class="status-pill"> 
                         <span class="status-dot"></span>
-                        ${entity.status === "online" ? "Engine Online" : entity.status}
+                        ${this.translate(
+    entity.status === "online"
+        ? "Engine Online"
+        : entity.status
+)}
                     </div>
                 </div>
             </div>
