@@ -430,3 +430,7 @@
         gap: 5px;
     }
 }
+
+body.discovery-active .brain-fab {
+    display: none !important;
+}
