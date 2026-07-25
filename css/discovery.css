@@ -150,3 +150,24 @@
     color: #f0d17d;
     transform: translateX(-3px);
 }
+
+.discovery-screen {
+    align-items: flex-start;
+    overflow-x: hidden;
+    overflow-y: auto;
+}
+
+.discovery-content {
+    margin: auto 0;
+}
+
+@media (max-height: 850px) {
+    .discovery-screen {
+        padding-top: 24px;
+        padding-bottom: 24px;
+    }
+
+    .discovery-content {
+        margin: 0;
+    }
+}
