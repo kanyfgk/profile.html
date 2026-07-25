@@ -2,20 +2,27 @@ class DiscoveryApp {
 
     constructor() {
 
-        this.currentStep = 0;
-        this.container = null;
         this.storageKey =
-            "vaero:discovery:draft";
+            "vaero:discovery:draft:v2";
+
+        this.container = null;
+
+        const draft =
+            this.loadDraft();
+
+        this.currentStep =
+            draft.currentStep;
 
         this.answers =
-            this.loadDraft();
+            draft.answers;
 
         this.steps = [
             {
                 id: "purpose",
+                type: "single",
                 title: "VAERO’ya neden geldin?",
                 description:
-                    "Buradaki yolculuğunun başlangıç noktasını seç.",
+                    "Yolculuğunun başlangıç noktasını seç.",
                 options: [
                     "Kendimi geliştirmek istiyorum",
                     "Bir fikir veya proje geliştirmek istiyorum",
@@ -26,9 +33,10 @@ class DiscoveryApp {
             },
             {
                 id: "interest",
-                title: "Seni en çok hangi dünya çekiyor?",
+                type: "multiple",
+                title: "Seni hangi dünyalar çekiyor?",
                 description:
-                    "VAERO sana uygun alanları önceliklendirecek.",
+                    "Bir veya daha fazla alan seçebilirsin.",
                 options: [
                     "Teknoloji",
                     "Girişimcilik",
@@ -40,9 +48,10 @@ class DiscoveryApp {
             },
             {
                 id: "strength",
+                type: "multiple",
                 title: "Bu dünyaya ne katabilirsin?",
                 description:
-                    "Bugünkü en güçlü yönünü seç.",
+                    "Sana uyan güçlü yönleri seç.",
                 options: [
                     "Fikir geliştirebilirim",
                     "Üretebilir ve uygulayabilirim",
@@ -55,9 +64,10 @@ class DiscoveryApp {
             },
             {
                 id: "goal",
+                type: "single",
                 title: "Şu an ulaşmak istediğin nokta ne?",
                 description:
-                    "Bu seçim VAERO’nun sana göstereceği yolu belirleyecek.",
+                    "VAERO sana göstereceği yolu buna göre şekillendirecek.",
                 options: [
                     "Bir proje başlatmak",
                     "Mevcut projemi büyütmek",
@@ -69,9 +79,10 @@ class DiscoveryApp {
             },
             {
                 id: "connection",
+                type: "multiple",
                 title: "Kimlerle karşılaşmak istersin?",
                 description:
-                    "VAERO gelecekteki eşleşmelerini buna göre şekillendirecek.",
+                    "Bir veya daha fazla insan grubunu seçebilirsin.",
                 options: [
                     "Kurucular ve girişimciler",
                     "Yatırımcılar",
@@ -83,6 +94,7 @@ class DiscoveryApp {
             },
             {
                 id: "guidance",
+                type: "single",
                 title: "VAERO sana nasıl eşlik etsin?",
                 description:
                     "Kontrol her zaman sende kalacak.",
@@ -96,6 +108,13 @@ class DiscoveryApp {
             }
         ];
 
+        if(
+            this.currentStep < 0 ||
+            this.currentStep >= this.steps.length
+        ){
+            this.currentStep = 0;
+        }
+
     }
 
     loadDraft() {
@@ -104,23 +123,32 @@ class DiscoveryApp {
 
             const saved =
                 localStorage.getItem(
-                    "vaero:discovery:draft"
+                    "vaero:discovery:draft:v2"
                 );
 
             if(!saved){
-                return {};
+                return {
+                    currentStep: 0,
+                    answers: {}
+                };
             }
 
             const parsed =
                 JSON.parse(saved);
 
-            return (
-                parsed &&
-                typeof parsed === "object" &&
-                !Array.isArray(parsed)
-            )
-                ? parsed
-                : {};
+            return {
+                currentStep:
+                    Number.isInteger(parsed.currentStep)
+                        ? parsed.currentStep
+                        : 0,
+
+                answers:
+                    parsed.answers &&
+                    typeof parsed.answers === "object" &&
+                    !Array.isArray(parsed.answers)
+                        ? parsed.answers
+                        : {}
+            };
 
         } catch(error) {
 
@@ -129,7 +157,10 @@ class DiscoveryApp {
                 error
             );
 
-            return {};
+            return {
+                currentStep: 0,
+                answers: {}
+            };
 
         }
 
@@ -139,7 +170,41 @@ class DiscoveryApp {
 
         localStorage.setItem(
             this.storageKey,
-            JSON.stringify(this.answers)
+            JSON.stringify({
+                currentStep:
+                    this.currentStep,
+
+                answers:
+                    this.answers
+            })
+        );
+
+    }
+
+    getSelectedAnswers(step) {
+
+        const answer =
+            this.answers[step.id];
+
+        if(step.type === "multiple"){
+
+            return Array.isArray(answer)
+                ? answer
+                : [];
+
+        }
+
+        return answer
+            ? [answer]
+            : [];
+
+    }
+
+    hasAnswer(step) {
+
+        return (
+            this.getSelectedAnswers(step)
+                .length > 0
         );
 
     }
@@ -155,8 +220,8 @@ class DiscoveryApp {
         const step =
             this.steps[this.currentStep];
 
-        const selectedAnswer =
-            this.answers[step.id] || null;
+        const selectedAnswers =
+            this.getSelectedAnswers(step);
 
         const progress =
             (
@@ -167,7 +232,35 @@ class DiscoveryApp {
         container.innerHTML = `
             <div class="discovery-screen">
 
-                <div class="discovery-content">
+                <main class="discovery-content">
+
+                    <div class="discovery-navigation">
+
+                        ${
+                            this.currentStep > 0
+                                ? `
+                                    <button
+                                        type="button"
+                                        class="discovery-back"
+                                        data-discovery-action="back"
+                                    >
+                                        ← Geri
+                                    </button>
+                                  `
+                                : `
+                                    <span
+                                        class="discovery-back-placeholder"
+                                    ></span>
+                                  `
+                        }
+
+                        <span class="discovery-count">
+                            ${this.currentStep + 1}
+                            /
+                            ${this.steps.length}
+                        </span>
+
+                    </div>
 
                     <div class="discovery-progress">
                         <span
@@ -175,53 +268,81 @@ class DiscoveryApp {
                         ></span>
                     </div>
 
-                    <p class="discovery-step">
-                        ${this.currentStep + 1}
-                        /
-                        ${this.steps.length}
-                    </p>
+                    <header class="discovery-header">
 
-                    <h1>${step.title}</h1>
+                        <h1>${step.title}</h1>
 
-                    <p class="discovery-description">
-                        ${step.description}
-                    </p>
+                        <p class="discovery-description">
+                            ${step.description}
+                        </p>
+
+                    </header>
 
                     <div class="discovery-options">
 
                         ${step.options
-                            .map(option => `
-                                <button
-                                    type="button"
-                                    class="discovery-option ${
-                                        selectedAnswer === option
-                                            ? "is-selected"
-                                            : ""
-                                    }"
-                                    data-discovery-option="${option}"
-                                >
-                                    ${option}
-                                </button>
-                            `)
+                            .map(option => {
+
+                                const isSelected =
+                                    selectedAnswers.includes(
+                                        option
+                                    );
+
+                                return `
+                                    <button
+                                        type="button"
+                                        class="discovery-option ${
+                                            isSelected
+                                                ? "is-selected"
+                                                : ""
+                                        }"
+                                        data-discovery-option="${option}"
+                                        aria-pressed="${isSelected}"
+                                    >
+                                        <span>
+                                            ${option}
+                                        </span>
+
+                                        ${
+                                            step.type === "multiple"
+                                                ? `
+                                                    <span
+                                                        class="discovery-check"
+                                                        aria-hidden="true"
+                                                    >
+                                                        ${isSelected ? "✓" : ""}
+                                                    </span>
+                                                  `
+                                                : ""
+                                        }
+                                    </button>
+                                `;
+
+                            })
                             .join("")}
 
                     </div>
 
                     ${
-                        this.currentStep > 0
+                        step.type === "multiple"
                             ? `
                                 <button
                                     type="button"
-                                    class="discovery-back"
-                                    data-discovery-action="back"
+                                    class="discovery-continue"
+                                    data-discovery-action="continue"
+                                    ${
+                                        this.hasAnswer(step)
+                                            ? ""
+                                            : "disabled"
+                                    }
                                 >
-                                    ← Geri
+                                    Devam
                                 </button>
                               `
                             : ""
                     }
 
-                </div>
+                </main>
 
             </div>
         `;
@@ -252,12 +373,24 @@ class DiscoveryApp {
                             "[data-discovery-action]"
                         );
 
-                    if(
-                        actionButton &&
+                    if(!actionButton){
+                        return;
+                    }
+
+                    const action =
                         actionButton.dataset
-                            .discoveryAction === "back"
-                    ){
+                            .discoveryAction;
+
+                    if(action === "back"){
                         this.goBack();
+                    }
+
+                    if(action === "continue"){
+                        this.continueJourney();
+                    }
+
+                    if(action === "enter"){
+                        window.location.reload();
                     }
 
                 }
@@ -270,10 +403,55 @@ class DiscoveryApp {
         const step =
             this.steps[this.currentStep];
 
+        if(step.type === "multiple"){
+
+            const selected =
+                this.getSelectedAnswers(step);
+
+            if(selected.includes(answer)){
+
+                this.answers[step.id] =
+                    selected.filter(
+                        item => item !== answer
+                    );
+
+            } else {
+
+                this.answers[step.id] = [
+                    ...selected,
+                    answer
+                ];
+
+            }
+
+            this.saveDraft();
+            this.render(this.container);
+
+            return;
+        }
+
         this.answers[step.id] =
             answer;
 
         this.saveDraft();
+        this.advance();
+
+    }
+
+    continueJourney() {
+
+        const step =
+            this.steps[this.currentStep];
+
+        if(!this.hasAnswer(step)){
+            return;
+        }
+
+        this.advance();
+
+    }
+
+    advance() {
 
         if(
             this.currentStep <
@@ -282,9 +460,8 @@ class DiscoveryApp {
 
             this.currentStep += 1;
 
-            this.render(
-                this.container
-            );
+            this.saveDraft();
+            this.render(this.container);
 
             return;
         }
@@ -301,9 +478,8 @@ class DiscoveryApp {
 
         this.currentStep -= 1;
 
-        this.render(
-            this.container
-        );
+        this.saveDraft();
+        this.render(this.container);
 
     }
 
@@ -331,86 +507,168 @@ class DiscoveryApp {
             this.storageKey
         );
 
+        this.recordJourney(
+            completedAt
+        );
+
+        this.renderCompletion();
+
+    }
+
+    recordJourney(completedAt) {
+
         if(
-            typeof Evolution !== "undefined" &&
-            typeof Evolution.record === "function"
+            typeof Evolution === "undefined" ||
+            typeof Evolution.record !== "function"
         ){
-
-            const alreadyRecorded =
-                Evolution.history.some(event =>
-                    event.source === "discovery" &&
-                    event.title ===
-                        "Discovery Journey tamamlandı"
-                );
-
-            if(!alreadyRecorded){
-
-                const event =
-                    Evolution.record(
-                        "milestone",
-                        "Kullanıcı ilk keşif yolculuğunu tamamladı.",
-                        {
-                            title:
-                                "Discovery Journey tamamlandı",
-
-                            status:
-                                "completed",
-
-                            importance:
-                                "high",
-
-                            source:
-                                "discovery",
-
-                            tags: [
-                                "discovery",
-                                "onboarding",
-                                "ilk-yolculuk"
-                            ],
-
-                            effects: {
-                                awareness: 8,
-                                experience: 6,
-                                connectionReadiness: 5
-                            },
-
-                            xp: 15,
-
-                            organs: [
-                                "identity",
-                                "profile",
-                                "memory",
-                                "timeline",
-                                "bridge",
-                                "brain"
-                            ],
-
-                            discoveryAnswers: {
-                                ...this.answers
-                            },
-
-                            journeyVersion: 1,
-
-                            occurredAt:
-                                completedAt
-                        }
-                    );
-
-                if(
-                    typeof Evolution
-                        .publishLifeEvent ===
-                    "function"
-                ){
-                    Evolution.publishLifeEvent(
-                        event
-                    );
-                }
-
-            }
-
+            return;
         }
 
-        window.location.reload();
+        const existingEvent =
+            Evolution.history.find(event =>
+                event.source === "discovery" &&
+                event.title ===
+                    "Discovery Journey tamamlandı"
+            );
+
+        if(existingEvent){
+
+            existingEvent.payload = {
+                ...existingEvent.payload,
+
+                discoveryAnswers: {
+                    ...this.answers
+                },
+
+                journeyVersion: 2
+            };
+
+            existingEvent.updatedAt =
+                completedAt;
+
+            Evolution.save();
+
+            return;
+        }
+
+        const event =
+            Evolution.record(
+                "milestone",
+                "Kullanıcı ilk keşif yolculuğunu tamamladı.",
+                {
+                    title:
+                        "Discovery Journey tamamlandı",
+
+                    status:
+                        "completed",
+
+                    importance:
+                        "high",
+
+                    source:
+                        "discovery",
+
+                    tags: [
+                        "discovery",
+                        "onboarding",
+                        "ilk-yolculuk"
+                    ],
+
+                    effects: {
+                        awareness: 8,
+                        experience: 6,
+                        connectionReadiness: 5
+                    },
+
+                    xp: 15,
+
+                    organs: [
+                        "identity",
+                        "profile",
+                        "memory",
+                        "timeline",
+                        "bridge",
+                        "brain"
+                    ],
+
+                    discoveryAnswers: {
+                        ...this.answers
+                    },
+
+                    journeyVersion: 2,
+
+                    occurredAt:
+                        completedAt
+                }
+            );
+
+        if(
+            typeof Evolution.publishLifeEvent ===
+            "function"
+        ){
+            Evolution.publishLifeEvent(
+                event
+            );
+        }
+
+    }
+
+    renderCompletion() {
+
+        if(!this.container){
+            return;
+        }
+
+        this.container.innerHTML = `
+            <div class="discovery-screen">
+
+                <main
+                    class="
+                        discovery-content
+                        discovery-completion
+                    "
+                >
+
+                    <div class="discovery-completion-mark">
+                        ✓
+                    </div>
+
+                    <p class="discovery-completion-label">
+                        KEŞİF TAMAMLANDI
+                    </p>
+
+                    <h1>
+                        Yolculuğun hazır.
+                    </h1>
+
+                    <p class="discovery-description">
+                        VAERO ilk yönünü, ilgi alanlarını
+                        ve bağlantı beklentilerini öğrendi.
+                        Sistem bundan sonra seninle birlikte
+                        gelişecek.
+                    </p>
+
+                    <button
+                        type="button"
+                        class="discovery-enter"
+                        data-discovery-action="enter"
+                    >
+                        VAERO’ya Gir
+                    </button>
+
+                </main>
+
+            </div>
+        `;
+
+        this.container
+            .querySelector(
+                "[data-discovery-action='enter']"
+            )
+            .addEventListener(
+                "click",
+                () => window.location.reload()
+            );
 
     }
 
