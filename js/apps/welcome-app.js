@@ -36,13 +36,13 @@ const WelcomeApp = {
                 "is-closing"
             );
 
-        }, 700);
+        }, 900);
 
         window.setTimeout(() => {
 
             screen.remove();
 
-        }, 1200);
+        }, 14 00);
 
     },
 
