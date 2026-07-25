@@ -159,32 +159,49 @@ const WelcomeApp = {
         );
 
         screen.addEventListener(
-            "click",
-            event => {
+    "click",
+    event => {
 
-                const button =
-                    event.target.closest(
-                        "[data-welcome-action]"
-                    );
+        const button =
+            event.target.closest(
+                "[data-welcome-action]"
+            );
 
-                if(!button){
-                    return;
-                }
+        if(!button){
+            return;
+        }
 
-                if(
-                    screen.classList.contains(
-                        "is-entering"
-                    )
-                ){
-                    return;
-                }
+        if(
+            screen.classList.contains(
+                "is-entering"
+            )
+        ){
+            return;
+        }
 
-                this.complete();
+        const action =
+            button.dataset.welcomeAction;
 
+        if(action === "start"){
+
+            if(window.DiscoveryApp){
+                DiscoveryApp.render();
             }
-        );
 
-    },
+            this.complete();
+            return;
+
+        }
+
+        if(action === "login"){
+
+            this.complete();
+            return;
+
+        }
+
+    }
+);
 
     reset(){
 
