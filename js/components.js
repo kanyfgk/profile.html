@@ -1,4 +1,98 @@
 const Components = {
+    translate(value){
+
+        const text =
+            String(value || "");
+
+        const key =
+            text.toLowerCase().trim();
+
+        const translations = {
+            "living digital universe":
+                "Yaşayan Dijital Evren",
+
+            "engine online":
+                "Motor Çevrimiçi",
+
+            "online":
+                "çevrimiçi",
+
+            "active":
+                "aktif",
+
+            "ok":
+                "hazır",
+
+            "brand":
+                "marka",
+
+            "verified":
+                "doğrulandı",
+
+            "unverified":
+                "doğrulanmadı",
+
+            "identity":
+                "Kimlik",
+
+            "engine":
+                "Motor",
+
+            "renderer":
+                "Oluşturucu",
+
+            "bridge":
+                "Köprü",
+
+            "entity:mounted":
+                "Varlık sisteme bağlandı",
+
+            "life-event":
+                "Yaşam olayı",
+
+            "runtime started":
+                "Çalışma zamanı başladı",
+
+            "runtime tick":
+                "Sistem döngüsü çalıştı",
+
+            "entity mounted":
+                "Varlık sisteme bağlandı",
+
+            "engine started":
+                "Motor başlatıldı",
+
+            "discovery journey tamamlandı":
+                "Discovery Journey tamamlandı",
+
+            "person":
+                "Kişi",
+
+            "company":
+                "Şirket",
+
+            "device":
+                "Cihaz",
+
+            "knowledge":
+                "Bilgi",
+
+            "community":
+                "Topluluk",
+
+            "planet":
+                "Gezegen",
+
+            "custom":
+                "Özel"
+        };
+
+        return (
+            translations[key] ||
+            text
+        );
+
+    },
 
     hero(entity){
         return `
@@ -54,19 +148,82 @@ const Components = {
 },
 
     organs(entity){
-        return `
-            <div class="section" style="margin-top:24px;padding:18px;">
-                <div class="eyebrow">CONNECTED ORGANS</div>
 
-                ${(entity.organs || []).map(organ=>`
-                    <div style="display:flex;justify-content:space-between;margin-top:10px;color:var(--muted);">
-                        <span>${organ.name}</span>
-                        <span style="color:var(--green);">${organ.status}</span>
-                    </div>
-                `).join("")}
+    const organNames = {
+        identity: "Kimlik",
+        engine: "Motor",
+        renderer: "Oluşturucu",
+        bridge: "Köprü"
+    };
+
+    const statusNames = {
+        active: "aktif",
+        online: "çevrimiçi",
+        inactive: "pasif",
+        offline: "çevrimdışı"
+    };
+
+    return `
+        <div
+            class="section"
+            style="
+                margin-top:24px;
+                padding:18px;
+            "
+        >
+            <div class="eyebrow">
+                BAĞLANTILI ORGANLAR
             </div>
-        `;
-    },
+
+            ${(entity.organs || [])
+                .map(organ => {
+
+                    const organKey =
+                        String(
+                            organ.name || ""
+                        ).toLowerCase();
+
+                    const statusKey =
+                        String(
+                            organ.status || ""
+                        ).toLowerCase();
+
+                    return `
+                        <div
+                            style="
+                                display:flex;
+                                justify-content:space-between;
+                                gap:18px;
+                                margin-top:10px;
+                                color:var(--muted);
+                            "
+                        >
+                            <span>
+                                ${
+                                    organNames[organKey] ||
+                                    organ.name
+                                }
+                            </span>
+
+                            <span
+                                style="
+                                    color:var(--green);
+                                "
+                            >
+                                ${
+                                    statusNames[statusKey] ||
+                                    organ.status
+                                }
+                            </span>
+                        </div>
+                    `;
+
+                })
+                .join("")}
+        </div>
+    `;
+
+},
 
     profile(entity){
         return `
@@ -124,9 +281,9 @@ const Components = {
     bridge(){
         return `
             <div class="section" style="margin-top:24px;padding:18px;">
-                <div class="eyebrow">FIRST BRIDGE</div>
+                <div class="eyebrow">İLK KÖPRÜ</div>
                 <p style="color:var(--muted);line-height:1.7;">
-                    VAERO is now connected to its first community bridge.
+                    VAERO artık ilk topluluk köprüsüne bağlandı.
                 </p>
             </div>
         `;
