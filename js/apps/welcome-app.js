@@ -1,3 +1,5 @@
+/* Welcome onboarding v2 */
+
 const WelcomeApp = {
 
     storageKey: "vaero:welcome:completed:v2",
