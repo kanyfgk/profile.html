@@ -376,17 +376,6 @@
 }
 
 .vaero-welcome-screen.is-entering
-.welcome-scene img {
-    transform:
-        scale(1.8)
-        translateY(-5%);
-
-    filter:
-        brightness(1.28)
-        saturate(1.08);
-}
-
-.vaero-welcome-screen.is-entering
 .welcome-stars {
     opacity: 0;
     transform: scale(1.08);
@@ -562,12 +551,6 @@ and (max-height: 720px) {
         min-height: 58px;
     }
 
-    .vaero-welcome-screen.is-entering
-    .welcome-scene img {
-        transform:
-            scale(1.55)
-            translateY(-3%);
-    }
 }
 
 /* KEEP BRAIN OUT OF ONBOARDING */
