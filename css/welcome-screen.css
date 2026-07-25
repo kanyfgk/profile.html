@@ -605,3 +605,66 @@ body:has(.discovery-screen)
         transition-duration: 0.01ms;
     }
 }
+
+/* Direct portal zoom */
+
+.welcome-scene img{
+    transform-origin:50% 54%;
+}
+
+.vaero-welcome-screen.is-entering .welcome-scene img{
+    transform:scale(2.35);
+    filter:brightness(1.28) saturate(1.08);
+
+    transition:
+        transform 1.05s cubic-bezier(.55,.05,.85,.35),
+        filter .75s ease-in;
+}
+
+@media (min-width:769px){
+
+    .welcome-scene img{
+        transform-origin:50% 52%;
+    }
+
+    .vaero-welcome-screen.is-entering .welcome-scene img{
+        transform:scale(2.05);
+    }
+
+}
+
+.welcome-scene::after{
+    content:"";
+    position:absolute;
+    left:50%;
+    top:54%;
+    width:12px;
+    height:12px;
+    border-radius:50%;
+    pointer-events:none;
+
+    background:#fff4c7;
+    box-shadow:
+        0 0 28px 12px rgba(255,225,150,.65),
+        0 0 90px 34px rgba(255,205,105,.28);
+
+    opacity:0;
+    transform:translate(-50%,-50%) scale(.4);
+
+    transition:
+        opacity .45s ease-in,
+        transform .9s ease-in;
+}
+
+.vaero-welcome-screen.is-entering .welcome-scene::after{
+    opacity:1;
+    transform:translate(-50%,-50%) scale(18);
+}
+
+@media (min-width:769px){
+
+    .welcome-scene::after{
+        top:52%;
+    }
+
+}
