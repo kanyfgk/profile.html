@@ -613,7 +613,7 @@ body:has(.discovery-screen)
 }
 
 .vaero-welcome-screen.is-entering .welcome-scene img{
-    transform:scale(2.35);
+    transform:scale(1.65);
     filter:brightness(1.28) saturate(1.08);
 
     transition:
@@ -628,7 +628,7 @@ body:has(.discovery-screen)
     }
 
     .vaero-welcome-screen.is-entering .welcome-scene img{
-        transform:scale(2.05);
+        transform:scale(1.5);
     }
 
 }
