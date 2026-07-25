@@ -55,6 +55,9 @@ class DiscoveryApp {
         const step =
             this.steps[this.currentStep];
 
+        const selectedAnswer =
+            this.answers[step.id] || null;
+
         const progress =
             (
                 (this.currentStep + 1) /
@@ -98,7 +101,14 @@ class DiscoveryApp {
                             .map(option => `
                                 <button
                                     type="button"
-                                    class="discovery-option"
+                                    class="
+                                        discovery-option
+                                        ${
+                                            selectedAnswer === option
+                                                ? "is-selected"
+                                                : ""
+                                        }
+                                    "
                                     data-discovery-option="${option}"
                                 >
                                     ${option}
@@ -108,35 +118,61 @@ class DiscoveryApp {
 
                     </div>
 
+                    ${
+                        this.currentStep > 0
+                            ? `
+                                <button
+                                    type="button"
+                                    class="discovery-back"
+                                    data-discovery-action="back"
+                                >
+                                    ← Geri
+                                </button>
+                              `
+                            : ""
+                    }
+
                 </div>
 
             </div>
         `;
 
-        const options =
-            container.querySelector(
-                ".discovery-options"
-            );
+        container
+            .querySelector(".discovery-screen")
+            .addEventListener(
+                "click",
+                event => {
 
-        options.addEventListener(
-            "click",
-            event => {
+                    const optionButton =
+                        event.target.closest(
+                            "[data-discovery-option]"
+                        );
 
-                const button =
-                    event.target.closest(
-                        "[data-discovery-option]"
-                    );
+                    if(optionButton){
 
-                if(!button){
-                    return;
+                        this.selectOption(
+                            optionButton.dataset
+                                .discoveryOption
+                        );
+
+                        return;
+                    }
+
+                    const actionButton =
+                        event.target.closest(
+                            "[data-discovery-action]"
+                        );
+
+                    if(
+                        actionButton &&
+                        actionButton.dataset
+                            .discoveryAction === "back"
+                    ){
+                        this.goBack();
+                    }
+
                 }
-
-                this.selectOption(
-                    button.dataset.discoveryOption
-                );
-
-            }
-        );
+            );
 
     }
 
@@ -166,99 +202,120 @@ class DiscoveryApp {
 
     }
 
+    goBack() {
+
+        if(this.currentStep <= 0){
+            return;
+        }
+
+        this.currentStep -= 1;
+
+        this.render(
+            this.container
+        );
+
+    }
+
     complete() {
 
-    const completedAt = Date.now();
+        const completedAt =
+            Date.now();
 
-    localStorage.setItem(
-        "vaero:discovery:answers",
-        JSON.stringify(this.answers)
-    );
+        localStorage.setItem(
+            "vaero:discovery:answers",
+            JSON.stringify(
+                this.answers
+            )
+        );
 
-    localStorage.setItem(
-        "vaero:discovery:completed",
-        "true"
-    );
+        localStorage.setItem(
+            "vaero:discovery:completed",
+            "true"
+        );
 
-    localStorage.setItem(
-        "vaero:discovery:completedAt",
-        String(completedAt)
-    );
+        localStorage.setItem(
+            "vaero:discovery:completedAt",
+            String(completedAt)
+        );
 
-    if(
-        typeof Evolution !== "undefined" &&
-        typeof Evolution.record === "function"
-    ){
+        if(
+            typeof Evolution !== "undefined" &&
+            typeof Evolution.record === "function"
+        ){
 
-        const alreadyRecorded =
-            Evolution.history.some(event =>
-                event.source === "discovery" &&
-                event.title ===
-                    "Discovery Journey tamamlandı"
-            );
+            const alreadyRecorded =
+                Evolution.history.some(event =>
+                    event.source === "discovery" &&
+                    event.title ===
+                        "Discovery Journey tamamlandı"
+                );
 
-        if(!alreadyRecorded){
+            if(!alreadyRecorded){
 
-            const event = Evolution.record(
-                "milestone",
-                "Kullanıcı ilk keşif yolculuğunu tamamladı.",
-                {
-                    title:
-                        "Discovery Journey tamamlandı",
+                const event =
+                    Evolution.record(
+                        "milestone",
+                        "Kullanıcı ilk keşif yolculuğunu tamamladı.",
+                        {
+                            title:
+                                "Discovery Journey tamamlandı",
 
-                    status:
-                        "completed",
+                            status:
+                                "completed",
 
-                    importance:
-                        "high",
+                            importance:
+                                "high",
 
-                    source:
-                        "discovery",
+                            source:
+                                "discovery",
 
-                    tags: [
-                        "discovery",
-                        "onboarding",
-                        "ilk-yolculuk"
-                    ],
+                            tags: [
+                                "discovery",
+                                "onboarding",
+                                "ilk-yolculuk"
+                            ],
 
-                    effects: {
-                        awareness: 5,
-                        experience: 5
-                    },
+                            effects: {
+                                awareness: 5,
+                                experience: 5
+                            },
 
-                    xp: 10,
+                            xp: 10,
 
-                    organs: [
-                        "identity",
-                        "profile",
-                        "memory",
-                        "timeline",
-                        "brain"
-                    ],
+                            organs: [
+                                "identity",
+                                "profile",
+                                "memory",
+                                "timeline",
+                                "brain"
+                            ],
 
-                    discoveryAnswers: {
-                        ...this.answers
-                    },
+                            discoveryAnswers: {
+                                ...this.answers
+                            },
 
-                    occurredAt:
-                        completedAt
+                            occurredAt:
+                                completedAt
+                        }
+                    );
+
+                if(
+                    typeof Evolution
+                        .publishLifeEvent ===
+                    "function"
+                ){
+                    Evolution.publishLifeEvent(
+                        event
+                    );
                 }
-            );
 
-            if(
-                typeof Evolution.publishLifeEvent ===
-                "function"
-            ){
-                Evolution.publishLifeEvent(event);
             }
 
         }
 
+        window.location.reload();
+
     }
-
-    window.location.reload();
-
-}
 
 }
 
