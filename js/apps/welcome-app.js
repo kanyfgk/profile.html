@@ -202,7 +202,8 @@ const WelcomeApp = {
 
     }
 );
-
+        },
+    
     reset(){
 
         localStorage.removeItem(
