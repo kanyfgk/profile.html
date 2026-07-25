@@ -30,7 +30,7 @@ const WelcomeApp = {
 
         screen.classList.add(
             "is-entering"
-        );
+        ); 
 
         window.setTimeout(() => {
 
