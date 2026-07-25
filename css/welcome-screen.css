@@ -615,39 +615,3 @@ body:has(.discovery-screen)
     }
 
 }
-
-.welcome-scene::after{
-    content:"";
-    position:absolute;
-    left:50%;
-    top:54%;
-    width:12px;
-    height:12px;
-    border-radius:50%;
-    pointer-events:none;
-
-    background:#fff4c7;
-    box-shadow:
-        0 0 28px 12px rgba(255,225,150,.65),
-        0 0 90px 34px rgba(255,205,105,.28);
-
-    opacity:0;
-    transform:translate(-50%,-50%) scale(.4);
-
-    transition:
-        opacity .45s ease-in,
-        transform .9s ease-in;
-}
-
-.vaero-welcome-screen.is-entering .welcome-scene::after{
-    opacity:1;
-    transform:translate(-50%,-50%) scale(18);
-}
-
-@media (min-width:769px){
-
-    .welcome-scene::after{
-        top:52%;
-    }
-
-}
