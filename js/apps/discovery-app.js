@@ -216,6 +216,9 @@ class DiscoveryApp {
         }
 
         this.container = container;
+        document.body.classList.add(
+            "discovery-active"
+            );
 
         const step =
             this.steps[this.currentStep];
