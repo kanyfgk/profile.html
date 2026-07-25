@@ -15,7 +15,7 @@ class DiscoveryApp {
                     <h1>Discovery Journey</h1>
 
                     <p>
-                        Burası geçici ekrandır.
+                        Burası keşif ekranı.
                     </p>
 
                 </div>
