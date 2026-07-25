@@ -101,7 +101,7 @@ const Components = {
  
                 <div> 
                     <div class="brand-title">${entity.name}</div> 
-                    <div class="brand-subtitle">${entity.description}</div> 
+                    <div class="brand-subtitle">${this.translate(entity.description)}</div>
 
                     <div class="status-pill"> 
                         <span class="status-dot"></span>
