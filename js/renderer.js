@@ -32,11 +32,11 @@ const Renderer = {
             ? components.worldView(currentWorld)
             : `
                 <h1>
-                    Every universe begins with an Entity.
+                    Her evren bir Varlıkla başlar.
                 </h1>
 
                 <p style="margin-top:18px;color:var(--muted);line-height:1.8;">
-                    This entity was created by VAERO Engine and rendered through the new interface layer.
+                    Bu varlık VAERO Engine tarafından oluşturuldu ve yeni arayüz katmanı aracılığıyla görüntülendi.
                 </p>
 
                 ${components.organs(rootEntity)}
