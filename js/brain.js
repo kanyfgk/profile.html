@@ -357,6 +357,24 @@ analyzeMessage(message, context = null, intent = null){
         }
     }
 
+    const discoveryKnowledgeRequest =
+        topic === "discovery" &&
+        [
+            "sonuc",
+            "sonuclar",
+            "cevap",
+            "cevaplar",
+            "secim",
+            "secimler",
+            "ozet"
+        ].some(word =>
+            normalizedMessage.includes(word)
+        );
+
+    if(discoveryKnowledgeRequest){
+        operation = "explain";
+    }
+
     /*
      * Ana mesaj türünü belirle.
      */
@@ -381,6 +399,10 @@ analyzeMessage(message, context = null, intent = null){
         messageType = "question";
     }else if(operation !== "general"){
         messageType = "request";
+    }
+
+    if(discoveryKnowledgeRequest){
+        messageType = "question";
     }
 
     /*
