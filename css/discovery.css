@@ -403,3 +403,30 @@
     }
 
 }
+
+.discovery-profile-row {
+    display: grid;
+    grid-template-columns: minmax(130px, 0.7fr) minmax(0, 1.5fr);
+    gap: 18px;
+    align-items: start;
+}
+
+.discovery-profile-label {
+    color: rgba(255, 255, 255, 0.52);
+    font-size: 13px;
+    line-height: 1.5;
+}
+
+.discovery-profile-value {
+    color: rgba(255, 255, 255, 0.92);
+    font-size: 14px;
+    font-weight: 650;
+    line-height: 1.55;
+}
+
+@media (max-width: 600px) {
+    .discovery-profile-row {
+        grid-template-columns: 1fr;
+        gap: 5px;
+    }
+}
