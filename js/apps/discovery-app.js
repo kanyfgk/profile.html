@@ -3,44 +3,144 @@ class DiscoveryApp {
     constructor() {
 
         this.currentStep = 0;
-        this.answers = {};
         this.container = null;
+        this.storageKey =
+            "vaero:discovery:draft";
+
+        this.answers =
+            this.loadDraft();
 
         this.steps = [
             {
-                id: "identity",
-                title: "Seni nasıl tanıyalım?",
+                id: "purpose",
+                title: "VAERO’ya neden geldin?",
                 description:
-                    "VAERO yolculuğunu sana göre şekillendirecek.",
+                    "Buradaki yolculuğunun başlangıç noktasını seç.",
                 options: [
-                    "Kendimi keşfetmek istiyorum",
-                    "Bir hedefe ulaşmak istiyorum",
-                    "Yeni bağlantılar kurmak istiyorum"
+                    "Kendimi geliştirmek istiyorum",
+                    "Bir fikir veya proje geliştirmek istiyorum",
+                    "Doğru insanları bulmak istiyorum",
+                    "Yeni fırsatları keşfetmek istiyorum",
+                    "Yatırım yapmak veya destek olmak istiyorum"
                 ]
             },
             {
-                id: "focus",
-                title:
-                    "Şu an hayatında en çok neye odaklanıyorsun?",
+                id: "interest",
+                title: "Seni en çok hangi dünya çekiyor?",
+                description:
+                    "VAERO sana uygun alanları önceliklendirecek.",
                 options: [
-                    "Kariyer",
+                    "Teknoloji",
+                    "Girişimcilik",
+                    "Tasarım ve yaratıcılık",
+                    "Finans ve yatırım",
                     "Kişisel gelişim",
-                    "İlişkiler",
-                    "Finans",
-                    "Sağlık"
+                    "Toplumsal etki"
                 ]
             },
             {
-                id: "direction",
-                title:
-                    "VAERO sana nasıl eşlik etsin?",
+                id: "strength",
+                title: "Bu dünyaya ne katabilirsin?",
+                description:
+                    "Bugünkü en güçlü yönünü seç.",
                 options: [
-                    "Beni yönlendirsin",
+                    "Fikir geliştirebilirim",
+                    "Üretebilir ve uygulayabilirim",
+                    "Tasarım ve içerik oluşturabilirim",
+                    "İnsanları ve ekipleri yönetebilirim",
+                    "Bağlantılar kurabilirim",
+                    "Sermaye veya kaynak sağlayabilirim",
+                    "Henüz güçlü yönümü keşfediyorum"
+                ]
+            },
+            {
+                id: "goal",
+                title: "Şu an ulaşmak istediğin nokta ne?",
+                description:
+                    "Bu seçim VAERO’nun sana göstereceği yolu belirleyecek.",
+                options: [
+                    "Bir proje başlatmak",
+                    "Mevcut projemi büyütmek",
+                    "Kariyerimi geliştirmek",
+                    "Yeni şeyler öğrenmek",
+                    "Güçlü bir çevre kurmak",
+                    "Doğru yatırım fırsatını bulmak"
+                ]
+            },
+            {
+                id: "connection",
+                title: "Kimlerle karşılaşmak istersin?",
+                description:
+                    "VAERO gelecekteki eşleşmelerini buna göre şekillendirecek.",
+                options: [
+                    "Kurucular ve girişimciler",
+                    "Yatırımcılar",
+                    "Uzmanlar ve mentorlar",
+                    "Üreticiler ve yetenekler",
+                    "İş birliği yapabileceğim insanlar",
+                    "İlgi alanıma uygun topluluklar"
+                ]
+            },
+            {
+                id: "guidance",
+                title: "VAERO sana nasıl eşlik etsin?",
+                description:
+                    "Kontrol her zaman sende kalacak.",
+                options: [
+                    "Bana yön göstersin",
                     "Gelişimimi takip etsin",
-                    "Doğru insanlarla eşleştirsin"
+                    "Doğru insanlarla eşleştirsin",
+                    "Fırsatları karşıma çıkarsın",
+                    "Hepsini dengeli biçimde yapsın"
                 ]
             }
         ];
+
+    }
+
+    loadDraft() {
+
+        try {
+
+            const saved =
+                localStorage.getItem(
+                    "vaero:discovery:draft"
+                );
+
+            if(!saved){
+                return {};
+            }
+
+            const parsed =
+                JSON.parse(saved);
+
+            return (
+                parsed &&
+                typeof parsed === "object" &&
+                !Array.isArray(parsed)
+            )
+                ? parsed
+                : {};
+
+        } catch(error) {
+
+            console.warn(
+                "Discovery taslağı okunamadı:",
+                error
+            );
+
+            return {};
+
+        }
+
+    }
+
+    saveDraft() {
+
+        localStorage.setItem(
+            this.storageKey,
+            JSON.stringify(this.answers)
+        );
 
     }
 
@@ -81,19 +181,11 @@ class DiscoveryApp {
                         ${this.steps.length}
                     </p>
 
-                    <h1>
-                        ${step.title}
-                    </h1>
+                    <h1>${step.title}</h1>
 
-                    ${
-                        step.description
-                            ? `
-                                <p class="discovery-description">
-                                    ${step.description}
-                                </p>
-                              `
-                            : ""
-                    }
+                    <p class="discovery-description">
+                        ${step.description}
+                    </p>
 
                     <div class="discovery-options">
 
@@ -101,14 +193,11 @@ class DiscoveryApp {
                             .map(option => `
                                 <button
                                     type="button"
-                                    class="
-                                        discovery-option
-                                        ${
-                                            selectedAnswer === option
-                                                ? "is-selected"
-                                                : ""
-                                        }
-                                    "
+                                    class="discovery-option ${
+                                        selectedAnswer === option
+                                            ? "is-selected"
+                                            : ""
+                                    }"
                                     data-discovery-option="${option}"
                                 >
                                     ${option}
@@ -184,6 +273,8 @@ class DiscoveryApp {
         this.answers[step.id] =
             answer;
 
+        this.saveDraft();
+
         if(
             this.currentStep <
             this.steps.length - 1
@@ -223,9 +314,7 @@ class DiscoveryApp {
 
         localStorage.setItem(
             "vaero:discovery:answers",
-            JSON.stringify(
-                this.answers
-            )
+            JSON.stringify(this.answers)
         );
 
         localStorage.setItem(
@@ -236,6 +325,10 @@ class DiscoveryApp {
         localStorage.setItem(
             "vaero:discovery:completedAt",
             String(completedAt)
+        );
+
+        localStorage.removeItem(
+            this.storageKey
         );
 
         if(
@@ -276,23 +369,27 @@ class DiscoveryApp {
                             ],
 
                             effects: {
-                                awareness: 5,
-                                experience: 5
+                                awareness: 8,
+                                experience: 6,
+                                connectionReadiness: 5
                             },
 
-                            xp: 10,
+                            xp: 15,
 
                             organs: [
                                 "identity",
                                 "profile",
                                 "memory",
                                 "timeline",
+                                "bridge",
                                 "brain"
                             ],
 
                             discoveryAnswers: {
                                 ...this.answers
                             },
+
+                            journeyVersion: 1,
 
                             occurredAt:
                                 completedAt
