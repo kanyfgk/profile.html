@@ -10,12 +10,14 @@ const WelcomeApp = {
 
     },
 
-    complete(){
+    complete(saveCompletion = true){
 
-        localStorage.setItem(
-            this.storageKey,
-            "true"
-        );
+        if(saveCompletion){
+    localStorage.setItem(
+        this.storageKey,
+        "true"
+    );
+}
 
         const screen =
             document.getElementById(
@@ -42,7 +44,7 @@ const WelcomeApp = {
 
             screen.remove();
 
-        }, 14 00);
+        }, 1400);
 
     },
 
@@ -190,7 +192,7 @@ const WelcomeApp = {
 );
             }
 
-            this.complete();
+            this.complete(false);
             return;
 
         }
