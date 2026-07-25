@@ -470,8 +470,111 @@ const app =
 }
     },
 
+    getDiscoveryContext(){
+
+    let answers = {};
+
+    try {
+
+        if(
+            typeof Evolution !== "undefined"
+        ){
+
+            const event =
+                Evolution.history.find(item =>
+                    item.source === "discovery" &&
+                    item.payload &&
+                    item.payload.discoveryAnswers
+                );
+
+            if(event){
+                answers = {
+                    ...event.payload
+                        .discoveryAnswers
+                };
+            }
+
+        }
+
+        if(
+            Object.keys(answers).length === 0
+        ){
+
+            const saved =
+                localStorage.getItem(
+                    "vaero:discovery:answers"
+                );
+
+            if(saved){
+                answers =
+                    JSON.parse(saved) || {};
+            }
+
+        }
+
+    } catch(error) {
+
+        console.warn(
+            "Brain Discovery bağlamını okuyamadı:",
+            error
+        );
+
+    }
+
+    const format = value => {
+
+        if(Array.isArray(value)){
+            return value.join(", ");
+        }
+
+        return String(
+            value || "Henüz belirlenmedi"
+        );
+
+    };
+
+    return {
+        label:
+            "Discovery",
+
+        purpose:
+            "Kullanıcının ilk yönünü, ilgi alanlarını, güçlü yönlerini, hedeflerini ve bağlantı beklentilerini taşır.",
+
+        capabilities:
+            "Brain bu verileri kişiselleştirilmiş yönlendirme, öneri ve eşleştirme bağlamı olarak kullanabilir.",
+
+        completed:
+            Object.keys(answers).length > 0,
+
+        purposeAnswer:
+            format(answers.purpose),
+
+        interests:
+            format(answers.interest),
+
+        strengths:
+            format(answers.strength),
+
+        goal:
+            format(answers.goal),
+
+        connections:
+            format(answers.connection),
+
+        guidance:
+            format(answers.guidance),
+
+        answers: {
+            ...answers
+        }
+    };
+
+},
+
      getBrainKnowledge(){
     return {
+        discovery:
+            this.getDiscoveryContext(),
         profile: {
             label: "Profil",
             purpose:
