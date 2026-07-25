@@ -168,21 +168,97 @@ class DiscoveryApp {
 
     complete() {
 
-        localStorage.setItem(
-            "vaero:discovery:answers",
-            JSON.stringify(
-                this.answers
-            )
-        );
+    const completedAt = Date.now();
 
-        localStorage.setItem(
-            "vaero:discovery:completed",
-            "true"
-        );
+    localStorage.setItem(
+        "vaero:discovery:answers",
+        JSON.stringify(this.answers)
+    );
 
-        window.location.reload();
+    localStorage.setItem(
+        "vaero:discovery:completed",
+        "true"
+    );
+
+    localStorage.setItem(
+        "vaero:discovery:completedAt",
+        String(completedAt)
+    );
+
+    if(
+        typeof Evolution !== "undefined" &&
+        typeof Evolution.record === "function"
+    ){
+
+        const alreadyRecorded =
+            Evolution.history.some(event =>
+                event.source === "discovery" &&
+                event.title ===
+                    "Discovery Journey tamamlandı"
+            );
+
+        if(!alreadyRecorded){
+
+            const event = Evolution.record(
+                "milestone",
+                "Kullanıcı ilk keşif yolculuğunu tamamladı.",
+                {
+                    title:
+                        "Discovery Journey tamamlandı",
+
+                    status:
+                        "completed",
+
+                    importance:
+                        "high",
+
+                    source:
+                        "discovery",
+
+                    tags: [
+                        "discovery",
+                        "onboarding",
+                        "ilk-yolculuk"
+                    ],
+
+                    effects: {
+                        awareness: 5,
+                        experience: 5
+                    },
+
+                    xp: 10,
+
+                    organs: [
+                        "identity",
+                        "profile",
+                        "memory",
+                        "timeline",
+                        "brain"
+                    ],
+
+                    discoveryAnswers: {
+                        ...this.answers
+                    },
+
+                    occurredAt:
+                        completedAt
+                }
+            );
+
+            if(
+                typeof Evolution.publishLifeEvent ===
+                "function"
+            ){
+                Evolution.publishLifeEvent(event);
+            }
+
+        }
 
     }
+
+    window.location.reload();
+
+}
 
 }
 
