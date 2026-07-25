@@ -185,7 +185,9 @@ const WelcomeApp = {
         if(action === "start"){
 
             if(window.DiscoveryApp){
-                DiscoveryApp.render();
+                window.DiscoveryApp.render(
+    document.getElementById("engine")
+);
             }
 
             this.complete();
