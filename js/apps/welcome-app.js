@@ -115,7 +115,13 @@ const WelcomeApp = {
                         <div class="welcome-features">
 
                             <article class="welcome-feature">
-                                <span class="welcome-feature-icon">◎</span>
+                                <span class="welcome-feature-icon">
+    <svg viewBox="0 0 48 48" aria-hidden="true">
+        <path d="M20 8c-4.2 0-7 3.2-7 7v1.2A7.5 7.5 0 0 0 10 30a7 7 0 0 0 7 7h1a6 6 0 0 0 6-6V14a6 6 0 0 0-4-6Z"/>
+        <path d="M28 8c4.2 0 7 3.2 7 7v1.2A7.5 7.5 0 0 1 38 30a7 7 0 0 1-7 7h-1a6 6 0 0 1-6-6V14a6 6 0 0 1 4-6Z"/>
+        <path d="M17 17c3 0 5 2 5 5M31 17c-3 0-5 2-5 5M16 29c3.5 0 6 2.5 6 6M32 29c-3.5 0-6 2.5-6 6"/>
+    </svg>
+</span>
 
                                 <div>
                                     <strong>Akıllı Organlar</strong>
@@ -126,7 +132,26 @@ const WelcomeApp = {
                             </article>
 
                             <article class="welcome-feature">
-                                <span class="welcome-feature-icon">◌</span>
+                                <span class="welcome-feature-icon">
+    <svg viewBox="0 0 48 48" aria-hidden="true">
+        <circle cx="24" cy="24" r="4"/>
+        <ellipse
+            cx="24"
+            cy="24"
+            rx="17"
+            ry="8"
+            transform="rotate(-28 24 24)"
+        />
+        <ellipse
+            cx="24"
+            cy="24"
+            rx="17"
+            ry="8"
+            transform="rotate(58 24 24)"
+        />
+        <circle class="welcome-orbit-node" cx="39" cy="17" r="2"/>
+    </svg>
+</span>
 
                                 <div>
                                     <strong>Sürekli Evrim</strong>
@@ -137,7 +162,12 @@ const WelcomeApp = {
                             </article>
 
                             <article class="welcome-feature">
-                                <span class="welcome-feature-icon">◇</span>
+                                <span class="welcome-feature-icon">
+    <svg viewBox="0 0 48 48" aria-hidden="true">
+        <path d="M24 6 39 12v11c0 9.5-5.8 15.5-15 19-9.2-3.5-15-9.5-15-19V12L24 6Z"/>
+        <path d="m17 24 5 5 10-11"/>
+    </svg>
+</span>
 
                                 <div>
                                     <strong>Senin Kontrolünde</strong>
