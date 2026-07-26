@@ -519,6 +519,8 @@
 }
 
 .vaero-welcome-screen.is-entering .welcome-brand,
+.vaero-welcome-screen.is-entering .welcome-intro,
+.vaero-welcome-screen.is-entering .welcome-auth-panel,
 .vaero-welcome-screen.is-entering .welcome-message,
 .vaero-welcome-screen.is-entering .welcome-actions{
     opacity:0;
@@ -565,6 +567,12 @@
     .welcome-brand strong{
         font-size:22px;
         font-weight:700;
+        letter-spacing:.18em;
+        text-indent:0;
+        background:none;
+        -webkit-background-clip:initial;
+        background-clip:initial;
+        color:#fff;
     }
 
     .welcome-brand span{
