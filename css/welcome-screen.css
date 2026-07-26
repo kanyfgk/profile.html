@@ -533,110 +533,264 @@
     transform:scale(1.02);
 }
 
-@media (min-width:769px){
-
-    .vaero-welcome-screen{
-        overflow:hidden;
-    }
-
-    .welcome-scene img{
-        object-fit:cover;
-        object-position:center bottom;
-        transform:scale(1);
-    }
-
-    .welcome-content{
-    width:min(100%, 720px);
-    height:100vh;
-    min-height:0;
-    padding:16px 42px;
-}
-
-    .welcome-brand{
-        margin-top:8px;
-    }
-
-    .welcome-brand strong{
-        font-size:48px;
-    }
-
-    .welcome-brand span{
-        margin-top:8px;
-    }
-
-    .welcome-message{
-        margin-top:24px;
-    }
-
-    .welcome-message h1{
-        font-size:42px;
-    }
-
-    .welcome-message p{
-        margin-top:14px;
-        font-size:14px;
-        line-height:1.5;
-    }
-
-    .welcome-actions{
-        margin-top:20px;
-        padding:0;
-        transform:none;
-    }
-
-    .welcome-primary,
-    .welcome-secondary{
-        min-height:52px;
-    }
-
-    .welcome-divider{
-        margin:11px 0;
-    }
-
-    .welcome-security{
-        margin-top:11px;
-    }
-
-}
-
 /* trigger vercel deployment */
 
 @media (min-width:769px){
 
     .welcome-layout{
-        display:grid;
-        grid-template-columns:1fr 520px;
-        align-items:center;
-        width:100%;
-        height:100vh;
-        padding:0 80px;
-        gap:80px;
         position:relative;
         z-index:2;
+        display:grid;
+        grid-template-columns:minmax(0,1fr) minmax(380px,460px);
+        width:100%;
+        min-height:100vh;
+        padding:48px clamp(48px,6vw,110px);
+        gap:clamp(60px,8vw,140px);
     }
 
     .welcome-left{
-        max-width:620px;
+        display:flex;
+        flex-direction:column;
+        min-width:0;
+    }
+
+    .welcome-brand{
+        display:flex;
+        align-items:baseline;
+        gap:11px;
+        color:#fff;
+        letter-spacing:.18em;
+    }
+
+    .welcome-brand strong{
+        font-size:22px;
+        font-weight:700;
+    }
+
+    .welcome-brand span{
+        color:rgba(255,255,255,.48);
+        font-size:10px;
+        font-weight:600;
+        letter-spacing:.28em;
+    }
+
+    .welcome-intro{
+        width:min(100%,610px);
+        margin-top:auto;
+        margin-bottom:auto;
+        padding-top:40px;
+    }
+
+    .welcome-eyebrow{
+        margin:0 0 20px;
+        color:#5aa9ff;
+        font-size:11px;
+        font-weight:700;
+        letter-spacing:.25em;
+    }
+
+    .welcome-intro h1{
+        max-width:600px;
+        margin:0;
+        color:#fff;
+        font-size:clamp(46px,5vw,76px);
+        font-weight:600;
+        line-height:1.03;
+        letter-spacing:-.045em;
+    }
+
+    .welcome-intro h1 span{
+        display:block;
+        color:rgba(255,255,255,.58);
+    }
+
+    .welcome-description{
+        max-width:530px;
+        margin:24px 0 0;
+        color:rgba(229,237,248,.68);
+        font-size:17px;
+        line-height:1.7;
+    }
+
+    .welcome-features{
+        display:grid;
+        grid-template-columns:repeat(3,minmax(0,1fr));
+        gap:14px;
+        margin-top:42px;
+    }
+
+    .welcome-feature{
+        display:flex;
+        align-items:flex-start;
+        gap:12px;
+        min-width:0;
+        padding:16px 14px;
+        border:1px solid rgba(255,255,255,.08);
+        border-radius:16px;
+        background:rgba(7,13,24,.38);
+        backdrop-filter:blur(12px);
+    }
+
+    .welcome-feature-icon{
+        flex:0 0 auto;
+        color:#5aa9ff;
+        font-size:10px;
+        font-weight:700;
+        letter-spacing:.08em;
+    }
+
+    .welcome-feature strong{
+        display:block;
+        color:rgba(255,255,255,.92);
+        font-size:13px;
+        font-weight:600;
+    }
+
+    .welcome-feature p{
+        margin:6px 0 0;
+        color:rgba(222,232,245,.48);
+        font-size:11px;
+        line-height:1.45;
     }
 
     .welcome-right{
         display:flex;
-        justify-content:center;
         align-items:center;
+        justify-content:center;
     }
 
-    .welcome-actions{
+    .welcome-auth-panel{
         width:100%;
-        max-width:480px;
-        padding:40px;
+        padding:42px;
+        border:1px solid rgba(255,255,255,.09);
         border-radius:28px;
-        background:rgba(10,12,18,.78);
-        backdrop-filter:blur(20px);
-        border:1px solid rgba(255,255,255,.08);
-        margin:0;
+        background:rgba(7,11,19,.76);
+        box-shadow:0 30px 80px rgba(0,0,0,.42);
+        backdrop-filter:blur(24px);
     }
 
-    .welcome-content{
+    .welcome-auth-heading{
+        margin-bottom:30px;
+    }
+
+    .welcome-auth-heading > p{
+        margin:0 0 12px;
+        color:#5aa9ff;
+        font-size:10px;
+        font-weight:700;
+        letter-spacing:.22em;
+    }
+
+    .welcome-auth-heading h2{
+        margin:0;
+        color:#fff;
+        font-size:28px;
+        font-weight:600;
+        letter-spacing:-.025em;
+    }
+
+    .welcome-auth-heading span{
+        display:block;
+        margin-top:10px;
+        color:rgba(226,234,244,.5);
+        font-size:13px;
+        line-height:1.55;
+    }
+
+    .welcome-auth-form{
+        display:grid;
+        gap:18px;
+    }
+
+    .welcome-auth-form label{
+        display:grid;
+        gap:8px;
+    }
+
+    .welcome-auth-form label > span{
+        color:rgba(240,245,251,.74);
+        font-size:12px;
+        font-weight:500;
+    }
+
+    .welcome-auth-form input{
+        width:100%;
+        height:52px;
+        padding:0 16px;
+        border:1px solid rgba(255,255,255,.1);
+        border-radius:13px;
+        outline:none;
+        background:rgba(255,255,255,.045);
+        color:#fff;
+        font:inherit;
+        font-size:14px;
+        transition:border-color .2s ease,
+                   background .2s ease,
+                   box-shadow .2s ease;
+    }
+
+    .welcome-auth-form input::placeholder{
+        color:rgba(255,255,255,.28);
+    }
+
+    .welcome-auth-form input:focus{
+        border-color:rgba(90,169,255,.7);
+        background:rgba(90,169,255,.06);
+        box-shadow:0 0 0 3px rgba(90,169,255,.1);
+    }
+
+    .welcome-auth-panel .welcome-primary,
+    .welcome-auth-panel .welcome-secondary{
+        width:100%;
+        height:52px;
+        border-radius:13px;
+        font-size:14px;
+        font-weight:600;
+        cursor:pointer;
+    }
+
+    .welcome-auth-panel .welcome-primary{
+        margin-top:4px;
+        border:1px solid #6eb3ff;
+        background:linear-gradient(135deg,#378fe9,#6db7ff);
+        color:#06111e;
+        box-shadow:0 12px 30px rgba(53,143,233,.25);
+    }
+
+    .welcome-auth-panel .welcome-secondary{
+        border:1px solid rgba(255,255,255,.12);
+        background:rgba(255,255,255,.045);
+        color:rgba(255,255,255,.88);
+    }
+
+    .welcome-auth-panel .welcome-divider{
+        display:flex;
+        align-items:center;
+        gap:12px;
+        margin:22px 0;
+    }
+
+    .welcome-auth-panel .welcome-divider span{
+        flex:1;
+        height:1px;
+        background:rgba(255,255,255,.08);
+    }
+
+    .welcome-auth-panel .welcome-divider small{
+        color:rgba(255,255,255,.3);
+        font-size:11px;
+    }
+
+    .welcome-security{
+        margin:20px 0 0;
+        color:rgba(255,255,255,.3);
+        font-size:10px;
+        text-align:center;
+        letter-spacing:.04em;
+    }
+
+    .welcome-content,
+    .welcome-actions{
         display:none;
     }
 }
