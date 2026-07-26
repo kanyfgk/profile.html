@@ -1,4 +1,98 @@
 const Components = {
+    translate(value){
+
+        const text =
+            String(value || "");
+
+        const key =
+            text.toLowerCase().trim();
+
+        const translations = {
+            "living digital universe":
+                "Yaşayan Dijital Evren",
+
+            "engine online":
+                "Motor Çevrimiçi",
+
+            "online":
+                "çevrimiçi",
+
+            "active":
+                "aktif",
+
+            "ok":
+                "hazır",
+
+            "brand":
+                "marka",
+
+            "verified":
+                "doğrulandı",
+
+            "unverified":
+                "doğrulanmadı",
+
+            "identity":
+                "Kimlik",
+
+            "engine":
+                "Motor",
+
+            "renderer":
+                "Oluşturucu",
+
+            "bridge":
+                "Köprü",
+
+            "entity:mounted":
+                "Varlık sisteme bağlandı",
+
+            "life-event":
+                "Yaşam olayı",
+
+            "runtime started":
+                "Çalışma zamanı başladı",
+
+            "runtime tick":
+                "Sistem döngüsü çalıştı",
+
+            "entity mounted":
+                "Varlık sisteme bağlandı",
+
+            "engine started":
+                "Motor başlatıldı",
+
+            "discovery journey tamamlandı":
+                "Discovery Journey tamamlandı",
+
+            "person":
+                "Kişi",
+
+            "company":
+                "Şirket",
+
+            "device":
+                "Cihaz",
+
+            "knowledge":
+                "Bilgi",
+
+            "community":
+                "Topluluk",
+
+            "planet":
+                "Gezegen",
+
+            "custom":
+                "Özel"
+        };
+
+        return (
+            translations[key] ||
+            text
+        );
+
+    },
 
     hero(entity){
         return `
@@ -7,11 +101,15 @@ const Components = {
  
                 <div> 
                     <div class="brand-title">${entity.name}</div> 
-                    <div class="brand-subtitle">${entity.description}</div> 
+                    <div class="brand-subtitle">${this.translate(entity.description)}</div>
 
                     <div class="status-pill"> 
                         <span class="status-dot"></span>
-                        ${entity.status === "online" ? "Engine Online" : entity.status}
+                        ${this.translate(
+    entity.status === "online"
+        ? "Engine Online"
+        : entity.status
+)}
                     </div>
                 </div>
             </div>
@@ -54,116 +152,194 @@ const Components = {
 },
 
     organs(entity){
-        return `
-            <div class="section" style="margin-top:24px;padding:18px;">
-                <div class="eyebrow">CONNECTED ORGANS</div>
 
-                ${(entity.organs || []).map(organ=>`
-                    <div style="display:flex;justify-content:space-between;margin-top:10px;color:var(--muted);">
-                        <span>${organ.name}</span>
-                        <span style="color:var(--green);">${organ.status}</span>
-                    </div>
-                `).join("")}
+    const organNames = {
+        identity: "Kimlik",
+        engine: "Motor",
+        renderer: "Oluşturucu",
+        bridge: "Köprü"
+    };
+
+    const statusNames = {
+        active: "aktif",
+        online: "çevrimiçi",
+        inactive: "pasif",
+        offline: "çevrimdışı"
+    };
+
+    return `
+        <div
+            class="section"
+            style="
+                margin-top:24px;
+                padding:18px;
+            "
+        >
+            <div class="eyebrow">
+                BAĞLANTILI ORGANLAR
             </div>
-        `;
-    },
+
+            ${(entity.organs || [])
+                .map(organ => {
+
+                    const organKey =
+                        String(
+                            organ.name || ""
+                        ).toLowerCase();
+
+                    const statusKey =
+                        String(
+                            organ.status || ""
+                        ).toLowerCase();
+
+                    return `
+                        <div
+                            style="
+                                display:flex;
+                                justify-content:space-between;
+                                gap:18px;
+                                margin-top:10px;
+                                color:var(--muted);
+                            "
+                        >
+                            <span>
+                                ${
+                                    organNames[organKey] ||
+                                    organ.name
+                                }
+                            </span>
+
+                            <span
+                                style="
+                                    color:var(--green);
+                                "
+                            >
+                                ${
+                                    statusNames[statusKey] ||
+                                    organ.status
+                                }
+                            </span>
+                        </div>
+                    `;
+
+                })
+                .join("")}
+        </div>
+    `;
+
+},
 
     profile(entity){
-        return `
-            <div class="section" style="margin-top:24px;padding:18px;">
-                <div class="eyebrow">PROFILE</div>
+    return `
+        <div class="section" style="margin-top:24px;padding:18px;">
+            <div class="eyebrow">PROFİL</div>
 
-                <div style="display:flex;justify-content:space-between;margin-top:10px;color:var(--muted);">
-                    <span>Name</span>
-                    <span>${entity.profile.name}</span>
+            <div style="display:flex;justify-content:space-between;margin-top:10px;color:var(--muted);">
+                <span>İsim</span>
+                <span>${entity.profile.name}</span>
+            </div>
+
+            <div style="display:flex;justify-content:space-between;margin-top:10px;color:var(--muted);">
+                <span>Tür</span>
+                <span>${this.translate(entity.profile.type)}</span>
+            </div>
+
+            <div style="display:flex;justify-content:space-between;margin-top:10px;color:var(--muted);">
+                <span>Kimlik</span>
+                <span style="color:var(--green);">
+                    ${
+                        this.translate(
+                            entity.profile.identity.verified
+                                ? "Verified"
+                                : "Unverified"
+                        )
+                    }
+                </span>
+            </div>
+        </div>
+    `;
+},
+    identityCard(entity){
+    return `
+        <div class="section" style="margin-top:24px;padding:18px;">
+            <div class="eyebrow">VAERO KİMLİĞİ</div>
+
+            <div style="font-size:26px;font-weight:900;margin-top:10px;">
+                ${entity.profile.name}
+            </div>
+
+            <div style="margin-top:8px;color:var(--muted);">
+                ${this.translate(entity.profile.type).toUpperCase()}
+                ·
+                ${
+                    this.translate(
+                        entity.profile.identity.verified
+                            ? "Verified"
+                            : "Unverified"
+                    ).toUpperCase()
+                }
+            </div>
+
+            <div style="margin-top:18px;display:grid;gap:10px;">
+                <div style="display:flex;justify-content:space-between;color:var(--muted);">
+                    <span>Varlık Kimliği</span>
+                    <span>${entity.id}</span>
                 </div>
 
-                <div style="display:flex;justify-content:space-between;margin-top:10px;color:var(--muted);">
-                    <span>Type</span>
-                    <span>${entity.profile.type}</span>
-                </div>
-
-                <div style="display:flex;justify-content:space-between;margin-top:10px;color:var(--muted);">
-                    <span>Identity</span>
+                <div style="display:flex;justify-content:space-between;color:var(--muted);">
+                    <span>Durum</span>
                     <span style="color:var(--green);">
-                        ${entity.profile.identity.verified ? "Verified" : "Unverified"}
+                        ${this.translate(entity.status)}
                     </span>
                 </div>
             </div>
-        `;
-    },
-
-    identityCard(entity){
-        return `
-            <div class="section" style="margin-top:24px;padding:18px;">
-                <div class="eyebrow">VAERO IDENTITY</div>
-
-                <div style="font-size:26px;font-weight:900;margin-top:10px;">
-                    ${entity.profile.name}
-                </div>
-
-                <div style="margin-top:8px;color:var(--muted);">
-                    ${entity.profile.type.toUpperCase()} · ${entity.profile.identity.verified ? "VERIFIED" : "UNVERIFIED"}
-                </div>
-
-                <div style="margin-top:18px;display:grid;gap:10px;">
-                    <div style="display:flex;justify-content:space-between;color:var(--muted);">
-                        <span>Entity ID</span>
-                        <span>${entity.id}</span>
-                    </div>
-
-                    <div style="display:flex;justify-content:space-between;color:var(--muted);">
-                        <span>Status</span>
-                        <span style="color:var(--green);">${entity.status}</span>
-                    </div>
-                </div>
-            </div>
-        `;
-    },
-
+        </div>
+    `;
+},
     bridge(){
         return `
             <div class="section" style="margin-top:24px;padding:18px;">
-                <div class="eyebrow">FIRST BRIDGE</div>
+                <div class="eyebrow">İLK KÖPRÜ</div>
                 <p style="color:var(--muted);line-height:1.7;">
-                    VAERO is now connected to its first community bridge.
+                    VAERO artık ilk topluluk köprüsüne bağlandı.
                 </p>
             </div>
         `;
     },
 
     memory(){
-        const memory = VAERO.get("memorySystem");
+    const memory =
+        VAERO.get("memorySystem");
 
-        return `
-            <div class="section" style="margin-top:24px;padding:18px;">
-                <div class="eyebrow">MEMORY</div>
+    return `
+        <div class="section" style="margin-top:24px;padding:18px;">
+            <div class="eyebrow">HAFIZA</div>
 
-                ${memory.all().map(record=>`
-                    <div style="margin-top:10px;color:var(--muted);line-height:1.6;">
-                        ${record.type}
-                    </div>
-                `).join("")}
-            </div>
-        `;
-    },
+            ${memory.all().map(record => `
+                <div style="margin-top:10px;color:var(--muted);line-height:1.6;">
+                    ${this.translate(record.type)}
+                </div>
+            `).join("")}
+        </div>
+    `;
+},
 
     timeline(){
-        const timeline = VAERO.get("timeline");
+    const timeline =
+        VAERO.get("timeline");
 
-        return `
-            <div class="section" style="margin-top:24px;padding:18px;">
-                <div class="eyebrow">TIMELINE</div>
+    return `
+        <div class="section" style="margin-top:24px;padding:18px;">
+            <div class="eyebrow">ZAMAN AKIŞI</div>
 
-                ${timeline.all().map(event=>`
-                    <div style="margin-top:10px;color:var(--muted);line-height:1.6;">
-                        ${event.title}
-                    </div>
-                `).join("")}
-            </div>
-        `;
-    },
-
+            ${timeline.all().map(event => `
+                <div style="margin-top:10px;color:var(--muted);line-height:1.6;">
+                    ${this.translate(event.title)}
+                </div>
+            `).join("")}
+        </div>
+    `;
+},
     guardian(){
         const guardian = VAERO.get("guardian");
 
@@ -178,23 +354,40 @@ const Components = {
     },
 
     brain(){
-        const brain = VAERO.get("brain");
-        const report = brain.report();
+    const brain =
+        VAERO.get("brain");
 
-        return `
-            <div class="section" style="margin-top:24px;padding:18px;">
-                <div class="eyebrow">BRAIN STATUS</div>
+    const report =
+        brain.report();
 
-                ${Object.entries(report).map(([key,value])=>`
-                    <div style="display:flex;justify-content:space-between;margin-top:10px;color:var(--muted);">
-                        <span>${key}</span>
-                        <span style="color:var(--green);">${value}</span>
-                    </div>
-                `).join("")}
-            </div>
-        `;
-    },
+    const labels = {
+        identity: "Kimlik",
+        memory: "Hafıza",
+        guardian: "Koruyucu",
+        bridge: "Köprü",
+        evolution: "Evrim",
+        timeline: "Zaman Akışı",
+        profile: "Profil"
+    };
 
+    return `
+        <div class="section" style="margin-top:24px;padding:18px;">
+            <div class="eyebrow">BRAIN DURUMU</div>
+
+            ${Object.entries(report).map(([key, value]) => `
+                <div style="display:flex;justify-content:space-between;margin-top:10px;color:var(--muted);">
+                    <span>
+                        ${labels[key] || this.translate(key)}
+                    </span>
+
+                    <span style="color:var(--green);">
+                        ${this.translate(value)}
+                    </span>
+                </div>
+            `).join("")}
+        </div>
+    `;
+},
     alphaCreateWorld(){
 
         const world = VAERO.get("world");
@@ -284,15 +477,15 @@ const Components = {
             if(VAERO.engine.entityType){
                 return `
                     <div class="section" style="margin-top:24px;padding:24px;">
-                        <div class="eyebrow">${VAERO.engine.entityType} OLUŞTUR</div>
+                        ${this.translate(VAERO.engine.entityType).toUpperCase()} OLUŞTUR
 
                         <h2 style="margin-top:10px;">
-                            ${VAERO.engine.entityType} adını belirtin.
+                            ${this.translate(VAERO.engine.entityType)} adını belirtin.
                         </h2>
 
                         <input
                             id="entityNameInput"
-                            placeholder="${VAERO.engine.entityType} adı"
+                            placeholder="${this.translate(VAERO.engine.entityType)} adı"
                             style="
                                 width:100%;
                                 margin-top:18px;
@@ -310,7 +503,7 @@ const Components = {
                             data-action="entity:create"
                             style="width:100%;margin-top:14px;"
                         >
-                            ${VAERO.engine.entityType} Oluştur
+                            ${this.translate(VAERO.engine.entityType)} Oluştur
                         </button>
                     </div>
                 `;
@@ -318,7 +511,7 @@ const Components = {
 
             return `
                 <div class="section" style="margin-top:24px;padding:24px;">
-                    <div class="eyebrow">CREATE ENTITY</div>
+                    <div class="eyebrow">VARLIK OLUŞTUR</div>
 
                     <h2 style="margin-top:10px;">
                         Ne oluşturmak istiyorsun?
@@ -332,7 +525,7 @@ const Components = {
                                 data-entity-type="${type}"
                                 style="width:100%;text-align:left;"
                             >
-                                ${type}
+                                ${this.translate(type)}
                             </button>
                         `).join("")}
                     </div>
@@ -369,7 +562,7 @@ const Components = {
         cursor:pointer;
     "
 >
-    ${entity.type} · ${entity.name}
+    ${this.translate(entity.type)} · ${entity.name}
 </button>
                 `).join("")}
 
@@ -396,7 +589,9 @@ const Components = {
     ← Dünyaya Dön
 </button>
 
-            <div class="eyebrow">${entity.type.toUpperCase()}</div>
+            <div class="eyebrow">
+    ${this.translate(entity.type).toUpperCase()}
+</div>
 
             <h2 style="margin-top:10px;">
                 ${entity.name}
@@ -413,14 +608,17 @@ const Components = {
                 background:rgba(255,255,255,.05);
             ">
                 <div><b>ID:</b> ${entity.id}</div>
-                <div style="margin-top:8px;"><b>Type:</b> ${entity.type}</div>
+                <div style="margin-top:8px;">
+    <b>Tür:</b>
+    ${this.translate(entity.type)}
+</div>
             </div>
 
 <div class="card" style="margin-top:18px;">
     <div class="grid grid-2">
 
         <button class="secondary-btn" data-action="entity:organs" style="grid-column:1 / -1;">
-    📱 Organ Launcher
+    📱 Organ Başlatıcı
 </button>
 
     </div>
@@ -463,11 +661,11 @@ const Components = {
         return `
             <div style="display:flex;gap:14px;margin-top:32px;">
                 <button class="primary-btn" data-action="profile:open">
-                    Continue
+                    Devam Et
                 </button>
 
                 <button class="secondary-btn" data-action="docs:open">
-                    Documentation
+                    Belgeler
                 </button>
             </div>
         `;
@@ -477,11 +675,11 @@ const Components = {
         return `
             <div class="vaero-modal" id="profileModal">
                 <div class="modal-card">
-                    <h2 id="modalTitle">Profile</h2>
+                    <h2 id="modalTitle">Profil</h2>
                     <p id="modalText"></p>
 
                     <button class="primary-btn modal-close" data-action="modal:close">
-                        Close
+                        Kapat
                     </button>
                 </div>
             </div>
@@ -492,10 +690,10 @@ const Components = {
         return `
             <div class="vaero-modal" id="idModal">
                 <div class="modal-card">
-                    <h2>Platform ID</h2>
+                    <h2>Platform Kimliği</h2>
 
                     <p>
-                        Enter your VAERO Platform ID to connect your identity.
+                        Kimliğini bağlamak için VAERO Platform Kimliğini gir.
                     </p>
 
                     <input
@@ -514,7 +712,7 @@ const Components = {
                     >
 
                     <button class="primary-btn modal-close" data-action="identity:connect">
-                        Connect Identity
+                        Kimliği Bağla
                     </button>
 
                     <button class="secondary-btn modal-close" data-action="idmodal:close" style="width:100%;margin-top:10px;">
@@ -540,7 +738,7 @@ const Components = {
 
             <button class="nav-btn">
                 <div class="nav-icon">＋</div>
-                Yaratmak
+                Yarat
             </button>
 
             <button class="nav-btn">

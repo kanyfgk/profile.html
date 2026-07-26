@@ -1,3 +1,5 @@
+/* Welcome onboarding v2 */
+
 const WelcomeApp = {
 
     storageKey: "vaero:welcome:completed:v2",
@@ -10,12 +12,14 @@ const WelcomeApp = {
 
     },
 
-    complete(){
+    complete(saveCompletion = true){
 
-        localStorage.setItem(
-            this.storageKey,
-            "true"
-        );
+        if(saveCompletion){
+    localStorage.setItem(
+        this.storageKey,
+        "true"
+    );
+}
 
         const screen =
             document.getElementById(
@@ -28,7 +32,7 @@ const WelcomeApp = {
 
         screen.classList.add(
             "is-entering"
-        );
+        ); 
 
         window.setTimeout(() => {
 
@@ -36,13 +40,13 @@ const WelcomeApp = {
                 "is-closing"
             );
 
-        }, 700);
+        }, 900);
 
         window.setTimeout(() => {
 
             screen.remove();
 
-        }, 1200);
+        }, 1400);
 
     },
 
@@ -281,8 +285,9 @@ const WelcomeApp = {
 
             }
         );
-    },
 
+    },
+    
     reset(){
 
         localStorage.removeItem(

@@ -152,6 +152,25 @@ analyzeMessage(message, context = null, intent = null){
 
     const topicDefinitions = [
         {
+            topic: "discovery",
+            words: [
+                "discovery",
+                "kesif",
+                "kesif yolculugu",
+                "yolculugum",
+                "gelis amacim",
+                "ilgi alanim",
+                "ilgi alanlarim",
+                "guclu yonum",
+                "guclu yonlerim",
+                "hedefim",
+                "baglanti beklentim",
+                "kimlerle karsilasmak",
+                "vaero tercihim",
+                "bana nasil eslik"
+            ]
+        },
+        {
             topic: "profile",
             words: [
                 "profil",
@@ -338,6 +357,24 @@ analyzeMessage(message, context = null, intent = null){
         }
     }
 
+    const discoveryKnowledgeRequest =
+        topic === "discovery" &&
+        [
+            "sonuc",
+            "sonuclar",
+            "cevap",
+            "cevaplar",
+            "secim",
+            "secimler",
+            "ozet"
+        ].some(word =>
+            normalizedMessage.includes(word)
+        );
+
+    if(discoveryKnowledgeRequest){
+        operation = "explain";
+    }
+
     /*
      * Ana mesaj türünü belirle.
      */
@@ -362,6 +399,10 @@ analyzeMessage(message, context = null, intent = null){
         messageType = "question";
     }else if(operation !== "general"){
         messageType = "request";
+    }
+
+    if(discoveryKnowledgeRequest){
+        messageType = "question";
     }
 
     /*
@@ -470,8 +511,111 @@ const app =
 }
     },
 
+    getDiscoveryContext(){
+
+    let answers = {};
+
+    try {
+
+        if(
+            typeof Evolution !== "undefined"
+        ){
+
+            const event =
+                Evolution.history.find(item =>
+                    item.source === "discovery" &&
+                    item.payload &&
+                    item.payload.discoveryAnswers
+                );
+
+            if(event){
+                answers = {
+                    ...event.payload
+                        .discoveryAnswers
+                };
+            }
+
+        }
+
+        if(
+            Object.keys(answers).length === 0
+        ){
+
+            const saved =
+                localStorage.getItem(
+                    "vaero:discovery:answers"
+                );
+
+            if(saved){
+                answers =
+                    JSON.parse(saved) || {};
+            }
+
+        }
+
+    } catch(error) {
+
+        console.warn(
+            "Brain Discovery bağlamını okuyamadı:",
+            error
+        );
+
+    }
+
+    const format = value => {
+
+        if(Array.isArray(value)){
+            return value.join(", ");
+        }
+
+        return String(
+            value || "Henüz belirlenmedi"
+        );
+
+    };
+
+    return {
+        label:
+            "Discovery",
+
+        purpose:
+            "Kullanıcının ilk yönünü, ilgi alanlarını, güçlü yönlerini, hedeflerini ve bağlantı beklentilerini taşır.",
+
+        capabilities:
+            "Brain bu verileri kişiselleştirilmiş yönlendirme, öneri ve eşleştirme bağlamı olarak kullanabilir.",
+
+        completed:
+            Object.keys(answers).length > 0,
+
+        purposeAnswer:
+            format(answers.purpose),
+
+        interests:
+            format(answers.interest),
+
+        strengths:
+            format(answers.strength),
+
+        goal:
+            format(answers.goal),
+
+        connections:
+            format(answers.connection),
+
+        guidance:
+            format(answers.guidance),
+
+        answers: {
+            ...answers
+        }
+    };
+
+},
+
      getBrainKnowledge(){
     return {
+        discovery:
+            this.getDiscoveryContext(),
         profile: {
             label: "Profil",
             purpose:
@@ -636,6 +780,7 @@ getNavigationReply(analysis, fallbackApp = null){
 },
 
 getQuestionReply(analysis, fallbackApp = null){
+
     const topic =
         analysis?.topic ||
         fallbackApp ||
@@ -650,6 +795,27 @@ getQuestionReply(analysis, fallbackApp = null){
 
     if(!knowledge){
         return "Sorunun konusunu anladım ancak bu alanın bilgi katmanı henüz oluşturulmadı.";
+    }
+
+    if(topic === "discovery"){
+
+        if(!knowledge.completed){
+            return "Discovery Journey henüz tamamlanmadı. Yolculuğu tamamladığında hedeflerini, ilgi alanlarını ve bağlantı beklentilerini birlikte değerlendirebilirim.";
+        }
+
+        return [
+            "Discovery Journey sonuçlarına göre:",
+            "",
+            `• VAERO’ya geliş amacın: ${knowledge.purposeAnswer}`,
+            `• İlgi alanların: ${knowledge.interests}`,
+            `• Güçlü yönlerin: ${knowledge.strengths}`,
+            `• Şu anki hedefin: ${knowledge.goal}`,
+            `• Karşılaşmak istediğin kişiler: ${knowledge.connections}`,
+            `• VAERO’dan beklentin: ${knowledge.guidance}`,
+            "",
+            "Bu bilgileri sana yön gösterirken, fırsatları değerlendirirken ve uygun bağlantıları belirlerken kullanacağım."
+        ].join("\n");
+
     }
 
     if(operation === "explain"){
@@ -681,6 +847,7 @@ getQuestionReply(analysis, fallbackApp = null){
     }
 
     return `${knowledge.label} hakkında hangi işlemi yapmak istediğini biraz daha açık yazabilirsin. Bu alanın temel amacı: ${knowledge.purpose}`;
+
 },
 
 getRequestReply(analysis, fallbackApp = null){
