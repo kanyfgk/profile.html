@@ -507,3 +507,42 @@
         margin-top:12px;
     }
 }
+
+/* WELCOME FEATURE ICONS */
+
+@media (min-width:769px){
+
+    .vaero-welcome-screen .welcome-feature-icon{
+        display:flex;
+        align-items:center;
+        justify-content:center;
+        width:48px;
+        height:48px;
+        margin-bottom:14px;
+        border:0;
+        border-radius:0;
+        color:#dfb56a;
+    }
+
+    .vaero-welcome-screen .welcome-feature-icon svg{
+        display:block;
+        width:46px;
+        height:46px;
+        overflow:visible;
+    }
+
+    .vaero-welcome-screen .welcome-feature-icon svg path,
+    .vaero-welcome-screen .welcome-feature-icon svg ellipse,
+    .vaero-welcome-screen .welcome-feature-icon svg circle{
+        fill:none;
+        stroke:currentColor;
+        stroke-width:1.8;
+        stroke-linecap:round;
+        stroke-linejoin:round;
+    }
+
+    .vaero-welcome-screen .welcome-feature-icon svg .welcome-orbit-node{
+        fill:currentColor;
+        stroke:none;
+    }
+}
