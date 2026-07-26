@@ -416,3 +416,30 @@
     }
 
 }
+
+/* DESKTOP HEIGHT AND TOGGLE POLISH */
+
+@media (min-width:769px){
+
+    .vaero-welcome-screen .welcome-layout{
+        min-height:0;
+    }
+
+    .vaero-welcome-screen .welcome-right{
+        padding-top:48px;
+        padding-bottom:18px;
+    }
+
+    .vaero-welcome-screen .welcome-theme-toggle{
+        top:0;
+        right:0;
+    }
+
+    .vaero-welcome-screen .welcome-auth-panel{
+        margin-top:0;
+    }
+
+    .vaero-welcome-screen .welcome-intro{
+        padding-bottom:24px;
+    }
+}
