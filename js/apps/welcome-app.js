@@ -84,7 +84,7 @@ const WelcomeApp = {
             >
 
             <img
-                src="assets/welcome/vaero-earth-desktop.webp"
+                src="assets/welcome/vaero-earth-desktop.webp.png"
                 alt=""
             >
         </picture>
