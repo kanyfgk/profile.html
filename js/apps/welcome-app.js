@@ -71,153 +71,196 @@ const WelcomeApp = {
             "vaero-welcome-screen";
 
         screen.innerHTML = `
-    <div class="welcome-stars"></div>
+            <div class="welcome-stars"></div>
 
-    <div
-        class="welcome-scene"
-        aria-hidden="true"
-    >
-        <picture>
-            <source
-                media="(max-width:768px)"
-                srcset="assets/welcome/vaero-earth-mobile.webp"
+            <div
+                class="welcome-scene"
+                aria-hidden="true"
             >
-
-            <img
-                src="assets/welcome/vaero-earth-desktop.webp.png"
-                alt=""
-            >
-        </picture>
-    </div>
-
-    <main class="welcome-layout">
-
-        <section class="welcome-left">
-
-            <div class="welcome-brand">
-                <strong>VAERO</strong>
-                <span>ENGINE</span>
-            </div>
-
-            <div class="welcome-intro">
-                <p class="welcome-eyebrow">
-                    KİŞİSEL EVRİM SİSTEMİ
-                </p>
-
-                <h1>
-                    Hayatını tek bir
-                    <span>zekâda birleştir.</span>
-                </h1>
-
-                <p class="welcome-description">
-                    Kimliğini, hedeflerini ve gelişimini anlayan;
-                    seninle birlikte öğrenip evrilen kişisel sistemin.
-                </p>
-
-                <div class="welcome-features">
-
-                    <article class="welcome-feature">
-                        <span class="welcome-feature-icon">01</span>
-
-                        <div>
-                            <strong>Kendini keşfet</strong>
-                            <p>Kimliğini ve yönünü görünür hâle getir.</p>
-                        </div>
-                    </article>
-
-                    <article class="welcome-feature">
-                        <span class="welcome-feature-icon">02</span>
-
-                        <div>
-                            <strong>Hayatını birleştir</strong>
-                            <p>Deneyimlerini ve hedeflerini tek merkezde yönet.</p>
-                        </div>
-                    </article>
-
-                    <article class="welcome-feature">
-                        <span class="welcome-feature-icon">03</span>
-
-                        <div>
-                            <strong>Seninle evrilsin</strong>
-                            <p>VAERO seni tanıdıkça daha güçlü hâle gelsin.</p>
-                        </div>
-                    </article>
-
-                </div>
-            </div>
-
-        </section>
-
-        <section class="welcome-right">
-
-            <div class="welcome-auth-panel">
-
-                <div class="welcome-auth-heading">
-                    <p>TEKRAR HOŞ GELDİN</p>
-                    <h2>VAERO’ya giriş yap</h2>
-                    <span>
-                        Kaldığın yerden devam etmek için bilgilerini gir.
-                    </span>
-                </div>
-
-                <form class="welcome-auth-form">
-
-                    <label>
-                        <span>E-posta</span>
-
-                        <input
-                            type="email"
-                            name="email"
-                            placeholder="ornek@email.com"
-                            autocomplete="email"
-                        >
-                    </label>
-
-                    <label>
-                        <span>Şifre</span>
-
-                        <input
-                            type="password"
-                            name="password"
-                            placeholder="Şifreni gir"
-                            autocomplete="current-password"
-                        >
-                    </label>
-
-                    <button
-                        type="button"
-                        class="welcome-primary"
-                        data-welcome-action="login"
+                <picture>
+                    <source
+                        media="(max-width:768px)"
+                        srcset="assets/welcome/vaero-earth-mobile.webp"
                     >
-                        Giriş Yap
-                    </button>
 
-                </form>
-
-                <div class="welcome-divider">
-                    <span></span>
-                    <small>veya</small>
-                    <span></span>
-                </div>
-
-                <button
-                    type="button"
-                    class="welcome-secondary"
-                    data-welcome-action="start"
-                >
-                    Hesap Oluştur
-                </button>
-
-                <p class="welcome-security">
-                    Güvenli · Özel · Senin kontrolünde
-                </p>
-
+                    <img
+                        src="assets/welcome/vaero-earth-desktop.webp.png"
+                        alt=""
+                    >
+                </picture>
             </div>
 
-        </section>
+            <main class="welcome-layout">
 
-    </main>
-`;
+                <section class="welcome-left">
+
+                    <div class="welcome-brand">
+                        <strong>VAERO</strong>
+                        <span>ENGINE</span>
+                    </div>
+
+                    <div class="welcome-intro">
+
+                        <h1>
+                            Varlıkların Zekası.
+                            <span>Seninle Evrilecek.</span>
+                        </h1>
+
+                        <p class="welcome-description">
+                            VAERO Engine, varlıklarının yaşamını yönetir,
+                            deneyimlerinden öğrenir ve seninle birlikte
+                            sürekli gelişir.
+                        </p>
+
+                        <div class="welcome-features">
+
+                            <article class="welcome-feature">
+                                <span class="welcome-feature-icon">◎</span>
+
+                                <div>
+                                    <strong>Akıllı Organlar</strong>
+                                    <p>
+                                        Her varlığın kendi organlarına sahiptir.
+                                    </p>
+                                </div>
+                            </article>
+
+                            <article class="welcome-feature">
+                                <span class="welcome-feature-icon">◌</span>
+
+                                <div>
+                                    <strong>Sürekli Evrim</strong>
+                                    <p>
+                                        Deneyimlerinden öğrenir, güçlenir, evrilir.
+                                    </p>
+                                </div>
+                            </article>
+
+                            <article class="welcome-feature">
+                                <span class="welcome-feature-icon">◇</span>
+
+                                <div>
+                                    <strong>Senin Kontrolünde</strong>
+                                    <p>
+                                        Tüm varlıkların güvende ve senin yönetiminde.
+                                    </p>
+                                </div>
+                            </article>
+
+                        </div>
+                    </div>
+
+                    <p class="welcome-copyright">
+                        © 2026 VAERO Engine. Tüm hakları saklıdır.
+                    </p>
+
+                </section>
+
+                <section class="welcome-right">
+
+                    <div class="welcome-theme-toggle">
+                        <button type="button" aria-label="Aydınlık tema">☀️</button>
+                        <button type="button" aria-label="Karanlık tema">☾</button>
+                    </div>
+
+                    <div class="welcome-auth-panel">
+
+                        <div class="welcome-auth-logo" aria-hidden="true">
+                            V
+                        </div>
+
+                        <div class="welcome-auth-heading">
+                            <h2>VAERO Engine’e Hoş Geldin</h2>
+
+                            <span>
+                                Varlıklarını yönet, evrimleştir
+                                ve geleceği birlikte inşa et.
+                            </span>
+                        </div>
+
+                        <form class="welcome-auth-form">
+
+                            <label>
+                                <span>E-posta</span>
+
+                                <div class="welcome-input-wrap">
+                                    <span aria-hidden="true">✉️</span>
+
+                                    <input
+                                        type="email"
+                                        name="email"
+                                        placeholder="ornek@email.com"
+                                        autocomplete="email"
+                                    >
+                                </div>
+                            </label>
+
+                            <label>
+                                <span>Şifre</span>
+
+                                <div class="welcome-input-wrap">
+                                    <span aria-hidden="true">♙</span>
+
+                                    <input
+                                        type="password"
+                                        name="password"
+                                        placeholder="Şifrenizi girin"
+                                        autocomplete="current-password"
+                                    >
+
+                                    <button
+                                        type="button"
+                                        class="welcome-password-toggle"
+                                        aria-label="Şifreyi göster"
+                                    >
+                                        ◉
+                                    </button>
+                                </div>
+                            </label>
+
+                            <button
+                                type="button"
+                                class="welcome-forgot-password"
+                            >
+                                Şifremi Unuttum?
+                            </button>
+
+                            <button
+                                type="button"
+                                class="welcome-primary"
+                                data-welcome-action="login"
+                            >
+                                Giriş Yap
+                            </button>
+
+                        </form>
+
+                        <div class="welcome-divider">
+                            <span></span>
+                            <small>veya</small>
+                            <span></span>
+                        </div>
+
+                        <button
+                            type="button"
+                            class="welcome-secondary"
+                            data-welcome-action="start"
+                        >
+                            Hesap Oluştur
+                        </button>
+
+                        <a class="welcome-learn-more" href="#">
+                            VAERO Engine hakkında daha fazla bilgi edin
+                            <span>→</span>
+                        </a>
+
+                    </div>
+
+                </section>
+
+            </main>
+        `;
+        
         document.body.appendChild(
             screen
         );
