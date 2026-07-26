@@ -78,21 +78,19 @@ const WelcomeApp = {
         aria-hidden="true"
     >
         <picture>
-
             <source
                 media="(max-width:768px)"
                 srcset="assets/welcome/vaero-earth-mobile.webp"
             >
 
             <img
-                src="assets/welcome/vaero-earth.webp"
+                src="assets/welcome/vaero-earth-desktop.webp"
                 alt=""
             >
-
         </picture>
     </div>
 
-    <div class="welcome-layout">
+    <main class="welcome-layout">
 
         <section class="welcome-left">
 
@@ -101,36 +99,100 @@ const WelcomeApp = {
                 <span>ENGINE</span>
             </div>
 
-            <section class="welcome-message">
-
-                <h1>
-                    Varlıkların Zekası.
-                    <span>
-                        Seninle Evrilecek.
-                    </span>
-                </h1>
-
-                <p>
-                    Varlıklarını yönet,
-                    deneyimlerinden öğren
-                    ve seninle birlikte geliş.
+            <div class="welcome-intro">
+                <p class="welcome-eyebrow">
+                    KİŞİSEL EVRİM SİSTEMİ
                 </p>
 
-            </section>
+                <h1>
+                    Hayatını tek bir
+                    <span>zekâda birleştir.</span>
+                </h1>
+
+                <p class="welcome-description">
+                    Kimliğini, hedeflerini ve gelişimini anlayan;
+                    seninle birlikte öğrenip evrilen kişisel sistemin.
+                </p>
+
+                <div class="welcome-features">
+
+                    <article class="welcome-feature">
+                        <span class="welcome-feature-icon">01</span>
+
+                        <div>
+                            <strong>Kendini keşfet</strong>
+                            <p>Kimliğini ve yönünü görünür hâle getir.</p>
+                        </div>
+                    </article>
+
+                    <article class="welcome-feature">
+                        <span class="welcome-feature-icon">02</span>
+
+                        <div>
+                            <strong>Hayatını birleştir</strong>
+                            <p>Deneyimlerini ve hedeflerini tek merkezde yönet.</p>
+                        </div>
+                    </article>
+
+                    <article class="welcome-feature">
+                        <span class="welcome-feature-icon">03</span>
+
+                        <div>
+                            <strong>Seninle evrilsin</strong>
+                            <p>VAERO seni tanıdıkça daha güçlü hâle gelsin.</p>
+                        </div>
+                    </article>
+
+                </div>
+            </div>
 
         </section>
 
         <section class="welcome-right">
 
-            <section class="welcome-actions">
+            <div class="welcome-auth-panel">
 
-                <button
-                    type="button"
-                    class="welcome-primary"
-                    data-welcome-action="start"
-                >
-                    Başla
-                </button>
+                <div class="welcome-auth-heading">
+                    <p>TEKRAR HOŞ GELDİN</p>
+                    <h2>VAERO’ya giriş yap</h2>
+                    <span>
+                        Kaldığın yerden devam etmek için bilgilerini gir.
+                    </span>
+                </div>
+
+                <form class="welcome-auth-form">
+
+                    <label>
+                        <span>E-posta</span>
+
+                        <input
+                            type="email"
+                            name="email"
+                            placeholder="ornek@email.com"
+                            autocomplete="email"
+                        >
+                    </label>
+
+                    <label>
+                        <span>Şifre</span>
+
+                        <input
+                            type="password"
+                            name="password"
+                            placeholder="Şifreni gir"
+                            autocomplete="current-password"
+                        >
+                    </label>
+
+                    <button
+                        type="button"
+                        class="welcome-primary"
+                        data-welcome-action="login"
+                    >
+                        Giriş Yap
+                    </button>
+
+                </form>
 
                 <div class="welcome-divider">
                     <span></span>
@@ -141,74 +203,90 @@ const WelcomeApp = {
                 <button
                     type="button"
                     class="welcome-secondary"
-                    data-welcome-action="login"
+                    data-welcome-action="start"
                 >
-                    Hesabım Var
+                    Hesap Oluştur
                 </button>
 
                 <p class="welcome-security">
-                    🔒 Güvenli. Özel.
-                    Senin kontrolünde.
+                    Güvenli · Özel · Senin kontrolünde
                 </p>
 
-            </section>
+            </div>
 
         </section>
 
-    </div>
+    </main>
 `;
-
         document.body.appendChild(
             screen
         );
 
         screen.addEventListener(
-    "click",
-    event => {
+            "click",
+            event => {
 
-        const button =
-            event.target.closest(
-                "[data-welcome-action]"
-            );
+                const button =
+                    event.target.closest(
+                        "[data-welcome-action]"
+                    );
 
-        if(!button){
-            return;
-        }
+                if(!button){
+                    return;
+                }
 
-        if(
-            screen.classList.contains(
-                "is-entering"
-            )
-        ){
-            return;
-        }
+                if(
+                    screen.classList.contains(
+                        "is-entering"
+                    )
+                ){
+                    return;
+                }
 
-        const action =
-            button.dataset.welcomeAction;
+                const action =
+                    button.dataset.welcomeAction;
 
-        if(action === "start"){
+                if(action === "login"){
 
-            if(window.DiscoveryApp){
-                window.DiscoveryApp.render(
-    document.getElementById("engine")
-);
+                    this.complete();
+                    return;
+
+                }
+
+                if(action === "start"){
+
+                    screen.classList.add(
+                        "is-entering"
+                    );
+
+                    window.setTimeout(() => {
+
+                        screen.classList.add(
+                            "is-closing"
+                        );
+
+                    }, 700);
+
+                    window.setTimeout(() => {
+
+                        screen.remove();
+
+                        if(
+                            window.DiscoveryApp &&
+                            typeof window.DiscoveryApp.render ===
+                                "function"
+                        ){
+                            window.DiscoveryApp.render();
+                        }
+
+                    }, 1200);
+
+                }
+
             }
+        );
 
-            this.complete(false);
-            return;
-
-        }
-
-        if(action === "login"){
-
-            this.complete();
-            return;
-
-        }
-
-    }
-);
-        },
+    },
     
     reset(){
 
