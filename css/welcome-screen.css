@@ -890,7 +890,12 @@ body:has(.discovery-screen)
 }
 
 .vaero-welcome-screen.is-entering .welcome-layout{
-    visibility:hidden;
+    opacity:0;
+    transform:translateY(-10px) scale(.985);
+    pointer-events:none;
+    transition:
+        opacity .38s ease,
+        transform .52s cubic-bezier(.22,.8,.2,1);
 }
 
         /* REFERENCE DESKTOP WELCOME — FINAL OVERRIDES */
