@@ -117,11 +117,15 @@ const WelcomeApp = {
                         <div class="welcome-features">
 
                             <article class="welcome-feature">
-                                <span class="welcome-feature-icon">
-    <svg viewBox="0 0 48 48" aria-hidden="true">
-        <path d="M20 8c-4.2 0-7 3.2-7 7v1.2A7.5 7.5 0 0 0 10 30a7 7 0 0 0 7 7h1a6 6 0 0 0 6-6V14a6 6 0 0 0-4-6Z"/>
-        <path d="M28 8c4.2 0 7 3.2 7 7v1.2A7.5 7.5 0 0 1 38 30a7 7 0 0 1-7 7h-1a6 6 0 0 1-6-6V14a6 6 0 0 1 4-6Z"/>
-        <path d="M17 17c3 0 5 2 5 5M31 17c-3 0-5 2-5 5M16 29c3.5 0 6 2.5 6 6M32 29c-3.5 0-6 2.5-6 6"/>
+                                <span class="welcome-feature-icon" aria-hidden="true">
+    <svg viewBox="0 0 48 48">
+        <path d="M20 8a7 7 0 0 0-7 7v1a7 7 0 0 0-3 12 7 7 0 0 0 7 8h3V8Z"></path>
+        <path d="M28 8a7 7 0 0 1 7 7v1a7 7 0 0 1 3 12 7 7 0 0 1-7 8h-3V8Z"></path>
+        <path d="M20 16c-4 0-6 2-6 5"></path>
+        <path d="M28 16c4 0 6 2 6 5"></path>
+        <path d="M20 27c-4 0-6 2-6 5"></path>
+        <path d="M28 27c4 0 6 2 6 5"></path>
+        <path d="M20 22h8"></path>
     </svg>
 </span>
 
@@ -134,24 +138,13 @@ const WelcomeApp = {
                             </article>
 
                             <article class="welcome-feature">
-                                <span class="welcome-feature-icon">
-    <svg viewBox="0 0 48 48" aria-hidden="true">
-        <circle cx="24" cy="24" r="4"/>
-        <ellipse
-            cx="24"
-            cy="24"
-            rx="17"
-            ry="8"
-            transform="rotate(-28 24 24)"
-        />
-        <ellipse
-            cx="24"
-            cy="24"
-            rx="17"
-            ry="8"
-            transform="rotate(58 24 24)"
-        />
-        <circle class="welcome-orbit-node" cx="39" cy="17" r="2"/>
+                                <span class="welcome-feature-icon" aria-hidden="true">
+    <svg viewBox="0 0 48 48">
+        <ellipse cx="24" cy="24" rx="18" ry="9" transform="rotate(-28 24 24)"></ellipse>
+        <ellipse cx="24" cy="24" rx="9" ry="18" transform="rotate(-28 24 24)"></ellipse>
+        <circle cx="24" cy="24" r="3"></circle>
+        <circle class="welcome-orbit-node" cx="38" cy="15" r="2.5"></circle>
+        <circle class="welcome-orbit-node" cx="11" cy="31" r="2"></circle>
     </svg>
 </span>
 
@@ -164,13 +157,12 @@ const WelcomeApp = {
                             </article>
 
                             <article class="welcome-feature">
-                                <span class="welcome-feature-icon">
-    <svg viewBox="0 0 48 48" aria-hidden="true">
-        <path d="M24 6 39 12v11c0 9.5-5.8 15.5-15 19-9.2-3.5-15-9.5-15-19V12L24 6Z"/>
-        <path d="m17 24 5 5 10-11"/>
+                                <span class="welcome-feature-icon" aria-hidden="true">
+    <svg viewBox="0 0 48 48">
+        <path d="M24 4 40 10v12c0 10-6.5 17.5-16 22C14.5 39.5 8 32 8 22V10L24 4Z"></path>
+        <path d="m16.5 24 5 5 10-11"></path>
     </svg>
 </span>
-
                                 <div>
                                     <strong>Senin Kontrolünde</strong>
                                     <p>
