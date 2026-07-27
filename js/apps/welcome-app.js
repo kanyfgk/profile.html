@@ -183,8 +183,21 @@ const WelcomeApp = {
                 <section class="welcome-right">
 
                     <div class="welcome-theme-toggle">
-                        <button type="button" aria-label="Aydınlık tema">☀️</button>
-                        <button type="button" aria-label="Karanlık tema">☾</button>
+                        <button
+    type="button"
+    data-welcome-theme="light"
+    aria-label="Aydınlık tema"
+>
+    ☀️
+</button>
+
+<button
+    type="button"
+    data-welcome-theme="dark"
+    aria-label="Karanlık tema"
+>
+    ☾
+</button>
                     </div>
 
                     <div class="welcome-auth-panel">
@@ -395,6 +408,49 @@ if(passwordInput && passwordToggle){
 
 }
 
+        const themeButtons =
+    screen.querySelectorAll(
+        "[data-welcome-theme]"
+    );
+
+themeButtons.forEach(button => {
+
+    button.addEventListener(
+        "click",
+        () => {
+
+            const selectedTheme =
+                button.dataset.welcomeTheme;
+
+            screen.classList.toggle(
+                "is-light-theme",
+                selectedTheme === "light"
+            );
+
+            themeButtons.forEach(
+                themeButton => {
+
+                    const isActive =
+                        themeButton === button;
+
+                    themeButton.classList.toggle(
+                        "is-active",
+                        isActive
+                    );
+
+                    themeButton.setAttribute(
+                        "aria-pressed",
+                        String(isActive)
+                    );
+
+                }
+            );
+
+        }
+    );
+
+});
+        
         screen.addEventListener(
             "click",
             event => {
