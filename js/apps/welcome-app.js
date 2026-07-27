@@ -208,7 +208,26 @@ const WelcomeApp = {
                                 <span>E-posta</span>
 
                                 <div class="welcome-input-wrap">
-                                    <span aria-hidden="true">✉️</span>
+                                    <span aria-hidden="true">
+    <svg viewBox="0 0 24 24" width="16" height="16">
+        <rect
+            x="3"
+            y="5"
+            width="18"
+            height="14"
+            rx="2"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.5"
+        ></rect>
+        <path
+            d="m4 7 8 6 8-6"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.5"
+        ></path>
+    </svg>
+</span>
 
                                     <input
                                         type="email"
@@ -223,7 +242,26 @@ const WelcomeApp = {
                                 <span>Şifre</span>
 
                                 <div class="welcome-input-wrap">
-                                    <span aria-hidden="true">♙</span>
+                                    <span aria-hidden="true">
+    <svg viewBox="0 0 24 24" width="16" height="16">
+        <rect
+            x="5"
+            y="10"
+            width="14"
+            height="11"
+            rx="2"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.5"
+        ></rect>
+        <path
+            d="M8 10V7a4 4 0 0 1 8 0v3"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.5"
+        ></path>
+    </svg>
+</span>
 
                                     <input
                                         type="password"
@@ -237,7 +275,27 @@ const WelcomeApp = {
                                         class="welcome-password-toggle"
                                         aria-label="Şifreyi göster"
                                     >
-                                        ◉
+                                        <svg
+    viewBox="0 0 24 24"
+    width="17"
+    height="17"
+    aria-hidden="true"
+>
+    <path
+        d="M2.5 12s3.5-6 9.5-6 9.5 6 9.5 6-3.5 6-9.5 6-9.5-6-9.5-6Z"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="1.5"
+    ></path>
+    <circle
+        cx="12"
+        cy="12"
+        r="2.5"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="1.5"
+    ></circle>
+</svg>
                                     </button>
                                 </div>
                             </label>
