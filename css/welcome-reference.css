@@ -633,3 +633,23 @@
     stroke-linejoin:round;
     vector-effect:non-scaling-stroke;
 }
+
+@media (min-width:769px){
+
+    .vaero-welcome-screen .welcome-feature-icon{
+        transition:
+            transform .28s ease,
+            color .28s ease,
+            filter .28s ease;
+    }
+
+    .vaero-welcome-screen .welcome-feature:hover
+    .welcome-feature-icon{
+        color:#f1ca7d;
+        transform:translateY(-3px) scale(1.04);
+        filter:drop-shadow(
+            0 7px 12px rgba(218,174,94,.18)
+        );
+    }
+
+}
