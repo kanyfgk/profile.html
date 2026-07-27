@@ -190,8 +190,23 @@ const WelcomeApp = {
                     <div class="welcome-auth-panel">
 
                         <div class="welcome-auth-logo" aria-hidden="true">
-                            V
-                        </div>
+    <svg viewBox="0 0 82 72">
+        <path
+            d="M9 10 37 57 47 41 29 10Z"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="6"
+            stroke-linejoin="miter"
+        ></path>
+        <path
+            d="M34 10 47 31 59 10H73L40 64"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="6"
+            stroke-linejoin="miter"
+        ></path>
+    </svg>
+</div>
 
                         <div class="welcome-auth-heading">
                             <h2>VAERO Engine’e Hoş Geldin</h2>
