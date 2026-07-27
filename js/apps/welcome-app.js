@@ -343,9 +343,42 @@ const WelcomeApp = {
             </main>
         `;
         
-        document.body.appendChild(
-            screen
-        );
+        const passwordInput =
+    screen.querySelector(
+        'input[name="password"]'
+    );
+
+const passwordToggle =
+    screen.querySelector(
+        ".welcome-password-toggle"
+    );
+
+if(passwordInput && passwordToggle){
+
+    passwordToggle.addEventListener(
+        "click",
+        () => {
+
+            const isHidden =
+                passwordInput.type ===
+                "password";
+
+            passwordInput.type =
+                isHidden
+                    ? "text"
+                    : "password";
+
+            passwordToggle.setAttribute(
+                "aria-label",
+                isHidden
+                    ? "Şifreyi gizle"
+                    : "Şifreyi göster"
+            );
+
+        }
+    );
+
+}
 
         screen.addEventListener(
             "click",
