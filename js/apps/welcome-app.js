@@ -185,8 +185,10 @@ const WelcomeApp = {
                     <div class="welcome-theme-toggle">
                         <button
     type="button"
+    class="is-active"
     data-welcome-theme="light"
     aria-label="Aydınlık tema"
+    aria-pressed="true"
 >
     ☀️
 </button>
@@ -195,6 +197,7 @@ const WelcomeApp = {
     type="button"
     data-welcome-theme="dark"
     aria-label="Karanlık tema"
+    aria-pressed="false"
 >
     ☾
 </button>
