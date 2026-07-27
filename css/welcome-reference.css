@@ -546,3 +546,16 @@
         stroke:none;
     }
 }
+
+@media (min-width:769px){
+
+    .vaero-welcome-screen .welcome-feature{
+        text-align:center;
+    }
+
+    .vaero-welcome-screen .welcome-feature-icon{
+        margin-left:auto;
+        margin-right:auto;
+    }
+
+} 
