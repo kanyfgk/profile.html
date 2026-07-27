@@ -559,3 +559,26 @@
     }
 
 } 
+
+@media (min-width:769px){
+
+    .vaero-welcome-screen .welcome-feature:nth-child(1)
+    .welcome-feature-icon svg{
+        width:42px;
+        height:42px;
+    }
+
+    .vaero-welcome-screen .welcome-feature:nth-child(2)
+    .welcome-feature-icon svg{
+        width:44px;
+        height:44px;
+    }
+
+    .vaero-welcome-screen .welcome-feature:nth-child(3)
+    .welcome-feature-icon svg{
+        width:42px;
+        height:42px;
+        transform:translateY(-1px);
+    }
+
+}
