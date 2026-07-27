@@ -653,3 +653,188 @@
     }
 
 }
+
+@media (max-width:768px){
+
+    .vaero-welcome-screen{
+        overflow-x:hidden;
+        overflow-y:auto;
+    }
+
+    .vaero-welcome-screen .welcome-layout{
+        position:relative;
+        z-index:2;
+        display:flex;
+        flex-direction:column;
+        width:100%;
+        min-height:100svh;
+        padding:
+            calc(24px + env(safe-area-inset-top))
+            20px
+            calc(22px + env(safe-area-inset-bottom));
+    }
+
+    .vaero-welcome-screen .welcome-left{
+        display:flex;
+        flex-direction:column;
+    }
+
+    .vaero-welcome-screen .welcome-right{
+        position:relative;
+        display:flex;
+        justify-content:center;
+        margin-top:28px;
+    }
+
+}
+
+@media (max-width:768px){
+
+    .vaero-welcome-screen .welcome-brand{
+        margin:0 auto;
+        text-align:center;
+    }
+
+    .vaero-welcome-screen .welcome-brand strong{
+        font-size:26px;
+        letter-spacing:.25em;
+        text-indent:.25em;
+    }
+
+    .vaero-welcome-screen .welcome-brand span{
+        margin-top:7px;
+        font-size:8px;
+        letter-spacing:.48em;
+        text-indent:.48em;
+    }
+
+    .vaero-welcome-screen .welcome-intro{
+        width:100%;
+        margin-top:42px;
+        padding:0;
+        text-align:center;
+    }
+
+    .vaero-welcome-screen .welcome-intro h1{
+        margin:0;
+        font-size:clamp(36px,10.5vw,48px);
+        line-height:1.04;
+        letter-spacing:-.045em;
+    }
+
+    .vaero-welcome-screen .welcome-intro h1 span{
+        display:block;
+        margin-top:5px;
+    }
+
+    .vaero-welcome-screen .welcome-description{
+        max-width:390px;
+        margin:18px auto 0;
+        font-size:14px;
+        line-height:1.6;
+    }
+
+}
+
+@media (max-width:768px){
+
+    .vaero-welcome-screen .welcome-features{
+        display:grid;
+        grid-template-columns:repeat(3,minmax(0,1fr));
+        width:100%;
+        margin-top:30px;
+    }
+
+    .vaero-welcome-screen .welcome-feature{
+        padding:0 8px;
+        border-right:
+            1px solid rgba(218,177,103,.14);
+        text-align:center;
+    }
+
+    .vaero-welcome-screen .welcome-feature:last-child{
+        border-right:0;
+    }
+
+    .vaero-welcome-screen .welcome-feature-icon{
+        display:flex;
+        align-items:center;
+        justify-content:center;
+        width:38px;
+        height:38px;
+        margin:0 auto 10px;
+    }
+
+    .vaero-welcome-screen .welcome-feature-icon svg{
+        width:36px;
+        height:36px;
+    }
+
+    .vaero-welcome-screen .welcome-feature strong{
+        font-size:11px;
+        line-height:1.3;
+    }
+
+    .vaero-welcome-screen .welcome-feature p{
+        display:none;
+    }
+
+    .vaero-welcome-screen .welcome-copyright{
+        display:none;
+    }
+
+}
+
+@media (max-width:768px){
+
+    .vaero-welcome-screen .welcome-theme-toggle{
+        position:absolute;
+        top:-8px;
+        right:0;
+        display:flex;
+        padding:3px;
+        border:
+            1px solid rgba(255,255,255,.12);
+        border-radius:14px;
+        background:rgba(5,9,15,.70);
+        backdrop-filter:blur(14px);
+    }
+
+    .vaero-welcome-screen .welcome-theme-toggle button{
+        display:flex;
+        align-items:center;
+        justify-content:center;
+        width:32px;
+        height:28px;
+        padding:0;
+        border:0;
+        border-radius:10px;
+        background:transparent;
+        color:rgba(255,255,255,.55);
+    }
+
+    .vaero-welcome-screen
+    .welcome-theme-toggle button.is-active{
+        background:rgba(219,177,99,.13);
+        color:#e0b76e;
+    }
+
+    .vaero-welcome-screen .welcome-auth-panel{
+        width:100%;
+        max-width:430px;
+        margin-top:38px;
+        padding:28px 22px 24px;
+        border:
+            1px solid rgba(255,255,255,.11);
+        border-radius:18px;
+        background:
+            linear-gradient(
+                145deg,
+                rgba(16,20,28,.90),
+                rgba(7,10,16,.86)
+            );
+        box-shadow:0 24px 60px rgba(0,0,0,.42);
+        backdrop-filter:blur(22px);
+    }
+
+}
