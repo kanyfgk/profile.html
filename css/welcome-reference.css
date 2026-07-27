@@ -314,6 +314,9 @@
         width:20px;
         color:rgba(255,255,255,.5);
         font-size:14px;
+        display:flex;
+        align-items:center;
+        justify-content:center;
     }
 
     .vaero-welcome-screen .welcome-input-wrap input{
