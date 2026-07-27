@@ -217,7 +217,7 @@
         cursor:pointer;
     }
 
-    .vaero-welcome-screen .welcome-theme-toggle button:first-child{
+    .vaero-welcome-screen .welcome-theme-toggle button.is-active{
         background:rgba(219,177,99,.13);
         color:#e0b76e;
     }
