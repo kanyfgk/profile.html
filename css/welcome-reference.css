@@ -838,3 +838,151 @@
     }
 
 }
+
+@media (max-width:768px){
+
+    .vaero-welcome-screen .welcome-auth-logo{
+        display:flex;
+        align-items:center;
+        justify-content:center;
+        width:58px;
+        height:54px;
+        margin:0 auto 12px;
+        color:#dfb56d;
+    }
+
+    .vaero-welcome-screen .welcome-auth-logo svg{
+        width:58px;
+        height:54px;
+    }
+
+    .vaero-welcome-screen .welcome-auth-heading{
+        margin-bottom:22px;
+        text-align:center;
+    }
+
+    .vaero-welcome-screen .welcome-auth-heading h2{
+        margin:0;
+        font-size:20px;
+        font-weight:500;
+    }
+
+    .vaero-welcome-screen .welcome-auth-heading span{
+        display:block;
+        margin-top:8px;
+        color:rgba(232,228,219,.48);
+        font-size:12px;
+        line-height:1.5;
+    }
+
+    .vaero-welcome-screen .welcome-auth-form{
+        display:grid;
+        gap:14px;
+    }
+
+    .vaero-welcome-screen .welcome-auth-form label{
+        display:grid;
+        gap:7px;
+    }
+
+    .vaero-welcome-screen .welcome-auth-form label > span{
+        font-size:12px;
+        color:rgba(243,239,231,.72);
+    }
+
+}
+
+@media (max-width:768px){
+
+    .vaero-welcome-screen .welcome-input-wrap{
+        display:flex;
+        align-items:center;
+        width:100%;
+        height:48px;
+        padding:0 13px;
+        border:
+            1px solid rgba(255,255,255,.11);
+        border-radius:9px;
+        background:rgba(255,255,255,.04);
+    }
+
+    .vaero-welcome-screen .welcome-input-wrap > span{
+        display:flex;
+        align-items:center;
+        justify-content:center;
+        flex:0 0 auto;
+        width:20px;
+        color:rgba(255,255,255,.5);
+    }
+
+    .vaero-welcome-screen .welcome-input-wrap input{
+        flex:1;
+        width:auto;
+        height:100%;
+        min-width:0;
+        padding:0 8px;
+        border:0;
+        outline:0;
+        background:transparent;
+        color:#f4f1eb;
+        font:inherit;
+        font-size:13px;
+    }
+
+    .vaero-welcome-screen .welcome-password-toggle,
+    .vaero-welcome-screen .welcome-forgot-password{
+        border:0;
+        background:transparent;
+        color:#d2a85e;
+    }
+
+    .vaero-welcome-screen .welcome-forgot-password{
+        justify-self:end;
+        margin-top:-5px;
+        font-size:11px;
+    }
+
+    .vaero-welcome-screen .welcome-primary,
+    .vaero-welcome-screen .welcome-secondary{
+        width:100%;
+        height:48px;
+        min-height:0;
+        border-radius:9px;
+        font-size:14px;
+    }
+
+}
+
+@media (max-width:768px){
+
+    .vaero-welcome-screen .welcome-divider{
+        display:grid;
+        grid-template-columns:1fr auto 1fr;
+        align-items:center;
+        gap:12px;
+        margin:16px 0;
+    }
+
+    .vaero-welcome-screen .welcome-divider span{
+        height:1px;
+        background:rgba(255,255,255,.1);
+    }
+
+    .vaero-welcome-screen .welcome-divider small{
+        color:rgba(255,255,255,.32);
+        font-size:11px;
+    }
+
+    .vaero-welcome-screen .welcome-learn-more{
+        display:flex;
+        align-items:center;
+        justify-content:center;
+        gap:8px;
+        margin-top:21px;
+        color:#d2aa62;
+        font-size:11px;
+        text-align:center;
+        text-decoration:none;
+    }
+
+}
