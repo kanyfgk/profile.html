@@ -625,3 +625,11 @@
     }
 
 }
+
+.vaero-welcome-screen .welcome-feature-icon svg path,
+.vaero-welcome-screen .welcome-feature-icon svg ellipse,
+.vaero-welcome-screen .welcome-feature-icon svg circle{
+    stroke-linecap:round;
+    stroke-linejoin:round;
+    vector-effect:non-scaling-stroke;
+}
