@@ -497,7 +497,7 @@ themeButtons.forEach(button => {
                             "is-closing"
                         );
 
-                    }, 700);
+                    }, 900);
 
                     window.setTimeout(() => {
 
@@ -511,7 +511,7 @@ themeButtons.forEach(button => {
                             window.DiscoveryApp.render();
                         }
 
-                    }, 1200);
+                    }, 1400);
 
                 }
 
