@@ -102,9 +102,11 @@ const WelcomeApp = {
                     <div class="welcome-intro">
 
                         <h1>
-                            Varlıkların Zekası.
-                            <span>Seninle Evrilecek.</span>
-                        </h1>
+    Varlıkların
+    <br>
+    Zekası.
+    <span>Seninle Evrilecek.</span>
+</h1>
 
                         <p class="welcome-description">
                             VAERO Engine, varlıklarının yaşamını yönetir,
