@@ -880,7 +880,7 @@ body:has(.discovery-screen)
 @media (min-width:769px){
 
     .welcome-scene img{
-        transform-origin:50% 52%;
+        transform-origin:54% 66%;
     }
 
     .vaero-welcome-screen.is-entering .welcome-scene img{
