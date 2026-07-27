@@ -120,7 +120,7 @@
         display:grid;
         grid-template-columns:repeat(3,minmax(0,1fr));
         gap:0;
-        width:min(100%,590px);
+        width:min(100%,500px);
         margin-top:42px;
     }
 
