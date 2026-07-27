@@ -588,3 +588,37 @@
     }
 
 }
+
+@media (min-width:769px){
+
+    .vaero-welcome-screen.is-light-theme
+    .welcome-scene img{
+        filter:brightness(.82) saturate(.96);
+    }
+
+    .vaero-welcome-screen.is-light-theme::after{
+        background:
+            linear-gradient(
+                90deg,
+                rgba(1,5,11,.22) 0%,
+                rgba(1,5,11,.02) 47%,
+                rgba(1,5,11,.30) 100%
+            ),
+            linear-gradient(
+                180deg,
+                rgba(0,3,8,.04),
+                rgba(0,3,8,.22)
+            );
+    }
+
+    .vaero-welcome-screen.is-light-theme
+    .welcome-auth-panel{
+        background:
+            linear-gradient(
+                145deg,
+                rgba(24,29,38,.84),
+                rgba(10,14,21,.78)
+            );
+    }
+
+}
