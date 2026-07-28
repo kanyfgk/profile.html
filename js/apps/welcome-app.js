@@ -453,6 +453,10 @@ themeButtons.forEach(button => {
     );
 
 });
+
+        document.body.appendChild(
+    screen
+);
         
         screen.addEventListener(
             "click",
