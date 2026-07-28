@@ -986,3 +986,37 @@
     }
 
 }
+
+/* FINAL DESKTOP PROPORTIONS */
+
+@media (min-width:769px){
+
+    .vaero-welcome-screen .welcome-layout{
+        grid-template-columns:minmax(0,1.22fr) minmax(420px,.78fr);
+        min-height:0;
+        padding:28px 42px 22px;
+        gap:56px;
+    }
+
+    .vaero-welcome-screen .welcome-intro{
+        width:min(100%,590px);
+        padding:18px 0 40px 28px;
+    }
+
+    .vaero-welcome-screen .welcome-intro h1{
+        max-width:500px;
+        font-size:clamp(42px,3.7vw,54px);
+    }
+
+    .vaero-welcome-screen .welcome-auth-panel{
+        width:100%;
+        max-width:440px;
+        min-height:620px;
+        margin-top:0;
+        padding:34px 36px 30px;
+        display:flex;
+        flex-direction:column;
+        justify-content:center;
+    }
+
+}
