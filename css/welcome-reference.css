@@ -485,9 +485,10 @@
     }
 
     .vaero-welcome-screen .welcome-auth-panel{
-        max-width:430px;
-        padding:20px 28px 16px;
-    }
+    max-width:440px;
+    min-height:620px;
+    padding:34px 36px 30px;
+}
 
     .vaero-welcome-screen .welcome-auth-logo{
         height:42px;
