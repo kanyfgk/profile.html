@@ -990,7 +990,8 @@
 
 /* FINAL DESKTOP PROPORTIONS */
 
-@media (min-width:769px)
+@media (min-width:769px){
+
     .vaero-welcome-screen .welcome-layout{
         grid-template-columns:minmax(0,1.22fr) minmax(420px,.78fr);
         min-height:0;
