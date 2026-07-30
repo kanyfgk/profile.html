@@ -427,33 +427,6 @@
 
 }
 
-/* DESKTOP HEIGHT AND TOGGLE POLISH */
-
-@media (min-width:769px){
-
-    .vaero-welcome-screen .welcome-layout{
-        min-height:0;
-    }
-
-    .vaero-welcome-screen .welcome-right{
-        padding-top:48px;
-        padding-bottom:18px;
-    }
-
-    .vaero-welcome-screen .welcome-theme-toggle{
-        top:0;
-        right:0;
-    }
-
-    .vaero-welcome-screen .welcome-auth-panel{
-        margin-top:0;
-    }
-
-    .vaero-welcome-screen .welcome-intro{
-        padding-bottom:24px;
-    }
-}
-
 /* SHORT DESKTOP SCREENS */
 
 @media (min-width:769px) and (max-height:760px){
@@ -992,13 +965,6 @@
 /* FINAL DESKTOP PROPORTIONS */
 
 @media (min-width:769px){
-
-    .vaero-welcome-screen .welcome-layout{
-        grid-template-columns:minmax(0,1.22fr) minmax(420px,.78fr);
-        min-height:0;
-        padding:28px 42px 22px;
-        gap:56px;
-    }
 
     .vaero-welcome-screen .welcome-intro{
         width:min(100%,590px);
