@@ -600,6 +600,36 @@
     margin:0;
     padding:0;
 }
+
+   /* FINAL AUTH SPACING */
+
+.vaero-welcome-screen .welcome-auth-panel{
+    height:540px;
+    max-height:calc(100vh - 82px);
+    transform:translateY(8px);
+    padding:102px 36px 52px;
+}
+
+.vaero-welcome-screen .welcome-auth-heading{
+    margin:0 0 22px;
+}
+
+.vaero-welcome-screen .welcome-auth-heading span{
+    letter-spacing:.035em;
+}
+
+.vaero-welcome-screen .welcome-forgot-password{
+    margin-top:1px;
+    margin-bottom:3px;
+}
+
+.vaero-welcome-screen .welcome-divider{
+    margin:15px 0;
+}
+
+.vaero-welcome-screen .welcome-learn-more{
+    bottom:28px;
+}
 }
 
 /* ==========================================================
