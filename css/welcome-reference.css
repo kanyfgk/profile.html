@@ -1,68 +1,56 @@
-/* =========================================================
+/* ==========================================================
    VAERO WELCOME REFERENCE
-   Clean single-source overrides
-   ========================================================= */
+   Desktop and mobile overrides.
+   Clean rewrite.
+   ========================================================== */
 
-.vaero-welcome-screen::after{
-    content:"";
-    position:absolute;
-    inset:0;
-    z-index:1;
-    pointer-events:none;
-    background:
-        linear-gradient(90deg,rgba(1,5,11,.35) 0%,rgba(1,5,11,.05) 47%,rgba(1,5,11,.44) 100%),
-        linear-gradient(180deg,rgba(0,3,8,.12),rgba(0,3,8,.38));
-}
-
-.vaero-welcome-screen .welcome-scene img{
-    object-fit:cover;
-    object-position:center center;
-    filter:brightness(.66) saturate(.88);
-}
-
-.vaero-welcome-screen .welcome-stars{
-    z-index:1;
-    opacity:.18;
-}
-
-.vaero-welcome-screen .welcome-content,
-.vaero-welcome-screen .welcome-actions{
-    display:none;
-}
-
-.vaero-welcome-screen .welcome-feature-icon svg path,
-.vaero-welcome-screen .welcome-feature-icon svg ellipse,
-.vaero-welcome-screen .welcome-feature-icon svg circle{
-    fill:none;
-    stroke:currentColor;
-    stroke-width:1.8;
-    stroke-linecap:round;
-    stroke-linejoin:round;
-    vector-effect:non-scaling-stroke;
-}
-
-.vaero-welcome-screen .welcome-feature-icon svg .welcome-orbit-node{
-    fill:currentColor;
-    stroke:none;
-}
+/* ==========================================================
+   DESKTOP
+   ========================================================== */
 
 @media (min-width:769px){
 
-    .vaero-welcome-screen{
-        overflow:hidden;
+    .vaero-welcome-screen::after{
+        content:"";
+        position:absolute;
+        inset:0;
+        z-index:1;
+        pointer-events:none;
+        background:
+            linear-gradient(
+                90deg,
+                rgba(1,5,11,.35) 0%,
+                rgba(1,5,11,.05) 47%,
+                rgba(1,5,11,.44) 100%
+            ),
+            linear-gradient(
+                180deg,
+                rgba(0,3,8,.12),
+                rgba(0,3,8,.38)
+            );
+    }
+
+    .vaero-welcome-screen .welcome-scene img{
+        object-fit:cover;
+        object-position:center center;
+        filter:brightness(.66) saturate(.88);
+    }
+
+    .vaero-welcome-screen .welcome-stars{
+        z-index:1;
+        opacity:.18;
     }
 
     .vaero-welcome-screen .welcome-layout{
         position:relative;
         z-index:2;
         display:grid;
-        grid-template-columns:minmax(0,1.22fr) minmax(420px,.78fr);
-        align-items:stretch;
+        grid-template-columns:minmax(0,1.3fr) minmax(390px,.75fr);
         width:100%;
         height:100vh;
-        min-height:0;
-        padding:28px 42px 22px;
-        gap:56px;
+        min-height:680px;
+        padding:30px 44px 24px;
+        gap:clamp(44px,5vw,82px);
     }
 
     .vaero-welcome-screen .welcome-left{
@@ -142,6 +130,7 @@
         gap:0;
         width:min(100%,560px);
         margin-top:42px;
+        justify-items:stretch;
     }
 
     .vaero-welcome-screen .welcome-feature{
@@ -152,8 +141,8 @@
         border-right:1px solid rgba(218,177,103,.14);
         border-radius:0;
         background:none;
-        backdrop-filter:none;
         text-align:center;
+        backdrop-filter:none;
     }
 
     .vaero-welcome-screen .welcome-feature:first-child{
@@ -175,6 +164,16 @@
         border:0;
         border-radius:0;
         color:#dfb56a;
+        transition:
+            transform .28s ease,
+            color .28s ease,
+            filter .28s ease;
+    }
+
+    .vaero-welcome-screen .welcome-feature:hover .welcome-feature-icon{
+        color:#f1ca7d;
+        transform:translateY(-3px) scale(1.04);
+        filter:drop-shadow(0 7px 12px rgba(218,174,94,.18));
     }
 
     .vaero-welcome-screen .welcome-feature-icon svg{
@@ -198,6 +197,22 @@
         width:42px;
         height:42px;
         transform:translateY(-1px);
+    }
+
+    .vaero-welcome-screen .welcome-feature-icon svg path,
+    .vaero-welcome-screen .welcome-feature-icon svg ellipse,
+    .vaero-welcome-screen .welcome-feature-icon svg circle{
+        fill:none;
+        stroke:currentColor;
+        stroke-width:1.8;
+        stroke-linecap:round;
+        stroke-linejoin:round;
+        vector-effect:non-scaling-stroke;
+    }
+
+    .vaero-welcome-screen .welcome-feature-icon svg .welcome-orbit-node{
+        fill:currentColor;
+        stroke:none;
     }
 
     .vaero-welcome-screen .welcome-feature strong{
@@ -228,17 +243,13 @@
         display:flex;
         align-items:center;
         justify-content:flex-end;
-        width:100%;
         height:100%;
-        min-height:0;
-        margin:0;
-        padding:0;
     }
 
     .vaero-welcome-screen .welcome-theme-toggle{
         position:absolute;
         top:0;
-        right:0;
+        right:12px;
         z-index:3;
         display:flex;
         overflow:hidden;
@@ -274,14 +285,20 @@
         justify-content:center;
         width:100%;
         max-width:440px;
-        height:min(620px,calc(100vh - 76px));
-        min-height:0;
-        margin:0;
+        min-height:620px;
+        margin-top:0;
         padding:34px 36px 30px;
         border:1px solid rgba(255,255,255,.12);
         border-radius:18px;
-        background:linear-gradient(145deg,rgba(16,20,28,.88),rgba(7,10,16,.82));
-        box-shadow:0 28px 80px rgba(0,0,0,.48),inset 0 1px 0 rgba(255,255,255,.025);
+        background:
+            linear-gradient(
+                145deg,
+                rgba(16,20,28,.88),
+                rgba(7,10,16,.82)
+            );
+        box-shadow:
+            0 28px 80px rgba(0,0,0,.48),
+            inset 0 1px 0 rgba(255,255,255,.025);
         backdrop-filter:blur(24px);
     }
 
@@ -290,9 +307,11 @@
         align-items:center;
         justify-content:center;
         width:66px;
-        height:64px;
+        height:66px;
         margin:0 auto 14px;
         color:#dfb56d;
+        font-size:52px;
+        font-weight:300;
         line-height:1;
         transform:none;
     }
@@ -353,9 +372,9 @@
 
     .vaero-welcome-screen .welcome-input-wrap > span{
         display:flex;
+        flex:0 0 auto;
         align-items:center;
         justify-content:center;
-        flex:0 0 auto;
         width:20px;
         color:rgba(255,255,255,.5);
         font-size:14px;
@@ -415,7 +434,13 @@
     .vaero-welcome-screen .welcome-primary{
         margin:0;
         border:0;
-        background:linear-gradient(100deg,#cda554,#f0d28b,#c89442);
+        background:
+            linear-gradient(
+                100deg,
+                #cda554,
+                #f0d28b,
+                #c89442
+            );
         color:#171108;
         box-shadow:0 12px 28px rgba(203,157,72,.15);
     }
@@ -454,7 +479,117 @@
         font-size:11px;
         text-decoration:none;
     }
+
+    .vaero-welcome-screen .welcome-content,
+    .vaero-welcome-screen .welcome-actions{
+        display:none;
+    }
+
+    .vaero-welcome-screen.is-light-theme .welcome-scene img{
+        filter:brightness(.82) saturate(.96);
+    }
+
+    .vaero-welcome-screen.is-light-theme::after{
+        background:
+            linear-gradient(
+                90deg,
+                rgba(1,5,11,.22) 0%,
+                rgba(1,5,11,.02) 47%,
+                rgba(1,5,11,.30) 100%
+            ),
+            linear-gradient(
+                180deg,
+                rgba(0,3,8,.04),
+                rgba(0,3,8,.22)
+            );
+    }
+
+    .vaero-welcome-screen.is-light-theme .welcome-auth-panel{
+        background:
+            linear-gradient(
+                145deg,
+                rgba(24,29,38,.84),
+                rgba(10,14,21,.78)
+            );
+    }
 }
+
+/* ==========================================================
+   SHORT DESKTOP
+   ========================================================== */
+
+@media (min-width:769px) and (max-height:760px){
+
+    .vaero-welcome-screen .welcome-layout{
+        min-height:633px;
+        padding:18px 36px 12px;
+    }
+
+    .vaero-welcome-screen .welcome-intro{
+        padding:12px 0 10px 28px;
+    }
+
+    .vaero-welcome-screen .welcome-intro h1{
+        font-size:clamp(38px,3.7vw,54px);
+    }
+
+    .vaero-welcome-screen .welcome-description{
+        margin-top:14px;
+        line-height:1.45;
+    }
+
+    .vaero-welcome-screen .welcome-features{
+        margin-top:34px;
+    }
+
+    .vaero-welcome-screen .welcome-right{
+        padding-top:42px;
+        padding-bottom:8px;
+    }
+
+    .vaero-welcome-screen .welcome-auth-panel{
+        min-height:0;
+        max-width:440px;
+        padding:28px 36px 24px;
+    }
+
+    .vaero-welcome-screen .welcome-auth-logo{
+        width:58px;
+        height:48px;
+        margin-bottom:8px;
+    }
+
+    .vaero-welcome-screen .welcome-auth-logo svg{
+        width:58px;
+        height:48px;
+    }
+
+    .vaero-welcome-screen .welcome-auth-heading{
+        margin-bottom:14px;
+    }
+
+    .vaero-welcome-screen .welcome-auth-form{
+        gap:10px;
+    }
+
+    .vaero-welcome-screen .welcome-input-wrap,
+    .vaero-welcome-screen .welcome-primary,
+    .vaero-welcome-screen .welcome-secondary{
+        height:42px;
+    }
+
+    .vaero-welcome-screen .welcome-divider{
+        margin:10px 0;
+    }
+
+    .vaero-welcome-screen .welcome-learn-more{
+        margin-top:12px;
+    }
+}
+
+/* ==========================================================
+   MOBILE
+   ========================================================== */
 
 @media (max-width:768px){
 
@@ -470,12 +605,22 @@
         flex-direction:column;
         width:100%;
         min-height:100svh;
-        padding:calc(24px + env(safe-area-inset-top)) 20px calc(22px + env(safe-area-inset-bottom));
+        padding:
+            calc(24px + env(safe-area-inset-top))
+            20px
+            calc(22px + env(safe-area-inset-bottom));
     }
 
     .vaero-welcome-screen .welcome-left{
         display:flex;
         flex-direction:column;
+    }
+
+    .vaero-welcome-screen .welcome-right{
+        position:relative;
+        display:flex;
+        justify-content:center;
+        margin-top:28px;
     }
 
     .vaero-welcome-screen .welcome-brand{
@@ -563,14 +708,6 @@
         display:none;
     }
 
-    .vaero-welcome-screen .welcome-right{
-        position:relative;
-        display:flex;
-        justify-content:center;
-        width:100%;
-        margin-top:28px;
-    }
-
     .vaero-welcome-screen .welcome-theme-toggle{
         position:absolute;
         top:-8px;
@@ -608,7 +745,12 @@
         padding:28px 22px 24px;
         border:1px solid rgba(255,255,255,.11);
         border-radius:18px;
-        background:linear-gradient(145deg,rgba(16,20,28,.90),rgba(7,10,16,.86));
+        background:
+            linear-gradient(
+                145deg,
+                rgba(16,20,28,.90),
+                rgba(7,10,16,.86)
+            );
         box-shadow:0 24px 60px rgba(0,0,0,.42);
         backdrop-filter:blur(22px);
     }
@@ -675,9 +817,9 @@
 
     .vaero-welcome-screen .welcome-input-wrap > span{
         display:flex;
+        flex:0 0 auto;
         align-items:center;
         justify-content:center;
-        flex:0 0 auto;
         width:20px;
         color:rgba(255,255,255,.5);
     }
