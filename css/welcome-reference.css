@@ -543,48 +543,54 @@
     }
 
     .vaero-welcome-screen .welcome-right{
-        padding-top:42px;
-        padding-bottom:8px;
-    }
-
-    .vaero-welcome-screen .welcome-auth-panel{
-    min-height:620px;
-    max-width:440px;
-    padding:28px 36px 24px;
+    align-items:center;
+    padding:34px 0 10px;
 }
 
-    .vaero-welcome-screen .welcome-auth-logo{
-        width:58px;
-        height:48px;
-        margin-bottom:8px;
-    }
+.vaero-welcome-screen .welcome-auth-panel{
+    width:100%;
+    max-width:440px;
+    height:560px;
+    min-height:0;
+    max-height:calc(100vh - 64px);
+    margin:0;
+    padding:20px 36px 18px;
+    justify-content:flex-start;
+}
 
-    .vaero-welcome-screen .welcome-auth-logo svg{
-        width:58px;
-        height:48px;
-    }
+.vaero-welcome-screen .welcome-auth-logo{
+    width:58px;
+    height:52px;
+    margin:0 auto 6px;
+}
 
-    .vaero-welcome-screen .welcome-auth-heading{
-        margin-bottom:14px;
-    }
+.vaero-welcome-screen .welcome-auth-logo svg{
+    width:62px;
+    height:52px;
+}
 
-    .vaero-welcome-screen .welcome-auth-form{
-        gap:10px;
-    }
+.vaero-welcome-screen .welcome-auth-heading{
+    margin-bottom:14px;
+}
 
-    .vaero-welcome-screen .welcome-input-wrap,
-    .vaero-welcome-screen .welcome-primary,
-    .vaero-welcome-screen .welcome-secondary{
-        height:42px;
-    }
+.vaero-welcome-screen .welcome-auth-form{
+    gap:10px;
+}
 
-    .vaero-welcome-screen .welcome-divider{
-        margin:10px 0;
-    }
+.vaero-welcome-screen .welcome-input-wrap,
+.vaero-welcome-screen .welcome-primary,
+.vaero-welcome-screen .welcome-secondary{
+    height:42px;
+}
 
-    .vaero-welcome-screen .welcome-learn-more{
-        margin-top:12px;
-    }
+.vaero-welcome-screen .welcome-divider{
+    margin:10px 0;
+}
+
+.vaero-welcome-screen .welcome-learn-more{
+    margin-top:auto;
+    padding-top:12px;
+}
 }
 
 /* ==========================================================
