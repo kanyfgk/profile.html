@@ -1246,3 +1246,28 @@
         margin-top:14px;
     }
 }
+
+.vaero-welcome-screen .welcome-mobile-back{
+    position:absolute;
+    top:18px;
+    left:18px;
+    z-index:3;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    width:38px;
+    height:38px;
+    padding:0;
+    border:1px solid rgba(255,255,255,.12);
+    border-radius:50%;
+    background:rgba(255,255,255,.035);
+    color:#dfb56d;
+    font-size:22px;
+    cursor:pointer;
+}
+
+@media (min-width:769px){
+    .vaero-welcome-screen .welcome-mobile-back{
+        display:none;
+    }
+}
