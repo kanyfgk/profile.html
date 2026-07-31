@@ -576,11 +576,22 @@ themeButtons.forEach(button => {
                 
                 if(action === "login"){
 
-                    this.complete();
-                    return;
+    const engine =
+        document.getElementById("engine");
 
-                }
+    if(
+        engine &&
+        window.DiscoveryApp &&
+        typeof window.DiscoveryApp.render === "function"
+    ){
+        window.DiscoveryApp.render(engine);
+    }
 
+    this.complete(false);
+
+    return;
+
+}
                 if(action === "start"){
 
                     screen.classList.add(
