@@ -236,6 +236,13 @@ const WelcomeApp = {
                     </div>
 
                     <div class="welcome-auth-panel">
+                    <button
+    type="button"
+    class="welcome-mobile-back"
+    aria-label="Geri dön"
+>
+    ←
+</button>
 
                         <div class="welcome-auth-logo" aria-hidden="true">
     <svg viewBox="0 0 82 72">
@@ -405,6 +412,31 @@ const WelcomeApp = {
 
             </main>
         `;
+
+        const mobileBackButton =
+    screen.querySelector(
+        ".welcome-mobile-back"
+    );
+
+if(mobileBackButton){
+
+    mobileBackButton.addEventListener(
+        "click",
+        () => {
+
+            screen.classList.remove(
+                "is-mobile-auth-open"
+            );
+
+            window.scrollTo({
+                top:0,
+                behavior:"smooth"
+            });
+
+        }
+    );
+
+}
         
         const passwordInput =
     screen.querySelector(
