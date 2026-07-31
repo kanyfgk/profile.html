@@ -776,18 +776,45 @@ if(screen){
 
 }
 
+            if(
+        window.Engine &&
+        typeof window.Engine.start === "function"
+    ){
+
+                const discoveryScreen =
+    this.container.querySelector(
+        ".discovery-screen"
+    );
+
+const transitionLayer =
+    discoveryScreen
+        ? discoveryScreen.cloneNode(true)
+        : null;
+
+if(transitionLayer){
+
+    transitionLayer.classList.add(
+        "discovery-transition-layer"
+    );
+
+    document.body.appendChild(
+        transitionLayer
+    );
+
+}
+                
+        window.Engine.start();
+    }
+
 window.setTimeout(() => {
 
     document.body.classList.remove(
         "discovery-active"
     );
 
-    if(
-        window.Engine &&
-        typeof window.Engine.start === "function"
-    ){
-        window.Engine.start();
-    }
+    if(transitionLayer){
+    transitionLayer.remove();
+}
 
 }, 450);
 
