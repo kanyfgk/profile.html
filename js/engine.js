@@ -120,4 +120,6 @@ const kernel = VAERO.get("kernel");
 
 kernel.boot();
 
+window.Engine = Engine;
+
 // Engine.start();
