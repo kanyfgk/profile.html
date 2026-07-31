@@ -448,3 +448,10 @@ body.discovery-active .brain-fab {
     transform:translateY(-18px);
     pointer-events:none;
 }
+
+.discovery-transition-layer{
+    position: fixed;
+    inset: 0;
+    z-index: 100000;
+    pointer-events: none;
+}
