@@ -597,23 +597,21 @@ themeButtons.forEach(button => {
 
                     window.setTimeout(() => {
 
-                        screen.remove();
+    const engine =
+        document.getElementById("engine");
 
-                        if(
-                            window.DiscoveryApp &&
-                            typeof window.DiscoveryApp.render ===
-                                "function"
-                        ){
-                            const engine =
-    document.getElementById("engine");
+    if(
+        engine &&
+        window.DiscoveryApp &&
+        typeof window.DiscoveryApp.render ===
+            "function"
+    ){
+        window.DiscoveryApp.render(engine);
+    }
 
-if(engine){
-    window.DiscoveryApp.render(engine);
-}
-                        }
+    screen.remove();
 
-                    }, 1400);
-
+}, 1400);
                 }
 
             }
