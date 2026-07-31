@@ -395,18 +395,15 @@ class DiscoveryApp {
                     if(action === "enter"){
 
     document.body.classList.remove(
-        "discovery-active"
-    );
+    "discovery-active"
+);
 
-    this.container.innerHTML = "";
-
-    if(
-        window.Engine &&
-        typeof Engine.start === "function"
-    ){
-        Engine.start();
-    }
-
+if(
+    window.Engine &&
+    typeof window.Engine.start === "function"
+){
+    window.Engine.start();
+}
 }
 
                 }
