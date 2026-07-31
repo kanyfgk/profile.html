@@ -120,6 +120,4 @@ const kernel = VAERO.get("kernel");
 
 kernel.boot();
 
-console.log(kernel.health());
-
-Engine.start();
+// Engine.start();
