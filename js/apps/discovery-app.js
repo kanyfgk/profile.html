@@ -755,10 +755,27 @@ if(
             .querySelector(
                 "[data-discovery-action='enter']"
             )
-            .addEventListener(
-                "click",
-                () => window.location.reload()
+            this.container
+    .querySelector(
+        "[data-discovery-action='enter']"
+    )
+    .addEventListener(
+        "click",
+        () => {
+
+            document.body.classList.remove(
+                "discovery-active"
             );
+
+            if(
+                window.Engine &&
+                typeof window.Engine.start === "function"
+            ){
+                window.Engine.start();
+            }
+
+        }
+    );
 
     }
 
