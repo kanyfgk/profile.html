@@ -393,8 +393,21 @@ class DiscoveryApp {
                     }
 
                     if(action === "enter"){
-                        window.location.reload();
-                    }
+
+    document.body.classList.remove(
+        "discovery-active"
+    );
+
+    this.container.innerHTML = "";
+
+    if(
+        window.Engine &&
+        typeof Engine.start === "function"
+    ){
+        Engine.start();
+    }
+
+}
 
                 }
             );
