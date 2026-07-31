@@ -172,6 +172,38 @@ const WelcomeApp = {
                             </article>
 
                         </div>
+
+                        <div class="welcome-mobile-actions">
+
+                            <button
+                                type="button"
+                                class="welcome-mobile-primary"
+                                data-welcome-action="start"
+                            >
+                                Başla
+                            </button>
+
+                            <div class="welcome-mobile-divider">
+                                <span></span>
+                                <small>veya</small>
+                                <span></span>
+                            </div>
+
+                            <button
+                                type="button"
+                                class="welcome-mobile-secondary"
+                                data-welcome-action="show-login"
+                            >
+                                Hesabım Var
+                            </button>
+
+                            <p class="welcome-mobile-security">
+                                <span aria-hidden="true">🔒</span>
+                                Güvenli. Özel. Senin kontrolünde.
+                            </p>
+
+                        </div>
+
                     </div>
 
                     <p class="welcome-copyright">
@@ -482,6 +514,34 @@ themeButtons.forEach(button => {
                 const action =
                     button.dataset.welcomeAction;
 
+                if(action === "show-login"){
+
+    screen.classList.add(
+        "is-mobile-auth-open"
+    );
+
+    const authPanel =
+        screen.querySelector(
+            ".welcome-auth-panel"
+        );
+
+    if(authPanel){
+
+        window.setTimeout(() => {
+
+            authPanel.scrollIntoView({
+                behavior: "smooth",
+                block: "start"
+            });
+
+        }, 80);
+
+    }
+
+    return;
+
+}
+                
                 if(action === "login"){
 
                     this.complete();
