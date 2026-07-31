@@ -763,16 +763,33 @@ if(
         "click",
         () => {
 
-            document.body.classList.remove(
-                "discovery-active"
-            );
+            const screen =
+    this.container.querySelector(
+        ".discovery-screen"
+    );
 
-            if(
-                window.Engine &&
-                typeof window.Engine.start === "function"
-            ){
-                window.Engine.start();
-            }
+if(screen){
+
+    screen.classList.add(
+        "is-leaving"
+    );
+
+}
+
+window.setTimeout(() => {
+
+    document.body.classList.remove(
+        "discovery-active"
+    );
+
+    if(
+        window.Engine &&
+        typeof window.Engine.start === "function"
+    ){
+        window.Engine.start();
+    }
+
+}, 450);
 
         }
     );
