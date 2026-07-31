@@ -604,7 +604,12 @@ themeButtons.forEach(button => {
                             typeof window.DiscoveryApp.render ===
                                 "function"
                         ){
-                            window.DiscoveryApp.render();
+                            const engine =
+    document.getElementById("engine");
+
+if(engine){
+    window.DiscoveryApp.render(engine);
+}
                         }
 
                     }, 1400);
