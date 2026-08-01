@@ -455,3 +455,46 @@ body.discovery-active .brain-fab {
     z-index: 100000;
     pointer-events: none;
 }
+
+.vaero-home{
+    margin-top:40px;
+}
+
+.vaero-home h2{
+    font-size:24px;
+    font-weight:700;
+    margin-bottom:20px;
+}
+
+.vaero-home-grid{
+    display:grid;
+    grid-template-columns:repeat(2,1fr);
+    gap:16px;
+}
+
+.vaero-card{
+    border:none;
+    border-radius:22px;
+    padding:28px 20px;
+    background:rgba(255,255,255,.05);
+    backdrop-filter:blur(18px);
+    color:white;
+    cursor:pointer;
+
+    display:flex;
+    flex-direction:column;
+    align-items:flex-start;
+    gap:14px;
+
+    transition:.25s;
+}
+
+.vaero-card:hover{
+    transform:translateY(-4px);
+    background:rgba(255,255,255,.08);
+}
+
+.vaero-card span{
+    font-size:17px;
+    font-weight:600;
+}
