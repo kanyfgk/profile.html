@@ -711,29 +711,7 @@ const Components = {
             <p style="margin-top:12px;color:var(--muted);">
                 Bu varlık başarıyla oluşturuldu.
             </p>
-
-            <div style="
-                margin-top:20px;
-                padding:16px;
-                border-radius:16px;
-                background:rgba(255,255,255,.05);
-            ">
-                <div><b>ID:</b> ${entity.id}</div>
-                <div style="margin-top:8px;">
-    <b>Tür:</b>
-    ${this.translate(entity.type)}
-</div>
-            </div>
-
-<div class="card" style="margin-top:18px;">
-    <div class="grid grid-2">
-
-        <button class="secondary-btn" data-action="entity:organs" style="grid-column:1 / -1;">
-    📱 Organ Başlatıcı
-</button>
-
-    </div>
-</div>
+            
         </div>
     `;
 
