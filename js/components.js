@@ -582,11 +582,55 @@ const Components = {
     worldView(world){
 
         const entities = world.entities || [];
+        const activeCount = entities.filter(entity =>
+    entity.status === "online"
+).length;
+
+const totalCount = entities.length;
+
+const worldStatus =
+    activeCount > 0
+        ? "Canlı"
+        : "Sessiz";
 
         if(VAERO.engine.entityCreateMode){
 
             if(VAERO.engine.entityType){
                 return `
+                <div class="world-hero">
+
+    <div class="world-badge">
+        🌍 DÜNYA
+    </div>
+
+    <h1 class="world-title">
+        ${world.name}
+    </h1>
+
+    <p class="world-description">
+        Bu dünya yaşayan bir ekosistemdir. Varlıklar burada doğar, gelişir ve tarih oluşturur.
+    </p>
+
+    <div class="world-stats">
+
+        <div class="world-stat">
+            <strong>${totalCount}</strong>
+            <span>Varlık</span>
+        </div>
+
+        <div class="world-stat">
+            <strong>${activeCount}</strong>
+            <span>Aktif</span>
+        </div>
+
+        <div class="world-stat">
+            <strong>${worldStatus}</strong>
+            <span>Durum</span>
+        </div>
+
+    </div>
+
+</div>
                     <div class="section" style="margin-top:24px;padding:24px;">
                         ${this.translate(VAERO.engine.entityType).toUpperCase()} OLUŞTUR
 
@@ -645,43 +689,48 @@ const Components = {
         }
 
         return `
-            <div class="section" style="margin-top:24px;padding:24px;">
-                <div class="eyebrow">DÜNYA</div>
+            <div class="section dashboard-shell">
+                <div class="world-badge">
+    🌍 DÜNYA
+</div>
 
-                <h2 style="margin-top:10px;">
-                    ${world.name}
-                </h2>
+                <h1 class="world-title">
+    ${world.name}
+</h1>
 
                 ${entities.length === 0 ? `
-                    <p style="margin-top:12px;color:var(--muted);line-height:1.7;">
+                    <p class="world-empty">
                         Bu dünyada henüz hiçbir varlık yok.
                     </p>
                 ` : entities.map(entity=>`
                     <button
+    <button
+    class="secondary-btn world-entity-btn"
     data-action="entity:open"
     data-entity-id="${entity.id}"
-    style="
-        width:100%;
-        text-align:left;
-        margin-top:12px;
-        padding:14px;
-        border-radius:16px;
-        border:0;
-        background:rgba(255,255,255,.05);
-        color:var(--text);
-        font-weight:800;
-        cursor:pointer;
-    "
 >
-    ${this.translate(entity.type)} · ${entity.name}
+
+    <div class="world-entity-content">
+        <div class="world-entity-type">
+            ${entity.type}
+        </div>
+
+        <div class="world-entity-name">
+            ${entity.name}
+        </div>
+    </div>
+
+    <div class="world-entity-arrow">
+        →
+    </div>
+
 </button>
                 `).join("")}
 
                 <button
-                    class="primary-btn"
-                    data-action="entity:create:first"
-                    style="margin-top:20px;"
-                >
+    class="primary-btn world-create-btn"
+    data-action="entity:create:first"
+>
                     + İlk Varlığı Oluştur
                 </button>
             </div>
