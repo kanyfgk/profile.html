@@ -1,2 +1,2 @@
-VAERO Engine v1 deployment trigger
+VAERO Engine v1 deployment trigger.
  
