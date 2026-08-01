@@ -141,6 +141,92 @@ const Components = {
 
 },
 
+    home(){
+
+    return `
+        <section class="dashboard-shell">
+
+            <div class="vaero-home-actions">
+
+                <button
+                    type="button"
+                    class="primary-btn"
+                    data-action="worlds:open"
+                >
+                    🌍 Dünyaları Keşfet
+                </button>
+
+                <button
+                    type="button"
+                    class="secondary-btn"
+                    data-home-action="profile"
+                >
+                    👤 Profilim
+                </button>
+
+                <button
+                    type="button"
+                    class="secondary-btn"
+                    data-action="brain:open"
+                >
+                    🧠 Brain
+                </button>
+
+                <button
+                    type="button"
+                    class="secondary-btn"
+                    data-home-action="create-world"
+                >
+                    ➕ Yeni Dünya
+                </button>
+
+            </div>
+
+            <div class="vaero-home-overview">
+
+                <div class="overview-card">
+
+                    <span>ENGINE</span>
+
+                    <strong>Online</strong>
+
+                    <small>
+                        Sistem çalışıyor
+                    </small>
+
+                </div>
+
+                <div class="overview-card">
+
+                    <span>DÜNYALAR</span>
+
+                    <strong>1</strong>
+
+                    <small>
+                        Aktif dünya
+                    </small>
+
+                </div>
+
+                <div class="overview-card">
+
+                    <span>BRAIN</span>
+
+                    <strong>Hazır</strong>
+
+                    <small>
+                        Seni bekliyor
+                    </small>
+
+                </div>
+
+            </div>
+
+        </section>
+    `;
+
+},
+
     entityApp(entity){
 
     switch(VAERO.engine.currentEntityPage){
