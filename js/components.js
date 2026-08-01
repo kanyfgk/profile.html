@@ -400,22 +400,35 @@ const worldStatus =
                     </p>
                 ` : entities.map(entity=>`
                     <button
+    <button
+    class="secondary-btn"
     data-action="entity:open"
     data-entity-id="${entity.id}"
     style="
         width:100%;
+        margin-top:14px;
+        padding:18px;
+        display:flex;
+        justify-content:space-between;
+        align-items:center;
         text-align:left;
-        margin-top:12px;
-        padding:14px;
-        border-radius:16px;
-        border:0;
-        background:rgba(255,255,255,.05);
-        color:var(--text);
-        font-weight:800;
-        cursor:pointer;
     "
 >
-    ${entity.type} · ${entity.name}
+
+    <div>
+        <div style="font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.12em;">
+            ${entity.type}
+        </div>
+
+        <div style="margin-top:6px;font-size:18px;font-weight:800;">
+            ${entity.name}
+        </div>
+    </div>
+
+    <div style="font-size:22px;opacity:.45;">
+        →
+    </div>
+
 </button>
                 `).join("")}
 
