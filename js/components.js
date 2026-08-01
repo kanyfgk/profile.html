@@ -401,18 +401,9 @@ const worldStatus =
                 ` : entities.map(entity=>`
                     <button
     <button
-    class="secondary-btn"
+    class="secondary-btn world-entity-btn"
     data-action="entity:open"
     data-entity-id="${entity.id}"
-    style="
-        width:100%;
-        margin-top:14px;
-        padding:18px;
-        display:flex;
-        justify-content:space-between;
-        align-items:center;
-        text-align:left;
-    "
 >
 
     <div>
