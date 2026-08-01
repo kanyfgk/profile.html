@@ -335,3 +335,87 @@
     }
 
 }
+
+.vaero-home-card{
+    position:relative;
+
+    display:flex;
+    align-items:center;
+    gap:18px;
+
+    width:100%;
+
+    padding:22px;
+
+    border:1px solid rgba(255,255,255,.08);
+    border-radius:24px;
+
+    background:
+        linear-gradient(
+            145deg,
+            rgba(255,255,255,.06),
+            rgba(255,255,255,.025)
+        );
+
+    overflow:hidden;
+
+    transition:
+        transform .28s cubic-bezier(.2,.8,.2,1),
+        border-color .28s,
+        box-shadow .28s,
+        background .28s;
+
+    cursor:pointer;
+}
+
+.vaero-home-card::before{
+
+    content:"";
+
+    position:absolute;
+    inset:0;
+
+    background:
+        radial-gradient(
+            circle at top right,
+            rgba(230,215,176,.08),
+            transparent 55%
+        );
+
+    opacity:0;
+
+    transition:.3s;
+}
+
+.vaero-home-card:hover{
+
+    transform:
+        translateY(-6px);
+
+    border-color:
+        rgba(230,215,176,.18);
+
+    box-shadow:
+        0 22px 44px rgba(0,0,0,.28);
+
+}
+
+.vaero-home-card:hover::before{
+
+    opacity:1;
+
+}
+
+.vaero-home-card-primary{
+
+    border-color:
+        rgba(230,215,176,.22);
+
+    background:
+        linear-gradient(
+            145deg,
+            rgba(230,215,176,.09),
+            rgba(255,255,255,.03)
+        );
+
+} 
