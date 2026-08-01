@@ -805,7 +805,7 @@ if(transitionLayer){
 
 }
                 
-        window.Engine.start();
+       // window.Engine.start();
     }
 
 window.setTimeout(() => {
