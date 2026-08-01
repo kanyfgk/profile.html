@@ -175,7 +175,7 @@ const Renderer = {
                         <button
                             type="button"
                             class="vaero-home-card"
-                            data-home-action="profile"
+                            data-action="profile:open"
                         >
 
                             <span class="vaero-home-card-icon">
@@ -267,7 +267,7 @@ const Renderer = {
                         <button
                             type="button"
                             class="vaero-home-card"
-                            data-home-action="create-world"
+                            data-action="world:create"
                         >
 
                             <span class="vaero-home-card-icon">
