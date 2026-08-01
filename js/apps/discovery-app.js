@@ -587,6 +587,9 @@ if(
     "vaero:welcome:completed:v2",
     "true"
 );
+        if(window.Engine){
+    window.Engine.start();
+}
 
         localStorage.setItem(
             "vaero:discovery:completedAt",
