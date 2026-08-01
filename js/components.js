@@ -159,7 +159,7 @@ const Components = {
                 <button
                     type="button"
                     class="secondary-btn"
-                    data-home-action="profile"
+                    data-home-action="entity:profile"
                 >
                     👤 Profilim
                 </button>
@@ -175,7 +175,7 @@ const Components = {
                 <button
                     type="button"
                     class="secondary-btn"
-                    data-home-action="create-world"
+                    data-action="world:create"
                 >
                     ➕ Yeni Dünya
                 </button>
