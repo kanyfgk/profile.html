@@ -776,6 +776,8 @@ if(screen){
 
 }
 
+            let transitionLayer = null;
+
             if(
         window.Engine &&
         typeof window.Engine.start === "function"
@@ -786,7 +788,7 @@ if(screen){
         ".discovery-screen"
     );
 
-const transitionLayer =
+transitionLayer =
     discoveryScreen
         ? discoveryScreen.cloneNode(true)
         : null;
