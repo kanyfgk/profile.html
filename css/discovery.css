@@ -498,3 +498,169 @@ body.discovery-active .brain-fab {
     font-size:17px;
     font-weight:600;
 }
+
+.vaero-home{
+    margin-top:32px;
+    display:flex;
+    flex-direction:column;
+    gap:32px;
+}
+
+.vaero-home-header{
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-start;
+    gap:24px;
+    flex-wrap:wrap;
+}
+
+.vaero-home-eyebrow{
+    display:inline-block;
+    font-size:12px;
+    letter-spacing:.18em;
+    text-transform:uppercase;
+    color:var(--accent,#57d38c);
+    margin-bottom:10px;
+}
+
+.vaero-home-heading h1{
+    margin:0;
+    font-size:42px;
+}
+
+.vaero-home-heading p{
+    margin-top:16px;
+    color:var(--muted);
+    max-width:620px;
+    line-height:1.8;
+}
+
+.vaero-engine-status{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    padding:10px 16px;
+    border-radius:999px;
+    background:rgba(255,255,255,.06);
+    border:1px solid rgba(255,255,255,.08);
+}
+
+.vaero-engine-status-dot{
+    width:10px;
+    height:10px;
+    border-radius:50%;
+    background:#57d38c;
+}
+
+.vaero-home-section-heading{
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-end;
+    gap:20px;
+    flex-wrap:wrap;
+    margin-bottom:18px;
+}
+
+.vaero-home-section-heading span{
+    font-size:12px;
+    color:var(--muted);
+    letter-spacing:.14em;
+}
+
+.vaero-home-grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(240px,1fr));
+    gap:18px;
+}
+
+.vaero-home-card{
+    display:flex;
+    align-items:center;
+    gap:18px;
+    padding:22px;
+    border:none;
+    border-radius:20px;
+    background:rgba(255,255,255,.05);
+    color:inherit;
+    cursor:pointer;
+    transition:.25s;
+}
+
+.vaero-home-card:hover{
+    transform:translateY(-4px);
+    background:rgba(255,255,255,.08);
+}
+
+.vaero-home-card-primary{
+    border:1px solid rgba(87,211,140,.35);
+}
+
+.vaero-home-card-icon{
+    width:56px;
+    height:56px;
+    border-radius:16px;
+    display:grid;
+    place-items:center;
+    background:rgba(255,255,255,.06);
+}
+
+.vaero-home-card-icon svg{
+    width:26px;
+    height:26px;
+    stroke:currentColor;
+    fill:none;
+    stroke-width:2;
+}
+
+.vaero-home-card-content{
+    flex:1;
+    display:flex;
+    flex-direction:column;
+    gap:6px;
+    text-align:left;
+}
+
+.vaero-home-card-arrow{
+    font-size:22px;
+    opacity:.45;
+}
+
+.vaero-home-overview{
+    padding:28px;
+    border-radius:24px;
+    background:rgba(255,255,255,.04);
+}
+
+.vaero-overview-header{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin-bottom:22px;
+}
+
+.vaero-overview-grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
+    gap:18px;
+}
+
+.vaero-overview-item{
+    padding:20px;
+    border-radius:18px;
+    background:rgba(255,255,255,.04);
+}
+
+.vaero-overview-item span{
+    color:var(--muted);
+    font-size:13px;
+}
+
+.vaero-overview-item strong{
+    display:block;
+    margin:8px 0;
+    font-size:22px;
+}
+
+.vaero-overview-live{
+    color:#57d38c;
+}
