@@ -255,3 +255,83 @@
         border-radius:var(--radius-md);
     }
 }
+
+.vaero-home-actions{
+    display:grid;
+    grid-template-columns:repeat(2,minmax(0,1fr));
+    gap:16px;
+    margin-bottom:26px;
+}
+
+.vaero-home-actions button{
+    width:100%;
+}
+
+.vaero-home-overview{
+    display:grid;
+    grid-template-columns:repeat(3,minmax(0,1fr));
+    gap:16px;
+}
+
+.overview-card{
+    padding:20px;
+
+    border:1px solid var(--border-soft);
+    border-radius:var(--radius-md);
+
+    background:
+        linear-gradient(
+            145deg,
+            rgba(255,255,255,.05),
+            rgba(255,255,255,.02)
+        );
+
+    backdrop-filter:blur(20px);
+    -webkit-backdrop-filter:blur(20px);
+
+    transition:var(--transition);
+}
+
+.overview-card:hover{
+    transform:translateY(-3px);
+    border-color:var(--border-strong);
+}
+
+.overview-card span{
+    display:block;
+
+    margin-bottom:10px;
+
+    color:var(--gold-soft);
+
+    font-size:11px;
+    font-weight:800;
+
+    letter-spacing:.18em;
+}
+
+.overview-card strong{
+    display:block;
+
+    margin-bottom:6px;
+
+    font-size:26px;
+    font-weight:800;
+}
+
+.overview-card small{
+    color:var(--muted);
+    line-height:1.5;
+}
+
+@media (max-width:700px){
+
+    .vaero-home-actions{
+        grid-template-columns:1fr;
+    }
+
+    .vaero-home-overview{
+        grid-template-columns:1fr;
+    }
+
+}
