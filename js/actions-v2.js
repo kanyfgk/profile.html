@@ -36,6 +36,20 @@ const Actions = {
         input.value = "";
     },
 
+    openWorlds(){
+
+    VAERO.engine.currentWorld = {
+        id: "worlds"
+    };
+
+    VAERO.engine.currentOpenedEntity = null;
+
+    VAERO.engine.mount(
+        VAERO.engine.currentEntity
+    );
+
+},
+
     openWorld(worldId){
         const worldService = VAERO.get("world");
         const world = worldService.all().find(item => item.id === worldId);
@@ -2206,6 +2220,10 @@ document.addEventListener("click", event => {
         Actions.openEntityPage(null);
     }
 
+    if(action === "worlds:open"){
+    Actions.openWorlds();
+}
+
     if(action === "brain:open"){
         Actions.openBrain();
     }
@@ -2213,6 +2231,8 @@ document.addEventListener("click", event => {
     if(action === "brain:close"){
         Actions.closeBrain();
     }
+
+    
 
     if(action === "brain:send"){
         Actions.sendBrainMessage();

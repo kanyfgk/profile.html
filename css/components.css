@@ -1,83 +1,445 @@
 .brand-header{
-  display:flex;
-  align-items:center;
-  gap:18px;
-  margin-bottom:24px;
+    display:flex;
+    align-items:center;
+    gap:18px;
+    margin-bottom:24px;
 }
- 
+
 .brand-mark{
-  width:58px;
-  height:58px;
-  border-radius:50%;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  background:linear-gradient(145deg,#a7905d,#7f6b43);
-  color:white;
-  font-size:26px;
-  font-weight:900;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+
+    width:58px;
+    height:58px;
+
+    flex:0 0 58px;
+
+    border:1px solid rgba(230,215,176,.22);
+    border-radius:18px;
+
+    background:
+        linear-gradient(
+            145deg,
+            rgba(230,215,176,.18),
+            rgba(127,107,67,.16)
+        );
+
+    color:var(--gold-soft);
+
+    font-size:26px;
+    font-weight:900;
+
+    box-shadow:
+        inset 0 1px 0 rgba(255,255,255,.08),
+        0 14px 34px rgba(0,0,0,.24);
+
+    backdrop-filter:blur(18px);
+    -webkit-backdrop-filter:blur(18px);
+}
+
+.brand-info{
+    flex:1;
+    min-width:0;
+}
+
+.brand-label{
+    display:inline-block;
+
+    margin-bottom:10px;
+
+    color:var(--gold-soft);
+
+    font-size:11px;
+    font-weight:800;
+
+    letter-spacing:.22em;
+    text-transform:uppercase;
+
+    opacity:.9;
 }
 
 .brand-title{
-  font-size:34px;
-  letter-spacing:5px;
-  font-weight:900;
+    margin:0;
+
+    color:var(--text);
+
+    font-size:34px;
+    font-weight:900;
+    line-height:1;
+
+    letter-spacing:5px;
 }
 
 .brand-subtitle{
-  margin-top:6px;
-  color:var(--muted);
-  letter-spacing:.6px;
+    margin-top:7px;
+
+    color:var(--muted);
+
+    font-size:13px;
+    line-height:1.5;
+    letter-spacing:.6px;
 }
 
 .status-pill{
-  display:inline-flex;
-  align-items:center;
-  gap:8px;
-  margin-top:12px;
-  padding:7px 12px;
-  border-radius:999px;
-  background:rgba(110,231,168,.08);
-  border:1px solid rgba(110,231,168,.18);
-  color:var(--green);
-  font-size:11px;
-  font-weight:800;
+    display:inline-flex;
+    align-items:center;
+    gap:8px;
+
+    margin-top:13px;
+    padding:8px 14px;
+
+    border:1px solid rgba(110,231,168,.24);
+    border-radius:999px;
+
+    background:rgba(110,231,168,.10);
+
+    color:var(--green);
+
+    font-size:11px;
+    font-weight:800;
+    line-height:1;
+
+    box-shadow:
+        inset 0 1px 0 rgba(255,255,255,.05),
+        0 8px 24px rgba(0,0,0,.18);
+
+    backdrop-filter:blur(16px);
+    -webkit-backdrop-filter:blur(16px);
+
+    transition:var(--transition);
 }
 
 .status-dot{
-  width:8px;
-  height:8px;
-  border-radius:50%;
-  background:var(--green);
-  box-shadow:0 0 12px rgba(110,231,168,.7);
+    width:8px;
+    height:8px;
+
+    flex:0 0 8px;
+
+    border-radius:50%;
+
+    background:var(--green);
+
+    box-shadow:
+        0 0 0 4px rgba(110,231,168,.08),
+        0 0 14px rgba(110,231,168,.72);
 }
 
 .primary-btn,
 .secondary-btn{
-  border:0;
-  border-radius:999px;
-  padding:15px 18px;
-  font-weight:900;
-  cursor:pointer;
+    min-height:48px;
+
+    padding:14px 20px;
+
+    border-radius:999px;
+
+    font:inherit;
+    font-size:13px;
+    font-weight:800;
+
+    cursor:pointer;
+
+    transition:
+        transform var(--transition),
+        border-color var(--transition),
+        background var(--transition),
+        box-shadow var(--transition);
 }
 
 .primary-btn{
-  background:linear-gradient(180deg,#eadcb6,#d8c89c);
-  color:#07111d;
+    border:1px solid rgba(242,226,187,.4);
+
+    background:
+        linear-gradient(
+            110deg,
+            #c9a85f,
+            #f0dda9,
+            #bd9147
+        );
+
+    color:#07111d;
+
+    box-shadow:
+        inset 0 1px 0 rgba(255,255,255,.48),
+        0 12px 30px rgba(202,163,88,.18);
 }
 
 .secondary-btn{
-  background:rgba(255,255,255,.08);
-  color:var(--text);
-  border:1px solid rgba(255,255,255,.08);
+    border:1px solid var(--border-soft);
+
+    background:rgba(255,255,255,.045);
+
+    color:var(--text);
+
+    box-shadow:
+        inset 0 1px 0 rgba(255,255,255,.025);
+}
+
+.primary-btn:hover,
+.secondary-btn:hover{
+    transform:translateY(-2px);
+}
+
+.primary-btn:hover{
+    box-shadow:
+        inset 0 1px 0 rgba(255,255,255,.52),
+        0 16px 36px rgba(202,163,88,.24);
+}
+
+.secondary-btn:hover{
+    border-color:var(--border-strong);
+    background:rgba(255,255,255,.07);
+}
+
+.primary-btn:active,
+.secondary-btn:active{
+    transform:scale(.985);
 }
 
 .dashboard-shell{
-  margin-top:24px;
-  padding:18px;
-  border-radius:28px;
-  background:rgba(255,255,255,.025);
-  border:1px solid rgba(255,255,255,.06);
+    margin-top:28px;
+    padding:22px;
+
+    border:1px solid var(--border-soft);
+    border-radius:var(--radius-lg);
+
+    background:
+        linear-gradient(
+            145deg,
+            rgba(255,255,255,.045),
+            rgba(255,255,255,.018)
+        );
+
+    box-shadow:
+        inset 0 1px 0 rgba(255,255,255,.025),
+        var(--shadow);
+
+    backdrop-filter:blur(22px);
+    -webkit-backdrop-filter:blur(22px);
+}
+
+@media (max-width:600px){
+
+    .brand-header{
+        align-items:flex-start;
+        gap:14px;
+        margin-bottom:20px;
+    }
+
+    .brand-mark{
+        width:52px;
+        height:52px;
+        flex-basis:52px;
+        border-radius:16px;
+        font-size:23px;
+    }
+
+    .brand-title{
+        font-size:28px;
+        letter-spacing:4px;
+    }
+
+    .brand-subtitle{
+        margin-top:6px;
+        font-size:12px;
+    }
+
+    .status-pill{
+        margin-top:11px;
+        padding:7px 12px;
+    }
+
+    .dashboard-shell{
+        margin-top:22px;
+        padding:16px;
+        border-radius:var(--radius-md);
+    }
+}
+
+.vaero-home-actions{
+    display:grid;
+    grid-template-columns:repeat(2,minmax(0,1fr));
+    gap:16px;
+    margin-bottom:26px;
+}
+
+.vaero-home-actions button{
+    width:100%;
+}
+
+.vaero-home-overview{
+    display:grid;
+    grid-template-columns:repeat(3,minmax(0,1fr));
+    gap:16px;
+}
+
+.overview-card{
+    padding:20px;
+
+    border:1px solid var(--border-soft);
+    border-radius:var(--radius-md);
+
+    background:
+        linear-gradient(
+            145deg,
+            rgba(255,255,255,.05),
+            rgba(255,255,255,.02)
+        );
+
+    backdrop-filter:blur(20px);
+    -webkit-backdrop-filter:blur(20px);
+
+    transition:var(--transition);
+}
+
+.overview-card:hover{
+    transform:translateY(-3px);
+    border-color:var(--border-strong);
+}
+
+.overview-card span{
+    display:block;
+
+    margin-bottom:10px;
+
+    color:var(--gold-soft);
+
+    font-size:11px;
+    font-weight:800;
+
+    letter-spacing:.18em;
+}
+
+.overview-card strong{
+    display:block;
+
+    margin-bottom:6px;
+
+    font-size:26px;
+    font-weight:800;
+}
+
+.overview-card small{
+    color:var(--muted);
+    line-height:1.5;
+}
+
+@media (max-width:700px){
+
+    .vaero-home-actions{
+        grid-template-columns:1fr;
+    }
+
+    .vaero-home-overview{
+        grid-template-columns:1fr;
+    }
+
+}
+
+.vaero-home-card{
+    position:relative;
+
+    display:flex;
+    align-items:center;
+    gap:18px;
+
+    width:100%;
+
+    padding:22px;
+
+    border:1px solid rgba(255,255,255,.08);
+    border-radius:24px;
+
+    background:
+        linear-gradient(
+            145deg,
+            rgba(255,255,255,.06),
+            rgba(255,255,255,.025)
+        );
+
+    overflow:hidden;
+
+    transition:
+        transform .28s cubic-bezier(.2,.8,.2,1),
+        border-color .28s,
+        box-shadow .28s,
+        background .28s;
+
+    cursor:pointer;
+}
+
+.vaero-home-card::before{
+
+    content:"";
+
+    position:absolute;
+    inset:0;
+
+    background:
+        radial-gradient(
+            circle at top right,
+            rgba(230,215,176,.08),
+            transparent 55%
+        );
+
+    opacity:0;
+
+    transition:.3s;
+}
+
+.vaero-home-card:hover{
+
+    transform:
+        translateY(-6px);
+
+    border-color:
+        rgba(230,215,176,.18);
+
+    box-shadow:
+        0 22px 44px rgba(0,0,0,.28);
+
+}
+
+.vaero-home-card:hover::before{
+
+    opacity:1;
+
+}
+
+.vaero-home-card-primary{
+
+    border-color:
+        rgba(230,215,176,.22);
+
+    background:
+        linear-gradient(
+            145deg,
+            rgba(230,215,176,.09),
+            rgba(255,255,255,.03)
+        );
+
+} 
+
+.world-entity-content{
+    flex:1;
+}
+
+.world-entity-type{
+    font-size:12px;
+    color:var(--muted);
+    text-transform:uppercase;
+    letter-spacing:.12em;
+}
+
+.world-entity-name{
+    margin-top:6px;
+    font-size:18px;
+    font-weight:800;
+}
+
+.world-entity-arrow{
+    font-size:22px;
+    opacity:.45;
 }
 
 .world-hero{

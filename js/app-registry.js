@@ -72,4 +72,12 @@ OrganRegistry.register({
     action: "entity:settings"
 });
 
+OrganRegistry.register({
+    id: "discovery",
+    icon: "🧭",
+    title: "Discovery",
+    subtitle: "Kendini keşfet",
+    action: "entity:discovery"
+});
+
 window.OrganRegistry = OrganRegistry;

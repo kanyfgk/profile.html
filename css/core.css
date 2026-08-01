@@ -1,12 +1,29 @@
 :root{
 
 --bg:#07111d;
+
 --surface:#0f1926;
---surface-2:#162434; 
+--surface-2:#162434;
+--surface-3:#1d2d40;
 
 --gold:#e6d7b0;
+--gold-soft:#f2e2bb;
+
 --text:#f5f1e9;
 --muted:rgba(245,241,233,.65);
+
+--border-soft:rgba(255,255,255,.06);
+--border-strong:rgba(255,255,255,.12);
+
+--radius-sm:16px;
+--radius-md:22px;
+--radius-lg:30px;
+
+--shadow:
+0 20px 60px rgba(0,0,0,.35);
+
+--transition:
+.28s cubic-bezier(.2,.8,.2,1);
 
 }
 
