@@ -5,7 +5,7 @@ const Components = {
             String(value || "");
 
         const key =
-            text.toLowerCase().trim();
+            text.toLowerCase().trim(); 
 
         const translations = {
             "living digital universe":
