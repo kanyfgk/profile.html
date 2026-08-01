@@ -173,18 +173,17 @@ const Renderer = {
                         </button>
 
                         <button
-                            type="button"
-                            class="vaero-home-card"
-                            data-action="profile:open"
-                        >
-
-                            <span class="vaero-home-card-icon">
-                                <svg viewBox="0 0 24 24">
-                                    <circle
-                                        cx="12"
-                                        cy="8"
-                                        r="4"
-                                    ></circle>
+    type="button"
+    class="vaero-home-card"
+    data-action="entity:profile"
+>
+    <span class="vaero-home-card-icon">
+        <svg viewBox="0 0 24 24">
+            <circle
+                cx="12"
+                cy="8"
+                r="4"
+            ></circle>
 
                                     <path
                                         d="M4.5 21c.8-4.2 3.3-6.5 7.5-6.5s6.7 2.3 7.5 6.5"
