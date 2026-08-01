@@ -406,17 +406,17 @@ const worldStatus =
     data-entity-id="${entity.id}"
 >
 
-    <div>
-        <div style="font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.12em;">
+    <div class="world-entity-content">
+        <div class="world-entity-type">
             ${entity.type}
         </div>
 
-        <div style="margin-top:6px;font-size:18px;font-weight:800;">
+        <div class="world-entity-name">
             ${entity.name}
         </div>
     </div>
 
-    <div style="font-size:22px;opacity:.45;">
+    <div class="world-entity-arrow">
         →
     </div>
 
