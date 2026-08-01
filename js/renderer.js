@@ -32,18 +32,46 @@ const Renderer = {
             ? components.worldView(currentWorld)
             : `
                 <h1>
-                    Her evren bir Varlıkla başlar.
+                    Yaşayan Dijital Evren
                 </h1>
 
                 <p style="margin-top:18px;color:var(--muted);line-height:1.8;">
-                    Bu varlık VAERO Engine tarafından oluşturuldu ve yeni arayüz katmanı aracılığıyla görüntülendi.
+                    Dijital kimliğin, bağlantıların ve gelişimin tek bir canlı sistemde birleşiyor.
                 </p>
 
-                ${components.organs(rootEntity)}
+                // ${components.organs(rootEntity)}
 
-                ${components.bridge()}
+                // ${components.bridge()}
 
-                ${components.dashboard(rootEntity)}
+                <section class="vaero-home">
+
+    <h2>Bugün ne yapmak istiyorsun?</h2>
+
+    <div class="vaero-home-grid">
+
+        <button class="vaero-card">
+            🌍
+            <span>Dünyaları Keşfet</span>
+        </button>
+
+        <button class="vaero-card">
+            👤
+            <span>Profilim</span>
+        </button>
+
+        <button class="vaero-card">
+            🧠
+            <span>Brain</span>
+        </button>
+
+        <button class="vaero-card">
+            ➕
+            <span>Yeni Dünya</span>
+        </button>
+
+    </div>
+
+</section>
 
                 ${components.actions()}
             `
