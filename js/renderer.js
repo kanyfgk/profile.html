@@ -45,7 +45,9 @@ const Renderer = {
                                 ? components.worldView(
                                     currentWorld
                                   )
-                                : this.renderHome()
+                                : `
+    ${components.home()}
+`
                     }
 
                 </section>
