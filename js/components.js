@@ -95,26 +95,51 @@ const Components = {
     },
 
     hero(entity){
-        return `
-            <div class="brand-header">  
-                <div class="brand-mark">${entity.name.charAt(0)}</div> 
- 
-                <div> 
-                    <div class="brand-title">${entity.name}</div> 
-                    <div class="brand-subtitle">${this.translate(entity.description)}</div>
 
-                    <div class="status-pill"> 
-                        <span class="status-dot"></span>
-                        ${this.translate(
-    entity.status === "online"
-        ? "Engine Online"
-        : entity.status
-)}
-                    </div>
-                </div>
+    return `
+        <header class="brand-header">
+
+            <div class="brand-mark">
+                ${entity.name.charAt(0)}
             </div>
-        `;
-    },
+
+            <div class="brand-info">
+
+                <span class="brand-label">
+                    VAERO ENGINE
+                </span>
+
+                <h1 class="brand-title">
+                    ${entity.name}
+                </h1>
+
+                <p class="brand-subtitle">
+                    ${this.translate(entity.description)}
+                </p>
+
+                <div class="status-pill">
+
+                    <span
+                        class="status-dot"
+                        aria-hidden="true"
+                    ></span>
+
+                    <span>
+                        ${this.translate(
+                            entity.status === "online"
+                                ? "Engine Online"
+                                : entity.status
+                        )}
+                    </span>
+
+                </div>
+
+            </div>
+
+        </header>
+    `;
+
+},
 
     entityApp(entity){
 
