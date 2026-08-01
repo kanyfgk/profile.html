@@ -125,14 +125,10 @@ const Renderer = {
                     <div class="vaero-home-grid">
 
                         <button
-                            type="button"
-                            class="
-                                vaero-home-card
-                                vaero-home-card-primary
-                            "
-                            data-home-action="worlds"
-                        >
-
+    type="button"
+    class="vaero-home-card vaero-home-card-primary"
+    data-action="worlds:open"
+>
                             <span class="vaero-home-card-icon">
                                 <svg viewBox="0 0 24 24">
                                     <circle
