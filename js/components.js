@@ -395,7 +395,7 @@ const worldStatus =
 </h1>
 
                 ${entities.length === 0 ? `
-                    <p style="margin-top:12px;color:var(--muted);line-height:1.7;">
+                    <p class="world-empty">
                         Bu dünyada henüz hiçbir varlık yok.
                     </p>
                 ` : entities.map(entity=>`
@@ -433,10 +433,9 @@ const worldStatus =
                 `).join("")}
 
                 <button
-                    class="primary-btn"
-                    data-action="entity:create:first"
-                    style="margin-top:20px;"
-                >
+    class="primary-btn world-create-btn"
+    data-action="entity:create:first"
+>
                     + İlk Varlığı Oluştur
                 </button>
             </div>
