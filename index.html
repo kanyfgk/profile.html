@@ -20,6 +20,50 @@
 </head>
 
 <body>
+ <script>
+(() => {
+
+    console.clear();
+
+    console.log("🚀 ===== VAERO DEBUG MODE =====");
+
+    window.onerror = (message, source, line, column, error) => {
+
+        console.group("❌ JAVASCRIPT ERROR");
+        console.log("Message :", message);
+        console.log("File    :", source);
+        console.log("Line    :", line);
+        console.log("Column  :", column);
+        console.log("Stack   :", error ? error.stack : "No stack");
+        console.groupEnd();
+
+    };
+
+    window.addEventListener("unhandledrejection", event => {
+
+        console.group("❌ PROMISE ERROR");
+        console.log(event.reason);
+        console.groupEnd();
+
+    });
+
+    window.addEventListener("error", event => {
+
+        if (event.target !== window) {
+
+            console.group("❌ RESOURCE ERROR");
+            console.log("Element :", event.target.tagName);
+            console.log("Source  :", event.target.src || event.target.href);
+            console.groupEnd();
+
+        }
+
+    }, true);
+
+    console.log("✅ Debug sistemi hazır.");
+
+})();
+</script>
 
 <div id="engine"></div>
 
