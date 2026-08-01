@@ -278,11 +278,55 @@ const Components = {
     worldView(world){
 
         const entities = world.entities || [];
+        const activeCount = entities.filter(entity =>
+    entity.status === "online"
+).length;
+
+const totalCount = entities.length;
+
+const worldStatus =
+    activeCount > 0
+        ? "Canlı"
+        : "Sessiz";
 
         if(VAERO.engine.entityCreateMode){
 
             if(VAERO.engine.entityType){
                 return `
+                <div class="world-hero">
+
+    <div class="world-badge">
+        🌍 DÜNYA
+    </div>
+
+    <h1 class="world-title">
+        ${world.name}
+    </h1>
+
+    <p class="world-description">
+        Bu dünya yaşayan bir ekosistemdir. Varlıklar burada doğar, gelişir ve tarih oluşturur.
+    </p>
+
+    <div class="world-stats">
+
+        <div class="world-stat">
+            <strong>${totalCount}</strong>
+            <span>Varlık</span>
+        </div>
+
+        <div class="world-stat">
+            <strong>${activeCount}</strong>
+            <span>Aktif</span>
+        </div>
+
+        <div class="world-stat">
+            <strong>${worldStatus}</strong>
+            <span>Durum</span>
+        </div>
+
+    </div>
+
+</div>
                     <div class="section" style="margin-top:24px;padding:24px;">
                         <div class="eyebrow">${VAERO.engine.entityType} OLUŞTUR</div>
 
@@ -341,12 +385,14 @@ const Components = {
         }
 
         return `
-            <div class="section" style="margin-top:24px;padding:24px;">
-                <div class="eyebrow">DÜNYA</div>
+            <div class="section dashboard-shell">
+                <div class="world-badge">
+    🌍 DÜNYA
+</div>
 
-                <h2 style="margin-top:10px;">
-                    ${world.name}
-                </h2>
+                <h1 class="world-title">
+    ${world.name}
+</h1>
 
                 ${entities.length === 0 ? `
                     <p style="margin-top:12px;color:var(--muted);line-height:1.7;">
