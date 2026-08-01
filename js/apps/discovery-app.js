@@ -587,9 +587,6 @@ if(
     "vaero:welcome:completed:v2",
     "true"
 );
-        if(window.Engine){
-    window.Engine.start();
-}
 
         localStorage.setItem(
             "vaero:discovery:completedAt",
@@ -808,7 +805,7 @@ if(transitionLayer){
 
 }
                 
-       // window.Engine.start();
+        window.Engine.start();
     }
 
 window.setTimeout(() => {
