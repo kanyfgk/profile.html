@@ -38,6 +38,27 @@
     -webkit-backdrop-filter:blur(18px);
 }
 
+.brand-info{
+    flex:1;
+    min-width:0;
+}
+
+.brand-label{
+    display:inline-block;
+
+    margin-bottom:10px;
+
+    color:var(--gold-soft);
+
+    font-size:11px;
+    font-weight:800;
+
+    letter-spacing:.22em;
+    text-transform:uppercase;
+
+    opacity:.9;
+}
+
 .brand-title{
     margin:0;
 
