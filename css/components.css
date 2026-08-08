@@ -324,101 +324,628 @@
     line-height:1.5;
 }
 
-@media (max-width:700px){
+/* =========================================
+   VAERO ENGINE HOME — V2
+========================================= */
 
-    .vaero-home-actions{
-        grid-template-columns:1fr;
-    }
-
-    .vaero-home-overview{
-        grid-template-columns:1fr;
-    }
-
+.vaero-engine-home{
+    width:100%;
+    max-width:1180px;
+    margin:0 auto;
+    padding:28px 24px 130px;
+    color:#f5f7fb;
 }
 
-.vaero-home-card{
-    position:relative;
+/* TOP BAR */
 
+.engine-home-topbar{
     display:flex;
     align-items:center;
-    gap:18px;
+    justify-content:space-between;
+    margin-bottom:54px;
+}
 
-    width:100%;
+.engine-brand{
+    display:flex;
+    flex-direction:column;
+    gap:5px;
+}
 
-    padding:22px;
+.engine-brand-main{
+    font-size:30px;
+    font-weight:500;
+    letter-spacing:.28em;
+}
 
-    border:1px solid rgba(255,255,255,.08);
-    border-radius:24px;
+.engine-brand-sub{
+    color:#e7c486;
+    font-size:12px;
+    font-weight:700;
+    letter-spacing:.35em;
+}
 
-    background:
-        linear-gradient(
-            145deg,
-            rgba(255,255,255,.06),
-            rgba(255,255,255,.025)
-        );
+.engine-top-actions{
+    display:flex;
+    gap:12px;
+}
 
-    overflow:hidden;
-
-    transition:
-        transform .28s cubic-bezier(.2,.8,.2,1),
-        border-color .28s,
-        box-shadow .28s,
-        background .28s;
-
+.engine-icon-btn{
+    width:48px;
+    height:48px;
+    border-radius:50%;
+    border:1px solid rgba(255,255,255,.12);
+    background:rgba(255,255,255,.025);
+    color:#e9c98f;
+    font-size:20px;
     cursor:pointer;
 }
 
-.vaero-home-card::before{
+/* HERO */
 
-    content:"";
+.engine-hero{
+    position:relative;
+    display:grid;
+    grid-template-columns:minmax(0,1fr) 330px;
+    align-items:center;
+    min-height:280px;
+    margin-bottom:56px;
+}
 
+.engine-welcome{
+    display:block;
+    margin-bottom:14px;
+    color:#e5c18a;
+    font-size:18px;
+}
+
+.engine-hero h1{
+    margin:0;
+    font-size:48px;
+    font-weight:500;
+    letter-spacing:-.03em;
+}
+
+.engine-hero-copy > p{
+    margin:14px 0 28px;
+    color:rgba(235,240,247,.68);
+    font-size:18px;
+}
+
+.engine-status-pill{
+    display:inline-flex;
+    align-items:center;
+    gap:13px;
+    min-height:52px;
+    padding:0 20px;
+    border:1px solid rgba(255,255,255,.09);
+    border-radius:999px;
+    background:rgba(5,17,29,.55);
+}
+
+.engine-status-dot{
+    width:10px;
+    height:10px;
+    border-radius:50%;
+    background:#63e6bd;
+    box-shadow:0 0 16px rgba(99,230,189,.55);
+}
+
+.engine-status-pill strong{
+    font-size:14px;
+    font-weight:600;
+}
+
+.engine-status-pill small{
+    color:rgba(235,240,247,.58);
+    font-size:14px;
+}
+
+.engine-status-separator{
+    width:1px;
+    height:22px;
+    background:rgba(255,255,255,.12);
+}
+
+/* BRAIN */
+
+.engine-brain-orb{
+    position:relative;
+    justify-self:center;
+    width:250px;
+    height:250px;
+    padding:0;
+    border:0;
+    background:transparent;
+    cursor:pointer;
+    animation:brainBreath 9s ease-in-out infinite;
+}
+
+.brain-core{
     position:absolute;
-    inset:0;
-
+    inset:59px;
+    z-index:4;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:28px;
+    border:1px solid rgba(189,221,255,.65);
+    border-radius:50%;
     background:
         radial-gradient(
-            circle at top right,
-            rgba(230,215,176,.08),
-            transparent 55%
+            circle at 50% 35%,
+            rgba(28,57,80,.9),
+            rgba(3,12,21,.98) 65%
         );
-
-    opacity:0;
-
-    transition:.3s;
-}
-
-.vaero-home-card:hover{
-
-    transform:
-        translateY(-6px);
-
-    border-color:
-        rgba(230,215,176,.18);
-
     box-shadow:
-        0 22px 44px rgba(0,0,0,.28);
-
+        0 0 25px rgba(92,170,255,.28),
+        0 0 55px rgba(237,192,117,.12),
+        inset 0 0 30px rgba(255,255,255,.05);
 }
 
-.vaero-home-card:hover::before{
-
-    opacity:1;
-
+.brain-eye{
+    width:18px;
+    height:18px;
+    border-radius:50%;
+    background:#ffe3aa;
+    box-shadow:
+        0 0 10px #ffd78d,
+        0 0 24px rgba(255,205,126,.7);
 }
 
-.vaero-home-card-primary{
+.brain-orbit{
+    position:absolute;
+    border-radius:50%;
+    border:1px solid rgba(230,190,125,.22);
+}
 
-    border-color:
-        rgba(230,215,176,.22);
+.brain-orbit-1{
+    inset:37px;
+}
+
+.brain-orbit-2{
+    inset:19px;
+    border-color:rgba(105,176,234,.2);
+}
+
+.brain-orbit-3{
+    inset:3px;
+    border-color:rgba(230,190,125,.14);
+}
+
+@keyframes brainBreath{
+    0%,100%{
+        transform:scale(1);
+    }
+
+    50%{
+        transform:scale(1.025);
+    }
+}
+
+/* SHORTCUTS */
+
+.engine-section-label{
+    display:block;
+    margin-bottom:18px;
+    color:rgba(235,240,247,.67);
+    font-size:12px;
+    font-weight:600;
+    letter-spacing:.16em;
+}
+
+.engine-shortcuts{
+    margin-bottom:28px;
+}
+
+.engine-shortcuts-grid{
+    display:grid;
+    grid-template-columns:repeat(4,minmax(0,1fr));
+    gap:14px;
+}
+
+.engine-shortcut-card{
+    position:relative;
+    display:flex;
+    min-height:220px;
+    padding:26px 22px;
+    flex-direction:column;
+    align-items:flex-start;
+    text-align:left;
+
+    border:1px solid rgba(255,255,255,.1);
+    border-radius:22px;
 
     background:
         linear-gradient(
             145deg,
-            rgba(230,215,176,.09),
-            rgba(255,255,255,.03)
+            rgba(255,255,255,.035),
+            rgba(255,255,255,.012)
         );
 
-} 
+    color:#f5f7fb;
+    cursor:pointer;
+    transition:
+        transform .25s ease,
+        border-color .25s ease,
+        background .25s ease;
+}
+
+.engine-shortcut-card:hover{
+    transform:translateY(-4px);
+    border-color:rgba(229,193,138,.32);
+    background:rgba(255,255,255,.045);
+}
+
+.engine-shortcut-icon{
+    margin-bottom:26px;
+    color:#e6c589;
+    font-size:40px;
+    line-height:1;
+}
+
+.engine-shortcut-card:nth-child(2) .engine-shortcut-icon{
+    color:#5797ff;
+}
+
+.engine-shortcut-card:nth-child(3) .engine-shortcut-icon{
+    color:#8b6cff;
+}
+
+.engine-shortcut-card:nth-child(4) .engine-shortcut-icon{
+    color:#6ce5bf;
+}
+
+.engine-shortcut-card strong{
+    display:block;
+    margin-bottom:9px;
+    font-size:20px;
+    font-weight:600;
+}
+
+.engine-shortcut-card small{
+    max-width:150px;
+    color:rgba(235,240,247,.56);
+    font-size:14px;
+    line-height:1.55;
+}
+
+.engine-shortcut-arrow{
+    display:flex;
+    align-items:center;
+    justify-content:center;
+
+    width:38px;
+    height:38px;
+    margin-top:auto;
+
+    border:1px solid rgba(229,193,138,.3);
+    border-radius:50%;
+
+    color:#e6c589;
+    font-size:21px;
+}
+
+/* ACTIVE WORLD */
+
+.engine-active-world{
+    position:relative;
+    min-height:280px;
+    margin-bottom:28px;
+    overflow:hidden;
+
+    border:1px solid rgba(255,255,255,.09);
+    border-radius:26px;
+
+    background:
+        radial-gradient(
+            circle at 85% 80%,
+            rgba(51,122,187,.18),
+            transparent 38%
+        ),
+        linear-gradient(
+            145deg,
+            rgba(255,255,255,.025),
+            rgba(255,255,255,.008)
+        );
+}
+
+.engine-active-world-copy{
+    position:relative;
+    z-index:4;
+    padding:34px;
+}
+
+.engine-active-world h2{
+    margin:4px 0 8px;
+    font-size:38px;
+    font-weight:500;
+}
+
+.engine-active-count{
+    display:block;
+    margin-bottom:28px;
+    color:#63dca9;
+    font-size:17px;
+    font-weight:500;
+}
+
+.engine-world-enter{
+    display:flex;
+    align-items:center;
+    gap:34px;
+
+    padding:14px 22px;
+
+    border:1px solid rgba(255,255,255,.15);
+    border-radius:999px;
+
+    background:rgba(5,14,25,.45);
+    color:#fff;
+
+    font-size:15px;
+    cursor:pointer;
+}
+
+.engine-world-visual{
+    position:absolute;
+    right:-70px;
+    bottom:-180px;
+    width:540px;
+    height:540px;
+}
+
+.engine-world-planet{
+    position:absolute;
+    inset:0;
+    border-radius:50%;
+
+    background:
+        radial-gradient(
+            circle at 34% 25%,
+            rgba(133,193,255,.9),
+            rgba(25,75,122,.88) 15%,
+            rgba(6,25,43,.98) 42%,
+            #020a11 70%
+        );
+
+    box-shadow:
+        -24px -15px 55px rgba(100,180,255,.34),
+        inset 22px 18px 60px rgba(83,166,255,.22);
+}
+
+.engine-world-glow{
+    position:absolute;
+    inset:-15px;
+    border-radius:50%;
+    box-shadow:
+        -20px -18px 60px rgba(93,178,255,.45);
+}
+
+/* ACTIVITY */
+
+.engine-activity{
+    padding:30px 34px;
+    border:1px solid rgba(255,255,255,.09);
+    border-radius:26px;
+
+    background:
+        linear-gradient(
+            145deg,
+            rgba(255,255,255,.025),
+            rgba(255,255,255,.008)
+        );
+}
+
+.engine-activity-list{
+    display:flex;
+    flex-direction:column;
+}
+
+.engine-activity-item{
+    display:grid;
+    grid-template-columns:12px 1fr auto;
+    align-items:center;
+    gap:16px;
+
+    min-height:54px;
+
+    border-bottom:1px solid rgba(255,255,255,.055);
+}
+
+.engine-activity-item:last-child{
+    border-bottom:0;
+}
+
+.activity-dot{
+    width:7px;
+    height:7px;
+    border-radius:50%;
+    background:#dfac64;
+}
+
+.engine-activity-item:nth-child(2) .activity-dot{
+    background:#7ca5ad;
+}
+
+.engine-activity-item:nth-child(3) .activity-dot{
+    background:#64d8d0;
+}
+
+.engine-activity-item:nth-child(4) .activity-dot{
+    background:#7d6ee6;
+}
+
+.engine-activity-item span:nth-child(2){
+    color:rgba(245,247,251,.86);
+    font-size:14px;
+}
+
+.engine-activity-item small{
+    color:rgba(235,240,247,.5);
+    font-size:13px;
+}
+
+/* MOBILE */
+
+@media (max-width:700px){
+
+    .vaero-engine-home{
+        padding:
+            22px
+            18px
+            125px;
+    }
+
+    .engine-home-topbar{
+        margin-bottom:54px;
+    }
+
+    .engine-brand-main{
+        font-size:25px;
+    }
+
+    .engine-icon-btn{
+        width:44px;
+        height:44px;
+    }
+
+    .engine-hero{
+        grid-template-columns:minmax(0,1fr) 160px;
+        min-height:265px;
+        margin-bottom:42px;
+    }
+
+    .engine-welcome{
+        font-size:15px;
+    }
+
+    .engine-hero h1{
+        font-size:31px;
+        white-space:nowrap;
+    }
+
+    .engine-hero-copy > p{
+        max-width:300px;
+        margin:12px 0 24px;
+        font-size:15px;
+        line-height:1.55;
+    }
+
+    .engine-status-pill{
+        min-height:48px;
+        padding:0 16px;
+        gap:10px;
+    }
+
+    .engine-status-pill strong{
+        font-size:13px;
+        white-space:nowrap;
+    }
+
+    .engine-status-pill small{
+        font-size:12px;
+        white-space:nowrap;
+    }
+
+    .engine-brain-orb{
+        width:165px;
+        height:165px;
+        margin-left:-20px;
+    }
+
+    .brain-core{
+        inset:39px;
+        gap:19px;
+    }
+
+    .brain-eye{
+        width:13px;
+        height:13px;
+    }
+
+    .brain-orbit-1{
+        inset:25px;
+    }
+
+    .brain-orbit-2{
+        inset:13px;
+    }
+
+    .brain-orbit-3{
+        inset:2px;
+    }
+
+    .engine-shortcuts-grid{
+        grid-template-columns:
+            repeat(4,minmax(0,1fr));
+        gap:8px;
+    }
+
+    .engine-shortcut-card{
+        min-height:170px;
+        padding:18px 11px;
+        border-radius:17px;
+    }
+
+    .engine-shortcut-icon{
+        margin-bottom:18px;
+        font-size:29px;
+    }
+
+    .engine-shortcut-card strong{
+        font-size:14px;
+    }
+
+    .engine-shortcut-card small{
+        font-size:11px;
+        line-height:1.45;
+    }
+
+    .engine-shortcut-arrow{
+        width:31px;
+        height:31px;
+        font-size:17px;
+    }
+
+    .engine-active-world{
+        min-height:240px;
+        border-radius:22px;
+    }
+
+    .engine-active-world-copy{
+        padding:28px 22px;
+    }
+
+    .engine-active-world h2{
+        font-size:31px;
+    }
+
+    .engine-world-visual{
+        right:-180px;
+        bottom:-170px;
+        width:470px;
+        height:470px;
+    }
+
+    .engine-activity{
+        padding:26px 22px;
+        border-radius:22px;
+    }
+
+    .engine-activity-item{
+        grid-template-columns:9px 1fr auto;
+        gap:10px;
+    }
+
+    .engine-activity-item span:nth-child(2){
+        font-size:12px;
+    }
+
+    .engine-activity-item small{
+        font-size:11px;
+    }
+
+}    
 
 .world-entity-content{
     flex:1;
