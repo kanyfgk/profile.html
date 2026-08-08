@@ -810,48 +810,50 @@
     }
 
     .engine-hero{
-        grid-template-columns:minmax(0,1fr) 160px;
-        min-height:265px;
-        margin-bottom:42px;
-    }
+    grid-template-columns:minmax(0,1fr) 145px;
+    min-height:235px;
+    margin-bottom:38px;
+    column-gap:2px;
+}
 
-    .engine-welcome{
-        font-size:15px;
-    }
+.engine-welcome{
+    font-size:15px;
+}
 
-    .engine-hero h1{
-        font-size:31px;
-        white-space:nowrap;
-    }
+.engine-hero h1{
+    font-size:30px;
+    white-space:nowrap;
+}
 
-    .engine-hero-copy > p{
-        max-width:300px;
-        margin:12px 0 24px;
-        font-size:15px;
-        line-height:1.55;
-    }
+.engine-hero-copy > p{
+    max-width:245px;
+    margin:12px 0 22px;
+    font-size:14px;
+    line-height:1.5;
+}
 
-    .engine-status-pill{
-        min-height:48px;
-        padding:0 16px;
-        gap:10px;
-    }
+.engine-status-pill{
+    min-height:46px;
+    padding:0 14px;
+    gap:9px;
+}
 
-    .engine-status-pill strong{
-        font-size:13px;
-        white-space:nowrap;
-    }
+.engine-status-pill strong{
+    font-size:13px;
+    white-space:nowrap;
+}
 
-    .engine-status-pill small{
-        font-size:12px;
-        white-space:nowrap;
-    }
+.engine-status-pill small{
+    font-size:11px;
+    white-space:nowrap;
+}
 
-    .engine-brain-orb{
-        width:165px;
-        height:165px;
-        margin-left:-20px;
-    }
+.engine-brain-orb{
+    width:150px;
+    height:150px;
+    margin-left:-12px;
+    transform:translateY(-4px);
+}
 
     .brain-core{
         inset:39px;
@@ -876,16 +878,16 @@
     }
 
     .engine-shortcuts-grid{
-        grid-template-columns:
-            repeat(4,minmax(0,1fr));
-        gap:8px;
-    }
+    grid-template-columns:
+        repeat(4,minmax(0,1fr));
+    gap:10px;
+}
 
-    .engine-shortcut-card{
-        min-height:170px;
-        padding:18px 11px;
-        border-radius:17px;
-    }
+.engine-shortcut-card{
+    min-height:158px;
+    padding:16px 9px;
+    border-radius:16px;
+}
 
     .engine-shortcut-icon{
         margin-bottom:18px;
