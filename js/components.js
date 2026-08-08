@@ -144,83 +144,256 @@ const Components = {
     home(){
 
     return `
-        <section class="dashboard-shell">
+        <section class="vaero-engine-home">
 
-            <div class="vaero-home-actions">
+            <header class="engine-home-topbar">
+
+                <div class="engine-brand">
+                    <span class="engine-brand-main">VAERO</span>
+                    <span class="engine-brand-sub">ENGINE</span>
+                </div>
+
+                <div class="engine-top-actions">
+                    <button
+                        type="button"
+                        class="engine-icon-btn"
+                        aria-label="Bildirimler"
+                    >
+                        ♢
+                    </button>
+
+                    <button
+                        type="button"
+                        class="engine-icon-btn"
+                        aria-label="Tarama"
+                    >
+                        ⌗
+                    </button>
+                </div>
+
+            </header>
+
+            <section class="engine-hero">
+
+                <div class="engine-hero-copy">
+
+                    <span class="engine-welcome">
+                        Hoş geldin, Mehmet
+                    </span>
+
+                    <h1>
+                        VAERO Engine
+                    </h1>
+
+                    <p>
+                        Yaşayan dijital evrenin kontrol merkezi
+                    </p>
+
+                    <div class="engine-status-pill">
+
+                        <span class="engine-status-dot"></span>
+
+                        <strong>
+                            Sistem Online
+                        </strong>
+
+                        <span class="engine-status-separator"></span>
+
+                        <small>
+                            Tüm sistemler çalışıyor
+                        </small>
+
+                    </div>
+
+                </div>
 
                 <button
                     type="button"
-                    class="primary-btn"
-                    data-action="worlds:open"
-                >
-                    🌍 Dünyaları Keşfet
-                </button>
-
-                <button
-                    type="button"
-                    class="secondary-btn"
-                    data-home-action="entity:profile"
-                >
-                    👤 Profilim
-                </button>
-
-                <button
-                    type="button"
-                    class="secondary-btn"
+                    class="engine-brain-orb"
                     data-action="brain:open"
+                    aria-label="Brain'i aç"
                 >
-                    🧠 Brain
+                    <span class="brain-orbit brain-orbit-1"></span>
+                    <span class="brain-orbit brain-orbit-2"></span>
+                    <span class="brain-orbit brain-orbit-3"></span>
+
+                    <span class="brain-core">
+                        <span class="brain-eye"></span>
+                        <span class="brain-eye"></span>
+                    </span>
                 </button>
 
-                <button
-                    type="button"
-                    class="secondary-btn"
-                    data-action="world:create"
-                >
-                    ➕ Yeni Dünya
-                </button>
+            </section>
 
-            </div>
+            <section class="engine-shortcuts">
 
-            <div class="vaero-home-overview">
+                <span class="engine-section-label">
+                    KISAYOLLAR
+                </span>
 
-                <div class="overview-card">
+                <div class="engine-shortcuts-grid">
 
-                    <span>ENGINE</span>
+                    <button
+                        type="button"
+                        class="engine-shortcut-card"
+                        data-action="worlds:open"
+                    >
+                        <span class="engine-shortcut-icon">
+                            ◯
+                        </span>
 
-                    <strong>Online</strong>
+                        <strong>
+                            Dünyalar
+                        </strong>
 
-                    <small>
-                        Sistem çalışıyor
-                    </small>
+                        <small>
+                            Keşfet ve yönet
+                        </small>
+
+                        <span class="engine-shortcut-arrow">
+                            →
+                        </span>
+                    </button>
+
+                    <button
+                        type="button"
+                        class="engine-shortcut-card"
+                        data-action="entity:profile"
+                    >
+                        <span class="engine-shortcut-icon">
+                            ♙
+                        </span>
+
+                        <strong>
+                            Profilim
+                        </strong>
+
+                        <small>
+                            Kimliğin ve ayarların
+                        </small>
+
+                        <span class="engine-shortcut-arrow">
+                            →
+                        </span>
+                    </button>
+
+                    <button
+                        type="button"
+                        class="engine-shortcut-card"
+                        data-action="entities:open"
+                    >
+                        <span class="engine-shortcut-icon">
+                            ⬡
+                        </span>
+
+                        <strong>
+                            Varlıklar
+                        </strong>
+
+                        <small>
+                            Varlıklarını yönet
+                        </small>
+
+                        <span class="engine-shortcut-arrow">
+                            →
+                        </span>
+                    </button>
+
+                    <button
+                        type="button"
+                        class="engine-shortcut-card"
+                        data-action="world:create"
+                    >
+                        <span class="engine-shortcut-icon">
+                            ✦
+                        </span>
+
+                        <strong>
+                            Yeni Dünya
+                        </strong>
+
+                        <small>
+                            Evrenine yeni bir dünya ekle
+                        </small>
+
+                        <span class="engine-shortcut-arrow">
+                            →
+                        </span>
+                    </button>
 
                 </div>
 
-                <div class="overview-card">
+            </section>
 
-                    <span>DÜNYALAR</span>
+            <section class="engine-active-world">
 
-                    <strong>1</strong>
+                <div class="engine-active-world-copy">
 
-                    <small>
-                        Aktif dünya
-                    </small>
+                    <span class="engine-section-label">
+                        AKTİF DÜNYAN
+                    </span>
+
+                    <h2>
+                        Earth Prime
+                    </h2>
+
+                    <strong class="engine-active-count">
+                        1 aktif varlık
+                    </strong>
+
+                    <button
+                        type="button"
+                        class="engine-world-enter"
+                        data-action="worlds:open"
+                    >
+                        Dünyaya Git
+                        <span>→</span>
+                    </button>
 
                 </div>
 
-                <div class="overview-card">
+                <div class="engine-world-visual">
+                    <div class="engine-world-glow"></div>
+                    <div class="engine-world-planet"></div>
+                </div>
 
-                    <span>BRAIN</span>
+            </section>
 
-                    <strong>Hazır</strong>
+            <section class="engine-activity">
 
-                    <small>
-                        Seni bekliyor
-                    </small>
+                <span class="engine-section-label">
+                    SON AKTİVİTELER
+                </span>
+
+                <div class="engine-activity-list">
+
+                    <div class="engine-activity-item">
+                        <span class="activity-dot"></span>
+                        <span>Innerbloom bağlantısı eklendi</span>
+                        <small>2 saat önce</small>
+                    </div>
+
+                    <div class="engine-activity-item">
+                        <span class="activity-dot"></span>
+                        <span>Yeni bellek oluşturuldu</span>
+                        <small>5 saat önce</small>
+                    </div>
+
+                    <div class="engine-activity-item">
+                        <span class="activity-dot"></span>
+                        <span>Zaman çizelgesine 3 olay eklendi</span>
+                        <small>1 gün önce</small>
+                    </div>
+
+                    <div class="engine-activity-item">
+                        <span class="activity-dot"></span>
+                        <span>Finansal kayıt güncellendi</span>
+                        <small>2 gün önce</small>
+                    </div>
 
                 </div>
 
-            </div>
+            </section>
 
         </section>
     `;
