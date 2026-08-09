@@ -7,7 +7,6 @@
   width:calc(100% - 28px);
   max-width:760px;
   min-height:86px;
-
   display:grid;
   grid-template-columns:1fr 1fr 96px 1fr 1fr;
   align-items:center;
@@ -94,7 +93,7 @@
   width:92px;
   height:92px;
 
-  margin-top:-34px;
+  margin-top:-42px;
 
   padding:0;
 
@@ -103,21 +102,27 @@
 
   cursor:pointer;
 
-  z-index:10;
+  z-index:1002;
+  opacity:1;
+  visibility:visible;
 
   animation:navBrainBreath 9s ease-in-out infinite;
 }
+
 .nav-brain-orbit{
   position:absolute;
   inset:3px;
+
+  display:block;
 
   border:1px solid rgba(224,188,125,.25);
   border-radius:50%;
 
   box-shadow:
     0 0 22px rgba(224,188,125,.08);
-}
 
+  pointer-events:none;
+}
 .nav-brain-orbit::before,
 .nav-brain-orbit::after{
   content:"";
@@ -203,23 +208,24 @@
 @media (max-width:700px){
 
   .bottom-nav{
-    bottom:18px;
+  bottom:10px;
 
-    width:calc(100% - 22px);
-    min-height:82px;
+  width:calc(100% - 28px);
+  min-height:74px;
 
-    grid-template-columns:
-      1fr
-      1fr
-      82px
-      1fr
-      1fr;
+  grid-template-columns:
+    1fr
+    1fr
+    88px
+    1fr
+    1fr;
 
-    padding:9px 8px;
+  padding:7px 10px;
 
-    border-radius:28px;
-  }
+  border-radius:26px;
 
+  overflow:visible;
+}
   .nav-btn{
     font-size:10px;
   }
