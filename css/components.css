@@ -890,65 +890,75 @@
 }
 
     .engine-shortcut-icon{
-        margin-bottom:18px;
-        font-size:29px;
+        margin-bottom:14px;
+        font-size:26px;
     }
 
     .engine-shortcut-card strong{
-        font-size:14px;
-    }
+    font-size:12px;
+    line-height:1.2;
+    white-space:normal;
+    word-break:normal;
+}
 
-    .engine-shortcut-card small{
-        font-size:11px;
-        line-height:1.45;
-    }
+.engine-shortcut-card small{
+    font-size:10px;
+    line-height:1.35;
+    white-space:normal;
+}
 
-    .engine-shortcut-arrow{
-        width:31px;
-        height:31px;
-        font-size:17px;
-    }
+.engine-shortcut-icon{
+    margin-bottom:14px;
+    font-size:26px;
+}
+
+.engine-shortcut-arrow{
+    width:29px;
+    height:29px;
+    font-size:16px;
+}
 
     .engine-active-world{
-        min-height:240px;
-        border-radius:22px;
-    }
+    min-height:220px;
+    border-radius:22px;
+}
 
-    .engine-active-world-copy{
-        padding:28px 22px;
-    }
+.engine-active-world-copy{
+    padding:26px 22px;
+}
 
-    .engine-active-world h2{
-        font-size:31px;
-    }
+.engine-active-world h2{
+    font-size:29px;
+    line-height:1.1;
+}
 
-    .engine-world-visual{
-        right:-180px;
-        bottom:-170px;
-        width:470px;
-        height:470px;
-    }
+.engine-world-visual{
+    right:-145px;
+    bottom:-145px;
+    width:420px;
+    height:420px;
+}
 
     .engine-activity{
-        padding:26px 22px;
-        border-radius:22px;
-    }
+    padding:22px 18px;
+    border-radius:20px;
+}
 
-    .engine-activity-item{
-        grid-template-columns:9px 1fr auto;
-        gap:10px;
-    }
+.engine-activity-item{
+    grid-template-columns:8px 1fr auto;
+    gap:8px;
+    min-height:48px;
+}
 
-    .engine-activity-item span:nth-child(2){
-        font-size:12px;
-    }
+.engine-activity-item span:nth-child(2){
+    font-size:11px;
+    line-height:1.4;
+}
 
-    .engine-activity-item small{
-        font-size:11px;
-    }
-
-}    
-
+.engine-activity-item small{
+    font-size:10px;
+    white-space:nowrap;
+}
 .world-entity-content{
     flex:1;
 }
