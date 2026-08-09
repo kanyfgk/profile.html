@@ -119,6 +119,26 @@
 <script src="js/apps/welcome-app.js?v=build-032"></script>
 <script src="js/renderer.js?v=build-027"></script>
 <script src="js/engine.js?v=build-026"></script> 
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+
+    const discoveryCompleted =
+        localStorage.getItem("vaero:discovery:completed") === "true";
+
+    const welcomeCompleted =
+        localStorage.getItem("vaero:welcome:completed:v2") === "true";
+
+    if(
+        discoveryCompleted &&
+        welcomeCompleted &&
+        window.Engine &&
+        typeof window.Engine.start === "function"
+    ){
+        window.Engine.start();
+    }
+
+});
+</script> 
 
  
  <button class="brain-fab" data-action="brain:open">
