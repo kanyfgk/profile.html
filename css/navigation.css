@@ -114,7 +114,8 @@
   inset:3px;
 
   display:block;
-
+  opacity:1;
+  visibility:visible;
   border:1px solid rgba(224,188,125,.25);
   border-radius:50%;
 
@@ -146,9 +147,12 @@
   position:absolute;
   inset:24px;
 
-  z-index:4;
+  z-index:1003;
 
   display:flex;
+  opacity:1;
+  visibility:visible;
+
   align-items:center;
   justify-content:center;
   gap:11px;
