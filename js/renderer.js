@@ -34,7 +34,11 @@ const Renderer = {
 
                 <section class="section">
 
-                    ${components.hero(rootEntity)}
+                    ${
+    openedEntity || currentWorld
+        ? components.hero(rootEntity)
+        : ""
+}
 
                     ${
                         openedEntity
