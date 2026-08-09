@@ -1042,7 +1042,7 @@ const worldStatus =
                 type="button"
                 class="nav-btn active"
                 data-action="home:open"
-            >
+            > 
                 <div class="nav-icon">⌂</div>
                 <span>Ev</span>
             </button>
