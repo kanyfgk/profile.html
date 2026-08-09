@@ -863,26 +863,62 @@ const worldStatus =
 
     navigation(){
     return `
-        <nav class="bottom-nav">
-            <button class="nav-btn active">
+        <nav class="bottom-nav engine-bottom-nav">
+
+            <button
+                type="button"
+                class="nav-btn active"
+                data-action="home:open"
+            >
                 <div class="nav-icon">⌂</div>
-                Ev
+                <span>Ev</span>
             </button>
 
-            <button class="nav-btn">
+            <button
+                type="button"
+                class="nav-btn"
+                data-action="entity:profile"
+            >
                 <div class="nav-icon">ID</div>
-                Kimlik
+                <span>Kimlik</span>
             </button>
 
-            <button class="nav-btn">
+            <button
+                type="button"
+                class="nav-brain-btn"
+                data-action="brain:open"
+                aria-label="Brain"
+            >
+                <span class="nav-brain-orbit"></span>
+
+                <span class="nav-brain-core">
+                    <span class="nav-brain-eye"></span>
+                    <span class="nav-brain-eye"></span>
+                </span>
+            </button>
+
+            <button
+                type="button"
+                class="nav-btn"
+                data-action="world:create"
+            >
                 <div class="nav-icon">＋</div>
-                Yarat
+                <span>Yarat</span>
             </button>
 
-            <button class="nav-btn">
+            <button
+                type="button"
+                class="nav-btn"
+                data-action="worlds:open"
+            >
                 <div class="nav-icon">◌</div>
-                Dünya
+                <span>Dünya</span>
             </button>
+
+            <span class="nav-brain-label">
+                Brain'e dokun veya konuş
+            </span>
+
         </nav>
     `;
 },
