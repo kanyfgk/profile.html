@@ -938,16 +938,16 @@ const worldStatus =
 </h1>
 
                 ${entities.length === 0 ? `
-                    <p class="world-empty">
-                        Bu dünyada henüz hiçbir varlık yok.
-                    </p>
-                ` : entities.map(entity=>`
-                    <button
+    <p class="world-empty">
+        Bu dünyada henüz hiçbir varlık yok.
+    </p>
+` : entities.map(entity=>`
     <button
-    class="secondary-btn world-entity-btn"
-    data-action="entity:open"
-    data-entity-id="${entity.id}"
->
+        type="button"
+        class="secondary-btn world-entity-btn"
+        data-action="entity:open"
+        data-entity-id="${entity.id}"
+    >
 
     <div class="world-entity-content">
         <div class="world-entity-type">
