@@ -1,19 +1,77 @@
 const BrainAwareness = {
 
-    currentApp: null,
+    currentApp: "home",
+    previousApp: null,
+    metadata: {},
+    enteredAt: Date.now(),
 
-    enter(app){
+    enter(app, metadata = {}){
 
-        this.currentApp = app;
- 
+        const nextApp =
+            String(app || "home")
+                .trim()
+                .toLowerCase();
+
+        if(this.currentApp !== nextApp){
+            this.previousApp =
+                this.currentApp;
+        }
+
+        this.currentApp =
+            nextApp || "home";
+
+        this.metadata =
+            metadata &&
+            typeof metadata === "object" &&
+            !Array.isArray(metadata)
+                ? { ...metadata }
+                : {};
+
+        this.enteredAt =
+            Date.now();
+
+        return this.snapshot();
+
     },
 
     current(){
 
-        return this.currentApp;
+        return this.currentApp || "home";
+
+    },
+
+    snapshot(){
+
+        return {
+            app: this.current(),
+            previousApp: this.previousApp,
+            metadata: {
+                ...this.metadata
+            },
+            enteredAt: this.enteredAt
+        };
+
+    },
+
+    reset(){
+
+        this.previousApp =
+            this.currentApp;
+
+        this.currentApp =
+            "home";
+
+        this.metadata = {};
+        this.enteredAt =
+            Date.now();
+
+        return this.snapshot();
 
     }
 
 };
 
-VAERO.register("brainAwareness", BrainAwareness);
+VAERO.register(
+    "brainAwareness",
+    BrainAwareness
+);
