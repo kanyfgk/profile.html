@@ -1,183 +1,106 @@
-class Entity {
+const EntityManager = {
 
-    constructor(data = {}){
+    entities: {},
 
-        this.id =
-            data.id ||
-            Entity.createId();
+    create(data = {}){
 
-        this.type =
-            String(
-                data.type ||
-                "entity"
-            ).trim();
-
-        this.name =
-            String(
-                data.name ||
-                "İsimsiz Varlık"
-            ).trim();
-
-        this.description =
-            String(
-                data.description ||
-                ""
-            ).trim();
-
-        this.status =
-            String(
-                data.status ||
-                "active"
-            ).trim();
-
-        this.organs =
-            Array.isArray(data.organs)
-                ? [...data.organs]
-                : [];
-
-        this.bridges =
-            Array.isArray(data.bridges)
-                ? [...data.bridges]
-                : [];
-
-        this.identity =
-            data.identity &&
-            typeof data.identity === "object"
-                ? { ...data.identity }
-                : null;
-
-        this.profile =
-            data.profile &&
-            typeof data.profile === "object"
-                ? {
-                    ...data.profile,
-                    identity:
-                        data.profile.identity ||
-                        this.identity
-                }
-                : null;
-
-        this.createdAt =
-            Number(data.createdAt) ||
-            Date.now();
-
-        this.updatedAt =
-            Number(data.updatedAt) ||
-            this.createdAt;
-
-    }
-
-    static createId(){
+        const requestedId =
+            data.id || null;
 
         if(
-            typeof crypto !== "undefined" &&
-            typeof crypto.randomUUID === "function"
+            requestedId &&
+            this.entities[requestedId]
         ){
-            return crypto.randomUUID();
+            return this.entities[requestedId];
         }
 
-        return `entity_${Date.now()}_${Math.random()
-            .toString(36)
-            .slice(2, 10)}`;
+        const entity =
+            new Entity(data);
 
-    }
+        this.entities[entity.id] =
+            entity;
 
-    addOrgan(organ){
+        VAERO.emit(
+            "entity:created",
+            entity
+        );
 
-        if(!organ || !organ.name){
+        return entity;
+
+    },
+
+    hydrate(data = {}){
+
+        if(!data || typeof data !== "object"){
             return null;
         }
 
-        const organName =
-            String(organ.name)
-                .trim()
-                .toLowerCase();
+        if(data instanceof Entity){
 
-        const existing =
-            this.organs.find(item =>
-                String(item?.name || "")
-                    .trim()
-                    .toLowerCase() === organName
-            );
+            this.entities[data.id] =
+                data;
 
-        if(existing){
-            return existing;
-        }
+            return data;
 
-        this.organs.push(organ);
-        this.updatedAt = Date.now();
-
-        return organ;
-
-    }
-
-    addBridge(bridge){
-
-        if(!bridge || !bridge.id){
-            return null;
-        }
-
-        const existing =
-            this.bridges.find(
-                item =>
-                    item?.id === bridge.id
-            );
-
-        if(existing){
-            return existing;
-        }
-
-        this.bridges.push(bridge);
-        this.updatedAt = Date.now();
-
-        return bridge;
-
-    }
-
-    update(data = {}){
-
-        if(
-            typeof data.name === "string" &&
-            data.name.trim()
-        ){
-            this.name = data.name.trim();
-        }
-
-        if(typeof data.description === "string"){
-            this.description =
-                data.description.trim();
         }
 
         if(
-            typeof data.status === "string" &&
-            data.status.trim()
+            data.id &&
+            this.entities[data.id]
         ){
-            this.status =
-                data.status.trim();
+            return this.entities[data.id];
         }
 
-        this.updatedAt = Date.now();
+        const entity =
+            new Entity(data);
 
-        return this;
+        this.entities[entity.id] =
+            entity;
+
+        return entity;
+
+    },
+
+    get(id){
+
+        return (
+            this.entities[id] ||
+            null
+        );
+
+    },
+
+    all(){
+
+        return Object.values(
+            this.entities
+        );
+
+    },
+
+    remove(id){
+
+        const entity =
+            this.get(id);
+
+        if(!entity){
+            return false;
+        }
+
+        delete this.entities[id];
+
+        VAERO.emit(
+            "entity:removed",
+            entity
+        );
+
+        return true;
 
     }
 
-    toJSON(){
+};
 
-        return {
-            id: this.id,
-            type: this.type,
-            name: this.name,
-            description: this.description,
-            status: this.status,
-            organs: this.organs,
-            bridges: this.bridges,
-            identity: this.identity,
-            profile: this.profile,
-            createdAt: this.createdAt,
-            updatedAt: this.updatedAt
-        };
-
-    }
-
-}
+VAERO.register(
+    "entityManager",
+    EntityManager
+);
