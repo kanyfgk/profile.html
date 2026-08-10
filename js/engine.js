@@ -2,13 +2,24 @@ const Engine = {
 
     currentEntity: null,
     renderer: null,
- 
+    started: false,
+
     start(){
+
+        if(this.started){
+            console.warn("VAERO Engine is already running.");
+            return;
+        }
 
         VAERO.engine = this;
         VAERO.register("engine", this);
 
         const kernel = VAERO.get("kernel");
+
+        if(!kernel){
+            console.error("VAERO Kernel could not be found.");
+            return;
+        }
 
         const entityManager = kernel.service("entityManager");
         const identity = kernel.service("identity");
@@ -38,12 +49,12 @@ const Engine = {
         runtime.boot();
 
         const vaeroEntity = entityManager.create({
-            id:"vaero-root",
-            type:"brand",
-            name:"VAERO",
-            description:"Living Digital Universe",
-            status:"online",
-            organs:[]
+            id: "vaero-root",
+            type: "brand",
+            name: "VAERO",
+            description: "Living Digital Universe",
+            status: "online",
+            organs: []
         });
 
         vaeroEntity.identity = identity.create(vaeroEntity);
@@ -51,41 +62,54 @@ const Engine = {
 
         vaeroEntity.profile = profile.create(vaeroEntity);
 
-        vaeroEntity.addOrgan(organSystem.create("Identity","active"));
-        vaeroEntity.addOrgan(organSystem.create("Engine","active"));
-        vaeroEntity.addOrgan(organSystem.create("Renderer","active"));
-        vaeroEntity.addOrgan(organSystem.create("Bridge","active"));
+        vaeroEntity.addOrgan(
+            organSystem.create("Identity", "active")
+        );
+
+        vaeroEntity.addOrgan(
+            organSystem.create("Engine", "active")
+        );
+
+        vaeroEntity.addOrgan(
+            organSystem.create("Renderer", "active")
+        );
+
+        vaeroEntity.addOrgan(
+            organSystem.create("Bridge", "active")
+        );
 
         events.emit("entity.mounted", {
             entityId: vaeroEntity.id,
             entityName: vaeroEntity.name
         });
 
-        const engineStartExists =
-    evolution.all().some(event =>
-        event.type === "engine:start" &&
-        event.payload &&
-        event.payload.entityId === vaeroEntity.id
-    );
+        const engineStartExists = evolution.all().some(event =>
+            event.type === "engine:start" &&
+            event.payload &&
+            event.payload.entityId === vaeroEntity.id
+        );
 
-if (!engineStartExists) {
+        if(!engineStartExists){
 
-    evolution.record(
-        "engine:start",
-        "VAERO Engine started with root entity",
-        {
-            entityId: vaeroEntity.id,
-            entityName: vaeroEntity.name
+            evolution.record(
+                "engine:start",
+                "VAERO Engine started with root entity",
+                {
+                    entityId: vaeroEntity.id,
+                    entityName: vaeroEntity.name
+                }
+            );
+
         }
-    );
 
-}
         if(!guardian.validate(vaeroEntity)){
             console.error("Entity rejected by Guardian");
             return;
         }
 
         this.mount(vaeroEntity);
+
+        this.started = true;
 
         events.emit("engine.started", {
             time: Date.now(),
@@ -99,20 +123,20 @@ if (!engineStartExists) {
 
     mount(entity){
 
-    this.currentEntity = entity;
-    this.renderer.render(entity);
+        if(!entity){
+            console.error("Engine.mount requires an entity.");
+            return;
+        }
 
-    setTimeout(() => {
-        const buttons = document.querySelectorAll('[data-action="brain:open"]');
+        if(!this.renderer){
+            console.error("Renderer is not available.");
+            return;
+        }
 
-        buttons.forEach((button, index) => {
-            if(index > 0){
-                button.remove();
-            }
-        });
-    }, 0);
+        this.currentEntity = entity;
+        this.renderer.render(entity);
 
-}
+    }
 
 };
 
@@ -121,5 +145,3 @@ const kernel = VAERO.get("kernel");
 kernel.boot();
 
 window.Engine = Engine;
-
-// Engine.start();
