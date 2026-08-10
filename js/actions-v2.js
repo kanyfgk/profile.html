@@ -1,1097 +1,1205 @@
 const Actions = {
 
-    openProfile(entity){
-        const memory = VAERO.get("memorySystem"); 
+    brainOutsideHandler: null,
 
-        memory.remember("profile:opened", {
-            entityId: entity.id,
-            profileName: entity.profile.name
-        });
-    },
+    createId(prefix = "item"){
 
-    closeModal(){
-        const modal = document.getElementById("profileModal");
-        if(modal) modal.classList.remove("show");
-    },
-
-    createWorld(){
-        const input = document.getElementById("worldNameInput");
-
-        if(!input || input.value.trim() === ""){
-            alert("Please enter a world name.");
-            return;
+        if(
+            typeof crypto !== "undefined" &&
+            typeof crypto.randomUUID === "function"
+        ){
+            return crypto.randomUUID();
         }
 
-        const worldService = VAERO.get("world");
+        return `${prefix}_${Date.now()}_${Math.random()
+            .toString(36)
+            .slice(2, 10)}`;
 
-        worldService.create({
-            id: crypto.randomUUID(),
-            name: input.value,
-            type: "custom-world",
-            owner: VAERO.engine.currentEntity.id,
-            entities: []
-        });
+    },
 
-        VAERO.engine.mount(VAERO.engine.currentEntity);
-        input.value = "";
+    openHome(){
+
+        return VAERO.engine.openHome();
+
+    },
+
+    openIdentity(){
+
+        const entity =
+            VAERO.engine.rootEntity ||
+            VAERO.engine.currentEntity;
+
+        if(!entity){
+            return false;
+        }
+
+        VAERO.engine.currentOpenedEntity =
+            entity;
+
+        VAERO.engine.currentEntityPage =
+            "identity";
+
+        return VAERO.engine.setView(
+            "identity",
+            {
+                entity,
+                page: "identity",
+                world: null,
+                entityCreateMode: false,
+                entityType: null
+            }
+        );
+
+    },
+
+    openProfile(){
+
+        const entity =
+            VAERO.engine.rootEntity ||
+            VAERO.engine.currentEntity;
+
+        if(!entity){
+            return false;
+        }
+
+        VAERO.engine.currentOpenedEntity =
+            entity;
+
+        VAERO.engine.currentEntityPage =
+            "profile";
+
+        return VAERO.engine.setView(
+            "profile",
+            {
+                entity,
+                page: "profile",
+                world: null,
+                entityCreateMode: false,
+                entityType: null
+            }
+        );
+
+    },
+
+    openCreate(){
+
+        return VAERO.engine.setView(
+            "create",
+            {
+                entity: null,
+                page: null,
+                world: null,
+                entityCreateMode: false,
+                entityType: null
+            }
+        );
+
     },
 
     openWorlds(){
 
-    VAERO.engine.currentWorld = {
-        id: "worlds"
-    };
+        return VAERO.engine.setView(
+            "worlds",
+            {
+                entity: null,
+                page: null,
+                world: null,
+                entityCreateMode: false,
+                entityType: null
+            }
+        );
 
-    VAERO.engine.currentOpenedEntity = null;
+    },
 
-    VAERO.engine.mount(
-        VAERO.engine.currentEntity
-    );
+    openEntities(){
 
-},
+        const worldService =
+            VAERO.get("world");
+
+        const worlds =
+            worldService &&
+            typeof worldService.all === "function"
+                ? worldService.all()
+                : [];
+
+        const targetWorld =
+            VAERO.engine.currentWorld ||
+            worlds.find(
+                world =>
+                    world.status === "active"
+            ) ||
+            worlds[0] ||
+            null;
+
+        if(!targetWorld){
+            return this.openWorlds();
+        }
+
+        return this.openWorld(
+            targetWorld.id
+        );
+
+    },
 
     openWorld(worldId){
-        const worldService = VAERO.get("world");
-        const world = worldService.all().find(item => item.id === worldId);
 
-        if(!world){
-            alert("World not found.");
-            return;
-        }
+        const worldService =
+            VAERO.get("world");
 
-        if(!world.entities) world.entities = [];
-
-        VAERO.engine.currentWorld = world;
-        VAERO.engine.mount(VAERO.engine.currentEntity);
-    },
-
-    createEntity(){
-        const input = document.getElementById("entityNameInput");
-
-        if(!input || input.value.trim() === ""){
-            alert("Please enter a name.");
-            return;
-        }
-
-        const currentWorld = VAERO.engine.currentWorld;
-
-        if(!currentWorld){
-            alert("No world selected.");
-            return;
-        }
-
-        if(!currentWorld.entities) currentWorld.entities = [];
-
-        const entityManager = VAERO.get("entityManager");
-
-        const entity = entityManager.create({
-            id: crypto.randomUUID(),
-            name: input.value,
-            type: VAERO.engine.entityType
-        });
-
-        currentWorld.entities.push(entity);
-
-        VAERO.engine.entityCreateMode = false;
-        VAERO.engine.entityType = null;
-
-        VAERO.engine.mount(VAERO.engine.currentEntity);
-    },
-
-    openEntity(entityId){
-        const world = VAERO.engine.currentWorld;
-        if(!world) return;
-
-        const entity = (world.entities || []).find(item => item.id === entityId);
-
-        if(!entity){
-            alert("Entity not found.");
-            return;
-        }
-
-        VAERO.engine.currentOpenedEntity = entity;
-        VAERO.engine.currentEntityPage = null;
-
-        VAERO.engine.mount(VAERO.engine.currentEntity);
-    },
-
-    openEntityPage(page){
-    /*
-     * Brain doğrudan bir uygulama açmak istediğinde
-     * henüz currentOpenedEntity seçilmemiş olabilir.
-     *
-     * Bu durumda mevcut aktif entity'yi hedef olarak kullan.
-     */
-    if(page && !VAERO.engine.currentOpenedEntity){
-        const activeEntity = VAERO.engine.currentEntity;
-
-        if(!activeEntity){
+        if(!worldService){
             console.error(
-                "Uygulama açılamadı: aktif entity bulunamadı.",
-                page
+                "World service not found."
             );
 
             return false;
         }
 
-        VAERO.engine.currentOpenedEntity = activeEntity;
-    }
+        const world =
+            typeof worldService.get === "function"
+                ? worldService.get(worldId)
+                : worldService
+                    .all()
+                    .find(
+                        item =>
+                            item.id === worldId
+                    );
 
-    VAERO.engine.currentEntityPage = page;
+        if(!world){
 
-    console.log("OPEN ENTITY PAGE:", page);
-    console.log(
-        "OPENED ENTITY:",
-        VAERO.engine.currentOpenedEntity
-    );
+            console.error(
+                "World not found:",
+                worldId
+            );
 
-    VAERO.engine.mount(VAERO.engine.currentEntity);
+            return false;
 
-    const trackablePages = [
-        "profile",
-        "identity",
-        "organs",
-        "timeline",
-        "memory",
-        "bridge",
-        "settings"
-    ];
-
-    if(trackablePages.includes(page)){
-        this.trackBrainSession(page);
-    }
-
-    return true;
-},
-    trackBrainSession(page){
-    const brain = VAERO.get("brain");
-    if(!brain) return;
-
-    if(!Array.isArray(brain.sessions)){
-        brain.sessions = [];
-    }
-
-    const pageMap = {
-        profile: {
-            label: "Profil",
-            action: "Profil ekranı açıldı"
-        },
-        identity: {
-            label: "Kimlik",
-            action: "Kimlik ekranı açıldı"
-        },
-        organs: {
-            label: "Organlar",
-            action: "Organlar ekranı açıldı"
-        },
-        timeline: {
-            label: "Timeline",
-            action: "Timeline ekranı açıldı"
-        },
-        memory: {
-            label: "Hafıza",
-            action: "Hafıza ekranı açıldı"
-        },
-        bridge: {
-            label: "Köprü",
-            action: "Köprü ekranı açıldı"
-        },
-        settings: {
-            label: "Ayarlar",
-            action: "Ayarlar ekranı açıldı"
         }
-    };
 
-    const pageData = pageMap[page];
-
-    if(!pageData){
-        return;
-    }
-
-    const now = Date.now();
-    const dayKey = this.getBrainDayKey(now);
-
-    /*
-     * Uygulama hareketleri ayrı kart oluşturmaz.
-     * O günün tek Brain sohbet akışına eklenir.
-     */
-    let session =
-        this.getTodayBrainConversationSession(brain);
-
-    if(!session){
-        session = {
-            id: crypto.randomUUID(),
-            title: "Brain Sohbeti · Bugün",
-            kind: "conversation",
-            target: null,
-            status: "progress",
-            startedAt: now,
-            updatedAt: now,
-            actions: [],
-            favorite: false,
-            summary: null,
-            topic: "daily-brain",
-            dayKey
-        };
-
-        brain.sessions.unshift(session);
-    }
-
-    if(!Array.isArray(session.actions)){
-        session.actions = [];
-    }
-
-    /*
-     * Her ziyaret ayrı ayrı saklanır.
-     * Böylece hangi uygulamanın hangi saatlerde
-     * kaç kez açıldığı sonradan hesaplanabilir.
-     */
-    session.actions.push({
-        id: crypto.randomUUID(),
-        role: "system",
-        type: "navigation",
-        content: pageData.action,
-        createdAt: now,
-        target: page,
-        appLabel: pageData.label,
-        context: {
-            page
+        if(!Array.isArray(world.entities)){
+            world.entities = [];
         }
-    });
 
-    session.updatedAt = now;
-
-    if(
-        typeof this.updateBrainConversationSummary ===
-        "function"
-    ){
-        this.updateBrainConversationSummary(session);
-    }
-
-    if(typeof this.saveBrainState === "function"){
-        this.saveBrainState();
-    }
-
-    this.renderBrainHistory();
-}, 
-
-    getBrainStorageKey(){
-    /*
-     * Brain bütün VAERO uygulamalarında tek bir akıştır.
-     * Profil, Köprü, Hafıza veya başka bir entity açılması
-     * kayıt anahtarını değiştirmez.
-     */
-    return "vaero:brain:global";
-},
-
-    normalizeBrainSessions(sessions){
-    if(!Array.isArray(sessions)){
-        return [];
-    }
-
-    return sessions
-        .filter(session =>
-            session &&
-            typeof session === "object"
-        )
-        .map(session => {
-            const target = session.target || null;
-
-            let kind = session.kind;
-
-            if(!["conversation", "action", "noise"].includes(kind)){
-                kind = target
-                    ? "action"
-                    : "conversation";
+        return VAERO.engine.setView(
+            "world",
+            {
+                world,
+                entity: null,
+                page: null,
+                entityCreateMode: false,
+                entityType: null
             }
+        );
 
-            const rawActions = Array.isArray(session.actions)
-                ? session.actions
-                : [];
+    },
 
-            const actions = rawActions
-                .map(action => {
-                    if(typeof action === "string"){
-                        return {
-                            id: crypto.randomUUID(),
-                            role: kind === "action"
-                                ? "system"
-                                : "user",
-                            type: kind === "action"
-                                ? "activity"
-                                : "message",
-                            content: action,
-                            createdAt:
-                                session.updatedAt ||
-                                session.startedAt ||
-                                Date.now()
-                        };
-                    }
+    createWorld(){
 
-                    if(
-                        action &&
-                        typeof action === "object"
-                    ){
-                        const content = String(
-                            action.content ||
-                            action.text ||
-                            action.message ||
-                            ""
-                        ).trim();
+        const nameInput =
+            document.getElementById(
+                "worldNameInput"
+            );
 
-                        if(!content){
-                            return null;
-                        }
+        const descriptionInput =
+            document.getElementById(
+                "worldDescriptionInput"
+            );
 
-                        return {
-    id:
-        action.id ||
-        crypto.randomUUID(),
+        const name =
+            String(
+                nameInput?.value || ""
+            ).trim();
 
-    role:
-        action.role ||
-        (
-            kind === "action"
-                ? "system"
-                : "user"
-        ),
+        if(!name){
 
-    type:
-        action.type ||
-        (
-            kind === "action"
-                ? "activity"
-                : "message"
-        ),
+            nameInput?.focus();
 
-    content,
+            return false;
 
-    createdAt:
-        action.createdAt ||
-        session.updatedAt ||
-        session.startedAt ||
-        Date.now(),
+        }
 
-    context:
-        action.context &&
-        typeof action.context === "object"
-            ? action.context
-            : null,
+        const worldService =
+            VAERO.get("world");
 
-    appLinks:
-        Array.isArray(action.appLinks)
-            ? action.appLinks
-            : [],
+        if(!worldService){
 
-    target:
-        action.target || null,
+            console.error(
+                "World service not found."
+            );
 
-    appLabel:
-        action.appLabel || null
-};
-                    }
+            return false;
 
-                    return null;
-                })
-                .filter(Boolean);
+        }
 
-            const startedAt =
-                Number(session.startedAt) ||
-                Number(session.updatedAt) ||
-                Date.now();
-
-            const updatedAt =
-                Number(session.updatedAt) ||
-                startedAt;
-
-            return {
+        const world =
+            worldService.create({
                 id:
-                    session.id ||
-                    crypto.randomUUID(),
+                    this.createId("world"),
 
-                title:
+                name,
+
+                description:
                     String(
-                        session.title ||
-                        (
-                            kind === "conversation"
-                                ? "Brain Sohbeti"
-                                : "Brain Oturumu"
-                        )
-                    ),
+                        descriptionInput?.value ||
+                        ""
+                    ).trim(),
 
-                kind,
-                target,
+                type:
+                    "custom-world",
+
+                owner:
+                    VAERO.engine.currentEntity?.id ||
+                    null,
+
+                entities: []
+            });
+
+        const evolution =
+            VAERO.get("evolution");
+
+        if(
+            evolution &&
+            typeof evolution.record === "function"
+        ){
+            evolution.record(
+                "milestone",
+                `${name} dünyası oluşturuldu`,
+                {
+                    title:
+                        `${name} dünyası oluşturuldu`,
+
+                    source:
+                        "world",
+
+                    status:
+                        "completed",
+
+                    importance:
+                        "medium",
+
+                    relatedWorldId:
+                        world.id,
+
+                    tags: [
+                        "world",
+                        "creation"
+                    ]
+                }
+            );
+        }
+
+        return VAERO.engine.setView(
+            "world",
+            {
+                world,
+                entity: null,
+                page: null,
+                entityCreateMode: false,
+                entityType: null
+            }
+        );
+
+    },
+
+    startEntityCreate(){
+
+        const world =
+            VAERO.engine.currentWorld;
+
+        if(!world){
+            return this.openWorlds();
+        }
+
+        return VAERO.engine.setView(
+            "world",
+            {
+                world,
+                entity: null,
+                page: null,
+                entityCreateMode: true,
+                entityType: null
+            }
+        );
+
+    },
+
+    selectEntityType(type){
+
+        if(!type){
+            return false;
+        }
+
+        return VAERO.engine.setView(
+            "world",
+            {
+                entityCreateMode: true,
+                entityType: type
+            }
+        );
+
+    },
+
+    clearEntityType(){
+
+        return VAERO.engine.setView(
+            "world",
+            {
+                entityCreateMode: true,
+                entityType: null
+            }
+        );
+
+    },
+
+    cancelEntityCreate(){
+
+        return VAERO.engine.setView(
+            "world",
+            {
+                entity: null,
+                page: null,
+                entityCreateMode: false,
+                entityType: null
+            }
+        );
+
+    },
+
+    createEntity(){
+
+        const world =
+            VAERO.engine.currentWorld;
+
+        if(!world){
+
+            console.error(
+                "No world selected."
+            );
+
+            return false;
+
+        }
+
+        const nameInput =
+            document.getElementById(
+                "entityNameInput"
+            );
+
+        const descriptionInput =
+            document.getElementById(
+                "entityDescriptionInput"
+            );
+
+        const name =
+            String(
+                nameInput?.value || ""
+            ).trim();
+
+        const type =
+            VAERO.engine.entityType;
+
+        if(!name){
+
+            nameInput?.focus();
+
+            return false;
+
+        }
+
+        if(!type){
+            return false;
+        }
+
+        const entityManager =
+            VAERO.get("entityManager");
+
+        const identityService =
+            VAERO.get("identity");
+
+        const profileService =
+            VAERO.get("profile");
+
+        const worldService =
+            VAERO.get("world");
+
+        if(
+            !entityManager ||
+            !identityService ||
+            !profileService ||
+            !worldService
+        ){
+            console.error(
+                "Entity creation services are missing."
+            );
+
+            return false;
+        }
+
+        const entity =
+            entityManager.create({
+                id:
+                    this.createId("entity"),
+
+                name,
+
+                type,
+
+                description:
+                    String(
+                        descriptionInput?.value ||
+                        ""
+                    ).trim(),
 
                 status:
-                    ["progress", "done", "error"].includes(
-                        session.status
-                    )
-                        ? session.status
-                        : "progress",
+                    "active",
 
-                startedAt,
-                updatedAt,
-                actions,
+                organs: [],
+                bridges: []
+            });
 
-                favorite:
-                    Boolean(session.favorite),
+        entity.identity =
+            identityService.create(
+                entity
+            );
 
-                summary:
-    session.summary || null,
-
-topic:
-    session.topic || null,
-
-dayKey:
-    session.dayKey ||
-    this.getBrainDayKey(
-        session.startedAt ||
-        session.updatedAt ||
-        Date.now()
-    ),
-
-migratedAt:
-    session.migratedAt || Date.now()
-            };
-        })
-        .sort((a, b) =>
-            b.updatedAt - a.updatedAt
-        );
-},
-
-loadBrainState(){
-    const brain = VAERO.get("brain");
-    if(!brain) return false;
-
-    const storageKey = this.getBrainStorageKey();
-    const savedState = localStorage.getItem(storageKey);
-
-    /*
-     * Bu entity için kayıt yoksa önceki entity'nin
-     * bellekte kalan geçmişini gösterme.
-     */
-    if(!savedState){
-        brain.sessions = [];
-        brain.resumePoint = null;
-        return true;
-    }
-
-    try {
-    const parsedState = JSON.parse(savedState);
-
-    brain.sessions = this.normalizeBrainSessions(
-        parsedState.sessions
-    );
-
-    brain.resumePoint =
-        parsedState.resumePoint || null;
-
-    /*
-     * Eski kayıt biçimini yeni sürüme kalıcı olarak geçir.
-     */
-    this.saveBrainState();
-
-    return true;
-} catch(error){
-    console.error(
-        "Brain geçmişi okunamadı:",
-        error
-    );
-
-    brain.sessions = [];
-    brain.resumePoint = null;
-
-    return false;
-
-}
- },  
-
-saveBrainState(){
-    const brain = VAERO.get("brain");
-    if(!brain) return;
-
-    const storageKey = this.getBrainStorageKey();
-
-    const state = {
-        sessions: Array.isArray(brain.sessions)
-            ? brain.sessions
-            : [],
-        resumePoint: brain.resumePoint || null,
-        savedAt: Date.now()
-    };
-
-    try {
-        localStorage.setItem(
-            storageKey,
-            JSON.stringify(state)
-        );
-    } catch(error){
-        console.error("Brain geçmişi kaydedilemedi:", error);
-    }
-},
-
-    
-
-
-    openBrain(){
-
-    this.loadBrainState();
-
-    document
-
-        .querySelectorAll("#brainPanel")
-
-        .forEach(panel => panel.remove());
-
-    if(window.BrainApp){
-
-        document.body.insertAdjacentHTML(
-
-            "beforeend",
-
-            BrainApp.render()
-
-        );
-
-    }
-
-    const panel = document.getElementById("brainPanel");
-
-    if(!panel) return;
-
-    panel.style.display = "block";
-
-    this.initBrainSessionDragClose();
-
-    this.initBrainPanelAdaptiveSize();
-
-    const contextText = document.getElementById("brainContextText");
-    const brainContext = VAERO.get("brainContext");
-
-    if(contextText && brainContext){
-        const context = brainContext.build();
-        const appKey = context.app || "unknown";
-
-        const appNameMap = {
-            identity: "Kimlik",
-            profile: "Profil",
-            organs: "Organlar",
-            timeline: "Zaman Çizelgesi",
-            memory: "Hafıza",
-            bridge: "Köprü",
-            settings: "Ayarlar",
-            unknown: "bilinmeyen bir"
-        };
-
-        const appName = appNameMap[appKey] || appKey;
-
-        contextText.innerText = `Şu an ${appName} ekranındasın.`;
-        const suggestionText = document.getElementById("brainSuggestion");
-
-const suggestionMap = {
-    identity: "💡 Kimlik katmanlarını inceleyebilir veya Profil ekranına geçebilirsin.",
-    profile: "💡 Profil bilgilerini tamamlayabilir veya Kimlik ekranını açabilirsin.",
-    organs: "💡 Buradan Kimlik, Profil, Hafıza, Timeline, Bridge ve Ayarlar uygulamalarına geçebilirsin.",
-    timeline: "💡 Geçmiş olayları inceleyebilir veya kaldığın noktayı Brain’e kaydedebilirsin.",
-    memory: "💡 Hafıza kayıtlarını inceleyebilir veya yeni bir devam noktası oluşturabilirsin.",
-    bridge: "💡 Varlıklar ve dünyalar arasındaki bağlantıları inceleyebilirsin.",
-    settings: "💡 Sistem ve varlık tercihlerini buradan yönetebilirsin.",
-    unknown: "💡 Bir uygulama açabilir veya Brain’e ne yapmak istediğini yazabilirsin."
-};
-
-if(suggestionText){
-    suggestionText.innerText =
-        suggestionMap[appKey] ||
-        suggestionMap.unknown;
-} 
-    }
-
-    this.renderBrainHistory();
-},
-
-closeBrain(){
-    /*
-     * Panel kapanmadan önce güncel sohbet akışını koru.
-     */
-    if(typeof this.saveBrainState === "function"){
-        this.saveBrainState();
-    }
-
-    document
-        .querySelectorAll("#brainPanel")
-        .forEach(panel => panel.remove());
-},
-
-    createBrainConversationTitle(text){
-
-    const clean = String(text || "")
-        .toLowerCase()
-        .replace(/[?.!,;:]/g, " ")
-        .replace(/\s+/g, " ")
-        .trim();
-
-    const topicMap = [
-
-        {
-            words: ["profil","profile"],
-            title: "Profil"
-        },
-
-        {
-            words: ["kimlik","identity"],
-            title: "Kimlik"
-        },
-
-        {
-            words: ["hafiza","hafıza","memory"],
-            title: "Hafıza"
-        },
-
-        {
-            words: ["timeline","zaman"],
-            title: "Timeline"
-        },
-
-        {
-            words: ["bridge","kopru","köprü"],
-            title: "Bridge"
-        },
-
-        {
-            words: ["organ"],
-            title: "Organlar"
-        },
-
-        {
-            words: ["ayar","settings"],
-            title: "Ayarlar"
-        },
-
-        {
-            words: ["brain","beyin"],
-            title: "Brain"
-        }
-
-    ];
-
-    for(const topic of topicMap){
+        entity.profile =
+            profileService.create(
+                entity
+            );
 
         if(
-            topic.words.some(word =>
-                clean.includes(word)
-            )
+            typeof worldService.addEntity ===
+            "function"
         ){
-            return topic.title;
+            worldService.addEntity(
+                world.id,
+                entity
+            );
+        }else{
+
+            if(!Array.isArray(world.entities)){
+                world.entities = [];
+            }
+
+            world.entities.push(entity);
+
+            if(
+                typeof worldService.save ===
+                "function"
+            ){
+                worldService.save();
+            }
+
         }
 
-    }
+        const evolution =
+            VAERO.get("evolution");
 
-    const firstSentence = String(text || "")
-        .trim()
-        .replace(/\s+/g," ");
+        if(
+            evolution &&
+            typeof evolution.record === "function"
+        ){
+            evolution.record(
+                "milestone",
+                `${name} varlığı oluşturuldu`,
+                {
+                    title:
+                        `${name} varlığı oluşturuldu`,
 
-    if(firstSentence.length <= 40){
-    return firstSentence || "Brain Sohbeti";
-}
+                    source:
+                        "entity",
 
-    return `${firstSentence.slice(0,40).trim()}…`;
-},
+                    status:
+                        "completed",
 
-    updateBrainConversationSummary(session){
+                    importance:
+                        "medium",
 
-    if(
-        !session ||
-        !Array.isArray(session.actions)
-    ){
-        return;
-    }
+                    relatedEntityId:
+                        entity.id,
 
-    const lastUserMessage = [...session.actions]
-        .reverse()
-        .find(item =>
-            item &&
-            item.role === "user" &&
-            item.content
+                    relatedWorldId:
+                        world.id,
+
+                    tags: [
+                        "entity",
+                        "creation"
+                    ],
+
+                    organs: [
+                        "identity",
+                        "profile"
+                    ]
+                }
+            );
+        }
+
+        return VAERO.engine.setView(
+            "entity",
+            {
+                world,
+                entity,
+                page: null,
+                entityCreateMode: false,
+                entityType: null
+            }
         );
 
-    if(!lastUserMessage){
-        return;
-    }
+    },
 
-    session.summary = String(
-        lastUserMessage.content
-    )
-    .trim()
-    .slice(0,120);
+    openEntity(entityId){
 
-},
+        const world =
+            VAERO.engine.currentWorld;
 
-    detectBrainConversationTopic(text){
-    const clean = String(text || "")
-        .toLowerCase()
-        .replaceAll("ı", "i")
-        .replaceAll("ğ", "g")
-        .replaceAll("ü", "u")
-        .replaceAll("ş", "s")
-        .replaceAll("ö", "o")
-        .replaceAll("ç", "c")
-        .replace(/[?.!,;:]/g, " ")
-        .replace(/\s+/g, " ")
-        .trim();
-
-    const topicMap = [
-        { words: ["profil", "profile"], topic: "Profil" },
-        { words: ["kimlik", "identity"], topic: "Kimlik" },
-        { words: ["hafiza", "memory"], topic: "Hafıza" },
-        { words: ["timeline", "zaman cizelgesi"], topic: "Timeline" },
-        { words: ["bridge", "kopru"], topic: "Bridge" },
-        { words: ["organ"], topic: "Organlar" },
-        { words: ["ayar", "settings"], topic: "Ayarlar" },
-        { words: ["brain", "beyin"], topic: "Brain" }
-    ];
-
-    const match = topicMap.find(item =>
-        item.words.some(word => clean.includes(word))
-    );
-
-    return match ? match.topic : null;
-},
-    
-updateBrainConversationMetadata(session, text){
-    if(!session || session.kind !== "conversation"){
-        return;
-    }
-
-    const cleanText = String(text || "").trim();
-
-    if(!cleanText){
-        return;
-    }
-
-    /*
-     * Yalnızca varsayılan veya eski anlamsız başlıkları değiştir.
-     * Sonradan özel olarak verilmiş başlıklara dokunma.
-     */
-    const currentTitle = String(session.title || "").trim();
-
-    const genericTitles = [
-        "",
-        "Brain Sohbeti",
-        "Brain Oturumu"
-    ];
-
-    if(genericTitles.includes(currentTitle)){
-        session.title =
-            this.createBrainConversationTitle(cleanText);
-    }
-
-    session.updatedAt = Date.now();
-},
-
-    updateBrainConversationSummary(session){
-    if(!session || session.kind !== "conversation"){
-        return;
-    }
-
-    const userMessages = (session.actions || [])
-        .filter(action =>
-            action &&
-            typeof action === "object" &&
-            action.role === "user"
-        )
-        .map(action =>
-            this.getBrainActionText(action).trim()
-        )
-        .filter(Boolean);
-
-    if(userMessages.length === 0){
-        session.summary = null;
-        return;
-    }
-
-    const recentMessages = userMessages.slice(-3);
-
-    const summaryText = recentMessages.join(" · ");
-
-    session.summary =
-        summaryText.length > 160
-            ? `${summaryText.slice(0, 160).trim()}…`
-            : summaryText;
-},
-
-    completeActiveBrainConversation(){
-    const brain = VAERO.get("brain");
-
-    if(!brain || !Array.isArray(brain.sessions)){
-        return false;
-    }
-
-    const activeSession = brain.sessions.find(session =>
-        session.kind === "conversation" &&
-        session.status === "progress"
-    );
-
-    if(!activeSession){
-        return false;
-    }
-
-    /*
-     * Buradaki status yalnızca sohbetin artık aktif olmadığını belirtir.
-     * Kullanıcı arayüzünde günlük tamamlanma işareti olarak gösterilmez.
-     */
-    activeSession.status = "closed";
-    activeSession.updatedAt = Date.now();
-
-    this.saveBrainState();
-
-    return true;
-},
-    
-    getActiveBrainConversationSession(topic = null){
-    const brain = VAERO.get("brain");
-
-    if(!brain || !Array.isArray(brain.sessions)){
-        return null;
-    }
-
-    const session = brain.sessions.find(item =>
-        item.kind === "conversation" &&
-        item.status === "progress"
-    );
-
-    if(!session){
-        return null;
-    }
-
-    const lastActivity =
-        Number(session.updatedAt) ||
-        Number(session.startedAt) ||
-        0;
-
-    const inactivityLimit = 30 * 60 * 1000;
-
-    /*
-     * 30 dakikadan fazla ara verildiyse
-     * mevcut sohbeti tamamla.
-     */
-    if(Date.now() - lastActivity > inactivityLimit){
-        session.status = "done";
-        session.updatedAt = Date.now();
-
-        this.saveBrainState();
-        return null;
-    }
-
-    /*
-     * Yeni mesajın konusu belli ve mevcut oturumun
-     * konusundan farklıysa eski sohbeti tamamla.
-     */
-    if(
-        topic &&
-        session.topic &&
-        session.topic !== topic
-    ){
-        session.status = "done";
-        session.updatedAt = Date.now();
-
-        this.saveBrainState();
-        return null;
-    }
-
-    return session;
-},
-
-    getBrainAppDefinitions(){
-    return [
-        {
-            id: "profile",
-            label: "Profil",
-            words: [
-                "profil",
-                "profili",
-                "profile"
-            ]
-        },
-        {
-            id: "identity",
-            label: "Kimlik",
-            words: [
-                "kimlik",
-                "kimliği",
-                "kimligi",
-                "identity"
-            ]
-        },
-        {
-            id: "memory",
-            label: "Hafıza",
-            words: [
-                "hafıza",
-                "hafızayı",
-                "hafiza",
-                "hafizayi",
-                "memory"
-            ]
-        },
-        {
-            id: "bridge",
-            label: "Köprü",
-            words: [
-                "köprü",
-                "köprüyü",
-                "kopru",
-                "kopruyu",
-                "bridge"
-            ]
-        },
-        {
-            id: "timeline",
-            label: "Timeline",
-            words: [
-                "timeline",
-                "zaman çizelgesi",
-                "zaman cizelgesi"
-            ]
-        },
-        {
-            id: "organs",
-            label: "Organlar",
-            words: [
-                "organ",
-                "organlar",
-                "organs"
-            ]
-        },
-        {
-            id: "settings",
-            label: "Ayarlar",
-            words: [
-                "ayar",
-                "ayarlar",
-                "settings"
-            ]
+        if(
+            !world ||
+            !Array.isArray(world.entities)
+        ){
+            return false;
         }
-    ];
-},
 
-extractBrainAppMentions(text){
-    const normalized =
-        String(text || "")
-            .toLocaleLowerCase("tr-TR");
+        const savedEntity =
+            world.entities.find(
+                item =>
+                    item?.id === entityId
+            );
 
-    const found = [];
+        if(!savedEntity){
 
-    this.getBrainAppDefinitions()
-        .forEach(app => {
-            const matched =
-                app.words.some(word =>
-                    normalized.includes(word)
+            console.error(
+                "Entity not found:",
+                entityId
+            );
+
+            return false;
+
+        }
+
+        const entityManager =
+            VAERO.get("entityManager");
+
+        const entity =
+            entityManager &&
+            typeof entityManager.hydrate ===
+                "function"
+                ? entityManager.hydrate(
+                    savedEntity
+                )
+                : savedEntity;
+
+        return VAERO.engine.setView(
+            "entity",
+            {
+                world,
+                entity,
+                page: null,
+                entityCreateMode: false,
+                entityType: null
+            }
+        );
+
+    },
+
+    backToWorld(){
+
+        const world =
+            VAERO.engine.currentWorld;
+
+        if(!world){
+            return this.openWorlds();
+        }
+
+        return VAERO.engine.setView(
+            "world",
+            {
+                world,
+                entity: null,
+                page: null,
+                entityCreateMode: false,
+                entityType: null
+            }
+        );
+
+    },
+
+    openEntityPage(page){
+
+        const allowedPages = [
+            "identity",
+            "profile",
+            "organs",
+            "timeline",
+            "memory",
+            "bridge",
+            "evolution",
+            "settings",
+            "discovery"
+        ];
+
+        if(!allowedPages.includes(page)){
+            return false;
+        }
+
+        const entity =
+            VAERO.engine.currentOpenedEntity ||
+            VAERO.engine.rootEntity ||
+            VAERO.engine.currentEntity;
+
+        if(!entity){
+            return false;
+        }
+
+        VAERO.engine.currentOpenedEntity =
+            entity;
+
+        VAERO.engine.currentEntityPage =
+            page;
+
+        let view = "entity";
+
+        if(
+            entity.id ===
+                VAERO.engine.rootEntity?.id &&
+            page === "identity"
+        ){
+            view = "identity";
+        }
+
+        if(
+            entity.id ===
+                VAERO.engine.rootEntity?.id &&
+            page === "profile"
+        ){
+            view = "profile";
+        }
+
+        const opened =
+            VAERO.engine.setView(
+                view,
+                {
+                    entity,
+                    page,
+                    entityCreateMode: false,
+                    entityType: null
+                }
+            );
+
+        if(opened){
+            this.trackBrainSession(page);
+        }
+
+        return opened;
+
+    },
+
+    openEntityDashboard(){
+
+        const entity =
+            VAERO.engine.currentOpenedEntity;
+
+        if(!entity){
+            return this.openIdentity();
+        }
+
+        return VAERO.engine.setView(
+            "entity",
+            {
+                entity,
+                page: null,
+                entityCreateMode: false,
+                entityType: null
+            }
+        );
+
+    },
+
+    saveProfile(){
+
+        const nameInput =
+            document.getElementById(
+                "profileNameInput"
+            );
+
+        const descriptionInput =
+            document.getElementById(
+                "profileDescriptionInput"
+            );
+
+        const name =
+            String(
+                nameInput?.value || ""
+            ).trim();
+
+        if(!name){
+
+            nameInput?.focus();
+
+            return false;
+
+        }
+
+        const description =
+            String(
+                descriptionInput?.value || ""
+            ).trim();
+
+        const entity =
+            VAERO.engine.currentOpenedEntity ||
+            VAERO.engine.rootEntity;
+
+        if(!entity){
+            return false;
+        }
+
+        const isRoot =
+            entity.id ===
+            VAERO.engine.rootEntity?.id;
+
+        if(isRoot){
+
+            const userProfile = {
+                name,
+                description,
+                updatedAt:
+                    Date.now()
+            };
+
+            try {
+
+                localStorage.setItem(
+                    "vaero:user:profile:v1",
+                    JSON.stringify(
+                        userProfile
+                    )
                 );
 
-            if(matched){
-                found.push({
-                    app: app.id,
-                    label: app.label
-                });
+            } catch(error){
+
+                console.error(
+                    "Profil kaydedilemedi:",
+                    error
+                );
+
+                return false;
+
             }
-        });
 
-    return found;
-},
-    
-getBrainDayKey(timestamp = Date.now()){
-    const date = new Date(timestamp);
+            if(entity.profile){
+                entity.profile.name = name;
+                entity.profile.description =
+                    description;
+                entity.profile.updatedAt =
+                    Date.now();
+            }
 
-    const year = date.getFullYear();
-    const month = String(
-        date.getMonth() + 1
-    ).padStart(2, "0");
+        }else{
 
-    const day = String(
-        date.getDate()
-    ).padStart(2, "0");
+            entity.update({
+                name,
+                description
+            });
 
-    return `${year}-${month}-${day}`;
-},
+            const profileService =
+                VAERO.get("profile");
 
-getTodayBrainConversationSession(brain){
-    if(!brain || !Array.isArray(brain.sessions)){
-        return null;
-    }
+            if(
+                profileService &&
+                entity.profile
+            ){
+                profileService.update(
+                    entity.profile,
+                    {
+                        name,
+                        description
+                    }
+                );
+            }
 
-    const todayKey =
-        this.getBrainDayKey();
+            const worldService =
+                VAERO.get("world");
 
-    return brain.sessions.find(session =>
-        session &&
-        session.kind === "conversation" &&
-        session.dayKey === todayKey
-    ) || null;
-},
+            if(
+                worldService &&
+                typeof worldService.save ===
+                    "function"
+            ){
+                worldService.save();
+            }
 
-sendBrainMessage(){
-    const input =
-        document.getElementById("brainInput");
+        }
 
-    if(!input) return;
+        const feedback =
+            document.getElementById(
+                "profileSaveFeedback"
+            );
 
-    const text =
-        input.value.trim();
+        if(feedback){
+            feedback.textContent =
+                "Profil kaydedildi.";
+        }
 
-    if(text === "") return;
+        return true;
 
-    const brain =
-        VAERO.get("brain");
+    },
 
-    const brainContext =
-        VAERO.get("brainContext");
+    restartDiscovery(){
 
-    if(
-        !brain ||
-        typeof brain.receive !== "function"
-    ){
-        return;
-    }
+        localStorage.removeItem(
+            "vaero:discovery:completed"
+        );
 
-    if(!Array.isArray(brain.sessions)){
-        brain.sessions = [];
-    }
+        localStorage.removeItem(
+            "vaero:discovery:draft:v2"
+        );
 
-    const context =
-        brainContext &&
-        typeof brainContext.build === "function"
-            ? brainContext.build()
-            : null;
+        const engineRoot =
+            document.getElementById(
+                "engine"
+            );
 
-    const now =
-        Date.now();
+        if(
+            engineRoot &&
+            window.DiscoveryApp &&
+            typeof window.DiscoveryApp.render ===
+                "function"
+        ){
+            window.DiscoveryApp.currentStep = 0;
+            window.DiscoveryApp.answers = {};
+            window.DiscoveryApp.render(
+                engineRoot
+            );
 
-    const dayKey =
-        this.getBrainDayKey(now);
+            return true;
+        }
 
-    /*
-     * Sayfa yalnızca mesaj bağlamıdır.
-     * Sohbetin konusu veya oturumu değildir.
-     */
-    const contextPage =
-        context?.page ||
-        context?.currentPage ||
-        context?.screen ||
-        context?.route ||
-        document.body?.dataset?.page ||
-        null;
+        return false;
 
-    /*
-     * Her gün için yalnızca bir Brain sohbeti bulunur.
-     */
-    let session =
-        this.getTodayBrainConversationSession(brain);
+    },
 
-    if(!session){
-        session = {
-            id: crypto.randomUUID(),
-            title: "Brain Sohbeti · Bugün",
-            kind: "conversation",
+    getBrainStorageKey(){
+
+        return "vaero:brain:global";
+
+    },
+
+    getBrainDayKey(timestamp = Date.now()){
+
+        const date =
+            new Date(timestamp);
+
+        const year =
+            date.getFullYear();
+
+        const month =
+            String(
+                date.getMonth() + 1
+            ).padStart(2, "0");
+
+        const day =
+            String(
+                date.getDate()
+            ).padStart(2, "0");
+
+        return `${year}-${month}-${day}`;
+
+    },
+
+    normalizeBrainSessions(sessions){
+
+        if(!Array.isArray(sessions)){
+            return [];
+        }
+
+        return sessions
+            .filter(session =>
+                session &&
+                typeof session === "object"
+            )
+            .map(session => {
+
+                const startedAt =
+                    Number(session.startedAt) ||
+                    Number(session.updatedAt) ||
+                    Date.now();
+
+                const updatedAt =
+                    Number(session.updatedAt) ||
+                    startedAt;
+
+                const actions =
+                    Array.isArray(session.actions)
+                        ? session.actions
+                            .map(action => {
+
+                                if(
+                                    typeof action ===
+                                    "string"
+                                ){
+                                    return {
+                                        id:
+                                            this.createId(
+                                                "brain-action"
+                                            ),
+                                        role: "user",
+                                        type: "message",
+                                        content:
+                                            action,
+                                        createdAt:
+                                            updatedAt,
+                                        context: null,
+                                        appLinks: []
+                                    };
+                                }
+
+                                if(
+                                    !action ||
+                                    typeof action !==
+                                        "object"
+                                ){
+                                    return null;
+                                }
+
+                                const content =
+                                    String(
+                                        action.content ||
+                                        action.fullContent ||
+                                        action.text ||
+                                        action.message ||
+                                        ""
+                                    ).trim();
+
+                                if(!content){
+                                    return null;
+                                }
+
+                                return {
+                                    ...action,
+                                    id:
+                                        action.id ||
+                                        this.createId(
+                                            "brain-action"
+                                        ),
+                                    content,
+                                    createdAt:
+                                        Number(
+                                            action.createdAt
+                                        ) ||
+                                        updatedAt,
+                                    appLinks:
+                                        Array.isArray(
+                                            action.appLinks
+                                        )
+                                            ? action.appLinks
+                                            : []
+                                };
+
+                            })
+                            .filter(Boolean)
+                        : [];
+
+                return {
+                    id:
+                        session.id ||
+                        this.createId(
+                            "brain-session"
+                        ),
+
+                    title:
+                        String(
+                            session.title ||
+                            "Brain Sohbeti · Bugün"
+                        ),
+
+                    kind:
+                        "conversation",
+
+                    target: null,
+
+                    status:
+                        session.status ===
+                            "error"
+                            ? "error"
+                            : session.status ===
+                                "done" ||
+                              session.status ===
+                                "closed"
+                                ? "done"
+                                : "progress",
+
+                    startedAt,
+                    updatedAt,
+                    actions,
+
+                    favorite:
+                        Boolean(
+                            session.favorite
+                        ),
+
+                    summary:
+                        session.summary ||
+                        null,
+
+                    topic:
+                        session.topic ||
+                        "daily-brain",
+
+                    dayKey:
+                        session.dayKey ||
+                        this.getBrainDayKey(
+                            startedAt
+                        )
+                };
+
+            })
+            .sort(
+                (a, b) =>
+                    b.updatedAt -
+                    a.updatedAt
+            );
+
+    },
+
+    loadBrainState(){
+
+        const brain =
+            VAERO.get("brain");
+
+        if(!brain){
+            return false;
+        }
+
+        const saved =
+            localStorage.getItem(
+                this.getBrainStorageKey()
+            );
+
+        if(!saved){
+
+            brain.sessions = [];
+            brain.resumePoint = null;
+
+            return true;
+
+        }
+
+        try {
+
+            const parsed =
+                JSON.parse(saved);
+
+            brain.sessions =
+                this.normalizeBrainSessions(
+                    parsed.sessions
+                );
+
+            brain.resumePoint =
+                parsed.resumePoint ||
+                null;
+
+            return true;
+
+        } catch(error){
+
+            console.error(
+                "Brain geçmişi okunamadı:",
+                error
+            );
+
+            brain.sessions = [];
+            brain.resumePoint = null;
+
+            return false;
+
+        }
+
+    },
+
+    saveBrainState(){
+
+        const brain =
+            VAERO.get("brain");
+
+        if(!brain){
+            return false;
+        }
+
+        try {
+
+            localStorage.setItem(
+                this.getBrainStorageKey(),
+                JSON.stringify({
+                    sessions:
+                        Array.isArray(
+                            brain.sessions
+                        )
+                            ? brain.sessions
+                            : [],
+
+                    resumePoint:
+                        brain.resumePoint ||
+                        null,
+
+                    savedAt:
+                        Date.now()
+                })
+            );
+
+            return true;
+
+        } catch(error){
+
+            console.error(
+                "Brain geçmişi kaydedilemedi:",
+                error
+            );
+
+            return false;
+
+        }
+
+    },
+
+    getTodayBrainConversationSession(brain){
+
+        if(
+            !brain ||
+            !Array.isArray(brain.sessions)
+        ){
+            return null;
+        }
+
+        const todayKey =
+            this.getBrainDayKey();
+
+        return (
+            brain.sessions.find(session =>
+                session.kind ===
+                    "conversation" &&
+                session.dayKey ===
+                    todayKey
+            ) ||
+            null
+        );
+
+    },
+
+    createTodayBrainConversation(brain){
+
+        const now =
+            Date.now();
+
+        const session = {
+            id:
+                this.createId(
+                    "brain-session"
+                ),
+
+            title:
+                "Brain Sohbeti · Bugün",
+
+            kind:
+                "conversation",
+
             target: null,
             status: "progress",
             startedAt: now,
@@ -1100,1269 +1208,1603 @@ sendBrainMessage(){
             favorite: false,
             summary: null,
             topic: "daily-brain",
-            dayKey
+            dayKey:
+                this.getBrainDayKey(now)
         };
 
-        brain.sessions.unshift(session);
-    }
-
-    if(!Array.isArray(session.actions)){
-        session.actions = [];
-    }
-
-    /*
-     * Kullanıcı mesajı günlük sohbet akışına eklenir.
-     */
-    const appMentions =
-    this.extractBrainAppMentions(text);
-
-session.actions.push({
-    id: crypto.randomUUID(),
-    role: "user",
-    type: "message",
-    content: text,
-    createdAt: now,
-    context: {
-        page: contextPage
-    },
-    appLinks: appMentions
-});
-
-    /*
-     * Mesaj Brain'e iletilir.
-     */
-    const brainReply =
-        brain.receive(text, context);
-
-    if(brainReply){
-        const replyText =
-            typeof brainReply === "string"
-                ? brainReply
-                : brainReply.reply ||
-                  brainReply.message ||
-                  brainReply.text ||
-                  null;
-
-        if(replyText){
-    const replyAppMentions =
-        this.extractBrainAppMentions(replyText);
-
-    const brainAction = {
-        id: crypto.randomUUID(),
-        role: "brain",
-        type: "reply",
-        content: "",
-        fullContent: replyText,
-        isStreaming: true,
-        createdAt: Date.now(),
-        context: {
-            page: contextPage
-        },
-        appLinks: []
-    };
-
-    session.actions.push(brainAction);
-    /*
- * Gerçek açma / geçiş komutları sohbet cevabının
- * yazılmasını beklemeden anında uygulanır.
- */
-const navigationHandled =
-    this.dispatchBrainIntent(text);
-
-if(navigationHandled){
-    /*
-     * Streaming başlamadan yönlendirme yapıldığı için
-     * Brain cevabını tamamlanmış biçimde kaydet.
-     */
-    brainAction.content = replyText;
-    brainAction.fullContent = replyText;
-    brainAction.isStreaming = false;
-    brainAction.appLinks = replyAppMentions;
-
-    session.updatedAt = Date.now();
-    session.title = "Brain Sohbeti · Bugün";
-    session.topic = "daily-brain";
-
-    input.value = "";
-
-    if(
-        typeof this.updateBrainConversationSummary ===
-        "function"
-    ){
-        this.updateBrainConversationSummary(session);
-    }
-
-    if(typeof this.saveBrainState === "function"){
-        this.saveBrainState();
-    }
-
-    return;
-} 
-
-    session.updatedAt = Date.now();
-
-    if(typeof this.saveBrainState === "function"){
-        this.saveBrainState();
-    }
-
-    this.renderBrainHistory();
-
-    this.streamBrainReply(
-        session,
-        brainAction,
-        replyText,
-        replyAppMentions
-    );
-}
-    }
-
-    session.updatedAt =
-        Date.now();
-
-    /*
-     * Aç / geç / götür gibi gerçek komutlar
-     * sohbet kaydedildikten sonra çalıştırılır.
-     */
-    const handledByIntent = false; 
-
-    /*
-     * Günlük sohbetin başlığı uygulama adına dönüşmez.
-     */
-    session.title =
-        "Brain Sohbeti · Bugün";
-
-    session.topic =
-        "daily-brain";
-
-    if(
-        typeof this.updateBrainConversationSummary ===
-        "function"
-    ){
-        this.updateBrainConversationSummary(session);
-    }
-
-    input.value = "";
-
-    if(
-        typeof this.saveBrainState ===
-        "function"
-    ){
-        this.saveBrainState();
-    }
-
-    this.renderBrainHistory();
-
-    /*
-     * Komut ilgili uygulamayı açtıysa
-     * paneli yeniden zorla açma.
-     */
-    if(handledByIntent){
-        return;
-    }
-
-    const panel =
-        document.getElementById("brainPanel");
-
-    if(panel){
-        panel.classList.remove("is-compact");
-        panel.classList.add("is-expanded");
-    }
-
-    console.log(
-        "Brain Daily Conversation:",
-        session
-    );
-},
-
-    streamBrainReply(
-    session,
-    brainAction,
-    replyText,
-    replyAppMentions = []
-){
-    if(
-        !session ||
-        !brainAction ||
-        !replyText
-    ){
-        return;
-    }
-
-    const fullText = String(replyText);
-
-    let characterIndex = 0;
-    let renderTick = 0;
-
-    /*
-     * Uzun cevaplarda yazım süresini gereksiz
-     * şekilde uzatma.
-     */
-    const characterStep =
-        fullText.length > 500
-            ? 5
-            : fullText.length > 220
-                ? 3
-                : 2;
-
-    const intervalDelay =
-        fullText.length > 500
-            ? 6
-            : 10;
-
-    /*
-     * Bu fonksiyon yalnızca normal sohbet içindir.
-     * Uygulama açma komutları buraya gelmeden önce
-     * sendBrainMessage içinde anında çalıştırılır.
-     */
-    const streamTimer = window.setInterval(() => {
-        characterIndex = Math.min(
-            characterIndex + characterStep,
-            fullText.length
+        brain.sessions.unshift(
+            session
         );
 
-        /*
-         * Görünen metni gerçekten ilerlet.
-         */
-        brainAction.content =
-            fullText.slice(0, characterIndex);
+        return session;
 
-        brainAction.fullContent =
-            fullText;
+    },
 
-        brainAction.isStreaming =
-            characterIndex < fullText.length;
+    trackBrainSession(page){
 
-        session.updatedAt =
-            Date.now();
+        const brain =
+            VAERO.get("brain");
 
-        renderTick += 1;
-
-        /*
-         * Her karakterde bütün paneli yeniden çizme.
-         * Mobil cihazlarda gereksiz yük oluşmasını önler.
-         */
-        if(
-            renderTick % 3 === 0 ||
-            characterIndex >= fullText.length
-        ){
-            this.renderBrainHistory();
-
-            const history =
-                document.getElementById(
-                    "brainHistory"
-                );
-
-            if(history){
-                history.scrollTop =
-                    history.scrollHeight;
-            }
-        }
-
-        if(characterIndex < fullText.length){
+        if(!brain){
             return;
         }
 
-        window.clearInterval(streamTimer);
+        if(!Array.isArray(brain.sessions)){
+            brain.sessions = [];
+        }
 
-        /*
-         * Cevabı kesin olarak tamamla.
-         */
-        brainAction.content =
-            fullText;
+        const labels = {
+            profile:
+                "Profil ekranı açıldı",
 
-        brainAction.fullContent =
-            fullText;
+            identity:
+                "Kimlik ekranı açıldı",
 
-        brainAction.isStreaming =
-            false;
+            organs:
+                "Organlar ekranı açıldı",
 
-        /*
-         * Uygulama butonları cevap tamamlandıktan
-         * sonra görünür.
-         */
-        brainAction.appLinks =
-            Array.isArray(replyAppMentions)
-                ? replyAppMentions
-                : [];
+            timeline:
+                "Zaman Çizelgesi açıldı",
 
-        session.updatedAt =
+            memory:
+                "Hafıza ekranı açıldı",
+
+            bridge:
+                "Köprü ekranı açıldı",
+
+            evolution:
+                "Evrim ekranı açıldı",
+
+            settings:
+                "Ayarlar ekranı açıldı",
+
+            discovery:
+                "Discovery ekranı açıldı"
+        };
+
+        const content =
+            labels[page];
+
+        if(!content){
+            return;
+        }
+
+        const session =
+            this.getTodayBrainConversationSession(
+                brain
+            ) ||
+            this.createTodayBrainConversation(
+                brain
+            );
+
+        const now =
             Date.now();
 
-        if(
-            typeof this.updateBrainConversationSummary ===
-            "function"
-        ){
-            this.updateBrainConversationSummary(
-                session
-            );
-        }
+        session.actions.push({
+            id:
+                this.createId(
+                    "brain-action"
+                ),
+            role: "system",
+            type: "navigation",
+            content,
+            createdAt: now,
+            target: page,
+            context: {
+                page
+            }
+        });
 
-        if(
-            typeof this.saveBrainState ===
-            "function"
-        ){
-            this.saveBrainState();
-        }
+        session.updatedAt =
+            now;
 
+        this.saveBrainState();
         this.renderBrainHistory();
 
-        const finalHistory =
+    },
+
+    openBrain(){
+
+        this.loadBrainState();
+
+        let panel =
             document.getElementById(
-                "brainHistory"
+                "brainPanel"
             );
 
-        if(finalHistory){
-            finalHistory.scrollTop =
-                finalHistory.scrollHeight;
-        }
+        if(!panel){
 
-    }, intervalDelay);
-} ,
-
-openBrainTarget(page){
-    const opened = this.openEntityPage(page);
-
-    if(opened){
-        this.closeBrain();
-        return true;
-    }
-
-    console.error(
-        "Brain hedefi açılamadı:",
-        page
-    );
-
-    return false;
-},
-    
-    dispatchBrainIntent(text){
-    const command = String(text || "")
-        .toLowerCase()
-        .trim()
-        .replaceAll("ı", "i")
-        .replaceAll("ğ", "g")
-        .replaceAll("ü", "u")
-        .replaceAll("ş", "s")
-        .replaceAll("ö", "o")
-        .replaceAll("ç", "c")
-        .replace(/[?.!,;:]+$/g, "")
-        .replace(/\s+/g, " ");
-
-    /*
-     * Devam noktası kaydetme komutları
-     */
-    const saveResumeCommands = [
-        "burada kaldik",
-        "burda kaldik",
-        "sonra devam",
-        "bunu kaydet",
-        "kaldigimiz yeri kaydet"
-    ];
-
-    if(
-        saveResumeCommands.some(item =>
-            command.includes(item)
-        )
-    ){
-        this.saveBrainResumePoint(text);
-        return true;
-    }
-
-    /*
-     * Devam noktasına dönme komutları
-     */
-    const restoreResumeCommands = [
-        "nerede kalmistik",
-        "kaldigimiz yer",
-        "devam et",
-        "kaldigim yer"
-    ];
-
-    if(
-        restoreResumeCommands.some(item =>
-            command.includes(item)
-        )
-    ){
-        this.restoreBrainResumePoint();
-        return true;
-    }
-
-    const navigationTargets = [
-        {
-            page: "profile",
-            names: [
-                "profil",
-                "profili",
-                "profil uygulamasi",
-                "profile"
-            ]
-        },
-        {
-            page: "identity",
-            names: [
-                "kimlik",
-                "kimligi",
-                "kimlik uygulamasi",
-                "identity"
-            ]
-        },
-        {
-            page: "memory",
-            names: [
-                "hafiza",
-                "hafizayi",
-                "hafiza uygulamasi",
-                "memory"
-            ]
-        },
-        {
-            page: "bridge",
-            names: [
-                "kopru",
-                "kopruyu",
-                "kopru uygulamasi",
-                "bridge"
-            ]
-        },
-        {
-            page: "timeline",
-            names: [
-                "timeline",
-                "zaman cizelgesi",
-                "zaman akisi"
-            ]
-        },
-        {
-            page: "organs",
-            names: [
-                "organ",
-                "organlar",
-                "organlari",
-                "organ uygulamasi"
-            ]
-        },
-        {
-            page: "settings",
-            names: [
-                "ayar",
-                "ayarlar",
-                "ayarlari",
-                "ayarlar uygulamasi"
-            ]
-        }
-    ];
-
-    /*
-     * Emir, rica ve doğal konuşma biçimlerini kapsar.
-     */
-    const navigationPatterns = [
-        /\bac\b/,
-        /\bacar misin\b/,
-        /\acabilir misin\b/,
-        /\acmani istiyorum\b/,
-        /\acmak istiyorum\b/,
-        /\goster\b/,
-        /\gosterir misin\b/,
-        /\goruntule\b/,
-        /\goruntuler misin\b/,
-        /\git\b/,
-        /\gider misin\b/,
-        /\gec\b/,
-        /\gecer misin\b/,
-        /\beni gotur\b/,
-        /\beni .* gotur\b/,
-        /\uygulamasini ac\b/,
-        /\uygulamayi ac\b/
-    ];
-
-    for(const target of navigationTargets){
-        const targetFound =
-            target.names.some(name =>
-                command === name ||
-                command.startsWith(`${name} `) ||
-                command.endsWith(` ${name}`) ||
-                command.includes(` ${name} `)
-            );
-
-        if(!targetFound){
-            continue;
-        }
-
-        const navigationRequested =
-            navigationPatterns.some(pattern =>
-                pattern.test(command)
-            );
-
-        if(navigationRequested){
-            return this.openBrainTarget(target.page);
-        }
-    }
-
-    return false;
-},
-    saveBrainResumePoint(note){
-    const brain = VAERO.get("brain");
-    const brainContext = VAERO.get("brainContext");
-    if(!brain) return;
-
-    const context = brainContext ? brainContext.build() : null;
-
-    const activeSession =
-    (brain.sessions || []).find(session =>
-        session.kind === "conversation" &&
-        session.status === "progress"
-    ) ||
-    (brain.sessions || []).find(session =>
-        session.status === "progress"
-    ) ||
-    null;
-
-    brain.resumePoint = {
-        id: crypto.randomUUID(),
-        sessionId: activeSession ? activeSession.id : null,
-        sessionTitle: activeSession ? activeSession.title : null,
-        app: context ? context.app : null,
-        page: VAERO.engine.currentEntityPage || null,
-        note: note,
-        savedAt: Date.now()
-    };
-
-    if(activeSession){
-    activeSession.updatedAt = Date.now();
-
-    if(!Array.isArray(activeSession.actions)){
-        activeSession.actions = [];
-    }
-
-    const resumeActionExists = activeSession.actions.some(item =>
-        this.getBrainActionText(item) ===
-        "Devam noktası kaydedildi"
-    );
-
-    if(!resumeActionExists){
-        activeSession.actions.push({
-            id: crypto.randomUUID(),
-            role: "system",
-            type: "resume",
-            content: "Devam noktası kaydedildi",
-            createdAt: Date.now()
-        });
-    }
-}
-
-    this.saveBrainState();
-this.renderBrainHistory();
-
-console.log("Brain Resume Point:", brain.resumePoint);
-},
-
-    restoreBrainResumePoint(){
-
-    const brain = VAERO.get("brain");
-
-    if(!brain || !brain.resumePoint){
-        alert("Kayıtlı bir devam noktası bulunamadı.");
-        return;
-    }
-
-    const point = brain.resumePoint;
-
-    if(point.page){
-        VAERO.engine.currentEntityPage = point.page;
-    }
-
-    VAERO.engine.mount(VAERO.engine.currentEntity);
-
-    console.log("Brain Resume:", point);
-
-},
-
-    isBrainNoise(text){
-    const clean = String(text || "").trim();
-
-    if(!clean) return true;
-
-    const normalized = clean
-        .toLowerCase()
-        .replaceAll("ı", "i")
-        .replaceAll("ğ", "g")
-        .replaceAll("ü", "u")
-        .replaceAll("ş", "s")
-        .replaceAll("ö", "o")
-        .replaceAll("ç", "c");
-
-    const words = normalized.split(/\s+/);
-
-    // “Pro”, “asd”, “buu” gibi tek başına kalmış kısa parçalar
-    if(words.length === 1 && normalized.length <= 4){
-        return true;
-    }
-
-    const intentService = VAERO.get("brainIntent");
-    const intent = intentService
-        ? intentService.detect(clean)
-        : { type: "chat" };
-
-    // “Bu aç”, “şu ac” gibi hedefi olmayan yarım komutlar
-    if(
-        intent.type === "chat" &&
-        words.length <= 2 &&
-        normalized.length <= 10 &&
-        (normalized.includes(" ac") || normalized.endsWith("ac"))
-    ){
-        return true;
-    }
-
-    return false;
-},
-
-removeBrainSession(sessionId){
-    const brain = VAERO.get("brain");
-
-    if(!brain || !Array.isArray(brain.sessions)){
-        return;
-    }
-
-    brain.sessions = brain.sessions.filter(
-        session => session.id !== sessionId
-    );
-
-    this.saveBrainState();
-    this.renderBrainHistory();
-},
-
-    getBrainActionText(action){
-    if(typeof action === "string"){
-        return action;
-    }
-
-    if(action && typeof action === "object"){
-        return String(
-            action.content ||
-            action.text ||
-            action.message ||
-            ""
-        );
-    }
-
-    return "";
-},
-
-    escapeBrainHTML(value){
-    return String(value ?? "")
-        .replaceAll("&", "&amp;")
-        .replaceAll("<", "&lt;")
-        .replaceAll(">", "&gt;")
-        .replaceAll('"', "&quot;")
-        .replaceAll("'", "&#039;");
-},
-
-    renderBrainHistory(){
-    const history =
-        document.getElementById("brainHistory");
-
-    const miniHistory =
-        document.getElementById("brainMiniHistory");
-
-    const brain =
-        VAERO.get("brain");
-
-    if(!history || !brain){
-        return;
-    }
-
-    history.innerHTML = "";
-
-    if(miniHistory){
-        miniHistory.innerHTML = "";
-    }
-
-    const sessions =
-        Array.isArray(brain.sessions)
-            ? brain.sessions
-            : [];
-
-    const todayKey =
-        this.getBrainDayKey();
-
-    /*
-     * Bugünün tek sohbet oturumu.
-     */
-    const todaySession =
-        sessions.find(session =>
-            session &&
-            session.kind === "conversation" &&
-            session.dayKey === todayKey
-        );
-
-    /*
-     * Eski kart mimarisinden kalan action oturumları
-     * günlük sohbet görünümüne alınmaz.
-     */
-    const todayActions =
-        Array.isArray(todaySession?.actions)
-            ? [...todaySession.actions]
-                .filter(action =>
-                    this
-                        .getBrainActionText(action)
-                        .trim() !== ""
-                )
-                .sort(
-                    (a, b) =>
-                        (a?.createdAt || 0) -
-                        (b?.createdAt || 0)
-                )
-            : [];
-
-    const flow =
-        document.createElement("div");
-
-    flow.className = "brain-chat-flow";
-
-    if(todayActions.length === 0){
-        flow.innerHTML = `
-            <div class="brain-chat-empty">
-                <strong>Bugünün sohbeti</strong>
-                <span>
-                    Brain’e bir şey yazarak başlayabilirsin.
-                </span>
-            </div>
-        `;
-    }else{
-        todayActions.forEach(action => {
-            const content =
-                this.getBrainActionText(action);
-
-            if(!content.trim()){
-                return;
-            }
-
-            const role =
-                action &&
-                typeof action === "object"
-                    ? action.role
-                    : null;
-
-            const createdAt =
-                action?.createdAt || Date.now();
-
-            const messageTime =
-                new Date(createdAt)
-                    .toLocaleTimeString("tr-TR", {
-                        hour: "2-digit",
-                        minute: "2-digit"
-                    });
-
-            /*
-             * Uygulama geçişleri sohbeti bölmeyen
-             * küçük sistem hareketleri olarak gösterilir.
-             */
             if(
-                role === "system" ||
-                action?.type === "navigation"
+                !window.BrainApp ||
+                typeof BrainApp.render !==
+                    "function"
             ){
-                const systemRow =
-                    document.createElement("div");
-
-                systemRow.className =
-                    "brain-chat-system";
-
-                systemRow.innerHTML = `
-                    <span class="brain-chat-system-time">
-                        ${messageTime}
-                    </span>
-
-                    <span>
-                        ${this.escapeBrainHTML(content)}
-                    </span>
-                `;
-
-                flow.appendChild(systemRow);
-                return;
+                return false;
             }
 
-            const message =
-                document.createElement("div");
+            document.body.insertAdjacentHTML(
+                "beforeend",
+                BrainApp.render()
+            );
 
-            message.className =
-                role === "user"
-                    ? "brain-chat-message brain-chat-user"
-                    : "brain-chat-message brain-chat-brain";
+            panel =
+                document.getElementById(
+                    "brainPanel"
+                );
 
-            const contextPage =
-                action?.context?.page
-                    ? `
-                        <span class="brain-chat-context">
-                            ${this.escapeBrainHTML(
-                                action.context.page
-                            )}
-                        </span>
-                    `
-                    : "";
+        }
 
-            const appLinks =
-                Array.isArray(action?.appLinks)
-                    ? action.appLinks
-                    : [];
+        if(!panel){
+            return false;
+        }
 
-            const uniqueLinks = [];
+        panel.classList.remove(
+            "is-expanded"
+        );
 
-            appLinks.forEach(link => {
+        panel.classList.add(
+            "is-compact"
+        );
+
+        panel.style.display =
+            "flex";
+
+        const contextService =
+            VAERO.get(
+                "brainContext"
+            );
+
+        const context =
+            contextService &&
+            typeof contextService.build ===
+                "function"
+                ? contextService.build()
+                : {
+                    screen: "home",
+                    app: "home"
+                };
+
+        const contextKey =
+            context.page ||
+            context.screen ||
+            context.app ||
+            "home";
+
+        const names = {
+            home: "Ana Ekran",
+            identity: "Kimlik",
+            profile: "Profil",
+            create: "Yarat",
+            worlds: "Dünyalar",
+            world: "Dünya",
+            entity: "Varlık",
+            organs: "Organlar",
+            timeline:
+                "Zaman Çizelgesi",
+            memory: "Hafıza",
+            bridge: "Köprü",
+            evolution: "Evrim",
+            settings: "Ayarlar",
+            discovery: "Discovery"
+        };
+
+        const suggestions = {
+            home:
+                "Dünyalarını açabilir, profilini görüntüleyebilir veya yeni bir yapı oluşturabilirsin.",
+
+            identity:
+                "Kimlik bilgilerini inceleyebilir veya Profil ekranına geçebilirsin.",
+
+            profile:
+                "Profil bilgilerini güncelleyebilir veya Discovery yönünü inceleyebilirsin.",
+
+            create:
+                "Yeni dünyanın amacını belirleyerek başlayabilirsin.",
+
+            worlds:
+                "Mevcut dünyalarını açabilir veya yeni bir dünya oluşturabilirsin.",
+
+            world:
+                "Bu dünyadaki varlıkları inceleyebilir veya yeni bir varlık ekleyebilirsin.",
+
+            entity:
+                "Varlığın kimlik, profil ve organlarına geçebilirsin."
+        };
+
+        const contextText =
+            document.getElementById(
+                "brainContextText"
+            );
+
+        if(contextText){
+
+            contextText.textContent =
+                `Şu an ${
+                    names[contextKey] ||
+                    contextKey
+                } ekranındasın.`;
+
+        }
+
+        const suggestion =
+            document.getElementById(
+                "brainSuggestion"
+            );
+
+        if(suggestion){
+
+            suggestion.textContent =
+                suggestions[contextKey] ||
+                "Bir ekran açabilir veya ne yapmak istediğini yazabilirsin.";
+
+        }
+
+        const input =
+            document.getElementById(
+                "brainInput"
+            );
+
+        input?.addEventListener(
+            "focus",
+            () => {
+
+                panel.classList.remove(
+                    "is-compact"
+                );
+
+                panel.classList.add(
+                    "is-expanded"
+                );
+
+            },
+            {
+                once: true
+            }
+        );
+
+        if(this.brainOutsideHandler){
+
+            document.removeEventListener(
+                "pointerdown",
+                this.brainOutsideHandler
+            );
+
+        }
+
+        this.brainOutsideHandler =
+            event => {
+
+                const currentPanel =
+                    document.getElementById(
+                        "brainPanel"
+                    );
+
                 if(
-                    !link ||
-                    !link.app ||
-                    uniqueLinks.some(
-                        item => item.app === link.app
+                    !currentPanel ||
+                    currentPanel.contains(
+                        event.target
+                    ) ||
+                    event.target.closest(
+                        '[data-action="brain:open"]'
                     )
                 ){
                     return;
                 }
 
-                uniqueLinks.push(link);
-            });
+                currentPanel.classList.remove(
+                    "is-expanded"
+                );
 
-            const linksHTML =
-    uniqueLinks.length
-        ? `
-            <span class="brain-message-app-links">
-                ${uniqueLinks
-                    .map(link => `
-                        <button
-                            type="button"
-                            class="brain-message-app-link"
-                            data-brain-app="${this.escapeBrainHTML(link.app)}"
-                            data-brain-label="${this.escapeBrainHTML(link.label)}">
+                currentPanel.classList.add(
+                    "is-compact"
+                );
 
-                            ${this.escapeBrainHTML(link.label)}
+            };
 
-                        </button>
-                    `)
-                    .join("")}
-            </span>
-        `
-        : "";
-            message.innerHTML = `
-                <div class="brain-chat-meta">
-                    <span>${messageTime}</span>
-                    ${contextPage}
-                </div>
-
-                <div class="brain-chat-content">
-                    ${this.escapeBrainHTML(content)}
-                    ${linksHTML}
-                </div>
-            `;
-
-            flow.appendChild(message);
-        });
-    }
-
-    history.appendChild(flow);
-
-    /*
-     * Uygulama bağlantıları.
-     */
-    history
-        .querySelectorAll(".brain-message-app-link")
-        .forEach(button => {
-            button.addEventListener("click", event => {
-                event.stopPropagation();
-
-                const app =
-                    button.dataset.brainApp;
-
-                if(!app){
-                    return;
-                }
-
-                this.closeBrain();
-
-                requestAnimationFrame(() => {
-                    this.openEntityPage(app);
-                });
-            });
-        });
-
-    /*
-     * Kompakt görünümde bugünün son dört gerçek mesajı.
-     */
-    if(miniHistory){
-        const recentMessages =
-            todayActions
-                .filter(action =>
-                    action?.role === "user" ||
-                    action?.role === "brain"
-                )
-                .slice(-4);
-
-        const miniFlow =
-            document.createElement("div");
-
-        miniFlow.className =
-            "brain-mini-chat-flow";
-
-        recentMessages.forEach(action => {
-            const role =
-                action.role === "user"
-                    ? "Sen"
-                    : "Brain";
-
-            const message =
-                document.createElement("div");
-
-            message.className =
-                "brain-mini-chat-message";
-
-            message.innerHTML = `
-                <strong>${role}:</strong>
-                <span>
-                    ${this.escapeBrainHTML(
-                        this.getBrainActionText(action)
-                    )}
-                </span>
-            `;
-
-            miniFlow.appendChild(message);
-        });
-
-        miniFlow.addEventListener("click", () => {
-            const panel =
-                document.getElementById("brainPanel");
-
-            if(panel){
-                panel.classList.remove("is-compact");
-                panel.classList.add("is-expanded");
-            }
-        });
-
-        miniHistory.appendChild(miniFlow);
-    }
-
-    /*
-     * Yeni mesaj geldiğinde sohbetin en altına git.
-     */
-    requestAnimationFrame(() => {
-        history.scrollTop =
-            history.scrollHeight;
-    });
-},
-    
-    openBrainSession(session){
-    if(!session) return;
-
-    const actionText = (session.actions || [])
-    .map(action => this.getBrainActionText(action))
-    .filter(Boolean)
-    .join(" ");
-
-const source = `${session.title || ""} ${actionText}`
-    .toLowerCase();
-
-    let page = null;
-
-    if(source.includes("profil")){
-        page = "profile";
-    } else if(
-    source.includes("kimlik") ||
-    source.includes("kimliği") ||
-    source.includes("kimligi")
-){
-    page = "identity";
-    } else if(
-        source.includes("hafıza") ||
-        source.includes("hafiza") ||
-        source.includes("memory")
-    ){
-        page = "memory";
-    } else if(
-        source.includes("köprü") ||
-        source.includes("kopru") ||
-        source.includes("bridge")
-    ){
-        page = "bridge";
-    } else if(
-        source.includes("timeline") ||
-        source.includes("zaman")
-    ){
-        page = "timeline";
-    } else if(source.includes("organ")){
-        page = "organs";
-    } else if(source.includes("ayar")){
-        page = "settings";
-    }
-
-    if(!page){
-        console.log("Brain Session için yönlendirme bulunamadı:", session);
-        return;
-    }
-
-    this.closeBrain();
-
-requestAnimationFrame(() => {
-    this.openEntityPage(page);
-});
-},
-
-    initBrainPanelAdaptiveSize(){
-    const panel = document.querySelector(".brain-panel");
-    const input = document.getElementById("brainInput");
-    const history = document.getElementById("brainHistory");
-    const miniHistory = document.getElementById("brainMiniHistory");
-
-    if(!panel) return;
-
-    panel.classList.remove("is-expanded");
-    panel.classList.add("is-compact");
-
-    const expandPanel = () => {
-        panel.classList.remove("is-compact");
-        panel.classList.add("is-expanded");
-    };
-
-    const compactPanel = event => {
-        if(!document.body.contains(panel)) return;
-        if(panel.contains(event.target)) return;
-
-        const openSession = panel.querySelector(
-            '.brain-session-card[data-open="true"]'
+        document.addEventListener(
+            "pointerdown",
+            this.brainOutsideHandler
         );
 
-        if(openSession) return;
+        this.renderBrainHistory();
 
-        panel.classList.remove("is-expanded");
-        panel.classList.add("is-compact");
-    };
+        return true;
 
-    if(input){
-        input.addEventListener("focus", expandPanel);
-        input.addEventListener("click", expandPanel);
-    }
+    },
 
-    if(history){
-        history.addEventListener("click", expandPanel);
-    }
+    closeBrain(){
 
-    if(miniHistory){
-        miniHistory.addEventListener("click", expandPanel);
-    }
+        this.saveBrainState();
 
-    document.addEventListener("pointerdown", compactPanel);
-},
-    
-    initBrainSessionDragClose() {
-    const panel = document.querySelector(".brain-panel");
-    if (!panel) return;
+        if(this.brainOutsideHandler){
 
-    let startX = 0;
-    let startY = 0;
+            document.removeEventListener(
+                "pointerdown",
+                this.brainOutsideHandler
+            );
 
-    panel.addEventListener("pointerdown", event => {
-        startX = event.clientX;
-        startY = event.clientY;
-    });
+            this.brainOutsideHandler =
+                null;
 
-    panel.addEventListener("pointermove", event => {
-        const movedX = Math.abs(event.clientX - startX);
-        const movedY = Math.abs(event.clientY - startY);
+        }
 
-        if (movedX < 8 && movedY < 8) return;
+        document
+            .querySelectorAll(
+                "#brainPanel"
+            )
+            .forEach(
+                panel =>
+                    panel.remove()
+            );
 
-        panel.classList.add("is-dragging");
+        return true;
 
-        panel
-            .querySelectorAll('.brain-session-card[data-open="true"]')
-            .forEach(card => {
-                card.dataset.open = "false";
+    },
+
+    getBrainAppDefinitions(){
+
+        return [
+            {
+                id: "profile",
+                label: "Profil",
+                words: [
+                    "profil",
+                    "profile"
+                ]
+            },
+            {
+                id: "identity",
+                label: "Kimlik",
+                words: [
+                    "kimlik",
+                    "identity"
+                ]
+            },
+            {
+                id: "memory",
+                label: "Hafıza",
+                words: [
+                    "hafıza",
+                    "hafiza",
+                    "memory"
+                ]
+            },
+            {
+                id: "timeline",
+                label:
+                    "Zaman Çizelgesi",
+                words: [
+                    "timeline",
+                    "zaman çizelgesi",
+                    "zaman cizelgesi"
+                ]
+            },
+            {
+                id: "bridge",
+                label: "Köprü",
+                words: [
+                    "köprü",
+                    "kopru",
+                    "bridge"
+                ]
+            },
+            {
+                id: "organs",
+                label: "Organlar",
+                words: [
+                    "organ",
+                    "organlar"
+                ]
+            },
+            {
+                id: "settings",
+                label: "Ayarlar",
+                words: [
+                    "ayar",
+                    "ayarlar",
+                    "settings"
+                ]
+            }
+        ];
+
+    },
+
+    extractBrainAppMentions(text){
+
+        const normalized =
+            String(text || "")
+                .toLocaleLowerCase(
+                    "tr-TR"
+                );
+
+        return this
+            .getBrainAppDefinitions()
+            .filter(app =>
+                app.words.some(word =>
+                    normalized.includes(
+                        word
+                    )
+                )
+            )
+            .map(app => ({
+                app:
+                    app.id,
+                label:
+                    app.label
+            }));
+
+    },
+
+    sendBrainMessage(){
+
+        const input =
+            document.getElementById(
+                "brainInput"
+            );
+
+        if(!input){
+            return false;
+        }
+
+        const text =
+            input.value.trim();
+
+        if(!text){
+            return false;
+        }
+
+        const brain =
+            VAERO.get("brain");
+
+        if(
+            !brain ||
+            typeof brain.receive !==
+                "function"
+        ){
+            return false;
+        }
+
+        if(!Array.isArray(brain.sessions)){
+            brain.sessions = [];
+        }
+
+        const contextService =
+            VAERO.get(
+                "brainContext"
+            );
+
+        const context =
+            contextService &&
+            typeof contextService.build ===
+                "function"
+                ? contextService.build()
+                : null;
+
+        const session =
+            this.getTodayBrainConversationSession(
+                brain
+            ) ||
+            this.createTodayBrainConversation(
+                brain
+            );
+
+        const now =
+            Date.now();
+
+        session.actions.push({
+            id:
+                this.createId(
+                    "brain-action"
+                ),
+
+            role: "user",
+            type: "message",
+            content: text,
+            createdAt: now,
+
+            context: {
+                page:
+                    context?.page ||
+                    context?.screen ||
+                    null
+            },
+
+            appLinks:
+                this.extractBrainAppMentions(
+                    text
+                )
+        });
+
+        session.updatedAt =
+            now;
+
+        input.value = "";
+
+        const reply =
+            brain.receive(
+                text,
+                context
+            );
+
+        const replyText =
+            typeof reply === "string"
+                ? reply
+                : reply?.reply ||
+                  reply?.message ||
+                  reply?.text ||
+                  "";
+
+        if(replyText){
+
+            session.actions.push({
+                id:
+                    this.createId(
+                        "brain-action"
+                    ),
+
+                role: "brain",
+                type: "reply",
+
+                content:
+                    String(replyText),
+
+                createdAt:
+                    Date.now(),
+
+                context: {
+                    page:
+                        context?.page ||
+                        context?.screen ||
+                        null
+                },
+
+                appLinks:
+                    this.extractBrainAppMentions(
+                        replyText
+                    )
             });
-    });
 
-    panel.addEventListener("pointerup", () => {
-        panel.classList.remove("is-dragging");
-    });
+        }
 
-    panel.addEventListener("pointerleave", () => {
-        panel.classList.remove("is-dragging");
-    });
-},
+        session.updatedAt =
+            Date.now();
+
+        this.updateBrainConversationSummary(
+            session
+        );
+
+        this.saveBrainState();
+
+        const handled =
+            this.dispatchBrainIntent(
+                text
+            );
+
+        if(!handled){
+
+            this.renderBrainHistory();
+
+            const panel =
+                document.getElementById(
+                    "brainPanel"
+                );
+
+            if(panel){
+
+                panel.classList.remove(
+                    "is-compact"
+                );
+
+                panel.classList.add(
+                    "is-expanded"
+                );
+
+            }
+
+        }
+
+        return true;
+
+    },
+
+    updateBrainConversationSummary(
+        session
+    ){
+
+        if(
+            !session ||
+            !Array.isArray(
+                session.actions
+            )
+        ){
+            return;
+        }
+
+        const messages =
+            session.actions
+                .filter(
+                    action =>
+                        action?.role ===
+                            "user" &&
+                        action.content
+                )
+                .map(
+                    action =>
+                        String(
+                            action.content
+                        ).trim()
+                )
+                .filter(Boolean)
+                .slice(-3);
+
+        const summary =
+            messages.join(" · ");
+
+        session.summary =
+            summary.length > 160
+                ? `${summary
+                    .slice(0, 160)
+                    .trim()}…`
+                : summary || null;
+
+    },
+
+    dispatchBrainIntent(text){
+
+        const command =
+            String(text || "")
+                .toLocaleLowerCase(
+                    "tr-TR"
+                )
+                .replaceAll("ı", "i")
+                .replaceAll("ğ", "g")
+                .replaceAll("ü", "u")
+                .replaceAll("ş", "s")
+                .replaceAll("ö", "o")
+                .replaceAll("ç", "c")
+                .replace(/[?.!,;:]/g, " ")
+                .replace(/\s+/g, " ")
+                .trim();
+
+        if(
+            [
+                "burada kaldik",
+                "burda kaldik",
+                "kaldigimiz yeri kaydet",
+                "bunu kaydet"
+            ].some(
+                item =>
+                    command.includes(item)
+            )
+        ){
+            return this.saveBrainResumePoint(
+                text
+            );
+        }
+
+        if(
+            [
+                "nerede kalmistik",
+                "kaldigimiz yer",
+                "devam et"
+            ].some(
+                item =>
+                    command.includes(item)
+            )
+        ){
+            return this.restoreBrainResumePoint();
+        }
+
+        const navigationRequested =
+            [
+                "ac",
+                "goster",
+                "goruntule",
+                "git",
+                "gec",
+                "gotur"
+            ].some(word =>
+                command.includes(word)
+            );
+
+        if(!navigationRequested){
+            return false;
+        }
+
+        const targets = [
+            {
+                page: "profile",
+                words: [
+                    "profil",
+                    "profile"
+                ]
+            },
+            {
+                page: "identity",
+                words: [
+                    "kimlik",
+                    "identity"
+                ]
+            },
+            {
+                page: "memory",
+                words: [
+                    "hafiza",
+                    "memory"
+                ]
+            },
+            {
+                page: "timeline",
+                words: [
+                    "timeline",
+                    "zaman cizelgesi"
+                ]
+            },
+            {
+                page: "bridge",
+                words: [
+                    "kopru",
+                    "bridge"
+                ]
+            },
+            {
+                page: "organs",
+                words: [
+                    "organ",
+                    "organlar"
+                ]
+            },
+            {
+                page: "settings",
+                words: [
+                    "ayar",
+                    "ayarlar",
+                    "settings"
+                ]
+            }
+        ];
+
+        const target =
+            targets.find(item =>
+                item.words.some(word =>
+                    command.includes(
+                        word
+                    )
+                )
+            );
+
+        if(!target){
+            return false;
+        }
+
+        this.closeBrain();
+
+        return this.openEntityPage(
+            target.page
+        );
+
+    },
+
+    saveBrainResumePoint(note){
+
+        const brain =
+            VAERO.get("brain");
+
+        const contextService =
+            VAERO.get(
+                "brainContext"
+            );
+
+        if(!brain){
+            return false;
+        }
+
+        const context =
+            contextService &&
+            typeof contextService.build ===
+                "function"
+                ? contextService.build()
+                : null;
+
+        brain.resumePoint = {
+            id:
+                this.createId(
+                    "resume"
+                ),
+
+            app:
+                context?.app ||
+                null,
+
+            screen:
+                context?.screen ||
+                null,
+
+            page:
+                context?.page ||
+                null,
+
+            worldId:
+                context?.world?.id ||
+                null,
+
+            entityId:
+                context?.entity?.id ||
+                null,
+
+            note:
+                String(note || ""),
+
+            savedAt:
+                Date.now()
+        };
+
+        this.saveBrainState();
+        this.renderBrainHistory();
+
+        return true;
+
+    },
+
+    restoreBrainResumePoint(){
+
+        const brain =
+            VAERO.get("brain");
+
+        const point =
+            brain?.resumePoint;
+
+        if(!point){
+            return false;
+        }
+
+        if(point.worldId){
+
+            const opened =
+                this.openWorld(
+                    point.worldId
+                );
+
+            if(
+                opened &&
+                point.entityId
+            ){
+                this.openEntity(
+                    point.entityId
+                );
+            }
+
+            if(
+                point.page &&
+                point.entityId
+            ){
+                this.openEntityPage(
+                    point.page
+                );
+            }
+
+            return true;
+
+        }
+
+        if(point.page){
+
+            return this.openEntityPage(
+                point.page
+            );
+
+        }
+
+        if(
+            point.screen === "create"
+        ){
+            return this.openCreate();
+        }
+
+        if(
+            point.screen === "worlds"
+        ){
+            return this.openWorlds();
+        }
+
+        return this.openHome();
+
+    },
+
+    getBrainActionText(action){
+
+        if(typeof action === "string"){
+            return action;
+        }
+
+        if(
+            action &&
+            typeof action === "object"
+        ){
+            return String(
+                action.content ||
+                action.text ||
+                action.message ||
+                ""
+            );
+        }
+
+        return "";
+
+    },
+
+    escapeBrainHTML(value){
+
+        return String(value ?? "")
+            .replaceAll("&", "&amp;")
+            .replaceAll("<", "&lt;")
+            .replaceAll(">", "&gt;")
+            .replaceAll('"', "&quot;")
+            .replaceAll("'", "&#039;");
+
+    },
+
+    renderBrainHistory(){
+
+        const history =
+            document.getElementById(
+                "brainHistory"
+            );
+
+        const miniHistory =
+            document.getElementById(
+                "brainMiniHistory"
+            );
+
+        const brain =
+            VAERO.get("brain");
+
+        if(!history || !brain){
+            return;
+        }
+
+        history.innerHTML = "";
+
+        if(miniHistory){
+            miniHistory.innerHTML = "";
+        }
+
+        const todaySession =
+            this.getTodayBrainConversationSession(
+                brain
+            );
+
+        const actions =
+            Array.isArray(
+                todaySession?.actions
+            )
+                ? [...todaySession.actions]
+                    .filter(
+                        action =>
+                            this
+                                .getBrainActionText(
+                                    action
+                                )
+                                .trim()
+                    )
+                    .sort(
+                        (a, b) =>
+                            (
+                                a?.createdAt ||
+                                0
+                            ) -
+                            (
+                                b?.createdAt ||
+                                0
+                            )
+                    )
+                : [];
+
+        const flow =
+            document.createElement(
+                "div"
+            );
+
+        flow.className =
+            "brain-chat-flow";
+
+        if(actions.length === 0){
+
+            flow.innerHTML = `
+                <div class="brain-chat-empty">
+                    <strong>
+                        Bugünün sohbeti
+                    </strong>
+
+                    <span>
+                        Brain’e bir şey yazarak başlayabilirsin.
+                    </span>
+                </div>
+            `;
+
+        }else{
+
+            actions.forEach(action => {
+
+                const content =
+                    this.getBrainActionText(
+                        action
+                    );
+
+                const time =
+                    new Date(
+                        action.createdAt ||
+                        Date.now()
+                    ).toLocaleTimeString(
+                        "tr-TR",
+                        {
+                            hour:
+                                "2-digit",
+                            minute:
+                                "2-digit"
+                        }
+                    );
+
+                if(
+                    action.role ===
+                        "system" ||
+                    action.type ===
+                        "navigation"
+                ){
+
+                    const systemRow =
+                        document.createElement(
+                            "div"
+                        );
+
+                    systemRow.className =
+                        "brain-chat-system";
+
+                    systemRow.innerHTML = `
+                        <span class="brain-chat-system-time">
+                            ${time}
+                        </span>
+
+                        <span>
+                            ${this.escapeBrainHTML(content)}
+                        </span>
+                    `;
+
+                    flow.appendChild(
+                        systemRow
+                    );
+
+                    return;
+
+                }
+
+                const message =
+                    document.createElement(
+                        "div"
+                    );
+
+                message.className =
+                    action.role === "user"
+                        ? "brain-chat-message brain-chat-user"
+                        : "brain-chat-message brain-chat-brain";
+
+                const links =
+                    Array.isArray(
+                        action.appLinks
+                    )
+                        ? action.appLinks
+                            .filter(
+                                (link, index, all) =>
+                                    link?.app &&
+                                    all.findIndex(
+                                        item =>
+                                            item?.app ===
+                                            link.app
+                                    ) === index
+                            )
+                        : [];
+
+                message.innerHTML = `
+                    <div class="brain-chat-meta">
+                        <span>${time}</span>
+
+                        ${
+                            action?.context?.page
+                                ? `
+                                    <span class="brain-chat-context">
+                                        ${this.escapeBrainHTML(
+                                            action.context.page
+                                        )}
+                                    </span>
+                                  `
+                                : ""
+                        }
+                    </div>
+
+                    <div class="brain-chat-content">
+                        ${this.escapeBrainHTML(content)}
+
+                        ${
+                            links.length
+                                ? `
+                                    <span class="brain-message-app-links">
+
+                                        ${links
+                                            .map(link => `
+                                                <button
+                                                    type="button"
+                                                    class="brain-message-app-link"
+                                                    data-brain-app="${this.escapeBrainHTML(link.app)}"
+                                                >
+                                                    ${this.escapeBrainHTML(link.label)}
+                                                </button>
+                                            `)
+                                            .join("")}
+
+                                    </span>
+                                  `
+                                : ""
+                        }
+                    </div>
+                `;
+
+                flow.appendChild(
+                    message
+                );
+
+            });
+
+        }
+
+        history.appendChild(
+            flow
+        );
+
+        history
+            .querySelectorAll(
+                "[data-brain-app]"
+            )
+            .forEach(button => {
+
+                button.addEventListener(
+                    "click",
+                    () => {
+
+                        const app =
+                            button.dataset
+                                .brainApp;
+
+                        this.closeBrain();
+                        this.openEntityPage(
+                            app
+                        );
+
+                    }
+                );
+
+            });
+
+        if(miniHistory){
+
+            const recent =
+                actions
+                    .filter(
+                        action =>
+                            action.role ===
+                                "user" ||
+                            action.role ===
+                                "brain"
+                    )
+                    .slice(-3);
+
+            const miniFlow =
+                document.createElement(
+                    "div"
+                );
+
+            miniFlow.className =
+                "brain-mini-chat-flow";
+
+            recent.forEach(action => {
+
+                const row =
+                    document.createElement(
+                        "div"
+                    );
+
+                row.className =
+                    "brain-mini-chat-message";
+
+                row.innerHTML = `
+                    <strong>
+                        ${
+                            action.role ===
+                                "user"
+                                ? "Sen:"
+                                : "Brain:"
+                        }
+                    </strong>
+
+                    <span>
+                        ${this.escapeBrainHTML(
+                            this.getBrainActionText(
+                                action
+                            )
+                        )}
+                    </span>
+                `;
+
+                miniFlow.appendChild(
+                    row
+                );
+
+            });
+
+            miniFlow.addEventListener(
+                "click",
+                () => {
+
+                    const panel =
+                        document.getElementById(
+                            "brainPanel"
+                        );
+
+                    if(panel){
+
+                        panel.classList.remove(
+                            "is-compact"
+                        );
+
+                        panel.classList.add(
+                            "is-expanded"
+                        );
+
+                    }
+
+                }
+            );
+
+            miniHistory.appendChild(
+                miniFlow
+            );
+
+        }
+
+        requestAnimationFrame(
+            () => {
+
+                history.scrollTop =
+                    history.scrollHeight;
+
+            }
+        );
+
+    },
+
+    handleEvolutionAction(
+        action,
+        button
+    ){
+
+        if(
+            action ===
+                "evolution:filter" &&
+            window.EvolutionApp &&
+            typeof EvolutionApp.setFilter ===
+                "function"
+        ){
+            EvolutionApp.setFilter(
+                button.dataset.filter
+            );
+
+            VAERO.engine.mount();
+
+            return true;
+        }
+
+        if(
+            action ===
+                "evolution:event:open" &&
+            window.EvolutionApp &&
+            typeof EvolutionApp.selectEvent ===
+                "function"
+        ){
+            EvolutionApp.selectEvent(
+                button.dataset.eventId
+            );
+
+            VAERO.engine.mount();
+
+            return true;
+        }
+
+        if(
+            action ===
+                "evolution:event:close" &&
+            window.EvolutionApp &&
+            typeof EvolutionApp.clearSelectedEvent ===
+                "function"
+        ){
+            EvolutionApp.clearSelectedEvent();
+            VAERO.engine.mount();
+
+            return true;
+        }
+
+        if(
+            action ===
+                "evolution:linked:open"
+        ){
+
+            const target =
+                String(
+                    button.dataset.target ||
+                    ""
+                )
+                    .trim()
+                    .toLowerCase();
+
+            if(
+                target !== "timeline" &&
+                target !== "memory"
+            ){
+                return false;
+            }
+
+            if(
+                window.EvolutionApp &&
+                typeof EvolutionApp.clearSelectedEvent ===
+                    "function"
+            ){
+                EvolutionApp.clearSelectedEvent();
+            }
+
+            return this.openEntityPage(
+                target
+            );
+
+        }
+
+        return false;
+
+    }
 
 };
 
-document.addEventListener("click", event => {
+document.addEventListener(
+    "click",
+    event => {
 
-    const button = event.target.closest("[data-action]");
-    if(!button) return;
+        const button =
+            event.target.closest(
+                "[data-action]"
+            );
 
-    const action = button.dataset.action;
+        if(!button){
+            return;
+        }
 
-    if(action === "profile:open"){
-        Actions.openProfile(VAERO.engine.currentEntity);
+        const action =
+            button.dataset.action;
+
+        if(
+            action ===
+                "world:create:submit" ||
+            action ===
+                "entity:create:submit"
+        ){
+            event.preventDefault();
+        }
+
+        switch(action){
+
+            case "home:open":
+                Actions.openHome();
+                break;
+
+            case "identity:open":
+                Actions.openIdentity();
+                break;
+
+            case "profile:open":
+                Actions.openProfile();
+                break;
+
+            case "create:open":
+                Actions.openCreate();
+                break;
+
+            case "worlds:open":
+                Actions.openWorlds();
+                break;
+
+            case "entities:open":
+                Actions.openEntities();
+                break;
+
+            case "world:open":
+                Actions.openWorld(
+                    button.dataset.worldId
+                );
+                break;
+
+            case "world:create:submit":
+                Actions.createWorld();
+                break;
+
+            case "world:back":
+                Actions.backToWorld();
+                break;
+
+            case "entity:create:first":
+                Actions.startEntityCreate();
+                break;
+
+            case "entity:type:select":
+                Actions.selectEntityType(
+                    button.dataset.entityType
+                );
+                break;
+
+            case "entity:type:clear":
+                Actions.clearEntityType();
+                break;
+
+            case "entity:create:cancel":
+                Actions.cancelEntityCreate();
+                break;
+
+            case "entity:create:submit":
+                Actions.createEntity();
+                break;
+
+            case "entity:open":
+                Actions.openEntity(
+                    button.dataset.entityId
+                );
+                break;
+
+            case "entity:dashboard":
+                Actions.openEntityDashboard();
+                break;
+
+            case "entity:identity":
+                Actions.openEntityPage(
+                    "identity"
+                );
+                break;
+
+            case "entity:profile":
+                Actions.openEntityPage(
+                    "profile"
+                );
+                break;
+
+            case "entity:organs":
+                Actions.openEntityPage(
+                    "organs"
+                );
+                break;
+
+            case "entity:timeline":
+                Actions.openEntityPage(
+                    "timeline"
+                );
+                break;
+
+            case "entity:memory":
+                Actions.openEntityPage(
+                    "memory"
+                );
+                break;
+
+            case "entity:bridge":
+                Actions.openEntityPage(
+                    "bridge"
+                );
+                break;
+
+            case "entity:evolution":
+                Actions.openEntityPage(
+                    "evolution"
+                );
+                break;
+
+            case "entity:settings":
+                Actions.openEntityPage(
+                    "settings"
+                );
+                break;
+
+            case "entity:discovery":
+                Actions.openEntityPage(
+                    "discovery"
+                );
+                break;
+
+            case "profile:save":
+                Actions.saveProfile();
+                break;
+
+            case "discovery:restart":
+                Actions.restartDiscovery();
+                break;
+
+            case "brain:open":
+                Actions.openBrain();
+                break;
+
+            case "brain:close":
+                Actions.closeBrain();
+                break;
+
+            case "brain:send":
+                Actions.sendBrainMessage();
+                break;
+
+            default:
+                Actions.handleEvolutionAction(
+                    action,
+                    button
+                );
+
+        }
+
     }
+);
 
-    if(action === "modal:close"){
-        Actions.closeModal();
+document.addEventListener(
+    "submit",
+    event => {
+
+        const form =
+            event.target.closest(
+                "[data-engine-form]"
+            );
+
+        if(!form){
+            return;
+        }
+
+        event.preventDefault();
+
+        if(
+            form.dataset.engineForm ===
+                "world-create"
+        ){
+            Actions.createWorld();
+        }
+
+        if(
+            form.dataset.engineForm ===
+                "entity-create"
+        ){
+            Actions.createEntity();
+        }
+
     }
+);
 
-    if(action === "world:create"){
-        Actions.createWorld();
-    }
+document.addEventListener(
+    "keydown",
+    event => {
 
-    if(action === "world:open"){
-        Actions.openWorld(button.dataset.worldId);
-    }
+        if(
+            event.target.id !==
+                "brainInput" ||
+            event.key !== "Enter" ||
+            event.shiftKey
+        ){
+            return;
+        }
 
-    if(action === "world:back"){
-        VAERO.engine.currentEntityPage = null;
-        VAERO.engine.currentOpenedEntity = null;
-        VAERO.engine.mount(VAERO.engine.currentEntity);
-    }
-
-    if(action === "entity:dashboard"){
-        Actions.openEntityPage(null);
-    }
-
-    if(action === "worlds:open"){
-    Actions.openWorlds();
-}
-
-    if(action === "brain:open"){
-        Actions.openBrain();
-    }
-
-    if(action === "brain:close"){
-        Actions.closeBrain();
-    }
-
-    
-
-    if(action === "brain:send"){
+        event.preventDefault();
         Actions.sendBrainMessage();
+
     }
+);
 
-    if(action === "entity:identity"){
-        Actions.openEntityPage("identity");
-    }
-
-    if(action === "entity:profile"){
-        Actions.openEntityPage("profile");
-    }
-
-    if(action === "entity:organs"){
-        Actions.openEntityPage("organs");
-    }
-
-    if(action === "entity:timeline"){
-        Actions.openEntityPage("timeline");
-    }
-
-    if(action === "entity:memory"){
-        Actions.openEntityPage("memory");
-    }
-
-    if(action === "entity:bridge"){
-        Actions.openEntityPage("bridge");
-    }
-
-    if(action === "entity:evolution"){
-    Actions.openEntityPage("evolution");
-}
-
-    if(action === "evolution:filter"){
-
-    if(
-        window.EvolutionApp &&
-        typeof EvolutionApp.setFilter === "function"
-    ){
-        EvolutionApp.setFilter(
-            button.dataset.filter
-        );
-
-        VAERO.engine.mount(
-            VAERO.engine.currentEntity
-        );
-    }
-
-}
-
-    if(action === "entity:settings"){
-        Actions.openEntityPage("settings");
-    }
-
-    if(action === "evolution:event:open"){
-
-    if(
-        window.EvolutionApp &&
-        typeof EvolutionApp.selectEvent === "function"
-    ){
-        EvolutionApp.selectEvent(
-            button.dataset.eventId
-        );
-
-        VAERO.engine.mount(
-            VAERO.engine.currentEntity
-        );
-    }
-
-}
-
-if(action === "evolution:event:close"){
-
-    if(
-        window.EvolutionApp &&
-        typeof EvolutionApp.clearSelectedEvent === "function"
-    ){
-        EvolutionApp.clearSelectedEvent();
-
-        VAERO.engine.mount(
-            VAERO.engine.currentEntity
-        );
-    }
-
-}
-
-    if(action === "evolution:linked:open"){
-
-    const target = String(
-        button.dataset.target || ""
-    )
-        .trim()
-        .toLowerCase();
-
-    if(
-        target !== "timeline" &&
-        target !== "memory"
-    ){
-        return;
-    }
-
-    if(
-        window.EvolutionApp &&
-        typeof EvolutionApp.clearSelectedEvent === "function"
-    ){
-        EvolutionApp.clearSelectedEvent();
-    }
-
-    Actions.openEntityPage(target);
-}
-
-    if(action === "entity:create:first"){
-        VAERO.engine.entityCreateMode = true;
-        VAERO.engine.mount(VAERO.engine.currentEntity);
-    }
-
-    if(action === "entity:type:select"){
-        VAERO.engine.entityType = button.dataset.entityType;
-        VAERO.engine.mount(VAERO.engine.currentEntity);
-    }
-
-    if(action === "entity:create"){
-        Actions.createEntity();
-    }
-
-    if(action === "entity:open"){
-        Actions.openEntity(button.dataset.entityId);
-    }
-
-});
-
-VAERO.register("actions", Actions);
-
+VAERO.register(
+    "actions",
+    Actions
+);
