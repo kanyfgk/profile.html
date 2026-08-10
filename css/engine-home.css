@@ -861,3 +861,26 @@
         height:60px;
     }
 }
+
+.engine-hero.has-brain-intro{
+    padding-bottom:112px;
+}
+
+.engine-brain-intro{
+    appearance:none;
+    text-align:left;
+    cursor:pointer;
+}
+
+.engine-brain-intro:active{
+    transform:scale(.985);
+}
+
+@media (max-width:600px){
+
+    .engine-hero.has-brain-intro{
+        min-height:342px;
+        padding-bottom:108px;
+    }
+
+}
