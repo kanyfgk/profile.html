@@ -667,24 +667,66 @@ body.discovery-active .brain-fab {
 
 @media (max-width:768px){
 
+    .discovery-screen{
+        position:fixed;
+        inset:0;
+
+        width:100%;
+        height:100dvh;
+        min-height:0;
+
+        display:block;
+
+        padding:
+            14px
+            14px
+            calc(
+                32px +
+                env(safe-area-inset-bottom)
+            );
+
+        overflow-x:hidden;
+        overflow-y:auto;
+
+        transform:none;
+
+        overscroll-behavior-y:contain;
+        -webkit-overflow-scrolling:touch;
+    }
+
+    .discovery-content{
+        width:100%;
+        max-width:680px;
+
+        margin:0 auto;
+        padding-bottom:
+            calc(
+                30px +
+                env(safe-area-inset-bottom)
+            );
+
+        overflow:visible;
+    }
+
     button.discovery-continue{
-        position:fixed !important;
+        position:sticky !important;
 
-        right:20px !important;
+        right:auto !important;
         bottom:calc(
-            96px + env(safe-area-inset-bottom)
+            14px +
+            env(safe-area-inset-bottom)
         ) !important;
-        left:20px !important;
+        left:auto !important;
 
-        z-index:999999 !important;
+        z-index:20;
 
-        display:flex !important;
+        display:flex;
         align-items:center;
         justify-content:center;
 
-        width:auto !important;
+        width:100% !important;
         min-height:56px;
-        margin:0 !important;
+        margin-top:22px !important;
 
         border-radius:17px;
 
@@ -696,13 +738,8 @@ body.discovery-active .brain-fab {
         opacity:.45;
     }
 
-    .discovery-screen main,
-    .discovery-journey main{
-        padding-bottom:
-            calc(
-                180px +
-                env(safe-area-inset-bottom)
-            );
+    .discovery-screen.is-leaving{
+        transform:translateY(-18px);
     }
 
 }
