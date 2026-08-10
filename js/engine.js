@@ -112,4 +112,4 @@ kernel.boot();
 
 window.Engine = Engine;
 
-// Engine.start();
+Engine.start();
