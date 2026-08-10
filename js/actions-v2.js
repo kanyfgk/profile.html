@@ -2225,8 +2225,29 @@ document.addEventListener("click", event => {
 }
 
     if(action === "brain:open"){
-        Actions.openBrain();
-    }
+
+    localStorage.setItem(
+        "vaero:brain:intro:v1",
+        "true"
+    );
+
+    document
+        .querySelector(
+            ".engine-brain-intro"
+        )
+        ?.remove();
+
+    document
+        .querySelector(
+            ".engine-hero"
+        )
+        ?.classList.remove(
+            "has-brain-intro"
+        );
+
+    Actions.openBrain();
+
+}
 
     if(action === "brain:close"){
         Actions.closeBrain();
