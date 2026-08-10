@@ -667,26 +667,32 @@ body.discovery-active .brain-fab {
 
 @media (max-width:768px){
 
-    .discovery-continue{
-        position:fixed;
-        right:20px;
-        bottom:calc(
-            18px + env(safe-area-inset-bottom)
-        );
-        left:20px;
-        z-index:10000;
+    button.discovery-continue{
+        position:fixed !important;
 
-        width:auto;
+        right:20px !important;
+        bottom:calc(
+            96px + env(safe-area-inset-bottom)
+        ) !important;
+        left:20px !important;
+
+        z-index:999999 !important;
+
+        display:flex !important;
+        align-items:center;
+        justify-content:center;
+
+        width:auto !important;
         min-height:56px;
-        margin:0;
+        margin:0 !important;
 
         border-radius:17px;
 
         box-shadow:
-            0 18px 42px rgba(0,0,0,.48);
+            0 18px 42px rgba(0,0,0,.58);
     }
 
-    .discovery-continue:disabled{
+    button.discovery-continue:disabled{
         opacity:.45;
     }
 
@@ -694,7 +700,7 @@ body.discovery-active .brain-fab {
     .discovery-journey main{
         padding-bottom:
             calc(
-                100px +
+                180px +
                 env(safe-area-inset-bottom)
             );
     }
