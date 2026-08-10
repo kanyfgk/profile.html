@@ -102,16 +102,6 @@ if (!engineStartExists) {
     this.currentEntity = entity;
     this.renderer.render(entity);
 
-    setTimeout(() => {
-        const buttons = document.querySelectorAll('[data-action="brain:open"]');
-
-        buttons.forEach((button, index) => {
-            if(index > 0){
-                button.remove();
-            }
-        });
-    }, 0);
-
 }
 
 };
