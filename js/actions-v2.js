@@ -1784,22 +1784,22 @@ const Actions = {
 
             this.renderBrainHistory();
 
-            const panel =
-                document.getElementById(
-                    "brainPanel"
-                );
+        const panel =
+            document.getElementById(
+                "brainPanel"
+            );
 
-            if(panel){
+        if(panel){
 
-                panel.classList.remove(
-                    "is-compact"
-                );
+            panel.classList.remove(
+                "is-compact"
+            );
 
-                panel.classList.add(
-                    "is-expanded"
-                );
+            panel.classList.add(
+                "is-expanded"
+            );
 
-            }
+        }
 
         }
 
