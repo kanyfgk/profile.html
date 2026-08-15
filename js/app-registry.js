@@ -80,4 +80,12 @@ OrganRegistry.register({
     action: "entity:discovery"
 });
 
+OrganRegistry.register({
+    id: "vaero",
+    icon: "◉",
+    title: "VAERO",
+    subtitle: "Fiziksel dünyanı keşfet",
+    action: "app:vaero"
+});
+
 window.OrganRegistry = OrganRegistry;
