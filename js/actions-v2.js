@@ -36,6 +36,18 @@ const Actions = {
         input.value = "";
     },
 
+    openVaeroApp(){
+
+    VAERO.engine.currentWorld = null;
+    VAERO.engine.currentOpenedEntity = null;
+    VAERO.engine.currentEntityPage = "vaero";
+
+    VAERO.engine.mount(
+        VAERO.engine.currentEntity
+    );
+
+},
+
     openWorlds(){
 
     VAERO.engine.currentWorld = {
@@ -2307,6 +2319,10 @@ document.addEventListener("click", event => {
     if(action === "entity:settings"){
         Actions.openEntityPage("settings");
     }
+
+    if(action === "app:vaero"){
+    Actions.openVaeroApp();
+}
 
     if(action === "evolution:event:open"){
 
