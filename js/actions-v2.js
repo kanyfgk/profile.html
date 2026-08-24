@@ -143,6 +143,98 @@ openVaeroProduct(productId){
 
 },
 
+    openVaeroCart(){
+
+    if(!window.VaeroApp){
+        return false;
+    }
+
+    VAERO.engine.currentVaeroCart =
+        VaeroApp.loadCart();
+
+    VAERO.engine.currentEntityPage =
+        "vaero-cart";
+
+    VAERO.engine.mount(
+        VAERO.engine.currentEntity
+    );
+
+    return true;
+
+},
+
+increaseVaeroCartItem(productId){
+
+    const cart =
+        VaeroApp.increaseCartItem(productId);
+
+    if(!cart) return false;
+
+    VAERO.engine.currentVaeroCart =
+        cart;
+
+    VAERO.engine.mount(
+        VAERO.engine.currentEntity
+    );
+
+    return true;
+
+},
+
+decreaseVaeroCartItem(productId){
+
+    const cart =
+        VaeroApp.decreaseCartItem(productId);
+
+    if(!cart) return false;
+
+    VAERO.engine.currentVaeroCart =
+        cart;
+
+    VAERO.engine.mount(
+        VAERO.engine.currentEntity
+    );
+
+    return true;
+
+},
+
+removeVaeroCartItem(productId){
+
+    const cart =
+        VaeroApp.removeFromCart(productId);
+
+    if(!cart) return false;
+
+    VAERO.engine.currentVaeroCart =
+        cart;
+
+    VAERO.engine.mount(
+        VAERO.engine.currentEntity
+    );
+
+    return true;
+
+},
+
+clearVaeroCart(){
+
+    const cart =
+        VaeroApp.clearCart();
+
+    if(!cart) return false;
+
+    VAERO.engine.currentVaeroCart =
+        cart;
+
+    VAERO.engine.mount(
+        VAERO.engine.currentEntity
+    );
+
+    return true;
+
+},
+
     createEntity(){
         const input = document.getElementById("entityNameInput");
 
@@ -2483,6 +2575,32 @@ if(action === "vaero:product"){
     Actions.addVaeroProductToCart(
         button.dataset.product
     );
+}
+
+    if(action === "vaero:cart"){
+    Actions.openVaeroCart();
+}
+
+if(action === "vaero:cart:increase"){
+    Actions.increaseVaeroCartItem(
+        button.dataset.product
+    );
+}
+
+if(action === "vaero:cart:decrease"){
+    Actions.decreaseVaeroCartItem(
+        button.dataset.product
+    );
+}
+
+if(action === "vaero:cart:remove"){
+    Actions.removeVaeroCartItem(
+        button.dataset.product
+    );
+}
+
+if(action === "vaero:cart:clear"){
+    Actions.clearVaeroCart();
 }
 
 });
