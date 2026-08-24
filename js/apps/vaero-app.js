@@ -833,6 +833,137 @@ clearCart(){
 
 },
 
+    getPhysicalAssetsStorageKey(){
+
+    return `vaero:physical-assets:${this.getCustomerId()}`;
+
+},
+
+    loadPhysicalAssets(){
+
+    const savedAssets =
+        localStorage.getItem(
+            this.getPhysicalAssetsStorageKey()
+        );
+
+    if(!savedAssets){
+        return [];
+    }
+
+    try {
+
+        const assets =
+            JSON.parse(savedAssets);
+
+        return Array.isArray(assets)
+            ? assets
+            : [];
+
+    } catch(error){
+
+        console.error(
+            "VAERO fiziksel varlıkları okunamadı:",
+            error
+        );
+
+        return [];
+
+    }
+
+},
+
+    createPhysicalAssetsFromOrder(order){
+
+    if(
+        !order ||
+        !order.id ||
+        !Array.isArray(order.items)
+    ){
+        return [];
+    }
+
+    const assets =
+        this.loadPhysicalAssets();
+
+    const now =
+        Date.now();
+
+    const createdAssets = [];
+
+    order.items.forEach(item => {
+
+        const sourceKey =
+            `${order.id}:${item.key}`;
+
+        const alreadyExists =
+            assets.some(asset =>
+                asset.sourceKey ===
+                sourceKey
+            );
+
+        if(alreadyExists){
+            return;
+        }
+
+        const product =
+            this.products[item.productId];
+
+        if(!product){
+            return;
+        }
+
+        const variant =
+            this.getProductVariant(
+                product.id,
+                item.variantId
+            );
+
+        const asset = {
+            id:
+                crypto.randomUUID(),
+            sourceKey,
+            sourceOrderId:
+                order.id,
+            ownerId:
+                order.customerId,
+            productId:
+                product.id,
+            variantId:
+                item.variantId || null,
+            sku:
+                item.sku,
+            name:
+                product.name,
+            type:
+                product.type,
+            variantLabel:
+                variant
+                    ? variant.label
+                    : null,
+            quantity:
+                item.quantity,
+            status:
+                "ordered",
+            createdAt:
+                now,
+            updatedAt:
+                now
+        };
+
+        assets.unshift(asset);
+        createdAssets.push(asset);
+
+    });
+
+    localStorage.setItem(
+        this.getPhysicalAssetsStorageKey(),
+        JSON.stringify(assets)
+    );
+
+    return createdAssets;
+
+},
+
     loadOrders(){
 
     const savedOrders =
@@ -890,8 +1021,14 @@ clearCart(){
         );
 
     if(existingOrder){
-        return existingOrder;
-    }
+
+    this.createPhysicalAssetsFromOrder(
+        existingOrder
+    );
+
+    return existingOrder;
+
+}
 
     const now =
         Date.now();
@@ -948,6 +1085,10 @@ clearCart(){
         this.getCheckoutStorageKey(),
         JSON.stringify(checkout)
     );
+
+        this.createPhysicalAssetsFromOrder(
+    order
+);
 
     return order;
 
@@ -2242,6 +2383,24 @@ ${
         order.totals.grandTotal ??
         order.totals.subtotal;
 
+        const orderAssets =
+    this.loadPhysicalAssets()
+        .filter(asset =>
+            asset.sourceOrderId ===
+            order.id
+        );
+
+const assetCount =
+    orderAssets.reduce(
+        (totalQuantity, asset) =>
+            totalQuantity +
+            (
+                Number(asset.quantity) ||
+                0
+            ),
+        0
+    );
+
     return `
         <section class="vaero-commerce-app">
 
@@ -2257,6 +2416,8 @@ ${
 
                 <p>
                     Siparişin başarıyla oluşturuldu.
+                    ${assetCount} fiziksel ürün kişisel
+                    Assets kayıtlarına eklendi.
                 </p>
 
                 <strong>
