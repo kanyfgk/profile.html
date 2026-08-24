@@ -335,6 +335,35 @@ clearVaeroCart(){
 
 },
 
+    startVaeroCheckout(){
+
+    if(
+        !window.VaeroApp ||
+        typeof VaeroApp.createCheckoutDraft !==
+            "function"
+    ){
+        return false;
+    }
+
+    const checkout =
+        VaeroApp.createCheckoutDraft();
+
+    if(!checkout){
+        return false;
+    }
+
+    VAERO.engine.currentVaeroCheckout =
+        checkout;
+
+    console.log(
+        "VAERO checkout taslağı oluşturuldu:",
+        checkout
+    );
+
+    return true;
+
+},
+
     openWorlds(){
 
         return VAERO.engine.setView(
@@ -3028,6 +3057,10 @@ case "vaero:cart:remove":
 
 case "vaero:cart:clear":
     Actions.clearVaeroCart();
+    break;
+
+                case "vaero:checkout":
+    Actions.startVaeroCheckout();
     break;
 
             case "brain:open":
