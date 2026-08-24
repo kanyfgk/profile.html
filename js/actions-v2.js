@@ -237,12 +237,16 @@ openVaeroCart(){
 
 },
 
-increaseVaeroCartItem(productId){
+increaseVaeroCartItem(
+    productId,
+    variantId = null
+){
 
     const cart =
         VaeroApp.increaseCartItem(
-            productId
-        );
+    productId,
+    variantId
+);
 
     if(!cart){
         return false;
@@ -259,12 +263,16 @@ increaseVaeroCartItem(productId){
 
 },
 
-decreaseVaeroCartItem(productId){
+decreaseVaeroCartItem(
+    productId,
+    variantId = null
+){
 
     const cart =
         VaeroApp.decreaseCartItem(
-            productId
-        );
+    productId,
+    variantId
+);
 
     if(!cart){
         return false;
@@ -281,11 +289,15 @@ decreaseVaeroCartItem(productId){
 
 },
 
-removeVaeroCartItem(productId){
+removeVaeroCartItem(
+    productId,
+    variantId = null
+){
 
     const cart =
         VaeroApp.removeFromCart(
-            productId
+            productId,
+            variantId
         );
 
     if(!cart){
@@ -2995,19 +3007,22 @@ case "vaero:cart":
 
 case "vaero:cart:increase":
     Actions.increaseVaeroCartItem(
-        button.dataset.product
+        button.dataset.product,
+        button.dataset.variant || null
     );
     break;
 
 case "vaero:cart:decrease":
     Actions.decreaseVaeroCartItem(
-        button.dataset.product
+        button.dataset.product,
+        button.dataset.variant || null
     );
     break;
-
+                
 case "vaero:cart:remove":
     Actions.removeVaeroCartItem(
-        button.dataset.product
+        button.dataset.product,
+        button.dataset.variant || null
     );
     break;
 
