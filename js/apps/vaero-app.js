@@ -1008,6 +1008,46 @@ formatMoney(
 
 },
 
+    startCheckoutPayment(){
+
+    const checkout =
+        this.loadCheckoutDraft();
+
+    if(
+        !checkout ||
+        !checkout.payment?.method ||
+        checkout.items.length === 0
+    ){
+        return null;
+    }
+
+    const now =
+        Date.now();
+
+    checkout.status =
+        "payment-pending";
+
+    checkout.payment = {
+        ...checkout.payment,
+        status: "pending",
+        attemptId:
+            crypto.randomUUID(),
+        transactionId: null,
+        startedAt: now
+    };
+
+    checkout.updatedAt =
+        now;
+
+    localStorage.setItem(
+        this.getCheckoutStorageKey(),
+        JSON.stringify(checkout)
+    );
+
+    return checkout;
+
+},
+
     render(){
 
         const page =
