@@ -8,8 +8,12 @@
     display:flex;
     align-items:flex-start;
     justify-content:space-between;
-    gap:24px;
+    gap:14px;
     margin-bottom:28px;
+}
+
+.vaero-commerce-header > div:first-child{
+    margin-right:auto;
 }
 
 .vaero-commerce-eyebrow,
@@ -41,7 +45,9 @@
 .vaero-commerce-id-btn{
     display:flex;
     align-items:center;
+    justify-content:center;
     gap:14px;
+    flex-shrink:0;
     min-height:44px;
     padding:0 18px;
     border:1px solid rgba(220,184,125,.22);
@@ -49,6 +55,19 @@
     background:rgba(255,255,255,.025);
     color:#f4ecdf;
     cursor:pointer;
+}
+
+.vaero-commerce-id-btn span{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    min-width:22px;
+    height:22px;
+    padding:0 6px;
+    border-radius:999px;
+    background:rgba(217,179,115,.14);
+    color:#e8c58e;
+    font-size:11px;
 }
 
 .vaero-commerce-hero{
@@ -224,6 +243,96 @@
     font-size:12px;
 }
 
+.vaero-cart-items{
+    display:grid;
+    gap:12px;
+    margin-top:8px;
+}
+
+.vaero-cart-item{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:24px;
+    min-height:112px;
+    padding:22px 24px;
+    border:1px solid rgba(255,255,255,.07);
+    border-radius:22px;
+    background:
+        radial-gradient(
+            circle at 88% 30%,
+            rgba(77,128,165,.1),
+            transparent 28%
+        ),
+        linear-gradient(
+            145deg,
+            rgba(255,255,255,.045),
+            rgba(255,255,255,.015)
+        );
+}
+
+.vaero-cart-item-copy{
+    display:flex;
+    flex-direction:column;
+    align-items:flex-start;
+    gap:7px;
+    min-width:0;
+}
+
+.vaero-cart-item-copy strong{
+    color:#f7f1e7;
+    font-size:20px;
+    font-weight:500;
+}
+
+.vaero-cart-item-copy small{
+    color:rgba(255,255,255,.48);
+    font-size:12px;
+    line-height:1.4;
+}
+
+.vaero-cart-item-controls{
+    display:flex;
+    align-items:center;
+    justify-content:flex-end;
+    gap:10px;
+    flex-shrink:0;
+}
+
+.vaero-cart-item-controls button{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    min-width:38px;
+    min-height:38px;
+    padding:0 12px;
+    border:1px solid rgba(224,188,125,.18);
+    border-radius:999px;
+    background:rgba(255,255,255,.025);
+    color:#ead1a8;
+    cursor:pointer;
+}
+
+.vaero-cart-item-controls button:hover{
+    border-color:rgba(224,188,125,.42);
+    background:rgba(224,188,125,.08);
+}
+
+.vaero-cart-item-controls span{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    min-width:30px;
+    color:#f8f1e6;
+    font-size:14px;
+    font-weight:600;
+}
+
+.vaero-cart-item-controls button:last-child{
+    margin-left:8px;
+    color:rgba(255,255,255,.56);
+}
+
 @media (max-width:700px){
 
     .vaero-commerce-app{
@@ -231,8 +340,14 @@
     }
 
     .vaero-commerce-header{
-        gap:12px;
+        flex-wrap:wrap;
+        gap:10px;
         margin-bottom:18px;
+    }
+
+    .vaero-commerce-header > div:first-child{
+        flex-basis:100%;
+        margin-right:0;
     }
 
     .vaero-commerce-header h1{
@@ -298,5 +413,28 @@
         max-width:90px;
         font-size:9px;
         line-height:1.3;
+    }
+
+    .vaero-cart-item{
+        align-items:flex-start;
+        flex-direction:column;
+        gap:18px;
+        min-height:0;
+        padding:18px;
+        border-radius:18px;
+    }
+
+    .vaero-cart-item-copy strong{
+        font-size:18px;
+    }
+
+    .vaero-cart-item-controls{
+        width:100%;
+        justify-content:flex-start;
+        flex-wrap:wrap;
+    }
+
+    .vaero-cart-item-controls button:last-child{
+        margin-left:auto;
     }
 }
