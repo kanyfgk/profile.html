@@ -4,6 +4,8 @@ const VaeroApp = {
 
     title: "VAERO",
 
+    cartStorageVersion: 1,
+
     products: {
 
         device: {
@@ -32,6 +34,236 @@ const VaeroApp = {
             description:
                 "Serin, sakin ve ferah karakteriyle daha açık bir atmosfer oluşturur."
         }
+
+    },
+
+    getCustomerId(){
+
+        const entity =
+            VAERO.engine.currentEntity;
+
+        return entity && entity.id
+            ? entity.id
+            : "guest";
+
+    },
+
+    getCartStorageKey(){
+
+        return `vaero:commerce:cart:${this.getCustomerId()}`;
+
+    },
+
+    createEmptyCart(){
+
+        const now = Date.now();
+
+        return {
+            version: this.cartStorageVersion,
+            customerId: this.getCustomerId(),
+            currency: "TRY",
+            status: "active",
+            items: [],
+            createdAt: now,
+            updatedAt: now
+        };
+
+    },
+
+    normalizeCart(rawCart){
+
+        if(
+            !rawCart ||
+            typeof rawCart !== "object"
+        ){
+            return this.createEmptyCart();
+        }
+
+        const normalizedItems =
+            Array.isArray(rawCart.items)
+                ? rawCart.items
+                    .map(item => {
+
+                        if(
+                            !item ||
+                            typeof item !== "object"
+                        ){
+                            return null;
+                        }
+
+                        const product =
+                            this.products[item.productId];
+
+                        if(!product){
+                            return null;
+                        }
+
+                        const quantity =
+                            Math.max(
+                                1,
+                                Math.floor(
+                                    Number(item.quantity) || 1
+                                )
+                            );
+
+                        return {
+                            productId: product.id,
+                            quantity,
+                            addedAt:
+                                Number(item.addedAt) ||
+                                Date.now(),
+                            updatedAt:
+                                Number(item.updatedAt) ||
+                                Date.now()
+                        };
+
+                    })
+                    .filter(Boolean)
+                : [];
+
+        return {
+            version: this.cartStorageVersion,
+            customerId: this.getCustomerId(),
+            currency: "TRY",
+            status: "active",
+            items: normalizedItems,
+            createdAt:
+                Number(rawCart.createdAt) ||
+                Date.now(),
+            updatedAt:
+                Number(rawCart.updatedAt) ||
+                Date.now()
+        };
+
+    },
+
+    loadCart(){
+
+        const storageKey =
+            this.getCartStorageKey();
+
+        const savedCart =
+            localStorage.getItem(storageKey);
+
+        if(!savedCart){
+            return this.createEmptyCart();
+        }
+
+        try {
+
+            return this.normalizeCart(
+                JSON.parse(savedCart)
+            );
+
+        } catch(error){
+
+            console.error(
+                "VAERO sepeti okunamadı:",
+                error
+            );
+
+            return this.createEmptyCart();
+
+        }
+
+    },
+
+    saveCart(cart){
+
+        const normalizedCart =
+            this.normalizeCart(cart);
+
+        normalizedCart.updatedAt =
+            Date.now();
+
+        try {
+
+            localStorage.setItem(
+                this.getCartStorageKey(),
+                JSON.stringify(normalizedCart)
+            );
+
+            return normalizedCart;
+
+        } catch(error){
+
+            console.error(
+                "VAERO sepeti kaydedilemedi:",
+                error
+            );
+
+            return null;
+
+        }
+
+    },
+
+    addToCart(productId, quantity = 1){
+
+        const product =
+            this.products[productId];
+
+        if(!product){
+            console.error(
+                "Sepete eklenemedi: ürün bulunamadı.",
+                productId
+            );
+
+            return null;
+        }
+
+        const safeQuantity =
+            Math.max(
+                1,
+                Math.floor(
+                    Number(quantity) || 1
+                )
+            );
+
+        const cart =
+            this.loadCart();
+
+        const existingItem =
+            cart.items.find(item =>
+                item.productId === productId
+            );
+
+        const now =
+            Date.now();
+
+        if(existingItem){
+
+            existingItem.quantity +=
+                safeQuantity;
+
+            existingItem.updatedAt =
+                now;
+
+        }else{
+
+            cart.items.push({
+                productId,
+                quantity: safeQuantity,
+                addedAt: now,
+                updatedAt: now
+            });
+
+        }
+
+        return this.saveCart(cart);
+
+    },
+
+    getCartItemCount(){
+
+        const cart =
+            this.loadCart();
+
+        return cart.items.reduce(
+            (total, item) =>
+                total + item.quantity,
+            0
+        );
 
     },
 
