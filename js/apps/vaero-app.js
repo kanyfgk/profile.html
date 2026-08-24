@@ -4,7 +4,61 @@ const VaeroApp = {
 
     title: "VAERO",
 
+    products: {
+
+        device: {
+            id: "device",
+            type: "CİHAZ",
+            name: "VAERO",
+            subtitle: "Kişisel Atmosfer Sistemi",
+            description:
+                "VAERO atmosferlerini fiziksel dünyaya taşıyan araç içi kişisel atmosfer sistemi."
+        },
+
+        "white-tea": {
+            id: "white-tea",
+            type: "ATMOSFER",
+            name: "White Tea",
+            subtitle: "Temiz ve ferah atmosfer",
+            description:
+                "Hafif, temiz ve dengeli karakteriyle yolculuğun atmosferini dönüştürür."
+        },
+
+        ocean: {
+            id: "ocean",
+            type: "ATMOSFER",
+            name: "Ocean",
+            subtitle: "Serin ve dengeli atmosfer",
+            description:
+                "Serin, sakin ve ferah karakteriyle daha açık bir atmosfer oluşturur."
+        }
+
+    },
+
     render(){
+
+        const page =
+            VAERO.engine.currentEntityPage || "vaero";
+
+        if(page === "vaero-device"){
+            return this.renderDevice();
+        }
+
+        if(page === "vaero-collection"){
+            return this.renderCollection();
+        }
+
+        if(page === "vaero-product"){
+            return this.renderProduct(
+                VAERO.engine.currentVaeroProduct
+            );
+        }
+
+        return this.renderHome();
+
+    },
+
+    renderHome(){
 
         return `
             <section class="vaero-commerce-app">
@@ -12,6 +66,7 @@ const VaeroApp = {
                 <header class="vaero-commerce-header">
 
                     <div>
+
                         <span class="vaero-commerce-eyebrow">
                             VAERO PHYSICAL
                         </span>
@@ -23,6 +78,7 @@ const VaeroApp = {
                         <p>
                             VAERO cihazını ve atmosfer koleksiyonlarını keşfet.
                         </p>
+
                     </div>
 
                     <button
@@ -91,64 +147,94 @@ const VaeroApp = {
 
                     </div>
 
-                    <div class="vaero-commerce-products">
+                    ${this.renderProductGrid()}
 
+                </section>
+
+            </section>
+        `;
+
+    },
+
+    renderProductGrid(){
+
+        return `
+            <div class="vaero-commerce-products">
+
+                ${Object.values(this.products)
+                    .map(product => `
                         <button
                             type="button"
                             class="vaero-product-card"
-                            data-product="device"
+                            data-product="${product.id}"
                             data-action="vaero:product"
                         >
+
                             <span class="vaero-product-type">
-                                CİHAZ
+                                ${product.type}
                             </span>
 
                             <strong>
-                                VAERO
+                                ${product.name}
                             </strong>
 
                             <small>
-                                Kişisel Atmosfer Sistemi
+                                ${product.subtitle}
                             </small>
+
                         </button>
+                    `)
+                    .join("")}
 
-                        <button
-                            type="button"
-                            class="vaero-product-card"
-                            data-product="white-tea"
-                            data-action="vaero:product"
-                        >
-                            <span class="vaero-product-type">
-                                ATMOSFER
-                            </span>
+            </div>
+        `;
 
-                            <strong>
-                                White Tea
-                            </strong>
+    },
 
-                            <small>
-                                Temiz ve ferah atmosfer
-                            </small>
-                        </button>
+    renderDevice(){
 
-                        <button
-                            type="button"
-                            class="vaero-product-card"
-                            data-product="ocean"
-                            data-action="vaero:product"
-                        >
-                            <span class="vaero-product-type">
-                                ATMOSFER
-                            </span>
+        const device =
+            this.products.device;
 
-                            <strong>
-                                Ocean
-                            </strong>
+        return `
+            <section class="vaero-commerce-app">
 
-                            <small>
-                                Serin ve dengeli atmosfer
-                            </small>
-                        </button>
+                ${this.renderBackButton()}
+
+                <section class="vaero-commerce-hero">
+
+                    <div class="vaero-commerce-hero-copy">
+
+                        <span>
+                            ${device.type}
+                        </span>
+
+                        <h2>
+                            ${device.name}
+                        </h2>
+
+                        <p>
+                            ${device.description}
+                        </p>
+
+                        <div class="vaero-commerce-actions">
+
+                            <button
+                                type="button"
+                                data-product="device"
+                                data-action="vaero:product"
+                            >
+                                Ürünü İncele
+                            </button>
+
+                            <button
+                                type="button"
+                                data-action="vaero:collection"
+                            >
+                                Atmosferleri Keşfet
+                            </button>
+
+                        </div>
 
                     </div>
 
@@ -156,6 +242,121 @@ const VaeroApp = {
 
             </section>
         `;
+
+    },
+
+    renderCollection(){
+
+        return `
+            <section class="vaero-commerce-app">
+
+                ${this.renderBackButton()}
+
+                <header class="vaero-commerce-header">
+
+                    <div>
+
+                        <span class="vaero-commerce-eyebrow">
+                            ATMOSFER KOLEKSİYONU
+                        </span>
+
+                        <h1>
+                            VAERO Atmospheres
+                        </h1>
+
+                        <p>
+                            Fiziksel dünyan için oluşturulan VAERO koleksiyonunu keşfet.
+                        </p>
+
+                    </div>
+
+                </header>
+
+                <section class="vaero-commerce-section">
+
+                    ${this.renderProductGrid()}
+
+                </section>
+
+            </section>
+        `;
+
+    },
+
+    renderProduct(productId){
+
+        const product =
+            this.products[productId];
+
+        if(!product){
+            return `
+                <section class="vaero-commerce-app">
+
+                    ${this.renderBackButton()}
+
+                    <p>
+                        Ürün bulunamadı.
+                    </p>
+
+                </section>
+            `;
+        }
+
+        return `
+            <section class="vaero-commerce-app">
+
+                ${this.renderBackButton()}
+
+                <section class="vaero-commerce-hero">
+
+                    <div class="vaero-commerce-hero-copy">
+
+                        <span>
+                            ${product.type}
+                        </span>
+
+                        <h2>
+                            ${product.name}
+                        </h2>
+
+                        <p>
+                            ${product.description}
+                        </p>
+
+                        <div class="vaero-commerce-actions">
+
+                            <button
+                                type="button"
+                                data-action="vaero:buy"
+                                data-product="${product.id}"
+                            >
+                                Satın Al
+                            </button>
+
+                        </div>
+
+                    </div>
+
+                </section>
+
+            </section>
+        `;
+
+    },
+
+    renderBackButton(){
+
+        return `
+            <button
+                type="button"
+                class="vaero-commerce-id-btn"
+                data-action="app:vaero"
+                style="margin-bottom:18px;"
+            >
+                ← VAERO
+            </button>
+        `;
+
     }
 
 };
