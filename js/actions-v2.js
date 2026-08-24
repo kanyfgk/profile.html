@@ -108,6 +108,41 @@ openVaeroProduct(productId){
 
 },
 
+    addVaeroProductToCart(productId){
+
+    if(
+        !window.VaeroApp ||
+        typeof VaeroApp.addToCart !== "function"
+    ){
+        console.error(
+            "VAERO sepet sistemi bulunamadı."
+        );
+
+        return false;
+    }
+
+    const cart =
+        VaeroApp.addToCart(productId, 1);
+
+    if(!cart){
+        return false;
+    }
+
+    VAERO.engine.currentVaeroCart =
+        cart;
+
+    console.log(
+        "VAERO ürünü sepete eklendi:",
+        {
+            productId,
+            cart
+        }
+    );
+
+    return true;
+
+},
+
     createEntity(){
         const input = document.getElementById("entityNameInput");
 
@@ -2440,6 +2475,12 @@ if(action === "vaero:collection"){
 
 if(action === "vaero:product"){
     Actions.openVaeroProduct(
+        button.dataset.product
+    );
+}
+
+    if(action === "vaero:buy"){
+    Actions.addVaeroProductToCart(
         button.dataset.product
     );
 }
