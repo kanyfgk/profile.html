@@ -10,397 +10,216 @@ const Renderer = {
             );
 
         if(!root){
+
             console.error(
-                "Engine root not found"
+                "Engine root not found."
             );
-            return;
+
+            return false;
+
         }
 
         const components =
             VAERO.get("components");
 
-        const currentWorld =
-            VAERO.engine.currentWorld;
+        if(!components){
+
+            console.error(
+                "Components service not found."
+            );
+
+            return false;
+
+        }
+
+        const engine =
+            VAERO.engine;
+
+        if(!engine){
+
+            console.error(
+                "Engine state is not available."
+            );
+
+            return false;
+
+        }
 
         const rootEntity =
-            VAERO.engine.rootEntity ||
+            engine.rootEntity ||
             entity;
 
-        const openedEntity =
-            VAERO.engine.currentOpenedEntity;
+        const view =
+            engine.currentView ||
+            "home";
 
-        const currentEntityPage =
-            VAERO.engine.currentEntityPage;
+        document.body.dataset.page =
+            view;
 
-        const isVaeroApp =
-            currentEntityPage &&
-            currentEntityPage.startsWith("vaero");
+        let screenHTML = "";
+
+        try {
+
+            screenHTML =
+                this.renderScreen({
+                    view,
+                    engine,
+                    components,
+                    rootEntity
+                });
+
+        } catch(error){
+
+            console.error(
+                "Screen render failed:",
+                error
+            );
+
+            screenHTML =
+                components.errorState
+                    ? components.errorState(
+                        "Bu ekran şu anda açılamıyor."
+                    )
+                    : `
+                        <section class="section">
+                            <div class="eyebrow">
+                                EKRAN HATASI
+                            </div>
+
+                            <h1>
+                                Bu ekran şu anda açılamıyor.
+                            </h1>
+                        </section>
+                    `;
+
+        }
 
         root.innerHTML = `
-            <main class="vaero-shell">
+            <main
+                class="vaero-shell"
+                data-engine-view="${view}"
+            >
+                <div class="engine-screen">
+                    ${screenHTML}
+                </div>
 
-                <section class="section">
-
-                    ${
-                        isVaeroApp
-                            ? ""
-                            : components.hero(rootEntity)
-                    }
-
-                    ${
-                        isVaeroApp
-                            ? (
-                                window.VaeroApp &&
-                                typeof window.VaeroApp.render === "function"
-                                    ? window.VaeroApp.render()
-                                    : "<p>VAERO uygulaması yüklenemedi.</p>"
-                              )
-                            : openedEntity
-                                ? components.entityApp(
-                                    openedEntity
-                                  )
-                                : currentWorld
-                                    ? components.worldView(
-                                        currentWorld
-                                      )
-                                    : components.home()
-                    }
-
-                </section>
-
-                ${components.navigation()}
-
-                ${components.modal()}
-
-                ${components.idModal()}
-
-                ${components.brainPanel()}
-
+                ${components.navigation({
+                    view,
+                    page:
+                        engine.currentEntityPage ||
+                        null
+                })}
             </main>
         `;
 
+        return true;
+
     },
 
-    renderHome(){
+    renderScreen({
+        view,
+        engine,
+        components,
+        rootEntity
+    }){
 
-        return `
-            <section class="vaero-home">
+        switch(view){
 
-                <header class="vaero-home-header">
+            case "identity":
 
-                    <div class="vaero-home-heading">
+                return components.entityIdentity(
+                    engine.currentOpenedEntity ||
+                    rootEntity
+                );
 
-                        <span class="vaero-home-eyebrow">
-                            VAERO ENGINE
-                        </span>
+            case "profile":
 
-                        <h1>
-                            Yaşayan Dijital Evren
-                        </h1>
+                return components.entityProfile(
+                    engine.currentOpenedEntity ||
+                    rootEntity
+                );
 
-                        <p>
-                            Dijital kimliğin, bağlantıların ve
-                            gelişimin tek bir canlı sistemde
-                            birleşiyor.
-                        </p>
+            case "create":
 
-                    </div>
+                return components.createView(
+                    rootEntity
+                );
 
-                    <div class="vaero-engine-status">
+            case "worlds": {
 
-                        <span
-                            class="vaero-engine-status-dot"
-                            aria-hidden="true"
-                        ></span>
+                const worldService =
+                    VAERO.get("world");
 
-                        <span>
-                            Engine çevrimiçi
-                        </span>
+                const worlds =
+                    worldService &&
+                    typeof worldService.all ===
+                        "function"
+                        ? worldService.all()
+                        : [];
 
-                    </div>
+                return components.worldsView(
+                    worlds
+                );
 
-                </header>
+            }
 
-                <section class="vaero-home-actions">
+            case "world":
 
-                    <div class="vaero-home-section-heading">
+                if(
+                    !engine.currentWorld ||
+                    !engine.currentWorld.id
+                ){
 
-                        <div>
-                            <span>BAŞLANGIÇ</span>
+                    console.warn(
+                        "World view requested without a valid world."
+                    );
 
-                            <h2>
-                                Bugün ne yapmak istiyorsun?
-                            </h2>
-                        </div>
+                    const worldService =
+                        VAERO.get("world");
 
-                        <p>
-                            VAERO dünyanda ilerlemek için
-                            bir alan seç.
-                        </p>
+                    return components.worldsView(
+                        worldService &&
+                        typeof worldService.all ===
+                            "function"
+                            ? worldService.all()
+                            : []
+                    );
 
-                    </div>
+                }
 
-                    <div class="vaero-home-grid">
+                return components.worldView(
+                    engine.currentWorld
+                );
 
-                        <button
-                            type="button"
-                            class="vaero-home-card vaero-home-card-primary"
-                            data-action="worlds:open"
-                        >
-                            <span class="vaero-home-card-icon">
-                                <svg viewBox="0 0 24 24">
-                                    <circle
-                                        cx="12"
-                                        cy="12"
-                                        r="9"
-                                    ></circle>
+            case "entity":
 
-                                    <path
-                                        d="M3 12h18"
-                                    ></path>
+                if(!engine.currentOpenedEntity){
 
-                                    <path
-                                        d="M12 3c2.4 2.5 3.7 5.5 3.7 9S14.4 18.5 12 21"
-                                    ></path>
+                    return components.errorState(
+                        "Açılacak varlık bulunamadı."
+                    );
 
-                                    <path
-                                        d="M12 3C9.6 5.5 8.3 8.5 8.3 12S9.6 18.5 12 21"
-                                    ></path>
-                                </svg>
-                            </span>
+                }
 
-                            <span class="vaero-home-card-content">
+                return components.entityApp(
+                    engine.currentOpenedEntity
+                );
 
-                                <strong>
-                                    Dünyaları Keşfet
-                                </strong>
+            case "home":
+            default:
 
-                                <small>
-                                    Yeni toplulukları, fikirleri
-                                    ve fırsatları keşfet.
-                                </small>
+                return components.home(
+                    rootEntity
+                );
 
-                            </span>
-
-                            <span class="vaero-home-card-arrow">
-                                →
-                            </span>
-
-                        </button>
-
-                        <button
-                            type="button"
-                            class="vaero-home-card"
-                            data-home-action="profile"
-                        >
-
-                            <span class="vaero-home-card-icon">
-                                <svg viewBox="0 0 24 24">
-                                    <circle
-                                        cx="12"
-                                        cy="8"
-                                        r="4"
-                                    ></circle>
-
-                                    <path
-                                        d="M4.5 21c.8-4.2 3.3-6.5 7.5-6.5s6.7 2.3 7.5 6.5"
-                                    ></path>
-                                </svg>
-                            </span>
-
-                            <span class="vaero-home-card-content">
-
-                                <strong>
-                                    Profilim
-                                </strong>
-
-                                <small>
-                                    Kimliğini, yönünü ve
-                                    görünürlüğünü yönet.
-                                </small>
-
-                            </span>
-
-                            <span class="vaero-home-card-arrow">
-                                →
-                            </span>
-
-                        </button>
-
-                        <button
-                            type="button"
-                            class="vaero-home-card"
-                            data-action="brain:open"
-                        >
-
-                            <span class="vaero-home-card-icon">
-                                <svg viewBox="0 0 24 24">
-                                    <path
-                                        d="M9.2 4.2A4 4 0 0 0 5 8.1v.7a4 4 0 0 0-1.5 6.8A4 4 0 0 0 7.4 20H10V4.6a3.8 3.8 0 0 0-.8-.4Z"
-                                    ></path>
-
-                                    <path
-                                        d="M14.8 4.2A4 4 0 0 1 19 8.1v.7a4 4 0 0 1 1.5 6.8A4 4 0 0 1 16.6 20H14V4.6c.3-.2.5-.3.8-.4Z"
-                                    ></path>
-
-                                    <path
-                                        d="M10 9H7.5"
-                                    ></path>
-
-                                    <path
-                                        d="M14 9h2.5"
-                                    ></path>
-
-                                    <path
-                                        d="M10 15H7.5"
-                                    ></path>
-
-                                    <path
-                                        d="M14 15h2.5"
-                                    ></path>
-                                </svg>
-                            </span>
-
-                            <span class="vaero-home-card-content">
-
-                                <strong>
-                                    Brain
-                                </strong>
-
-                                <small>
-                                    Sorular sor, yön bul ve
-                                    sisteminle birlikte düşün.
-                                </small>
-
-                            </span>
-
-                            <span class="vaero-home-card-arrow">
-                                →
-                            </span>
-
-                        </button>
-
-                        <button
-                            type="button"
-                            class="vaero-home-card"
-                            data-home-action="create-world"
-                        >
-
-                            <span class="vaero-home-card-icon">
-                                <svg viewBox="0 0 24 24">
-                                    <path
-                                        d="M12 5v14"
-                                    ></path>
-
-                                    <path
-                                        d="M5 12h14"
-                                    ></path>
-                                </svg>
-                            </span>
-
-                            <span class="vaero-home-card-content">
-
-                                <strong>
-                                    Yeni Dünya
-                                </strong>
-
-                                <small>
-                                    Bir proje, topluluk veya
-                                    dijital yapı başlat.
-                                </small>
-
-                            </span>
-
-                            <span class="vaero-home-card-arrow">
-                                →
-                            </span>
-
-                        </button>
-
-                    </div>
-
-                </section>
-
-                <section class="vaero-home-overview">
-
-                    <div class="vaero-overview-header">
-
-                        <div>
-                            <span>EVRENİN</span>
-
-                            <h2>
-                                İlk görünüm
-                            </h2>
-                        </div>
-
-                        <span class="vaero-overview-live">
-                            Canlı
-                        </span>
-
-                    </div>
-
-                    <div class="vaero-overview-grid">
-
-                        <article class="vaero-overview-item">
-
-                            <span>
-                                Kimlik
-                            </span>
-
-                            <strong>
-                                Hazır
-                            </strong>
-
-                            <small>
-                                Dijital kimliğin Engine'e bağlı.
-                            </small>
-
-                        </article>
-
-                        <article class="vaero-overview-item">
-
-                            <span>
-                                Yolculuk
-                            </span>
-
-                            <strong>
-                                Başladı
-                            </strong>
-
-                            <small>
-                                İlk keşif seçimlerin kaydedildi.
-                            </small>
-
-                        </article>
-
-                        <article class="vaero-overview-item">
-
-                            <span>
-                                Bağlantılar
-                            </span>
-
-                            <strong>
-                                Beklemede
-                            </strong>
-
-                            <small>
-                                Uygun eşleşmeler zamanla oluşacak.
-                            </small>
-
-                        </article>
-
-                    </div>
-
-                </section>
-
-            </section>
-        `;
+        }
 
     }
 
 };
 
-VAERO.renderer = Renderer;
+VAERO.renderer =
+    Renderer;
 
 VAERO.register(
     "renderer",

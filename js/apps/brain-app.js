@@ -1,48 +1,106 @@
 const BrainApp = {
 
     render(){
+
         return `
-            <div id="brainPanel" class="brain-panel">
+            <section
+                id="brainPanel"
+                class="brain-panel"
+                role="dialog"
+                aria-modal="true"
+                aria-labelledby="brainPanelTitle"
+            >
+                <div
+                    class="brain-panel-handle"
+                    aria-hidden="true"
+                ></div>
 
-                <button
-                    class="brain-close"
-                    data-action="brain:close">
-                    ×
-                </button>
+                <header class="brain-panel-header">
 
-                <div class="eyebrow">VAERO BRAIN</div>
+                    <div>
+                        <span class="eyebrow">
+                            VAERO BRAIN
+                        </span>
 
-<h3 class="brain-title">
-    Brain Panel
-</h3>
+                        <h2
+                            id="brainPanelTitle"
+                            class="brain-title"
+                        >
+                            Birlikte düşünelim.
+                        </h2>
+                    </div>
 
-<p id="brainContextText" class="brain-context">
-    Bağlam bekleniyor.
-</p>
+                    <button
+                        type="button"
+                        class="brain-close"
+                        data-action="brain:close"
+                        aria-label="Brain panelini kapat"
+                    >
+                        ×
+                    </button>
 
-<div id="brainSuggestion" class="brain-suggestion">
-    💡 Hazırım. Bir komut verebilir veya son oturumlarına bakabilirsin.
-</div>
+                </header>
 
-<div id="brainMiniHistory" class="brain-mini-history"></div>
-<div id="brainHistory" class="brain-history"></div>
+                <p
+                    id="brainContextText"
+                    class="brain-context"
+                >
+                    Bulunduğun ekran algılanıyor.
+                </p>
 
-<input
-    id="brainInput"
-    class="brain-input"
-    placeholder="Brain'e yaz..."
-/>
+                <div
+                    id="brainSuggestion"
+                    class="brain-suggestion"
+                >
+                    Bir komut verebilir veya ne yapmak istediğini yazabilirsin.
+                </div>
 
-<button
-    class="primary-btn brain-send"
-    data-action="brain:send">
-    Gönder
-</button>
+                <div
+                    id="brainMiniHistory"
+                    class="brain-mini-history"
+                    aria-label="Son Brain mesajları"
+                ></div>
 
-            </div>
+                <div
+                    id="brainHistory"
+                    class="brain-history"
+                    aria-live="polite"
+                    aria-label="Brain sohbet geçmişi"
+                ></div>
+
+                <div class="brain-composer">
+
+                    <input
+                        id="brainInput"
+                        class="brain-input"
+                        type="text"
+                        maxlength="1000"
+                        placeholder="Brain’e yaz..."
+                        autocomplete="off"
+                        aria-label="Brain mesajı"
+                    >
+
+                    <button
+                        type="button"
+                        class="brain-send"
+                        data-action="brain:send"
+                        aria-label="Mesajı gönder"
+                    >
+                        →
+                    </button>
+
+                </div>
+
+                <small class="brain-input-hint">
+                    Göndermek için Enter
+                </small>
+
+            </section>
         `;
+
     }
 
 };
 
-window.BrainApp = BrainApp;
+window.BrainApp =
+    BrainApp; 
