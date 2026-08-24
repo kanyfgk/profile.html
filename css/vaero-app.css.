@@ -438,3 +438,46 @@
         margin-left:auto;
     }
 }
+
+.vaero-payment-methods{
+    margin-top:24px;
+    padding:22px;
+    border:1px solid rgba(255,255,255,.07);
+    border-radius:20px;
+    background:rgba(255,255,255,.025);
+}
+
+.vaero-payment-methods .vaero-commerce-actions{
+    margin-top:16px;
+}
+
+.vaero-payment-methods button.is-active{
+    border-color:rgba(224,188,125,.65);
+    background:rgba(224,188,125,.14);
+    color:#f0d39d;
+}
+
+.vaero-payment-status{
+    display:flex;
+    flex-direction:column;
+    gap:8px;
+    margin-top:22px;
+    padding:20px 22px;
+    border:1px solid rgba(224,188,125,.2);
+    border-radius:18px;
+    background:rgba(224,188,125,.06);
+}
+
+.vaero-payment-status strong{
+    color:#f6f1e8;
+    font-size:17px;
+}
+
+.vaero-payment-status small{
+    color:rgba(255,255,255,.58);
+}
+
+.vaero-commerce-actions button:disabled{
+    opacity:.45;
+    cursor:not-allowed;
+}
