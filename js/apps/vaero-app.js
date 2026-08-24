@@ -974,6 +974,10 @@ formatMoney(
     return this.renderCart();
 }
 
+        if(page === "vaero-checkout"){
+            return this.renderCheckout();
+        }
+        
         if(page === "vaero-product"){
             return this.renderProduct(
                 VAERO.engine.currentVaeroProduct
@@ -1622,6 +1626,191 @@ formatMoney(
     `;
 
 },
+
+    renderCheckout(){
+
+    const checkout =
+        this.loadCheckoutDraft();
+
+    if(
+        !checkout ||
+        checkout.items.length === 0
+    ){
+        return `
+            <section class="vaero-commerce-app">
+
+                ${this.renderBackButton()}
+
+                <header class="vaero-commerce-header">
+
+                    <div>
+
+                        <span class="vaero-commerce-eyebrow">
+                            VAERO CHECKOUT
+                        </span>
+
+                        <h1>
+                            Sipariş taslağı bulunamadı
+                        </h1>
+
+                        <p>
+                            Sepetine dönerek siparişini yeniden oluşturabilirsin.
+                        </p>
+
+                    </div>
+
+                </header>
+
+                <div class="vaero-commerce-actions">
+
+                    <button
+                        type="button"
+                        data-action="vaero:cart"
+                    >
+                        Sepete Dön
+                    </button>
+
+                </div>
+
+            </section>
+        `;
+    }
+
+    return `
+        <section class="vaero-commerce-app">
+
+            <button
+                type="button"
+                class="vaero-commerce-id-btn"
+                data-action="vaero:cart"
+                style="margin-bottom:18px;"
+            >
+                ← Sepete Dön
+            </button>
+
+            <header class="vaero-commerce-header">
+
+                <div>
+
+                    <span class="vaero-commerce-eyebrow">
+                        VAERO CHECKOUT
+                    </span>
+
+                    <h1>
+                        Siparişini Onayla
+                    </h1>
+
+                    <p>
+                        Ürünlerini kontrol et ve ödeme adımına ilerle.
+                    </p>
+
+                </div>
+
+            </header>
+
+            <section class="vaero-cart-items">
+
+                ${checkout.items
+                    .map(item => {
+
+                        const product =
+                            this.products[item.productId];
+
+                        if(!product){
+                            return "";
+                        }
+
+                        const variant =
+                            this.getProductVariant(
+                                product.id,
+                                item.variantId
+                            );
+
+                        const lineTotal =
+                            (
+                                Number(
+                                    item.unitPrice?.amount
+                                ) || 0
+                            ) * item.quantity;
+
+                        return `
+                            <article class="vaero-cart-item">
+
+                                <div class="vaero-cart-item-copy">
+
+                                    <span class="vaero-product-type">
+                                        ${product.type}
+                                    </span>
+
+                                    <strong>
+                                        ${product.name}
+                                    </strong>
+
+                                    <small>
+                                        ${
+                                            variant
+                                                ? variant.label
+                                                : product.subtitle
+                                        }
+                                        · ${item.quantity} adet
+                                    </small>
+
+                                </div>
+
+                                <strong>
+                                    ${this.formatMoney(
+                                        lineTotal,
+                                        checkout.currency
+                                    )}
+                                </strong>
+
+                            </article>
+                        `;
+
+                    })
+                    .join("")}
+
+            </section>
+
+            <section class="vaero-cart-summary">
+
+                <div>
+
+                    <span>
+                        Ara toplam
+                    </span>
+
+                    <strong>
+                        ${this.formatMoney(
+                            checkout.totals.subtotal,
+                            checkout.currency
+                        )}
+                    </strong>
+
+                </div>
+
+                <small>
+                    Teslimat ve vergiler ödeme öncesinde hesaplanacaktır.
+                </small>
+
+            </section>
+
+            <div class="vaero-commerce-actions">
+
+                <button
+                    type="button"
+                    data-action="vaero:payment"
+                >
+                    Ödeme Adımına Geç
+                </button>
+
+            </div>
+
+        </section>
+    `;
+
+},
+    
 renderCartButton(){
 
     const itemCount =
