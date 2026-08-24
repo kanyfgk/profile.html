@@ -5,37 +5,252 @@ const VaeroApp = {
     title: "VAERO",
 
     cartStorageVersion: 1,
+    baseCurrency: "USD",
+
+getCurrencyStorageKey(){
+
+    return `vaero:commerce:currency:${this.getCustomerId()}`;
+
+},
+
+getDisplayCurrency(){
+
+    const savedCurrency =
+        localStorage.getItem(
+            this.getCurrencyStorageKey()
+        );
+
+    return savedCurrency || this.baseCurrency;
+
+},
+
+setDisplayCurrency(currencyCode){
+
+    const normalizedCurrency =
+        String(currencyCode || "")
+            .trim()
+            .toUpperCase();
+
+    if(!normalizedCurrency){
+        return false;
+    }
+
+    localStorage.setItem(
+        this.getCurrencyStorageKey(),
+        normalizedCurrency
+    );
+
+    return true;
+
+},
 
     products: {
 
-        device: {
-            id: "device",
-            type: "CİHAZ",
-            name: "VAERO",
-            subtitle: "Kişisel Atmosfer Sistemi",
-            description:
-                "VAERO atmosferlerini fiziksel dünyaya taşıyan araç içi kişisel atmosfer sistemi."
+    device: {
+        id: "device",
+        sku: "VAERO-DEVICE-01",
+        type: "CİHAZ",
+        name: "VAERO",
+        subtitle: "Kişisel Atmosfer Sistemi",
+        description:
+            "VAERO atmosferlerini fiziksel dünyaya taşıyan araç içi kişisel atmosfer sistemi.",
+        price: {
+            amount: 52,
+            currency: "USD"
         },
-
-        "white-tea": {
-            id: "white-tea",
-            type: "ATMOSFER",
-            name: "White Tea",
-            subtitle: "Temiz ve ferah atmosfer",
-            description:
-                "Hafif, temiz ve dengeli karakteriyle yolculuğun atmosferini dönüştürür."
-        },
-
-        ocean: {
-            id: "ocean",
-            type: "ATMOSFER",
-            name: "Ocean",
-            subtitle: "Serin ve dengeli atmosfer",
-            description:
-                "Serin, sakin ve ferah karakteriyle daha açık bir atmosfer oluşturur."
-        }
-
+        variants: []
     },
+
+    "white-tea": {
+        id: "white-tea",
+        sku: "VAERO-WT",
+        type: "ATMOSFER",
+        name: "White Tea",
+        subtitle: "Temiz ve ferah atmosfer",
+        description:
+            "Hafif, temiz ve dengeli karakteriyle yolculuğun atmosferini dönüştürür.",
+        variants: [
+            {
+                id: "10ml",
+                sku: "VAERO-WT-10",
+                label: "10 ml",
+                volumeMl: 10,
+                price: {
+                    amount: 10,
+                    currency: "USD"
+                }
+            },
+            {
+                id: "30ml",
+                sku: "VAERO-WT-30",
+                label: "30 ml",
+                volumeMl: 30,
+                price: {
+                    amount: 24,
+                    currency: "USD"
+                }
+            },
+            {
+                id: "50ml",
+                sku: "VAERO-WT-50",
+                label: "50 ml",
+                volumeMl: 50,
+                price: {
+                    amount: 35,
+                    currency: "USD"
+                }
+            },
+            {
+                id: "100ml",
+                sku: "VAERO-WT-100",
+                label: "100 ml",
+                volumeMl: 100,
+                price: {
+                    amount: 60,
+                    currency: "USD"
+                }
+            }
+        ]
+    },
+
+    ocean: {
+        id: "ocean",
+        sku: "VAERO-OC",
+        type: "ATMOSFER",
+        name: "Ocean",
+        subtitle: "Serin ve dengeli atmosfer",
+        description:
+            "Serin, sakin ve ferah karakteriyle daha açık bir atmosfer oluşturur.",
+        variants: [
+            {
+                id: "10ml",
+                sku: "VAERO-OC-10",
+                label: "10 ml",
+                volumeMl: 10,
+                price: {
+                    amount: 10,
+                    currency: "USD"
+                }
+            },
+            {
+                id: "30ml",
+                sku: "VAERO-OC-30",
+                label: "30 ml",
+                volumeMl: 30,
+                price: {
+                    amount: 24,
+                    currency: "USD"
+                }
+            },
+            {
+                id: "50ml",
+                sku: "VAERO-OC-50",
+                label: "50 ml",
+                volumeMl: 50,
+                price: {
+                    amount: 35,
+                    currency: "USD"
+                }
+            },
+            {
+                id: "100ml",
+                sku: "VAERO-OC-100",
+                label: "100 ml",
+                volumeMl: 100,
+                price: {
+                    amount: 60,
+                    currency: "USD"
+                }
+            }
+        ]
+    }
+
+},
+
+    getProductVariant(productId, variantId = null){
+
+    const product =
+        this.products[productId];
+
+    if(!product){
+        return null;
+    }
+
+    const variants =
+        Array.isArray(product.variants)
+            ? product.variants
+            : [];
+
+    if(variants.length === 0){
+        return null;
+    }
+
+    return variants.find(variant =>
+        variant.id === variantId
+    ) || null;
+
+},
+
+getDefaultProductVariant(productId){
+
+    const product =
+        this.products[productId];
+
+    if(
+        !product ||
+        !Array.isArray(product.variants) ||
+        product.variants.length === 0
+    ){
+        return null;
+    }
+
+    return product.variants[0];
+
+},
+
+getCartItemKey(productId, variantId = null){
+
+    return variantId
+        ? `${productId}:${variantId}`
+        : productId;
+
+},
+
+getProductPrice(productId, variantId = null){
+
+    const product =
+        this.products[productId];
+
+    if(!product){
+        return null;
+    }
+
+    const variant =
+        this.getProductVariant(
+            productId,
+            variantId
+        );
+
+    const price =
+        variant
+            ? variant.price
+            : product.price;
+
+    if(
+        !price ||
+        typeof price.amount !== "number"
+    ){
+        return null;
+    }
+
+    return {
+        amount: price.amount,
+        currency:
+            price.currency ||
+            this.baseCurrency
+    };
+
+},
 
     getCustomerId(){
 
@@ -61,7 +276,8 @@ const VaeroApp = {
         return {
             version: this.cartStorageVersion,
             customerId: this.getCustomerId(),
-            currency: "TRY",
+            baseCurrency: this.baseCurrency,
+displayCurrency: this.getDisplayCurrency(),
             status: "active",
             items: [],
             createdAt: now,
@@ -72,71 +288,129 @@ const VaeroApp = {
 
     normalizeCart(rawCart){
 
-        if(
-            !rawCart ||
-            typeof rawCart !== "object"
-        ){
-            return this.createEmptyCart();
-        }
+    if(
+        !rawCart ||
+        typeof rawCart !== "object"
+    ){
+        return this.createEmptyCart();
+    }
 
-        const normalizedItems =
-            Array.isArray(rawCart.items)
-                ? rawCart.items
-                    .map(item => {
+    const normalizedItems =
+        Array.isArray(rawCart.items)
+            ? rawCart.items
+                .map(item => {
 
-                        if(
-                            !item ||
-                            typeof item !== "object"
-                        ){
-                            return null;
-                        }
+                    if(
+                        !item ||
+                        typeof item !== "object"
+                    ){
+                        return null;
+                    }
 
-                        const product =
-                            this.products[item.productId];
+                    const product =
+                        this.products[item.productId];
 
-                        if(!product){
-                            return null;
-                        }
+                    if(!product){
+                        return null;
+                    }
 
-                        const quantity =
-                            Math.max(
-                                1,
-                                Math.floor(
-                                    Number(item.quantity) || 1
-                                )
+                    const quantity =
+                        Math.max(
+                            1,
+                            Math.floor(
+                                Number(item.quantity) || 1
+                            )
+                        );
+
+                    const hasVariants =
+                        Array.isArray(product.variants) &&
+                        product.variants.length > 0;
+
+                    let variantId =
+                        item.variantId || null;
+
+                    if(hasVariants){
+
+                        const savedVariant =
+                            this.getProductVariant(
+                                product.id,
+                                variantId
                             );
 
-                        return {
-                            productId: product.id,
-                            quantity,
-                            addedAt:
-                                Number(item.addedAt) ||
-                                Date.now(),
-                            updatedAt:
-                                Number(item.updatedAt) ||
-                                Date.now()
-                        };
+                        const resolvedVariant =
+                            savedVariant ||
+                            this.getDefaultProductVariant(
+                                product.id
+                            );
 
-                    })
-                    .filter(Boolean)
-                : [];
+                        variantId =
+                            resolvedVariant
+                                ? resolvedVariant.id
+                                : null;
 
-        return {
-            version: this.cartStorageVersion,
-            customerId: this.getCustomerId(),
-            currency: "TRY",
-            status: "active",
-            items: normalizedItems,
-            createdAt:
-                Number(rawCart.createdAt) ||
-                Date.now(),
-            updatedAt:
-                Number(rawCart.updatedAt) ||
-                Date.now()
-        };
+                    }else{
 
-    },
+                        variantId = null;
 
+                    }
+
+                    const variant =
+                        this.getProductVariant(
+                            product.id,
+                            variantId
+                        );
+
+                    const price =
+                        this.getProductPrice(
+                            product.id,
+                            variantId
+                        );
+
+                    return {
+                        key:
+                            this.getCartItemKey(
+                                product.id,
+                                variantId
+                            ),
+                        productId:
+                            product.id,
+                        variantId,
+                        sku:
+                            variant
+                                ? variant.sku
+                                : product.sku,
+                        quantity,
+                        unitPrice:
+                            price,
+                        addedAt:
+                            Number(item.addedAt) ||
+                            Date.now(),
+                        updatedAt:
+                            Number(item.updatedAt) ||
+                            Date.now()
+                    };
+
+                })
+                .filter(Boolean)
+            : [];
+
+    return {
+        version: this.cartStorageVersion,
+        customerId: this.getCustomerId(),
+        baseCurrency: this.baseCurrency,
+        displayCurrency:
+            this.getDisplayCurrency(),
+        status: "active",
+        items: normalizedItems,
+        createdAt:
+            Number(rawCart.createdAt) ||
+            Date.now(),
+        updatedAt:
+            Number(rawCart.updatedAt) ||
+            Date.now()
+    };
+
+},
     loadCart(){
 
         const storageKey =
@@ -198,63 +472,152 @@ const VaeroApp = {
 
     },
 
-    addToCart(productId, quantity = 1){
+    addToCart(
+    productId,
+    variantId = null,
+    quantity = 1
+){
 
-        const product =
-            this.products[productId];
+    const product =
+        this.products[productId];
 
-        if(!product){
-            console.error(
-                "Sepete eklenemedi: ürün bulunamadı.",
+    if(!product){
+        console.error(
+            "Sepete eklenemedi: ürün bulunamadı.",
+            productId
+        );
+
+        return null;
+    }
+
+    /*
+     * Eski addToCart(productId, quantity)
+     * çağrı biçimini geçici olarak destekler.
+     */
+    if(typeof variantId === "number"){
+        quantity = variantId;
+        variantId = null;
+    }
+
+    const variants =
+        Array.isArray(product.variants)
+            ? product.variants
+            : [];
+
+    let resolvedVariant = null;
+
+    if(variants.length > 0){
+
+        resolvedVariant =
+            this.getProductVariant(
+                productId,
+                variantId
+            ) ||
+            this.getDefaultProductVariant(
                 productId
+            );
+
+        if(!resolvedVariant){
+            console.error(
+                "Sepete eklenemedi: ürün varyantı bulunamadı.",
+                {
+                    productId,
+                    variantId
+                }
             );
 
             return null;
         }
 
-        const safeQuantity =
-            Math.max(
-                1,
-                Math.floor(
-                    Number(quantity) || 1
-                )
-            );
+        variantId =
+            resolvedVariant.id;
 
-        const cart =
-            this.loadCart();
+    }else{
 
-        const existingItem =
-            cart.items.find(item =>
-                item.productId === productId
-            );
+        variantId = null;
 
-        const now =
-            Date.now();
+    }
 
-        if(existingItem){
+    const safeQuantity =
+        Math.max(
+            1,
+            Math.floor(
+                Number(quantity) || 1
+            )
+        );
 
-            existingItem.quantity +=
-                safeQuantity;
+    const itemKey =
+        this.getCartItemKey(
+            productId,
+            variantId
+        );
 
-            existingItem.updatedAt =
-                now;
+    const unitPrice =
+        this.getProductPrice(
+            productId,
+            variantId
+        );
 
-        }else{
-
-            cart.items.push({
+    if(!unitPrice){
+        console.error(
+            "Sepete eklenemedi: ürün fiyatı bulunamadı.",
+            {
                 productId,
-                quantity: safeQuantity,
-                addedAt: now,
-                updatedAt: now
-            });
+                variantId
+            }
+        );
 
-        }
+        return null;
+    }
 
-        return this.saveCart(cart);
+    const cart =
+        this.loadCart();
 
-    },
+    const existingItem =
+        cart.items.find(item =>
+            item.key === itemKey
+        );
 
-    updateCartItemQuantity(productId, quantity){
+    const now =
+        Date.now();
+
+    if(existingItem){
+
+        existingItem.quantity +=
+            safeQuantity;
+
+        existingItem.unitPrice =
+            unitPrice;
+
+        existingItem.updatedAt =
+            now;
+
+    }else{
+
+        cart.items.push({
+            key: itemKey,
+            productId,
+            variantId,
+            sku:
+                resolvedVariant
+                    ? resolvedVariant.sku
+                    : product.sku,
+            quantity: safeQuantity,
+            unitPrice,
+            addedAt: now,
+            updatedAt: now
+        });
+
+    }
+
+    return this.saveCart(cart);
+
+},
+    updateCartItemQuantity(
+    productId,
+    variantId = null,
+    quantity = 0
+){
 
     const product =
         this.products[productId];
@@ -268,12 +631,18 @@ const VaeroApp = {
         return null;
     }
 
+    const itemKey =
+        this.getCartItemKey(
+            productId,
+            variantId
+        );
+
     const cart =
         this.loadCart();
 
     const item =
         cart.items.find(cartItem =>
-            cartItem.productId === productId
+            cartItem.key === itemKey
         );
 
     if(!item){
@@ -289,7 +658,7 @@ const VaeroApp = {
 
         cart.items =
             cart.items.filter(cartItem =>
-                cartItem.productId !== productId
+                cartItem.key !== itemKey
             );
 
     }else{
@@ -306,35 +675,60 @@ const VaeroApp = {
 
 },
 
-increaseCartItem(productId){
+increaseCartItem(
+    productId,
+    variantId = null
+){
+
+    const itemKey =
+        this.getCartItemKey(
+            productId,
+            variantId
+        );
 
     const cart =
         this.loadCart();
 
     const item =
         cart.items.find(cartItem =>
-            cartItem.productId === productId
+            cartItem.key === itemKey
         );
 
     if(!item){
-        return this.addToCart(productId, 1);
+
+        return this.addToCart(
+            productId,
+            variantId,
+            1
+        );
+
     }
 
     return this.updateCartItemQuantity(
         productId,
+        variantId,
         item.quantity + 1
     );
 
 },
 
-decreaseCartItem(productId){
+decreaseCartItem(
+    productId,
+    variantId = null
+){
+
+    const itemKey =
+        this.getCartItemKey(
+            productId,
+            variantId
+        );
 
     const cart =
         this.loadCart();
 
     const item =
         cart.items.find(cartItem =>
-            cartItem.productId === productId
+            cartItem.key === itemKey
         );
 
     if(!item){
@@ -343,19 +737,29 @@ decreaseCartItem(productId){
 
     return this.updateCartItemQuantity(
         productId,
+        variantId,
         item.quantity - 1
     );
 
 },
 
-removeFromCart(productId){
+removeFromCart(
+    productId,
+    variantId = null
+){
+
+    const itemKey =
+        this.getCartItemKey(
+            productId,
+            variantId
+        );
 
     const cart =
         this.loadCart();
 
     cart.items =
         cart.items.filter(item =>
-            item.productId !== productId
+            item.key !== itemKey
         );
 
     return this.saveCart(cart);
@@ -383,6 +787,64 @@ clearCart(){
         );
 
     },
+
+    getCartSubtotal(){
+
+    const cart =
+        this.loadCart();
+
+    const amount =
+        cart.items.reduce(
+            (total, item) => {
+
+                const unitAmount =
+                    Number(
+                        item.unitPrice?.amount
+                    ) || 0;
+
+                return total +
+                    (
+                        unitAmount *
+                        item.quantity
+                    );
+
+            },
+            0
+        );
+
+    return {
+        amount,
+        currency:
+            cart.baseCurrency ||
+            this.baseCurrency
+    };
+
+},
+
+formatMoney(
+    amount,
+    currency = this.baseCurrency
+){
+
+    try {
+
+        return new Intl.NumberFormat(
+            "en-US",
+            {
+                style: "currency",
+                currency,
+                minimumFractionDigits: 0,
+                maximumFractionDigits: 2
+            }
+        ).format(amount);
+
+    } catch(error){
+
+        return `${amount} ${currency}`;
+
+    }
+
+},
 
     render(){
 
@@ -640,64 +1102,172 @@ clearCart(){
 
     renderProduct(productId){
 
-        const product =
-            this.products[productId];
+    const product =
+        this.products[productId];
 
-        if(!product){
-            return `
-                <section class="vaero-commerce-app">
-
-                    ${this.renderBackButton()}
-
-                    <p>
-                        Ürün bulunamadı.
-                    </p>
-
-                </section>
-            `;
-        }
-
+    if(!product){
         return `
             <section class="vaero-commerce-app">
 
                 ${this.renderBackButton()}
 
-                <section class="vaero-commerce-hero">
-
-                    <div class="vaero-commerce-hero-copy">
-
-                        <span>
-                            ${product.type}
-                        </span>
-
-                        <h2>
-                            ${product.name}
-                        </h2>
-
-                        <p>
-                            ${product.description}
-                        </p>
-
-                        <div class="vaero-commerce-actions">
-
-                            <button
-                                type="button"
-                                data-action="vaero:buy"
-                                data-product="${product.id}"
-                            >
-                                Satın Al
-                            </button>
-
-                        </div>
-
-                    </div>
-
-                </section>
+                <p>
+                    Ürün bulunamadı.
+                </p>
 
             </section>
         `;
+    }
 
-    },
+    const variants =
+        Array.isArray(product.variants)
+            ? product.variants
+            : [];
+
+    let selectedVariant = null;
+
+    if(variants.length > 0){
+
+        selectedVariant =
+            this.getProductVariant(
+                product.id,
+                VAERO.engine.currentVaeroVariant
+            ) ||
+            this.getDefaultProductVariant(
+                product.id
+            );
+
+        VAERO.engine.currentVaeroVariant =
+            selectedVariant
+                ? selectedVariant.id
+                : null;
+
+    }else{
+
+        VAERO.engine.currentVaeroVariant =
+            null;
+
+    }
+
+    const price =
+        this.getProductPrice(
+            product.id,
+            selectedVariant
+                ? selectedVariant.id
+                : null
+        );
+
+    const variantsHTML =
+        variants.length > 0
+            ? `
+                <div class="vaero-product-variants">
+
+                    <span>
+                        BOYUT SEÇ
+                    </span>
+
+                    <div>
+
+                        ${variants
+                            .map(variant => `
+                                <button
+                                    type="button"
+                                    class="${
+                                        selectedVariant &&
+                                        selectedVariant.id === variant.id
+                                            ? "is-active"
+                                            : ""
+                                    }"
+                                    data-action="vaero:variant"
+                                    data-product="${product.id}"
+                                    data-variant="${variant.id}"
+                                >
+                                    ${variant.label}
+                                </button>
+                            `)
+                            .join("")}
+
+                    </div>
+
+                </div>
+            `
+            : "";
+
+    return `
+        <section class="vaero-commerce-app">
+
+            ${this.renderBackButton()}
+
+            <section class="vaero-commerce-hero">
+
+                <div class="vaero-commerce-hero-copy">
+
+                    <span>
+                        ${product.type}
+                    </span>
+
+                    <h2>
+                        ${product.name}
+                    </h2>
+
+                    <p>
+                        ${product.description}
+                    </p>
+
+                    ${variantsHTML}
+
+                    <div class="vaero-product-price">
+
+                        <span>
+                            ${
+                                price
+                                    ? this.formatMoney(
+                                        price.amount,
+                                        price.currency
+                                    )
+                                    : "Fiyat bulunamadı"
+                            }
+                        </span>
+
+                        ${
+                            selectedVariant
+                                ? `
+                                    <small>
+                                        ${selectedVariant.label}
+                                    </small>
+                                `
+                                : ""
+                        }
+
+                    </div>
+
+                    <div class="vaero-commerce-actions">
+
+                        <button
+                            type="button"
+                            data-action="vaero:buy"
+                            data-product="${product.id}"
+                            data-variant="${
+                                selectedVariant
+                                    ? selectedVariant.id
+                                    : ""
+                            }"
+                        >
+                            Sepete Ekle
+                        </button>
+
+                        ${this.renderCartButton()}
+
+                    </div>
+
+                </div>
+
+            </section>
+
+        </section>
+    `;
+
+},
 
     renderCart(){
 
@@ -706,6 +1276,9 @@ clearCart(){
 
     const itemCount =
         this.getCartItemCount();
+
+    const subtotal =
+        this.getCartSubtotal();
 
     if(cart.items.length === 0){
 
@@ -795,10 +1368,30 @@ clearCart(){
                             return "";
                         }
 
+                        const variant =
+                            this.getProductVariant(
+                                product.id,
+                                item.variantId
+                            );
+
+                        const unitAmount =
+                            Number(
+                                item.unitPrice?.amount
+                            ) || 0;
+
+                        const lineTotal =
+                            unitAmount *
+                            item.quantity;
+
+                        const currency =
+                            item.unitPrice?.currency ||
+                            this.baseCurrency;
+
                         return `
                             <article
                                 class="vaero-cart-item"
                                 data-product="${product.id}"
+                                data-variant="${item.variantId || ""}"
                             >
 
                                 <div class="vaero-cart-item-copy">
@@ -812,8 +1405,19 @@ clearCart(){
                                     </strong>
 
                                     <small>
-                                        ${product.subtitle}
+                                        ${
+                                            variant
+                                                ? variant.label
+                                                : product.subtitle
+                                        }
                                     </small>
+
+                                    <span class="vaero-cart-item-price">
+                                        ${this.formatMoney(
+                                            lineTotal,
+                                            currency
+                                        )}
+                                    </span>
 
                                 </div>
 
@@ -823,6 +1427,7 @@ clearCart(){
                                         type="button"
                                         data-action="vaero:cart:decrease"
                                         data-product="${product.id}"
+                                        data-variant="${item.variantId || ""}"
                                         aria-label="${product.name} adedini azalt"
                                     >
                                         −
@@ -836,6 +1441,7 @@ clearCart(){
                                         type="button"
                                         data-action="vaero:cart:increase"
                                         data-product="${product.id}"
+                                        data-variant="${item.variantId || ""}"
                                         aria-label="${product.name} adedini artır"
                                     >
                                         +
@@ -845,6 +1451,7 @@ clearCart(){
                                         type="button"
                                         data-action="vaero:cart:remove"
                                         data-product="${product.id}"
+                                        data-variant="${item.variantId || ""}"
                                     >
                                         Kaldır
                                     </button>
@@ -856,6 +1463,29 @@ clearCart(){
 
                     })
                     .join("")}
+
+            </section>
+
+            <section class="vaero-cart-summary">
+
+                <div>
+
+                    <span>
+                        Ara toplam
+                    </span>
+
+                    <strong>
+                        ${this.formatMoney(
+                            subtotal.amount,
+                            subtotal.currency
+                        )}
+                    </strong>
+
+                </div>
+
+                <small>
+                    Teslimat ve vergiler sipariş aşamasında hesaplanır.
+                </small>
 
             </section>
 
@@ -881,7 +1511,6 @@ clearCart(){
     `;
 
 },
-
 renderCartButton(){
 
     const itemCount =
