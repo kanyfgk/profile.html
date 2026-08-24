@@ -354,6 +354,12 @@ clearVaeroCart(){
 
     VAERO.engine.currentVaeroCheckout =
         checkout;
+        VAERO.engine.currentEntityPage =
+    "vaero-checkout";
+
+VAERO.engine.mount(
+    VAERO.engine.currentEntity
+);
 
     console.log(
         "VAERO checkout taslağı oluşturuldu:",
