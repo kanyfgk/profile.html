@@ -821,6 +821,72 @@ clearCart(){
 
 },
 
+    createCheckoutDraft(){
+
+    const cart =
+        this.loadCart();
+
+    if(cart.items.length === 0){
+        return null;
+    }
+
+    const subtotal =
+        this.getCartSubtotal();
+
+    const now =
+        Date.now();
+
+    const checkout = {
+        id:
+            crypto.randomUUID(),
+        customerId:
+            this.getCustomerId(),
+        status:
+            "draft",
+        currency:
+            subtotal.currency,
+        items:
+            cart.items.map(item => ({
+                key:
+                    item.key,
+                productId:
+                    item.productId,
+                variantId:
+                    item.variantId || null,
+                sku:
+                    item.sku,
+                quantity:
+                    item.quantity,
+                unitPrice:
+                    {
+                        ...item.unitPrice
+                    }
+            })),
+        totals: {
+            subtotal:
+                subtotal.amount,
+            shipping:
+                null,
+            tax:
+                null,
+            grandTotal:
+                null
+        },
+        createdAt:
+            now,
+        updatedAt:
+            now
+    };
+
+    localStorage.setItem(
+        `vaero:commerce:checkout:${this.getCustomerId()}`,
+        JSON.stringify(checkout)
+    );
+
+    return checkout;
+
+},
+    
 formatMoney(
     amount,
     currency = this.baseCurrency
