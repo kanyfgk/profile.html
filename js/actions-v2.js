@@ -62,21 +62,7 @@ openVaeroApp(){
         VAERO.engine.currentEntity
     );
 
-},
-
-openWorlds(){
-
-    VAERO.engine.currentWorld = {
-        id: "worlds"
-    };
-
-    VAERO.engine.currentOpenedEntity = null;
-
-    VAERO.engine.mount(
-        VAERO.engine.currentEntity
-    );
-
-},
+}, 
 
 openProfile(){
         const entity =
