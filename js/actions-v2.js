@@ -143,7 +143,42 @@ openVaeroProduct(productId){
 
 },
 
-addVaeroProductToCart(productId){
+    selectVaeroProductVariant(
+    productId,
+    variantId
+){
+
+    if(
+        !window.VaeroApp ||
+        !VaeroApp.getProductVariant(
+            productId,
+            variantId
+        )
+    ){
+        return false;
+    }
+
+    VAERO.engine.currentVaeroProduct =
+        productId;
+
+    VAERO.engine.currentVaeroVariant =
+        variantId;
+
+    VAERO.engine.currentEntityPage =
+        "vaero-product";
+
+    VAERO.engine.mount(
+        VAERO.engine.currentEntity
+    );
+
+    return true;
+
+},
+
+addVaeroProductToCart(
+    productId,
+    variantId = null
+){
 
     if(
         !window.VaeroApp ||
@@ -159,6 +194,7 @@ addVaeroProductToCart(productId){
     const cart =
         VaeroApp.addToCart(
             productId,
+            variantId,
             1
         );
 
@@ -2939,9 +2975,17 @@ case "vaero:product":
     );
     break;
 
+                case "vaero:variant":
+    Actions.selectVaeroProductVariant(
+        button.dataset.product,
+        button.dataset.variant
+    );
+    break;
+
 case "vaero:buy":
     Actions.addVaeroProductToCart(
-        button.dataset.product
+        button.dataset.product,
+        button.dataset.variant || null
     );
     break;
 
