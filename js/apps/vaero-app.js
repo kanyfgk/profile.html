@@ -1771,6 +1771,10 @@ formatMoney(
 
     const selectedPaymentMethod =
         checkout.payment?.method || null;
+        
+        const isPaymentPending =
+    checkout.payment?.status ===
+    "pending";
 
     return `
         <section class="vaero-commerce-app">
@@ -1929,19 +1933,50 @@ formatMoney(
 
             </section>
 
+${
+    isPaymentPending
+        ? `
+            <section class="vaero-payment-status">
+
+                <span class="vaero-commerce-eyebrow">
+                    ÖDEME DURUMU
+                </span>
+
+                <strong>
+                    Ödeme işlemi hazırlanıyor
+                </strong>
+
+                <small>
+                    Seçilen yöntem: ${
+                        selectedPaymentMethod ===
+                        "bank-transfer"
+                            ? "Banka Transferi"
+                            : "Kart ile Ödeme"
+                    }
+                </small>
+
+            </section>
+        `
+        : ""
+}
             <div class="vaero-commerce-actions">
 
                 <button
-                    type="button"
-                    data-action="vaero:payment:start"
-                    ${
-                        selectedPaymentMethod
-                            ? ""
-                            : "disabled"
-                    }
-                >
-                    Ödemeye Devam Et
-                </button>
+    type="button"
+    data-action="vaero:payment:start"
+    ${
+        !selectedPaymentMethod ||
+        isPaymentPending
+            ? "disabled"
+            : ""
+    }
+>
+    ${
+        isPaymentPending
+            ? "Ödeme Hazırlanıyor…"
+            : "Ödemeye Devam Et"
+    }
+</button>
 
             </div>
 
