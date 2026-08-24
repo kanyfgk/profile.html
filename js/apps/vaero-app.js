@@ -1048,6 +1048,62 @@ formatMoney(
 
 },
 
+    completeCheckoutPayment(
+    successful,
+    failureReason = null
+){
+
+    const checkout =
+        this.loadCheckoutDraft();
+
+    if(
+        !checkout ||
+        checkout.payment?.status !==
+            "pending"
+    ){
+        return null;
+    }
+
+    const now =
+        Date.now();
+
+    checkout.status =
+        successful
+            ? "paid"
+            : "payment-failed";
+
+    checkout.payment = {
+        ...checkout.payment,
+        status:
+            successful
+                ? "paid"
+                : "failed",
+        transactionId:
+            successful
+                ? crypto.randomUUID()
+                : null,
+        failureReason:
+            successful
+                ? null
+                : (
+                    failureReason ||
+                    "payment-failed"
+                ),
+        completedAt: now
+    };
+
+    checkout.updatedAt =
+        now;
+
+    localStorage.setItem(
+        this.getCheckoutStorageKey(),
+        JSON.stringify(checkout)
+    );
+
+    return checkout;
+
+},
+    
     render(){
 
         const page =
