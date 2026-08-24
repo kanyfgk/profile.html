@@ -2253,18 +2253,18 @@ const isPaymentFailed =
                     </button>
 
                     <button
-                        type="button"
-                        class="${
-                            selectedPaymentMethod === "bank-transfer"
-                            ${isPaymentPending ? "disabled" : ""}
-                                ? "is-active"
-                                : ""
-                        }"
-                        data-action="vaero:payment:method"
-                        data-payment-method="bank-transfer"
-                    >
-                        Banka Transferi
-                    </button>
+    type="button"
+    class="${
+        selectedPaymentMethod === "bank-transfer"
+            ? "is-active"
+            : ""
+    }"
+    data-action="vaero:payment:method"
+    data-payment-method="bank-transfer"
+    ${isPaymentPending ? "disabled" : ""}
+>
+    Banka Transferi
+</button>
 
                 </div>
 
