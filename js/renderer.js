@@ -29,40 +29,51 @@ const Renderer = {
         const openedEntity =
             VAERO.engine.currentOpenedEntity;
 
+        const currentEntityPage =
+    VAERO.engine.currentEntityPage;
+
         root.innerHTML = `
-            <main class="vaero-shell">
+    <main class="vaero-shell">
 
-                <section class="section">
+        <section class="section">
 
-                    ${components.hero(rootEntity)}
+            ${
+                currentEntityPage === "vaero"
+                    ? ""
+                    : components.hero(rootEntity)
+            }
 
-                    ${
-                        openedEntity
-                            ? components.entityApp(
-                                openedEntity
+            ${
+                currentEntityPage === "vaero"
+                    ? (
+                        window.VaeroApp &&
+                        typeof window.VaeroApp.render === "function"
+                            ? window.VaeroApp.render()
+                            : "<p>VAERO uygulaması yüklenemedi.</p>"
+                      )
+                    : openedEntity
+                        ? components.entityApp(
+                            openedEntity
+                          )
+                        : currentWorld
+                            ? components.worldView(
+                                currentWorld
                               )
-                            : currentWorld
-                                ? components.worldView(
-                                    currentWorld
-                                  )
-                                : `
-    ${components.home()}
-`
-                    }
+                            : components.home()
+            }
 
-                </section>
+        </section>
 
-                ${components.navigation()}
+        ${components.navigation()}
 
-                ${components.modal()}
+        ${components.modal()}
 
-                ${components.idModal()}
+        ${components.idModal()}
 
-                ${components.brainPanel()}
+        ${components.brainPanel()}
 
-            </main>
-        `;
-
+    </main>
+`;
     },
 
     renderHome(){
