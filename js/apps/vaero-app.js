@@ -1912,6 +1912,7 @@ formatMoney(
                         }"
                         data-action="vaero:payment:method"
                         data-payment-method="card"
+                        ${isPaymentPending ? "disabled" : ""}
                     >
                         Kart ile Ödeme
                     </button>
@@ -1920,6 +1921,7 @@ formatMoney(
                         type="button"
                         class="${
                             selectedPaymentMethod === "bank-transfer"
+                            ${isPaymentPending ? "disabled" : ""}
                                 ? "is-active"
                                 : ""
                         }"
