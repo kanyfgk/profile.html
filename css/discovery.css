@@ -664,3 +664,82 @@ body.discovery-active .brain-fab {
 .vaero-overview-live{
     color:#57d38c;
 }
+
+@media (max-width:768px){
+
+    .discovery-screen{
+        position:fixed;
+        inset:0;
+
+        width:100%;
+        height:100dvh;
+        min-height:0;
+
+        display:block;
+
+        padding:
+            14px
+            14px
+            calc(
+                32px +
+                env(safe-area-inset-bottom)
+            );
+
+        overflow-x:hidden;
+        overflow-y:auto;
+
+        transform:none;
+
+        overscroll-behavior-y:contain;
+        -webkit-overflow-scrolling:touch;
+    }
+
+    .discovery-content{
+        width:100%;
+        max-width:680px;
+
+        margin:0 auto;
+        padding-bottom:
+            calc(
+                30px +
+                env(safe-area-inset-bottom)
+            );
+
+        overflow:visible;
+    }
+
+    button.discovery-continue{
+        position:sticky !important;
+
+        right:auto !important;
+        bottom:calc(
+            14px +
+            env(safe-area-inset-bottom)
+        ) !important;
+        left:auto !important;
+
+        z-index:20;
+
+        display:flex;
+        align-items:center;
+        justify-content:center;
+
+        width:100% !important;
+        min-height:56px;
+        margin-top:22px !important;
+
+        border-radius:17px;
+
+        box-shadow:
+            0 18px 42px rgba(0,0,0,.58);
+    }
+
+    button.discovery-continue:disabled{
+        opacity:.45;
+    }
+
+    .discovery-screen.is-leaving{
+        transform:translateY(-18px);
+    }
+
+}

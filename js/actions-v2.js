@@ -52,8 +52,33 @@ const Actions = {
 
     },
 
-    openProfile(){
+openVaeroApp(){
 
+    VAERO.engine.currentWorld = null;
+    VAERO.engine.currentOpenedEntity = null;
+    VAERO.engine.currentEntityPage = "vaero";
+
+    VAERO.engine.mount(
+        VAERO.engine.currentEntity
+    );
+
+},
+
+openWorlds(){
+
+    VAERO.engine.currentWorld = {
+        id: "worlds"
+    };
+
+    VAERO.engine.currentOpenedEntity = null;
+
+    VAERO.engine.mount(
+        VAERO.engine.currentEntity
+    );
+
+},
+
+openProfile(){
         const entity =
             VAERO.engine.rootEntity ||
             VAERO.engine.currentEntity;
@@ -94,7 +119,187 @@ const Actions = {
             }
         );
 
-    },
+},
+
+openVaeroDevice(){
+
+    VAERO.engine.currentEntityPage =
+        "vaero-device";
+
+    VAERO.engine.mount(
+        VAERO.engine.currentEntity
+    );
+
+},
+
+openVaeroCollection(){
+
+    VAERO.engine.currentEntityPage =
+        "vaero-collection";
+
+    VAERO.engine.mount(
+        VAERO.engine.currentEntity
+    );
+
+},
+
+openVaeroProduct(productId){
+
+    VAERO.engine.currentEntityPage =
+        "vaero-product";
+
+    VAERO.engine.currentVaeroProduct =
+        productId;
+
+    VAERO.engine.mount(
+        VAERO.engine.currentEntity
+    );
+
+},
+
+addVaeroProductToCart(productId){
+
+    if(
+        !window.VaeroApp ||
+        typeof VaeroApp.addToCart !== "function"
+    ){
+        console.error(
+            "VAERO sepet sistemi bulunamadı."
+        );
+
+        return false;
+    }
+
+    const cart =
+        VaeroApp.addToCart(
+            productId,
+            1
+        );
+
+    if(!cart){
+        return false;
+    }
+
+    VAERO.engine.currentVaeroCart =
+        cart;
+
+    console.log(
+        "VAERO ürünü sepete eklendi:",
+        {
+            productId,
+            cart
+        }
+    );
+
+    return true;
+
+},
+
+openVaeroCart(){
+
+    if(!window.VaeroApp){
+        return false;
+    }
+
+    VAERO.engine.currentVaeroCart =
+        VaeroApp.loadCart();
+
+    VAERO.engine.currentEntityPage =
+        "vaero-cart";
+
+    VAERO.engine.mount(
+        VAERO.engine.currentEntity
+    );
+
+    return true;
+
+},
+
+increaseVaeroCartItem(productId){
+
+    const cart =
+        VaeroApp.increaseCartItem(
+            productId
+        );
+
+    if(!cart){
+        return false;
+    }
+
+    VAERO.engine.currentVaeroCart =
+        cart;
+
+    VAERO.engine.mount(
+        VAERO.engine.currentEntity
+    );
+
+    return true;
+
+},
+
+decreaseVaeroCartItem(productId){
+
+    const cart =
+        VaeroApp.decreaseCartItem(
+            productId
+        );
+
+    if(!cart){
+        return false;
+    }
+
+    VAERO.engine.currentVaeroCart =
+        cart;
+
+    VAERO.engine.mount(
+        VAERO.engine.currentEntity
+    );
+
+    return true;
+
+},
+
+removeVaeroCartItem(productId){
+
+    const cart =
+        VaeroApp.removeFromCart(
+            productId
+        );
+
+    if(!cart){
+        return false;
+    }
+
+    VAERO.engine.currentVaeroCart =
+        cart;
+
+    VAERO.engine.mount(
+        VAERO.engine.currentEntity
+    );
+
+    return true;
+
+},
+
+clearVaeroCart(){
+
+    const cart =
+        VaeroApp.clearCart();
+
+    if(!cart){
+        return false;
+    }
+
+    VAERO.engine.currentVaeroCart =
+        cart;
+
+    VAERO.engine.mount(
+        VAERO.engine.currentEntity
+    );
+
+    return true;
+
+},
 
     openWorlds(){
 
@@ -2640,11 +2845,11 @@ document.addEventListener(
                 Actions.startEntityCreate();
                 break;
 
-            case "entity:type:select":
-                Actions.selectEntityType(
-                    button.dataset.entityType
-                );
-                break;
+case "entity:type:select":
+    Actions.selectEntityType(
+        button.dataset.entityType
+    );
+    break;
 
             case "entity:type:clear":
                 Actions.clearEntityType();
@@ -2726,9 +2931,59 @@ document.addEventListener(
                 Actions.saveProfile();
                 break;
 
-            case "discovery:restart":
-                Actions.restartDiscovery();
-                break;
+case "app:vaero":
+    Actions.openVaeroApp();
+    break;
+
+case "discovery:restart":
+    Actions.restartDiscovery();
+    break;
+            
+            case "vaero:device":
+    Actions.openVaeroDevice();
+    break;
+
+case "vaero:collection":
+    Actions.openVaeroCollection();
+    break;
+
+case "vaero:product":
+    Actions.openVaeroProduct(
+        button.dataset.product
+    );
+    break;
+
+case "vaero:buy":
+    Actions.addVaeroProductToCart(
+        button.dataset.product
+    );
+    break;
+
+case "vaero:cart":
+    Actions.openVaeroCart();
+    break;
+
+case "vaero:cart:increase":
+    Actions.increaseVaeroCartItem(
+        button.dataset.product
+    );
+    break;
+
+case "vaero:cart:decrease":
+    Actions.decreaseVaeroCartItem(
+        button.dataset.product
+    );
+    break;
+
+case "vaero:cart:remove":
+    Actions.removeVaeroCartItem(
+        button.dataset.product
+    );
+    break;
+
+case "vaero:cart:clear":
+    Actions.clearVaeroCart();
+    break;
 
             case "brain:open":
                 Actions.openBrain();
@@ -2798,8 +3053,8 @@ document.addEventListener(
             return;
         }
 
-        event.preventDefault();
-        Actions.sendBrainMessage();
+event.preventDefault();
+Actions.sendBrainMessage();
 
     }
 );

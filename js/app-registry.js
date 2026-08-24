@@ -162,6 +162,13 @@ const OrganRegistry = {
         title: "Discovery",
         subtitle: "Keşif cevaplarını yeniden değerlendir",
         action: "entity:discovery"
+    },
+    {
+        id: "vaero",
+        icon: "◉",
+        title: "VAERO",
+        subtitle: "Fiziksel dünyanı keşfet",
+        action: "app:vaero"
     }
 ].forEach(
     app => OrganRegistry.register(app)
