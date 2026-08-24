@@ -77,6 +77,37 @@ const Actions = {
         VAERO.engine.mount(VAERO.engine.currentEntity);
     },
 
+    openVaeroDevice(){
+
+    VAERO.engine.currentEntityPage = "vaero-device";
+
+    VAERO.engine.mount(
+        VAERO.engine.currentEntity
+    );
+
+},
+
+openVaeroCollection(){
+
+    VAERO.engine.currentEntityPage = "vaero-collection";
+
+    VAERO.engine.mount(
+        VAERO.engine.currentEntity
+    );
+
+},
+
+openVaeroProduct(productId){
+
+    VAERO.engine.currentEntityPage = "vaero-product";
+    VAERO.engine.currentVaeroProduct = productId;
+
+    VAERO.engine.mount(
+        VAERO.engine.currentEntity
+    );
+
+},
+
     createEntity(){
         const input = document.getElementById("entityNameInput");
 
@@ -2398,6 +2429,20 @@ if(action === "evolution:event:close"){
     if(action === "entity:open"){
         Actions.openEntity(button.dataset.entityId);
     }
+
+    if(action === "vaero:device"){
+    Actions.openVaeroDevice();
+}
+
+if(action === "vaero:collection"){
+    Actions.openVaeroCollection();
+}
+
+if(action === "vaero:product"){
+    Actions.openVaeroProduct(
+        button.dataset.product
+    );
+}
 
 });
 
