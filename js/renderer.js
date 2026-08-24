@@ -123,6 +123,29 @@ const Renderer = {
         rootEntity
     }){
 
+        const currentEntityPage =
+            engine.currentEntityPage;
+
+        const isVaeroApp =
+            currentEntityPage &&
+            currentEntityPage.startsWith("vaero");
+
+        if(isVaeroApp){
+
+            if(
+                window.VaeroApp &&
+                typeof window.VaeroApp.render ===
+                    "function"
+            ){
+                return window.VaeroApp.render();
+            }
+
+            return components.errorState(
+                "VAERO uygulaması yüklenemedi."
+            );
+
+        }
+
         switch(view){
 
             case "identity":
