@@ -917,6 +917,16 @@ loadCheckoutDraft(){
             grandTotal:
                 null
         },
+
+        payment: {
+            method:
+                null,
+            status:
+                "unpaid",
+            transactionId:
+                null
+        },
+        
         createdAt:
             now,
         updatedAt:
@@ -954,6 +964,47 @@ formatMoney(
         return `${amount} ${currency}`;
 
     }
+
+},
+
+    setCheckoutPaymentMethod(method){
+
+    const allowedMethods = [
+        "card",
+        "bank-transfer"
+    ];
+
+    if(!allowedMethods.includes(method)){
+        return null;
+    }
+
+    const checkout =
+        this.loadCheckoutDraft();
+
+    if(!checkout){
+        return null;
+    }
+
+    checkout.payment = {
+        ...(checkout.payment || {}),
+        method,
+        status:
+            checkout.payment?.status ||
+            "unpaid",
+        transactionId:
+            checkout.payment?.transactionId ||
+            null
+    };
+
+    checkout.updatedAt =
+        Date.now();
+
+    localStorage.setItem(
+        this.getCheckoutStorageKey(),
+        JSON.stringify(checkout)
+    );
+
+    return checkout;
 
 },
 
@@ -1636,6 +1687,7 @@ formatMoney(
         !checkout ||
         checkout.items.length === 0
     ){
+
         return `
             <section class="vaero-commerce-app">
 
@@ -1674,7 +1726,11 @@ formatMoney(
 
             </section>
         `;
+
     }
+
+    const selectedPaymentMethod =
+        checkout.payment?.method || null;
 
     return `
         <section class="vaero-commerce-app">
@@ -1795,13 +1851,56 @@ formatMoney(
 
             </section>
 
+            <section class="vaero-payment-methods">
+
+                <span class="vaero-commerce-eyebrow">
+                    ÖDEME YÖNTEMİ
+                </span>
+
+                <div class="vaero-commerce-actions">
+
+                    <button
+                        type="button"
+                        class="${
+                            selectedPaymentMethod === "card"
+                                ? "is-active"
+                                : ""
+                        }"
+                        data-action="vaero:payment:method"
+                        data-payment-method="card"
+                    >
+                        Kart ile Ödeme
+                    </button>
+
+                    <button
+                        type="button"
+                        class="${
+                            selectedPaymentMethod === "bank-transfer"
+                                ? "is-active"
+                                : ""
+                        }"
+                        data-action="vaero:payment:method"
+                        data-payment-method="bank-transfer"
+                    >
+                        Banka Transferi
+                    </button>
+
+                </div>
+
+            </section>
+
             <div class="vaero-commerce-actions">
 
                 <button
                     type="button"
-                    data-action="vaero:payment"
+                    data-action="vaero:payment:start"
+                    ${
+                        selectedPaymentMethod
+                            ? ""
+                            : "disabled"
+                    }
                 >
-                    Ödeme Adımına Geç
+                    Ödemeye Devam Et
                 </button>
 
             </div>
