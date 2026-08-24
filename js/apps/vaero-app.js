@@ -254,6 +254,123 @@ const VaeroApp = {
 
     },
 
+    updateCartItemQuantity(productId, quantity){
+
+    const product =
+        this.products[productId];
+
+    if(!product){
+        console.error(
+            "Sepet güncellenemedi: ürün bulunamadı.",
+            productId
+        );
+
+        return null;
+    }
+
+    const cart =
+        this.loadCart();
+
+    const item =
+        cart.items.find(cartItem =>
+            cartItem.productId === productId
+        );
+
+    if(!item){
+        return cart;
+    }
+
+    const safeQuantity =
+        Math.floor(
+            Number(quantity) || 0
+        );
+
+    if(safeQuantity <= 0){
+
+        cart.items =
+            cart.items.filter(cartItem =>
+                cartItem.productId !== productId
+            );
+
+    }else{
+
+        item.quantity =
+            safeQuantity;
+
+        item.updatedAt =
+            Date.now();
+
+    }
+
+    return this.saveCart(cart);
+
+},
+
+increaseCartItem(productId){
+
+    const cart =
+        this.loadCart();
+
+    const item =
+        cart.items.find(cartItem =>
+            cartItem.productId === productId
+        );
+
+    if(!item){
+        return this.addToCart(productId, 1);
+    }
+
+    return this.updateCartItemQuantity(
+        productId,
+        item.quantity + 1
+    );
+
+},
+
+decreaseCartItem(productId){
+
+    const cart =
+        this.loadCart();
+
+    const item =
+        cart.items.find(cartItem =>
+            cartItem.productId === productId
+        );
+
+    if(!item){
+        return cart;
+    }
+
+    return this.updateCartItemQuantity(
+        productId,
+        item.quantity - 1
+    );
+
+},
+
+removeFromCart(productId){
+
+    const cart =
+        this.loadCart();
+
+    cart.items =
+        cart.items.filter(item =>
+            item.productId !== productId
+        );
+
+    return this.saveCart(cart);
+
+},
+
+clearCart(){
+
+    const emptyCart =
+        this.createEmptyCart();
+
+    return this.saveCart(emptyCart);
+
+},
+
     getCartItemCount(){
 
         const cart =
