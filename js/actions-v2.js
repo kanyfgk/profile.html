@@ -463,6 +463,39 @@ VAERO.engine.mount(
 
 },
 
+    createVaeroOrder(){
+
+    if(
+        !window.VaeroApp ||
+        typeof VaeroApp.createOrderFromCheckout !==
+            "function"
+    ){
+        return false;
+    }
+
+    const order =
+        VaeroApp.createOrderFromCheckout();
+
+    if(!order){
+        return false;
+    }
+
+    VaeroApp.clearCart();
+
+    VAERO.engine.currentVaeroOrder =
+        order;
+
+    VAERO.engine.currentEntityPage =
+        "vaero-order-success";
+
+    VAERO.engine.mount(
+        VAERO.engine.currentEntity
+    );
+
+    return true;
+
+},
+
     openWorlds(){
 
         return VAERO.engine.setView(
@@ -3016,6 +3049,10 @@ case "entity:type:select":
             case "entity:type:clear":
                 Actions.clearEntityType();
                 break;
+
+                case "vaero:order:create":
+    Actions.createVaeroOrder();
+    break;
 
             case "entity:create:cancel":
                 Actions.cancelEntityCreate();
