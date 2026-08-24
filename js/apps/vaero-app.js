@@ -821,6 +821,51 @@ clearCart(){
 
 },
 
+    getCheckoutStorageKey(){
+
+    return `vaero:commerce:checkout:${this.getCustomerId()}`;
+
+},
+
+loadCheckoutDraft(){
+
+    const savedCheckout =
+        localStorage.getItem(
+            this.getCheckoutStorageKey()
+        );
+
+    if(!savedCheckout){
+        return null;
+    }
+
+    try {
+
+        const checkout =
+            JSON.parse(savedCheckout);
+
+        if(
+            !checkout ||
+            typeof checkout !== "object" ||
+            !Array.isArray(checkout.items)
+        ){
+            return null;
+        }
+
+        return checkout;
+
+    } catch(error){
+
+        console.error(
+            "VAERO checkout taslağı okunamadı:",
+            error
+        );
+
+        return null;
+
+    }
+
+},
+
     createCheckoutDraft(){
 
     const cart =
@@ -879,7 +924,7 @@ clearCart(){
     };
 
     localStorage.setItem(
-        `vaero:commerce:checkout:${this.getCustomerId()}`,
+        this.getCheckoutStorageKey(),
         JSON.stringify(checkout)
     );
 
