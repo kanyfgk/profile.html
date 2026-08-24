@@ -827,6 +827,132 @@ clearCart(){
 
 },
 
+    getOrdersStorageKey(){
+
+    return `vaero:commerce:orders:${this.getCustomerId()}`;
+
+},
+
+    loadOrders(){
+
+    const savedOrders =
+        localStorage.getItem(
+            this.getOrdersStorageKey()
+        );
+
+    if(!savedOrders){
+        return [];
+    }
+
+    try {
+
+        const orders =
+            JSON.parse(savedOrders);
+
+        return Array.isArray(orders)
+            ? orders
+            : [];
+
+    } catch(error){
+
+        console.error(
+            "VAERO siparişleri okunamadı:",
+            error
+        );
+
+        return [];
+
+    }
+
+},
+
+    createOrderFromCheckout(){
+
+    const checkout =
+        this.loadCheckoutDraft();
+
+    if(
+        !checkout ||
+        checkout.status !== "paid" ||
+        checkout.payment?.status !==
+            "paid"
+    ){
+        return null;
+    }
+
+    const orders =
+        this.loadOrders();
+
+    const existingOrder =
+        orders.find(order =>
+            order.checkoutId ===
+            checkout.id
+        );
+
+    if(existingOrder){
+        return existingOrder;
+    }
+
+    const now =
+        Date.now();
+
+    const order = {
+        id:
+            crypto.randomUUID(),
+        checkoutId:
+            checkout.id,
+        customerId:
+            checkout.customerId,
+        status:
+            "confirmed",
+        fulfillmentStatus:
+            "pending",
+        currency:
+            checkout.currency,
+        items:
+            checkout.items.map(item => ({
+                ...item,
+                unitPrice: {
+                    ...item.unitPrice
+                }
+            })),
+        totals: {
+            ...checkout.totals
+        },
+        payment: {
+            ...checkout.payment
+        },
+        createdAt:
+            now,
+        updatedAt:
+            now
+    };
+
+    orders.unshift(order);
+
+    localStorage.setItem(
+        this.getOrdersStorageKey(),
+        JSON.stringify(orders)
+    );
+
+    checkout.status =
+        "order-created";
+
+    checkout.orderId =
+        order.id;
+
+    checkout.updatedAt =
+        now;
+
+    localStorage.setItem(
+        this.getCheckoutStorageKey(),
+        JSON.stringify(checkout)
+    );
+
+    return order;
+
+},
+
 loadCheckoutDraft(){
 
     const savedCheckout =
@@ -1992,7 +2118,11 @@ formatMoney(
             </section>
 
 ${
-    isPaymentPending
+    (
+        isPaymentPending ||
+        isPaymentPaid ||
+        isPaymentFailed
+    )
         ? `
             <section class="vaero-payment-status">
 
@@ -2001,7 +2131,13 @@ ${
                 </span>
 
                 <strong>
-                    Ödeme işlemi hazırlanıyor
+                    ${
+                        isPaymentPaid
+                            ? "Ödeme başarılı"
+                            : isPaymentFailed
+                                ? "Ödeme başarısız"
+                                : "Ödeme işlemi hazırlanıyor"
+                    }
                 </strong>
 
                 <small>
@@ -2013,30 +2149,60 @@ ${
                     }
                 </small>
 
+                ${
+                    isPaymentPending
+                        ? `
+                            <div class="vaero-commerce-actions">
+
+                                <button
+                                    type="button"
+                                    data-action="vaero:payment:success"
+                                >
+                                    Test Ödemesini Başarılı Say
+                                </button>
+
+                                <button
+                                    type="button"
+                                    data-action="vaero:payment:fail"
+                                >
+                                    Başarısız Say
+                                </button>
+
+                            </div>
+                        `
+                        : ""
+                }
+
             </section>
         `
         : ""
 }
-            <div class="vaero-commerce-actions">
 
-                <button
-    type="button"
-    data-action="vaero:payment:start"
-    ${
-        !selectedPaymentMethod ||
-        isPaymentPending
-            ? "disabled"
-            : ""
-    }
->
-    ${
-        isPaymentPending
-            ? "Ödeme Hazırlanıyor…"
-            : "Ödemeye Devam Et"
-    }
-</button>
+<div class="vaero-commerce-actions">
 
-            </div>
+    <button
+        type="button"
+        data-action="vaero:payment:start"
+        ${
+            !selectedPaymentMethod ||
+            isPaymentPending ||
+            isPaymentPaid
+                ? "disabled"
+                : ""
+        }
+    >
+        ${
+            isPaymentPaid
+                ? "Ödeme Tamamlandı"
+                : isPaymentPending
+                    ? "Ödeme Hazırlanıyor…"
+                    : isPaymentFailed
+                        ? "Ödemeyi Yeniden Dene"
+                        : "Ödemeye Devam Et"
+        }
+    </button>
+
+</div>
 
         </section>
     `;
