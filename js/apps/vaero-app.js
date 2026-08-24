@@ -2103,6 +2103,14 @@ formatMoney(
     checkout.payment?.status ===
     "pending";
 
+        const isPaymentPaid =
+    checkout.payment?.status ===
+    "paid";
+
+const isPaymentFailed =
+    checkout.payment?.status ===
+    "failed";
+
     return `
         <section class="vaero-commerce-app">
 
