@@ -370,6 +370,36 @@ VAERO.engine.mount(
 
 },
 
+    selectVaeroPaymentMethod(method){
+
+    if(
+        !window.VaeroApp ||
+        typeof VaeroApp.setCheckoutPaymentMethod !==
+            "function"
+    ){
+        return false;
+    }
+
+    const checkout =
+        VaeroApp.setCheckoutPaymentMethod(
+            method
+        );
+
+    if(!checkout){
+        return false;
+    }
+
+    VAERO.engine.currentVaeroCheckout =
+        checkout;
+
+    VAERO.engine.mount(
+        VAERO.engine.currentEntity
+    );
+
+    return true;
+
+},
+
     openWorlds(){
 
         return VAERO.engine.setView(
@@ -3067,6 +3097,12 @@ case "vaero:cart:clear":
 
                 case "vaero:checkout":
     Actions.startVaeroCheckout();
+    break;
+
+                case "vaero:payment:method":
+    Actions.selectVaeroPaymentMethod(
+        button.dataset.paymentMethod
+    );
     break;
 
             case "brain:open":
