@@ -30,50 +30,55 @@ const Renderer = {
             VAERO.engine.currentOpenedEntity;
 
         const currentEntityPage =
-    VAERO.engine.currentEntityPage;
+            VAERO.engine.currentEntityPage;
+
+        const isVaeroApp =
+            currentEntityPage &&
+            currentEntityPage.startsWith("vaero");
 
         root.innerHTML = `
-    <main class="vaero-shell">
+            <main class="vaero-shell">
 
-        <section class="section">
+                <section class="section">
 
-            ${
-                currentEntityPage === "vaero"
-                    ? ""
-                    : components.hero(rootEntity)
-            }
+                    ${
+                        isVaeroApp
+                            ? ""
+                            : components.hero(rootEntity)
+                    }
 
-            ${
-                currentEntityPage === "vaero"
-                    ? (
-                        window.VaeroApp &&
-                        typeof window.VaeroApp.render === "function"
-                            ? window.VaeroApp.render()
-                            : "<p>VAERO uygulaması yüklenemedi.</p>"
-                      )
-                    : openedEntity
-                        ? components.entityApp(
-                            openedEntity
-                          )
-                        : currentWorld
-                            ? components.worldView(
-                                currentWorld
+                    ${
+                        isVaeroApp
+                            ? (
+                                window.VaeroApp &&
+                                typeof window.VaeroApp.render === "function"
+                                    ? window.VaeroApp.render()
+                                    : "<p>VAERO uygulaması yüklenemedi.</p>"
                               )
-                            : components.home()
-            }
+                            : openedEntity
+                                ? components.entityApp(
+                                    openedEntity
+                                  )
+                                : currentWorld
+                                    ? components.worldView(
+                                        currentWorld
+                                      )
+                                    : components.home()
+                    }
 
-        </section>
+                </section>
 
-        ${components.navigation()}
+                ${components.navigation()}
 
-        ${components.modal()}
+                ${components.modal()}
 
-        ${components.idModal()}
+                ${components.idModal()}
 
-        ${components.brainPanel()}
+                ${components.brainPanel()}
 
-    </main>
-`;
+            </main>
+        `;
+
     },
 
     renderHome(){
@@ -138,10 +143,10 @@ const Renderer = {
                     <div class="vaero-home-grid">
 
                         <button
-    type="button"
-    class="vaero-home-card vaero-home-card-primary"
-    data-action="worlds:open"
->
+                            type="button"
+                            class="vaero-home-card vaero-home-card-primary"
+                            data-action="worlds:open"
+                        >
                             <span class="vaero-home-card-icon">
                                 <svg viewBox="0 0 24 24">
                                     <circle
