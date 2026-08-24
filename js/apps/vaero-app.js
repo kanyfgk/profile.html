@@ -161,7 +161,3 @@ const VaeroApp = {
 };
 
 window.VaeroApp = VaeroApp;
-
-if(window.AppRegistry){
-    AppRegistry.register(VaeroApp);
-}
