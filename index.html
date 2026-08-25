@@ -9,10 +9,10 @@
  
 <link rel="stylesheet" href="css/core.css">
   <link rel="stylesheet" href="css/layout.css">
-  <link rel="stylesheet" href="css/components.css">
-  <link rel="stylesheet" href="css/navigation.css">
- <link rel="stylesheet" href="css/engine-home.css?v=build-002">
- <link rel="stylesheet" href="css/vaero-app.css?v=build-001">
+<link rel="stylesheet" href="css/components.css?v=build-003">
+<link rel="stylesheet" href="css/navigation.css?v=build-003">
+<link rel="stylesheet" href="css/engine-home.css?v=build-002"> 
+<link rel="stylesheet" href="css/vaero-app.css?v=build-002">
   <link rel="stylesheet" href="css/modal.css">
  <link rel="stylesheet" href="css/brain.css">
  <link rel="stylesheet" href="css/welcome-screen.css?v=build-029">
@@ -91,24 +91,25 @@
 <script src="js/guardian.js"></script>
 <script src="js/evolution.js?v=build-026"></script>
 <script src="js/organ-status.js"></script> 
-<script src="js/brain-intent.js?v=build-008"></script>
-<script src="js/brain-action-policy.js?v=build-023"></script> 
-<script src="js/brain.js?v=build-008"></script>
-<script src="js/brain-awareness.js"></script> 
-<script src="js/brain-context.js"></script> 
-<script src="js/brain-core.js"></script>
+<script src="js/brain-intent.js?v=build-009"></script>
+<script src="js/brain-action-policy.js?v=build-024"></script>
+
+<script src="js/brain-context.js"></script>
+<script src="js/brain-core.js?v=build-001"></script>
+<script src="js/brain-actions.js?v=build-001"></script>
+<script src="js/brain.js?v=build-009"></script>
+
+<script src="js/brain-awareness.js"></script>
 <script src="js/brain-provider.js"></script>
-<script src="js/brain-service.js"></script> 
-<script src="js/brain-actions.js"></script> 
-<script src="js/brain-skills.js"></script> 
-<script src="js/brain-mode.js"></script> 
-<script src="js/actions-v2.js?v=build-027"></script>  
- 
+<script src="js/brain-service.js"></script>
+<script src="js/brain-skills.js"></script>
+<script src="js/brain-mode.js"></script>
+<script src="js/actions-v2.js?v=build-028"></script>
 <script src="js/components.js?v=build-030"></script>
 <script src="js/theme.js"></script> 
 <script src="js/ui-kit.js"></script> 
 <script src="js/app-registry.js"></script> 
-<script src="js/apps/vaero-app.js?v=build-001"></script> 
+<script src="js/apps/vaero-app.js?v=build-002"></script> 
 <script src="js/apps/profile-app.js?v=build-014"></script>
 <script src="js/apps/organs-app.js"></script> 
 <script src="js/apps/identity-app.js"></script>
@@ -120,8 +121,29 @@
 <script src="js/apps/brain-app.js"></script> 
 <script src="js/apps/discovery-app.js?v=build-028"></script>
 <script src="js/apps/welcome-app.js?v=build-032"></script>
-<script src="js/renderer.js?v=build-027"></script>
-<script src="js/engine.js?v=build-027"></script> 
+<script src="js/renderer.js?v=build-029"></script>
+<script src="js/engine.js?v=build-029"></script>
+
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+
+    const discoveryCompleted =
+        localStorage.getItem("vaero:discovery:completed") === "true";
+
+    const welcomeCompleted =
+        localStorage.getItem("vaero:welcome:completed:v2") === "true";
+
+    if(
+        discoveryCompleted &&
+        welcomeCompleted &&
+        window.Engine &&
+        typeof window.Engine.start === "function"
+    ){
+        window.Engine.start();
+    }
+
+});
+</script>
 
  
 </body>

@@ -821,6 +821,394 @@ clearCart(){
 
 },
 
+    getCheckoutStorageKey(){
+
+    return `vaero:commerce:checkout:${this.getCustomerId()}`;
+
+},
+
+    getOrdersStorageKey(){
+
+    return `vaero:commerce:orders:${this.getCustomerId()}`;
+
+},
+
+    getPhysicalAssetsStorageKey(){
+
+    return `vaero:physical-assets:${this.getCustomerId()}`;
+
+},
+
+    loadPhysicalAssets(){
+
+    const savedAssets =
+        localStorage.getItem(
+            this.getPhysicalAssetsStorageKey()
+        );
+
+    if(!savedAssets){
+        return [];
+    }
+
+    try {
+
+        const assets =
+            JSON.parse(savedAssets);
+
+        return Array.isArray(assets)
+            ? assets
+            : [];
+
+    } catch(error){
+
+        console.error(
+            "VAERO fiziksel varlıkları okunamadı:",
+            error
+        );
+
+        return [];
+
+    }
+
+},
+
+    createPhysicalAssetsFromOrder(order){
+
+    if(
+        !order ||
+        !order.id ||
+        !Array.isArray(order.items)
+    ){
+        return [];
+    }
+
+    const assets =
+        this.loadPhysicalAssets();
+
+    const now =
+        Date.now();
+
+    const createdAssets = [];
+
+    order.items.forEach(item => {
+
+        const sourceKey =
+            `${order.id}:${item.key}`;
+
+        const alreadyExists =
+            assets.some(asset =>
+                asset.sourceKey ===
+                sourceKey
+            );
+
+        if(alreadyExists){
+            return;
+        }
+
+        const product =
+            this.products[item.productId];
+
+        if(!product){
+            return;
+        }
+
+        const variant =
+            this.getProductVariant(
+                product.id,
+                item.variantId
+            );
+
+        const asset = {
+            id:
+                crypto.randomUUID(),
+            sourceKey,
+            sourceOrderId:
+                order.id,
+            ownerId:
+                order.customerId,
+            productId:
+                product.id,
+            variantId:
+                item.variantId || null,
+            sku:
+                item.sku,
+            name:
+                product.name,
+            type:
+                product.type,
+            variantLabel:
+                variant
+                    ? variant.label
+                    : null,
+            quantity:
+                item.quantity,
+            status:
+                "ordered",
+            createdAt:
+                now,
+            updatedAt:
+                now
+        };
+
+        assets.unshift(asset);
+        createdAssets.push(asset);
+
+    });
+
+    localStorage.setItem(
+        this.getPhysicalAssetsStorageKey(),
+        JSON.stringify(assets)
+    );
+
+    return createdAssets;
+
+},
+
+    loadOrders(){
+
+    const savedOrders =
+        localStorage.getItem(
+            this.getOrdersStorageKey()
+        );
+
+    if(!savedOrders){
+        return [];
+    }
+
+    try {
+
+        const orders =
+            JSON.parse(savedOrders);
+
+        return Array.isArray(orders)
+            ? orders
+            : [];
+
+    } catch(error){
+
+        console.error(
+            "VAERO siparişleri okunamadı:",
+            error
+        );
+
+        return [];
+
+    }
+
+},
+
+    createOrderFromCheckout(){
+
+    const checkout =
+        this.loadCheckoutDraft();
+
+    if(
+        !checkout ||
+        checkout.status !== "paid" ||
+        checkout.payment?.status !==
+            "paid"
+    ){
+        return null;
+    }
+
+    const orders =
+        this.loadOrders();
+
+    const existingOrder =
+        orders.find(order =>
+            order.checkoutId ===
+            checkout.id
+        );
+
+    if(existingOrder){
+
+    this.createPhysicalAssetsFromOrder(
+        existingOrder
+    );
+
+    return existingOrder;
+
+}
+
+    const now =
+        Date.now();
+
+    const order = {
+        id:
+            crypto.randomUUID(),
+        checkoutId:
+            checkout.id,
+        customerId:
+            checkout.customerId,
+        status:
+            "confirmed",
+        fulfillmentStatus:
+            "pending",
+        currency:
+            checkout.currency,
+        items:
+            checkout.items.map(item => ({
+                ...item,
+                unitPrice: {
+                    ...item.unitPrice
+                }
+            })),
+        totals: {
+            ...checkout.totals
+        },
+        payment: {
+            ...checkout.payment
+        },
+        createdAt:
+            now,
+        updatedAt:
+            now
+    };
+
+    orders.unshift(order);
+
+    localStorage.setItem(
+        this.getOrdersStorageKey(),
+        JSON.stringify(orders)
+    );
+
+    checkout.status =
+        "order-created";
+
+    checkout.orderId =
+        order.id;
+
+    checkout.updatedAt =
+        now;
+
+    localStorage.setItem(
+        this.getCheckoutStorageKey(),
+        JSON.stringify(checkout)
+    );
+
+        this.createPhysicalAssetsFromOrder(
+    order
+);
+
+    return order;
+
+},
+
+loadCheckoutDraft(){
+
+    const savedCheckout =
+        localStorage.getItem(
+            this.getCheckoutStorageKey()
+        );
+
+    if(!savedCheckout){
+        return null;
+    }
+
+    try {
+
+        const checkout =
+            JSON.parse(savedCheckout);
+
+        if(
+            !checkout ||
+            typeof checkout !== "object" ||
+            !Array.isArray(checkout.items)
+        ){
+            return null;
+        }
+
+        return checkout;
+
+    } catch(error){
+
+        console.error(
+            "VAERO checkout taslağı okunamadı:",
+            error
+        );
+
+        return null;
+
+    }
+
+},
+
+    createCheckoutDraft(){
+
+    const cart =
+        this.loadCart();
+
+    if(cart.items.length === 0){
+        return null;
+    }
+
+    const subtotal =
+        this.getCartSubtotal();
+
+    const now =
+        Date.now();
+
+    const checkout = {
+        id:
+            crypto.randomUUID(),
+        customerId:
+            this.getCustomerId(),
+        status:
+            "draft",
+        currency:
+            subtotal.currency,
+        items:
+            cart.items.map(item => ({
+                key:
+                    item.key,
+                productId:
+                    item.productId,
+                variantId:
+                    item.variantId || null,
+                sku:
+                    item.sku,
+                quantity:
+                    item.quantity,
+                unitPrice:
+                    {
+                        ...item.unitPrice
+                    }
+            })),
+        totals: {
+            subtotal:
+                subtotal.amount,
+            shipping:
+                null,
+            tax:
+                null,
+            grandTotal:
+                null
+        },
+
+        payment: {
+            method:
+                null,
+            status:
+                "unpaid",
+            transactionId:
+                null
+        },
+        
+        createdAt:
+            now,
+        updatedAt:
+            now
+    };
+
+    localStorage.setItem(
+        this.getCheckoutStorageKey(),
+        JSON.stringify(checkout)
+    );
+
+    return checkout;
+
+},
+    
 formatMoney(
     amount,
     currency = this.baseCurrency
@@ -846,6 +1234,143 @@ formatMoney(
 
 },
 
+    setCheckoutPaymentMethod(method){
+
+    const allowedMethods = [
+        "card",
+        "bank-transfer"
+    ];
+
+    if(!allowedMethods.includes(method)){
+        return null;
+    }
+
+    const checkout =
+        this.loadCheckoutDraft();
+
+    if(!checkout){
+        return null;
+    }
+
+    checkout.payment = {
+        ...(checkout.payment || {}),
+        method,
+        status:
+            checkout.payment?.status ||
+            "unpaid",
+        transactionId:
+            checkout.payment?.transactionId ||
+            null
+    };
+
+    checkout.updatedAt =
+        Date.now();
+
+    localStorage.setItem(
+        this.getCheckoutStorageKey(),
+        JSON.stringify(checkout)
+    );
+
+    return checkout;
+
+},
+
+    startCheckoutPayment(){
+
+    const checkout =
+        this.loadCheckoutDraft();
+
+    if(
+        !checkout ||
+        !checkout.payment?.method ||
+        checkout.items.length === 0
+    ){
+        return null;
+    }
+
+    const now =
+        Date.now();
+
+    checkout.status =
+        "payment-pending";
+
+    checkout.payment = {
+        ...checkout.payment,
+        status: "pending",
+        attemptId:
+            crypto.randomUUID(),
+        transactionId: null,
+        startedAt: now
+    };
+
+    checkout.updatedAt =
+        now;
+
+    localStorage.setItem(
+        this.getCheckoutStorageKey(),
+        JSON.stringify(checkout)
+    );
+
+    return checkout;
+
+},
+
+    completeCheckoutPayment(
+    successful,
+    failureReason = null
+){
+
+    const checkout =
+        this.loadCheckoutDraft();
+
+    if(
+        !checkout ||
+        checkout.payment?.status !==
+            "pending"
+    ){
+        return null;
+    }
+
+    const now =
+        Date.now();
+
+    checkout.status =
+        successful
+            ? "paid"
+            : "payment-failed";
+
+    checkout.payment = {
+        ...checkout.payment,
+        status:
+            successful
+                ? "paid"
+                : "failed",
+        transactionId:
+            successful
+                ? crypto.randomUUID()
+                : null,
+        failureReason:
+            successful
+                ? null
+                : (
+                    failureReason ||
+                    "payment-failed"
+                ),
+        completedAt: now
+    };
+
+    checkout.updatedAt =
+        now;
+
+    localStorage.setItem(
+        this.getCheckoutStorageKey(),
+        JSON.stringify(checkout)
+    );
+
+    return checkout;
+
+},
+    
     render(){
 
         const page =
@@ -863,6 +1388,14 @@ formatMoney(
     return this.renderCart();
 }
 
+        if(page === "vaero-checkout"){
+            return this.renderCheckout();
+        }
+
+        if(page === "vaero-order-success"){
+    return this.renderOrderSuccess();
+}
+        
         if(page === "vaero-product"){
             return this.renderProduct(
                 VAERO.engine.currentVaeroProduct
@@ -1511,6 +2044,427 @@ formatMoney(
     `;
 
 },
+
+    renderCheckout(){
+
+    const checkout =
+        this.loadCheckoutDraft();
+
+    if(
+        !checkout ||
+        checkout.items.length === 0
+    ){
+
+        return `
+            <section class="vaero-commerce-app">
+
+                ${this.renderBackButton()}
+
+                <header class="vaero-commerce-header">
+
+                    <div>
+
+                        <span class="vaero-commerce-eyebrow">
+                            VAERO CHECKOUT
+                        </span>
+
+                        <h1>
+                            Sipariş taslağı bulunamadı
+                        </h1>
+
+                        <p>
+                            Sepetine dönerek siparişini yeniden oluşturabilirsin.
+                        </p>
+
+                    </div>
+
+                </header>
+
+                <div class="vaero-commerce-actions">
+
+                    <button
+                        type="button"
+                        data-action="vaero:cart"
+                    >
+                        Sepete Dön
+                    </button>
+
+                </div>
+
+            </section>
+        `;
+
+    }
+
+    const selectedPaymentMethod =
+        checkout.payment?.method || null;
+        
+        const isPaymentPending =
+    checkout.payment?.status ===
+    "pending";
+
+        const isPaymentPaid =
+    checkout.payment?.status ===
+    "paid";
+
+const isPaymentFailed =
+    checkout.payment?.status ===
+    "failed";
+
+    return `
+        <section class="vaero-commerce-app">
+
+            <button
+                type="button"
+                class="vaero-commerce-id-btn"
+                data-action="vaero:cart"
+                style="margin-bottom:18px;"
+            >
+                ← Sepete Dön
+            </button>
+
+            <header class="vaero-commerce-header">
+
+                <div>
+
+                    <span class="vaero-commerce-eyebrow">
+                        VAERO CHECKOUT
+                    </span>
+
+                    <h1>
+                        Siparişini Onayla
+                    </h1>
+
+                    <p>
+                        Ürünlerini kontrol et ve ödeme adımına ilerle.
+                    </p>
+
+                </div>
+
+            </header>
+
+            <section class="vaero-cart-items">
+
+                ${checkout.items
+                    .map(item => {
+
+                        const product =
+                            this.products[item.productId];
+
+                        if(!product){
+                            return "";
+                        }
+
+                        const variant =
+                            this.getProductVariant(
+                                product.id,
+                                item.variantId
+                            );
+
+                        const lineTotal =
+                            (
+                                Number(
+                                    item.unitPrice?.amount
+                                ) || 0
+                            ) * item.quantity;
+
+                        return `
+                            <article class="vaero-cart-item">
+
+                                <div class="vaero-cart-item-copy">
+
+                                    <span class="vaero-product-type">
+                                        ${product.type}
+                                    </span>
+
+                                    <strong>
+                                        ${product.name}
+                                    </strong>
+
+                                    <small>
+                                        ${
+                                            variant
+                                                ? variant.label
+                                                : product.subtitle
+                                        }
+                                        · ${item.quantity} adet
+                                    </small>
+
+                                </div>
+
+                                <strong>
+                                    ${this.formatMoney(
+                                        lineTotal,
+                                        checkout.currency
+                                    )}
+                                </strong>
+
+                            </article>
+                        `;
+
+                    })
+                    .join("")}
+
+            </section>
+
+            <section class="vaero-cart-summary">
+
+                <div>
+
+                    <span>
+                        Ara toplam
+                    </span>
+
+                    <strong>
+                        ${this.formatMoney(
+                            checkout.totals.subtotal,
+                            checkout.currency
+                        )}
+                    </strong>
+
+                </div>
+
+                <small>
+                    Teslimat ve vergiler ödeme öncesinde hesaplanacaktır.
+                </small>
+
+            </section>
+
+            <section class="vaero-payment-methods">
+
+                <span class="vaero-commerce-eyebrow">
+                    ÖDEME YÖNTEMİ
+                </span>
+
+                <div class="vaero-commerce-actions">
+
+                    <button
+                        type="button"
+                        class="${
+                            selectedPaymentMethod === "card"
+                                ? "is-active"
+                                : ""
+                        }"
+                        data-action="vaero:payment:method"
+                        data-payment-method="card"
+                        ${isPaymentPending ? "disabled" : ""}
+                    >
+                        Kart ile Ödeme
+                    </button>
+
+                    <button
+    type="button"
+    class="${
+        selectedPaymentMethod === "bank-transfer"
+            ? "is-active"
+            : ""
+    }"
+    data-action="vaero:payment:method"
+    data-payment-method="bank-transfer"
+    ${isPaymentPending ? "disabled" : ""}
+>
+    Banka Transferi
+</button>
+
+                </div>
+
+            </section>
+
+${
+    (
+        isPaymentPending ||
+        isPaymentPaid ||
+        isPaymentFailed
+    )
+        ? `
+            <section class="vaero-payment-status">
+
+                <span class="vaero-commerce-eyebrow">
+                    ÖDEME DURUMU
+                </span>
+
+                <strong>
+                    ${
+                        isPaymentPaid
+                            ? "Ödeme başarılı"
+                            : isPaymentFailed
+                                ? "Ödeme başarısız"
+                                : "Ödeme işlemi hazırlanıyor"
+                    }
+                </strong>
+
+                <small>
+                    Seçilen yöntem: ${
+                        selectedPaymentMethod ===
+                        "bank-transfer"
+                            ? "Banka Transferi"
+                            : "Kart ile Ödeme"
+                    }
+                </small>
+
+                ${
+                    isPaymentPending
+                        ? `
+                            <div class="vaero-commerce-actions">
+
+                                <button
+                                    type="button"
+                                    data-action="vaero:payment:success"
+                                >
+                                    Test Ödemesini Başarılı Say
+                                </button>
+
+                                <button
+                                    type="button"
+                                    data-action="vaero:payment:fail"
+                                >
+                                    Başarısız Say
+                                </button>
+
+                            </div>
+                        `
+                        : ""
+                }
+
+            </section>
+        `
+        : ""
+}
+
+<div class="vaero-commerce-actions">
+
+    <button
+    type="button"
+    data-action="${
+        isPaymentPaid
+            ? "vaero:order:create"
+            : "vaero:payment:start"
+    }"
+    ${
+        !selectedPaymentMethod ||
+        isPaymentPending
+            ? "disabled"
+            : ""
+    }
+>
+    ${
+        isPaymentPaid
+            ? "Siparişi Oluştur"
+            : isPaymentPending
+                ? "Ödeme Hazırlanıyor…"
+                : isPaymentFailed
+                    ? "Ödemeyi Yeniden Dene"
+                    : "Ödemeye Devam Et"
+    }
+</button>
+</div>
+
+        </section>
+    `;
+
+},
+
+    renderOrderSuccess(){
+
+    const order =
+        VAERO.engine.currentVaeroOrder ||
+        this.loadOrders()[0] ||
+        null;
+
+    if(!order){
+
+        return `
+            <section class="vaero-commerce-app">
+
+                ${this.renderBackButton()}
+
+                <p>
+                    Sipariş kaydı bulunamadı.
+                </p>
+
+            </section>
+        `;
+
+    }
+
+    const total =
+        order.totals.grandTotal ??
+        order.totals.subtotal;
+
+        const orderAssets =
+    this.loadPhysicalAssets()
+        .filter(asset =>
+            asset.sourceOrderId ===
+            order.id
+        );
+
+const assetCount =
+    orderAssets.reduce(
+        (totalQuantity, asset) =>
+            totalQuantity +
+            (
+                Number(asset.quantity) ||
+                0
+            ),
+        0
+    );
+
+    return `
+        <section class="vaero-commerce-app">
+
+            <section class="vaero-payment-status">
+
+                <span class="vaero-commerce-eyebrow">
+                    SİPARİŞ ONAYLANDI
+                </span>
+
+                <h1>
+                    Fiziksel atmosferin hazırlanıyor
+                </h1>
+
+                <p>
+                    Siparişin başarıyla oluşturuldu.
+                    ${assetCount} fiziksel ürün kişisel
+                    Assets kayıtlarına eklendi.
+                </p>
+
+                <strong>
+                    ${this.formatMoney(
+                        total,
+                        order.currency
+                    )}
+                </strong>
+
+                <small>
+                    Sipariş No:
+                    ${order.id}
+                </small>
+
+            </section>
+
+            <div class="vaero-commerce-actions">
+
+                <button
+                    type="button"
+                    data-action="app:vaero"
+                >
+                    VAERO Ana Ekranı
+                </button>
+
+                <button
+                    type="button"
+                    data-action="vaero:collection"
+                >
+                    Ürünleri Gör
+                </button>
+
+            </div>
+
+        </section>
+    `;
+
+},
+    
 renderCartButton(){
 
     const itemCount =

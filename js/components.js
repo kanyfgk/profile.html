@@ -1,11 +1,23 @@
 const Components = {
+
+    escapeHTML(value){
+
+        return String(value ?? "")
+            .replaceAll("&", "&amp;")
+            .replaceAll("<", "&lt;")
+            .replaceAll(">", "&gt;")
+            .replaceAll('"', "&quot;")
+            .replaceAll("'", "&#039;");
+
+    },
+
     translate(value){
 
         const text =
-            String(value || "");
+            String(value ?? "");
 
         const key =
-            text.toLowerCase().trim(); 
+            text.toLowerCase().trim();
 
         const translations = {
             "living digital universe":
@@ -15,22 +27,28 @@ const Components = {
                 "Motor Çevrimiçi",
 
             "online":
-                "çevrimiçi",
+                "Çevrimiçi",
 
             "active":
-                "aktif",
+                "Aktif",
+
+            "inactive":
+                "Pasif",
+
+            "offline":
+                "Çevrimdışı",
 
             "ok":
-                "hazır",
+                "Hazır",
 
             "brand":
-                "marka",
+                "Marka",
 
             "verified":
-                "doğrulandı",
+                "Doğrulandı",
 
             "unverified":
-                "doğrulanmadı",
+                "Doğrulanmadı",
 
             "identity":
                 "Kimlik",
@@ -62,6 +80,9 @@ const Components = {
             "engine started":
                 "Motor başlatıldı",
 
+            "vaero engine started with root entity":
+                "VAERO Engine başlatıldı",
+
             "discovery journey tamamlandı":
                 "Discovery Journey tamamlandı",
 
@@ -70,6 +91,9 @@ const Components = {
 
             "company":
                 "Şirket",
+
+            "ai":
+                "Yapay Zekâ",
 
             "device":
                 "Cihaz",
@@ -94,88 +118,185 @@ const Components = {
 
     },
 
-    hero(entity){
-
-    return `
-        <header class="brand-header">
-
-            <div class="brand-mark">
-                ${entity.name.charAt(0)}
-            </div>
-
-            <div class="brand-info">
-
-                <span class="brand-label">
-                    VAERO ENGINE
-                </span>
-
-                <h1 class="brand-title">
-                    ${entity.name}
-                </h1>
-
-                <p class="brand-subtitle">
-                    ${this.translate(entity.description)}
-                </p>
-
-                <div class="status-pill">
-
-                    <span
-                        class="status-dot"
-                        aria-hidden="true"
-                    ></span>
-
-                    <span>
-                        ${this.translate(
-                            entity.status === "online"
-                                ? "Engine Online"
-                                : entity.status
-                        )}
-                    </span>
-
-                </div>
-
-            </div>
-
-        </header>
-    `;
-
-},
-
-    home(){
-
-        const showBrainIntro =
-            localStorage.getItem(
-                "vaero:brain:intro:v1"
-            ) !== "true";
+    getWorlds(){
 
         const worldService =
             VAERO.get("world");
 
-        const worlds =
+        return (
             worldService &&
             typeof worldService.all === "function"
                 ? worldService.all()
-                : [];
+                : []
+        );
+
+    },
+
+    getActivity(){
+
+        const evolution =
+            VAERO.get("evolution");
+
+        if(
+            !evolution ||
+            typeof evolution.all !== "function"
+        ){
+            return [];
+        }
+
+        return evolution
+            .all()
+            .filter(event =>
+                event &&
+                event.type !== "runtime:tick"
+            )
+            .slice(0, 4);
+
+    },
+
+    getDisplayName(entity){
+
+        try {
+
+            const saved =
+                localStorage.getItem(
+                    "vaero:user:profile:v1"
+                );
+
+            if(saved){
+
+                const parsed =
+                    JSON.parse(saved);
+
+                const savedName =
+                    String(
+                        parsed?.name || ""
+                    ).trim();
+
+                if(savedName){
+                    return savedName;
+                }
+
+            }
+
+        } catch(error){
+
+            console.warn(
+                "Kullanıcı adı okunamadı:",
+                error
+            );
+
+        }
+
+        const profileName =
+            String(
+                entity?.profile?.name || ""
+            ).trim();
+
+        if(
+            profileName &&
+            profileName.toLowerCase() !==
+                "vaero"
+        ){
+            return profileName;
+        }
+
+        return "";
+
+    },
+
+    formatRelativeTime(timestamp){
+
+        const value =
+            Number(timestamp);
+
+        if(!Number.isFinite(value)){
+            return "";
+        }
+
+        const difference =
+            Math.max(
+                0,
+                Date.now() - value
+            );
+
+        const minute =
+            60 * 1000;
+
+        const hour =
+            60 * minute;
+
+        const day =
+            24 * hour;
+
+        if(difference < minute){
+            return "Şimdi";
+        }
+
+        if(difference < hour){
+
+            const minutes =
+                Math.floor(
+                    difference / minute
+                );
+
+            return `${minutes} dk önce`;
+
+        }
+
+        if(difference < day){
+
+            const hours =
+                Math.floor(
+                    difference / hour
+                );
+
+            return `${hours} saat önce`;
+
+        }
+
+        const days =
+            Math.floor(
+                difference / day
+            );
+
+        return `${days} gün önce`;
+
+    },
+
+    home(entity){
+
+        const worlds =
+            this.getWorlds();
 
         const activeWorld =
-            VAERO.engine?.currentWorld ||
+            worlds.find(world =>
+                world.status === "active"
+            ) ||
             worlds[0] ||
             null;
 
         const activeEntities =
-            Array.isArray(activeWorld?.entities)
+            Array.isArray(
+                activeWorld?.entities
+            )
                 ? activeWorld.entities.filter(
-                    entity =>
-                        entity.status === "online"
+                    item =>
+                        item?.status === "active" ||
+                        item?.status === "online"
                 )
                 : [];
 
-        const activeWorldName =
-            activeWorld?.name ||
-            "Henüz dünya yok";
+        const activities =
+            this.getActivity();
 
-        const activeWorldCount =
-            activeEntities.length;
+        const displayName =
+            this.getDisplayName(entity);
+
+        const welcomeText =
+            displayName
+                ? `Hoş geldin, ${this.escapeHTML(displayName)}`
+                : "Hoş geldin";
 
         return `
             <section class="vaero-engine-home">
@@ -197,7 +318,9 @@ const Components = {
                         <button
                             type="button"
                             class="engine-icon-btn"
-                            aria-label="Bildirimler"
+                            aria-label="Bildirimler yakında"
+                            title="Bildirimler yakında"
+                            disabled
                         >
                             ♢
                         </button>
@@ -205,7 +328,9 @@ const Components = {
                         <button
                             type="button"
                             class="engine-icon-btn"
-                            aria-label="Tarama"
+                            aria-label="Tarama yakında"
+                            title="Tarama yakında"
+                            disabled
                         >
                             ⌗
                         </button>
@@ -214,21 +339,12 @@ const Components = {
 
                 </header>
 
-                <section
-                    class="
-                        engine-hero
-                        ${
-                            showBrainIntro
-                                ? "has-brain-intro"
-                                : ""
-                        }
-                    "
-                >
+                <section class="engine-hero">
 
                     <div class="engine-hero-copy">
 
                         <span class="engine-welcome">
-                            Hoş geldin, Mehmet
+                            ${welcomeText}
                         </span>
 
                         <h1>
@@ -236,18 +352,24 @@ const Components = {
                         </h1>
 
                         <p>
-                            Yaşayan dijital evreninin kontrol merkezi
+                            Yaşayan dijital evrenin kontrol merkezi
                         </p>
 
                         <div class="engine-status-pill">
 
-                            <span class="engine-status-dot"></span>
+                            <span
+                                class="engine-status-dot"
+                                aria-hidden="true"
+                            ></span>
 
                             <strong>
                                 Sistem Online
                             </strong>
 
-                            <span class="engine-status-separator"></span>
+                            <span
+                                class="engine-status-separator"
+                                aria-hidden="true"
+                            ></span>
 
                             <small>
                                 Tüm sistemler çalışıyor
@@ -273,26 +395,6 @@ const Components = {
                         </span>
                     </button>
 
-                    ${
-                        showBrainIntro
-                            ? `
-                                <button
-                                    type="button"
-                                    class="engine-brain-intro"
-                                    data-action="brain:open"
-                                >
-                                    <strong>
-                                        Brain
-                                    </strong>
-
-                                    Aklına takılan bir şey varsa
-                                    bana dokun ve yaz. Engine’i
-                                    birlikte keşfedebiliriz.
-                                </button>
-                            `
-                            : ""
-                    }
-
                 </section>
 
                 <section class="engine-shortcuts">
@@ -303,140 +405,50 @@ const Components = {
 
                     <div class="engine-shortcuts-grid">
 
-                        <button
-                            type="button"
-                            class="engine-shortcut-card"
-                            data-action="worlds:open"
-                        >
-                            <span class="engine-shortcut-icon">
-                                ◯
-                            </span>
+                        ${this.shortcutCard({
+                            action: "worlds:open",
+                            icon: "◯",
+                            title: "Dünyalar",
+                            subtitle: "Keşfet ve yönet",
+                            tone: "gold"
+                        })}
 
-                            <strong>
-                                Dünyalar
-                            </strong>
+                        ${this.shortcutCard({
+                            action: "profile:open",
+                            icon: "♙",
+                            title: "Profilim",
+                            subtitle: "Yönün ve tercihlerın",
+                            tone: "blue"
+                        })}
 
-                            <small>
-                                Keşfet ve yönet
-                            </small>
+                        ${this.shortcutCard({
+                            action: "entities:open",
+                            icon: "⬡",
+                            title: "Varlıklar",
+                            subtitle: "Varlıklarını yönet",
+                            tone: "violet"
+                        })}
 
-                            <span class="engine-shortcut-arrow">
-                                →
-                            </span>
-                        </button>
-
-                        <button
-                            type="button"
-                            class="engine-shortcut-card"
-                            data-action="entity:profile"
-                        >
-                            <span class="engine-shortcut-icon">
-                                ♙
-                            </span>
-
-                            <strong>
-                                Profilim
-                            </strong>
-
-                            <small>
-                                Kimliğin ve ayarların
-                            </small>
-
-                            <span class="engine-shortcut-arrow">
-                                →
-                            </span>
-                        </button>
-
-                        <button
-                            type="button"
-                            class="engine-shortcut-card"
-                            data-action="entities:open"
-                        >
-                            <span class="engine-shortcut-icon">
-                                ⬡
-                            </span>
-
-                            <strong>
-                                Varlıklar
-                            </strong>
-
-                            <small>
-                                Varlıklarını yönet
-                            </small>
-
-                            <span class="engine-shortcut-arrow">
-                                →
-                            </span>
-                        </button>
-
-                        <button
-                            type="button"
-                            class="engine-shortcut-card"
-                            data-action="world:create"
-                        >
-                            <span class="engine-shortcut-icon">
-                                ✦
-                            </span>
-
-                            <strong>
-                                Yeni Dünya
-                            </strong>
-
-                            <small>
-                                Evrenine yeni bir dünya ekle
-                            </small>
-
-                            <span class="engine-shortcut-arrow">
-                                →
-                            </span>
-                        </button>
+                        ${this.shortcutCard({
+                            action: "create:open",
+                            icon: "✦",
+                            title: "Yeni Dünya",
+                            subtitle: "Yeni bir yapı başlat",
+                            tone: "green"
+                        })}
 
                     </div>
 
                 </section>
 
-                <section class="engine-active-world">
-
-                    <div class="engine-active-world-copy">
-
-                        <span class="engine-section-label">
-                            AKTİF DÜNYAN
-                        </span>
-
-                        <h2>
-                            ${activeWorldName}
-                        </h2>
-
-                        <strong class="engine-active-count">
-                            ${activeWorldCount} aktif varlık
-                        </strong>
-
-                        <button
-                            type="button"
-                            class="engine-world-enter"
-                            data-action="${
-                                activeWorld
-                                    ? "worlds:open"
-                                    : "world:create"
-                            }"
-                        >
-                            ${
-                                activeWorld
-                                    ? "Dünyaya Git"
-                                    : "Dünya Oluştur"
-                            }
-
-                            <span>→</span>
-                        </button>
-
-                    </div>
-
-                    <div class="engine-world-visual">
-                        <div class="engine-world-glow"></div>
-                        <div class="engine-world-planet"></div>
-                    </div>
-
-                </section>
+                ${
+                    activeWorld
+                        ? this.activeWorldCard(
+                            activeWorld,
+                            activeEntities.length
+                        )
+                        : this.emptyWorldCard()
+                }
 
                 <section class="engine-activity">
 
@@ -444,21 +456,34 @@ const Components = {
                         SON AKTİVİTELER
                     </span>
 
-                    <div class="engine-activity-list">
+                    ${
+                        activities.length
+                            ? `
+                                <div class="engine-activity-list">
 
-                        <div class="engine-activity-item">
-                            <span class="activity-dot"></span>
-                            <span>VAERO Engine başlatıldı</span>
-                            <small>Şimdi</small>
-                        </div>
+                                    ${activities
+                                        .map((event, index) =>
+                                            this.activityItem(
+                                                event,
+                                                index
+                                            )
+                                        )
+                                        .join("")}
 
-                        <div class="engine-activity-item">
-                            <span class="activity-dot"></span>
-                            <span>Discovery Journey tamamlandı</span>
-                            <small>Son oturum</small>
-                        </div>
+                                </div>
+                              `
+                            : `
+                                <div class="engine-empty-state">
+                                    <strong>
+                                        Henüz aktivite yok
+                                    </strong>
 
-                    </div>
+                                    <span>
+                                        Engine ile yaptığın işlemler burada görünecek.
+                                    </span>
+                                </div>
+                              `
+                    }
 
                 </section>
 
@@ -466,706 +491,1243 @@ const Components = {
         `;
 
     },
-    entityApp(entity){
 
-    switch(VAERO.engine.currentEntityPage){
+    shortcutCard({
+        action,
+        icon,
+        title,
+        subtitle,
+        tone
+    }){
 
-        case "identity":
-            return this.entityIdentity(entity);
-
-        case "profile":
-            return this.entityProfile(entity);
-
-        case "organs":
-            return this.entityOrgans(entity);
-
-        case "memory":
-            return this.entityMemory(entity);
-
-        case "timeline":
-            return this.entityTimeline(entity);
-
-        case "bridge":
-            return this.entityBridge(entity);
-
-        case "evolution":
-            return this.entityEvolution(entity);
-            
-        case "settings":
-            return this.entitySettings(entity);
-
-        default:
-            return this.entityView(entity);
-
-    }
-
-},
-
-    organs(entity){
-
-    const organNames = {
-        identity: "Kimlik",
-        engine: "Motor",
-        renderer: "Oluşturucu",
-        bridge: "Köprü"
-    };
-
-    const statusNames = {
-        active: "aktif",
-        online: "çevrimiçi",
-        inactive: "pasif",
-        offline: "çevrimdışı"
-    };
-
-    return `
-        <div
-            class="section"
-            style="
-                margin-top:24px;
-                padding:18px;
-            "
-        >
-            <div class="eyebrow">
-                BAĞLANTILI ORGANLAR
-            </div>
-
-            ${(entity.organs || [])
-                .map(organ => {
-
-                    const organKey =
-                        String(
-                            organ.name || ""
-                        ).toLowerCase();
-
-                    const statusKey =
-                        String(
-                            organ.status || ""
-                        ).toLowerCase();
-
-                    return `
-                        <div
-                            style="
-                                display:flex;
-                                justify-content:space-between;
-                                gap:18px;
-                                margin-top:10px;
-                                color:var(--muted);
-                            "
-                        >
-                            <span>
-                                ${
-                                    organNames[organKey] ||
-                                    organ.name
-                                }
-                            </span>
-
-                            <span
-                                style="
-                                    color:var(--green);
-                                "
-                            >
-                                ${
-                                    statusNames[statusKey] ||
-                                    organ.status
-                                }
-                            </span>
-                        </div>
-                    `;
-
-                })
-                .join("")}
-        </div>
-    `;
-
-},
-
-    profile(entity){
-    return `
-        <div class="section" style="margin-top:24px;padding:18px;">
-            <div class="eyebrow">PROFİL</div>
-
-            <div style="display:flex;justify-content:space-between;margin-top:10px;color:var(--muted);">
-                <span>İsim</span>
-                <span>${entity.profile.name}</span>
-            </div>
-
-            <div style="display:flex;justify-content:space-between;margin-top:10px;color:var(--muted);">
-                <span>Tür</span>
-                <span>${this.translate(entity.profile.type)}</span>
-            </div>
-
-            <div style="display:flex;justify-content:space-between;margin-top:10px;color:var(--muted);">
-                <span>Kimlik</span>
-                <span style="color:var(--green);">
-                    ${
-                        this.translate(
-                            entity.profile.identity.verified
-                                ? "Verified"
-                                : "Unverified"
-                        )
-                    }
+        return `
+            <button
+                type="button"
+                class="
+                    engine-shortcut-card
+                    engine-shortcut-${this.escapeHTML(tone)}
+                "
+                data-action="${this.escapeHTML(action)}"
+            >
+                <span class="engine-shortcut-icon">
+                    ${this.escapeHTML(icon)}
                 </span>
-            </div>
-        </div>
-    `;
-},
-    identityCard(entity){
-    return `
-        <div class="section" style="margin-top:24px;padding:18px;">
-            <div class="eyebrow">VAERO KİMLİĞİ</div>
 
-            <div style="font-size:26px;font-weight:900;margin-top:10px;">
-                ${entity.profile.name}
-            </div>
+                <strong>
+                    ${this.escapeHTML(title)}
+                </strong>
 
-            <div style="margin-top:8px;color:var(--muted);">
-                ${this.translate(entity.profile.type).toUpperCase()}
-                ·
-                ${
-                    this.translate(
-                        entity.profile.identity.verified
-                            ? "Verified"
-                            : "Unverified"
-                    ).toUpperCase()
-                }
-            </div>
+                <small>
+                    ${this.escapeHTML(subtitle)}
+                </small>
 
-            <div style="margin-top:18px;display:grid;gap:10px;">
-                <div style="display:flex;justify-content:space-between;color:var(--muted);">
-                    <span>Varlık Kimliği</span>
-                    <span>${entity.id}</span>
-                </div>
-
-                <div style="display:flex;justify-content:space-between;color:var(--muted);">
-                    <span>Durum</span>
-                    <span style="color:var(--green);">
-                        ${this.translate(entity.status)}
-                    </span>
-                </div>
-            </div>
-        </div>
-    `;
-},
-    bridge(){
-        return `
-            <div class="section" style="margin-top:24px;padding:18px;">
-                <div class="eyebrow">İLK KÖPRÜ</div>
-                <p style="color:var(--muted);line-height:1.7;">
-                    VAERO artık ilk topluluk köprüsüne bağlandı.
-                </p>
-            </div>
-        `;
-    },
-
-    memory(){
-    const memory =
-        VAERO.get("memorySystem");
-
-    return `
-        <div class="section" style="margin-top:24px;padding:18px;">
-            <div class="eyebrow">HAFIZA</div>
-
-            ${memory.all().map(record => `
-                <div style="margin-top:10px;color:var(--muted);line-height:1.6;">
-                    ${this.translate(record.type)}
-                </div>
-            `).join("")}
-        </div>
-    `;
-},
-
-    timeline(){
-    const timeline =
-        VAERO.get("timeline");
-
-    return `
-        <div class="section" style="margin-top:24px;padding:18px;">
-            <div class="eyebrow">ZAMAN AKIŞI</div>
-
-            ${timeline.all().map(event => `
-                <div style="margin-top:10px;color:var(--muted);line-height:1.6;">
-                    ${this.translate(event.title)}
-                </div>
-            `).join("")}
-        </div>
-    `;
-},
-    guardian(){
-        const guardian = VAERO.get("guardian");
-
-        return `
-            <div class="section" style="margin-top:24px;padding:18px;">
-                <div class="eyebrow">GUARDIAN</div>
-                <p style="color:var(--muted);line-height:1.7;">
-                    Guardian active · ${guardian.rules.length} validation rules loaded
-                </p>
-            </div>
-        `;
-    },
-
-    brain(){
-    const brain =
-        VAERO.get("brain");
-
-    const report =
-        brain.report();
-
-    const labels = {
-        identity: "Kimlik",
-        memory: "Hafıza",
-        guardian: "Koruyucu",
-        bridge: "Köprü",
-        evolution: "Evrim",
-        timeline: "Zaman Akışı",
-        profile: "Profil"
-    };
-
-    return `
-        <div class="section" style="margin-top:24px;padding:18px;">
-            <div class="eyebrow">BRAIN DURUMU</div>
-
-            ${Object.entries(report).map(([key, value]) => `
-                <div style="display:flex;justify-content:space-between;margin-top:10px;color:var(--muted);">
-                    <span>
-                        ${labels[key] || this.translate(key)}
-                    </span>
-
-                    <span style="color:var(--green);">
-                        ${this.translate(value)}
-                    </span>
-                </div>
-            `).join("")}
-        </div>
-    `;
-},
-    alphaCreateWorld(){
-
-        const world = VAERO.get("world");
-        const worlds = world ? world.all() : [];
-
-        return `
-            <div class="section" style="margin-top:24px;padding:18px;">
-                <div class="eyebrow">VAERO ALPHA</div>
-
-                <h2 style="margin-top:10px;">İlk dünyanızı yaratın</h2>
-
-                <p style="color:var(--muted);line-height:1.7;margin-top:10px;">
-                    VAERO Evreni içinde inşa etmeye başlayın.
-                </p>
-
-                <input
-                    id="worldNameInput"
-                    placeholder="Benim İlk Dünyam"
-                    style="
-                        width:100%;
-                        margin-top:18px;
-                        padding:16px;
-                        border-radius:18px;
-                        border:1px solid rgba(255,255,255,.10);
-                        background:rgba(255,255,255,.06);
-                        color:var(--text);
-                        font-weight:800;
-                    "
+                <span
+                    class="engine-shortcut-arrow"
+                    aria-hidden="true"
                 >
-
-                <button class="primary-btn" data-action="world:create" style="width:100%;margin-top:14px;">
-                    Dünyayı Yarat
-                </button>
-
-                <div style="margin-top:22px;">
-                    <div class="eyebrow">SİZİN DÜNYALARINIZ</div>
-
-                    ${worlds.length === 0 ? `
-                        <p style="color:var(--muted);line-height:1.7;margin-top:10px;">
-                            Henüz özel dünyalar yok.
-                        </p>
-                    ` : worlds.map(item=>`
-                        <button
-                            data-action="world:open"
-                            data-world-id="${item.id}"
-                            style="
-                                width:100%;
-                                text-align:left;
-                                margin-top:10px;
-                                padding:14px;
-                                border-radius:16px;
-                                border:0;
-                                background:rgba(255,255,255,.05);
-                                color:var(--text);
-                                font-weight:800;
-                                cursor:pointer;
-                            "
-                        >
-                            🟢 ${item.name}
-                        </button>
-                    `).join("")}
-                </div>
-            </div>
+                    →
+                </span>
+            </button>
         `;
+
     },
 
-    dashboard(entity){
+    activeWorldCard(world, activeCount){
+
+        const name =
+            this.escapeHTML(
+                world.name ||
+                "İsimsiz Dünya"
+            );
+
         return `
-            <div class="dashboard-shell">
-                ${this.alphaCreateWorld()}
-                ${this.identityCard(entity)}
-                ${this.profile(entity)}
-                ${this.memory()}
-                ${this.timeline()}
-                ${this.guardian()}
-                ${this.brain()}
+            <section class="engine-active-world">
+
+                <div class="engine-active-world-copy">
+
+                    <span class="engine-section-label">
+                        AKTİF DÜNYAN
+                    </span>
+
+                    <h2>
+                        ${name}
+                    </h2>
+
+                    <strong class="engine-active-count">
+                        ${activeCount}
+                        aktif varlık
+                    </strong>
+
+                    <button
+                        type="button"
+                        class="engine-world-enter"
+                        data-action="world:open"
+                        data-world-id="${this.escapeHTML(world.id)}"
+                    >
+                        Dünyaya Git
+                        <span aria-hidden="true">→</span>
+                    </button>
+
+                </div>
+
+                <div
+                    class="engine-world-visual"
+                    aria-hidden="true"
+                >
+                    <div class="engine-world-glow"></div>
+                    <div class="engine-world-planet"></div>
+                </div>
+
+            </section>
+        `;
+
+    },
+
+    emptyWorldCard(){
+
+        return `
+            <section class="engine-active-world engine-active-world-empty">
+
+                <div class="engine-active-world-copy">
+
+                    <span class="engine-section-label">
+                        İLK DÜNYAN
+                    </span>
+
+                    <h2>
+                        Evrenin henüz sessiz
+                    </h2>
+
+                    <p>
+                        İlk dünyanı oluşturarak varlıklarını tek bir yaşam alanında birleştir.
+                    </p>
+
+                    <button
+                        type="button"
+                        class="engine-world-enter"
+                        data-action="create:open"
+                    >
+                        Dünya Oluştur
+                        <span aria-hidden="true">→</span>
+                    </button>
+
+                </div>
+
+            </section>
+        `;
+
+    },
+
+    activityItem(event, index){
+
+        const title =
+            this.translate(
+                event.title ||
+                event.description ||
+                event.type ||
+                "Yaşam olayı"
+            );
+
+        const timestamp =
+            event.occurredAt ||
+            event.updatedAt ||
+            event.createdAt;
+
+        return `
+            <div
+                class="engine-activity-item"
+                data-activity-tone="${index % 4}"
+            >
+                <span
+                    class="activity-dot"
+                    aria-hidden="true"
+                ></span>
+
+                <span>
+                    ${this.escapeHTML(title)}
+                </span>
+
+                <small>
+                    ${this.escapeHTML(
+                        this.formatRelativeTime(timestamp)
+                    )}
+                </small>
             </div>
         `;
+
+    },
+
+    worldsView(worlds = []){
+
+        const safeWorlds =
+            Array.isArray(worlds)
+                ? worlds.filter(Boolean)
+                : [];
+
+        return `
+            <section class="engine-page worlds-page">
+
+                ${this.pageHeader({
+                    eyebrow: "DÜNYA",
+                    title: "Dünyaların",
+                    text:
+                        "Projelerini, topluluklarını ve dijital varlıklarını yaşayan dünyalar içinde yönet.",
+                    action: "create:open",
+                    actionLabel: "Yeni Dünya"
+                })}
+
+                ${
+                    safeWorlds.length
+                        ? `
+                            <div class="worlds-grid">
+
+                                ${safeWorlds
+                                    .map(world =>
+                                        this.worldCard(world)
+                                    )
+                                    .join("")}
+
+                            </div>
+                          `
+                        : `
+                            <div class="section engine-page-empty">
+
+                                <span class="engine-page-empty-icon">
+                                    ◯
+                                </span>
+
+                                <h2>
+                                    Henüz bir dünyan yok
+                                </h2>
+
+                                <p>
+                                    İlk dünyanı oluşturarak Engine içindeki yaşam alanını başlat.
+                                </p>
+
+                                <button
+                                    type="button"
+                                    class="primary-btn"
+                                    data-action="create:open"
+                                >
+                                    İlk Dünyayı Oluştur
+                                </button>
+
+                            </div>
+                          `
+                }
+
+            </section>
+        `;
+
+    },
+
+    worldCard(world){
+
+        const entities =
+            Array.isArray(world.entities)
+                ? world.entities
+                : [];
+
+        const activeCount =
+            entities.filter(entity =>
+                entity?.status === "active" ||
+                entity?.status === "online"
+            ).length;
+
+        return `
+            <button
+                type="button"
+                class="world-card"
+                data-action="world:open"
+                data-world-id="${this.escapeHTML(world.id)}"
+            >
+                <span class="world-card-orbit" aria-hidden="true">
+                    <span></span>
+                </span>
+
+                <span class="world-card-content">
+
+                    <small>
+                        ${
+                            world.type === "root-world"
+                                ? "ANA DÜNYA"
+                                : "ÖZEL DÜNYA"
+                        }
+                    </small>
+
+                    <strong>
+                        ${this.escapeHTML(world.name)}
+                    </strong>
+
+                    <span>
+                        ${entities.length} varlık ·
+                        ${activeCount} aktif
+                    </span>
+
+                </span>
+
+                <span class="world-card-arrow" aria-hidden="true">
+                    →
+                </span>
+            </button>
+        `;
+
+    },
+
+    createView(){
+
+        const worlds =
+            this.getWorlds();
+
+        return `
+            <section class="engine-page create-page">
+
+                ${this.pageHeader({
+                    eyebrow: "YARAT",
+                    title: "Yeni bir dünya oluştur",
+                    text:
+                        "Bir proje, topluluk veya fikir için yaşayan bir dijital alan başlat."
+                })}
+
+                <div class="create-layout">
+
+                    <form
+                        class="section create-world-form"
+                        data-engine-form="world-create"
+                    >
+
+                        <div class="eyebrow">
+                            DÜNYA BİLGİLERİ
+                        </div>
+
+                        <label class="engine-field">
+
+                            <span>
+                                Dünya adı
+                            </span>
+
+                            <input
+                                id="worldNameInput"
+                                name="worldName"
+                                type="text"
+                                maxlength="60"
+                                placeholder="Örn. Innerbloom"
+                                autocomplete="off"
+                                required
+                            >
+
+                        </label>
+
+                        <label class="engine-field">
+
+                            <span>
+                                Kısa açıklama
+                            </span>
+
+                            <textarea
+                                id="worldDescriptionInput"
+                                name="worldDescription"
+                                maxlength="180"
+                                placeholder="Bu dünya ne için yaşayacak?"
+                                rows="4"
+                            ></textarea>
+
+                        </label>
+
+                        <button
+                            type="submit"
+                            class="primary-btn create-submit"
+                            data-action="world:create:submit"
+                        >
+                            Dünyayı Oluştur
+                        </button>
+
+                    </form>
+
+                    <aside class="section create-preview">
+
+                        <span class="engine-section-label">
+                            CANLI ÖNİZLEME
+                        </span>
+
+                        <div
+                            class="create-preview-orbit"
+                            aria-hidden="true"
+                        >
+                            <span></span>
+                        </div>
+
+                        <h2>
+                            Yeni Dünyan
+                        </h2>
+
+                        <p>
+                            Oluşturduğun dünya, varlıkların ve bağlantıların için bağımsız bir yaşam alanı olacak.
+                        </p>
+
+                        <small>
+                            Şu anda ${worlds.length} dünya bulunuyor.
+                        </small>
+
+                    </aside>
+
+                </div>
+
+            </section>
+        `;
+
     },
 
     worldView(world){
 
-        const entities = world.entities || [];
-        const activeCount = entities.filter(entity =>
-    entity.status === "online"
-).length;
+        if(!world || !world.id){
 
-const totalCount = entities.length;
+            return this.errorState(
+                "Dünya bilgisi bulunamadı."
+            );
 
-const worldStatus =
-    activeCount > 0
-        ? "Canlı"
-        : "Sessiz";
+        }
+
+        const entities =
+            Array.isArray(world.entities)
+                ? world.entities
+                : [];
+
+        const activeCount =
+            entities.filter(entity =>
+                entity?.status === "active" ||
+                entity?.status === "online"
+            ).length;
 
         if(VAERO.engine.entityCreateMode){
 
-            if(VAERO.engine.entityType){
-                return `
-                <div class="world-hero">
+            return this.entityCreateView(
+                world
+            );
 
-    <div class="world-badge">
-        🌍 DÜNYA
-    </div>
-
-    <h1 class="world-title">
-        ${world.name}
-    </h1>
-
-    <p class="world-description">
-        Bu dünya yaşayan bir ekosistemdir. Varlıklar burada doğar, gelişir ve tarih oluşturur.
-    </p>
-
-    <div class="world-stats">
-
-        <div class="world-stat">
-            <strong>${totalCount}</strong>
-            <span>Varlık</span>
-        </div>
-
-        <div class="world-stat">
-            <strong>${activeCount}</strong>
-            <span>Aktif</span>
-        </div>
-
-        <div class="world-stat">
-            <strong>${worldStatus}</strong>
-            <span>Durum</span>
-        </div>
-
-    </div>
-
-</div>
-                    <div class="section" style="margin-top:24px;padding:24px;">
-                        ${this.translate(VAERO.engine.entityType).toUpperCase()} OLUŞTUR
-
-                        <h2 style="margin-top:10px;">
-                            ${this.translate(VAERO.engine.entityType)} adını belirtin.
-                        </h2>
-
-                        <input
-                            id="entityNameInput"
-                            placeholder="${this.translate(VAERO.engine.entityType)} adı"
-                            style="
-                                width:100%;
-                                margin-top:18px;
-                                padding:16px;
-                                border-radius:18px;
-                                border:1px solid rgba(255,255,255,.10);
-                                background:rgba(255,255,255,.06);
-                                color:var(--text);
-                                font-weight:800;
-                            "
-                        >
-
-                        <button
-                            class="primary-btn"
-                            data-action="entity:create"
-                            style="width:100%;margin-top:14px;"
-                        >
-                            ${this.translate(VAERO.engine.entityType)} Oluştur
-                        </button>
-                    </div>
-                `;
-            }
-
-            return `
-                <div class="section" style="margin-top:24px;padding:24px;">
-                    <div class="eyebrow">VARLIK OLUŞTUR</div>
-
-                    <h2 style="margin-top:10px;">
-                        Ne oluşturmak istiyorsun?
-                    </h2>
-
-                    <div style="display:grid;gap:10px;margin-top:18px;">
-                        ${["Person","Company","AI","Device","Knowledge","Community","Planet","Custom"].map(type=>`
-                            <button
-                                class="secondary-btn"
-                                data-action="entity:type:select"
-                                data-entity-type="${type}"
-                                style="width:100%;text-align:left;"
-                            >
-                                ${this.translate(type)}
-                            </button>
-                        `).join("")}
-                    </div>
-                </div>
-            `;
         }
 
         return `
-            <div class="section dashboard-shell">
-                <div class="world-badge">
-    🌍 DÜNYA
-</div>
-
-                <h1 class="world-title">
-    ${world.name}
-</h1>
-
-                ${entities.length === 0 ? `
-    <p class="world-empty">
-        Bu dünyada henüz hiçbir varlık yok.
-    </p>
-` : entities.map(entity=>`
-    <button
-        type="button"
-        class="secondary-btn world-entity-btn"
-        data-action="entity:open"
-        data-entity-id="${entity.id}"
-    >
-
-    <div class="world-entity-content">
-        <div class="world-entity-type">
-            ${entity.type}
-        </div>
-
-        <div class="world-entity-name">
-            ${entity.name}
-        </div>
-    </div>
-
-    <div class="world-entity-arrow">
-        →
-    </div>
-
-</button>
-                `).join("")}
+            <section class="engine-page world-page">
 
                 <button
-    class="primary-btn world-create-btn"
-    data-action="entity:create:first"
->
-                    + İlk Varlığı Oluştur
+                    type="button"
+                    class="engine-back-btn"
+                    data-action="worlds:open"
+                >
+                    ← Dünyalara Dön
                 </button>
-            </div>
+
+                <header class="world-hero">
+
+                    <div class="world-hero-copy">
+
+                        <div class="world-badge">
+                            ◯ DÜNYA
+                        </div>
+
+                        <h1 class="world-title">
+                            ${this.escapeHTML(world.name)}
+                        </h1>
+
+                        <p class="world-description">
+                            ${
+                                this.escapeHTML(
+                                    world.description ||
+                                    "Bu dünya yaşayan bir ekosistemdir. Varlıklar burada doğar, gelişir ve tarih oluşturur."
+                                )
+                            }
+                        </p>
+
+                        <div class="world-stats">
+
+                            ${this.statCard(
+                                entities.length,
+                                "Varlık"
+                            )}
+
+                            ${this.statCard(
+                                activeCount,
+                                "Aktif"
+                            )}
+
+                            ${this.statCard(
+                                activeCount > 0
+                                    ? "Canlı"
+                                    : "Sessiz",
+                                "Durum"
+                            )}
+
+                        </div>
+
+                    </div>
+
+                    <div
+                        class="world-hero-planet"
+                        aria-hidden="true"
+                    >
+                        <span></span>
+                    </div>
+
+                </header>
+
+                <section class="world-entities">
+
+                    <div class="world-section-heading">
+
+                        <div>
+                            <span class="engine-section-label">
+                                VARLIKLAR
+                            </span>
+
+                            <h2>
+                                Bu dünyanın yaşamı
+                            </h2>
+                        </div>
+
+                        <button
+                            type="button"
+                            class="secondary-btn"
+                            data-action="entity:create:first"
+                        >
+                            + Varlık Oluştur
+                        </button>
+
+                    </div>
+
+                    ${
+                        entities.length
+                            ? `
+                                <div class="world-entity-grid">
+
+                                    ${entities
+                                        .map(entity =>
+                                            this.entityCard(entity)
+                                        )
+                                        .join("")}
+
+                                </div>
+                              `
+                            : `
+                                <div class="section world-empty">
+
+                                    <span aria-hidden="true">
+                                        ⬡
+                                    </span>
+
+                                    <h3>
+                                        Bu dünya henüz sessiz
+                                    </h3>
+
+                                    <p>
+                                        İlk varlığını oluşturarak dünyaya yaşam ekle.
+                                    </p>
+
+                                    <button
+                                        type="button"
+                                        class="primary-btn"
+                                        data-action="entity:create:first"
+                                    >
+                                        İlk Varlığı Oluştur
+                                    </button>
+
+                                </div>
+                              `
+                    }
+
+                </section>
+
+            </section>
         `;
+
+    },
+
+    entityCreateView(world){
+
+        const selectedType =
+            VAERO.engine.entityType;
+
+        const entityTypes = [
+            {
+                id: "Person",
+                label: "Kişi",
+                icon: "♙"
+            },
+            {
+                id: "Company",
+                label: "Şirket",
+                icon: "▣"
+            },
+            {
+                id: "AI",
+                label: "Yapay Zekâ",
+                icon: "✦"
+            },
+            {
+                id: "Device",
+                label: "Cihaz",
+                icon: "◇"
+            },
+            {
+                id: "Knowledge",
+                label: "Bilgi",
+                icon: "◫"
+            },
+            {
+                id: "Community",
+                label: "Topluluk",
+                icon: "◯"
+            },
+            {
+                id: "Planet",
+                label: "Gezegen",
+                icon: "●"
+            },
+            {
+                id: "Custom",
+                label: "Özel",
+                icon: "+"
+            }
+        ];
+
+        return `
+            <section class="engine-page entity-create-page">
+
+                <button
+                    type="button"
+                    class="engine-back-btn"
+                    data-action="entity:create:cancel"
+                >
+                    ← ${this.escapeHTML(world.name)}
+                </button>
+
+                ${this.pageHeader({
+                    eyebrow: "YENİ VARLIK",
+                    title:
+                        selectedType
+                            ? `${this.translate(selectedType)} oluştur`
+                            : "Ne oluşturmak istiyorsun?",
+                    text:
+                        selectedType
+                            ? "Varlığın adını belirleyerek bu dünyaya yaşam ekle."
+                            : "Oluşturacağın varlığın temel türünü seç."
+                })}
+
+                ${
+                    selectedType
+                        ? `
+                            <form
+                                class="section entity-create-form"
+                                data-engine-form="entity-create"
+                            >
+
+                                <label class="engine-field">
+
+                                    <span>
+                                        ${this.escapeHTML(
+                                            this.translate(selectedType)
+                                        )} adı
+                                    </span>
+
+                                    <input
+                                        id="entityNameInput"
+                                        name="entityName"
+                                        type="text"
+                                        maxlength="60"
+                                        placeholder="Varlık adını gir"
+                                        autocomplete="off"
+                                        required
+                                    >
+
+                                </label>
+
+                                <label class="engine-field">
+
+                                    <span>
+                                        Kısa açıklama
+                                    </span>
+
+                                    <textarea
+                                        id="entityDescriptionInput"
+                                        name="entityDescription"
+                                        maxlength="180"
+                                        placeholder="Bu varlığın amacı nedir?"
+                                        rows="4"
+                                    ></textarea>
+
+                                </label>
+
+                                <div class="entity-create-actions">
+
+                                    <button
+                                        type="button"
+                                        class="secondary-btn"
+                                        data-action="entity:type:clear"
+                                    >
+                                        Türü Değiştir
+                                    </button>
+
+                                    <button
+                                        type="submit"
+                                        class="primary-btn"
+                                        data-action="entity:create:submit"
+                                    >
+                                        Varlığı Oluştur
+                                    </button>
+
+                                </div>
+
+                            </form>
+                          `
+                        : `
+                            <div class="entity-type-grid">
+
+                                ${entityTypes
+                                    .map(type => `
+                                        <button
+                                            type="button"
+                                            class="entity-type-card"
+                                            data-action="entity:type:select"
+                                            data-entity-type="${this.escapeHTML(type.id)}"
+                                        >
+                                            <span>
+                                                ${this.escapeHTML(type.icon)}
+                                            </span>
+
+                                            <strong>
+                                                ${this.escapeHTML(type.label)}
+                                            </strong>
+                                        </button>
+                                    `)
+                                    .join("")}
+
+                            </div>
+                          `
+                }
+
+            </section>
+        `;
+
+    },
+
+    entityCard(entity){
+
+        return `
+            <button
+                type="button"
+                class="world-entity-btn"
+                data-action="entity:open"
+                data-entity-id="${this.escapeHTML(entity.id)}"
+            >
+                <span class="world-entity-symbol">
+                    ${this.escapeHTML(
+                        String(
+                            entity.name || "V"
+                        ).charAt(0).toUpperCase()
+                    )}
+                </span>
+
+                <span class="world-entity-content">
+
+                    <small class="world-entity-type">
+                        ${this.escapeHTML(
+                            this.translate(entity.type)
+                        )}
+                    </small>
+
+                    <strong class="world-entity-name">
+                        ${this.escapeHTML(entity.name)}
+                    </strong>
+
+                </span>
+
+                <span
+                    class="world-entity-arrow"
+                    aria-hidden="true"
+                >
+                    →
+                </span>
+            </button>
+        `;
+
+    },
+
+    entityApp(entity){
+
+        switch(
+            VAERO.engine.currentEntityPage
+        ){
+
+            case "identity":
+                return this.entityIdentity(entity);
+
+            case "profile":
+                return this.entityProfile(entity);
+
+            case "organs":
+                return this.entityOrgans(entity);
+
+            case "memory":
+                return this.entityMemory(entity);
+
+            case "timeline":
+                return this.entityTimeline(entity);
+
+            case "bridge":
+                return this.entityBridge(entity);
+
+            case "evolution":
+                return this.entityEvolution(entity);
+
+            case "settings":
+                return this.entitySettings(entity);
+
+            case "discovery":
+                return this.entityDiscovery(entity);
+
+            default:
+                return this.entityView(entity);
+
+        }
+
     },
 
     entityView(entity){
 
-    return `
-        <div class="section" style="margin-top:24px;padding:24px;">
-        <button
-    class="secondary-btn"
-    data-action="world:back"
-    style="margin-bottom:18px;"
->
-    ← Dünyaya Dön
-</button>
+        if(!entity){
 
-            <div class="eyebrow">
-    ${this.translate(entity.type).toUpperCase()}
-</div>
+            return this.errorState(
+                "Varlık bilgisi bulunamadı."
+            );
 
-            <h2 style="margin-top:10px;">
-                ${entity.name}
-            </h2>
+        }
 
-            <p style="margin-top:12px;color:var(--muted);">
-                Bu varlık başarıyla oluşturuldu.
-            </p>
-            
-        </div>
-    `;
+        return `
+            <section class="engine-page entity-page">
 
-},
+                <button
+                    type="button"
+                    class="engine-back-btn"
+                    data-action="world:back"
+                >
+                    ← Dünyaya Dön
+                </button>
+
+                <header class="section entity-header">
+
+                    <span class="entity-header-symbol">
+                        ${this.escapeHTML(
+                            String(entity.name || "V")
+                                .charAt(0)
+                                .toUpperCase()
+                        )}
+                    </span>
+
+                    <div>
+
+                        <span class="engine-section-label">
+                            ${this.escapeHTML(
+                                this.translate(entity.type)
+                            )}
+                        </span>
+
+                        <h1>
+                            ${this.escapeHTML(entity.name)}
+                        </h1>
+
+                        <p>
+                            ${
+                                this.escapeHTML(
+                                    entity.description ||
+                                    "Bu varlık VAERO dünyası içinde yaşıyor."
+                                )
+                            }
+                        </p>
+
+                    </div>
+
+                </header>
+
+                <div class="entity-app-grid">
+
+                    ${this.entityAppLink(
+                        "entity:identity",
+                        "ID",
+                        "Kimlik",
+                        "Varlık kimliği ve doğrulama"
+                    )}
+
+                    ${this.entityAppLink(
+                        "entity:profile",
+                        "♙",
+                        "Profil",
+                        "Profil bilgileri ve yön"
+                    )}
+
+                    ${this.entityAppLink(
+                        "entity:organs",
+                        "◫",
+                        "Organlar",
+                        "Bağlı sistem uygulamaları"
+                    )}
+
+                    ${this.entityAppLink(
+                        "entity:evolution",
+                        "⌬",
+                        "Evrim",
+                        "Yaşam ve gelişim olayları"
+                    )}
+
+                </div>
+
+            </section>
+        `;
+
+    },
+
+    entityAppLink(
+        action,
+        icon,
+        title,
+        subtitle
+    ){
+
+        return `
+            <button
+                type="button"
+                class="entity-app-link"
+                data-action="${this.escapeHTML(action)}"
+            >
+                <span>${this.escapeHTML(icon)}</span>
+
+                <strong>
+                    ${this.escapeHTML(title)}
+                </strong>
+
+                <small>
+                    ${this.escapeHTML(subtitle)}
+                </small>
+            </button>
+        `;
+
+    },
 
     entityIdentity(entity){
-    return IdentityApp.render(entity);
-},
+
+        return IdentityApp.render(
+            entity
+        );
+
+    },
 
     entityProfile(entity){
-    return ProfileApp.render(entity);
-},
+
+        return ProfileApp.render(
+            entity
+        );
+
+    },
+
     entityOrgans(entity){
-    return OrgansApp.render(entity);
-},
+
+        return OrgansApp.render(
+            entity
+        );
+
+    },
 
     entityTimeline(entity){
-    return TimelineApp.render(entity);
-},
+
+        return TimelineApp.render(
+            entity
+        );
+
+    },
 
     entityBridge(entity){
-    return BridgeApp.render(entity);
-},
+
+        return BridgeApp.render(
+            entity
+        );
+
+    },
+
     entityMemory(entity){
-    return MemoryApp.render(entity);
-},
+
+        return MemoryApp.render(
+            entity
+        );
+
+    },
 
     entityEvolution(entity){
-    return EvolutionApp.render(entity);
-},
+
+        return EvolutionApp.render(
+            entity
+        );
+
+    },
 
     entitySettings(entity){
-    return SettingsApp.render(entity);
-},
-    actions(){
-        return `
-            <div style="display:flex;gap:14px;margin-top:32px;">
-                <button class="primary-btn" data-action="profile:open">
-                    Devam Et
-                </button>
 
-                <button class="secondary-btn" data-action="docs:open">
-                    Belgeler
-                </button>
-            </div>
-        `;
+        return SettingsApp.render(
+            entity
+        );
+
     },
 
-    modal(){
-        return `
-            <div class="vaero-modal" id="profileModal">
-                <div class="modal-card">
-                    <h2 id="modalTitle">Profil</h2>
-                    <p id="modalText"></p>
+    entityDiscovery(){
 
-                    <button class="primary-btn modal-close" data-action="modal:close">
-                        Kapat
-                    </button>
-                </div>
-            </div>
-        `;
-    },
-
-    idModal(){
         return `
-            <div class="vaero-modal" id="idModal">
-                <div class="modal-card">
-                    <h2>Platform Kimliği</h2>
+            <section class="engine-page">
+
+                ${this.pageHeader({
+                    eyebrow: "DISCOVERY",
+                    title: "Keşif yönünü güncelle",
+                    text:
+                        "İlgi alanlarını, hedeflerini ve VAERO’dan beklentilerini yeniden değerlendirebilirsin."
+                })}
+
+                <div class="section engine-page-empty">
+
+                    <span class="engine-page-empty-icon">
+                        ◇
+                    </span>
+
+                    <h2>
+                        Discovery Journey
+                    </h2>
 
                     <p>
-                        Kimliğini bağlamak için VAERO Platform Kimliğini gir.
+                        Mevcut cevapların Profil ekranında korunur. Yeniden başlatırsan yeni seçimlerin önceki yönünün yerini alır.
                     </p>
 
-                    <input
-                        id="platformIdInput"
-                        placeholder="VA-001"
-                        style="
-                            width:100%;
-                            margin-top:18px;
-                            padding:16px;
-                            border-radius:18px;
-                            border:1px solid rgba(255,255,255,.10);
-                            background:rgba(255,255,255,.06);
-                            color:var(--text);
-                            font-weight:800;
-                        "
+                    <button
+                        type="button"
+                        class="primary-btn"
+                        data-action="discovery:restart"
                     >
-
-                    <button class="primary-btn modal-close" data-action="identity:connect">
-                        Kimliği Bağla
+                        Discovery’yi Yeniden Başlat
                     </button>
 
-                    <button class="secondary-btn modal-close" data-action="idmodal:close" style="width:100%;margin-top:10px;">
-                        Close
-                    </button>
                 </div>
-            </div>
+
+            </section>
         `;
+
     },
 
-    navigation(){
-    return `
-        <nav class="bottom-nav engine-bottom-nav">
+    pageHeader({
+        eyebrow,
+        title,
+        text,
+        action = null,
+        actionLabel = null
+    }){
 
+        return `
+            <header class="engine-page-header">
+
+                <div>
+
+                    <span class="engine-section-label">
+                        ${this.escapeHTML(eyebrow)}
+                    </span>
+
+                    <h1>
+                        ${this.escapeHTML(title)}
+                    </h1>
+
+                    <p>
+                        ${this.escapeHTML(text)}
+                    </p>
+
+                </div>
+
+                ${
+                    action && actionLabel
+                        ? `
+                            <button
+                                type="button"
+                                class="primary-btn"
+                                data-action="${this.escapeHTML(action)}"
+                            >
+                                ${this.escapeHTML(actionLabel)}
+                            </button>
+                          `
+                        : ""
+                }
+
+            </header>
+        `;
+
+    },
+
+    statCard(value, label){
+
+        return `
+            <div class="world-stat">
+
+                <strong>
+                    ${this.escapeHTML(value)}
+                </strong>
+
+                <span>
+                    ${this.escapeHTML(label)}
+                </span>
+
+            </div>
+        `;
+
+    },
+
+    errorState(message){
+
+        return `
+            <section class="section engine-error-state">
+
+                <div class="eyebrow">
+                    VAERO ENGINE
+                </div>
+
+                <h1>
+                    Bu ekran açılamadı
+                </h1>
+
+                <p>
+                    ${this.escapeHTML(message)}
+                </p>
+
+                <button
+                    type="button"
+                    class="primary-btn"
+                    data-action="home:open"
+                >
+                    Ana Ekrana Dön
+                </button>
+
+            </section>
+        `;
+
+    },
+
+    navigation(state = {}){
+
+        const view =
+            state.view ||
+            "home";
+
+        const homeActive =
+            view === "home";
+
+        const identityActive =
+            view === "identity" ||
+            view === "profile" ||
+            (
+                view === "entity" &&
+                [
+                    "identity",
+                    "profile"
+                ].includes(state.page)
+            );
+
+        const createActive =
+            view === "create";
+
+        const worldsActive =
+            view === "worlds" ||
+            view === "world";
+
+        return `
+            <nav
+                class="bottom-nav engine-bottom-nav"
+                aria-label="Ana navigasyon"
+            >
+
+                ${this.navButton({
+                    action: "home:open",
+                    icon: "⌂",
+                    label: "Ev",
+                    active: homeActive
+                })}
+
+                ${this.navButton({
+                    action: "identity:open",
+                    icon: "ID",
+                    label: "Kimlik",
+                    active: identityActive
+                })}
+
+                <button
+                    type="button"
+                    class="nav-brain-btn"
+                    data-action="brain:open"
+                    aria-label="Brain'i aç"
+                >
+                    <span class="nav-brain-orbit"></span>
+
+                    <span class="nav-brain-core">
+                        <span class="nav-brain-eye"></span>
+                        <span class="nav-brain-eye"></span>
+                    </span>
+                </button>
+
+                ${this.navButton({
+                    action: "create:open",
+                    icon: "＋",
+                    label: "Yarat",
+                    active: createActive
+                })}
+
+                ${this.navButton({
+                    action: "worlds:open",
+                    icon: "◌",
+                    label: "Dünya",
+                    active: worldsActive
+                })}
+
+                <span class="nav-brain-label">
+                    Brain’e dokun veya konuş
+                </span>
+
+            </nav>
+        `;
+
+    },
+
+    navButton({
+        action,
+        icon,
+        label,
+        active
+    }){
+
+        return `
             <button
                 type="button"
-                class="nav-btn active"
-                data-action="home:open"
+                class="nav-btn ${active ? "active" : ""}"
+                data-action="${this.escapeHTML(action)}"
+                ${
+                    active
+                        ? 'aria-current="page"'
+                        : ""
+                }
             >
-                <div class="nav-icon">⌂</div>
-                <span>Ev</span>
-            </button>
+                <span class="nav-icon">
+                    ${this.escapeHTML(icon)}
+                </span>
 
-            <button
-                type="button"
-                class="nav-btn"
-                data-action="entity:profile"
-            >
-                <div class="nav-icon">ID</div>
-                <span>Kimlik</span>
-            </button>
-
-            <button
-                type="button"
-                class="nav-brain-btn"
-                data-action="brain:open"
-                aria-label="Brain"
-            >
-                <span class="nav-brain-orbit"></span>
-
-                <span class="nav-brain-core">
-                    <span class="nav-brain-eye"></span>
-                    <span class="nav-brain-eye"></span>
+                <span>
+                    ${this.escapeHTML(label)}
                 </span>
             </button>
+        `;
 
-            <button
-                type="button"
-                class="nav-btn"
-                data-action="world:create"
-            >
-                <div class="nav-icon">＋</div>
-                <span>Yarat</span>
-            </button>
-
-            <button
-                type="button"
-                class="nav-btn"
-                data-action="worlds:open"
-            >
-                <div class="nav-icon">◌</div>
-                <span>Dünya</span>
-            </button>
-
-            <span class="nav-brain-label">
-                Brain
-            </span>
-
-        </nav>
-    `;
-},
-
-brainPanel(){
-    return BrainApp.render();
-}
+    }
 
 };
 
-VAERO.register("components", Components);
+VAERO.register(
+    "components",
+    Components
+);
