@@ -12,28 +12,82 @@
     --gold-soft:#f2e2bb;
 
     --text:#f5f1e9;
-    --muted:rgba(245,241,233,.64);
-    --muted-soft:rgba(245,241,233,.42);
+
+    --muted:
+        rgba(
+            245,
+            241,
+            233,
+            .64
+        );
+
+    --muted-soft:
+        rgba(
+            245,
+            241,
+            233,
+            .42
+        );
 
     --green:#6ee7a8;
     --blue:#72b7f2;
 
-    --border-soft:rgba(255,255,255,.065);
-    --border-strong:rgba(255,255,255,.13);
+    --border-soft:
+        rgba(
+            255,
+            255,
+            255,
+            .065
+        );
 
-    --radius-sm:16px;
-    --radius-md:22px;
-    --radius-lg:30px;
+    --border-strong:
+        rgba(
+            255,
+            255,
+            255,
+            .13
+        );
+
+    --radius-sm:13px;
+    --radius-md:18px;
+    --radius-lg:24px;
 
     --shadow:
-        0 20px 60px rgba(0,0,0,.35);
+        0
+        18px
+        48px
+        rgba(
+            0,
+            0,
+            0,
+            .3
+        );
 
     --shadow-soft:
-        0 16px 42px rgba(0,0,0,.22);
+        0
+        12px
+        34px
+        rgba(
+            0,
+            0,
+            0,
+            .2
+        );
 
     --transition:
-        .28s cubic-bezier(.2,.8,.2,1);
+        .22s
+        cubic-bezier(
+            .2,
+            .8,
+            .2,
+            1
+        );
 }
+
+
+/* =========================================================
+   GLOBAL RESET
+========================================================= */
 
 *,
 *::before,
@@ -41,28 +95,35 @@
     box-sizing:border-box;
 }
 
+
 html{
     width:100%;
-    min-height:100%;
+    height:100%;
 
-    background:var(--bg-deep);
+    margin:0;
+    padding:0;
 
-    overflow-x:hidden;
-    touch-action:pan-y;
+    background:
+        var(--bg-deep);
+
+    overflow:hidden;
 
     -webkit-text-size-adjust:100%;
     text-size-adjust:100%;
 }
 
+
 body{
     width:100%;
-    min-height:100vh;
-    min-height:100dvh;
+    height:100%;
 
     margin:0;
 
-    background:var(--bg);
-    color:var(--text);
+    background:
+        var(--bg);
+
+    color:
+        var(--text);
 
     font-family:
         Inter,
@@ -72,15 +133,53 @@ body{
         Arial,
         sans-serif;
 
-    overflow-x:hidden;
+    font-size:14px;
+
+    line-height:1.4;
+
+    overflow:hidden;
+
+    -webkit-font-smoothing:
+        antialiased;
+
+    -moz-osx-font-smoothing:
+        grayscale;
+}
+
+
+/* =========================================================
+   TEXT
+========================================================= */
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+p{
+    margin:0;
 }
 
 h1,
 h2,
 h3,
-p{
-    margin:0;
+h4,
+h5,
+h6{
+    color:
+        var(--text);
 }
+
+p{
+    color:
+        var(--muted);
+}
+
+
+/* =========================================================
+   INTERACTIVE ELEMENTS
+========================================================= */
 
 button,
 input,
@@ -90,6 +189,8 @@ select{
 }
 
 button{
+    margin:0;
+
     color:inherit;
 }
 
@@ -99,48 +200,133 @@ button:not(:disabled){
 
 button:disabled{
     cursor:not-allowed;
-    opacity:.48;
+
+    opacity:.46;
 }
 
 input,
 textarea,
 select{
-    color:var(--text);
+    color:
+        var(--text);
 }
 
 input::placeholder,
 textarea::placeholder{
-    color:var(--muted-soft);
+    color:
+        var(--muted-soft);
 }
+
+textarea{
+    font-family:inherit;
+}
+
+
+/* =========================================================
+   LINKS
+========================================================= */
 
 a{
     color:inherit;
+
+    text-decoration:none;
 }
 
+
+/* =========================================================
+   MEDIA
+========================================================= */
+
 img,
-svg{
+svg,
+video,
+canvas{
     display:block;
+
     max-width:100%;
 }
 
+
+/* =========================================================
+   ACCESSIBILITY
+========================================================= */
+
 :focus-visible{
-    outline:2px solid rgba(232,201,135,.82);
-    outline-offset:3px;
+    outline:
+        2px solid
+        rgba(
+            232,
+            201,
+            135,
+            .78
+        );
+
+    outline-offset:
+        2px;
 }
 
+
+/* =========================================================
+   EYEBROW
+========================================================= */
+
 .eyebrow{
-    margin-bottom:18px;
+    margin-bottom:10px;
 
-    color:var(--gold);
+    color:
+        var(--gold);
 
-    font-size:11px;
-    font-weight:800;
+    font-size:8px;
+    font-weight:750;
+
     line-height:1;
-    letter-spacing:.18em;
+
+    letter-spacing:.17em;
+
     text-transform:uppercase;
 }
 
-@media (max-width:700px){
+
+/* =========================================================
+   SELECTION
+========================================================= */
+
+::selection{
+    background:
+        rgba(
+            230,
+            199,
+            141,
+            .22
+        );
+
+    color:
+        #fff;
+}
+
+
+/* =========================================================
+   DESKTOP
+========================================================= */
+
+@media (min-width:1000px){
+
+    body{
+        font-size:13px;
+    }
+
+}
+
+
+/* =========================================================
+   MOBILE
+========================================================= */
+
+@media (max-width:600px){
+
+    body{
+        font-size:12px;
+    }
 
     input,
     textarea,
@@ -148,17 +334,48 @@ svg{
         font-size:16px;
     }
 
+    .eyebrow{
+        margin-bottom:7px;
+
+        font-size:7px;
+    }
+
 }
+
+
+/* =========================================================
+   SMALL PHONE
+========================================================= */
+
+@media (max-width:390px){
+
+    body{
+        font-size:11px;
+    }
+
+}
+
+
+/* =========================================================
+   REDUCED MOTION
+========================================================= */
 
 @media (prefers-reduced-motion:reduce){
 
     *,
     *::before,
     *::after{
-        scroll-behavior:auto !important;
-        animation-duration:.01ms !important;
-        animation-iteration-count:1 !important;
-        transition-duration:.01ms !important;
+        scroll-behavior:
+            auto !important;
+
+        animation-duration:
+            .01ms !important;
+
+        animation-iteration-count:
+            1 !important;
+
+        transition-duration:
+            .01ms !important;
     }
 
-}
+} 
