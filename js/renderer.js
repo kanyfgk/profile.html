@@ -20,7 +20,9 @@ const Renderer = {
         }
 
         const components =
-            VAERO.get("components");
+            VAERO.get(
+                "components"
+            );
 
         if(!components){
 
@@ -56,7 +58,21 @@ const Renderer = {
         document.body.dataset.page =
             view;
 
-        let screenHTML = "";
+        if(
+            engine.currentEntityPage
+        ){
+
+            document.body.dataset.enginePage =
+                engine.currentEntityPage;
+
+        }else{
+
+            delete document.body.dataset.enginePage;
+
+        }
+
+        let screenHTML =
+            "";
 
         try {
 
@@ -82,6 +98,7 @@ const Renderer = {
                     )
                     : `
                         <section class="section">
+
                             <div class="eyebrow">
                                 EKRAN HATASI
                             </div>
@@ -89,6 +106,7 @@ const Renderer = {
                             <h1>
                                 Bu ekran şu anda açılamıyor.
                             </h1>
+
                         </section>
                     `;
 
@@ -98,7 +116,12 @@ const Renderer = {
             <main
                 class="vaero-shell"
                 data-engine-view="${view}"
+                data-engine-page="${
+                    engine.currentEntityPage ||
+                    ""
+                }"
             >
+
                 <div class="engine-screen">
                     ${screenHTML}
                 </div>
@@ -109,6 +132,7 @@ const Renderer = {
                         engine.currentEntityPage ||
                         null
                 })}
+
             </main>
         `;
 
@@ -124,27 +148,53 @@ const Renderer = {
     }){
 
         const currentEntityPage =
-            engine.currentEntityPage;
+            engine.currentEntityPage ||
+            null;
 
-        const isVaeroApp =
-            currentEntityPage &&
-            currentEntityPage.startsWith("vaero");
+        /*
+         * =====================================================
+         * VAERO SYSTEM APP
+         * =====================================================
+         *
+         * Eski yapı:
+         *
+         * currentEntityPage.startsWith("vaero")
+         *
+         * şeklinde tüm vaero-* sayfalarını tek uygulamaya
+         * gönderiyordu.
+         *
+         * Bu kaldırıldı.
+         *
+         * VaeroApp şu anda yalnızca VAERO Engine hizmet /
+         * Payment Core sistem ekranıdır.
+         */
 
-        if(isVaeroApp){
+        if(
+            currentEntityPage ===
+                "vaero"
+        ){
 
             if(
                 window.VaeroApp &&
                 typeof window.VaeroApp.render ===
                     "function"
             ){
+
                 return window.VaeroApp.render();
+
             }
 
             return components.errorState(
-                "VAERO uygulaması yüklenemedi."
+                "VAERO sistem katmanı yüklenemedi."
             );
 
         }
+
+        /*
+         * =====================================================
+         * ENGINE VIEWS
+         * =====================================================
+         */
 
         switch(view){
 
@@ -171,7 +221,9 @@ const Renderer = {
             case "worlds": {
 
                 const worldService =
-                    VAERO.get("world");
+                    VAERO.get(
+                        "world"
+                    );
 
                 const worlds =
                     worldService &&
@@ -198,14 +250,19 @@ const Renderer = {
                     );
 
                     const worldService =
-                        VAERO.get("world");
+                        VAERO.get(
+                            "world"
+                        );
 
-                    return components.worldsView(
+                    const worlds =
                         worldService &&
                         typeof worldService.all ===
                             "function"
                             ? worldService.all()
-                            : []
+                            : [];
+
+                    return components.worldsView(
+                        worlds
                     );
 
                 }
@@ -216,7 +273,9 @@ const Renderer = {
 
             case "entity":
 
-                if(!engine.currentOpenedEntity){
+                if(
+                    !engine.currentOpenedEntity
+                ){
 
                     return components.errorState(
                         "Açılacak varlık bulunamadı."
