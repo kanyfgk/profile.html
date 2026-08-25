@@ -1,5 +1,148 @@
+/* =========================================================
+   VAERO EVOLUTION APP
+   Life Events / Progress / Organ Impact
+========================================================= */
+
 const EvolutionApp = {
+
     activeFilter: "all",
+
+    selectedEventId: null,
+
+
+    /* =====================================================
+       SAFETY
+    ===================================================== */
+
+    escapeHTML(value){
+
+        return String(
+            value ?? ""
+        )
+            .replaceAll("&", "&amp;")
+            .replaceAll("<", "&lt;")
+            .replaceAll(">", "&gt;")
+            .replaceAll('"', "&quot;")
+            .replaceAll("'", "&#039;");
+
+    },
+
+
+    /* =====================================================
+       BRAIN CONTEXT
+    ===================================================== */
+
+    enterBrainContext(){
+
+        try{
+
+            const awareness =
+                typeof VAERO !== "undefined" &&
+                typeof VAERO.get === "function"
+                    ? VAERO.get(
+                        "brainAwareness"
+                    )
+                    : null;
+
+
+            if(
+                awareness &&
+                typeof awareness.enter ===
+                    "function"
+            ){
+
+                awareness.enter(
+                    "evolution"
+                );
+
+            }
+
+        } catch(error){
+
+            console.warn(
+                "Evolution Brain context açılamadı:",
+                error
+            );
+
+        }
+
+    },
+
+
+    /* =====================================================
+       EVOLUTION CORE
+    ===================================================== */
+
+    getEvolutionCore(){
+
+        try{
+
+            if(
+                typeof VAERO === "undefined" ||
+                typeof VAERO.get !== "function"
+            ){
+                return null;
+            }
+
+            return VAERO.get(
+                "evolution"
+            ) || null;
+
+        } catch(error){
+
+            console.warn(
+                "Evolution core okunamadı:",
+                error
+            );
+
+            return null;
+
+        }
+
+    },
+
+
+    getEvents(){
+
+        const evolution =
+            this.getEvolutionCore();
+
+
+        if(
+            !evolution ||
+            typeof evolution.all !==
+                "function"
+        ){
+            return [];
+        }
+
+
+        try{
+
+            const events =
+                evolution.all();
+
+            return Array.isArray(events)
+                ? events
+                : [];
+
+        } catch(error){
+
+            console.warn(
+                "Evolution olayları okunamadı:",
+                error
+            );
+
+            return [];
+
+        }
+
+    },
+
+
+    /* =====================================================
+       FILTER
+    ===================================================== */
 
     setFilter(filter){
 
@@ -11,32 +154,19 @@ const EvolutionApp = {
             "finance"
         ];
 
-        this.activeFilter = allowedFilters.includes(filter)
-            ? filter
-            : "all";
+
+        this.activeFilter =
+            allowedFilters.includes(
+                filter
+            )
+                ? filter
+                : "all";
+
 
         return this.activeFilter;
 
     },
 
-    selectedEventId: null,
-
-selectEvent(eventId){
-
-    this.selectedEventId =
-        String(eventId || "").trim() || null;
-
-    return this.selectedEventId;
-
-},
-
-clearSelectedEvent(){
-
-    this.selectedEventId = null;
-
-    return true;
-
-},
 
     filterEvents(events = []){
 
@@ -44,563 +174,1134 @@ clearSelectedEvent(){
             return [];
         }
 
-        if(this.activeFilter === "important"){
-            return events.filter(event =>
-                event.importance === "high" ||
-                event.importance === "critical"
+
+        if(
+            this.activeFilter ===
+            "important"
+        ){
+
+            return events.filter(
+                event =>
+                    event &&
+                    (
+                        event.importance ===
+                            "high" ||
+                        event.importance ===
+                            "critical"
+                    )
             );
+
         }
 
-        if(this.activeFilter === "achievement"){
-            return events.filter(event =>
-                event.type === "achievement"
+
+        if(
+            this.activeFilter ===
+            "achievement"
+        ){
+
+            return events.filter(
+                event =>
+                    event &&
+                    event.type ===
+                        "achievement"
             );
+
         }
 
-        if(this.activeFilter === "goal"){
-            return events.filter(event =>
-                event.type === "goal"
+
+        if(
+            this.activeFilter ===
+            "goal"
+        ){
+
+            return events.filter(
+                event =>
+                    event &&
+                    event.type ===
+                        "goal"
             );
+
         }
 
-        if(this.activeFilter === "finance"){
-            return events.filter(event =>
-                event.type === "finance"
+
+        if(
+            this.activeFilter ===
+            "finance"
+        ){
+
+            return events.filter(
+                event =>
+                    event &&
+                    event.type ===
+                        "finance"
             );
+
         }
+
 
         return events;
 
     },
 
-    escapeHTML(value){
 
-        return String(value ?? "")
-            .replaceAll("&", "&amp;")
-            .replaceAll("<", "&lt;")
-            .replaceAll(">", "&gt;")
-            .replaceAll('"', "&quot;")
-            .replaceAll("'", "&#039;");
+    /* =====================================================
+       EVENT SELECTION
+    ===================================================== */
+
+    selectEvent(eventId){
+
+        this.selectedEventId =
+            String(
+                eventId || ""
+            ).trim() || null;
+
+
+        return this.selectedEventId;
 
     },
+
+
+    clearSelectedEvent(){
+
+        this.selectedEventId =
+            null;
+
+        return true;
+
+    },
+
+
+    /* =====================================================
+       DATE
+    ===================================================== */
 
     formatDate(timestamp){
 
-        const date = new Date(
-            Number(timestamp) || Date.now()
-        );
+        const numericTimestamp =
+            Number(timestamp);
 
-        return new Intl.DateTimeFormat(
-            "tr-TR",
-            {
-                day: "2-digit",
-                month: "long",
-                year: "numeric",
-                hour: "2-digit",
-                minute: "2-digit"
-            }
-        ).format(date);
+
+        if(
+            !Number.isFinite(
+                numericTimestamp
+            ) ||
+            numericTimestamp <= 0
+        ){
+
+            return "Tarih bilinmiyor";
+
+        }
+
+
+        const date =
+            new Date(
+                numericTimestamp
+            );
+
+
+        if(
+            Number.isNaN(
+                date.getTime()
+            )
+        ){
+
+            return "Tarih bilinmiyor";
+
+        }
+
+
+        try{
+
+            return new Intl.DateTimeFormat(
+                "tr-TR",
+                {
+                    day:"2-digit",
+                    month:"long",
+                    year:"numeric",
+                    hour:"2-digit",
+                    minute:"2-digit"
+                }
+            ).format(date);
+
+        } catch(error){
+
+            return date.toLocaleString();
+
+        }
 
     },
+
+
+    /* =====================================================
+       LABELS
+    ===================================================== */
 
     getTypeLabel(type){
 
         const labels = {
-            achievement: "Başarı",
-            decision: "Karar",
-            failure: "Başarısızlık",
-            relationship: "İlişki",
-            work: "İş",
-            health: "Sağlık",
-            finance: "Finans",
-            location: "Konum",
-            goal: "Hedef",
-            milestone: "Dönüm Noktası",
-            general: "Genel"
+
+            achievement:"Başarı",
+            decision:"Karar",
+            failure:"Başarısızlık",
+            relationship:"İlişki",
+            work:"İş",
+            health:"Sağlık",
+            finance:"Finans",
+            location:"Konum",
+            goal:"Hedef",
+            milestone:"Dönüm Noktası",
+            general:"Genel"
+
         };
 
-        return labels[type] || "Genel";
+
+        return labels[type] ||
+            "Genel";
 
     },
 
-    getImportanceLabel(importance){
+
+    getImportanceLabel(
+        importance
+    ){
 
         const labels = {
-            low: "Düşük",
-            medium: "Orta",
-            high: "Yüksek",
-            critical: "Kritik"
+
+            low:"Düşük",
+            medium:"Orta",
+            high:"Yüksek",
+            critical:"Kritik"
+
         };
 
-        return labels[importance] || "Orta";
+
+        return labels[importance] ||
+            "Orta";
 
     },
 
-    getImportanceColor(importance){
 
-        if(importance === "critical"){
-            return "#ff5c75";
+    getImportanceColor(
+        importance
+    ){
+
+        if(
+            importance ===
+            "critical"
+        ){
+
+            return "var(--engine-danger)";
+
         }
 
-        if(importance === "high"){
-            return "#f5c96a";
+
+        if(
+            importance ===
+            "high"
+        ){
+
+            return "var(--engine-gold)";
+
         }
 
-        if(importance === "low"){
-            return "var(--muted)";
+
+        if(
+            importance ===
+            "low"
+        ){
+
+            return "var(--engine-muted)";
+
         }
 
-        return "#70a7ff";
+
+        return "var(--engine-blue)";
 
     },
+
+
+    /* =====================================================
+       XP
+    ===================================================== */
 
     getEventXP(event = {}){
 
-    const directXP = Number(event.xp);
+        const directXP =
+            Number(
+                event.xp
+            );
 
-    if(
-        Number.isFinite(directXP) &&
-        directXP > 0
-    ){
-        return directXP;
-    }
 
-    const payloadXP = Number(
-        event.payload?.xp
-    );
+        if(
+            Number.isFinite(
+                directXP
+            ) &&
+            directXP > 0
+        ){
 
-    if(
-        Number.isFinite(payloadXP) &&
-        payloadXP > 0
-    ){
-        return payloadXP;
-    }
+            return directXP;
 
-    const importanceXP = {
-        low: 5,
-        medium: 10,
-        high: 25,
-        critical: 50
-    };
+        }
 
-    return importanceXP[event.importance] || 10;
 
-},
+        const payloadXP =
+            Number(
+                event.payload?.xp
+            );
 
-    getEvolutionProgress(totalXP = 0){
 
-    const safeXP = Math.max(
-        0,
-        Number(totalXP) || 0
-    );
+        if(
+            Number.isFinite(
+                payloadXP
+            ) &&
+            payloadXP > 0
+        ){
 
-    const level = Math.floor(
-        safeXP / 100
-    ) + 1;
+            return payloadXP;
 
-    const currentLevelXP =
-        safeXP % 100;
+        }
 
-    const nextLevelXP = 100;
 
-    const progressPercent =
-        Math.min(
-            100,
-            Math.round(
-                (
-                    currentLevelXP /
-                    nextLevelXP
-                ) * 100
-            )
+        const importanceXP = {
+
+            low:5,
+            medium:10,
+            high:25,
+            critical:50
+
+        };
+
+
+        return (
+            importanceXP[
+                event.importance
+            ] ||
+            10
         );
 
-    return {
-        level,
-        totalXP: safeXP,
-        currentLevelXP,
-        nextLevelXP,
-        progressPercent
-    };
+    },
 
-},
 
-    renderEvolutionProgress(progress = {}){
-
-    return `
-        <section
-            class="card"
-            style="
-                ${Theme.card}
-                margin-top:16px;
-                padding:20px;
-            "
-        >
-            <div
-                style="
-                    display:flex;
-                    align-items:center;
-                    justify-content:space-between;
-                    gap:16px;
-                "
-            >
-                <div>
-                    <div
-                        style="
-                            color:var(--muted);
-                            font-size:12px;
-                        "
-                    >
-                        EVOLUTION SEVİYESİ
-                    </div>
-
-                    <strong
-                        style="
-                            display:block;
-                            margin-top:6px;
-                            font-size:28px;
-                        "
-                    >
-                        Seviye ${progress.level}
-                    </strong>
-                </div>
-
-                <div
-                    style="
-                        color:#f5d796;
-                        font-size:14px;
-                        font-weight:600;
-                    "
-                >
-                    ${progress.totalXP} XP
-                </div>
-            </div>
-
-            <div
-                style="
-                    margin-top:18px;
-                    height:9px;
-                    overflow:hidden;
-                    border-radius:999px;
-                    background:rgba(255,255,255,.06);
-                "
-            >
-                <div
-                    style="
-                        width:${progress.progressPercent}%;
-                        height:100%;
-                        border-radius:999px;
-                        background:linear-gradient(
-                            90deg,
-                            #b89045,
-                            #f5d796
-                        );
-                    "
-                ></div>
-            </div>
-
-            <div
-                style="
-                    display:flex;
-                    justify-content:space-between;
-                    gap:12px;
-                    margin-top:9px;
-                    color:var(--muted);
-                    font-size:11px;
-                "
-            >
-                <span>
-                    ${progress.currentLevelXP} / ${progress.nextLevelXP} XP
-                </span>
-
-                <span>
-                    %${progress.progressPercent}
-                </span>
-            </div>
-        </section>
-    `;
-
-},
-    
-getAffectedOrgans(event = {}){
-
-    const organs = new Set(
-        (Array.isArray(event.organs)
-            ? event.organs
-            : []
-        )
-            .map(value =>
-                String(value || "")
-                    .trim()
-                    .toLowerCase()
-            )
-            .filter(Boolean)
-    );
-
-    const searchableText = [
-        event.type,
-        event.title,
-        event.description,
-        event.source,
-        event.payload?.action,
-        event.payload?.category
-    ]
-        .filter(Boolean)
-        .join(" ")
-        .toLowerCase();
-
-    if(
-        searchableText.includes("memory") ||
-        searchableText.includes("hafıza") ||
-        searchableText.includes("hatıra")
+    getEvolutionProgress(
+        totalXP = 0
     ){
-        organs.add("memory");
-    }
 
-    if(
-        searchableText.includes("timeline") ||
-        searchableText.includes("zaman çizelgesi") ||
-        searchableText.includes("geçmiş")
-    ){
-        organs.add("timeline");
-    }
+        const safeXP =
+            Math.max(
+                0,
+                Number(totalXP) || 0
+            );
 
-    if(
-        searchableText.includes("identity") ||
-        searchableText.includes("kimlik") ||
-        searchableText.includes("doğrulama")
-    ){
-        organs.add("identity");
-    }
 
-    if(
-        searchableText.includes("profile") ||
-        searchableText.includes("profil")
-    ){
-        organs.add("profile");
-    }
+        const level =
+            Math.floor(
+                safeXP / 100
+            ) + 1;
 
-    if(
-        searchableText.includes("bridge") ||
-        searchableText.includes("köprü") ||
-        searchableText.includes("bağlantı")
-    ){
-        organs.add("bridge");
-    }
 
-    if(
-        searchableText.includes("finance") ||
-        searchableText.includes("finans") ||
-        searchableText.includes("satış") ||
-        searchableText.includes("ödeme") ||
-        searchableText.includes("gelir")
-    ){
-        organs.add("finance");
-    }
+        const currentLevelXP =
+            safeXP % 100;
 
-    if(event.type === "achievement"){
-        organs.add("timeline");
-        organs.add("memory");
-    }
 
-    if(event.type === "engine:start"){
-        organs.add("timeline");
-    }
+        const nextLevelXP =
+            100;
 
-    return [...organs];
 
-},
-    getLinkedRecordCounts(event = {}){
+        const progressPercent =
+            Math.min(
+                100,
+                Math.round(
+                    (
+                        currentLevelXP /
+                        nextLevelXP
+                    ) * 100
+                )
+            );
 
-    if(!event.id){
+
         return {
-            timeline: 0,
-            memory: 0
+            level,
+            totalXP:safeXP,
+            currentLevelXP,
+            nextLevelXP,
+            progressPercent
         };
-    }
 
-    const timeline =
-        VAERO.get("timeline");
+    },
 
-    const memory =
-        VAERO.get("memorySystem");
 
-    const timelineEvents =
-        timeline &&
-        typeof timeline.all === "function"
-            ? timeline.all()
-            : [];
+    /* =====================================================
+       AFFECTED ORGANS
+    ===================================================== */
 
-    const memoryRecords =
-        memory &&
-        typeof memory.all === "function"
-            ? memory.all()
-            : [];
+    getAffectedOrgans(
+        event = {}
+    ){
 
-    return {
-        timeline: timelineEvents.filter(item =>
-            item.payload &&
-            item.payload.sourceEventId === event.id
-        ).length,
+        const organs =
+            new Set(
+                (
+                    Array.isArray(
+                        event.organs
+                    )
+                        ? event.organs
+                        : []
+                )
+                    .map(
+                        value =>
+                            String(
+                                value || ""
+                            )
+                                .trim()
+                                .toLowerCase()
+                    )
+                    .filter(Boolean)
+            );
 
-        memory: memoryRecords.filter(item =>
-            item.payload &&
-            item.payload.sourceEventId === event.id
-        ).length
-    };
 
-},
+        const searchableText = [
 
-    getBrainAnalysis(event = {}){
+            event.type,
+            event.title,
+            event.description,
+            event.source,
+            event.payload?.action,
+            event.payload?.category
 
-    let summary =
-        "Bu olay varlığın yaşam akışına kaydedildi.";
+        ]
+            .filter(Boolean)
+            .join(" ")
+            .toLowerCase();
 
-    let impact = "Orta";
-    let risk = "Düşük";
-    let suggestion =
-        "Olayın gelecekteki etkileri izlenebilir.";
 
-    if(event.type === "achievement"){
+        if(
+            searchableText.includes(
+                "memory"
+            ) ||
+            searchableText.includes(
+                "hafıza"
+            ) ||
+            searchableText.includes(
+                "hatıra"
+            )
+        ){
 
-        summary =
-            "Bu olay varlığın gelişiminde olumlu bir ilerleme oluşturuyor.";
+            organs.add(
+                "memory"
+            );
 
-        impact = "Yüksek";
+        }
 
-        suggestion =
-            "Bu başarı yeni bir hedef veya dönüm noktasıyla ilişkilendirilebilir.";
 
-    }
-    else if(event.type === "failure"){
+        if(
+            searchableText.includes(
+                "timeline"
+            ) ||
+            searchableText.includes(
+                "zaman çizelgesi"
+            ) ||
+            searchableText.includes(
+                "geçmiş"
+            )
+        ){
 
-        summary =
-            "Bu olay başarısızlık olarak görünse de deneyim ve öğrenme üretiyor.";
+            organs.add(
+                "timeline"
+            );
 
-        impact = "Yüksek";
-        risk = "Orta";
+        }
 
-        suggestion =
-            "Sebep, sonuç ve çıkarılan dersler Hafıza organına eklenebilir.";
 
-    }
-    else if(event.type === "goal"){
+        if(
+            searchableText.includes(
+                "identity"
+            ) ||
+            searchableText.includes(
+                "kimlik"
+            ) ||
+            searchableText.includes(
+                "doğrulama"
+            )
+        ){
 
-        summary =
-            "Bu olay geleceğe yönelik bir gelişim yönü oluşturuyor.";
+            organs.add(
+                "identity"
+            );
 
-        suggestion =
-            "Hedef için ölçülebilir adımlar ve tamamlanma tarihi belirlenebilir.";
+        }
 
-    }
-    else if(event.type === "finance"){
 
-        summary =
-            "Bu olay varlığın finansal gelişimini veya yükümlülüklerini etkiliyor.";
+        if(
+            searchableText.includes(
+                "profile"
+            ) ||
+            searchableText.includes(
+                "profil"
+            )
+        ){
 
-        impact = "Yüksek";
-        risk = "Orta";
+            organs.add(
+                "profile"
+            );
 
-        suggestion =
-            "Ödeme, gelir, borç ve sonuç bilgileri düzenli olarak güncellenebilir.";
+        }
 
-    }
-    else if(event.type === "decision"){
 
-        summary =
-            "Bu karar varlığın sonraki yaşam akışını değiştirebilir.";
+        if(
+            searchableText.includes(
+                "bridge"
+            ) ||
+            searchableText.includes(
+                "köprü"
+            ) ||
+            searchableText.includes(
+                "bağlantı"
+            )
+        ){
 
-        suggestion =
-            "Kararın nedeni ve sonraki sonuçları Timeline üzerinden izlenebilir.";
+            organs.add(
+                "bridge"
+            );
 
-    }
+        }
 
-    if(event.importance === "critical"){
-        impact = "Kritik";
-        risk = "Yüksek";
-    }
-    else if(event.importance === "high"){
-        impact = "Yüksek";
-    }
 
-        if(event.organs?.includes("memory")){
-    suggestion =
-        "Bu olay hafızada uzun süreli iz bırakabilir.";
-}
+        if(
+            searchableText.includes(
+                "finance"
+            ) ||
+            searchableText.includes(
+                "finans"
+            ) ||
+            searchableText.includes(
+                "satış"
+            ) ||
+            searchableText.includes(
+                "ödeme"
+            ) ||
+            searchableText.includes(
+                "gelir"
+            )
+        ){
 
-if(event.organs?.includes("identity")){
-    impact = "Yüksek";
-}
+            organs.add(
+                "finance"
+            );
 
-if(event.organs?.includes("timeline")){
-    summary += " Timeline üzerinde önemli bir kayıt oluşturdu.";
-}
+        }
 
-    return {
-        summary,
-        impact,
-        risk,
-        suggestion
-    };
 
-},
+        if(
+            event.type ===
+            "achievement"
+        ){
+
+            organs.add(
+                "timeline"
+            );
+
+            organs.add(
+                "memory"
+            );
+
+        }
+
+
+        if(
+            event.type ===
+            "engine:start"
+        ){
+
+            organs.add(
+                "timeline"
+            );
+
+        }
+
+
+        return [
+            ...organs
+        ];
+
+    },
+
+
+    /* =====================================================
+       ORGAN LABEL
+    ===================================================== */
 
     getOrganLabel(id){
 
-    const organ = OrganRegistry.find(id);
- 
-    if(organ){
-        return `${organ.icon} ${organ.title}`;
-    }
+        try{
 
-    return id;
+            if(
+                typeof OrganRegistry !==
+                    "undefined" &&
+                typeof OrganRegistry.find ===
+                    "function"
+            ){
 
-},
+                const organ =
+                    OrganRegistry.find(
+                        id
+                    );
 
-    renderEffects(effects = {}){
 
-        const entries = Object.entries(effects);
+                if(organ){
 
-        if(entries.length === 0){
+                    return [
+                        organ.icon,
+                        organ.title
+                    ]
+                        .filter(Boolean)
+                        .join(" ");
+
+                }
+
+            }
+
+        } catch(error){
+
+            console.warn(
+                "Organ etiketi okunamadı:",
+                error
+            );
+
+        }
+
+
+        return String(
+            id || "organ"
+        );
+
+    },
+
+
+    /* =====================================================
+       LINKED RECORDS
+    ===================================================== */
+
+    getLinkedRecordCounts(
+        event = {}
+    ){
+
+        if(!event.id){
+
+            return {
+                timeline:0,
+                memory:0
+            };
+
+        }
+
+
+        let timelineEvents =
+            [];
+
+        let memoryRecords =
+            [];
+
+
+        try{
+
+            if(
+                typeof VAERO !==
+                    "undefined" &&
+                typeof VAERO.get ===
+                    "function"
+            ){
+
+                const timeline =
+                    VAERO.get(
+                        "timeline"
+                    );
+
+                const memory =
+                    VAERO.get(
+                        "memorySystem"
+                    );
+
+
+                if(
+                    timeline &&
+                    typeof timeline.all ===
+                        "function"
+                ){
+
+                    const result =
+                        timeline.all();
+
+                    timelineEvents =
+                        Array.isArray(
+                            result
+                        )
+                            ? result
+                            : [];
+
+                }
+
+
+                if(
+                    memory &&
+                    typeof memory.all ===
+                        "function"
+                ){
+
+                    const result =
+                        memory.all();
+
+                    memoryRecords =
+                        Array.isArray(
+                            result
+                        )
+                            ? result
+                            : [];
+
+                }
+
+            }
+
+        } catch(error){
+
+            console.warn(
+                "Evolution bağlantılı kayıtları okunamadı:",
+                error
+            );
+
+        }
+
+
+        return {
+
+            timeline:
+                timelineEvents.filter(
+                    item =>
+                        item &&
+                        item.payload &&
+                        item.payload
+                            .sourceEventId ===
+                            event.id
+                ).length,
+
+            memory:
+                memoryRecords.filter(
+                    item =>
+                        item &&
+                        item.payload &&
+                        item.payload
+                            .sourceEventId ===
+                            event.id
+                ).length
+
+        };
+
+    },
+
+
+    /* =====================================================
+       BRAIN ANALYSIS
+    ===================================================== */
+
+    getBrainAnalysis(
+        event = {}
+    ){
+
+        let summary =
+            "Bu olay varlığın yaşam akışına kaydedildi.";
+
+        let impact =
+            "Orta";
+
+        let risk =
+            "Düşük";
+
+        let suggestion =
+            "Olayın gelecekteki etkileri izlenebilir.";
+
+
+        if(
+            event.type ===
+            "achievement"
+        ){
+
+            summary =
+                "Bu olay varlığın gelişiminde olumlu bir ilerleme oluşturuyor.";
+
+            impact =
+                "Yüksek";
+
+            suggestion =
+                "Bu başarı yeni bir hedef veya dönüm noktasıyla ilişkilendirilebilir.";
+
+        }
+        else if(
+            event.type ===
+            "failure"
+        ){
+
+            summary =
+                "Bu olay başarısızlık olarak görünse de deneyim ve öğrenme üretiyor.";
+
+            impact =
+                "Yüksek";
+
+            risk =
+                "Orta";
+
+            suggestion =
+                "Sebep, sonuç ve çıkarılan dersler Hafıza organına eklenebilir.";
+
+        }
+        else if(
+            event.type ===
+            "goal"
+        ){
+
+            summary =
+                "Bu olay geleceğe yönelik bir gelişim yönü oluşturuyor.";
+
+            suggestion =
+                "Hedef için ölçülebilir adımlar ve tamamlanma tarihi belirlenebilir.";
+
+        }
+        else if(
+            event.type ===
+            "finance"
+        ){
+
+            summary =
+                "Bu olay varlığın finansal gelişimini veya yükümlülüklerini etkiliyor.";
+
+            impact =
+                "Yüksek";
+
+            risk =
+                "Orta";
+
+            suggestion =
+                "Ödeme, gelir, borç ve sonuç bilgileri düzenli olarak güncellenebilir.";
+
+        }
+        else if(
+            event.type ===
+            "decision"
+        ){
+
+            summary =
+                "Bu karar varlığın sonraki yaşam akışını değiştirebilir.";
+
+            suggestion =
+                "Kararın nedeni ve sonraki sonuçları Timeline üzerinden izlenebilir.";
+
+        }
+
+
+        if(
+            event.importance ===
+            "critical"
+        ){
+
+            impact =
+                "Kritik";
+
+            risk =
+                "Yüksek";
+
+        }
+        else if(
+            event.importance ===
+            "high"
+        ){
+
+            impact =
+                "Yüksek";
+
+        }
+
+
+        const affectedOrgans =
+            this.getAffectedOrgans(
+                event
+            );
+
+
+        if(
+            affectedOrgans.includes(
+                "memory"
+            )
+        ){
+
+            suggestion =
+                "Bu olay hafızada uzun süreli iz bırakabilir.";
+
+        }
+
+
+        if(
+            affectedOrgans.includes(
+                "identity"
+            )
+        ){
+
+            impact =
+                "Yüksek";
+
+        }
+
+
+        if(
+            affectedOrgans.includes(
+                "timeline"
+            )
+        ){
+
+            summary +=
+                " Timeline üzerinde önemli bir kayıt oluşturdu.";
+
+        }
+
+
+        return {
+            summary,
+            impact,
+            risk,
+            suggestion
+        };
+
+    },
+
+
+    /* =====================================================
+       EFFECTS
+    ===================================================== */
+
+    renderEffects(
+        effects = {}
+    ){
+
+        const entries =
+            Object.entries(
+                effects
+            );
+
+
+        if(
+            entries.length === 0
+        ){
             return "";
         }
+
 
         return `
             <div
                 style="
                     display:flex;
                     flex-wrap:wrap;
-                    gap:8px;
-                    margin-top:14px;
+                    gap:5px;
+                    margin-top:8px;
                 "
             >
-                ${entries.map(([name, value]) => `
-                    <span
-                        style="
-                            padding:7px 10px;
-                            border-radius:999px;
-                            border:1px solid rgba(255,255,255,.07);
-                            background:rgba(255,255,255,.035);
-                            color:var(--muted);
-                            font-size:12px;
-                        "
-                    >
-                        ${this.escapeHTML(name)}
 
-                        <strong
-                            style="
-                                color:var(--text);
-                                margin-left:4px;
-                            "
-                        >
-                            ${Number(value) > 0 ? "+" : ""}
-                            ${Number(value)}
-                        </strong>
-                    </span>
-                `).join("")}
+                ${entries
+                    .map(
+                        ([name, value]) => {
+
+                            const numericValue =
+                                Number(value);
+
+                            const safeValue =
+                                Number.isFinite(
+                                    numericValue
+                                )
+                                    ? numericValue
+                                    : 0;
+
+                            return `
+                                <span
+                                    style="
+                                        padding:4px 7px;
+                                        border-radius:999px;
+                                        border:
+                                            1px solid
+                                            var(--engine-line);
+                                        background:
+                                            rgba(
+                                                255,
+                                                255,
+                                                255,
+                                                .02
+                                            );
+                                        color:
+                                            var(--engine-muted);
+                                        font-size:7px;
+                                    "
+                                >
+                                    ${this.escapeHTML(
+                                        name
+                                    )}
+
+                                    <strong
+                                        style="
+                                            color:
+                                                var(--engine-text);
+                                            margin-left:3px;
+                                        "
+                                    >
+                                        ${
+                                            safeValue > 0
+                                                ? "+"
+                                                : ""
+                                        }${safeValue}
+                                    </strong>
+                                </span>
+                            `;
+
+                        }
+                    )
+                    .join("")}
+
             </div>
         `;
 
     },
+
+
+    /* =====================================================
+       EVOLUTION PROGRESS
+    ===================================================== */
+
+    renderEvolutionProgress(
+        progress = {}
+    ){
+
+        return `
+            <section
+                class="card"
+                style="
+                    margin-top:7px;
+                    padding:12px;
+                "
+            >
+
+                <div
+                    style="
+                        display:flex;
+                        align-items:center;
+                        justify-content:space-between;
+                        gap:10px;
+                    "
+                >
+
+                    <div>
+
+                        <div
+                            style="
+                                color:
+                                    var(--engine-muted);
+                                font-size:7px;
+                            "
+                        >
+                            EVOLUTION SEVİYESİ
+                        </div>
+
+                        <strong
+                            style="
+                                display:block;
+                                margin-top:2px;
+                                color:
+                                    var(--engine-text);
+                                font-size:15px;
+                            "
+                        >
+                            Seviye
+                            ${progress.level}
+                        </strong>
+
+                    </div>
+
+
+                    <strong
+                        style="
+                            color:
+                                var(--engine-gold-soft);
+                            font-size:9px;
+                        "
+                    >
+                        ${progress.totalXP}
+                        XP
+                    </strong>
+
+                </div>
+
+
+                <div
+                    style="
+                        margin-top:8px;
+                        height:5px;
+                        overflow:hidden;
+                        border-radius:999px;
+                        background:
+                            rgba(
+                                255,
+                                255,
+                                255,
+                                .05
+                            );
+                    "
+                >
+
+                    <div
+                        style="
+                            width:
+                                ${progress.progressPercent}%;
+                            height:100%;
+                            border-radius:999px;
+                            background:
+                                linear-gradient(
+                                    90deg,
+                                    var(--engine-gold),
+                                    var(--engine-gold-soft)
+                                );
+                        "
+                    ></div>
+
+                </div>
+
+
+                <div
+                    style="
+                        display:flex;
+                        justify-content:space-between;
+                        gap:8px;
+                        margin-top:5px;
+                        color:
+                            var(--engine-muted);
+                        font-size:6px;
+                    "
+                >
+
+                    <span>
+                        ${progress.currentLevelXP}
+                        /
+                        ${progress.nextLevelXP}
+                        XP
+                    </span>
+
+                    <span>
+                        %${progress.progressPercent}
+                    </span>
+
+                </div>
+
+            </section>
+        `;
+
+    },
+
+
+    /* =====================================================
+       EVENT CARD
+    ===================================================== */
 
     renderEvent(event){
 
@@ -609,55 +1310,86 @@ if(event.organs?.includes("timeline")){
                 event.importance
             );
 
+
+        const affectedOrgans =
+            this.getAffectedOrgans(
+                event
+            );
+
+
         return `
             <article
-                class="card evolution-event-card"
+                class="
+                    card
+                    evolution-event-card
+                "
                 data-action="evolution:event:open"
-data-event-id="${event.id}"
+                data-event-id="${this.escapeHTML(
+                    event.id
+                )}"
                 style="
-                    ${Theme.card}
-                    padding:18px;
-                    margin-top:12px;
+                    padding:11px;
                 "
             >
+
                 <div
                     style="
                         display:flex;
                         align-items:flex-start;
                         justify-content:space-between;
-                        gap:14px;
+                        gap:10px;
                     "
                 >
-                    <div style="min-width:0;">
+
+                    <div
+                        style="
+                            min-width:0;
+                        "
+                    >
+
                         <div
                             style="
                                 display:flex;
-                                gap:8px;
+                                gap:5px;
                                 flex-wrap:wrap;
-                                margin-bottom:10px;
+                                margin-bottom:6px;
                             "
                         >
-                            <span
-                                style="
-                                    padding:6px 9px;
-                                    border-radius:999px;
-                                    background:rgba(255,255,255,.04);
-                                    color:var(--muted);
-                                    font-size:11px;
-                                "
-                            >
-                                ${this.escapeHTML(
-                                    this.getTypeLabel(event.type)
-                                )}
-                            </span>
 
                             <span
                                 style="
-                                    padding:6px 9px;
+                                    padding:4px 6px;
                                     border-radius:999px;
-                                    border:1px solid ${importanceColor};
-                                    color:${importanceColor};
-                                    font-size:11px;
+                                    background:
+                                        rgba(
+                                            255,
+                                            255,
+                                            255,
+                                            .025
+                                        );
+                                    color:
+                                        var(--engine-muted);
+                                    font-size:6px;
+                                "
+                            >
+                                ${this.escapeHTML(
+                                    this.getTypeLabel(
+                                        event.type
+                                    )
+                                )}
+                            </span>
+
+
+                            <span
+                                style="
+                                    padding:4px 6px;
+                                    border-radius:999px;
+                                    border:
+                                        1px solid
+                                        ${importanceColor};
+                                    color:
+                                        ${importanceColor};
+                                    font-size:6px;
                                 "
                             >
                                 ${this.escapeHTML(
@@ -666,105 +1398,155 @@ data-event-id="${event.id}"
                                     )
                                 )}
                             </span>
+
                         </div>
+
 
                         <h3
                             style="
                                 margin:0;
-                                font-size:18px;
-                                line-height:1.35;
+                                overflow:hidden;
+                                color:
+                                    var(--engine-text);
+                                font-size:10px;
+                                line-height:1.3;
+                                text-overflow:ellipsis;
+                                white-space:nowrap;
                             "
                         >
                             ${this.escapeHTML(
-                                event.title || "Yaşam olayı"
+                                event.title ||
+                                "Yaşam olayı"
                             )}
                         </h3>
+
 
                         ${
                             event.description
                                 ? `
                                     <p
                                         style="
-                                            margin-top:9px;
-                                            color:var(--muted);
-                                            line-height:1.65;
-                                            font-size:14px;
+                                            margin:4px 0 0;
+                                            display:
+                                                -webkit-box;
+                                            overflow:hidden;
+                                            color:
+                                                var(--engine-muted);
+                                            font-size:7px;
+                                            line-height:1.35;
+                                            -webkit-line-clamp:2;
+                                            -webkit-box-orient:
+                                                vertical;
                                         "
                                     >
                                         ${this.escapeHTML(
                                             event.description
                                         )}
                                     </p>
-                                `
+                                  `
                                 : ""
                         }
+
                     </div>
 
-                    <div
+
+                    <span
+                        aria-hidden="true"
                         style="
-                            width:10px;
-                            height:10px;
-                            flex:0 0 auto;
-                            margin-top:5px;
+                            width:7px;
+                            height:7px;
+                            flex:0 0 7px;
+                            margin-top:3px;
                             border-radius:50%;
-                            background:${importanceColor};
-                            box-shadow:0 0 14px ${importanceColor};
+                            background:
+                                ${importanceColor};
+                            box-shadow:
+                                0
+                                0
+                                8px
+                                ${importanceColor};
                         "
-                    ></div>
+                    ></span>
+
                 </div>
 
-                ${this.renderEffects(event.effects)}
-                ${(() => {
 
-    const affectedOrgans =
-        this.getAffectedOrgans(event);
+                ${this.renderEffects(
+                    event.effects
+                )}
 
-    if(affectedOrgans.length === 0){
-        return "";
-    }
 
-    return `
-        <div
-            style="
-                display:flex;
-                flex-wrap:wrap;
-                gap:8px;
-                margin-top:14px;
-            "
-        >
-            ${affectedOrgans.map(id => `
-                <span
-                    style="
-                        padding:7px 10px;
-                        border-radius:999px;
-                        background:rgba(255,255,255,.035);
-                        border:1px solid rgba(255,255,255,.07);
-                        color:var(--muted);
-                        font-size:12px;
-                    "
-                >
-                    ${this.escapeHTML(
-                        this.getOrganLabel(id)
-                    )}
-                </span>
-            `).join("")}
-        </div>
-    `;
+                ${
+                    affectedOrgans.length
+                        ? `
+                            <div
+                                style="
+                                    display:flex;
+                                    flex-wrap:wrap;
+                                    gap:4px;
+                                    margin-top:7px;
+                                "
+                            >
 
-})()}
+                                ${affectedOrgans
+                                    .slice(0, 4)
+                                    .map(
+                                        id => `
+                                            <span
+                                                style="
+                                                    padding:
+                                                        3px
+                                                        6px;
+                                                    border-radius:
+                                                        999px;
+                                                    background:
+                                                        rgba(
+                                                            255,
+                                                            255,
+                                                            255,
+                                                            .018
+                                                        );
+                                                    border:
+                                                        1px solid
+                                                        var(--engine-line);
+                                                    color:
+                                                        var(--engine-muted);
+                                                    font-size:
+                                                        6px;
+                                                "
+                                            >
+                                                ${this.escapeHTML(
+                                                    this.getOrganLabel(
+                                                        id
+                                                    )
+                                                )}
+                                            </span>
+                                        `
+                                    )
+                                    .join("")}
+
+                            </div>
+                          `
+                        : ""
+                }
+
 
                 <div
                     style="
-                        margin-top:15px;
-                        padding-top:13px;
-                        border-top:1px solid rgba(255,255,255,.055);
+                        margin-top:7px;
+                        padding-top:6px;
+                        border-top:
+                            1px solid
+                            var(--engine-line);
                         display:flex;
                         justify-content:space-between;
-                        gap:12px;
-                        color:var(--muted);
-                        font-size:11px;
+                        gap:8px;
+                        color:
+                            var(--engine-dim);
+                        font-size:6px;
                     "
                 >
+
                     <span>
                         ${this.escapeHTML(
                             this.formatDate(
@@ -776,484 +1558,386 @@ data-event-id="${event.id}"
 
                     <span>
                         ${this.escapeHTML(
-                            event.status || "completed"
+                            event.status ||
+                            "completed"
                         )}
                     </span>
+
                 </div>
+
             </article>
         `;
 
     },
 
-    render(entity){
+    /* =====================================================
+       FILTER BAR
+    ===================================================== */
 
-        const awareness =
-            VAERO.get("brainAwareness");
+    renderFilters(){
 
-        if(
-            awareness &&
-            typeof awareness.enter === "function"
-        ){
-            awareness.enter("evolution");
-        }
+        const filters = [
 
-        const evolution =
-            VAERO.get("evolution");
+            {
+                id:"all",
+                label:"Tümü"
+            },
 
-        const events =
-            evolution &&
-            typeof evolution.all === "function"
-                ? evolution.all()
-                : [];
+            {
+                id:"important",
+                label:"Önemli"
+            },
 
-        const selectedEvent =
-    this.selectedEventId &&
-    evolution &&
-    typeof evolution.find === "function"
-        ? evolution.find(this.selectedEventId)
-        : null;
+            {
+                id:"achievement",
+                label:"Başarılar"
+            },
 
-        const selectedEventAnalysis =
-    selectedEvent
-        ? this.getBrainAnalysis(selectedEvent)
-        : null;
-        
-        const importantCount =
-            events.filter(event =>
-                event.importance === "high" ||
-                event.importance === "critical"
-            ).length;
+            {
+                id:"goal",
+                label:"Hedefler"
+            },
 
-        const achievementCount =
-            events.filter(event =>
-                event.type === "achievement"
-            ).length;
+            {
+                id:"finance",
+                label:"Finans"
+            }
 
-        const totalEffects =
-    events.reduce(
-        (total, event) =>
-            total + this.getEventXP(event),
-        0
-    );
+        ];
 
-        const evolutionProgress =
-    this.getEvolutionProgress(totalEffects);
-
-        const filteredEvents =
-    this.filterEvents(events);
-
-const recentEvents =
-    filteredEvents.slice(0, 8);
 
         return `
             <div
-                class="section evolution-app"
                 style="
-                    margin-top:24px;
-                    padding:24px;
+                    display:flex;
+                    gap:5px;
+                    overflow-x:auto;
+                    padding:7px 0 3px;
+                    scrollbar-width:none;
                 "
             >
-                <button
-                    class="secondary-btn"
-                    data-action="entity:organs"
-                    style="margin-bottom:18px;"
-                >
-                    ← Organlara Dön
-                </button>
 
-                <section
-                    class="card"
-                    style="
-                        ${Theme.card}
-                        padding:22px;
-                    "
-                >
-                    <div class="eyebrow">
-                        EVOLUTION
-                    </div>
+                ${filters
+                    .map(
+                        filter => {
 
-                    <div
-                        style="
-                            display:flex;
-                            align-items:center;
-                            justify-content:space-between;
-                            gap:18px;
-                            margin-top:8px;
-                        "
-                    >
-                        <div>
-                            <h2 style="margin:0;">
-                                Yaşam ve Gelişim
-                            </h2>
+                            const isActive =
+                                this.activeFilter ===
+                                filter.id;
 
-                            <p
-                                style="
-                                    margin-top:10px;
-                                    color:var(--muted);
-                                    line-height:1.65;
-                                "
-                            >
-                                Varlığın yaşam olayları,
-                                gelişimi ve etkileri burada
-                                birleşir.
-                            </p>
-                        </div>
-
-                        <div
-                            style="
-                                font-size:44px;
-                                flex:0 0 auto;
-                            "
-                        >
-                            🧬
-                        </div>
-                    </div>
-                </section>
-
-                <section
-                    style="
-                        display:grid;
-                        grid-template-columns:
-                            repeat(2, minmax(0, 1fr));
-                        gap:12px;
-                        margin-top:16px;
-                    "
-                >
-                    <div
-                        class="card"
-                        style="
-                            ${Theme.card}
-                            padding:16px;
-                        "
-                    >
-                        <div
-                            style="
-                                color:var(--muted);
-                                font-size:12px;
-                            "
-                        >
-                            Toplam Olay
-                        </div>
-
-                        <strong
-                            style="
-                                display:block;
-                                margin-top:7px;
-                                font-size:27px;
-                            "
-                        >
-                            ${events.length}
-                        </strong>
-                    </div>
-
-                    <div
-                        class="card"
-                        style="
-                            ${Theme.card}
-                            padding:16px;
-                        "
-                    >
-                        <div
-                            style="
-                                color:var(--muted);
-                                font-size:12px;
-                            "
-                        >
-                            Önemli Olay
-                        </div>
-
-                        <strong
-                            style="
-                                display:block;
-                                margin-top:7px;
-                                font-size:27px;
-                            "
-                        >
-                            ${importantCount}
-                        </strong>
-                    </div>
-
-                    <div
-                        class="card"
-                        style="
-                            ${Theme.card}
-                            padding:16px;
-                        "
-                    >
-                        <div
-                            style="
-                                color:var(--muted);
-                                font-size:12px;
-                            "
-                        >
-                            Başarı
-                        </div>
-
-                        <strong
-                            style="
-                                display:block;
-                                margin-top:7px;
-                                font-size:27px;
-                            "
-                        >
-                            ${achievementCount}
-                        </strong>
-                    </div>
-
-                    <div
-                        class="card"
-                        style="
-                            ${Theme.card}
-                            padding:16px;
-                        "
-                    >
-                        <div
-                            style="
-                                color:var(--muted);
-                                font-size:12px;
-                            "
-                        >
-                            Toplam Etki
-                        </div>
-
-                        <strong
-                            style="
-                                display:block;
-                                margin-top:7px;
-                                font-size:27px;
-                            "
-                        >
-                            ${totalEffects}
-                        </strong>
-                    </div>
-                </section>
-                ${this.renderEvolutionProgress(
-    evolutionProgress
-)}
-
-                <section style="margin-top:24px;">
-                    <div
-                        style="
-                            display:flex;
-                            align-items:center;
-                            justify-content:space-between;
-                            gap:14px;
-                        "
-                    >
-                        <div>
-                            <div class="eyebrow">
-                                YAŞAM AKIŞI
-                            </div>
-
-                            <h2
-                                style="
-                                    margin-top:7px;
-                                    font-size:22px;
-                                "
-                            >
-                                Son Olaylar
-                            </h2>
-                        </div>
-
-                        <span
-                            style="
-                                color:var(--muted);
-                                font-size:12px;
-                            "
-                        >
-                            ${recentEvents.length} gösteriliyor
-                        </span>
-                    </div>
-
-                    <div
-    style="
-        display:flex;
-        gap:8px;
-        overflow-x:auto;
-        padding:14px 0 4px;
-        scrollbar-width:none;
-    "
->
-    ${[
-        {
-            id: "all",
-            label: "Tümü"
-        },
-        {
-            id: "important",
-            label: "Önemli"
-        },
-        {
-            id: "achievement",
-            label: "Başarılar"
-        },
-        {
-            id: "goal",
-            label: "Hedefler"
-        },
-        {
-            id: "finance",
-            label: "Finans"
-        }
-    ].map(filter => {
-
-        const isActive =
-            this.activeFilter === filter.id;
-
-        return `
-            <button
-                data-action="evolution:filter"
-                data-filter="${filter.id}"
-                style="
-                    flex:0 0 auto;
-                    border-radius:999px;
-                    padding:9px 13px;
-                    border:1px solid ${
-                        isActive
-                            ? "rgba(245,215,150,.55)"
-                            : "rgba(255,255,255,.08)"
-                    };
-                    background:${
-                        isActive
-                            ? "rgba(245,215,150,.13)"
-                            : "rgba(255,255,255,.025)"
-                    };
-                    color:${
-                        isActive
-                            ? "var(--text)"
-                            : "var(--muted)"
-                    };
-                    cursor:pointer;
-                    font-size:12px;
-                    white-space:nowrap;
-                "
-            >
-                ${filter.label}
-            </button>
-        `;
-
-    }).join("")}
-</div>
-
-                    ${
-                        recentEvents.length > 0
-                            ? recentEvents
-                                .map(event =>
-                                    this.renderEvent(event)
-                                )
-                                .join("")
-                            : `
-                                <div
-                                    class="card"
+                            return `
+                                <button
+                                    type="button"
+                                    data-action="evolution:filter"
+                                    data-filter="${filter.id}"
                                     style="
-                                        ${Theme.card}
-                                        margin-top:14px;
-                                        padding:28px;
-                                        text-align:center;
+                                        flex:0 0 auto;
+                                        padding:
+                                            5px
+                                            8px;
+                                        border:
+                                            1px solid
+                                            ${
+                                                isActive
+                                                    ? "rgba(223,189,122,.34)"
+                                                    : "var(--engine-line)"
+                                            };
+                                        border-radius:
+                                            999px;
+                                        background:
+                                            ${
+                                                isActive
+                                                    ? "rgba(223,189,122,.07)"
+                                                    : "rgba(255,255,255,.018)"
+                                            };
+                                        color:
+                                            ${
+                                                isActive
+                                                    ? "var(--engine-gold-soft)"
+                                                    : "var(--engine-muted)"
+                                            };
+                                        font-size:7px;
+                                        font-weight:650;
+                                        white-space:nowrap;
                                     "
                                 >
-                                    <div style="font-size:38px;">
-                                        🧬
-                                    </div>
+                                    ${filter.label}
+                                </button>
+                            `;
 
-                                    <h3 style="margin-top:14px;">
-                                        Henüz yaşam olayı yok
-                                    </h3>
+                        }
+                    )
+                    .join("")}
 
-                                    <p
-                                        style="
-                                            margin-top:8px;
-                                            color:var(--muted);
-                                            line-height:1.6;
-                                        "
-                                    >
-                                        Yeni bir olay oluşturulduğunda
-                                        burada görünecek.
-                                    </p>
-                                </div>
-                            `
-                    }
-                </section>
-                ${
-    selectedEvent
-        ? `
+            </div>
+        `;
+
+    },
+
+
+    /* =====================================================
+       STAT
+    ===================================================== */
+
+    renderStat(
+        label,
+        value
+    ){
+
+        return `
+            <div
+                class="card"
+                style="
+                    min-width:0;
+                    padding:10px 11px;
+                "
+            >
+
+                <span
+                    style="
+                        display:block;
+                        color:
+                            var(--engine-muted);
+                        font-size:6px;
+                    "
+                >
+                    ${this.escapeHTML(
+                        label
+                    )}
+                </span>
+
+                <strong
+                    style="
+                        display:block;
+                        margin-top:2px;
+                        color:
+                            var(--engine-text);
+                        font-size:15px;
+                        font-weight:650;
+                    "
+                >
+                    ${this.escapeHTML(
+                        value
+                    )}
+                </strong>
+
+            </div>
+        `;
+
+    },
+
+
+    /* =====================================================
+       EMPTY STATE
+    ===================================================== */
+
+    renderEmptyState(){
+
+        return `
+            <div
+                class="engine-empty-state"
+                style="
+                    margin-top:7px;
+                "
+            >
+
+                <strong>
+                    Henüz yaşam olayı yok
+                </strong>
+
+                Yeni bir olay oluştuğunda
+                Evolution akışında burada görünecek.
+
+            </div>
+        `;
+
+    },
+
+
+    /* =====================================================
+       SELECTED EVENT MODAL
+    ===================================================== */
+
+    renderSelectedEvent(
+        selectedEvent
+    ){
+
+        if(!selectedEvent){
+            return "";
+        }
+
+
+        const analysis =
+            this.getBrainAnalysis(
+                selectedEvent
+            );
+
+
+        const affectedOrgans =
+            this.getAffectedOrgans(
+                selectedEvent
+            );
+
+
+        const linkedRecords =
+            this.getLinkedRecordCounts(
+                selectedEvent
+            );
+
+
+        const importanceColor =
+            this.getImportanceColor(
+                selectedEvent.importance
+            );
+
+
+        const identities =
+            Array.isArray(
+                selectedEvent.identities
+            )
+                ? selectedEvent.identities
+                : [];
+
+
+        return `
             <div
                 style="
                     position:fixed;
                     inset:0;
                     z-index:9998;
-                    background:rgba(2,8,18,.78);
-                    backdrop-filter:blur(14px);
                     display:flex;
-                    align-items:flex-end;
+                    align-items:center;
                     justify-content:center;
-                    padding:18px;
+                    padding:12px;
+                    background:
+                        rgba(
+                            2,
+                            8,
+                            18,
+                            .76
+                        );
+                    backdrop-filter:
+                        blur(12px);
                 "
             >
+
                 <section
                     class="card"
                     style="
-                        ${Theme.card}
-                        width:min(100%,620px);
-                        max-height:82vh;
-                        overflow:auto;
-                        padding:24px;
-                        border-radius:26px 26px 18px 18px;
+                        width:
+                            min(
+                                100%,
+                                580px
+                            );
+                        max-height:
+                            min(
+                                82dvh,
+                                680px
+                            );
+                        overflow-y:auto;
+                        overscroll-behavior:
+                            contain;
+                        padding:16px;
+                        border-radius:20px;
                     "
                 >
+
+                    <!-- HEADER -->
+
                     <div
                         style="
                             display:flex;
-                            justify-content:space-between;
-                            gap:16px;
                             align-items:flex-start;
+                            justify-content:space-between;
+                            gap:12px;
                         "
                     >
-                        <div>
+
+                        <div
+                            style="
+                                min-width:0;
+                            "
+                        >
+
                             <div class="eyebrow">
                                 YAŞAM OLAYI
                             </div>
 
-                            <h2 style="margin-top:8px;">
+                            <h2
+                                style="
+                                    margin:4px 0 0;
+                                    color:
+                                        var(--engine-text);
+                                    font-size:18px;
+                                    line-height:1.2;
+                                "
+                            >
                                 ${this.escapeHTML(
                                     selectedEvent.title ||
                                     "Yaşam olayı"
                                 )}
                             </h2>
+
                         </div>
 
+
                         <button
+                            type="button"
                             data-action="evolution:event:close"
+                            aria-label="Olay detayını kapat"
                             style="
-                                width:40px;
-                                height:40px;
+                                width:32px;
+                                height:32px;
+                                flex:0 0 32px;
+                                display:grid;
+                                place-items:center;
+                                border:
+                                    1px solid
+                                    var(--engine-line);
                                 border-radius:50%;
-                                border:1px solid rgba(255,255,255,.09);
-                                background:rgba(255,255,255,.04);
-                                color:var(--text);
-                                cursor:pointer;
-                                font-size:18px;
+                                background:
+                                    rgba(
+                                        255,
+                                        255,
+                                        255,
+                                        .025
+                                    );
+                                color:
+                                    var(--engine-text);
+                                font-size:15px;
                             "
                         >
                             ×
                         </button>
+
                     </div>
+
+
+                    <!-- TAGS -->
 
                     <div
                         style="
                             display:flex;
-                            gap:8px;
                             flex-wrap:wrap;
-                            margin-top:16px;
+                            gap:5px;
+                            margin-top:9px;
                         "
                     >
+
                         <span
                             style="
-                                padding:7px 10px;
+                                padding:4px 7px;
                                 border-radius:999px;
-                                background:rgba(255,255,255,.04);
-                                color:var(--muted);
-                                font-size:12px;
+                                background:
+                                    rgba(
+                                        255,
+                                        255,
+                                        255,
+                                        .025
+                                    );
+                                color:
+                                    var(--engine-muted);
+                                font-size:7px;
                             "
                         >
                             ${this.escapeHTML(
@@ -1263,21 +1947,17 @@ const recentEvents =
                             )}
                         </span>
 
+
                         <span
                             style="
-                                padding:7px 10px;
+                                padding:4px 7px;
+                                border:
+                                    1px solid
+                                    ${importanceColor};
                                 border-radius:999px;
-                                border:1px solid ${
-                                    this.getImportanceColor(
-                                        selectedEvent.importance
-                                    )
-                                };
-                                color:${
-                                    this.getImportanceColor(
-                                        selectedEvent.importance
-                                    )
-                                };
-                                font-size:12px;
+                                color:
+                                    ${importanceColor};
+                                font-size:7px;
                             "
                         >
                             ${this.escapeHTML(
@@ -1286,297 +1966,484 @@ const recentEvents =
                                 )
                             )}
                         </span>
+
                     </div>
+
 
                     ${
                         selectedEvent.description
                             ? `
                                 <p
                                     style="
-                                        margin-top:18px;
-                                        color:var(--muted);
-                                        line-height:1.75;
+                                        margin:10px 0 0;
+                                        color:
+                                            var(--engine-muted);
+                                        font-size:8px;
+                                        line-height:1.5;
                                     "
                                 >
                                     ${this.escapeHTML(
                                         selectedEvent.description
                                     )}
                                 </p>
-                            `
+                              `
                             : ""
                     }
+
 
                     ${this.renderEffects(
                         selectedEvent.effects
                     )}
 
-                    <div
-    style="
-        margin-top:18px;
-        display:grid;
-        gap:14px;
-    "
->
-    <div
-        style="
-            padding:16px;
-            border-radius:18px;
-            background:rgba(255,255,255,.035);
-            border:1px solid rgba(255,255,255,.06);
-        "
-    >
-        <div
-            style="
-                color:var(--muted);
-                font-size:12px;
-            "
-        >
-            Kazanılan Deneyim
-        </div>
 
-        <strong
-            style="
-                display:block;
-                margin-top:6px;
-                font-size:24px;
-                color:#f5d796;
-            "
-        >
-            +${this.getEventXP(selectedEvent)} XP
-        </strong>
-    </div>
-
-    <div
-        style="
-            padding:16px;
-            border-radius:18px;
-            background:rgba(255,255,255,.035);
-            border:1px solid rgba(255,255,255,.06);
-        "
-    >
-        <div
-            style="
-                color:var(--muted);
-                font-size:12px;
-                margin-bottom:10px;
-            "
-        >
-            Etkilenen Organlar
-        </div>
-
-        <div
-            style="
-                display:flex;
-                gap:8px;
-                flex-wrap:wrap;
-            "
-        >
-            ${this.getAffectedOrgans(selectedEvent)
-    .map(id => `
-        <span
-            style="
-                padding:8px 11px;
-                border-radius:999px;
-                background:rgba(255,255,255,.04);
-                border:1px solid rgba(255,255,255,.07);
-                font-size:12px;
-            "
-        >
-            ${this.escapeHTML(
-                this.getOrganLabel(id)
-            )}
-        </span>
-    `)
-    .join("")}
-        </div>
-    </div>
-</div>
-
-<div
-    style="
-        margin-top:14px;
-        padding:18px;
-        border-radius:18px;
-        background:rgba(112,167,255,.055);
-        border:1px solid rgba(112,167,255,.15);
-    "
->
-    <div
-        style="
-            display:flex;
-            align-items:center;
-            gap:9px;
-        "
-    >
-        <span style="font-size:20px;">
-            🧠
-        </span>
-
-        <strong style="font-size:14px;">
-            Brain Analizi
-        </strong>
-    </div>
-
-    <p
-        style="
-            margin-top:13px;
-            color:var(--muted);
-            line-height:1.7;
-            font-size:14px;
-        "
-    >
-        ${this.escapeHTML(
-    selectedEventAnalysis.summary
-)}
-    </p>
-
-    <div
-        style="
-            display:grid;
-            grid-template-columns:1fr 1fr;
-            gap:10px;
-            margin-top:16px;
-        "
-    >
-        <div
-            style="
-                padding:12px;
-                border-radius:14px;
-                background:rgba(255,255,255,.035);
-            "
-        >
-            <div
-                style="
-                    color:var(--muted);
-                    font-size:11px;
-                "
-            >
-                Etki
-            </div>
-
-            <strong
-                style="
-                    display:block;
-                    margin-top:5px;
-                    font-size:14px;
-                "
-            >
-                ${this.escapeHTML(
-                    selectedEventAnalysis.impact
-                )}
-            </strong>
-        </div>
-
-        <div
-            style="
-                padding:12px;
-                border-radius:14px;
-                background:rgba(255,255,255,.035);
-            "
-        >
-            <div
-                style="
-                    color:var(--muted);
-                    font-size:11px;
-                "
-            >
-                Risk
-            </div>
-
-            <strong
-                style="
-                    display:block;
-                    margin-top:5px;
-                    font-size:14px;
-                "
-            >
-                ${this.escapeHTML(
-                    selectedEventAnalysis.risk
-                )}
-            </strong>
-        </div>
-    </div>
-
-    <div
-        style="
-            margin-top:14px;
-            padding-top:14px;
-            border-top:1px solid rgba(255,255,255,.06);
-        "
-    >
-        <div
-            style="
-                color:var(--muted);
-                font-size:11px;
-                margin-bottom:6px;
-            "
-        >
-            Öneri
-        </div>
-
-        <div
-            style="
-                line-height:1.65;
-                font-size:13px;
-            "
-        >
-            ${this.escapeHTML(
-                selectedEventAnalysis.suggestion
-            )}
-        </div>
-    </div>
-</div>
+                    <!-- XP / ORGANS -->
 
                     <div
                         style="
-                            margin-top:22px;
-                            padding-top:18px;
-                            border-top:1px solid rgba(255,255,255,.06);
+                            margin-top:10px;
                             display:grid;
-                            gap:10px;
-                            color:var(--muted);
-                            font-size:13px;
+                            grid-template-columns:
+                                minmax(0,.7fr)
+                                minmax(0,1.3fr);
+                            gap:7px;
                         "
                     >
 
-                    <div
-    style="
-        margin-top:14px;
-        padding:16px;
-        border-radius:18px;
-        background:rgba(245,215,150,.055);
-        border:1px solid rgba(245,215,150,.14);
-    "
->
-    <div
-        style="
-            color:var(--muted);
-            font-size:11px;
-        "
-    >
-        Gelecek Etkisi
-    </div>
+                        <div
+                            class="card"
+                            style="
+                                padding:10px;
+                            "
+                        >
 
-    <strong
-        style="
-            display:block;
-            margin-top:7px;
-            font-size:15px;
-            line-height:1.6;
-        "
-    >
-        ${
-            selectedEventAnalysis.impact === "Kritik"
-                ? "Bu olay gelecekte birden fazla organı doğrudan etkileyebilir."
-                : selectedEventAnalysis.impact === "Yüksek"
-                    ? "Bu olay sonraki kararları ve gelişim yönünü belirleyebilir."
-                    : "Bu olay yaşam akışında izlenmesi gereken bir kayıt oluşturur."
-        }
-    </strong>
-</div>
-                        <div>
-                            Tarih:
-                            <strong style="color:var(--text);">
+                            <span
+                                style="
+                                    display:block;
+                                    color:
+                                        var(--engine-muted);
+                                    font-size:6px;
+                                "
+                            >
+                                KAZANILAN DENEYİM
+                            </span>
+
+                            <strong
+                                style="
+                                    display:block;
+                                    margin-top:3px;
+                                    color:
+                                        var(--engine-gold-soft);
+                                    font-size:16px;
+                                "
+                            >
+                                +${this.getEventXP(
+                                    selectedEvent
+                                )} XP
+                            </strong>
+
+                        </div>
+
+
+                        <div
+                            class="card"
+                            style="
+                                padding:10px;
+                            "
+                        >
+
+                            <span
+                                style="
+                                    display:block;
+                                    color:
+                                        var(--engine-muted);
+                                    font-size:6px;
+                                "
+                            >
+                                ETKİLENEN ORGANLAR
+                            </span>
+
+
+                            <div
+                                style="
+                                    display:flex;
+                                    flex-wrap:wrap;
+                                    gap:4px;
+                                    margin-top:5px;
+                                "
+                            >
+
+                                ${
+                                    affectedOrgans.length
+                                        ? affectedOrgans
+                                            .map(
+                                                id => `
+                                                    <span
+                                                        style="
+                                                            padding:
+                                                                3px
+                                                                6px;
+                                                            border:
+                                                                1px solid
+                                                                var(--engine-line);
+                                                            border-radius:
+                                                                999px;
+                                                            background:
+                                                                rgba(
+                                                                    255,
+                                                                    255,
+                                                                    255,
+                                                                    .018
+                                                                );
+                                                            color:
+                                                                var(--engine-muted);
+                                                            font-size:
+                                                                6px;
+                                                        "
+                                                    >
+                                                        ${this.escapeHTML(
+                                                            this.getOrganLabel(
+                                                                id
+                                                            )
+                                                        )}
+                                                    </span>
+                                                `
+                                            )
+                                            .join("")
+                                        : `
+                                            <span
+                                                style="
+                                                    color:
+                                                        var(--engine-dim);
+                                                    font-size:7px;
+                                                "
+                                            >
+                                                Yok
+                                            </span>
+                                          `
+                                }
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- BRAIN ANALYSIS -->
+
+                    <div
+                        style="
+                            margin-top:7px;
+                            padding:11px;
+                            border:
+                                1px solid
+                                rgba(
+                                    107,
+                                    183,
+                                    241,
+                                    .12
+                                );
+                            border-radius:14px;
+                            background:
+                                rgba(
+                                    107,
+                                    183,
+                                    241,
+                                    .035
+                                );
+                        "
+                    >
+
+                        <div
+                            style="
+                                display:flex;
+                                align-items:center;
+                                gap:6px;
+                            "
+                        >
+
+                            <span
+                                aria-hidden="true"
+                                style="
+                                    font-size:13px;
+                                "
+                            >
+                                🧠
+                            </span>
+
+                            <strong
+                                style="
+                                    color:
+                                        var(--engine-text);
+                                    font-size:9px;
+                                "
+                            >
+                                Brain Analizi
+                            </strong>
+
+                        </div>
+
+
+                        <p
+                            style="
+                                margin:7px 0 0;
+                                color:
+                                    var(--engine-muted);
+                                font-size:8px;
+                                line-height:1.45;
+                            "
+                        >
+                            ${this.escapeHTML(
+                                analysis.summary
+                            )}
+                        </p>
+
+
+                        <div
+                            style="
+                                display:grid;
+                                grid-template-columns:
+                                    repeat(
+                                        2,
+                                        minmax(0,1fr)
+                                    );
+                                gap:6px;
+                                margin-top:8px;
+                            "
+                        >
+
+                            <div
+                                style="
+                                    padding:8px;
+                                    border-radius:10px;
+                                    background:
+                                        rgba(
+                                            255,
+                                            255,
+                                            255,
+                                            .022
+                                        );
+                                "
+                            >
+
+                                <span
+                                    style="
+                                        display:block;
+                                        color:
+                                            var(--engine-muted);
+                                        font-size:6px;
+                                    "
+                                >
+                                    Etki
+                                </span>
+
+                                <strong
+                                    style="
+                                        display:block;
+                                        margin-top:2px;
+                                        color:
+                                            var(--engine-text);
+                                        font-size:8px;
+                                    "
+                                >
+                                    ${this.escapeHTML(
+                                        analysis.impact
+                                    )}
+                                </strong>
+
+                            </div>
+
+
+                            <div
+                                style="
+                                    padding:8px;
+                                    border-radius:10px;
+                                    background:
+                                        rgba(
+                                            255,
+                                            255,
+                                            255,
+                                            .022
+                                        );
+                                "
+                            >
+
+                                <span
+                                    style="
+                                        display:block;
+                                        color:
+                                            var(--engine-muted);
+                                        font-size:6px;
+                                    "
+                                >
+                                    Risk
+                                </span>
+
+                                <strong
+                                    style="
+                                        display:block;
+                                        margin-top:2px;
+                                        color:
+                                            var(--engine-text);
+                                        font-size:8px;
+                                    "
+                                >
+                                    ${this.escapeHTML(
+                                        analysis.risk
+                                    )}
+                                </strong>
+
+                            </div>
+
+                        </div>
+
+
+                        <div
+                            style="
+                                margin-top:8px;
+                                padding-top:7px;
+                                border-top:
+                                    1px solid
+                                    var(--engine-line);
+                            "
+                        >
+
+                            <span
+                                style="
+                                    display:block;
+                                    color:
+                                        var(--engine-muted);
+                                    font-size:6px;
+                                "
+                            >
+                                ÖNERİ
+                            </span>
+
+                            <p
+                                style="
+                                    margin:3px 0 0;
+                                    color:
+                                        var(--engine-text);
+                                    font-size:8px;
+                                    line-height:1.4;
+                                "
+                            >
+                                ${this.escapeHTML(
+                                    analysis.suggestion
+                                )}
+                            </p>
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- FUTURE IMPACT -->
+
+                    <div
+                        style="
+                            margin-top:7px;
+                            padding:10px;
+                            border:
+                                1px solid
+                                rgba(
+                                    223,
+                                    189,
+                                    122,
+                                    .11
+                                );
+                            border-radius:13px;
+                            background:
+                                rgba(
+                                    223,
+                                    189,
+                                    122,
+                                    .03
+                                );
+                        "
+                    >
+
+                        <span
+                            style="
+                                display:block;
+                                color:
+                                    var(--engine-muted);
+                                font-size:6px;
+                            "
+                        >
+                            GELECEK ETKİSİ
+                        </span>
+
+                        <strong
+                            style="
+                                display:block;
+                                margin-top:3px;
+                                color:
+                                    var(--engine-text);
+                                font-size:8px;
+                                line-height:1.4;
+                            "
+                        >
+                            ${
+                                analysis.impact ===
+                                "Kritik"
+                                    ? "Bu olay gelecekte birden fazla organı doğrudan etkileyebilir."
+                                    : analysis.impact ===
+                                      "Yüksek"
+                                        ? "Bu olay sonraki kararları ve gelişim yönünü belirleyebilir."
+                                        : "Bu olay yaşam akışında izlenmesi gereken bir kayıt oluşturur."
+                            }
+                        </strong>
+
+                    </div>
+
+
+                    <!-- META -->
+
+                    <div
+                        style="
+                            margin-top:7px;
+                            display:grid;
+                            grid-template-columns:
+                                repeat(
+                                    3,
+                                    minmax(0,1fr)
+                                );
+                            gap:6px;
+                        "
+                    >
+
+                        <div
+                            class="card"
+                            style="
+                                min-width:0;
+                                padding:8px;
+                            "
+                        >
+
+                            <span
+                                style="
+                                    display:block;
+                                    color:
+                                        var(--engine-muted);
+                                    font-size:6px;
+                                "
+                            >
+                                TARİH
+                            </span>
+
+                            <strong
+                                style="
+                                    display:block;
+                                    margin-top:2px;
+                                    overflow:hidden;
+                                    color:
+                                        var(--engine-text);
+                                    font-size:7px;
+                                    text-overflow:ellipsis;
+                                    white-space:nowrap;
+                                "
+                            >
                                 ${this.escapeHTML(
                                     this.formatDate(
                                         selectedEvent.occurredAt ||
@@ -1584,135 +2451,565 @@ const recentEvents =
                                     )
                                 )}
                             </strong>
+
                         </div>
 
-                        <div>
-                            Durum:
-                            <strong style="color:var(--text);">
+
+                        <div
+                            class="card"
+                            style="
+                                min-width:0;
+                                padding:8px;
+                            "
+                        >
+
+                            <span
+                                style="
+                                    display:block;
+                                    color:
+                                        var(--engine-muted);
+                                    font-size:6px;
+                                "
+                            >
+                                DURUM
+                            </span>
+
+                            <strong
+                                style="
+                                    display:block;
+                                    margin-top:2px;
+                                    overflow:hidden;
+                                    color:
+                                        var(--engine-text);
+                                    font-size:7px;
+                                    text-overflow:ellipsis;
+                                    white-space:nowrap;
+                                "
+                            >
                                 ${this.escapeHTML(
                                     selectedEvent.status ||
                                     "completed"
                                 )}
                             </strong>
+
                         </div>
 
-                        <div>
-                            Kaynak:
-                            <strong style="color:var(--text);">
+
+                        <div
+                            class="card"
+                            style="
+                                min-width:0;
+                                padding:8px;
+                            "
+                        >
+
+                            <span
+                                style="
+                                    display:block;
+                                    color:
+                                        var(--engine-muted);
+                                    font-size:6px;
+                                "
+                            >
+                                KAYNAK
+                            </span>
+
+                            <strong
+                                style="
+                                    display:block;
+                                    margin-top:2px;
+                                    overflow:hidden;
+                                    color:
+                                        var(--engine-text);
+                                    font-size:7px;
+                                    text-overflow:ellipsis;
+                                    white-space:nowrap;
+                                "
+                            >
                                 ${this.escapeHTML(
                                     selectedEvent.source ||
                                     "user"
                                 )}
                             </strong>
+
                         </div>
+
                     </div>
-                    <div>
-    Etkilenen Organlar:
-    <strong style="color:var(--text);">
-        ${
-    this.getAffectedOrgans(selectedEvent).length
-        ? this.getAffectedOrgans(selectedEvent)
-            .map(id => this.getOrganLabel(id))
-            .join(", ")
-        : "Yok"
-}
-    </strong>
-</div>
 
-<div
-    style="
-        margin-top:14px;
-        display:grid;
-        grid-template-columns:1fr 1fr;
-        gap:10px;
-    "
->
-    <div
-    data-action="evolution:linked:open"
-    data-target="timeline"
-    style="
-        padding:14px;
-        border-radius:16px;
-        background:rgba(255,255,255,.035);
-        border:1px solid rgba(255,255,255,.06);
-        cursor:pointer;
-    "
->
-        <div
-            style="
-                color:var(--muted);
-                font-size:11px;
-            "
-        >
-            Timeline Bağlantısı
-        </div>
 
-        <strong
-            style="
-                display:block;
-                margin-top:5px;
-                font-size:20px;
-            "
-        >
-            ${
-                this.getLinkedRecordCounts(
-                    selectedEvent
-                ).timeline
-            }
-        </strong>
-    </div>
+                    <!-- LINKED RECORDS -->
 
-    <div
-    data-action="evolution:linked:open"
-    data-target="memory"
-    style="
-        padding:14px;
-        border-radius:16px;
-        background:rgba(255,255,255,.035);
-        border:1px solid rgba(255,255,255,.06);
-        cursor:pointer;
-    "
->
-        <div
-            style="
-                color:var(--muted);
-                font-size:11px;
-            "
-        >
-            Hafıza Bağlantısı
-        </div>
+                    <div
+                        style="
+                            margin-top:7px;
+                            display:grid;
+                            grid-template-columns:
+                                repeat(
+                                    2,
+                                    minmax(0,1fr)
+                                );
+                            gap:6px;
+                        "
+                    >
 
-        <strong
-            style="
-                display:block;
-                margin-top:5px;
-                font-size:20px;
-            "
-        >
-            ${
-                this.getLinkedRecordCounts(
-                    selectedEvent
-                ).memory
-            }
-        </strong>
-    </div>
-</div>
+                        <button
+                            type="button"
+                            data-action="evolution:linked:open"
+                            data-target="timeline"
+                            class="card"
+                            style="
+                                padding:9px;
+                                text-align:left;
+                            "
+                        >
 
-<div>
-    Etkilenen Kimlikler:
-    <strong style="color:var(--text);">
-        ${
-            (selectedEvent.identities || []).length
-                ? selectedEvent.identities.join(", ")
-                : "Yok"
-        }
-    </strong>
-</div>
+                            <span
+                                style="
+                                    display:block;
+                                    color:
+                                        var(--engine-muted);
+                                    font-size:6px;
+                                "
+                            >
+                                TIMELINE BAĞLANTISI
+                            </span>
+
+                            <strong
+                                style="
+                                    display:block;
+                                    margin-top:2px;
+                                    color:
+                                        var(--engine-text);
+                                    font-size:14px;
+                                "
+                            >
+                                ${linkedRecords.timeline}
+                            </strong>
+
+                        </button>
+
+
+                        <button
+                            type="button"
+                            data-action="evolution:linked:open"
+                            data-target="memory"
+                            class="card"
+                            style="
+                                padding:9px;
+                                text-align:left;
+                            "
+                        >
+
+                            <span
+                                style="
+                                    display:block;
+                                    color:
+                                        var(--engine-muted);
+                                    font-size:6px;
+                                "
+                            >
+                                HAFIZA BAĞLANTISI
+                            </span>
+
+                            <strong
+                                style="
+                                    display:block;
+                                    margin-top:2px;
+                                    color:
+                                        var(--engine-text);
+                                    font-size:14px;
+                                "
+                            >
+                                ${linkedRecords.memory}
+                            </strong>
+
+                        </button>
+
+                    </div>
+
+
+                    <!-- IDENTITIES -->
+
+                    <div
+                        style="
+                            margin-top:7px;
+                            padding-top:7px;
+                            border-top:
+                                1px solid
+                                var(--engine-line);
+                            color:
+                                var(--engine-muted);
+                            font-size:7px;
+                        "
+                    >
+
+                        Etkilenen Kimlikler:
+
+                        <strong
+                            style="
+                                color:
+                                    var(--engine-text);
+                            "
+                        >
+                            ${
+                                identities.length
+                                    ? identities
+                                        .map(
+                                            identity =>
+                                                this.escapeHTML(
+                                                    identity
+                                                )
+                                        )
+                                        .join(", ")
+                                    : "Yok"
+                            }
+                        </strong>
+
+                    </div>
+
                 </section>
+
             </div>
-        `
-        : ""
-}
+        `;
+
+    },
+
+
+    /* =====================================================
+       RENDER
+    ===================================================== */
+
+    render(entity){
+
+        this.enterBrainContext();
+
+
+        const evolution =
+            this.getEvolutionCore();
+
+
+        const events =
+            this.getEvents();
+
+
+        const selectedEvent =
+            this.selectedEventId &&
+            evolution &&
+            typeof evolution.find ===
+                "function"
+                ? (() => {
+
+                    try{
+
+                        return (
+                            evolution.find(
+                                this.selectedEventId
+                            ) ||
+                            null
+                        );
+
+                    } catch(error){
+
+                        console.warn(
+                            "Evolution olayı açılamadı:",
+                            error
+                        );
+
+                        return null;
+
+                    }
+
+                })()
+                : null;
+
+
+        if(
+            this.selectedEventId &&
+            !selectedEvent
+        ){
+
+            this.clearSelectedEvent();
+
+        }
+
+
+        const importantCount =
+            events.filter(
+                event =>
+                    event &&
+                    (
+                        event.importance ===
+                            "high" ||
+                        event.importance ===
+                            "critical"
+                    )
+            ).length;
+
+
+        const achievementCount =
+            events.filter(
+                event =>
+                    event &&
+                    event.type ===
+                        "achievement"
+            ).length;
+
+
+        const totalXP =
+            events.reduce(
+                (
+                    total,
+                    event
+                ) =>
+                    total +
+                    this.getEventXP(
+                        event
+                    ),
+                0
+            );
+
+
+        const progress =
+            this.getEvolutionProgress(
+                totalXP
+            );
+
+
+        const filteredEvents =
+            this.filterEvents(
+                events
+            );
+
+
+        const recentEvents =
+            filteredEvents.slice(
+                0,
+                8
+            );
+
+
+        return `
+            <div
+                class="
+                    section
+                    evolution-app
+                "
+                style="
+                    margin:0;
+                    padding:16px;
+                    overflow:hidden;
+                "
+            >
+
+                <button
+                    type="button"
+                    class="secondary-btn"
+                    data-action="entity:organs"
+                    style="
+                        margin-bottom:8px;
+                    "
+                >
+                    ← Organlara Dön
+                </button>
+
+
+                <!-- TOP -->
+
+                <section
+                    class="card"
+                    style="
+                        padding:12px 13px;
+                        display:flex;
+                        align-items:center;
+                        justify-content:space-between;
+                        gap:12px;
+                    "
+                >
+
+                    <div
+                        style="
+                            min-width:0;
+                        "
+                    >
+
+                        <div class="eyebrow">
+                            EVOLUTION
+                        </div>
+
+                        <h2
+                            style="
+                                margin:3px 0 0;
+                                color:
+                                    var(--engine-text);
+                                font-size:17px;
+                            "
+                        >
+                            Yaşam ve Gelişim
+                        </h2>
+
+                        <p
+                            style="
+                                margin:3px 0 0;
+                                color:
+                                    var(--engine-muted);
+                                font-size:8px;
+                                line-height:1.4;
+                            "
+                        >
+                            Varlığın yaşam olayları,
+                            gelişimi ve etkileri burada birleşir.
+                        </p>
+
+                    </div>
+
+
+                    <span
+                        aria-hidden="true"
+                        style="
+                            flex:0 0 auto;
+                            font-size:24px;
+                        "
+                    >
+                        🧬
+                    </span>
+
+                </section>
+
+
+                <!-- SUMMARY -->
+
+                <section
+                    style="
+                        margin-top:7px;
+                        display:grid;
+                        grid-template-columns:
+                            repeat(
+                                4,
+                                minmax(0,1fr)
+                            );
+                        gap:6px;
+                    "
+                >
+
+                    ${this.renderStat(
+                        "Toplam Olay",
+                        events.length
+                    )}
+
+                    ${this.renderStat(
+                        "Önemli Olay",
+                        importantCount
+                    )}
+
+                    ${this.renderStat(
+                        "Başarı",
+                        achievementCount
+                    )}
+
+                    ${this.renderStat(
+                        "Toplam XP",
+                        totalXP
+                    )}
+
+                </section>
+
+
+                ${this.renderEvolutionProgress(
+                    progress
+                )}
+
+
+                <!-- LIFE FLOW -->
+
+                <section
+                    style="
+                        margin-top:8px;
+                    "
+                >
+
+                    <div
+                        style="
+                            display:flex;
+                            align-items:flex-end;
+                            justify-content:space-between;
+                            gap:10px;
+                        "
+                    >
+
+                        <div>
+
+                            <div class="eyebrow">
+                                YAŞAM AKIŞI
+                            </div>
+
+                            <h2
+                                style="
+                                    margin:2px 0 0;
+                                    color:
+                                        var(--engine-text);
+                                    font-size:13px;
+                                "
+                            >
+                                Son Olaylar
+                            </h2>
+
+                        </div>
+
+
+                        <span
+                            style="
+                                color:
+                                    var(--engine-dim);
+                                font-size:6px;
+                            "
+                        >
+                            ${recentEvents.length}
+                            gösteriliyor
+                        </span>
+
+                    </div>
+
+
+                    ${this.renderFilters()}
+
+
+                    ${
+                        recentEvents.length
+                            ? `
+                                <div
+                                    style="
+                                        display:grid;
+                                        grid-template-columns:
+                                            repeat(
+                                                2,
+                                                minmax(0,1fr)
+                                            );
+                                        gap:6px;
+                                        margin-top:4px;
+                                    "
+                                >
+
+                                    ${recentEvents
+                                        .map(
+                                            event =>
+                                                this.renderEvent(
+                                                    event
+                                                )
+                                        )
+                                        .join("")}
+
+                                </div>
+                              `
+                            : this.renderEmptyState()
+                    }
+
+                </section>
+
+
+                ${this.renderSelectedEvent(
+                    selectedEvent
+                )}
+
             </div>
         `;
 
@@ -1720,4 +3017,6 @@ const recentEvents =
 
 };
 
-window.EvolutionApp = EvolutionApp;
+
+window.EvolutionApp =
+    EvolutionApp;
