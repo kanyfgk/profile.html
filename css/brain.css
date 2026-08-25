@@ -1,58 +1,92 @@
+/* =========================================================
+   VAERO BRAIN
+   Compact viewport-native assistant panel
+========================================================= */
+
 .brain-panel{
     position:fixed;
-    right:18px;
-    bottom:calc(
-        112px +
-        env(safe-area-inset-bottom)
-    );
 
-    width:min(420px,calc(100vw - 36px));
-    max-height:calc(
-        100dvh -
-        140px -
-        env(safe-area-inset-bottom)
-    );
+    right:14px;
+    bottom:
+        calc(
+            76px +
+            env(safe-area-inset-bottom)
+        );
+
+    width:
+        min(
+            380px,
+            calc(100vw - 28px)
+        );
+
+    height:auto;
+
+    max-height:
+        min(
+            560px,
+            calc(
+                100dvh -
+                100px -
+                env(safe-area-inset-bottom)
+            )
+        );
 
     display:none;
     flex-direction:column;
 
-    padding:18px;
+    min-width:0;
+    min-height:0;
+
+    padding:14px;
 
     overflow:hidden;
 
-    border:1px solid rgba(255,255,255,.11);
-    border-radius:28px;
+    border:
+        1px solid
+        rgba(255,255,255,.085);
+
+    border-radius:21px;
 
     background:
         radial-gradient(
             circle at 85% 0%,
-            rgba(71,137,192,.12),
-            transparent 38%
+            rgba(71,137,192,.1),
+            transparent 36%
         ),
         linear-gradient(
             160deg,
-            rgba(14,27,41,.985),
+            rgba(14,27,41,.975),
             rgba(5,13,22,.985)
         );
 
     box-shadow:
-        0 28px 80px rgba(0,0,0,.58),
-        inset 0 1px 0 rgba(255,255,255,.04);
+        0 22px 62px rgba(0,0,0,.48),
+        inset 0 1px 0 rgba(255,255,255,.03);
 
-    backdrop-filter:blur(28px) saturate(130%);
-    -webkit-backdrop-filter:blur(28px) saturate(130%);
+    backdrop-filter:
+        blur(24px)
+        saturate(125%);
+
+    -webkit-backdrop-filter:
+        blur(24px)
+        saturate(125%);
 
     z-index:99999;
 
     transform-origin:
-        calc(100% - 48px)
+        calc(100% - 38px)
         100%;
 
     animation:
         brainPanelEnter
-        .24s
+        .2s
         ease-out;
 }
+
+
+/* =========================================================
+   PANEL STATES
+========================================================= */
 
 .brain-panel.is-compact,
 .brain-panel.is-expanded{
@@ -60,44 +94,91 @@
 }
 
 .brain-panel.is-compact{
-    max-height:min(500px,65dvh);
+    max-height:
+        min(
+            360px,
+            48dvh
+        );
 }
 
 .brain-panel.is-expanded{
-    width:min(470px,calc(100vw - 36px));
-    max-height:calc(
-        100dvh -
-        138px -
-        env(safe-area-inset-bottom)
-    );
+    width:
+        min(
+            420px,
+            calc(100vw - 28px)
+        );
+
+    height:
+        min(
+            560px,
+            calc(
+                100dvh -
+                100px -
+                env(safe-area-inset-bottom)
+            )
+        );
+
+    max-height:
+        calc(
+            100dvh -
+            100px -
+            env(safe-area-inset-bottom)
+        );
 }
 
+
+/* =========================================================
+   ENTER
+========================================================= */
+
 @keyframes brainPanelEnter{
+
     from{
         opacity:0;
+
         transform:
-            translateY(12px)
-            scale(.98);
+            translateY(8px)
+            scale(.985);
     }
 
     to{
         opacity:1;
+
         transform:
             translateY(0)
             scale(1);
     }
+
 }
+
+
+/* =========================================================
+   MOBILE HANDLE
+========================================================= */
 
 .brain-panel-handle{
     display:none;
 
-    width:42px;
-    height:4px;
-    margin:0 auto 14px;
+    width:34px;
+    height:3px;
+
+    flex:0 0 auto;
+
+    margin:
+        0
+        auto
+        9px;
 
     border-radius:999px;
-    background:rgba(255,255,255,.2);
+
+    background:
+        rgba(255,255,255,.16);
 }
+
+
+/* =========================================================
+   HEADER
+========================================================= */
 
 .brain-panel-header{
     flex:0 0 auto;
@@ -105,11 +186,16 @@
     display:flex;
     align-items:flex-start;
     justify-content:space-between;
-    gap:18px;
+
+    gap:12px;
+}
+
+.brain-panel-header > div{
+    min-width:0;
 }
 
 .brain-panel-header .eyebrow{
-    margin-bottom:8px;
+    margin-bottom:5px;
 
     color:#e4bd81;
 }
@@ -118,31 +204,49 @@
     margin:0;
     padding:0;
 
+    overflow:hidden;
+
     color:#f7f8fb;
 
-    font-size:27px;
+    font-size:21px;
     font-weight:500;
-    line-height:1.1;
+
+    line-height:1.05;
     letter-spacing:-.025em;
+
+    text-overflow:ellipsis;
+    white-space:nowrap;
 }
 
+
+/* =========================================================
+   CLOSE
+========================================================= */
+
 .brain-close{
-    width:36px;
-    height:36px;
-    flex:0 0 36px;
+    width:30px;
+    height:30px;
+
+    flex:0 0 30px;
 
     display:grid;
     place-items:center;
 
     padding:0;
 
-    border:1px solid rgba(255,255,255,.09);
+    border:
+        1px solid
+        rgba(255,255,255,.07);
+
     border-radius:50%;
 
-    background:rgba(255,255,255,.035);
-    color:rgba(255,255,255,.7);
+    background:
+        rgba(255,255,255,.025);
 
-    font-size:22px;
+    color:
+        rgba(255,255,255,.62);
+
+    font-size:17px;
     line-height:1;
 
     transition:
@@ -153,62 +257,99 @@
 }
 
 .brain-close:hover{
-    border-color:rgba(230,199,141,.28);
-    background:rgba(230,199,141,.07);
+    border-color:
+        rgba(230,199,141,.22);
+
+    background:
+        rgba(230,199,141,.055);
+
     color:#f1d395;
-    transform:rotate(4deg);
+
+    transform:rotate(3deg);
 }
+
+
+/* =========================================================
+   CONTEXT
+========================================================= */
 
 .brain-context{
     flex:0 0 auto;
 
-    margin-top:12px;
+    margin-top:7px;
 
-    color:rgba(245,241,233,.58);
+    overflow:hidden;
 
-    font-size:13px;
-    line-height:1.5;
+    color:
+        rgba(245,241,233,.48);
+
+    font-size:9px;
+    line-height:1.4;
+
+    text-overflow:ellipsis;
+    white-space:nowrap;
 }
+
+
+/* =========================================================
+   SUGGESTION
+========================================================= */
 
 .brain-suggestion{
     flex:0 0 auto;
 
-    margin-top:13px;
-    padding:12px 14px;
+    margin-top:8px;
 
-    border:1px solid rgba(230,199,141,.1);
-    border-radius:15px;
+    padding:8px 10px;
+
+    border:
+        1px solid
+        rgba(230,199,141,.08);
+
+    border-radius:11px;
 
     background:
         linear-gradient(
             145deg,
-            rgba(230,199,141,.055),
-            rgba(255,255,255,.02)
+            rgba(230,199,141,.04),
+            rgba(255,255,255,.014)
         );
 
-    color:rgba(245,241,233,.72);
+    color:
+        rgba(245,241,233,.65);
 
-    font-size:12px;
-    line-height:1.5;
+    font-size:9px;
+    line-height:1.4;
 }
+
+
+/* =========================================================
+   HISTORY
+========================================================= */
 
 .brain-mini-history{
     flex:0 0 auto;
 
-    margin-top:13px;
+    min-height:0;
+
+    margin-top:8px;
 }
 
 .brain-history{
     min-height:0;
-    margin-top:13px;
-    padding-right:5px;
 
+    margin-top:8px;
+    padding-right:3px;
+
+    overflow-x:hidden;
     overflow-y:auto;
+
     overscroll-behavior:contain;
 
     scrollbar-width:thin;
+
     scrollbar-color:
-        rgba(255,255,255,.16)
+        rgba(255,255,255,.12)
         transparent;
 }
 
@@ -222,11 +363,12 @@
 
 .brain-panel.is-expanded .brain-history{
     display:block;
+
     flex:1 1 auto;
 }
 
 .brain-history::-webkit-scrollbar{
-    width:5px;
+    width:3px;
 }
 
 .brain-history::-webkit-scrollbar-track{
@@ -235,26 +377,41 @@
 
 .brain-history::-webkit-scrollbar-thumb{
     border-radius:999px;
-    background:rgba(255,255,255,.16);
+
+    background:
+        rgba(255,255,255,.12);
 }
 
-/* Composer */
+
+/* =========================================================
+   COMPOSER
+========================================================= */
 
 .brain-composer{
     flex:0 0 auto;
 
-    min-height:50px;
-    margin-top:14px;
-    padding:5px 5px 5px 16px;
+    min-height:42px;
+
+    margin-top:9px;
+    padding:
+        4px
+        4px
+        4px
+        12px;
 
     display:flex;
     align-items:center;
-    gap:8px;
 
-    border:1px solid rgba(255,255,255,.1);
-    border-radius:18px;
+    gap:6px;
 
-    background:rgba(255,255,255,.04);
+    border:
+        1px solid
+        rgba(255,255,255,.075);
+
+    border-radius:14px;
+
+    background:
+        rgba(255,255,255,.028);
 
     transition:
         border-color var(--transition),
@@ -263,17 +420,30 @@
 }
 
 .brain-composer:focus-within{
-    border-color:rgba(230,199,141,.34);
-    background:rgba(255,255,255,.055);
+    border-color:
+        rgba(230,199,141,.26);
+
+    background:
+        rgba(255,255,255,.04);
 
     box-shadow:
-        0 0 0 4px
-        rgba(230,199,141,.04);
+        0
+        0
+        0
+        3px
+        rgba(230,199,141,.03);
 }
+
+
+/* =========================================================
+   INPUT
+========================================================= */
 
 .brain-input{
     min-width:0;
-    height:40px;
+
+    height:32px;
+
     flex:1;
 
     padding:0;
@@ -282,44 +452,58 @@
     outline:0;
 
     background:transparent;
+
     color:#f7f8fb;
 
-    font-size:15px;
-    line-height:40px;
+    font-size:11px;
+
+    line-height:32px;
 }
 
 .brain-input::placeholder{
-    color:rgba(245,241,233,.36);
+    color:
+        rgba(245,241,233,.3);
 }
 
+
+/* =========================================================
+   SEND
+========================================================= */
+
 .brain-send{
-    width:40px;
-    height:40px;
-    flex:0 0 40px;
+    width:32px;
+    height:32px;
+
+    flex:0 0 32px;
 
     display:grid;
     place-items:center;
 
     padding:0;
 
-    border:1px solid rgba(240,218,165,.45);
-    border-radius:14px;
+    border:
+        1px solid
+        rgba(240,218,165,.36);
+
+    border-radius:10px;
 
     background:
         linear-gradient(
             140deg,
-            #e6c786,
+            #e3c482,
             #b98a45
         );
 
     color:#07111d;
 
-    font-size:19px;
+    font-size:14px;
     font-weight:800;
 
     box-shadow:
-        inset 0 1px 0 rgba(255,255,255,.35),
-        0 8px 20px rgba(190,145,72,.15);
+        inset 0 1px 0
+        rgba(255,255,255,.3),
+        0 6px 14px
+        rgba(190,145,72,.11);
 
     transition:
         transform var(--transition),
@@ -327,38 +511,57 @@
 }
 
 .brain-send:hover{
-    transform:translateX(2px);
+    transform:
+        translateX(1px);
 
     box-shadow:
-        inset 0 1px 0 rgba(255,255,255,.42),
-        0 10px 24px rgba(190,145,72,.23);
+        inset 0 1px 0
+        rgba(255,255,255,.37),
+        0 8px 17px
+        rgba(190,145,72,.17);
 }
+
+
+/* =========================================================
+   INPUT HINT
+========================================================= */
 
 .brain-input-hint{
     flex:0 0 auto;
 
     display:block;
-    margin-top:7px;
 
-    color:rgba(245,241,233,.3);
+    margin-top:4px;
 
-    font-size:9px;
+    color:
+        rgba(245,241,233,.24);
+
+    font-size:7px;
+
     text-align:right;
 }
 
-/* Mini conversation */
+
+/* =========================================================
+   MINI CONVERSATION
+========================================================= */
 
 .brain-mini-chat-flow{
     display:flex;
     flex-direction:column;
-    gap:7px;
 
-    padding:12px 14px;
+    gap:5px;
 
-    border:1px solid rgba(255,255,255,.07);
-    border-radius:17px;
+    padding:8px 10px;
 
-    background:rgba(255,255,255,.028);
+    border:
+        1px solid
+        rgba(255,255,255,.055);
+
+    border-radius:12px;
+
+    background:
+        rgba(255,255,255,.02);
 
     cursor:pointer;
 }
@@ -367,18 +570,21 @@
     min-width:0;
 
     display:flex;
-    gap:6px;
 
-    color:rgba(255,255,255,.58);
+    gap:5px;
 
-    font-size:11px;
-    line-height:1.4;
+    color:
+        rgba(255,255,255,.48);
+
+    font-size:8px;
+    line-height:1.3;
 }
 
 .brain-mini-chat-message strong{
     flex:0 0 auto;
 
-    color:rgba(255,255,255,.82);
+    color:
+        rgba(255,255,255,.75);
 }
 
 .brain-mini-chat-message span{
@@ -388,242 +594,397 @@
     white-space:nowrap;
 }
 
-/* Daily chat */
+
+/* =========================================================
+   DAILY CHAT
+========================================================= */
 
 .brain-chat-flow{
     display:flex;
     flex-direction:column;
-    gap:11px;
 
-    padding:3px 1px 14px;
+    gap:7px;
+
+    padding:
+        2px
+        1px
+        8px;
 }
 
 .brain-chat-message{
-    max-width:88%;
-    padding:10px 12px;
+    max-width:86%;
+
+    padding:7px 9px;
 
     display:flex;
     flex-direction:column;
-    gap:5px;
 
-    border-radius:17px;
+    gap:3px;
 
-    font-size:13px;
-    line-height:1.5;
+    border-radius:12px;
+
+    font-size:9px;
+    line-height:1.4;
 }
 
 .brain-chat-user{
     align-self:flex-end;
 
-    border:1px solid rgba(230,199,141,.17);
-    border-bottom-right-radius:5px;
+    border:
+        1px solid
+        rgba(230,199,141,.13);
+
+    border-bottom-right-radius:4px;
 
     background:
         linear-gradient(
             145deg,
-            rgba(230,199,141,.13),
-            rgba(230,199,141,.07)
+            rgba(230,199,141,.1),
+            rgba(230,199,141,.05)
         );
 }
 
 .brain-chat-brain{
     align-self:flex-start;
 
-    border:1px solid rgba(255,255,255,.065);
-    border-bottom-left-radius:5px;
+    border:
+        1px solid
+        rgba(255,255,255,.05);
 
-    background:rgba(255,255,255,.045);
+    border-bottom-left-radius:4px;
+
+    background:
+        rgba(255,255,255,.035);
 }
+
+
+/* =========================================================
+   CHAT META
+========================================================= */
 
 .brain-chat-meta{
     display:flex;
     align-items:center;
-    gap:6px;
 
-    color:rgba(255,255,255,.34);
+    gap:4px;
 
-    font-size:9px;
+    color:
+        rgba(255,255,255,.27);
+
+    font-size:6px;
 }
 
 .brain-chat-context{
-    color:rgba(126,182,255,.65);
+    color:
+        rgba(126,182,255,.58);
 }
 
 .brain-chat-content{
-    color:rgba(255,255,255,.86);
+    color:
+        rgba(255,255,255,.82);
 
     white-space:pre-wrap;
+
     overflow-wrap:anywhere;
 }
+
+
+/* =========================================================
+   SYSTEM MESSAGE
+========================================================= */
 
 .brain-chat-system{
     align-self:center;
 
     max-width:94%;
-    padding:6px 10px;
+
+    padding:4px 7px;
 
     display:flex;
     align-items:center;
-    gap:7px;
+
+    gap:5px;
 
     border-radius:999px;
 
-    background:rgba(255,255,255,.028);
-    color:rgba(255,255,255,.44);
+    background:
+        rgba(255,255,255,.02);
 
-    font-size:10px;
+    color:
+        rgba(255,255,255,.36);
+
+    font-size:7px;
+
     text-align:center;
 }
 
 .brain-chat-system-time{
-    color:rgba(230,199,141,.62);
+    color:
+        rgba(230,199,141,.54);
 }
 
+
+/* =========================================================
+   EMPTY CHAT
+========================================================= */
+
 .brain-chat-empty{
-    min-height:116px;
-    padding:20px;
+    min-height:78px;
+
+    padding:12px;
 
     display:flex;
     flex-direction:column;
     align-items:center;
     justify-content:center;
-    gap:6px;
 
-    border:1px dashed rgba(255,255,255,.09);
-    border-radius:17px;
+    gap:4px;
 
-    color:rgba(255,255,255,.48);
+    border:
+        1px dashed
+        rgba(255,255,255,.065);
 
-    font-size:12px;
+    border-radius:12px;
+
+    color:
+        rgba(255,255,255,.4);
+
+    font-size:8px;
+
     text-align:center;
 }
 
 .brain-chat-empty strong{
-    color:rgba(255,255,255,.82);
+    color:
+        rgba(255,255,255,.74);
 }
 
-/* App links inside Brain replies */
+
+/* =========================================================
+   APP LINKS
+========================================================= */
 
 .brain-message-app-links{
     width:100%;
-    margin-top:9px;
-    padding-top:9px;
+
+    margin-top:6px;
+    padding-top:6px;
 
     display:flex;
     align-items:center;
     justify-content:flex-end;
     flex-wrap:wrap;
-    gap:6px;
 
-    border-top:1px solid rgba(230,199,141,.12);
+    gap:4px;
+
+    border-top:
+        1px solid
+        rgba(230,199,141,.09);
 }
 
 .brain-message-app-link{
-    min-height:31px;
-    padding:6px 10px;
+    min-height:25px;
+
+    padding:
+        4px
+        7px;
 
     display:inline-flex;
     align-items:center;
     justify-content:center;
 
-    border:1px solid rgba(230,199,141,.3);
+    border:
+        1px solid
+        rgba(230,199,141,.22);
+
     border-radius:999px;
 
     background:
         linear-gradient(
             180deg,
-            rgba(230,199,141,.11),
-            rgba(230,199,141,.035)
+            rgba(230,199,141,.08),
+            rgba(230,199,141,.025)
         );
 
     color:#e8c989;
 
     font:inherit;
-    font-size:10px;
-    font-weight:750;
-    letter-spacing:.04em;
+
+    font-size:7px;
+    font-weight:700;
+
+    letter-spacing:.03em;
+
     text-transform:uppercase;
 
     transition:
-        transform .18s ease,
-        border-color .18s ease,
-        background .18s ease;
+        transform .16s ease,
+        border-color .16s ease,
+        background .16s ease;
 }
 
 .brain-message-app-link:hover{
-    transform:translateY(-1px);
+    transform:
+        translateY(-1px);
 
-    border-color:rgba(230,199,141,.55);
-    background:rgba(230,199,141,.14);
+    border-color:
+        rgba(230,199,141,.42);
+
+    background:
+        rgba(230,199,141,.1);
 }
 
-/* Mobile */
 
-@media (max-width:700px){
+/* =========================================================
+   MOBILE
+========================================================= */
+
+@media (max-width:600px){
 
     .brain-panel{
-        right:10px;
-        bottom:calc(
-            96px +
-            env(safe-area-inset-bottom)
-        );
+        right:7px;
 
-        width:calc(100vw - 20px);
-        max-height:calc(
-            100dvh -
-            112px -
-            env(safe-area-inset-bottom)
-        );
+        bottom:
+            calc(
+                68px +
+                env(safe-area-inset-bottom)
+            );
 
-        padding:14px;
+        width:
+            calc(
+                100vw - 14px
+            );
 
-        border-radius:24px 24px 20px 20px;
+        max-height:
+            calc(
+                100dvh -
+                82px -
+                env(safe-area-inset-bottom)
+            );
 
-        transform-origin:center bottom;
+        padding:10px;
+
+        border-radius:
+            17px
+            17px
+            14px
+            14px;
+
+        transform-origin:
+            center bottom;
     }
 
     .brain-panel.is-compact{
-        max-height:min(410px,54dvh);
+        max-height:
+            min(
+                300px,
+                42dvh
+            );
     }
 
     .brain-panel.is-expanded{
-        width:calc(100vw - 20px);
-        max-height:calc(
-            100dvh -
-            112px -
-            env(safe-area-inset-bottom)
-        );
+        width:
+            calc(
+                100vw - 14px
+            );
+
+        height:
+            calc(
+                100dvh -
+                82px -
+                env(safe-area-inset-bottom)
+            );
+
+        max-height:
+            calc(
+                100dvh -
+                82px -
+                env(safe-area-inset-bottom)
+            );
     }
 
     .brain-panel-handle{
         display:block;
+
+        margin-bottom:6px;
     }
 
     .brain-title{
-        font-size:23px;
+        font-size:17px;
+    }
+
+    .brain-close{
+        width:27px;
+        height:27px;
+
+        flex-basis:27px;
+
+        font-size:14px;
     }
 
     .brain-context{
-        margin-top:9px;
+        margin-top:5px;
 
-        font-size:11px;
+        font-size:7px;
     }
 
     .brain-suggestion{
-        margin-top:10px;
-        padding:10px 12px;
+        margin-top:6px;
 
-        font-size:10px;
+        padding:6px 7px;
+
+        font-size:7px;
     }
 
     .brain-mini-history{
-        margin-top:10px;
+        margin-top:6px;
+    }
+
+    .brain-mini-chat-flow{
+        padding:6px 7px;
+    }
+
+    .brain-mini-chat-message{
+        font-size:6.5px;
     }
 
     .brain-chat-message{
-        max-width:91%;
+        max-width:90%;
 
-        font-size:12px;
+        padding:6px 7px;
+
+        font-size:8px;
+    }
+
+    .brain-composer{
+        min-height:38px;
+
+        margin-top:6px;
+
+        padding:
+            3px
+            3px
+            3px
+            9px;
+
+        border-radius:11px;
+    }
+
+    .brain-input{
+        height:30px;
+
+        font-size:16px;
+
+        line-height:30px;
+    }
+
+    .brain-send{
+        width:30px;
+        height:30px;
+
+        flex-basis:30px;
+
+        border-radius:9px;
     }
 
     .brain-input-hint{
@@ -632,23 +993,85 @@
 
 }
 
-@media (max-width:380px){
+
+/* =========================================================
+   SMALL PHONE
+========================================================= */
+
+@media (max-width:390px){
 
     .brain-panel{
-        right:7px;
-        bottom:calc(
-            91px +
-            env(safe-area-inset-bottom)
-        );
+        right:5px;
 
-        width:calc(100vw - 14px);
+        width:
+            calc(
+                100vw - 10px
+            );
     }
 
     .brain-panel.is-expanded{
-        width:calc(100vw - 14px);
+        width:
+            calc(
+                100vw - 10px
+            );
+    }
+
+    .brain-title{
+        font-size:16px;
     }
 
 }
+
+
+/* =========================================================
+   SHORT VIEWPORT
+========================================================= */
+
+@media (max-height:720px){
+
+    .brain-panel{
+        max-height:
+            calc(
+                100dvh -
+                72px -
+                env(safe-area-inset-bottom)
+            );
+    }
+
+    .brain-panel.is-expanded{
+        height:
+            calc(
+                100dvh -
+                72px -
+                env(safe-area-inset-bottom)
+            );
+
+        max-height:
+            calc(
+                100dvh -
+                72px -
+                env(safe-area-inset-bottom)
+            );
+    }
+
+    .brain-panel.is-compact{
+        max-height:
+            min(
+                270px,
+                40dvh
+            );
+    }
+
+    .brain-suggestion{
+        display:none;
+    }
+
+}
+
+
+/* =========================================================
+   REDUCED MOTION
+========================================================= */
 
 @media (prefers-reduced-motion:reduce){
 
