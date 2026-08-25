@@ -1,78 +1,301 @@
-body{
+/* =========================================================
+   VAERO ENGINE — GLOBAL VIEWPORT SHELL
+   Desktop + Mobile
+========================================================= */
 
-display:flex;
-justify-content:center;
-align-items:flex-start;
+html{
+    width:100%;
+    height:100%;
+    max-width:100%;
 
-padding:40px 20px; 
+    margin:0;
+    padding:0;
 
-background:
-radial-gradient(circle at top,#122235,#07111d 60%);
-
+    overflow:hidden;
 }
 
-#engine{
-
-width:100%;
-max-width:560px;
-
-display:flex;
-flex-direction:column;
-gap:24px;
-
-}
-
-.vaero-shell{
-
-display:flex;
-flex-direction:column;
-gap:24px;
-
-min-height:100vh;
-
-}
-
-.section{
-
-background:linear-gradient(
-180deg,
-rgba(18,28,42,.95),
-rgba(11,18,30,.96)
-);
-
-border:1px solid rgba(255,255,255,.06);
-
-border-radius:28px;
-
-padding:28px;
-
-box-shadow:
-0 20px 60px rgba(0,0,0,.35);
-
-}
-
-html,
 body{
     width:100%;
+    height:100%;
     max-width:100%;
-    overflow-x:hidden;
-    touch-action:pan-y;
+
+    margin:0;
+    padding:14px;
+
+    display:flex;
+    align-items:stretch;
+    justify-content:center;
+
+    overflow:hidden;
+
+    background:
+        radial-gradient(
+            circle at 50% -10%,
+            #152b43 0%,
+            #091521 46%,
+            #050c14 100%
+        );
+
+    touch-action:manipulation;
 }
+
+
+/* =========================================================
+   GLOBAL BOX MODEL
+========================================================= */
 
 *{
     box-sizing:border-box;
 }
 
-#engine,
-.vaero-shell,
+
+/* =========================================================
+   ENGINE ROOT
+========================================================= */
+
+#engine{
+    width:100%;
+    height:100%;
+
+    max-width:1440px;
+    min-width:0;
+    min-height:0;
+
+    margin:0 auto;
+
+    display:flex;
+    flex-direction:column;
+
+    overflow:hidden;
+}
+
+
+/* =========================================================
+   MAIN ENGINE SHELL
+========================================================= */
+
+.vaero-shell{
+    position:relative;
+
+    width:100%;
+    height:100%;
+
+    min-width:0;
+    min-height:0;
+
+    display:flex;
+    flex-direction:column;
+
+    overflow:hidden;
+}
+
+
+/* =========================================================
+   CURRENT SCREEN
+========================================================= */
+
+.engine-screen{
+    position:relative;
+
+    width:100%;
+    height:100%;
+
+    min-width:0;
+    min-height:0;
+
+    flex:1 1 auto;
+
+    overflow:hidden;
+}
+
+
+/* =========================================================
+   GENERIC SECTION
+========================================================= */
+
 .section{
     width:100%;
     max-width:100%;
-    overflow-x:hidden;
+
+    min-width:0;
+
+    padding:22px;
+
+    overflow:hidden;
+
+    border:1px solid rgba(255,255,255,.06);
+    border-radius:22px;
+
+    background:
+        linear-gradient(
+            180deg,
+            rgba(18,28,42,.92),
+            rgba(11,18,30,.94)
+        );
+
+    box-shadow:
+        0 16px 42px rgba(0,0,0,.24);
+}
+
+
+/* =========================================================
+   ENGINE PAGE BASE
+========================================================= */
+
+.engine-page{
+    width:100%;
+    height:100%;
+
+    min-width:0;
+    min-height:0;
+
+    overflow:hidden;
+}
+
+
+/* =========================================================
+   FORM ELEMENTS
+========================================================= */
+
+input,
+textarea,
+select,
+button{
+    font-family:inherit;
 }
 
 input,
 textarea,
 select{
+    max-width:100%;
+
     font-size:16px !important;
+}
+
+
+/* =========================================================
+   DESKTOP
+========================================================= */
+
+@media (min-width:1000px){
+
+    body{
+        padding:18px 22px;
+    }
+
+    #engine{
+        max-width:1360px;
+    }
+
+}
+
+
+/* =========================================================
+   LARGE DESKTOP
+========================================================= */
+
+@media (min-width:1500px){
+
+    #engine{
+        max-width:1480px;
+    }
+
+}
+
+
+/* =========================================================
+   TABLET
+========================================================= */
+
+@media (max-width:900px){
+
+    body{
+        padding:10px;
+    }
+
+    .section{
+        padding:18px;
+        border-radius:19px;
+    }
+
+}
+
+
+/* =========================================================
+   MOBILE
+========================================================= */
+
+@media (max-width:600px){
+
+    html,
+    body{
+        height:100%;
+        min-height:100%;
+    }
+
+    body{
+        padding:
+            max(6px,env(safe-area-inset-top))
+            7px
+            max(6px,env(safe-area-inset-bottom));
+
+        align-items:stretch;
+    }
+
+    #engine{
+        max-width:none;
+        height:100%;
+    }
+
+    .vaero-shell{
+        height:100%;
+    }
+
+    .engine-screen{
+        height:100%;
+    }
+
+    .section{
+        padding:15px;
+        border-radius:17px;
+    }
+
+}
+
+
+/* =========================================================
+   VERY SMALL PHONES
+========================================================= */
+
+@media (max-width:390px){
+
+    body{
+        padding-left:5px;
+        padding-right:5px;
+    }
+
+    .section{
+        padding:13px;
+        border-radius:15px;
+    }
+
+}
+
+
+/* =========================================================
+   SHORT VIEWPORTS
+========================================================= */
+
+@media (max-height:720px){
+
+    body{
+        padding-top:6px;
+        padding-bottom:6px;
+    }
+
+    .section{
+        padding-top:14px;
+        padding-bottom:14px;
+    }
+
 }
