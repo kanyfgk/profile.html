@@ -10,24 +10,37 @@ const OrganRegistry = {
                 .toLowerCase();
 
         if(!id){
+
             console.warn(
                 "Organ kaydedilemedi: id eksik.",
                 app
             );
 
             return null;
+
         }
 
         const normalizedApp = {
+
             id,
+
             icon:
-                String(app.icon || "◌"),
+                String(
+                    app.icon ||
+                    "◌"
+                ),
 
             title:
-                String(app.title || id),
+                String(
+                    app.title ||
+                    id
+                ),
 
             subtitle:
-                String(app.subtitle || ""),
+                String(
+                    app.subtitle ||
+                    ""
+                ),
 
             action:
                 String(
@@ -37,11 +50,13 @@ const OrganRegistry = {
 
             enabled:
                 app.enabled !== false
+
         };
 
         const existingIndex =
             this.apps.findIndex(
-                item => item.id === id
+                item =>
+                    item.id === id
             );
 
         if(existingIndex >= 0){
@@ -51,11 +66,15 @@ const OrganRegistry = {
                 ...normalizedApp
             };
 
-            return this.apps[existingIndex];
+            return this.apps[
+                existingIndex
+            ];
 
         }
 
-        this.apps.push(normalizedApp);
+        this.apps.push(
+            normalizedApp
+        );
 
         return normalizedApp;
 
@@ -64,17 +83,21 @@ const OrganRegistry = {
     all(options = {}){
 
         const includeDisabled =
-            options.includeDisabled === true;
+            options.includeDisabled ===
+                true;
 
         const apps =
             includeDisabled
                 ? this.apps
                 : this.apps.filter(
-                    app => app.enabled
+                    app =>
+                        app.enabled
                 );
 
         return apps.map(
-            app => ({ ...app })
+            app => ({
+                ...app
+            })
         );
 
     },
@@ -89,7 +112,8 @@ const OrganRegistry = {
         return (
             this.apps.find(
                 app =>
-                    app.id === normalizedId
+                    app.id ===
+                    normalizedId
             ) ||
             null
         );
@@ -108,70 +132,163 @@ const OrganRegistry = {
 
 [
     {
-        id: "identity",
-        icon: "🪪",
-        title: "Kimlik",
-        subtitle: "Dijital kimliğini yönet",
-        action: "entity:identity"
+        id:
+            "identity",
+
+        icon:
+            "🪪",
+
+        title:
+            "Kimlik",
+
+        subtitle:
+            "Dijital kimliğini yönet",
+
+        action:
+            "entity:identity"
     },
+
     {
-        id: "profile",
-        icon: "👤",
-        title: "Profil",
-        subtitle: "Profilini ve yönünü görüntüle",
-        action: "entity:profile"
+        id:
+            "profile",
+
+        icon:
+            "👤",
+
+        title:
+            "Profil",
+
+        subtitle:
+            "Profilini ve yönünü görüntüle",
+
+        action:
+            "entity:profile"
     },
+
     {
-        id: "memory",
-        icon: "◫",
-        title: "Hafıza",
-        subtitle: "Kalıcı kayıtlarını görüntüle",
-        action: "entity:memory"
+        id:
+            "memory",
+
+        icon:
+            "◫",
+
+        title:
+            "Hafıza",
+
+        subtitle:
+            "Kalıcı kayıtlarını görüntüle",
+
+        action:
+            "entity:memory"
     },
+
     {
-        id: "timeline",
-        icon: "◷",
-        title: "Zaman Çizelgesi",
-        subtitle: "Geçmiş olaylarını görüntüle",
-        action: "entity:timeline"
+        id:
+            "timeline",
+
+        icon:
+            "◷",
+
+        title:
+            "Zaman Çizelgesi",
+
+        subtitle:
+            "Geçmiş olaylarını görüntüle",
+
+        action:
+            "entity:timeline"
     },
+
     {
-        id: "bridge",
-        icon: "⌁",
-        title: "Köprü",
-        subtitle: "Bağlantılarını yönet",
-        action: "entity:bridge"
+        id:
+            "bridge",
+
+        icon:
+            "⌁",
+
+        title:
+            "Köprü",
+
+        subtitle:
+            "Bağlantılarını yönet",
+
+        action:
+            "entity:bridge"
     },
+
     {
-        id: "evolution",
-        icon: "⌬",
-        title: "Evrim",
-        subtitle: "Gelişim olaylarını incele",
-        action: "entity:evolution"
+        id:
+            "evolution",
+
+        icon:
+            "⌬",
+
+        title:
+            "Evrim",
+
+        subtitle:
+            "Gelişim olaylarını incele",
+
+        action:
+            "entity:evolution"
     },
+
     {
-        id: "settings",
-        icon: "⚙️",
-        title: "Ayarlar",
-        subtitle: "Sistem tercihlerini yönet",
-        action: "entity:settings"
+        id:
+            "settings",
+
+        icon:
+            "⚙️",
+
+        title:
+            "Ayarlar",
+
+        subtitle:
+            "Sistem tercihlerini yönet",
+
+        action:
+            "entity:settings"
     },
+
     {
-        id: "discovery",
-        icon: "◇",
-        title: "Discovery",
-        subtitle: "Keşif cevaplarını yeniden değerlendir",
-        action: "entity:discovery"
+        id:
+            "discovery",
+
+        icon:
+            "◇",
+
+        title:
+            "Discovery",
+
+        subtitle:
+            "Keşif cevaplarını yeniden değerlendir",
+
+        action:
+            "entity:discovery"
     },
+
     {
-        id: "vaero",
-        icon: "◉",
-        title: "VAERO",
-        subtitle: "Fiziksel dünyanı keşfet",
-        action: "app:vaero"
+        id:
+            "vaero",
+
+        icon:
+            "◉",
+
+        title:
+            "VAERO",
+
+        subtitle:
+            "Engine hizmetlerini yönet",
+
+        action:
+            "app:vaero"
     }
+
 ].forEach(
-    app => OrganRegistry.register(app)
+    app =>
+        OrganRegistry.register(
+            app
+        )
 );
 
 window.OrganRegistry =
