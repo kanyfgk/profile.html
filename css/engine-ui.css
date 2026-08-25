@@ -1,821 +1,1516 @@
-/*
- * VAERO ENGINE — FINAL UI LAYER
- *
- * This file owns the visual language of the Engine shell only.
- * The physical VAERO commerce app keeps its independent stylesheet.
- */
+/* =========================================================
+   VAERO ENGINE — FINAL VISUAL LAYER
+
+   Bu dosya:
+   - Engine görsel dilini güçlendirir.
+   - Renk / yüzey / glow / hover / focus yönetir.
+   - Viewport veya ana layout ölçülerini yönetmez.
+
+   Layout:
+   layout.css
+
+   Shared pages:
+   components.css
+
+   Home:
+   engine-home.css
+
+   Navigation:
+   navigation.css
+
+   Brain:
+   brain.css
+========================================================= */
+
+
+/* =========================================================
+   ENGINE TOKENS
+========================================================= */
 
 :root{
-    --engine-bg:#050b13;
-    --engine-bg-soft:#091321;
-    --engine-panel:rgba(14,25,39,.82);
-    --engine-panel-strong:#101d2c;
-    --engine-line:rgba(255,255,255,.085);
-    --engine-line-strong:rgba(221,190,128,.24);
-    --engine-text:#f7f4ed;
-    --engine-muted:rgba(233,239,246,.62);
-    --engine-dim:rgba(233,239,246,.38);
-    --engine-gold:#dfbd7a;
-    --engine-gold-soft:#f2dda9;
-    --engine-blue:#6bb7f1;
-    --engine-green:#64d89d;
-    --engine-violet:#a58af1;
-    --engine-danger:#ff7b85;
-    --engine-radius-xl:32px;
-    --engine-radius-lg:24px;
-    --engine-radius-md:18px;
-    --engine-shadow:0 30px 90px rgba(0,0,0,.38);
-    --engine-content:1180px;
-    --engine-nav-height:88px;
+
+    --engine-bg:
+        #050b13;
+
+    --engine-bg-soft:
+        #091321;
+
+    --engine-panel:
+        rgba(
+            14,
+            25,
+            39,
+            .82
+        );
+
+    --engine-panel-strong:
+        #101d2c;
+
+    --engine-line:
+        rgba(
+            255,
+            255,
+            255,
+            .075
+        );
+
+    --engine-line-strong:
+        rgba(
+            221,
+            190,
+            128,
+            .22
+        );
+
+    --engine-text:
+        #f7f4ed;
+
+    --engine-muted:
+        rgba(
+            233,
+            239,
+            246,
+            .58
+        );
+
+    --engine-dim:
+        rgba(
+            233,
+            239,
+            246,
+            .34
+        );
+
+    --engine-gold:
+        #dfbd7a;
+
+    --engine-gold-soft:
+        #f2dda9;
+
+    --engine-blue:
+        #6bb7f1;
+
+    --engine-green:
+        #64d89d;
+
+    --engine-violet:
+        #a58af1;
+
+    --engine-danger:
+        #ff7b85;
+
 }
 
-html{
-    background:var(--engine-bg);
-}
 
-body{
-    display:block;
-    min-height:100dvh;
-    padding:0;
-    background:
-        radial-gradient(circle at 12% -10%,rgba(58,111,151,.18),transparent 34%),
-        radial-gradient(circle at 94% 6%,rgba(208,164,91,.09),transparent 28%),
-        linear-gradient(180deg,#07111d 0%,#050b13 55%,#03070d 100%);
-    color:var(--engine-text);
-}
+/* =========================================================
+   ENGINE BACKGROUND DETAIL
+========================================================= */
 
 body::before{
+
     content:"";
+
     position:fixed;
     inset:0;
+
     z-index:-1;
+
     pointer-events:none;
-    opacity:.2;
+
+    opacity:.13;
+
     background-image:
-        linear-gradient(rgba(255,255,255,.018) 1px,transparent 1px),
-        linear-gradient(90deg,rgba(255,255,255,.018) 1px,transparent 1px);
-    background-size:56px 56px;
-    mask-image:linear-gradient(to bottom,black,transparent 75%);
+
+        linear-gradient(
+            rgba(
+                255,
+                255,
+                255,
+                .014
+            )
+            1px,
+            transparent 1px
+        ),
+
+        linear-gradient(
+            90deg,
+            rgba(
+                255,
+                255,
+                255,
+                .014
+            )
+            1px,
+            transparent 1px
+        );
+
+    background-size:
+        58px
+        58px;
+
+    mask-image:
+        linear-gradient(
+            to bottom,
+            black,
+            transparent 78%
+        );
+
+    -webkit-mask-image:
+        linear-gradient(
+            to bottom,
+            black,
+            transparent 78%
+        );
+
 }
 
-#engine{
-    width:100%;
-    max-width:none;
-    min-height:100dvh;
-    display:block;
-}
 
-.vaero-shell{
-    width:100%;
-    min-height:100dvh;
-    display:block;
-    padding:0 24px calc(var(--engine-nav-height) + 52px);
-}
+/* =========================================================
+   SHARED PREMIUM SURFACE
+========================================================= */
 
-.engine-screen{
-    width:min(100%,var(--engine-content));
-    margin:0 auto;
-}
+.section,
+.card,
+.engine-shortcut-card,
+.engine-active-world,
+.engine-activity,
+.world-card,
+.world-hero,
+.world-entity-btn,
+.entity-type-card,
+.entity-header,
+.entity-app-link,
+.create-world-form,
+.entity-create-form,
+.create-preview{
 
-.vaero-engine-home,
-.engine-page{
-    width:100%;
-    padding:28px 0 72px;
-}
+    border-color:
+        var(--engine-line);
 
-.section{
-    border:1px solid var(--engine-line);
-    border-radius:var(--engine-radius-lg);
     background:
-        linear-gradient(150deg,rgba(20,34,51,.93),rgba(9,17,28,.92));
-    box-shadow:0 18px 55px rgba(0,0,0,.22);
+
+        linear-gradient(
+            150deg,
+            rgba(
+                18,
+                31,
+                47,
+                .88
+            ),
+            rgba(
+                8,
+                16,
+                26,
+                .88
+            )
+        );
+
+    box-shadow:
+
+        inset
+        0
+        1px
+        0
+        rgba(
+            255,
+            255,
+            255,
+            .018
+        ),
+
+        0
+        12px
+        34px
+        rgba(
+            0,
+            0,
+            0,
+            .14
+        );
+
 }
 
-.engine-screen > .section{
-    width:100%;
-    margin:28px auto 72px !important;
-    padding:clamp(22px,4vw,44px) !important;
+
+/* =========================================================
+   PAGE TYPE
+========================================================= */
+
+.engine-page,
+.vaero-engine-home{
+
+    color:
+        var(--engine-text);
+
 }
 
-.engine-home-topbar{
-    min-height:72px;
-    display:flex;
-    align-items:center;
-    justify-content:space-between;
-    gap:24px;
-    margin-bottom:24px;
-    padding:0 4px;
+.engine-page-header h1,
+.entity-header h1,
+.world-title,
+.engine-active-world h2{
+
+    color:
+        var(--engine-text);
+
 }
 
-.engine-brand{
-    display:flex;
-    align-items:baseline;
-    gap:10px;
+.engine-page-header p,
+.entity-header p,
+.world-description{
+
+    color:
+        var(--engine-muted);
+
 }
 
-.engine-brand-main{
-    color:var(--engine-text);
-    font-size:20px;
-    font-weight:800;
-    letter-spacing:.28em;
-}
 
-.engine-brand-sub{
-    color:var(--engine-gold);
-    font-size:10px;
-    font-weight:800;
-    letter-spacing:.25em;
-}
-
-.engine-top-actions{
-    display:flex;
-    gap:10px;
-}
-
-.engine-icon-btn,
-.engine-back-btn{
-    border:1px solid var(--engine-line);
-    background:rgba(255,255,255,.035);
-    color:var(--engine-muted);
-    transition:border-color .2s ease,background .2s ease,color .2s ease,transform .2s ease;
-}
-
-.engine-icon-btn{
-    width:42px;
-    height:42px;
-    border-radius:14px;
-}
-
-.engine-back-btn{
-    min-height:42px;
-    margin:0 0 22px;
-    padding:0 16px;
-    border-radius:999px;
-}
-
-.engine-back-btn:hover:not(:disabled){
-    color:var(--engine-text);
-    border-color:var(--engine-line-strong);
-    background:rgba(223,189,122,.08);
-}
-
-.engine-hero{
-    position:relative;
-    min-height:370px;
-    display:grid;
-    grid-template-columns:minmax(0,1.15fr) minmax(280px,.85fr);
-    align-items:center;
-    overflow:hidden;
-    padding:clamp(34px,6vw,72px);
-    border:1px solid var(--engine-line);
-    border-radius:var(--engine-radius-xl);
-    background:
-        radial-gradient(circle at 78% 48%,rgba(68,135,183,.21),transparent 27%),
-        radial-gradient(circle at 12% 0%,rgba(223,189,122,.12),transparent 32%),
-        linear-gradient(135deg,rgba(18,32,49,.98),rgba(5,13,22,.96));
-    box-shadow:var(--engine-shadow);
-}
-
-.engine-hero::before{
-    content:"";
-    position:absolute;
-    inset:0;
-    pointer-events:none;
-    background:linear-gradient(110deg,rgba(255,255,255,.04),transparent 42%);
-}
-
-.engine-hero-copy{
-    position:relative;
-    z-index:2;
-    max-width:650px;
-}
+/* =========================================================
+   ENGINE LABELS
+========================================================= */
 
 .engine-welcome,
 .engine-section-label,
 .world-badge,
 .world-card-content small,
 .world-entity-type{
-    color:var(--engine-gold);
-    font-size:11px;
-    font-weight:800;
-    line-height:1.2;
-    letter-spacing:.18em;
-    text-transform:uppercase;
+
+    color:
+        var(--engine-gold);
+
+}
+
+
+/* =========================================================
+   TOP ACTIONS
+========================================================= */
+
+.engine-icon-btn{
+
+    border-color:
+        var(--engine-line);
+
+    background:
+        rgba(
+            255,
+            255,
+            255,
+            .025
+        );
+
+    color:
+        var(--engine-gold-soft);
+
+}
+
+.engine-icon-btn:hover:not(:disabled){
+
+    border-color:
+        var(--engine-line-strong);
+
+    background:
+        rgba(
+            223,
+            189,
+            122,
+            .055
+        );
+
+}
+
+
+/* =========================================================
+   BACK BUTTON
+========================================================= */
+
+.engine-back-btn{
+
+    color:
+        var(--engine-muted);
+
+}
+
+.engine-back-btn:hover:not(:disabled){
+
+    color:
+        var(--engine-gold-soft);
+
+}
+
+
+/* =========================================================
+   HOME HERO
+========================================================= */
+
+.engine-hero{
+
+    background:
+
+        radial-gradient(
+            circle at 78% 45%,
+            rgba(
+                68,
+                135,
+                183,
+                .15
+            ),
+            transparent 30%
+        ),
+
+        radial-gradient(
+            circle at 12% 0%,
+            rgba(
+                223,
+                189,
+                122,
+                .075
+            ),
+            transparent 32%
+        ),
+
+        linear-gradient(
+            135deg,
+            rgba(
+                17,
+                30,
+                46,
+                .92
+            ),
+            rgba(
+                5,
+                13,
+                22,
+                .93
+            )
+        );
+
+}
+
+.engine-hero::before{
+
+    content:"";
+
+    position:absolute;
+    inset:0;
+
+    pointer-events:none;
+
+    background:
+
+        linear-gradient(
+            110deg,
+            rgba(
+                255,
+                255,
+                255,
+                .025
+            ),
+            transparent 42%
+        );
+
 }
 
 .engine-hero h1{
-    margin:16px 0 14px;
-    max-width:720px;
-    font-size:clamp(46px,7vw,82px);
-    font-weight:560;
-    line-height:.94;
-    letter-spacing:-.055em;
+
+    color:
+        var(--engine-text);
+
 }
 
 .engine-hero-copy > p{
-    max-width:520px;
-    color:var(--engine-muted);
-    font-size:clamp(16px,2vw,20px);
-    line-height:1.6;
+
+    color:
+        var(--engine-muted);
+
 }
 
+
+/* =========================================================
+   SYSTEM STATUS
+========================================================= */
+
 .engine-status-pill{
-    width:max-content;
-    max-width:100%;
-    display:flex;
-    align-items:center;
-    gap:11px;
-    margin-top:28px;
-    padding:11px 15px;
-    border:1px solid rgba(100,216,157,.16);
-    border-radius:999px;
-    background:rgba(100,216,157,.055);
+
+    border-color:
+        rgba(
+            100,
+            216,
+            157,
+            .13
+        );
+
+    background:
+        rgba(
+            100,
+            216,
+            157,
+            .04
+        );
+
 }
 
 .engine-status-dot{
-    width:8px;
-    height:8px;
-    flex:0 0 auto;
-    border-radius:50%;
-    background:var(--engine-green);
-    box-shadow:0 0 14px rgba(100,216,157,.8);
+
+    background:
+        var(--engine-green);
+
+    box-shadow:
+
+        0
+        0
+        11px
+        rgba(
+            100,
+            216,
+            157,
+            .62
+        );
+
 }
 
 .engine-status-pill strong{
-    color:#dffbec;
-    font-size:12px;
+
+    color:
+        #dffbec;
+
 }
 
 .engine-status-pill small{
-    color:var(--engine-muted);
-    font-size:11px;
+
+    color:
+        var(--engine-muted);
+
 }
 
-.engine-status-separator{
-    width:1px;
-    height:16px;
-    background:var(--engine-line);
-}
 
-.engine-brain-orb{
-    position:relative;
-    justify-self:center;
-    width:230px;
-    height:230px;
-    border:0;
-    border-radius:50%;
-    background:transparent;
-    isolation:isolate;
-}
+/* =========================================================
+   HOME BRAIN
+========================================================= */
 
 .engine-brain-orb::before{
-    content:"";
-    position:absolute;
-    inset:26%;
-    z-index:-1;
-    border-radius:50%;
-    background:rgba(108,184,239,.16);
-    filter:blur(28px);
-    transition:transform .35s ease,background .35s ease;
+
+    background:
+
+        radial-gradient(
+            circle,
+            rgba(
+                95,
+                170,
+                224,
+                .12
+            ),
+            transparent 70%
+        );
+
 }
 
 .engine-brain-orb:hover::before{
-    transform:scale(1.3);
-    background:rgba(223,189,122,.2);
+
+    background:
+
+        radial-gradient(
+            circle,
+            rgba(
+                223,
+                189,
+                122,
+                .16
+            ),
+            transparent 70%
+        );
+
 }
 
 .engine-brain-orb .brain-orbit{
-    position:absolute;
-    inset:30px;
-    border:1px solid rgba(136,195,238,.28);
-    border-radius:50%;
+
+    border-color:
+        rgba(
+            136,
+            195,
+            238,
+            .22
+        );
+
 }
 
-.engine-brain-orb .brain-orbit-1{transform:rotate(18deg) scaleX(1.08) scaleY(.74)}
-.engine-brain-orb .brain-orbit-2{transform:rotate(72deg) scaleX(1.03) scaleY(.76)}
-.engine-brain-orb .brain-orbit-3{transform:rotate(132deg) scaleX(1.08) scaleY(.72)}
-
 .engine-brain-orb .brain-core{
-    position:absolute;
-    inset:76px;
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    gap:12px;
-    border:1px solid rgba(255,255,255,.16);
-    border-radius:50%;
-    background:linear-gradient(145deg,#2b5878,#0b2033 70%);
-    box-shadow:inset 0 0 30px rgba(255,255,255,.08),0 0 45px rgba(91,174,230,.22);
+
+    border-color:
+        rgba(
+            255,
+            255,
+            255,
+            .14
+        );
+
+    background:
+
+        radial-gradient(
+            circle at 50% 34%,
+            rgba(
+                43,
+                88,
+                120,
+                .96
+            ),
+            rgba(
+                8,
+                25,
+                40,
+                .98
+            )
+            68%
+        );
+
+    box-shadow:
+
+        inset
+        0
+        0
+        24px
+        rgba(
+            255,
+            255,
+            255,
+            .055
+        ),
+
+        0
+        0
+        25px
+        rgba(
+            91,
+            174,
+            230,
+            .17
+        );
+
 }
 
 .engine-brain-orb .brain-eye{
-    width:13px;
-    height:13px;
-    border-radius:50%;
-    background:var(--engine-gold-soft);
-    box-shadow:0 0 16px rgba(242,221,169,.9);
+
+    background:
+        var(--engine-gold-soft);
+
+    box-shadow:
+
+        0
+        0
+        12px
+        rgba(
+            242,
+            221,
+            169,
+            .74
+        );
+
 }
 
-.engine-shortcuts,
-.engine-activity,
-.world-entities{
-    margin-top:38px;
-}
 
-.engine-shortcuts > .engine-section-label,
-.engine-activity > .engine-section-label{
-    display:block;
-    margin:0 0 15px 4px;
-}
-
-.engine-shortcuts-grid{
-    display:grid;
-    grid-template-columns:repeat(4,minmax(0,1fr));
-    gap:14px;
-}
-
-.engine-shortcut-card,
-.world-card,
-.world-entity-btn,
-.entity-app-link,
-.entity-type-card{
-    border:1px solid var(--engine-line);
-    color:var(--engine-text);
-    background:linear-gradient(150deg,rgba(19,33,50,.9),rgba(9,17,27,.9));
-    box-shadow:0 14px 36px rgba(0,0,0,.18);
-    transition:transform .22s ease,border-color .22s ease,background .22s ease,box-shadow .22s ease;
-}
-
-.engine-shortcut-card:hover,
-.world-card:hover,
-.world-entity-btn:hover,
-.entity-app-link:hover,
-.entity-type-card:hover{
-    transform:translateY(-3px);
-    border-color:var(--engine-line-strong);
-    background:linear-gradient(150deg,rgba(26,43,62,.96),rgba(11,21,33,.94));
-    box-shadow:0 20px 44px rgba(0,0,0,.26);
-}
+/* =========================================================
+   SHORTCUTS
+========================================================= */
 
 .engine-shortcut-card{
+
     position:relative;
-    min-height:156px;
-    display:flex;
-    flex-direction:column;
-    align-items:flex-start;
-    padding:20px;
-    overflow:hidden;
-    text-align:left;
-    border-radius:var(--engine-radius-md);
+
+}
+
+.engine-shortcut-card::after{
+
+    content:"";
+
+    position:absolute;
+    inset:0;
+
+    opacity:0;
+
+    pointer-events:none;
+
+    border-radius:inherit;
+
+    background:
+
+        radial-gradient(
+            circle at 20% 0%,
+            rgba(
+                223,
+                189,
+                122,
+                .055
+            ),
+            transparent 42%
+        );
+
+    transition:
+        opacity .2s ease;
+
+}
+
+.engine-shortcut-card:hover::after{
+
+    opacity:1;
+
+}
+
+.engine-shortcut-card:hover{
+
+    border-color:
+        var(--engine-line-strong);
+
 }
 
 .engine-shortcut-icon{
-    width:42px;
-    height:42px;
-    display:grid;
-    place-items:center;
-    margin-bottom:auto;
-    border:1px solid var(--engine-line);
-    border-radius:14px;
-    background:rgba(255,255,255,.045);
-    color:var(--engine-gold-soft);
-    font-size:20px;
+
+    border-color:
+        var(--engine-line);
+
+    background:
+        rgba(
+            255,
+            255,
+            255,
+            .03
+        );
+
+    color:
+        var(--engine-gold-soft);
+
 }
 
-.engine-shortcut-card strong{
-    margin-top:22px;
-    font-size:16px;
+.engine-shortcut-blue
+.engine-shortcut-icon{
+
+    color:
+        var(--engine-blue);
+
+}
+
+.engine-shortcut-violet
+.engine-shortcut-icon{
+
+    color:
+        var(--engine-violet);
+
+}
+
+.engine-shortcut-green
+.engine-shortcut-icon{
+
+    color:
+        var(--engine-green);
+
 }
 
 .engine-shortcut-card small{
-    margin-top:5px;
-    color:var(--engine-muted);
-    font-size:12px;
+
+    color:
+        var(--engine-muted);
+
 }
 
-.engine-shortcut-arrow{
-    position:absolute;
-    right:18px;
-    bottom:18px;
-    color:var(--engine-dim);
-}
 
-.engine-shortcut-blue .engine-shortcut-icon{color:var(--engine-blue)}
-.engine-shortcut-violet .engine-shortcut-icon{color:var(--engine-violet)}
-.engine-shortcut-green .engine-shortcut-icon{color:var(--engine-green)}
+/* =========================================================
+   ACTIVE WORLD
+========================================================= */
 
 .engine-active-world{
-    position:relative;
-    min-height:290px;
-    display:grid;
-    grid-template-columns:minmax(0,1fr) minmax(260px,.65fr);
-    align-items:center;
-    margin-top:38px;
-    padding:clamp(28px,5vw,56px);
-    overflow:hidden;
-    border:1px solid var(--engine-line);
-    border-radius:var(--engine-radius-xl);
+
     background:
-        radial-gradient(circle at 82% 50%,rgba(90,150,196,.16),transparent 30%),
-        linear-gradient(145deg,rgba(17,30,46,.97),rgba(6,14,23,.96));
-}
 
-.engine-active-world h2{
-    margin:13px 0 9px;
-    font-size:clamp(30px,4.5vw,52px);
-    font-weight:600;
-    letter-spacing:-.04em;
-}
+        radial-gradient(
+            circle at 84% 72%,
+            rgba(
+                71,
+                143,
+                195,
+                .12
+            ),
+            transparent 35%
+        ),
 
-.engine-active-world p{
-    max-width:580px;
-    color:var(--engine-muted);
-    line-height:1.65;
+        linear-gradient(
+            145deg,
+            rgba(
+                17,
+                30,
+                46,
+                .91
+            ),
+            rgba(
+                6,
+                14,
+                23,
+                .93
+            )
+        );
+
 }
 
 .engine-active-count{
-    display:block;
-    color:var(--engine-muted);
-    font-size:13px;
-    font-weight:500;
+
+    color:
+        var(--engine-green);
+
 }
 
-.engine-world-enter,
-.primary-btn,
-.secondary-btn{
-    min-height:46px;
-    border-radius:999px;
-    font-weight:700;
-    transition:transform .2s ease,filter .2s ease,border-color .2s ease,background .2s ease;
-}
-
-.engine-world-enter,
-.primary-btn{
-    border:0;
-    background:linear-gradient(135deg,var(--engine-gold),var(--engine-gold-soft));
-    color:#11161d;
-}
-
-.engine-world-enter{
-    display:inline-flex;
-    align-items:center;
-    gap:22px;
-    margin-top:25px;
-    padding:0 20px;
-}
-
-.primary-btn{padding:0 22px}
-.secondary-btn{
-    padding:0 19px;
-    border:1px solid var(--engine-line);
-    background:rgba(255,255,255,.04);
-    color:var(--engine-text);
-}
-
-.engine-world-enter:hover,
-.primary-btn:hover{transform:translateY(-2px);filter:brightness(1.06)}
-.secondary-btn:hover{transform:translateY(-2px);border-color:var(--engine-line-strong);background:rgba(223,189,122,.08)}
-
-.engine-world-visual{
-    position:relative;
-    min-height:210px;
-}
-
-.engine-world-glow,
 .engine-world-planet{
-    position:absolute;
-    left:50%;
-    top:50%;
-    border-radius:50%;
-    transform:translate(-50%,-50%);
+
+    border-color:
+        rgba(
+            161,
+            206,
+            237,
+            .18
+        );
+
 }
 
 .engine-world-glow{
-    width:230px;
-    height:230px;
-    background:rgba(76,149,199,.13);
-    filter:blur(35px);
+
+    opacity:.8;
+
 }
 
-.engine-world-planet{
-    width:154px;
-    height:154px;
-    border:1px solid rgba(161,206,237,.23);
-    background:
-        radial-gradient(circle at 32% 25%,rgba(255,255,255,.22),transparent 14%),
-        radial-gradient(circle at 36% 30%,#2f6586,#0c263b 46%,#06111c 76%);
-    box-shadow:inset -20px -22px 42px rgba(0,0,0,.45),0 22px 60px rgba(0,0,0,.38);
+
+/* =========================================================
+   WORLD / ENTITY CARDS
+========================================================= */
+
+.world-card:hover,
+.world-entity-btn:hover,
+.entity-type-card:hover,
+.entity-app-link:hover{
+
+    border-color:
+        var(--engine-line-strong);
+
 }
 
-.engine-activity-list{
-    overflow:hidden;
-    border:1px solid var(--engine-line);
-    border-radius:var(--engine-radius-lg);
-    background:rgba(8,16,26,.64);
+.world-card-content > span,
+.entity-app-link small{
+
+    color:
+        var(--engine-muted);
+
 }
 
-.engine-activity-item{
-    min-height:64px;
-    display:grid;
-    grid-template-columns:12px 1fr auto;
-    align-items:center;
-    gap:14px;
-    padding:0 20px;
-    border-bottom:1px solid var(--engine-line);
+.world-card-arrow,
+.world-entity-arrow{
+
+    color:
+        var(--engine-dim);
+
 }
 
-.engine-activity-item:last-child{border-bottom:0}
-.engine-activity-item > span:not(.activity-dot){font-size:14px}
-.engine-activity-item small{color:var(--engine-dim);font-size:12px}
-.activity-dot{width:7px;height:7px;border-radius:50%;background:var(--engine-blue);box-shadow:0 0 10px rgba(107,183,241,.55)}
-.engine-empty-state{padding:24px;border:1px solid var(--engine-line);border-radius:var(--engine-radius-md);color:var(--engine-muted)}
-.engine-empty-state strong{display:block;color:var(--engine-text);margin-bottom:5px}
 
-.engine-page-header{
-    display:flex;
-    align-items:flex-end;
-    justify-content:space-between;
-    gap:30px;
-    padding:34px 4px 28px;
-    border-bottom:1px solid var(--engine-line);
-    margin-bottom:28px;
-}
-
-.engine-page-header > div{max-width:740px}
-.engine-page-header h1,
-.entity-header h1,
-.world-title{
-    margin:11px 0 10px;
-    font-size:clamp(36px,6vw,64px);
-    font-weight:580;
-    line-height:1;
-    letter-spacing:-.05em;
-}
-
-.engine-page-header p,
-.entity-header p,
-.world-description{
-    color:var(--engine-muted);
-    font-size:15px;
-    line-height:1.7;
-}
-
-.worlds-grid{
-    display:grid;
-    grid-template-columns:repeat(2,minmax(0,1fr));
-    gap:16px;
-}
-
-.world-card{
-    min-height:190px;
-    display:grid;
-    grid-template-columns:78px 1fr auto;
-    align-items:center;
-    gap:20px;
-    padding:24px;
-    border-radius:var(--engine-radius-lg);
-    text-align:left;
-}
+/* =========================================================
+   WORLD ORBIT
+========================================================= */
 
 .world-card-orbit{
-    width:68px;
-    height:68px;
-    display:grid;
-    place-items:center;
-    border:1px solid rgba(107,183,241,.26);
-    border-radius:50%;
+
+    border-color:
+        rgba(
+            107,
+            183,
+            241,
+            .2
+        );
+
 }
 
 .world-card-orbit span{
-    width:36px;
-    height:36px;
-    border-radius:50%;
-    background:radial-gradient(circle at 32% 28%,#83c9f2,#173d58 52%,#07121d 80%);
-    box-shadow:0 0 22px rgba(107,183,241,.17);
+
+    box-shadow:
+
+        0
+        0
+        18px
+        rgba(
+            107,
+            183,
+            241,
+            .13
+        );
+
 }
 
-.world-card-content{min-width:0;display:flex;flex-direction:column;gap:8px}
-.world-card-content strong{overflow:hidden;font-size:22px;text-overflow:ellipsis;white-space:nowrap}
-.world-card-content > span{color:var(--engine-muted);font-size:12px}
-.world-card-arrow{color:var(--engine-dim);font-size:20px}
 
-.create-layout{
-    display:grid;
-    grid-template-columns:minmax(0,1.15fr) minmax(300px,.85fr);
-    gap:20px;
-}
-
-.create-world-form,
-.entity-create-form,
-.create-preview{
-    margin:0 !important;
-    padding:clamp(24px,4vw,38px) !important;
-}
-
-.engine-field{
-    display:grid;
-    gap:10px;
-    margin-top:22px;
-}
-
-.engine-field > span{color:var(--engine-muted);font-size:12px;font-weight:700}
-.engine-field input,
-.engine-field textarea{
-    width:100%;
-    border:1px solid var(--engine-line);
-    border-radius:15px;
-    background:rgba(3,9,16,.62);
-    color:var(--engine-text);
-    transition:border-color .2s ease,background .2s ease,box-shadow .2s ease;
-}
-.engine-field input{height:52px;padding:0 16px}
-.engine-field textarea{min-height:125px;padding:15px 16px;resize:vertical}
-.engine-field input:focus,
-.engine-field textarea:focus{outline:0;border-color:rgba(223,189,122,.48);background:rgba(5,12,20,.82);box-shadow:0 0 0 4px rgba(223,189,122,.07)}
-.create-submit{width:100%;margin-top:24px}
-.create-preview{text-align:center}
-.create-preview-orbit{position:relative;width:160px;height:160px;margin:20px auto;border:1px solid rgba(107,183,241,.22);border-radius:50%}
-.create-preview-orbit span{position:absolute;inset:38px;border-radius:50%;background:radial-gradient(circle at 30% 26%,#82c8f1,#173d58 55%,#07121d 82%)}
-.create-preview h2{font-size:28px}
-.create-preview p{margin:10px auto 20px;max-width:410px;color:var(--engine-muted);line-height:1.65}
-.create-preview small{color:var(--engine-dim)}
+/* =========================================================
+   WORLD HERO
+========================================================= */
 
 .world-hero{
-    min-height:340px;
-    display:grid;
-    grid-template-columns:minmax(0,1.2fr) minmax(260px,.8fr);
-    align-items:center;
-    gap:30px;
-    padding:clamp(32px,5vw,58px);
-    overflow:hidden;
-    border:1px solid var(--engine-line);
-    border-radius:var(--engine-radius-xl);
-    background:radial-gradient(circle at 82% 50%,rgba(75,147,197,.18),transparent 31%),linear-gradient(145deg,rgba(18,32,49,.98),rgba(6,14,23,.96));
+
+    background:
+
+        radial-gradient(
+            circle at 84% 58%,
+            rgba(
+                75,
+                147,
+                197,
+                .13
+            ),
+            transparent 33%
+        ),
+
+        linear-gradient(
+            145deg,
+            rgba(
+                17,
+                30,
+                46,
+                .92
+            ),
+            rgba(
+                6,
+                14,
+                23,
+                .94
+            )
+        );
+
 }
 
-.world-stats{display:flex;flex-wrap:wrap;gap:10px;margin-top:26px}
-.world-stat{min-width:104px;padding:13px 15px;border:1px solid var(--engine-line);border-radius:15px;background:rgba(255,255,255,.03)}
-.world-stat strong{display:block;font-size:20px}
-.world-stat span{color:var(--engine-muted);font-size:11px}
-.world-hero-planet{position:relative;min-height:220px}
-.world-hero-planet::before,.world-hero-planet span{content:"";position:absolute;left:50%;top:50%;border-radius:50%;transform:translate(-50%,-50%)}
-.world-hero-planet::before{width:210px;height:210px;border:1px solid rgba(107,183,241,.18)}
-.world-hero-planet span{width:142px;height:142px;background:radial-gradient(circle at 30% 25%,#75b7dc,#173d59 48%,#07121d 78%);box-shadow:0 25px 70px rgba(0,0,0,.4)}
+.world-stat{
 
-.world-section-heading{display:flex;align-items:end;justify-content:space-between;gap:24px;margin-bottom:18px}
-.world-section-heading h2{margin-top:8px;font-size:28px}
-.world-entity-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
-.world-entity-btn{min-height:104px;display:grid;grid-template-columns:54px 1fr auto;align-items:center;gap:16px;padding:18px;border-radius:var(--engine-radius-md);text-align:left}
-.world-entity-symbol,.entity-header-symbol{display:grid;place-items:center;border:1px solid rgba(223,189,122,.22);border-radius:17px;background:rgba(223,189,122,.07);color:var(--engine-gold-soft);font-weight:800}
-.world-entity-symbol{width:52px;height:52px;font-size:20px}
-.world-entity-content{min-width:0;display:flex;flex-direction:column;gap:6px}
-.world-entity-name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:17px}
-.world-entity-arrow{color:var(--engine-dim)}
-.world-empty,.engine-page-empty{margin:0 !important;padding:clamp(28px,5vw,50px) !important;text-align:center}
-.world-empty > span,.engine-page-empty-icon{display:grid;place-items:center;width:68px;height:68px;margin:0 auto 20px;border:1px solid var(--engine-line);border-radius:22px;background:rgba(255,255,255,.035);color:var(--engine-gold);font-size:25px}
-.world-empty p,.engine-page-empty p{max-width:550px;margin:10px auto 22px;color:var(--engine-muted);line-height:1.65}
+    border-color:
+        var(--engine-line);
 
-.entity-type-grid,.entity-app-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px}
-.entity-type-card,.entity-app-link{min-height:150px;display:flex;flex-direction:column;align-items:flex-start;justify-content:flex-end;padding:20px;border-radius:var(--engine-radius-md);text-align:left}
-.entity-type-card > span,.entity-app-link > span{display:grid;place-items:center;width:42px;height:42px;margin-bottom:auto;border:1px solid var(--engine-line);border-radius:14px;background:rgba(255,255,255,.035);color:var(--engine-gold-soft);font-size:18px}
-.entity-type-card strong,.entity-app-link strong{font-size:17px}
-.entity-app-link small{margin-top:6px;color:var(--engine-muted);font-size:11px;line-height:1.45}
-.entity-create-actions{display:flex;justify-content:flex-end;gap:10px;margin-top:24px}
-.entity-header{display:grid;grid-template-columns:84px 1fr;align-items:center;gap:24px;margin:0 0 24px !important;padding:clamp(26px,4vw,42px) !important}
-.entity-header-symbol{width:82px;height:82px;font-size:30px}
+    background:
+        rgba(
+            255,
+            255,
+            255,
+            .018
+        );
 
-/* Engine apps: normalize old inline card layouts without changing app logic. */
-.engine-screen > .section > .card,
-.engine-screen > .section .grid > .card,
-.engine-screen > .section .organ-launcher-card{
-    border:1px solid var(--engine-line) !important;
-    border-radius:var(--engine-radius-md) !important;
-    background:rgba(255,255,255,.03) !important;
-    box-shadow:none !important;
 }
 
-.engine-screen > .section .grid{
-    display:grid;
-    grid-template-columns:repeat(2,minmax(0,1fr));
-    gap:14px;
+.world-stat span{
+
+    color:
+        var(--engine-muted);
+
 }
 
-.engine-screen > .section h1{font-size:clamp(32px,5vw,52px);letter-spacing:-.04em}
-.engine-screen > .section p{color:var(--engine-muted);line-height:1.65}
 
-/* Bottom navigation: one clear, stable control surface. */
-.engine-bottom-nav{
-    position:fixed;
-    left:50%;
-    bottom:18px;
-    z-index:1000;
-    width:min(calc(100% - 32px),660px);
-    height:var(--engine-nav-height);
-    display:grid;
-    grid-template-columns:1fr 1fr 112px 1fr 1fr;
-    align-items:center;
-    padding:8px 12px;
-    border:1px solid rgba(255,255,255,.11);
-    border-radius:28px;
-    background:rgba(8,16,27,.84);
-    box-shadow:0 24px 75px rgba(0,0,0,.48),inset 0 1px 0 rgba(255,255,255,.035);
-    backdrop-filter:blur(22px) saturate(135%);
-    transform:translateX(-50%);
+/* =========================================================
+   ENTITY SYMBOLS
+========================================================= */
+
+.world-entity-symbol,
+.entity-header-symbol{
+
+    border-color:
+        rgba(
+            223,
+            189,
+            122,
+            .17
+        );
+
+    background:
+        rgba(
+            223,
+            189,
+            122,
+            .045
+        );
+
+    color:
+        var(--engine-gold-soft);
+
 }
 
-.engine-bottom-nav .nav-btn{
-    min-width:0;
-    height:66px;
-    display:flex;
-    flex-direction:column;
-    align-items:center;
-    justify-content:center;
-    gap:5px;
-    border:0;
-    border-radius:18px;
-    background:transparent;
-    color:var(--engine-dim);
-    font-size:10px;
-    font-weight:700;
+
+/* =========================================================
+   FORMS
+========================================================= */
+
+.engine-field > span{
+
+    color:
+        var(--engine-muted);
+
 }
 
-.engine-bottom-nav .nav-btn:hover{color:var(--engine-text);background:rgba(255,255,255,.035)}
-.engine-bottom-nav .nav-btn.active{color:var(--engine-gold-soft);background:rgba(223,189,122,.075)}
-.engine-bottom-nav .nav-icon{font-size:17px;font-weight:800}
-.nav-brain-btn{position:relative;width:84px;height:84px;justify-self:center;margin-top:-26px;border:1px solid rgba(129,193,237,.28);border-radius:50%;background:radial-gradient(circle at 38% 30%,#3d7396,#102c43 52%,#07131f 78%);box-shadow:0 0 0 8px rgba(8,16,27,.9),0 15px 40px rgba(0,0,0,.45),0 0 30px rgba(95,173,227,.18)}
-.nav-brain-orbit{position:absolute;inset:-9px;border:1px solid rgba(129,193,237,.22);border-radius:50%}
-.nav-brain-core{display:flex;justify-content:center;gap:8px}
-.nav-brain-eye{width:9px;height:9px;border-radius:50%;background:var(--engine-gold-soft);box-shadow:0 0 11px rgba(242,221,169,.9)}
-.nav-brain-label{position:absolute;left:50%;bottom:-18px;transform:translateX(-50%);color:var(--engine-dim);font-size:9px;white-space:nowrap}
+.engine-field input,
+.engine-field textarea{
 
-/* Brain remains an Engine layer, not a separate page. */
+    border-color:
+        var(--engine-line);
+
+    background:
+        rgba(
+            3,
+            9,
+            16,
+            .48
+        );
+
+    color:
+        var(--engine-text);
+
+}
+
+.engine-field input:focus,
+.engine-field textarea:focus{
+
+    border-color:
+        rgba(
+            223,
+            189,
+            122,
+            .38
+        );
+
+    background:
+        rgba(
+            5,
+            12,
+            20,
+            .67
+        );
+
+    box-shadow:
+
+        0
+        0
+        0
+        3px
+        rgba(
+            223,
+            189,
+            122,
+            .045
+        );
+
+}
+
+
+/* =========================================================
+   CREATE PREVIEW
+========================================================= */
+
+.create-preview-orbit{
+
+    border-color:
+        rgba(
+            107,
+            183,
+            241,
+            .17
+        );
+
+}
+
+.create-preview p{
+
+    color:
+        var(--engine-muted);
+
+}
+
+.create-preview small{
+
+    color:
+        var(--engine-dim);
+
+}
+
+
+/* =========================================================
+   EMPTY STATES
+========================================================= */
+
+.world-empty > span,
+.engine-page-empty-icon{
+
+    border-color:
+        var(--engine-line);
+
+    background:
+        rgba(
+            255,
+            255,
+            255,
+            .025
+        );
+
+    color:
+        var(--engine-gold);
+
+}
+
+.world-empty p,
+.engine-page-empty p{
+
+    color:
+        var(--engine-muted);
+
+}
+
+
+/* =========================================================
+   ACTIVITY
+========================================================= */
+
+.engine-activity{
+
+    background:
+
+        linear-gradient(
+            145deg,
+            rgba(
+                16,
+                28,
+                43,
+                .82
+            ),
+            rgba(
+                7,
+                14,
+                23,
+                .86
+            )
+        );
+
+}
+
+.engine-activity-item{
+
+    border-color:
+        var(--engine-line);
+
+}
+
+.engine-activity-item small{
+
+    color:
+        var(--engine-dim);
+
+}
+
+.activity-dot{
+
+    background:
+        var(--engine-blue);
+
+    box-shadow:
+
+        0
+        0
+        8px
+        rgba(
+            107,
+            183,
+            241,
+            .45
+        );
+
+}
+
+
+/* =========================================================
+   BUTTON VISUALS
+========================================================= */
+
+.primary-btn,
+.engine-world-enter{
+
+    background:
+
+        linear-gradient(
+            135deg,
+            var(--engine-gold),
+            var(--engine-gold-soft)
+        );
+
+    color:#11161d;
+
+}
+
+.secondary-btn{
+
+    border-color:
+        var(--engine-line);
+
+    background:
+        rgba(
+            255,
+            255,
+            255,
+            .025
+        );
+
+    color:
+        var(--engine-text);
+
+}
+
+.primary-btn:hover,
+.engine-world-enter:hover{
+
+    filter:
+        brightness(1.045);
+
+}
+
+.secondary-btn:hover{
+
+    border-color:
+        var(--engine-line-strong);
+
+    background:
+        rgba(
+            223,
+            189,
+            122,
+            .055
+        );
+
+}
+
+
+/* =========================================================
+   GENERIC ENGINE APP CARDS
+========================================================= */
+
+.engine-screen
+> .section
+.card,
+
+.engine-screen
+> .section
+.grid
+> .card,
+
+.engine-screen
+> .section
+.organ-launcher-card{
+
+    border-color:
+        var(--engine-line) !important;
+
+    background:
+        rgba(
+            255,
+            255,
+            255,
+            .022
+        ) !important;
+
+    box-shadow:
+        none !important;
+
+}
+
+
+/* =========================================================
+   NAVIGATION — VISUAL ONLY
+========================================================= */
+
+.bottom-nav{
+
+    border-color:
+        rgba(
+            255,
+            255,
+            255,
+            .08
+        );
+
+    background:
+
+        linear-gradient(
+            180deg,
+            rgba(
+                11,
+                20,
+                31,
+                .93
+            ),
+            rgba(
+                5,
+                11,
+                18,
+                .95
+            )
+        );
+
+    box-shadow:
+
+        0
+        18px
+        44px
+        rgba(
+            0,
+            0,
+            0,
+            .34
+        ),
+
+        inset
+        0
+        1px
+        0
+        rgba(
+            255,
+            255,
+            255,
+            .03
+        );
+
+}
+
+.nav-btn{
+
+    color:
+        var(--engine-dim);
+
+}
+
+.nav-btn:hover{
+
+    color:
+        var(--engine-text);
+
+}
+
+.nav-btn.active{
+
+    color:
+        var(--engine-gold-soft);
+
+}
+
+.nav-brain-btn{
+
+    filter:
+        drop-shadow(
+            0
+            10px
+            16px
+            rgba(
+                0,
+                0,
+                0,
+                .22
+            )
+        );
+
+}
+
+.nav-brain-orbit{
+
+    border-color:
+        rgba(
+            129,
+            193,
+            237,
+            .18
+        );
+
+}
+
+.nav-brain-eye{
+
+    background:
+        var(--engine-gold-soft);
+
+}
+
+
+/* =========================================================
+   BRAIN PANEL — VISUAL ONLY
+========================================================= */
+
 .brain-panel{
-    border:1px solid var(--engine-line) !important;
-    background:rgba(8,16,27,.94) !important;
-    box-shadow:0 30px 100px rgba(0,0,0,.55) !important;
-    backdrop-filter:blur(24px) saturate(130%);
+
+    border-color:
+        var(--engine-line) !important;
+
+    background:
+
+        radial-gradient(
+            circle at 85% 0%,
+            rgba(
+                71,
+                137,
+                192,
+                .08
+            ),
+            transparent 38%
+        ),
+
+        linear-gradient(
+            160deg,
+            rgba(
+                13,
+                25,
+                39,
+                .96
+            ),
+            rgba(
+                5,
+                13,
+                22,
+                .97
+            )
+        ) !important;
+
+    box-shadow:
+
+        0
+        24px
+        68px
+        rgba(
+            0,
+            0,
+            0,
+            .48
+        ),
+
+        inset
+        0
+        1px
+        0
+        rgba(
+            255,
+            255,
+            255,
+            .025
+        ) !important;
+
 }
 
-@media (max-width:900px){
-    .engine-hero{grid-template-columns:1fr minmax(210px,.55fr);min-height:330px}
-    .engine-brain-orb{width:190px;height:190px}
-    .engine-brain-orb .brain-core{inset:63px}
-    .engine-shortcuts-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
-    .entity-type-grid,.entity-app-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
-    .create-layout{grid-template-columns:1fr}
+
+/* =========================================================
+   FOCUS LANGUAGE
+========================================================= */
+
+.engine-shortcut-card:focus-visible,
+.world-card:focus-visible,
+.world-entity-btn:focus-visible,
+.entity-type-card:focus-visible,
+.entity-app-link:focus-visible{
+
+    outline:
+        1px solid
+        rgba(
+            223,
+            189,
+            122,
+            .6
+        );
+
+    outline-offset:
+        2px;
+
 }
 
-@media (max-width:700px){
-    :root{--engine-nav-height:76px}
-    .vaero-shell{padding:0 14px calc(var(--engine-nav-height) + 38px)}
-    .vaero-engine-home,.engine-page{padding-top:12px;padding-bottom:42px}
-    .engine-home-topbar{min-height:58px;margin-bottom:10px}
-    .engine-brand-main{font-size:17px}.engine-brand-sub{font-size:8px}
-    .engine-hero{min-height:400px;display:block;padding:30px 24px;border-radius:25px}
-    .engine-hero h1{font-size:46px}
-    .engine-hero-copy > p{font-size:15px}
-    .engine-status-pill{gap:8px;margin-top:20px;padding:10px 12px}
-    .engine-status-pill small,.engine-status-separator{display:none}
-    .engine-brain-orb{position:absolute;right:-10px;bottom:-12px;width:170px;height:170px;opacity:.9}
-    .engine-brain-orb .brain-core{inset:56px}
-    .engine-shortcuts,.engine-activity,.world-entities{margin-top:26px}
-    .engine-shortcuts-grid{gap:10px}
-    .engine-shortcut-card{min-height:136px;padding:16px}
-    .engine-shortcut-card strong{margin-top:16px}
-    .engine-active-world{min-height:260px;display:block;margin-top:26px;padding:28px 24px;border-radius:24px}
-    .engine-world-visual{position:absolute;right:-45px;bottom:-45px;width:190px;opacity:.62}
-    .engine-activity-item{grid-template-columns:10px 1fr;min-height:58px;padding:9px 15px}
-    .engine-activity-item small{grid-column:2}
-    .engine-page-header{display:block;padding:24px 3px 20px;margin-bottom:20px}
-    .engine-page-header h1,.entity-header h1,.world-title{font-size:38px}
-    .engine-page-header .primary-btn{width:100%;margin-top:20px}
-    .worlds-grid,.world-entity-grid{grid-template-columns:1fr}
-    .world-card{min-height:142px;grid-template-columns:60px 1fr auto;padding:18px}
-    .world-card-orbit{width:55px;height:55px}.world-card-orbit span{width:30px;height:30px}
-    .world-hero{min-height:390px;display:block;padding:28px 23px;border-radius:24px}
-    .world-hero-planet{position:absolute;right:-25px;bottom:-35px;width:180px;opacity:.55}
-    .world-section-heading{align-items:flex-start;flex-direction:column}
-    .world-section-heading .secondary-btn{width:100%}
-    .entity-header{grid-template-columns:60px 1fr;gap:17px}
-    .entity-header-symbol{width:58px;height:58px;font-size:22px}
-    .entity-type-grid,.entity-app-grid{gap:10px}
-    .entity-type-card,.entity-app-link{min-height:132px;padding:16px}
-    .entity-create-actions{flex-direction:column-reverse}.entity-create-actions button{width:100%}
-    .engine-screen > .section{margin-top:12px !important;padding:20px 16px !important;border-radius:22px}
-    .engine-screen > .section .grid{grid-template-columns:1fr}
-    .engine-bottom-nav{bottom:10px;width:calc(100% - 20px);height:76px;grid-template-columns:1fr 1fr 82px 1fr 1fr;padding:6px 8px;border-radius:23px}
-    .engine-bottom-nav .nav-btn{height:59px;font-size:9px}
-    .nav-brain-btn{width:68px;height:68px;margin-top:-20px}
-    .nav-brain-label{display:none}
+
+/* =========================================================
+   DESKTOP POINTER POLISH
+========================================================= */
+
+@media (hover:hover)
+and (pointer:fine){
+
+    .engine-shortcut-card:hover,
+    .world-card:hover,
+    .world-entity-btn:hover,
+    .entity-type-card:hover,
+    .entity-app-link:hover{
+
+        box-shadow:
+
+            inset
+            0
+            1px
+            0
+            rgba(
+                255,
+                255,
+                255,
+                .025
+            ),
+
+            0
+            15px
+            34px
+            rgba(
+                0,
+                0,
+                0,
+                .2
+            );
+
+    }
+
 }
 
-@media (max-width:390px){
-    .vaero-shell{padding-inline:10px}
-    .engine-shortcut-card{min-height:128px;padding:14px}
-    .engine-shortcut-card small{font-size:10px}
-    .engine-bottom-nav{width:calc(100% - 12px)}
+
+/* =========================================================
+   MOBILE VISUAL REFINEMENT
+========================================================= */
+
+@media (max-width:600px){
+
+    body::before{
+
+        opacity:.08;
+
+        background-size:
+            44px
+            44px;
+
+    }
+
+    .engine-hero,
+    .engine-active-world,
+    .world-hero{
+
+        box-shadow:
+
+            inset
+            0
+            1px
+            0
+            rgba(
+                255,
+                255,
+                255,
+                .015
+            ),
+
+            0
+            8px
+            22px
+            rgba(
+                0,
+                0,
+                0,
+                .13
+            );
+
+    }
+
 }
+
+
+/* =========================================================
+   REDUCED MOTION
+========================================================= */
 
 @media (prefers-reduced-motion:reduce){
-    .engine-shortcut-card:hover,.world-card:hover,.world-entity-btn:hover,.entity-app-link:hover,.entity-type-card:hover{transform:none}
+
+    .engine-shortcut-card::after{
+
+        transition:none;
+
+    }
+
 }
