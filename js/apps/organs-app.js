@@ -1,297 +1,680 @@
+/* =========================================================
+   VAERO ORGANS APP
+   Organ Launcher + Live Status
+========================================================= */
+
 const OrgansApp = {
 
-    render(entity){
+    /* =====================================================
+       SAFETY
+    ===================================================== */
 
-        const awareness = VAERO.get("brainAwareness");
+    escapeHTML(value){
 
-        if(
-            awareness &&
-            typeof awareness.enter === "function"
-        ){
-            awareness.enter("organs");
-        }
+        return String(
+            value ?? ""
+        )
+            .replaceAll("&", "&amp;")
+            .replaceAll("<", "&lt;")
+            .replaceAll(">", "&gt;")
+            .replaceAll('"', "&quot;")
+            .replaceAll("'", "&#039;");
 
-        const organStatus = VAERO.get("organStatus");
+    },
 
-        const liveStatuses =
-            organStatus &&
-            typeof organStatus.all === "function"
-                ? organStatus.all()
-                : [];
 
-        const findLiveStatus = app => {
+    /* =====================================================
+       BRAIN CONTEXT
+    ===================================================== */
 
-            const searchableText = [
-                app.id,
-                app.title,
-                app.action
-            ]
-                .filter(Boolean)
-                .join(" ")
-                .toLowerCase();
+    enterBrainContext(){
 
-            if(
-                searchableText.includes("memory") ||
-                searchableText.includes("hafıza") ||
-                searchableText.includes("hafiza")
-            ){
-                return liveStatuses.find(
-                    item => item.id === "memory"
-                ) || null;
-            }
+        try{
 
-            if(
-                searchableText.includes("timeline") ||
-                searchableText.includes("zaman")
-            ){
-                return liveStatuses.find(
-                    item => item.id === "timeline"
-                ) || null;
-            }
-
-            if(
-                searchableText.includes("evolution") ||
-                searchableText.includes("evrim")
-            ){
-                return liveStatuses.find(
-                    item => item.id === "evolution"
-                ) || null;
-            }
-
-            return null;
-
-        };
-
-        const getStatusLabel = status => {
-
-            if(status === "active"){
-                return "Aktif";
-            }
-
-            if(status === "missing"){
-                return "Bağlı değil";
-            }
-
-            return "Hazır";
-
-        };
-
-        const getStatusColor = status => {
-
-            if(status === "active"){
-                return "var(--green)";
-            }
-
-            if(status === "missing"){
-                return "#ff6b6b";
-            }
-
-            return "var(--muted)";
-
-        };
-
-        const makeCard = app => {
-
-            const liveStatus = findLiveStatus(app);
-
-            const status =
-                liveStatus?.status || "ready";
-
-            const total =
-                Number.isFinite(liveStatus?.total)
-                    ? liveStatus.total
+            const awareness =
+                typeof VAERO !== "undefined" &&
+                typeof VAERO.get === "function"
+                    ? VAERO.get("brainAwareness")
                     : null;
 
-            return `
-                <div
-                    class="card organ-launcher-card"
-                    data-action="${app.action}"
+            if(
+                awareness &&
+                typeof awareness.enter === "function"
+            ){
+
+                awareness.enter("organs");
+
+            }
+
+        } catch(error){
+
+            console.warn(
+                "Organs Brain context açılamadı:",
+                error
+            );
+
+        }
+
+    },
+
+
+    /* =====================================================
+       ORGAN REGISTRY
+    ===================================================== */
+
+    getRegisteredOrgans(){
+
+        try{
+
+            if(
+                typeof OrganRegistry === "undefined" ||
+                typeof OrganRegistry.all !== "function"
+            ){
+                return [];
+            }
+
+            const organs =
+                OrganRegistry.all();
+
+            return Array.isArray(organs)
+                ? organs
+                : [];
+
+        } catch(error){
+
+            console.warn(
+                "Organ Registry okunamadı:",
+                error
+            );
+
+            return [];
+
+        }
+
+    },
+
+
+    /* =====================================================
+       LIVE STATUS
+    ===================================================== */
+
+    getLiveStatuses(){
+
+        try{
+
+            const organStatus =
+                typeof VAERO !== "undefined" &&
+                typeof VAERO.get === "function"
+                    ? VAERO.get("organStatus")
+                    : null;
+
+            if(
+                !organStatus ||
+                typeof organStatus.all !== "function"
+            ){
+                return [];
+            }
+
+            const statuses =
+                organStatus.all();
+
+            return Array.isArray(statuses)
+                ? statuses
+                : [];
+
+        } catch(error){
+
+            console.warn(
+                "Organ durumları okunamadı:",
+                error
+            );
+
+            return [];
+
+        }
+
+    },
+
+
+    /* =====================================================
+       STATUS MATCHING
+    ===================================================== */
+
+    findLiveStatus(
+        app,
+        liveStatuses
+    ){
+
+        const searchableText = [
+            app?.id,
+            app?.title,
+            app?.action
+        ]
+            .filter(Boolean)
+            .join(" ")
+            .toLowerCase();
+
+
+        let statusId = null;
+
+
+        if(
+            searchableText.includes("memory") ||
+            searchableText.includes("hafıza") ||
+            searchableText.includes("hafiza")
+        ){
+
+            statusId = "memory";
+
+        }
+
+
+        if(
+            searchableText.includes("timeline") ||
+            searchableText.includes("zaman")
+        ){
+
+            statusId = "timeline";
+
+        }
+
+
+        if(
+            searchableText.includes("evolution") ||
+            searchableText.includes("evrim")
+        ){
+
+            statusId = "evolution";
+
+        }
+
+
+        if(!statusId){
+            return null;
+        }
+
+
+        return (
+            liveStatuses.find(
+                item =>
+                    item &&
+                    item.id === statusId
+            ) ||
+            null
+        );
+
+    },
+
+
+    /* =====================================================
+       STATUS PRESENTATION
+    ===================================================== */
+
+    getStatusPresentation(status){
+
+        if(status === "active"){
+
+            return {
+                label:"Aktif",
+                color:"var(--engine-green)",
+                glow:"rgba(100,216,157,.42)"
+            };
+
+        }
+
+
+        if(status === "missing"){
+
+            return {
+                label:"Bağlı değil",
+                color:"var(--engine-danger)",
+                glow:"rgba(255,123,133,.34)"
+            };
+
+        }
+
+
+        return {
+            label:"Hazır",
+            color:"var(--engine-muted)",
+            glow:"transparent"
+        };
+
+    },
+
+
+    /* =====================================================
+       ORGAN CARD
+    ===================================================== */
+
+    renderOrganCard(
+        app,
+        liveStatuses
+    ){
+
+        const liveStatus =
+            this.findLiveStatus(
+                app,
+                liveStatuses
+            );
+
+
+        const status =
+            liveStatus?.status ||
+            "ready";
+
+
+        const statusUI =
+            this.getStatusPresentation(
+                status
+            );
+
+
+        const total =
+            Number.isFinite(
+                liveStatus?.total
+            )
+                ? liveStatus.total
+                : null;
+
+
+        const safeAction =
+            this.escapeHTML(
+                app?.action || ""
+            );
+
+        const safeIcon =
+            this.escapeHTML(
+                app?.icon || "◈"
+            );
+
+        const safeTitle =
+            this.escapeHTML(
+                app?.title || "Organ"
+            );
+
+        const safeSubtitle =
+            this.escapeHTML(
+                app?.subtitle ||
+                "VAERO Engine organı"
+            );
+
+
+        return `
+
+            <button
+                type="button"
+                class="card organ-launcher-card"
+                data-action="${safeAction}"
+                style="
+                    width:100%;
+                    min-width:0;
+                    min-height:92px;
+                    padding:12px;
+                    display:grid;
+                    grid-template-columns:
+                        38px
+                        minmax(0,1fr)
+                        auto;
+                    align-items:center;
+                    gap:10px;
+                    text-align:left;
+                    position:relative;
+                    overflow:hidden;
+                "
+            >
+
+                <span
+                    aria-hidden="true"
                     style="
-                        ${Theme.card}
-                        cursor:pointer;
-                        min-height:178px;
-                        display:flex;
-                        flex-direction:column;
-                        align-items:center;
-                        justify-content:center;
-                        text-align:center;
-                        position:relative;
-                        overflow:hidden;
+                        width:38px;
+                        height:38px;
+                        display:grid;
+                        place-items:center;
+                        border:
+                            1px solid
+                            var(--engine-line);
+                        border-radius:12px;
+                        background:
+                            rgba(
+                                255,
+                                255,
+                                255,
+                                .025
+                            );
+                        color:
+                            var(--engine-gold-soft);
+                        font-size:15px;
                     "
                 >
-                    <div
+                    ${safeIcon}
+                </span>
+
+
+                <span
+                    style="
+                        min-width:0;
+                        display:block;
+                    "
+                >
+
+                    <strong
                         style="
-                            position:absolute;
-                            top:14px;
-                            right:14px;
-                            display:flex;
-                            align-items:center;
-                            gap:6px;
-                            padding:6px 9px;
-                            border:1px solid rgba(255,255,255,.08);
-                            border-radius:999px;
-                            background:rgba(255,255,255,.025);
+                            display:block;
+                            overflow:hidden;
+                            color:
+                                var(--engine-text);
                             font-size:11px;
-                            color:${getStatusColor(status)};
+                            font-weight:650;
+                            text-overflow:ellipsis;
+                            white-space:nowrap;
                         "
                     >
-                        <span
-                            style="
-                                width:7px;
-                                height:7px;
-                                border-radius:50%;
-                                background:${getStatusColor(status)};
-                                box-shadow:0 0 10px ${getStatusColor(status)};
-                            "
-                        ></span>
+                        ${safeTitle}
+                    </strong>
 
-                        ${getStatusLabel(status)}
-                    </div>
 
-                    <div style="font-size:${Theme.icon.large}px;">
-                        ${app.icon}
-                    </div>
-
-                    <h3
+                    <small
                         style="
-                            margin-top:16px;
-                            font-size:20px;
-                            font-weight:600;
+                            display:block;
+                            margin-top:3px;
+                            overflow:hidden;
+                            color:
+                                var(--engine-muted);
+                            font-size:7px;
+                            line-height:1.35;
+                            text-overflow:ellipsis;
+                            white-space:nowrap;
                         "
                     >
-                        ${app.title}
-                    </h3>
+                        ${safeSubtitle}
+                    </small>
 
-                    <div
-                        style="
-                            color:var(--muted);
-                            margin-top:8px;
-                            font-size:14px;
-                            line-height:1.5;
-                        "
-                    >
-                        ${app.subtitle}
-                    </div>
 
                     ${
                         total !== null
                             ? `
-                                <div
+                                <small
                                     style="
-                                        margin-top:16px;
-                                        padding:8px 12px;
-                                        border-radius:12px;
-                                        background:rgba(255,255,255,.035);
-                                        border:1px solid rgba(255,255,255,.06);
-                                        font-size:12px;
-                                        color:var(--muted);
+                                        display:block;
+                                        margin-top:5px;
+                                        color:
+                                            var(--engine-dim);
+                                        font-size:7px;
                                     "
                                 >
                                     <strong
                                         style="
-                                            color:var(--text);
-                                            font-size:15px;
+                                            color:
+                                                var(--engine-text);
+                                            font-size:8px;
                                         "
                                     >
                                         ${total}
                                     </strong>
 
                                     kayıt
-                                </div>
-                            `
+                                </small>
+                              `
                             : ""
                     }
-                </div>
-            `;
 
-        };
+                </span>
+
+
+                <span
+                    style="
+                        display:flex;
+                        align-items:center;
+                        gap:5px;
+                        padding:4px 6px;
+                        border:
+                            1px solid
+                            var(--engine-line);
+                        border-radius:999px;
+                        background:
+                            rgba(
+                                255,
+                                255,
+                                255,
+                                .018
+                            );
+                        color:
+                            ${statusUI.color};
+                        font-size:6px;
+                        font-weight:700;
+                        white-space:nowrap;
+                    "
+                >
+
+                    <span
+                        aria-hidden="true"
+                        style="
+                            width:6px;
+                            height:6px;
+                            border-radius:50%;
+                            background:
+                                ${statusUI.color};
+                            box-shadow:
+                                0
+                                0
+                                7px
+                                ${statusUI.glow};
+                        "
+                    ></span>
+
+                    ${statusUI.label}
+
+                </span>
+
+            </button>
+
+        `;
+
+    },
+
+
+    /* =====================================================
+       RENDER
+    ===================================================== */
+
+    render(entity){
+
+        this.enterBrainContext();
+
+
+        const organs =
+            this.getRegisteredOrgans();
+
+        const liveStatuses =
+            this.getLiveStatuses();
+
+
+        const activeConnections =
+            liveStatuses.filter(
+                item =>
+                    item &&
+                    item.status === "active"
+            ).length;
+
 
         return `
+
             <div
                 class="section"
                 style="
-                    margin-top:24px;
-                    padding:24px;
+                    margin:0;
+                    padding:16px;
+                    overflow:hidden;
                 "
             >
 
                 <button
+                    type="button"
                     class="secondary-btn"
                     data-action="entity:dashboard"
-                    style="margin-bottom:18px;"
+                    style="
+                        margin-bottom:8px;
+                    "
                 >
                     ← Varlık Kontrol Paneli
                 </button>
 
-                <div class="card" style="${Theme.card}">
-                    <div class="eyebrow">
-                        ORGAN LAUNCHER
-                    </div>
 
-                    <h2 style="margin-top:8px;">
-                        Organlar
-                    </h2>
-
-                    <p
-                        style="
-                            margin-top:10px;
-                            color:var(--muted);
-                            line-height:1.7;
-                        "
-                    >
-                        Her organ bağımsız çalışan bir uygulamadır.
-                        Canlı durumlarını açmadan önce görebilirsin.
-                    </p>
+                <div
+                    class="card"
+                    style="
+                        padding:13px;
+                        display:flex;
+                        align-items:center;
+                        justify-content:space-between;
+                        gap:14px;
+                    "
+                >
 
                     <div
                         style="
-                            margin-top:16px;
-                            display:flex;
-                            gap:10px;
-                            flex-wrap:wrap;
+                            min-width:0;
                         "
                     >
-                        <span
-                            style="
-                                padding:7px 10px;
-                                border-radius:999px;
-                                background:rgba(255,255,255,.035);
-                                color:var(--muted);
-                                font-size:12px;
-                            "
-                        >
-                            ${OrganRegistry.all().length} organ
-                        </span>
 
-                        <span
+                        <div class="eyebrow">
+                            ORGAN LAUNCHER
+                        </div>
+
+                        <h2
                             style="
-                                padding:7px 10px;
-                                border-radius:999px;
-                                background:rgba(50,210,130,.08);
-                                color:var(--green);
-                                font-size:12px;
+                                margin:3px 0 0;
+                                color:
+                                    var(--engine-text);
+                                font-size:17px;
                             "
                         >
-                            ${liveStatuses.filter(
-                                item => item.status === "active"
-                            ).length} canlı veri bağlantısı
-                        </span>
+                            Organlar
+                        </h2>
+
+                        <p
+                            style="
+                                margin:4px 0 0;
+                                max-width:520px;
+                                color:
+                                    var(--engine-muted);
+                                font-size:8px;
+                                line-height:1.4;
+                            "
+                        >
+                            Her organ bağımsız çalışan bir
+                            Engine uygulamasıdır. Canlı durumunu
+                            açmadan önce görebilirsin.
+                        </p>
+
                     </div>
+
+
+                    <div
+                        style="
+                            flex:0 0 auto;
+                            display:flex;
+                            align-items:center;
+                            gap:6px;
+                        "
+                    >
+
+                        <span
+                            style="
+                                padding:5px 8px;
+                                border-radius:999px;
+                                background:
+                                    rgba(
+                                        255,
+                                        255,
+                                        255,
+                                        .025
+                                    );
+                                color:
+                                    var(--engine-muted);
+                                font-size:7px;
+                                white-space:nowrap;
+                            "
+                        >
+                            ${organs.length} organ
+                        </span>
+
+
+                        <span
+                            style="
+                                padding:5px 8px;
+                                border-radius:999px;
+                                background:
+                                    rgba(
+                                        100,
+                                        216,
+                                        157,
+                                        .045
+                                    );
+                                color:
+                                    var(--engine-green);
+                                font-size:7px;
+                                white-space:nowrap;
+                            "
+                        >
+                            ${activeConnections} canlı
+                        </span>
+
+                    </div>
+
                 </div>
 
-                <div
-                    class="grid grid-2"
-                    style="margin-top:20px;"
-                >
-                    ${OrganRegistry
-                        .all()
-                        .map(app => makeCard(app))
-                        .join("")}
-                </div>
+
+                ${
+                    organs.length
+                        ? `
+                            <div
+                                class="grid grid-2"
+                                style="
+                                    margin-top:8px;
+                                    gap:7px;
+                                "
+                            >
+
+                                ${organs
+                                    .map(
+                                        app =>
+                                            this.renderOrganCard(
+                                                app,
+                                                liveStatuses
+                                            )
+                                    )
+                                    .join("")}
+
+                            </div>
+                          `
+                        : `
+                            <div
+                                class="engine-empty-state"
+                                style="
+                                    margin-top:8px;
+                                "
+                            >
+                                <strong>
+                                    Organ bulunamadı
+                                </strong>
+
+                                Organ Registry şu anda
+                                kullanılabilir bir organ
+                                döndürmedi.
+                            </div>
+                          `
+                }
 
             </div>
+
         `;
 
     }
 
 };
+
+
+window.OrgansApp =
+    OrgansApp; 
