@@ -1,9 +1,22 @@
+/* =========================================================
+   VAERO BRAIN INTENT
+   Natural Language Intent Detection
+========================================================= */
+
 const BrainIntent = {
+
+    /* =====================================================
+       NORMALIZE
+    ===================================================== */
 
     normalize(message){
 
-        return String(message || "")
-            .toLocaleLowerCase("tr-TR")
+        return String(
+            message ?? ""
+        )
+            .toLocaleLowerCase(
+                "tr-TR"
+            )
             .trim()
             .replaceAll("ı", "i")
             .replaceAll("ğ", "g")
@@ -11,45 +24,102 @@ const BrainIntent = {
             .replaceAll("ş", "s")
             .replaceAll("ö", "o")
             .replaceAll("ç", "c")
-            .replace(/[?.!,;:]/g, " ")
+            .replace(/[?.!,;:()[\]{}"'`]/g, " ")
+            .replace(/[-_/\\]+/g, " ")
             .replace(/\s+/g, " ")
             .trim();
 
     },
 
-    includesPhrase(text, phrases){
 
-        return phrases.some(phrase => {
+    /* =====================================================
+       TOKEN HELPERS
+    ===================================================== */
 
-            const normalizedPhrase =
-                this.normalize(phrase);
+    tokenize(text){
 
-            if(!normalizedPhrase){
-                return false;
-            }
+        const normalized =
+            this.normalize(
+                text
+            );
 
-            if(normalizedPhrase.includes(" ")){
-                return text.includes(
-                    normalizedPhrase
-                );
-            }
-
-            return text
-                .split(" ")
-                .includes(
-                    normalizedPhrase
-                );
-
-        });
+        return normalized
+            ? normalized.split(" ")
+            : [];
 
     },
+
+
+    includesPhrase(
+        text,
+        phrases = []
+    ){
+
+        const normalizedText =
+            this.normalize(
+                text
+            );
+
+
+        if(!normalizedText){
+            return false;
+        }
+
+
+        const tokens =
+            this.tokenize(
+                normalizedText
+            );
+
+
+        return phrases.some(
+            phrase => {
+
+                const normalizedPhrase =
+                    this.normalize(
+                        phrase
+                    );
+
+
+                if(!normalizedPhrase){
+                    return false;
+                }
+
+
+                if(
+                    normalizedPhrase.includes(
+                        " "
+                    )
+                ){
+
+                    return normalizedText.includes(
+                        normalizedPhrase
+                    );
+
+                }
+
+
+                return tokens.includes(
+                    normalizedPhrase
+                );
+
+            }
+        );
+
+    },
+
+
+    /* =====================================================
+       TARGET DEFINITIONS
+    ===================================================== */
 
     getTargetDefinitions(){
 
         return [
+
             {
-                target: "home",
-                names: [
+                target:"home",
+                names:[
                     "ana ekran",
                     "ana sayfa",
                     "ev",
@@ -57,239 +127,366 @@ const BrainIntent = {
                     "baslangic"
                 ]
             },
+
             {
-                target: "worlds",
-                names: [
+                target:"worlds",
+                names:[
                     "dunyalar",
                     "dunyalarim",
                     "dunya listesi",
                     "worlds"
                 ]
             },
+
             {
-                target: "world",
-                names: [
-                    "dunya",
+                target:"world",
+                names:[
                     "aktif dunya",
+                    "bu dunya",
+                    "dunya",
                     "world"
                 ]
             },
+
             {
-                target: "create",
-                names: [
-                    "yarat",
+                target:"create",
+                names:[
                     "olusturma ekrani",
-                    "yeni dunya"
+                    "yeni dunya",
+                    "yarat"
                 ]
             },
+
             {
-                target: "entities",
-                names: [
+                target:"entities",
+                names:[
                     "varliklar",
                     "varliklarim",
                     "entity",
                     "entities"
                 ]
             },
+
             {
-                target: "identity",
-                names: [
+                target:"identity",
+                names:[
                     "kimlik",
                     "kimligim",
                     "identity",
-                    "id"
+                    "va id",
+                    "ae id",
+                    "ea id"
                 ]
             },
+
             {
-                target: "profile",
-                names: [
+                target:"profile",
+                names:[
                     "profil",
                     "profilim",
                     "profile"
                 ]
             },
+
             {
-                target: "discovery",
-                names: [
+                target:"discovery",
+                names:[
                     "discovery",
                     "kesif",
                     "kesif yolculugu"
                 ]
             },
+
             {
-                target: "memory",
-                names: [
+                target:"memory",
+                names:[
                     "hafiza",
                     "hafizam",
-                    "memory"
+                    "memory",
+                    "notlar",
+                    "kayitlar"
                 ]
             },
+
             {
-                target: "timeline",
-                names: [
+                target:"timeline",
+                names:[
                     "timeline",
                     "zaman cizelgesi",
                     "zaman akisi",
-                    "gecmis olaylar"
+                    "gecmis olaylar",
+                    "kronoloji"
                 ]
             },
+
             {
-                target: "bridge",
-                names: [
+                target:"bridge",
+                names:[
                     "bridge",
                     "baglanti",
                     "baglantilar",
                     "kopru"
                 ]
             },
+
             {
-                target: "evolution",
-                names: [
+                target:"evolution",
+                names:[
                     "evolution",
                     "evrim",
                     "gelisim olaylari",
                     "yasam olaylari"
                 ]
             },
+
             {
-                target: "organs",
-                names: [
+                target:"organs",
+                names:[
                     "organ",
                     "organlar",
-                    "uygulamalar"
+                    "organ launcher"
                 ]
             },
+
             {
-                target: "settings",
-                names: [
+                target:"settings",
+                names:[
                     "ayar",
                     "ayarlar",
                     "settings"
                 ]
             },
+
             {
-                target: "brain",
-                names: [
+                target:"brain",
+                names:[
                     "brain",
                     "beyin"
                 ]
             }
+
         ];
 
     },
 
+
+    /* =====================================================
+       TARGET DETECTION
+    ===================================================== */
+
     detectTarget(text){
 
-        const definitions =
-            this.getTargetDefinitions();
+        const normalizedText =
+            this.normalize(
+                text
+            );
 
-        /*
-         * Daha uzun ifadeler önce aranır.
-         * Böylece “yeni dünya”, yalnızca “dünya”
-         * hedefi olarak algılanmaz.
-         */
-        const matches = [];
 
-        definitions.forEach(definition => {
+        if(!normalizedText){
+            return null;
+        }
 
-            definition.names.forEach(name => {
 
-                const normalizedName =
-                    this.normalize(name);
+        const tokens =
+            this.tokenize(
+                normalizedText
+            );
 
-                if(
-                    normalizedName &&
-                    text.includes(normalizedName)
-                ){
-                    matches.push({
-                        target:
-                            definition.target,
 
-                        phrase:
-                            normalizedName,
+        const matches =
+            [];
 
-                        length:
-                            normalizedName.length
-                    });
+
+        this
+            .getTargetDefinitions()
+            .forEach(
+                definition => {
+
+                    definition.names.forEach(
+                        name => {
+
+                            const normalizedName =
+                                this.normalize(
+                                    name
+                                );
+
+
+                            if(!normalizedName){
+                                return;
+                            }
+
+
+                            let matched =
+                                false;
+
+
+                            if(
+                                normalizedName.includes(
+                                    " "
+                                )
+                            ){
+
+                                matched =
+                                    normalizedText.includes(
+                                        normalizedName
+                                    );
+
+                            } else {
+
+                                matched =
+                                    tokens.includes(
+                                        normalizedName
+                                    );
+
+                            }
+
+
+                            if(!matched){
+                                return;
+                            }
+
+
+                            matches.push({
+
+                                target:
+                                    definition.target,
+
+                                phrase:
+                                    normalizedName,
+
+                                length:
+                                    normalizedName.length,
+
+                                tokenCount:
+                                    normalizedName
+                                        .split(" ")
+                                        .length
+
+                            });
+
+                        }
+                    );
+
                 }
+            );
 
-            });
-
-        });
 
         matches.sort(
-            (a, b) =>
-                b.length - a.length
+            (a, b) => {
+
+                if(
+                    b.tokenCount !==
+                    a.tokenCount
+                ){
+
+                    return (
+                        b.tokenCount -
+                        a.tokenCount
+                    );
+
+                }
+
+
+                return (
+                    b.length -
+                    a.length
+                );
+
+            }
         );
 
-        return matches[0] || null;
+
+        return (
+            matches[0] ||
+            null
+        );
 
     },
+
+
+    /* =====================================================
+       OPERATION DETECTION
+    ===================================================== */
 
     detectOperation(text){
 
         const operationDefinitions = [
+
             {
-                operation: "delete",
-                words: [
+                operation:"delete",
+                words:[
                     "sil",
                     "kaldir",
                     "yok et",
-                    "temizle"
+                    "temizle",
+                    "iptal et"
                 ]
             },
+
             {
-                operation: "restore",
-                words: [
+                operation:"restore",
+                words:[
                     "geri getir",
                     "geri yukle",
                     "kurtar",
                     "kaldigim yere don",
+                    "kaldigimiz yere don",
                     "nerede kalmistik",
-                    "devam et"
+                    "devam et",
+                    "devam edelim"
                 ]
             },
+
             {
-                operation: "save",
-                words: [
+                operation:"save",
+                words:[
                     "kaydet",
                     "burada kaldik",
                     "burda kaldik",
                     "kaldigimiz yeri kaydet",
-                    "devam noktasi"
+                    "devam noktasi",
+                    "bunu hatirla"
                 ]
             },
+
             {
-                operation: "create",
-                words: [
+                operation:"create",
+                words:[
                     "olustur",
                     "yarat",
                     "ekle",
                     "yeni",
-                    "baslat"
+                    "baslat",
+                    "kur"
                 ]
             },
+
             {
-                operation: "edit",
-                words: [
+                operation:"edit",
+                words:[
                     "duzenle",
                     "degistir",
                     "guncelle",
-                    "yenile"
+                    "yenile",
+                    "duzelt"
                 ]
             },
+
             {
-                operation: "search",
-                words: [
+                operation:"search",
+                words:[
                     "ara",
                     "bul",
                     "nerede",
-                    "listele"
+                    "listele",
+                    "goster bana",
+                    "hangileri"
                 ]
             },
+
             {
-                operation: "open",
-                words: [
+                operation:"open",
+                words:[
                     "ac",
                     "acar misin",
                     "acabilir misin",
@@ -300,111 +497,311 @@ const BrainIntent = {
                     "git",
                     "gec",
                     "beni gotur",
-                    "don"
+                    "don",
+                    "buraya git"
                 ]
             },
+
             {
-                operation: "explain",
-                words: [
+                operation:"explain",
+                words:[
                     "nedir",
                     "ne ise yarar",
                     "anlat",
                     "acikla",
                     "bilgi ver",
-                    "hakkinda"
+                    "hakkinda",
+                    "ne demek"
                 ]
             }
+
         ];
 
-        return (
-            operationDefinitions.find(
-                definition =>
-                    this.includesPhrase(
-                        text,
-                        definition.words
-                    )
-            )?.operation ||
-            "general"
-        );
+
+        for(
+            const definition of
+            operationDefinitions
+        ){
+
+            if(
+                this.includesPhrase(
+                    text,
+                    definition.words
+                )
+            ){
+
+                return definition.operation;
+
+            }
+
+        }
+
+
+        return "general";
 
     },
+
+
+    /* =====================================================
+       QUESTION DETECTION
+    ===================================================== */
 
     isQuestion(text){
 
+        const normalized =
+            this.normalize(
+                text
+            );
+
+
         return (
-            text.startsWith("ne ") ||
-            text.startsWith("nasil ") ||
-            text.startsWith("neden ") ||
-            text.startsWith("niye ") ||
-            text.startsWith("hangi ") ||
-            text.startsWith("kim ") ||
-            text.includes("bilir miyim") ||
-            text.includes("mumkun mu") ||
-            text.includes("var mi")
+            normalized.startsWith("ne ") ||
+            normalized === "ne" ||
+            normalized.startsWith("nasil ") ||
+            normalized.startsWith("neden ") ||
+            normalized.startsWith("niye ") ||
+            normalized.startsWith("hangi ") ||
+            normalized.startsWith("kim ") ||
+            normalized.startsWith("nerede ") ||
+            normalized.startsWith("ne zaman ") ||
+            normalized.includes(
+                "bilir miyim"
+            ) ||
+            normalized.includes(
+                "bilir misin"
+            ) ||
+            normalized.includes(
+                "mumkun mu"
+            ) ||
+            normalized.includes(
+                "var mi"
+            ) ||
+            normalized.includes(
+                "olur mu"
+            )
         );
 
     },
 
-    detect(message){
+
+    /* =====================================================
+       CONTEXT TARGET
+    ===================================================== */
+
+    getContextTarget(context = {}){
+
+        if(
+            !context ||
+            typeof context !==
+                "object"
+        ){
+            return null;
+        }
+
+
+        const candidates = [
+
+            context.page,
+            context.app,
+            context.screen
+
+        ]
+            .filter(Boolean)
+            .map(
+                value =>
+                    this.normalize(
+                        value
+                    )
+            );
+
+
+        const allowedTargets =
+            new Set(
+                this
+                    .getTargetDefinitions()
+                    .map(
+                        definition =>
+                            definition.target
+                    )
+            );
+
+
+        return (
+            candidates.find(
+                candidate =>
+                    allowedTargets.has(
+                        candidate
+                    )
+            ) ||
+            null
+        );
+
+    },
+
+
+    /* =====================================================
+       CONTEXTUAL REFERENCES
+    ===================================================== */
+
+    usesContextReference(text){
+
+        return this.includesPhrase(
+            text,
+            [
+                "burasi",
+                "burayi",
+                "burada",
+                "bu ekran",
+                "bu sayfa",
+                "bunu",
+                "buraya",
+                "mevcut ekran",
+                "mevcut sayfa"
+            ]
+        );
+
+    },
+
+
+    /* =====================================================
+       DETECT
+    ===================================================== */
+
+    detect(
+        message,
+        context = {}
+    ){
 
         const raw =
-            String(message || "").trim();
+            String(
+                message ?? ""
+            ).trim();
+
 
         const text =
-            this.normalize(raw);
+            this.normalize(
+                raw
+            );
+
 
         if(!text){
 
             return {
-                type: "empty",
-                target: null,
-                operation: null,
-                confidence: 1,
-                explicit: false,
-                raw
+
+                type:"empty",
+
+                target:null,
+
+                operation:null,
+
+                confidence:1,
+
+                explicit:false,
+
+                raw,
+
+                normalizedText:""
+
             };
 
         }
 
-        const targetMatch =
-            this.detectTarget(text);
 
-        const target =
+        const targetMatch =
+            this.detectTarget(
+                text
+            );
+
+
+        const detectedTarget =
             targetMatch?.target ||
             null;
 
+
+        const contextTarget =
+            this.getContextTarget(
+                context
+            );
+
+
+        const contextualReference =
+            this.usesContextReference(
+                text
+            );
+
+
+        const target =
+            detectedTarget ||
+            (
+                contextualReference
+                    ? contextTarget
+                    : null
+            );
+
+
         const operation =
-            this.detectOperation(text);
+            this.detectOperation(
+                text
+            );
+
 
         const question =
-            this.isQuestion(text);
+            this.isQuestion(
+                text
+            );
+
 
         const words =
-            text.split(" ");
+            this.tokenize(
+                text
+            );
+
+
+        /* =================================================
+           CLARIFY
+        ================================================= */
 
         if(
-            words.length <= 2 &&
+            words.length <= 3 &&
             [
                 "ne",
                 "anlamadim",
                 "nasil yani",
-                "ne demek"
-            ].includes(text)
+                "ne demek",
+                "anlamadim ben"
+            ].includes(
+                text
+            )
         ){
 
             return {
-                type: "clarify",
-                target: null,
-                operation:
-                    "clarify",
-                confidence: .9,
-                explicit: true,
+
+                type:"clarify",
+
+                target:
+                    contextTarget,
+
+                operation:"clarify",
+
+                confidence:.94,
+
+                explicit:true,
+
                 raw,
+
                 normalizedText:
-                    text
+                    text,
+
+                contextTarget
+
             };
 
         }
+
+
+        /* =================================================
+           RESUME SAVE
+        ================================================= */
 
         if(
             operation === "save" &&
@@ -414,53 +811,96 @@ const BrainIntent = {
                     "burada kaldik",
                     "burda kaldik",
                     "kaldigimiz yeri kaydet",
-                    "devam noktasi"
+                    "devam noktasi",
+                    "bunu hatirla"
                 ]
             )
         ){
 
             return {
-                type: "resume:save",
+
+                type:"resume:save",
+
                 target:
-                    target || null,
-                operation: "save",
-                confidence: .98,
-                explicit: true,
+                    target ||
+                    contextTarget ||
+                    null,
+
+                operation:"save",
+
+                confidence:.98,
+
+                explicit:true,
+
                 raw,
+
                 normalizedText:
-                    text
+                    text,
+
+                detectedTarget,
+
+                contextTarget
+
             };
 
         }
 
+
+        /* =================================================
+           RESUME RESTORE
+        ================================================= */
+
         if(
-            operation === "restore" &&
+            operation ===
+                "restore" &&
             this.includesPhrase(
                 text,
                 [
                     "nerede kalmistik",
                     "kaldigim yere don",
+                    "kaldigimiz yere don",
                     "kaldigimiz yer",
-                    "devam et"
+                    "devam et",
+                    "devam edelim"
                 ]
             )
         ){
 
             return {
-                type: "resume:restore",
-                target: null,
-                operation: "restore",
-                confidence: .98,
-                explicit: true,
+
+                type:"resume:restore",
+
+                target:
+                    target ||
+                    null,
+
+                operation:"restore",
+
+                confidence:.98,
+
+                explicit:true,
+
                 raw,
+
                 normalizedText:
-                    text
+                    text,
+
+                detectedTarget,
+
+                contextTarget
+
             };
 
         }
 
+
+        /* =================================================
+           CREATE WORLD
+        ================================================= */
+
         if(
-            operation === "create" &&
+            operation ===
+                "create" &&
             (
                 target === "world" ||
                 target === "worlds" ||
@@ -469,114 +909,251 @@ const BrainIntent = {
         ){
 
             return {
-                type: "create",
-                target: "world",
-                operation: "create",
-                confidence: .96,
-                explicit: true,
+
+                type:"create",
+
+                target:"world",
+
+                operation:"create",
+
+                confidence:.97,
+
+                explicit:true,
+
                 raw,
+
                 normalizedText:
-                    text
+                    text,
+
+                detectedTarget,
+
+                contextTarget
+
             };
 
         }
 
+
+        /* =================================================
+           CREATE ENTITY
+        ================================================= */
+
         if(
-            operation === "create" &&
-            target === "entities"
+            operation ===
+                "create" &&
+            (
+                target ===
+                    "entities" ||
+                this.includesPhrase(
+                    text,
+                    [
+                        "varlik olustur",
+                        "yeni varlik",
+                        "varlik ekle"
+                    ]
+                )
+            )
         ){
 
             return {
-                type: "create",
-                target: "entity",
-                operation: "create",
-                confidence: .94,
-                explicit: true,
+
+                type:"create",
+
+                target:"entity",
+
+                operation:"create",
+
+                confidence:.96,
+
+                explicit:true,
+
                 raw,
+
                 normalizedText:
-                    text
+                    text,
+
+                detectedTarget,
+
+                contextTarget
+
             };
 
         }
 
+
+        /* =================================================
+           NAVIGATION
+        ================================================= */
+
         if(
-            operation === "open" &&
+            operation ===
+                "open" &&
             target
         ){
 
             return {
-                type: "navigate",
+
+                type:"navigate",
+
                 target,
-                operation: "open",
-                confidence: .96,
-                explicit: true,
+
+                operation:"open",
+
+                confidence:
+                    detectedTarget
+                        ? .97
+                        : .88,
+
+                explicit:true,
+
                 raw,
+
                 normalizedText:
-                    text
+                    text,
+
+                detectedTarget,
+
+                contextTarget,
+
+                contextual:
+                    !detectedTarget &&
+                    Boolean(
+                        contextTarget
+                    )
+
             };
 
         }
+
+
+        /* =================================================
+           QUESTION
+        ================================================= */
 
         if(question){
 
             return {
-                type: "question",
+
+                type:"question",
+
                 target,
+
                 operation:
-                    operation === "general"
+                    operation ===
+                        "general"
                         ? "explain"
                         : operation,
+
                 confidence:
-                    target ? .86 : .58,
-                explicit: true,
+                    target
+                        ? .9
+                        : .64,
+
+                explicit:true,
+
                 raw,
+
                 normalizedText:
-                    text
+                    text,
+
+                detectedTarget,
+
+                contextTarget
+
             };
 
         }
 
+
+        /* =================================================
+           DIRECT REQUEST
+        ================================================= */
+
         if(
-            operation !== "general" &&
-            target
+            operation !==
+                "general"
         ){
 
             return {
-                type: "request",
-                target,
+
+                type:"request",
+
+                target:
+                    target ||
+                    contextTarget ||
+                    null,
+
                 operation,
-                confidence: .84,
-                explicit: true,
+
+                confidence:
+                    target
+                        ? .88
+                        : contextTarget
+                            ? .72
+                            : .54,
+
+                explicit:true,
+
                 raw,
+
                 normalizedText:
-                    text
+                    text,
+
+                detectedTarget,
+
+                contextTarget,
+
+                contextual:
+                    !detectedTarget &&
+                    Boolean(
+                        contextTarget
+                    )
+
             };
 
         }
 
-        /*
-         * Uygulamanın adının yalnızca konuşmada geçmesi,
-         * ekranı açmak için yeterli değildir.
-         */
+
+        /* =================================================
+           CHAT
+        ================================================= */
+
         return {
-            type: "chat",
-            target: null,
-            detectedTarget:
-                target,
-            operation: "general",
+
+            type:"chat",
+
+            target:null,
+
+            detectedTarget,
+
+            contextTarget,
+
+            operation:"general",
+
             confidence:
-                target ? .62 : .35,
-            explicit: false,
+                detectedTarget
+                    ? .62
+                    : .38,
+
+            explicit:false,
+
             raw,
+
             normalizedText:
                 text
+
         };
 
     }
 
 };
 
+
 VAERO.register(
     "brainIntent",
     BrainIntent
 );
+
+
+window.BrainIntent =
+    BrainIntent;
