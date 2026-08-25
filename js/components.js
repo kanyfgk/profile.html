@@ -417,7 +417,7 @@ const Components = {
                             action: "profile:open",
                             icon: "♙",
                             title: "Profilim",
-                            subtitle: "Yönün ve tercihlerın",
+                            subtitle: "Yönün ve tercihlerin",
                             tone: "blue"
                         })}
 
