@@ -43,6 +43,7 @@ const BrainIntent = {
                 text
             );
 
+
         return normalized
             ? normalized.split(" ")
             : [];
@@ -118,6 +119,27 @@ const BrainIntent = {
         return [
 
             {
+                target:"applications",
+                names:[
+                    "applications",
+                    "uygulamalar",
+                    "uygulama magazasi",
+                    "uygulama merkezi",
+                    "app store"
+                ]
+            },
+
+            {
+                target:"vaero",
+                names:[
+                    "vaero",
+                    "vaero engine",
+                    "engine merkezi",
+                    "living engine"
+                ]
+            },
+
+            {
                 target:"home",
                 names:[
                     "ana ekran",
@@ -152,7 +174,6 @@ const BrainIntent = {
                 target:"create",
                 names:[
                     "olusturma ekrani",
-                    "yeni dunya",
                     "yarat"
                 ]
             },
@@ -162,8 +183,17 @@ const BrainIntent = {
                 names:[
                     "varliklar",
                     "varliklarim",
-                    "entity",
                     "entities"
+                ]
+            },
+
+            {
+                target:"entity",
+                names:[
+                    "bu varlik",
+                    "aktif varlik",
+                    "varlik",
+                    "entity"
                 ]
             },
 
@@ -258,6 +288,37 @@ const BrainIntent = {
             },
 
             {
+                target:"notification",
+                names:[
+                    "bildirim",
+                    "bildirimler",
+                    "notification",
+                    "notifications"
+                ]
+            },
+
+            {
+                target:"message",
+                names:[
+                    "mesaj",
+                    "mesajlar",
+                    "message",
+                    "messages"
+                ]
+            },
+
+            {
+                target:"call",
+                names:[
+                    "arama",
+                    "sesli arama",
+                    "goruntulu arama",
+                    "video arama",
+                    "call"
+                ]
+            },
+
+            {
                 target:"brain",
                 names:[
                     "brain",
@@ -293,8 +354,7 @@ const BrainIntent = {
             );
 
 
-        const matches =
-            [];
+        const matches = [];
 
 
         this
@@ -372,7 +432,7 @@ const BrainIntent = {
 
 
         matches.sort(
-            (a, b) => {
+            (a,b) => {
 
                 if(
                     b.tokenCount !==
@@ -413,13 +473,10 @@ const BrainIntent = {
         const operationDefinitions = [
 
             {
-                operation:"delete",
+                operation:"archive",
                 words:[
-                    "sil",
-                    "kaldir",
-                    "yok et",
-                    "temizle",
-                    "iptal et"
+                    "arsivle",
+                    "arsive al"
                 ]
             },
 
@@ -428,12 +485,41 @@ const BrainIntent = {
                 words:[
                     "geri getir",
                     "geri yukle",
+                    "arsivden cikar",
                     "kurtar",
                     "kaldigim yere don",
                     "kaldigimiz yere don",
                     "nerede kalmistik",
                     "devam et",
                     "devam edelim"
+                ]
+            },
+
+            {
+                operation:"delete",
+                words:[
+                    "sil",
+                    "yok et",
+                    "kalici sil",
+                    "tamamen sil"
+                ]
+            },
+
+            {
+                operation:"remove",
+                words:[
+                    "kaldir",
+                    "uninstall",
+                    "uygulamayi kaldir"
+                ]
+            },
+
+            {
+                operation:"install",
+                words:[
+                    "yukle",
+                    "install",
+                    "uygulamayi kur"
                 ]
             },
 
@@ -456,8 +542,15 @@ const BrainIntent = {
                     "yarat",
                     "ekle",
                     "yeni",
-                    "baslat",
-                    "kur"
+                    "baslat"
+                ]
+            },
+
+            {
+                operation:"update",
+                words:[
+                    "guncelle",
+                    "update"
                 ]
             },
 
@@ -466,7 +559,6 @@ const BrainIntent = {
                 words:[
                     "duzenle",
                     "degistir",
-                    "guncelle",
                     "yenile",
                     "duzelt"
                 ]
@@ -477,7 +569,6 @@ const BrainIntent = {
                 words:[
                     "ara",
                     "bul",
-                    "nerede",
                     "listele",
                     "goster bana",
                     "hangileri"
@@ -497,8 +588,35 @@ const BrainIntent = {
                     "git",
                     "gec",
                     "beni gotur",
-                    "don",
                     "buraya git"
+                ]
+            },
+
+            {
+                operation:"send",
+                words:[
+                    "gonder",
+                    "yolla",
+                    "mesaj at"
+                ]
+            },
+
+            {
+                operation:"grant",
+                words:[
+                    "izin ver",
+                    "yetki ver",
+                    "permission ver"
+                ]
+            },
+
+            {
+                operation:"revoke",
+                words:[
+                    "izni kaldir",
+                    "yetkiyi kaldir",
+                    "izni geri al",
+                    "permission kaldir"
                 ]
             },
 
@@ -564,21 +682,11 @@ const BrainIntent = {
             normalized.startsWith("kim ") ||
             normalized.startsWith("nerede ") ||
             normalized.startsWith("ne zaman ") ||
-            normalized.includes(
-                "bilir miyim"
-            ) ||
-            normalized.includes(
-                "bilir misin"
-            ) ||
-            normalized.includes(
-                "mumkun mu"
-            ) ||
-            normalized.includes(
-                "var mi"
-            ) ||
-            normalized.includes(
-                "olur mu"
-            )
+            normalized.includes("bilir miyim") ||
+            normalized.includes("bilir misin") ||
+            normalized.includes("mumkun mu") ||
+            normalized.includes("var mi") ||
+            normalized.includes("olur mu")
         );
 
     },
@@ -592,8 +700,7 @@ const BrainIntent = {
 
         if(
             !context ||
-            typeof context !==
-                "object"
+            typeof context !== "object"
         ){
             return null;
         }
@@ -656,7 +763,10 @@ const BrainIntent = {
                 "bunu",
                 "buraya",
                 "mevcut ekran",
-                "mevcut sayfa"
+                "mevcut sayfa",
+                "bu kayit",
+                "bu varlik",
+                "bu dunya"
             ]
         );
 
@@ -664,6 +774,232 @@ const BrainIntent = {
 
 
     /* =====================================================
+       APPLICATION ID EXTRACTION
+    ===================================================== */
+
+    extractApplicationId(
+        text,
+        context = {}
+    ){
+
+        const direct =
+            context.appId ||
+            context.applicationId ||
+            null;
+
+
+        if(
+            typeof direct === "string" &&
+            direct.trim()
+        ){
+
+            return direct.trim();
+
+        }
+
+
+        const registry =
+            (
+                typeof VAERO !== "undefined" &&
+                typeof VAERO.get === "function"
+            )
+                ? (
+                    VAERO.get("appRegistry") ||
+                    null
+                )
+                : null;
+
+
+        if(
+            !registry ||
+            typeof registry.all !== "function"
+        ){
+            return null;
+        }
+
+
+        let apps = [];
+
+
+        try{
+
+            apps =
+                registry.all({
+                    includeDisabled:true
+                });
+
+        } catch(error){
+
+            try{
+
+                apps =
+                    registry.all();
+
+            } catch(secondError){
+
+                apps = [];
+
+            }
+
+        }
+
+
+        if(
+            !Array.isArray(apps)
+        ){
+            return null;
+        }
+
+
+        const normalizedText =
+            this.normalize(
+                text
+            );
+
+
+        const matches =
+            apps
+                .map(
+                    app => {
+
+                        const candidates = [
+
+                            app.id,
+                            app.title
+
+                        ]
+                            .filter(Boolean)
+                            .map(
+                                value =>
+                                    this.normalize(
+                                        value
+                                    )
+                            )
+                            .filter(Boolean);
+
+
+                        const matched =
+                            candidates.find(
+                                candidate =>
+                                    candidate.includes(" ")
+                                        ? normalizedText.includes(
+                                            candidate
+                                        )
+                                        : this.tokenize(
+                                            normalizedText
+                                        ).includes(
+                                            candidate
+                                        )
+                            );
+
+
+                        if(!matched){
+                            return null;
+                        }
+
+
+                        return {
+
+                            id:
+                                app.id,
+
+                            score:
+                                matched.length
+
+                        };
+
+                    }
+                )
+                .filter(Boolean)
+                .sort(
+                    (a,b) =>
+                        b.score -
+                        a.score
+                );
+
+
+        return (
+            matches[0]?.id ||
+            null
+        );
+
+    },
+
+
+    /* =====================================================
+       PERMISSION EXTRACTION
+    ===================================================== */
+
+    extractPermission(
+        text,
+        context = {}
+    ){
+
+        if(
+            typeof context.permission ===
+                "string" &&
+            context.permission.trim()
+        ){
+
+            return context.permission.trim();
+
+        }
+
+
+        const normalizedText =
+            this.normalize(
+                text
+            );
+
+
+        /*
+         * permission.name gibi açık permission ID
+         * metin içinde bulunuyorsa koru.
+         */
+
+        const match =
+            String(
+                text ?? ""
+            ).match(
+                /\b[a-z0-9_-]+\.[a-z0-9_.:-]+\b/i
+            );
+
+
+        if(match?.[0]){
+            return match[0];
+        }
+
+
+        const known = [
+
+            "microphone",
+            "camera",
+            "location",
+            "notifications",
+            "memory.read",
+            "memory.write",
+            "profile.read",
+            "profile.write",
+            "identity.read"
+
+        ];
+
+
+        return (
+            known.find(
+                permission =>
+                    normalizedText.includes(
+                        this.normalize(
+                            permission
+                        )
+                    )
+            ) ||
+            null
+        );
+
+    },
+
+   /* =====================================================
        DETECT
     ===================================================== */
 
@@ -789,8 +1125,7 @@ const BrainIntent = {
 
                 raw,
 
-                normalizedText:
-                    text,
+                normalizedText:text,
 
                 contextTarget
 
@@ -834,8 +1169,7 @@ const BrainIntent = {
 
                 raw,
 
-                normalizedText:
-                    text,
+                normalizedText:text,
 
                 detectedTarget,
 
@@ -851,8 +1185,7 @@ const BrainIntent = {
         ================================================= */
 
         if(
-            operation ===
-                "restore" &&
+            operation === "restore" &&
             this.includesPhrase(
                 text,
                 [
@@ -882,8 +1215,343 @@ const BrainIntent = {
 
                 raw,
 
-                normalizedText:
-                    text,
+                normalizedText:text,
+
+                detectedTarget,
+
+                contextTarget
+
+            };
+
+        }
+
+
+        /* =================================================
+           APPLICATION LIFECYCLE
+        ================================================= */
+
+        const applicationContext =
+            target === "applications" ||
+            contextTarget === "applications" ||
+            this.includesPhrase(
+                text,
+                [
+                    "uygulama",
+                    "application",
+                    "app"
+                ]
+            );
+
+
+        if(
+            applicationContext &&
+            operation === "install"
+        ){
+
+            const appId =
+                this.extractApplicationId(
+                    raw,
+                    context
+                );
+
+
+            return {
+
+                type:"application:install",
+
+                target:"application",
+
+                operation:"install",
+
+                appId,
+
+                applicationId:
+                    appId,
+
+                confidence:
+                    appId
+                        ? .98
+                        : .82,
+
+                explicit:true,
+
+                raw,
+
+                normalizedText:text,
+
+                detectedTarget,
+
+                contextTarget
+
+            };
+
+        }
+
+
+        if(
+            applicationContext &&
+            operation === "update"
+        ){
+
+            const appId =
+                this.extractApplicationId(
+                    raw,
+                    context
+                );
+
+
+            return {
+
+                type:"application:update",
+
+                target:"application",
+
+                operation:"update",
+
+                appId,
+
+                applicationId:
+                    appId,
+
+                confidence:
+                    appId
+                        ? .98
+                        : .82,
+
+                explicit:true,
+
+                raw,
+
+                normalizedText:text,
+
+                detectedTarget,
+
+                contextTarget
+
+            };
+
+        }
+
+
+        if(
+            applicationContext &&
+            operation === "remove"
+        ){
+
+            const appId =
+                this.extractApplicationId(
+                    raw,
+                    context
+                );
+
+
+            return {
+
+                type:"application:remove",
+
+                target:"application",
+
+                operation:"remove",
+
+                appId,
+
+                applicationId:
+                    appId,
+
+                confidence:
+                    appId
+                        ? .98
+                        : .82,
+
+                explicit:true,
+
+                raw,
+
+                normalizedText:text,
+
+                detectedTarget,
+
+                contextTarget
+
+            };
+
+        }
+
+
+        /* =================================================
+           PERMISSIONS
+        ================================================= */
+
+        if(
+            operation === "grant" ||
+            operation === "revoke"
+        ){
+
+            const appId =
+                this.extractApplicationId(
+                    raw,
+                    context
+                );
+
+
+            const permission =
+                this.extractPermission(
+                    raw,
+                    context
+                );
+
+
+            return {
+
+                type:
+                    operation === "grant"
+                        ? "permission:grant"
+                        : "permission:revoke",
+
+                target:"application",
+
+                operation,
+
+                appId,
+
+                applicationId:
+                    appId,
+
+                permission,
+
+                confidence:
+                    appId &&
+                    permission
+                        ? .98
+                        : .76,
+
+                explicit:true,
+
+                raw,
+
+                normalizedText:text,
+
+                detectedTarget,
+
+                contextTarget
+
+            };
+
+        }
+
+
+        /* =================================================
+           COMMUNICATION
+        ================================================= */
+
+        if(
+            target === "message" &&
+            operation === "send"
+        ){
+
+            return {
+
+                type:"message:send",
+
+                target:"message",
+
+                operation:"send",
+
+                confidence:.96,
+
+                explicit:true,
+
+                raw,
+
+                normalizedText:text,
+
+                detectedTarget,
+
+                contextTarget
+
+            };
+
+        }
+
+
+        if(
+            target === "call" &&
+            this.includesPhrase(
+                text,
+                [
+                    "ara",
+                    "arama baslat",
+                    "sesli ara",
+                    "goruntulu ara",
+                    "video ara",
+                    "call baslat"
+                ]
+            )
+        ){
+
+            return {
+
+                type:"call:start",
+
+                target:"call",
+
+                operation:"start",
+
+                callType:
+                    this.includesPhrase(
+                        text,
+                        [
+                            "goruntulu",
+                            "video"
+                        ]
+                    )
+                        ? "video"
+                        : "voice",
+
+                confidence:.96,
+
+                explicit:true,
+
+                raw,
+
+                normalizedText:text,
+
+                detectedTarget,
+
+                contextTarget
+
+            };
+
+        }
+
+
+        if(
+            this.includesPhrase(
+                text,
+                [
+                    "ekran paylas",
+                    "ekranimi paylas",
+                    "screen share",
+                    "ekran paylasimi baslat"
+                ]
+            )
+        ){
+
+            return {
+
+                type:"screen-share:start",
+
+                target:"call",
+
+                operation:"start",
+
+                confidence:.98,
+
+                explicit:true,
+
+                raw,
+
+                normalizedText:text,
 
                 detectedTarget,
 
@@ -899,12 +1567,19 @@ const BrainIntent = {
         ================================================= */
 
         if(
-            operation ===
-                "create" &&
+            operation === "create" &&
             (
                 target === "world" ||
                 target === "worlds" ||
-                target === "create"
+                target === "create" ||
+                this.includesPhrase(
+                    text,
+                    [
+                        "yeni dunya",
+                        "dunya olustur",
+                        "dunya yarat"
+                    ]
+                )
             )
         ){
 
@@ -922,8 +1597,7 @@ const BrainIntent = {
 
                 raw,
 
-                normalizedText:
-                    text,
+                normalizedText:text,
 
                 detectedTarget,
 
@@ -939,17 +1613,17 @@ const BrainIntent = {
         ================================================= */
 
         if(
-            operation ===
-                "create" &&
+            operation === "create" &&
             (
-                target ===
-                    "entities" ||
+                target === "entity" ||
+                target === "entities" ||
                 this.includesPhrase(
                     text,
                     [
                         "varlik olustur",
                         "yeni varlik",
-                        "varlik ekle"
+                        "varlik ekle",
+                        "entity olustur"
                     ]
                 )
             )
@@ -963,14 +1637,107 @@ const BrainIntent = {
 
                 operation:"create",
 
-                confidence:.96,
+                confidence:.97,
 
                 explicit:true,
 
                 raw,
 
-                normalizedText:
-                    text,
+                normalizedText:text,
+
+                detectedTarget,
+
+                contextTarget
+
+            };
+
+        }
+
+
+        /* =================================================
+           EXPLICIT ARCHIVE / RESTORE / DELETE
+        ================================================= */
+
+        if(
+            operation === "archive" &&
+            target
+        ){
+
+            return {
+
+                type:"request",
+
+                target,
+
+                operation:"archive",
+
+                confidence:.94,
+
+                explicit:true,
+
+                raw,
+
+                normalizedText:text,
+
+                detectedTarget,
+
+                contextTarget
+
+            };
+
+        }
+
+
+        if(
+            operation === "restore" &&
+            target
+        ){
+
+            return {
+
+                type:"request",
+
+                target,
+
+                operation:"restore",
+
+                confidence:.94,
+
+                explicit:true,
+
+                raw,
+
+                normalizedText:text,
+
+                detectedTarget,
+
+                contextTarget
+
+            };
+
+        }
+
+
+        if(
+            operation === "delete" &&
+            target
+        ){
+
+            return {
+
+                type:"request",
+
+                target,
+
+                operation:"delete",
+
+                confidence:.95,
+
+                explicit:true,
+
+                raw,
+
+                normalizedText:text,
 
                 detectedTarget,
 
@@ -986,8 +1753,7 @@ const BrainIntent = {
         ================================================= */
 
         if(
-            operation ===
-                "open" &&
+            operation === "open" &&
             target
         ){
 
@@ -1008,8 +1774,7 @@ const BrainIntent = {
 
                 raw,
 
-                normalizedText:
-                    text,
+                normalizedText:text,
 
                 detectedTarget,
 
@@ -1039,8 +1804,7 @@ const BrainIntent = {
                 target,
 
                 operation:
-                    operation ===
-                        "general"
+                    operation === "general"
                         ? "explain"
                         : operation,
 
@@ -1053,8 +1817,7 @@ const BrainIntent = {
 
                 raw,
 
-                normalizedText:
-                    text,
+                normalizedText:text,
 
                 detectedTarget,
 
@@ -1070,8 +1833,7 @@ const BrainIntent = {
         ================================================= */
 
         if(
-            operation !==
-                "general"
+            operation !== "general"
         ){
 
             return {
@@ -1096,8 +1858,7 @@ const BrainIntent = {
 
                 raw,
 
-                normalizedText:
-                    text,
+                normalizedText:text,
 
                 detectedTarget,
 
@@ -1122,7 +1883,9 @@ const BrainIntent = {
 
             type:"chat",
 
-            target:null,
+            target:
+                detectedTarget ||
+                null,
 
             detectedTarget,
 
@@ -1139,8 +1902,61 @@ const BrainIntent = {
 
             raw,
 
-            normalizedText:
-                text
+            normalizedText:text
+
+        };
+
+    },
+
+
+    /* =====================================================
+       REPORT
+    ===================================================== */
+
+    report(){
+
+        return {
+
+            targets:
+                this.getTargetDefinitions()
+                    .length,
+
+            supportedOperations:[
+                "open",
+                "search",
+                "create",
+                "edit",
+                "update",
+                "archive",
+                "restore",
+                "delete",
+                "install",
+                "remove",
+                "save",
+                "send",
+                "grant",
+                "revoke",
+                "explain"
+            ],
+
+            explicitIntents:[
+                "navigate",
+                "create",
+                "resume:save",
+                "resume:restore",
+                "application:install",
+                "application:update",
+                "application:remove",
+                "permission:grant",
+                "permission:revoke",
+                "message:send",
+                "call:start",
+                "screen-share:start",
+                "request",
+                "question",
+                "clarify",
+                "chat"
+            ]
 
         };
 
