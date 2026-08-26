@@ -1,6 +1,6 @@
 /* =========================================================
    VAERO ACTIONS V2
-   Engine Interaction / Brain / Payment Bridge
+   Engine Interaction / Editors / Brain / Payment Bridge
 ========================================================= */
 
 const Actions = {
@@ -90,7 +90,26 @@ const Actions = {
 
         return `${prefix}_${Date.now()}_${Math.random()
             .toString(36)
-            .slice(2, 10)}`;
+            .slice(2,10)}`;
+
+    },
+
+
+    parseTags(value){
+
+        return [
+            ...new Set(
+                String(
+                    value ?? ""
+                )
+                    .split(",")
+                    .map(
+                        item =>
+                            item.trim()
+                    )
+                    .filter(Boolean)
+            )
+        ];
 
     },
 
@@ -138,6 +157,84 @@ const Actions = {
     },
 
 
+    recordEvolution(
+        type,
+        description,
+        metadata = {}
+    ){
+
+        const evolution =
+            this.getService(
+                "evolution"
+            );
+
+
+        if(
+            !evolution ||
+            typeof evolution.record !==
+                "function"
+        ){
+            return false;
+        }
+
+
+        try{
+
+            evolution.record(
+                type,
+                description,
+                metadata
+            );
+
+            return true;
+
+        } catch(error){
+
+            console.warn(
+                "Evolution kaydı oluşturulamadı:",
+                error
+            );
+
+            return false;
+
+        }
+
+    },
+
+
+    /* =====================================================
+       RESET TRANSIENT UI STATE
+    ===================================================== */
+
+    resetEditorState(){
+
+        const engine =
+            this.getEngine();
+
+
+        if(!engine){
+            return false;
+        }
+
+
+        engine.worldEditMode =
+            false;
+
+        engine.entityEditMode =
+            false;
+
+        engine.entityCreateMode =
+            false;
+
+        engine.entityType =
+            null;
+
+
+        return true;
+
+    },
+
+
     /* =====================================================
        CORE NAVIGATION
     ===================================================== */
@@ -155,6 +252,9 @@ const Actions = {
         ){
             return false;
         }
+
+
+        this.resetEditorState();
 
 
         const result =
@@ -184,6 +284,9 @@ const Actions = {
         if(!engine){
             return false;
         }
+
+
+        this.resetEditorState();
 
 
         const entity =
@@ -250,6 +353,9 @@ const Actions = {
         }
 
 
+        this.resetEditorState();
+
+
         const entity =
             engine.rootEntity ||
             engine.currentEntity;
@@ -314,6 +420,9 @@ const Actions = {
         }
 
 
+        this.resetEditorState();
+
+
         const result =
             engine.setView(
                 "create",
@@ -355,6 +464,9 @@ const Actions = {
         if(!engine){
             return false;
         }
+
+
+        this.resetEditorState();
 
 
         const result =
@@ -430,7 +542,9 @@ const Actions = {
             worlds.find(
                 world =>
                     world?.status ===
-                    "active"
+                        "active" &&
+                    world?.archived !==
+                        true
             ) ||
             worlds[0] ||
             null;
@@ -466,9 +580,7 @@ const Actions = {
             !worldService ||
             !engine
         ){
-
             return false;
-
         }
 
 
@@ -493,13 +605,13 @@ const Actions = {
                     "function"
             ){
 
-                const worlds =
-                    worldService.all() ||
-                    [];
-
-
                 world =
-                    worlds.find(
+                    (
+                        worldService.all({
+                            includeArchived:true
+                        }) ||
+                        []
+                    ).find(
                         item =>
                             item?.id ===
                             worldId
@@ -520,10 +632,14 @@ const Actions = {
         }
 
 
-        if(!world){
+        if(
+            !world ||
+            world.archived ===
+                true
+        ){
 
             console.warn(
-                "World bulunamadı:",
+                "World bulunamadı veya arşivlenmiş:",
                 worldId
             );
 
@@ -542,6 +658,9 @@ const Actions = {
                 [];
 
         }
+
+
+        this.resetEditorState();
 
 
         const result =
@@ -596,6 +715,16 @@ const Actions = {
             return this.openWorlds();
 
         }
+
+
+        this.resetEditorState();
+
+
+        engine.currentOpenedEntity =
+            null;
+
+        engine.currentEntityPage =
+            null;
 
 
         const result =
@@ -661,6 +790,12 @@ const Actions = {
             );
 
 
+        const tagsInput =
+            document.getElementById(
+                "worldTagsInput"
+            );
+
+
         const name =
             String(
                 nameInput?.value ||
@@ -694,6 +829,12 @@ const Actions = {
         }
 
 
+        const tags =
+            this.parseTags(
+                tagsInput?.value
+            );
+
+
         let world =
             null;
 
@@ -711,21 +852,25 @@ const Actions = {
 
                     description:
                         String(
-                            descriptionInput
-                                ?.value ||
+                            descriptionInput?.value ||
                             ""
                         ).trim(),
+
+                    tags,
 
                     type:
                         "custom-world",
 
                     owner:
-                        engine.currentEntity
-                            ?.id ||
+                        engine.rootEntity?.id ||
+                        engine.currentEntity?.id ||
                         null,
 
                     entities:
-                        []
+                        [],
+
+                    status:
+                        "active"
                 });
 
         } catch(error){
@@ -745,56 +890,35 @@ const Actions = {
         }
 
 
-        const evolution =
-            this.getService(
-                "evolution"
-            );
-
-
-        if(
-            evolution &&
-            typeof evolution.record ===
-                "function"
-        ){
-
-            try{
-
-                evolution.record(
-                    "milestone",
+        this.recordEvolution(
+            "milestone",
+            `${name} dünyası oluşturuldu`,
+            {
+                title:
                     `${name} dünyası oluşturuldu`,
-                    {
-                        title:
-                            `${name} dünyası oluşturuldu`,
 
-                        source:
-                            "world",
+                source:
+                    "world",
 
-                        status:
-                            "completed",
+                status:
+                    "completed",
 
-                        importance:
-                            "medium",
+                importance:
+                    "medium",
 
-                        relatedWorldId:
-                            world.id,
+                relatedWorldId:
+                    world.id,
 
-                        tags:[
-                            "world",
-                            "creation"
-                        ]
-                    }
-                );
-
-            } catch(error){
-
-                console.warn(
-                    "World Evolution kaydı oluşturulamadı:",
-                    error
-                );
-
+                tags:[
+                    "world",
+                    "creation",
+                    ...tags
+                ]
             }
+        );
 
-        }
+
+        this.resetEditorState();
 
 
         const result =
@@ -833,6 +957,374 @@ const Actions = {
 
 
     /* =====================================================
+       WORLD EDITOR
+    ===================================================== */
+
+    openWorldEditor(){
+
+        const engine =
+            this.getEngine();
+
+
+        const world =
+            engine?.currentWorld ||
+            null;
+
+
+        if(
+            !engine ||
+            !world ||
+            world.archived ===
+                true
+        ){
+            return false;
+        }
+
+
+        engine.worldEditMode =
+            true;
+
+        engine.entityEditMode =
+            false;
+
+        engine.entityCreateMode =
+            false;
+
+        engine.entityType =
+            null;
+
+
+        return engine.setView(
+            "world",
+            {
+                world,
+                entity:
+                    null,
+                page:
+                    null,
+                entityCreateMode:
+                    false,
+                entityType:
+                    null
+            }
+        );
+
+    },
+
+
+    cancelWorldEditor(){
+
+        const engine =
+            this.getEngine();
+
+
+        if(!engine){
+            return false;
+        }
+
+
+        engine.worldEditMode =
+            false;
+
+
+        return engine.setView(
+            "world",
+            {
+                world:
+                    engine.currentWorld ||
+                    null,
+                entity:
+                    null,
+                page:
+                    null,
+                entityCreateMode:
+                    false,
+                entityType:
+                    null
+            }
+        );
+
+    },
+
+
+    saveWorldEditor(){
+
+        const engine =
+            this.getEngine();
+
+
+        const world =
+            engine?.currentWorld ||
+            null;
+
+
+        if(
+            !engine ||
+            !world
+        ){
+            return false;
+        }
+
+
+        const nameInput =
+            document.getElementById(
+                "worldEditNameInput"
+            );
+
+
+        const descriptionInput =
+            document.getElementById(
+                "worldEditDescriptionInput"
+            );
+
+
+        const tagsInput =
+            document.getElementById(
+                "worldEditTagsInput"
+            );
+
+
+        const statusInput =
+            document.getElementById(
+                "worldEditStatusInput"
+            );
+
+
+        const name =
+            String(
+                nameInput?.value ||
+                ""
+            ).trim();
+
+
+        if(!name){
+
+            nameInput?.focus();
+
+            return false;
+
+        }
+
+
+        const worldService =
+            this.getService(
+                "world"
+            );
+
+
+        if(
+            !worldService ||
+            typeof worldService.update !==
+                "function"
+        ){
+            return false;
+        }
+
+
+        let updated =
+            null;
+
+
+        try{
+
+            updated =
+                worldService.update(
+                    world.id,
+                    {
+                        name,
+
+                        description:
+                            String(
+                                descriptionInput?.value ||
+                                ""
+                            ).trim(),
+
+                        tags:
+                            this.parseTags(
+                                tagsInput?.value
+                            ),
+
+                        status:
+                            String(
+                                statusInput?.value ||
+                                "active"
+                            )
+                    }
+                );
+
+        } catch(error){
+
+            console.error(
+                "World güncellenemedi:",
+                error
+            );
+
+            return false;
+
+        }
+
+
+        if(!updated){
+            return false;
+        }
+
+
+        engine.currentWorld =
+            updated;
+
+        engine.worldEditMode =
+            false;
+
+
+        this.recordEvolution(
+            "life-event",
+            `${updated.name} dünyası güncellendi`,
+            {
+                title:
+                    `${updated.name} dünyası güncellendi`,
+
+                source:
+                    "world",
+
+                status:
+                    "completed",
+
+                importance:
+                    "low",
+
+                relatedWorldId:
+                    updated.id,
+
+                tags:[
+                    "world",
+                    "update"
+                ]
+            }
+        );
+
+
+        return engine.setView(
+            "world",
+            {
+                world:
+                    updated,
+                entity:
+                    null,
+                page:
+                    null,
+                entityCreateMode:
+                    false,
+                entityType:
+                    null
+            }
+        );
+
+    },
+
+
+    archiveWorld(){
+
+        const engine =
+            this.getEngine();
+
+
+        const world =
+            engine?.currentWorld ||
+            null;
+
+
+        if(
+            !world ||
+            world.id ===
+                "vaero-world"
+        ){
+            return false;
+        }
+
+
+        const worldService =
+            this.getService(
+                "world"
+            );
+
+
+        if(
+            !worldService ||
+            typeof worldService.archive !==
+                "function"
+        ){
+            return false;
+        }
+
+
+        let archived =
+            false;
+
+
+        try{
+
+            archived =
+                worldService.archive(
+                    world.id
+                );
+
+        } catch(error){
+
+            console.error(
+                "World arşivlenemedi:",
+                error
+            );
+
+            return false;
+
+        }
+
+
+        if(!archived){
+            return false;
+        }
+
+
+        this.recordEvolution(
+            "life-event",
+            `${world.name} dünyası arşivlendi`,
+            {
+                title:
+                    `${world.name} dünyası arşivlendi`,
+
+                source:
+                    "world",
+
+                relatedWorldId:
+                    world.id,
+
+                status:
+                    "completed",
+
+                importance:
+                    "medium",
+
+                tags:[
+                    "world",
+                    "archive"
+                ]
+            }
+        );
+
+
+        engine.currentWorld =
+            null;
+
+        engine.worldEditMode =
+            false;
+
+
+        return this.openWorlds();
+
+    },
+
+
+    /* =====================================================
        ENTITY CREATION
     ===================================================== */
 
@@ -852,6 +1344,13 @@ const Actions = {
             return this.openWorlds();
 
         }
+
+
+        engine.worldEditMode =
+            false;
+
+        engine.entityEditMode =
+            false;
 
 
         return engine.setView(
@@ -889,8 +1388,19 @@ const Actions = {
         return engine.setView(
             "world",
             {
+                world:
+                    engine.currentWorld ||
+                    null,
+
+                entity:
+                    null,
+
+                page:
+                    null,
+
                 entityCreateMode:
                     true,
+
                 entityType:
                     type
             }
@@ -913,8 +1423,19 @@ const Actions = {
         return engine.setView(
             "world",
             {
+                world:
+                    engine.currentWorld ||
+                    null,
+
+                entity:
+                    null,
+
+                page:
+                    null,
+
                 entityCreateMode:
                     true,
+
                 entityType:
                     null
             }
@@ -934,15 +1455,29 @@ const Actions = {
         }
 
 
+        engine.entityCreateMode =
+            false;
+
+        engine.entityType =
+            null;
+
+
         return engine.setView(
             "world",
             {
+                world:
+                    engine.currentWorld ||
+                    null,
+
                 entity:
                     null,
+
                 page:
                     null,
+
                 entityCreateMode:
                     false,
+
                 entityType:
                     null
             }
@@ -976,6 +1511,12 @@ const Actions = {
         const descriptionInput =
             document.getElementById(
                 "entityDescriptionInput"
+            );
+
+
+        const tagsInput =
+            document.getElementById(
+                "entityTagsInput"
             );
 
 
@@ -1030,16 +1571,18 @@ const Actions = {
 
         if(
             !entityManager ||
-            !identityService ||
-            !profileService ||
             !worldService ||
             typeof entityManager.create !==
                 "function"
         ){
-
             return false;
-
         }
+
+
+        const tags =
+            this.parseTags(
+                tagsInput?.value
+            );
 
 
         let entity =
@@ -1061,10 +1604,11 @@ const Actions = {
 
                     description:
                         String(
-                            descriptionInput
-                                ?.value ||
+                            descriptionInput?.value ||
                             ""
                         ).trim(),
+
+                    tags,
 
                     status:
                         "active",
@@ -1073,6 +1617,12 @@ const Actions = {
                         [],
 
                     bridges:
+                        [],
+
+                    permissions:
+                        [],
+
+                    capabilities:
                         []
                 });
 
@@ -1083,6 +1633,7 @@ const Actions = {
 
 
             if(
+                identityService &&
                 typeof identityService.create ===
                     "function"
             ){
@@ -1096,6 +1647,7 @@ const Actions = {
 
 
             if(
+                profileService &&
                 typeof profileService.create ===
                     "function"
             ){
@@ -1125,10 +1677,7 @@ const Actions = {
                         world.entities
                     )
                 ){
-
-                    world.entities =
-                        [];
-
+                    world.entities = [];
                 }
 
 
@@ -1137,14 +1686,7 @@ const Actions = {
                 );
 
 
-                if(
-                    typeof worldService.save ===
-                        "function"
-                ){
-
-                    worldService.save();
-
-                }
+                worldService.save?.();
 
             }
 
@@ -1160,82 +1702,94 @@ const Actions = {
         }
 
 
-        const evolution =
-            this.getService(
-                "evolution"
+        this.recordEvolution(
+            "milestone",
+            `${name} varlığı oluşturuldu`,
+            {
+                title:
+                    `${name} varlığı oluşturuldu`,
+
+                source:
+                    "entity",
+
+                status:
+                    "completed",
+
+                importance:
+                    "medium",
+
+                relatedEntityId:
+                    entity.id,
+
+                relatedWorldId:
+                    world.id,
+
+                tags:[
+                    "entity",
+                    "creation",
+                    ...tags
+                ],
+
+                organs:[
+                    "identity",
+                    "profile"
+                ]
+            }
+        );
+
+
+        engine.currentOpenedEntity =
+            entity;
+
+        engine.entityCreateMode =
+            false;
+
+        engine.entityType =
+            null;
+
+        engine.entityEditMode =
+            false;
+
+
+        const result =
+            engine.setView(
+                "entity",
+                {
+                    world,
+                    entity,
+                    page:
+                        null,
+                    entityCreateMode:
+                        false,
+                    entityType:
+                        null
+                }
             );
 
 
-        if(
-            evolution &&
-            typeof evolution.record ===
-                "function"
-        ){
+        if(result !== false){
 
-            try{
+            this.syncAwareness(
+                "entity",
+                {
+                    entityId:
+                        entity.id,
 
-                evolution.record(
-                    "milestone",
-                    `${name} varlığı oluşturuldu`,
-                    {
-                        title:
-                            `${name} varlığı oluşturuldu`,
-
-                        source:
-                            "entity",
-
-                        status:
-                            "completed",
-
-                        importance:
-                            "medium",
-
-                        relatedEntityId:
-                            entity.id,
-
-                        relatedWorldId:
-                            world.id,
-
-                        tags:[
-                            "entity",
-                            "creation"
-                        ],
-
-                        organs:[
-                            "identity",
-                            "profile"
-                        ]
-                    }
-                );
-
-            } catch(error){
-
-                console.warn(
-                    "Entity Evolution kaydı oluşturulamadı:",
-                    error
-                );
-
-            }
+                    worldId:
+                        world.id
+                }
+            );
 
         }
 
 
-        return engine.setView(
-            "entity",
-            {
-                world,
-                entity,
-                page:
-                    null,
-                entityCreateMode:
-                    false,
-                entityType:
-                    null
-            }
-        );
+        return result;
 
     },
 
+   /* =====================================================
+       ENTITY OPEN / EDIT / ARCHIVE
+    ===================================================== */
 
     openEntity(entityId){
 
@@ -1262,7 +1816,9 @@ const Actions = {
             world.entities.find(
                 item =>
                     item?.id ===
-                    entityId
+                        entityId &&
+                    item?.archived !==
+                        true
             );
 
 
@@ -1304,6 +1860,19 @@ const Actions = {
         }
 
 
+        engine.currentOpenedEntity =
+            entity;
+
+        engine.currentEntityPage =
+            null;
+
+        engine.entityEditMode =
+            false;
+
+        engine.worldEditMode =
+            false;
+
+
         const result =
             engine.setView(
                 "entity",
@@ -1339,6 +1908,488 @@ const Actions = {
 
 
         return result;
+
+    },
+
+
+    openEntityEditor(){
+
+        const engine =
+            this.getEngine();
+
+
+        const entity =
+            engine?.currentOpenedEntity ||
+            engine?.currentEntity ||
+            null;
+
+
+        if(
+            !engine ||
+            !entity ||
+            entity.archived ===
+                true
+        ){
+            return false;
+        }
+
+
+        engine.entityEditMode =
+            true;
+
+        engine.worldEditMode =
+            false;
+
+        engine.currentEntityPage =
+            null;
+
+
+        return engine.setView(
+            "entity",
+            {
+                world:
+                    engine.currentWorld ||
+                    null,
+
+                entity,
+
+                page:
+                    null,
+
+                entityCreateMode:
+                    false,
+
+                entityType:
+                    null
+            }
+        );
+
+    },
+
+
+    cancelEntityEditor(){
+
+        const engine =
+            this.getEngine();
+
+
+        const entity =
+            engine?.currentOpenedEntity ||
+            engine?.currentEntity ||
+            null;
+
+
+        if(
+            !engine ||
+            !entity
+        ){
+            return false;
+        }
+
+
+        engine.entityEditMode =
+            false;
+
+
+        return engine.setView(
+            "entity",
+            {
+                world:
+                    engine.currentWorld ||
+                    null,
+
+                entity,
+
+                page:
+                    null,
+
+                entityCreateMode:
+                    false,
+
+                entityType:
+                    null
+            }
+        );
+
+    },
+
+
+    saveEntityEditor(){
+
+        const engine =
+            this.getEngine();
+
+
+        const entity =
+            engine?.currentOpenedEntity ||
+            engine?.currentEntity ||
+            null;
+
+
+        if(
+            !engine ||
+            !entity
+        ){
+            return false;
+        }
+
+
+        const nameInput =
+            document.getElementById(
+                "entityEditNameInput"
+            );
+
+
+        const descriptionInput =
+            document.getElementById(
+                "entityEditDescriptionInput"
+            );
+
+
+        const tagsInput =
+            document.getElementById(
+                "entityEditTagsInput"
+            );
+
+
+        const statusInput =
+            document.getElementById(
+                "entityEditStatusInput"
+            );
+
+
+        const name =
+            String(
+                nameInput?.value ||
+                ""
+            ).trim();
+
+
+        if(!name){
+
+            nameInput?.focus();
+
+            return false;
+
+        }
+
+
+        const entityManager =
+            this.getService(
+                "entityManager"
+            );
+
+
+        const worldService =
+            this.getService(
+                "world"
+            );
+
+
+        if(
+            !entityManager ||
+            typeof entityManager.update !==
+                "function"
+        ){
+            return false;
+        }
+
+
+        let updated =
+            null;
+
+
+        try{
+
+            updated =
+                entityManager.update(
+                    entity.id,
+                    {
+                        name,
+
+                        description:
+                            String(
+                                descriptionInput?.value ||
+                                ""
+                            ).trim(),
+
+                        tags:
+                            this.parseTags(
+                                tagsInput?.value
+                            ),
+
+                        status:
+                            String(
+                                statusInput?.value ||
+                                "active"
+                            )
+                    }
+                );
+
+        } catch(error){
+
+            console.error(
+                "Entity güncellenemedi:",
+                error
+            );
+
+            return false;
+
+        }
+
+
+        if(!updated){
+            return false;
+        }
+
+
+        /*
+         * World localStorage içinde entity snapshot tutulduğu için
+         * güncel Entity instance'ını tekrar o World üyeliğine yazıyoruz.
+         */
+
+        const world =
+            engine.currentWorld ||
+            null;
+
+
+        if(
+            world &&
+            Array.isArray(
+                world.entities
+            )
+        ){
+
+            const index =
+                world.entities.findIndex(
+                    item =>
+                        item?.id ===
+                        updated.id
+                );
+
+
+            if(index >= 0){
+
+                world.entities[index] =
+                    updated;
+
+            }
+
+
+            if(
+                worldService &&
+                typeof worldService.save ===
+                    "function"
+            ){
+
+                worldService.save();
+
+            }
+
+        }
+
+
+        engine.currentOpenedEntity =
+            updated;
+
+        engine.entityEditMode =
+            false;
+
+
+        this.recordEvolution(
+            "life-event",
+            `${updated.name} varlığı güncellendi`,
+            {
+                title:
+                    `${updated.name} varlığı güncellendi`,
+
+                source:
+                    "entity",
+
+                status:
+                    "completed",
+
+                importance:
+                    "low",
+
+                relatedEntityId:
+                    updated.id,
+
+                relatedWorldId:
+                    world?.id ||
+                    null,
+
+                tags:[
+                    "entity",
+                    "update"
+                ]
+            }
+        );
+
+
+        return engine.setView(
+            "entity",
+            {
+                world,
+                entity:
+                    updated,
+                page:
+                    null,
+                entityCreateMode:
+                    false,
+                entityType:
+                    null
+            }
+        );
+
+    },
+
+
+    archiveEntity(){
+
+        const engine =
+            this.getEngine();
+
+
+        const entity =
+            engine?.currentOpenedEntity ||
+            engine?.currentEntity ||
+            null;
+
+
+        const world =
+            engine?.currentWorld ||
+            null;
+
+
+        if(
+            !entity ||
+            entity.id ===
+                engine?.rootEntity?.id
+        ){
+            return false;
+        }
+
+
+        const entityManager =
+            this.getService(
+                "entityManager"
+            );
+
+
+        const worldService =
+            this.getService(
+                "world"
+            );
+
+
+        if(
+            !entityManager ||
+            typeof entityManager.archive !==
+                "function"
+        ){
+            return false;
+        }
+
+
+        let archived =
+            false;
+
+
+        try{
+
+            archived =
+                entityManager.archive(
+                    entity.id
+                );
+
+        } catch(error){
+
+            console.error(
+                "Entity arşivlenemedi:",
+                error
+            );
+
+            return false;
+
+        }
+
+
+        if(!archived){
+            return false;
+        }
+
+
+        if(
+            world &&
+            Array.isArray(
+                world.entities
+            )
+        ){
+
+            const index =
+                world.entities.findIndex(
+                    item =>
+                        item?.id ===
+                        entity.id
+                );
+
+
+            if(index >= 0){
+
+                world.entities[index] =
+                    entity;
+
+            }
+
+
+            worldService?.save?.();
+
+        }
+
+
+        this.recordEvolution(
+            "life-event",
+            `${entity.name} varlığı arşivlendi`,
+            {
+                title:
+                    `${entity.name} varlığı arşivlendi`,
+
+                source:
+                    "entity",
+
+                status:
+                    "completed",
+
+                importance:
+                    "medium",
+
+                relatedEntityId:
+                    entity.id,
+
+                relatedWorldId:
+                    world?.id ||
+                    null,
+
+                tags:[
+                    "entity",
+                    "archive"
+                ]
+            }
+        );
+
+
+        engine.currentOpenedEntity =
+            null;
+
+        engine.currentEntityPage =
+            null;
+
+        engine.entityEditMode =
+            false;
+
+
+        return this.backToWorld();
 
     },
 
@@ -1397,6 +2448,12 @@ const Actions = {
         engine.currentEntityPage =
             page;
 
+        engine.entityEditMode =
+            false;
+
+        engine.worldEditMode =
+            false;
+
 
         let view =
             "entity";
@@ -1405,7 +2462,8 @@ const Actions = {
         if(
             entity.id ===
                 engine.rootEntity?.id &&
-            page === "identity"
+            page ===
+                "identity"
         ){
 
             view =
@@ -1417,7 +2475,8 @@ const Actions = {
         if(
             entity.id ===
                 engine.rootEntity?.id &&
-            page === "profile"
+            page ===
+                "profile"
         ){
 
             view =
@@ -1482,14 +2541,28 @@ const Actions = {
         }
 
 
+        engine.currentEntityPage =
+            null;
+
+        engine.entityEditMode =
+            false;
+
+
         return engine.setView(
             "entity",
             {
+                world:
+                    engine.currentWorld ||
+                    null,
+
                 entity,
+
                 page:
                     null,
+
                 entityCreateMode:
                     false,
+
                 entityType:
                     null
             }
@@ -1598,7 +2671,27 @@ const Actions = {
 
             } else {
 
+                const entityManager =
+                    this.getService(
+                        "entityManager"
+                    );
+
+
                 if(
+                    entityManager &&
+                    typeof entityManager.update ===
+                        "function"
+                ){
+
+                    entityManager.update(
+                        entity.id,
+                        {
+                            name,
+                            description
+                        }
+                    );
+
+                } else if(
                     typeof entity.update ===
                         "function"
                 ){
@@ -1643,21 +2736,9 @@ const Actions = {
                 }
 
 
-                const worldService =
-                    this.getService(
-                        "world"
-                    );
-
-
-                if(
-                    worldService &&
-                    typeof worldService.save ===
-                        "function"
-                ){
-
-                    worldService.save();
-
-                }
+                this.getService(
+                    "world"
+                )?.save?.();
 
             }
 
@@ -1758,462 +2839,468 @@ const Actions = {
 
 
     /* =====================================================
-       VAERO PAYMENT CORE
-       ENGINE CENTRAL COMMERCE IS NOT A PHYSICAL STORE
+       SYSTEM APPLICATIONS
     ===================================================== */
 
     openVaeroApp(){
 
-    const engine =
-        this.getEngine();
+        const engine =
+            this.getEngine();
 
-
-    if(
-        !engine ||
-        typeof engine.openSystemPage !==
-            "function"
-    ){
-        return false;
-    }
-
-
-    const opened =
-        engine.openSystemPage(
-            "vaero"
-        );
-
-
-    if(opened){
-
-        this.syncAwareness(
-            "vaero"
-        );
-
-    }
-
-
-    return opened;
-
-},
-
-
-openApplicationsApp(){
-
-    const engine =
-        this.getEngine();
-
-
-    if(
-        !engine ||
-        typeof engine.openSystemPage !==
-            "function"
-    ){
-        return false;
-    }
-
-
-    const opened =
-        engine.openSystemPage(
-            "applications"
-        );
-
-
-    if(opened){
-
-        this.syncAwareness(
-            "applications"
-        );
-
-    }
-
-
-    return opened;
-
-},
-
-getVaeroPaymentCore(){
-
-    if(
-        typeof window !== "undefined" &&
-        window.VaeroApp
-    ){
 
         if(
-            window.VaeroApp.paymentCore
+            !engine ||
+            typeof engine.openSystemPage !==
+                "function"
         ){
+            return false;
+        }
 
-            return window.VaeroApp
-                .paymentCore;
+
+        this.resetEditorState();
+
+
+        const opened =
+            engine.openSystemPage(
+                "vaero"
+            );
+
+
+        if(opened){
+
+            this.syncAwareness(
+                "vaero"
+            );
 
         }
 
 
-        if(
-            window.VaeroApp.core
-        ){
+        return opened;
 
-            return window.VaeroApp
-                .core;
+    },
+
+
+    openApplicationsApp(){
+
+        const engine =
+            this.getEngine();
+
+
+        if(
+            !engine ||
+            typeof engine.openSystemPage !==
+                "function"
+        ){
+            return false;
+        }
+
+
+        this.resetEditorState();
+
+
+        const opened =
+            engine.openSystemPage(
+                "applications"
+            );
+
+
+        if(opened){
+
+            this.syncAwareness(
+                "applications"
+            );
 
         }
 
 
+        return opened;
+
+    },
+
+
+    /* =====================================================
+       VAERO PAYMENT CORE
+    ===================================================== */
+
+    getVaeroPaymentCore(){
+
         if(
-            typeof window.VaeroApp
-                .getPaymentCore ===
-                    "function"
+            typeof window !==
+                "undefined" &&
+            window.VaeroApp
         ){
 
-            try{
+            if(
+                window.VaeroApp
+                    .paymentCore
+            ){
 
                 return window.VaeroApp
-                    .getPaymentCore();
+                    .paymentCore;
 
-            } catch(error){
+            }
 
-                return null;
+
+            if(
+                window.VaeroApp.core
+            ){
+
+                return window.VaeroApp
+                    .core;
+
+            }
+
+
+            if(
+                typeof window.VaeroApp
+                    .getPaymentCore ===
+                        "function"
+            ){
+
+                try{
+
+                    return window.VaeroApp
+                        .getPaymentCore();
+
+                } catch(error){
+
+                    return null;
+
+                }
 
             }
 
         }
 
-    }
 
-
-    return (
-        this.getService(
-            "paymentCore"
-        ) ||
-        null
-    );
-
-},
-
-
-createVaeroPaymentIntent(
-    payload = {}
-){
-
-    const core =
-        this.getVaeroPaymentCore();
-
-
-    if(
-        !core ||
-        typeof core.createIntent !==
-            "function"
-    ){
-
-        console.warn(
-            "VAERO Payment Core intent API bulunamadı."
+        return (
+            this.getService(
+                "paymentCore"
+            ) ||
+            null
         );
 
-        return false;
-
-    }
+    },
 
 
-    try{
+    createVaeroPaymentIntent(
+        payload = {}
+    ){
 
-        const intent =
-            core.createIntent(
-                payload
+        const core =
+            this.getVaeroPaymentCore();
+
+
+        if(
+            !core ||
+            typeof core.createIntent !==
+                "function"
+        ){
+
+            console.warn(
+                "VAERO Payment Core intent API bulunamadı."
             );
 
-
-        if(!intent){
             return false;
+
         }
+
+
+        try{
+
+            const intent =
+                core.createIntent(
+                    payload
+                );
+
+
+            if(!intent){
+                return false;
+            }
+
+
+            const engine =
+                this.getEngine();
+
+
+            if(engine){
+
+                engine.currentVaeroPaymentIntent =
+                    intent;
+
+                engine.mount(
+                    engine.currentEntity
+                );
+
+            }
+
+
+            return intent;
+
+        } catch(error){
+
+            console.error(
+                "Payment intent oluşturulamadı:",
+                error
+            );
+
+            return false;
+
+        }
+
+    },
+
+
+    selectVaeroPaymentMethod(method){
+
+        const core =
+            this.getVaeroPaymentCore();
 
 
         const engine =
             this.getEngine();
 
 
-        if(engine){
+        const intent =
+            engine?.currentVaeroPaymentIntent ||
+            null;
 
-            engine.currentVaeroPaymentIntent =
-                intent;
 
-            engine.mount(
-                engine.currentEntity
-            );
-
+        if(
+            !core ||
+            !intent ||
+            !method
+        ){
+            return false;
         }
 
 
-        return intent;
+        try{
 
-    } catch(error){
+            if(
+                typeof core.setMethod ===
+                    "function"
+            ){
 
-        console.error(
-            "Payment intent oluşturulamadı:",
-            error
-        );
-
-        return false;
-
-    }
-
-},
+                const result =
+                    core.setMethod(
+                        intent.id,
+                        method
+                    );
 
 
-selectVaeroPaymentMethod(
-    method
-){
-
-    const core =
-        this.getVaeroPaymentCore();
+                engine.currentVaeroPaymentIntent =
+                    result ||
+                    intent;
 
 
-    const engine =
-        this.getEngine();
-
-
-    const intent =
-        engine
-            ?.currentVaeroPaymentIntent ||
-        null;
-
-
-    if(
-        !core ||
-        !intent ||
-        !method
-    ){
-        return false;
-    }
-
-
-    try{
-
-        if(
-            typeof core.setMethod ===
-                "function"
-        ){
-
-            const result =
-                core.setMethod(
-                    intent.id,
-                    method
+                engine.mount(
+                    engine.currentEntity
                 );
 
 
-            engine.currentVaeroPaymentIntent =
-                result ||
-                intent;
+                return result !== false;
+
+            }
 
 
-            engine.mount(
-                engine.currentEntity
-            );
+            if(
+                typeof core.selectMethod ===
+                    "function"
+            ){
+
+                const result =
+                    core.selectMethod(
+                        intent.id,
+                        method
+                    );
 
 
-            return result !== false;
+                engine.currentVaeroPaymentIntent =
+                    result ||
+                    intent;
 
-        }
 
-
-        if(
-            typeof core.selectMethod ===
-                "function"
-        ){
-
-            const result =
-                core.selectMethod(
-                    intent.id,
-                    method
+                engine.mount(
+                    engine.currentEntity
                 );
 
 
-            engine.currentVaeroPaymentIntent =
-                result ||
-                intent;
+                return result !== false;
 
+            }
 
-            engine.mount(
-                engine.currentEntity
+        } catch(error){
+
+            console.error(
+                "Payment method seçilemedi:",
+                error
             );
-
-
-            return result !== false;
 
         }
 
-    } catch(error){
 
-        console.error(
-            "Payment method seçilemedi:",
-            error
-        );
-
-    }
-
-
-    return false;
-
-},
-
-
-selectVaeroPaymentProvider(
-    provider
-){
-
-    const core =
-        this.getVaeroPaymentCore();
-
-
-    const engine =
-        this.getEngine();
-
-
-    const intent =
-        engine
-            ?.currentVaeroPaymentIntent ||
-        null;
-
-
-    if(
-        !core ||
-        !intent ||
-        !provider
-    ){
         return false;
-    }
+
+    },
 
 
-    try{
+    selectVaeroPaymentProvider(provider){
+
+        const core =
+            this.getVaeroPaymentCore();
+
+
+        const engine =
+            this.getEngine();
+
+
+        const intent =
+            engine?.currentVaeroPaymentIntent ||
+            null;
+
 
         if(
-            typeof core.setProvider ===
-                "function"
+            !core ||
+            !intent ||
+            !provider
         ){
+            return false;
+        }
 
-            const result =
-                core.setProvider(
-                    intent.id,
-                    provider
+
+        try{
+
+            if(
+                typeof core.setProvider ===
+                    "function"
+            ){
+
+                const result =
+                    core.setProvider(
+                        intent.id,
+                        provider
+                    );
+
+
+                engine.currentVaeroPaymentIntent =
+                    result ||
+                    intent;
+
+
+                engine.mount(
+                    engine.currentEntity
                 );
 
 
-            engine.currentVaeroPaymentIntent =
-                result ||
-                intent;
+                return result !== false;
+
+            }
 
 
-            engine.mount(
-                engine.currentEntity
+            if(
+                typeof core.selectProvider ===
+                    "function"
+            ){
+
+                const result =
+                    core.selectProvider(
+                        intent.id,
+                        provider
+                    );
+
+
+                engine.currentVaeroPaymentIntent =
+                    result ||
+                    intent;
+
+
+                engine.mount(
+                    engine.currentEntity
+                );
+
+
+                return result !== false;
+
+            }
+
+        } catch(error){
+
+            console.error(
+                "Payment provider seçilemedi:",
+                error
             );
-
-
-            return result !== false;
 
         }
 
 
-        if(
-            typeof core.selectProvider ===
-                "function"
-        ){
-
-            const result =
-                core.selectProvider(
-                    intent.id,
-                    provider
-                );
-
-
-            engine.currentVaeroPaymentIntent =
-                result ||
-                intent;
-
-
-            engine.mount(
-                engine.currentEntity
-            );
-
-
-            return result !== false;
-
-        }
-
-    } catch(error){
-
-        console.error(
-            "Payment provider seçilemedi:",
-            error
-        );
-
-    }
-
-
-    return false;
-
-},
-
-
-startVaeroPayment(){
-
-    const core =
-        this.getVaeroPaymentCore();
-
-
-    const engine =
-        this.getEngine();
-
-
-    const intent =
-        engine
-            ?.currentVaeroPaymentIntent ||
-        null;
-
-
-    if(
-        !core ||
-        !intent
-    ){
         return false;
-    }
+
+    },
 
 
-    try{
+    startVaeroPayment(){
+
+        const core =
+            this.getVaeroPaymentCore();
+
+
+        const engine =
+            this.getEngine();
+
+
+        const intent =
+            engine?.currentVaeroPaymentIntent ||
+            null;
+
 
         if(
-            typeof core.start ===
-                "function"
+            !core ||
+            !intent
         ){
+            return false;
+        }
 
-            return core.start(
-                intent.id
+
+        try{
+
+            if(
+                typeof core.start ===
+                    "function"
+            ){
+
+                return core.start(
+                    intent.id
+                );
+
+            }
+
+
+            if(
+                typeof core.startIntent ===
+                    "function"
+            ){
+
+                return core.startIntent(
+                    intent.id
+                );
+
+            }
+
+        } catch(error){
+
+            console.error(
+                "Payment başlatılamadı:",
+                error
             );
 
         }
 
 
-        if(
-            typeof core.startIntent ===
-                "function"
-        ){
+        return false;
 
-            return core.startIntent(
-                intent.id
-            );
+    },
 
-        }
-
-    } catch(error){
-
-        console.error(
-            "Payment başlatılamadı:",
-            error
-        );
-
-    }
-
-
-    return false;
-
-},
 
     cancelVaeroPayment(){
 
@@ -2226,8 +3313,7 @@ startVaeroPayment(){
 
 
         const intent =
-            engine
-                ?.currentVaeroPaymentIntent ||
+            engine?.currentVaeroPaymentIntent ||
             null;
 
 
@@ -2279,9 +3365,7 @@ startVaeroPayment(){
     },
 
 
-    refundVaeroPayment(
-        transactionId
-    ){
+    refundVaeroPayment(transactionId){
 
         const core =
             this.getVaeroPaymentCore();
@@ -2371,9 +3455,7 @@ startVaeroPayment(){
     },
 
 
-    normalizeBrainSessions(
-        sessions
-    ){
+    normalizeBrainSessions(sessions){
 
         if(
             !Array.isArray(
@@ -2457,9 +3539,7 @@ startVaeroPayment(){
                                             typeof action !==
                                                 "object"
                                         ){
-
                                             return null;
-
                                         }
 
 
@@ -2507,9 +3587,7 @@ startVaeroPayment(){
 
                                     }
                                 )
-                                .filter(
-                                    Boolean
-                                )
+                                .filter(Boolean)
                             : [];
 
 
@@ -2576,7 +3654,7 @@ startVaeroPayment(){
                 }
             )
             .sort(
-                (a, b) =>
+                (a,b) =>
                     b.updatedAt -
                     a.updatedAt
             );
@@ -2617,8 +3695,7 @@ startVaeroPayment(){
 
         if(!saved){
 
-            brain.sessions =
-                [];
+            brain.sessions = [];
 
             brain.resumePoint =
                 null;
@@ -2657,8 +3734,7 @@ startVaeroPayment(){
             );
 
 
-            brain.sessions =
-                [];
+            brain.sessions = [];
 
             brain.resumePoint =
                 null;
@@ -2723,9 +3799,7 @@ startVaeroPayment(){
     },
 
 
-    getTodayBrainConversationSession(
-        brain
-    ){
+    getTodayBrainConversationSession(brain){
 
         if(
             !brain ||
@@ -2755,9 +3829,7 @@ startVaeroPayment(){
     },
 
 
-    createTodayBrainConversation(
-        brain
-    ){
+    createTodayBrainConversation(brain){
 
         const now =
             Date.now();
@@ -2837,8 +3909,7 @@ startVaeroPayment(){
             )
         ){
 
-            brain.sessions =
-                [];
+            brain.sessions = [];
 
         }
 
@@ -2876,9 +3947,7 @@ startVaeroPayment(){
 
 
         const content =
-            labels[
-                page
-            ];
+            labels[page];
 
 
         if(!content){
@@ -2943,7 +4012,7 @@ startVaeroPayment(){
 
     },
 
-    /* =====================================================
+   /* =====================================================
        BRAIN PANEL
     ===================================================== */
 
@@ -2969,11 +4038,10 @@ startVaeroPayment(){
             }
 
 
-            document.body
-                .insertAdjacentHTML(
-                    "beforeend",
-                    window.BrainApp.render()
-                );
+            document.body.insertAdjacentHTML(
+                "beforeend",
+                window.BrainApp.render()
+            );
 
 
             panel =
@@ -3022,8 +4090,7 @@ startVaeroPayment(){
 
         } catch(error){
 
-            context =
-                null;
+            context = null;
 
         }
 
@@ -3079,6 +4146,9 @@ startVaeroPayment(){
             discovery:
                 "Discovery",
 
+            applications:
+                "Applications",
+
             vaero:
                 "VAERO"
 
@@ -3088,7 +4158,7 @@ startVaeroPayment(){
         const suggestions = {
 
             home:
-                "Dünyalarını açabilir, profilini görüntüleyebilir veya yeni bir yapı oluşturabilirsin.",
+                "Dünyalarını açabilir, Applications'a geçebilir veya yeni bir yapı oluşturabilirsin.",
 
             identity:
                 "Kimlik bilgilerini inceleyebilir veya Profil ekranına geçebilirsin.",
@@ -3103,10 +4173,10 @@ startVaeroPayment(){
                 "Mevcut dünyalarını açabilir veya yeni bir dünya oluşturabilirsin.",
 
             world:
-                "Bu dünyadaki varlıkları inceleyebilir veya yeni bir varlık ekleyebilirsin.",
+                "Bu dünyadaki varlıkları inceleyebilir, düzenleyebilir veya yeni bir varlık oluşturabilirsin.",
 
             entity:
-                "Varlığın Kimlik, Profil ve organlarına geçebilirsin.",
+                "Varlığın Kimlik, Profil, Hafıza, Timeline, Bridge ve Organlar katmanlarını yönetebilirsin.",
 
             memory:
                 "Geçmiş kayıtlarını ve önemli bağlamlarını inceleyebilirsin.",
@@ -3116,6 +4186,9 @@ startVaeroPayment(){
 
             evolution:
                 "Gelişimini ve yaşam olaylarının etkisini inceleyebilirsin.",
+
+            applications:
+                "Engine'e bağlı uygulamaları keşfedebilir ve yönetebilirsin.",
 
             vaero:
                 "Engine hizmetlerini ve ödeme altyapısını yönetebilirsin."
@@ -3133,9 +4206,7 @@ startVaeroPayment(){
 
             contextText.textContent =
                 `Şu an ${
-                    names[
-                        contextKey
-                    ] ||
+                    names[contextKey] ||
                     contextKey
                 } ekranındasın.`;
 
@@ -3151,9 +4222,7 @@ startVaeroPayment(){
         if(suggestion){
 
             suggestion.textContent =
-                suggestions[
-                    contextKey
-                ] ||
+                suggestions[contextKey] ||
                 "Bir ekran açabilir veya ne yapmak istediğini yazabilirsin.";
 
         }
@@ -3297,12 +4366,8 @@ startVaeroPayment(){
         return [
 
             {
-                id:
-                    "profile",
-
-                label:
-                    "Profil",
-
+                id:"profile",
+                label:"Profil",
                 words:[
                     "profil",
                     "profile"
@@ -3310,12 +4375,8 @@ startVaeroPayment(){
             },
 
             {
-                id:
-                    "identity",
-
-                label:
-                    "Kimlik",
-
+                id:"identity",
+                label:"Kimlik",
                 words:[
                     "kimlik",
                     "identity"
@@ -3323,12 +4384,8 @@ startVaeroPayment(){
             },
 
             {
-                id:
-                    "memory",
-
-                label:
-                    "Hafıza",
-
+                id:"memory",
+                label:"Hafıza",
                 words:[
                     "hafıza",
                     "hafiza",
@@ -3337,12 +4394,8 @@ startVaeroPayment(){
             },
 
             {
-                id:
-                    "timeline",
-
-                label:
-                    "Zaman Çizelgesi",
-
+                id:"timeline",
+                label:"Zaman Çizelgesi",
                 words:[
                     "timeline",
                     "zaman çizelgesi",
@@ -3351,12 +4404,8 @@ startVaeroPayment(){
             },
 
             {
-                id:
-                    "bridge",
-
-                label:
-                    "Köprü",
-
+                id:"bridge",
+                label:"Köprü",
                 words:[
                     "köprü",
                     "kopru",
@@ -3365,12 +4414,8 @@ startVaeroPayment(){
             },
 
             {
-                id:
-                    "evolution",
-
-                label:
-                    "Evrim",
-
+                id:"evolution",
+                label:"Evrim",
                 words:[
                     "evrim",
                     "evolution"
@@ -3378,12 +4423,8 @@ startVaeroPayment(){
             },
 
             {
-                id:
-                    "organs",
-
-                label:
-                    "Organlar",
-
+                id:"organs",
+                label:"Organlar",
                 words:[
                     "organ",
                     "organlar"
@@ -3391,12 +4432,8 @@ startVaeroPayment(){
             },
 
             {
-                id:
-                    "settings",
-
-                label:
-                    "Ayarlar",
-
+                id:"settings",
+                label:"Ayarlar",
                 words:[
                     "ayar",
                     "ayarlar",
@@ -3446,15 +4483,12 @@ startVaeroPayment(){
 
 
     /* =====================================================
-       BRAIN MESSAGE SEND
-       SINGLE ROUTE - NO SECOND INTENT DISPATCH
+       BRAIN SEND
     ===================================================== */
 
     async sendBrainMessage(){
 
-        if(
-            this.brainSending
-        ){
+        if(this.brainSending){
             return false;
         }
 
@@ -3499,8 +4533,7 @@ startVaeroPayment(){
             )
         ){
 
-            brain.sessions =
-                [];
+            brain.sessions = [];
 
         }
 
@@ -3522,15 +4555,13 @@ startVaeroPayment(){
                 typeof contextService.build ===
                     "function"
                     ? contextService.build({
-                        message:
-                            text
+                        message:text
                     })
                     : null;
 
         } catch(error){
 
-            context =
-                null;
+            context = null;
 
         }
 
@@ -3589,10 +4620,8 @@ startVaeroPayment(){
         input.value =
             "";
 
-
         this.brainSending =
             true;
-
 
         input.disabled =
             true;
@@ -3606,18 +4635,6 @@ startVaeroPayment(){
 
 
         try{
-
-            /*
-             * Yeni ana yol:
-             *
-             * Brain.ask
-             * → BrainService
-             * → BrainCore
-             * → Intent
-             * → Policy
-             * → Actions
-             * → Provider
-             */
 
             if(
                 typeof brain.ask ===
@@ -3687,7 +4704,6 @@ startVaeroPayment(){
 
             this.brainSending =
                 false;
-
 
             input.disabled =
                 false;
@@ -3776,9 +4792,7 @@ startVaeroPayment(){
     },
 
 
-    updateBrainConversationSummary(
-        session
-    ){
+    updateBrainConversationSummary(session){
 
         if(
             !session ||
@@ -3804,12 +4818,8 @@ startVaeroPayment(){
                             action.content
                         ).trim()
                 )
-                .filter(
-                    Boolean
-                )
-                .slice(
-                    -3
-                );
+                .filter(Boolean)
+                .slice(-3);
 
 
         const summary =
@@ -3875,8 +4885,7 @@ startVaeroPayment(){
 
         } catch(error){
 
-            context =
-                null;
+            context = null;
 
         }
 
@@ -3996,7 +5005,7 @@ startVaeroPayment(){
 
         if(
             point.screen ===
-            "create"
+                "create"
         ){
 
             return this.openCreate();
@@ -4006,7 +5015,7 @@ startVaeroPayment(){
 
         if(
             point.screen ===
-            "worlds"
+                "worlds"
         ){
 
             return this.openWorlds();
@@ -4020,14 +5029,14 @@ startVaeroPayment(){
 
 
     /* =====================================================
-       BRAIN HISTORY UI
+       BRAIN HISTORY
     ===================================================== */
 
     getBrainActionText(action){
 
         if(
             typeof action ===
-            "string"
+                "string"
         ){
             return action;
         }
@@ -4057,29 +5066,13 @@ startVaeroPayment(){
     escapeBrainHTML(value){
 
         return String(
-            value ??
-            ""
+            value ?? ""
         )
-            .replaceAll(
-                "&",
-                "&amp;"
-            )
-            .replaceAll(
-                "<",
-                "&lt;"
-            )
-            .replaceAll(
-                ">",
-                "&gt;"
-            )
-            .replaceAll(
-                '"',
-                "&quot;"
-            )
-            .replaceAll(
-                "'",
-                "&#039;"
-            );
+            .replaceAll("&","&amp;")
+            .replaceAll("<","&lt;")
+            .replaceAll(">","&gt;")
+            .replaceAll('"',"&quot;")
+            .replaceAll("'","&#039;");
 
     },
 
@@ -4146,7 +5139,7 @@ startVaeroPayment(){
                                 .trim()
                     )
                     .sort(
-                        (a, b) =>
+                        (a,b) =>
                             (
                                 a?.createdAt ||
                                 0
@@ -4169,10 +5162,7 @@ startVaeroPayment(){
             "brain-chat-flow";
 
 
-        if(
-            actions.length ===
-            0
-        ){
+        if(actions.length === 0){
 
             flow.innerHTML = `
                 <div class="brain-chat-empty">
@@ -4327,9 +5317,7 @@ startVaeroPayment(){
                                                         </button>
                                                     `
                                                 )
-                                                .join(
-                                                    ""
-                                                )}
+                                                .join("")}
                                         </span>
                                       `
                                     : ""
@@ -4393,9 +5381,7 @@ startVaeroPayment(){
                             action.role ===
                                 "brain"
                     )
-                    .slice(
-                        -3
-                    );
+                    .slice(-3);
 
 
             const miniFlow =
@@ -4580,7 +5566,7 @@ startVaeroPayment(){
 
         if(
             action ===
-            "evolution:linked:open"
+                "evolution:linked:open"
         ){
 
             const target =
@@ -4653,10 +5639,12 @@ document.addEventListener(
 
 
         if(
-            action ===
-                "world:create:submit" ||
-            action ===
-                "entity:create:submit"
+            [
+                "world:create:submit",
+                "world:edit:submit",
+                "entity:create:submit",
+                "entity:edit:submit"
+            ].includes(action)
         ){
 
             event.preventDefault();
@@ -4718,6 +5706,30 @@ document.addEventListener(
                 break;
 
 
+            case "world:edit:open":
+
+                Actions.openWorldEditor();
+                break;
+
+
+            case "world:edit:cancel":
+
+                Actions.cancelWorldEditor();
+                break;
+
+
+            case "world:edit:submit":
+
+                Actions.saveWorldEditor();
+                break;
+
+
+            case "world:archive":
+
+                Actions.archiveWorld();
+                break;
+
+
             case "world:back":
 
                 Actions.backToWorld();
@@ -4765,6 +5777,30 @@ document.addEventListener(
                         .entityId
                 );
 
+                break;
+
+
+            case "entity:edit:open":
+
+                Actions.openEntityEditor();
+                break;
+
+
+            case "entity:edit:cancel":
+
+                Actions.cancelEntityEditor();
+                break;
+
+
+            case "entity:edit:submit":
+
+                Actions.saveEntityEditor();
+                break;
+
+
+            case "entity:archive":
+
+                Actions.archiveEntity();
                 break;
 
 
@@ -4854,46 +5890,47 @@ document.addEventListener(
 
                 break;
 
-              case "profile:save":
 
-    Actions.saveProfile();
-    break;
+            case "profile:save":
 
-
-case "discovery:restart":
-
-    Actions.restartDiscovery();
-    break;
+                Actions.saveProfile();
+                break;
 
 
-/* ---------------------------------------------
-   VAERO SYSTEM APPLICATIONS
---------------------------------------------- */
+            case "discovery:restart":
 
-case "app:applications":
-
-    Actions.openApplicationsApp();
-    break;
+                Actions.restartDiscovery();
+                break;
 
 
-case "app:vaero":
+            /* ---------------------------------------------
+               SYSTEM APPLICATIONS
+            --------------------------------------------- */
 
-    Actions.openVaeroApp();
-    break;
+            case "app:applications":
+
+                Actions.openApplicationsApp();
+                break;
 
 
-/* ---------------------------------------------
-   VAERO PAYMENT CORE
---------------------------------------------- */
+            case "app:vaero":
 
-case "vaero:payment:method":
+                Actions.openVaeroApp();
+                break;
 
-    Actions.selectVaeroPaymentMethod(
-        button.dataset
-            .paymentMethod
-    );
 
-    break;
+            /* ---------------------------------------------
+               PAYMENT CORE
+            --------------------------------------------- */
+
+            case "vaero:payment:method":
+
+                Actions.selectVaeroPaymentMethod(
+                    button.dataset
+                        .paymentMethod
+                );
+
+                break;
 
 
             case "vaero:payment:provider":
@@ -4985,22 +6022,33 @@ document.addEventListener(
         event.preventDefault();
 
 
-        if(
-            form.dataset.engineForm ===
-            "world-create"
+        switch(
+            form.dataset
+                .engineForm
         ){
 
-            Actions.createWorld();
+            case "world-create":
 
-        }
+                Actions.createWorld();
+                break;
 
 
-        if(
-            form.dataset.engineForm ===
-            "entity-create"
-        ){
+            case "world-edit":
 
-            Actions.createEntity();
+                Actions.saveWorldEditor();
+                break;
+
+
+            case "entity-create":
+
+                Actions.createEntity();
+                break;
+
+
+            case "entity-edit":
+
+                Actions.saveEntityEditor();
+                break;
 
         }
 
