@@ -1,13 +1,219 @@
+/* =========================================================
+   VAERO RENDERER
+   Engine Screen / Application Rendering Layer
+========================================================= */
+
 const Renderer = {
 
-    mountId: "engine",
+    mountId:
+        "engine",
+
+
+    /* =====================================================
+       ROOT
+    ===================================================== */
+
+    getRoot(){
+
+        return document.getElementById(
+            this.mountId
+        );
+
+    },
+
+
+    /* =====================================================
+       SAFE SERVICE ACCESS
+    ===================================================== */
+
+    getService(name){
+
+        try{
+
+            if(
+                typeof VAERO === "undefined" ||
+                typeof VAERO.get !== "function"
+            ){
+                return null;
+            }
+
+
+            return (
+                VAERO.get(name) ||
+                null
+            );
+
+        } catch(error){
+
+            console.warn(
+                `Renderer service lookup failed: ${name}`,
+                error
+            );
+
+            return null;
+
+        }
+
+    },
+
+
+    /* =====================================================
+       ERROR STATE
+    ===================================================== */
+
+    renderError(
+        components,
+        message
+    ){
+
+        if(
+            components &&
+            typeof components.errorState ===
+                "function"
+        ){
+
+            return components.errorState(
+                message
+            );
+
+        }
+
+
+        return `
+            <section class="section">
+
+                <div class="eyebrow">
+                    EKRAN HATASI
+                </div>
+
+                <h1>
+                    ${String(
+                        message ||
+                        "Bu ekran şu anda açılamıyor."
+                    )}
+                </h1>
+
+            </section>
+        `;
+
+    },
+
+
+    /* =====================================================
+       BODY STATE
+    ===================================================== */
+
+    syncDocumentState(
+        view,
+        page
+    ){
+
+        if(
+            typeof document ===
+                "undefined" ||
+            !document.body
+        ){
+            return false;
+        }
+
+
+        document.body.dataset.page =
+            view ||
+            "home";
+
+
+        if(page){
+
+            document.body.dataset.enginePage =
+                page;
+
+        } else {
+
+            delete document.body.dataset.enginePage;
+
+        }
+
+
+        return true;
+
+    },
+
+
+    /* =====================================================
+       SYSTEM APPLICATION ROUTER
+    ===================================================== */
+
+    renderSystemApplication(
+        page,
+        components
+    ){
+
+        switch(page){
+
+            /* -------------------------------------------------
+               VAERO SYSTEM / PAYMENT CORE
+            ------------------------------------------------- */
+
+            case "vaero":
+
+                if(
+                    window.VaeroApp &&
+                    typeof window.VaeroApp.render ===
+                        "function"
+                ){
+
+                    return window.VaeroApp.render();
+
+                }
+
+
+                return this.renderError(
+                    components,
+                    "VAERO sistem katmanı yüklenemedi."
+                );
+
+
+            /* -------------------------------------------------
+               APPLICATIONS
+            ------------------------------------------------- */
+
+            case "applications":
+
+                if(
+                    window.ApplicationsApp &&
+                    typeof window.ApplicationsApp.render ===
+                        "function"
+                ){
+
+                    return window.ApplicationsApp.render();
+
+                }
+
+
+                return this.renderError(
+                    components,
+                    "Applications katmanı yüklenemedi."
+                );
+
+
+            default:
+
+                return null;
+
+        }
+
+    },
+
+
+    /* =====================================================
+       MAIN RENDER
+    ===================================================== */
 
     render(entity){
 
         const root =
-            document.getElementById(
-                this.mountId
-            );
+            this.getRoot();
+
 
         if(!root){
 
@@ -19,10 +225,12 @@ const Renderer = {
 
         }
 
+
         const components =
-            VAERO.get(
+            this.getService(
                 "components"
             );
+
 
         if(!components){
 
@@ -34,8 +242,10 @@ const Renderer = {
 
         }
 
+
         const engine =
             VAERO.engine;
+
 
         if(!engine){
 
@@ -47,34 +257,33 @@ const Renderer = {
 
         }
 
+
         const rootEntity =
             engine.rootEntity ||
             entity;
+
 
         const view =
             engine.currentView ||
             "home";
 
-        document.body.dataset.page =
-            view;
 
-        if(
-            engine.currentEntityPage
-        ){
+        const currentEntityPage =
+            engine.currentEntityPage ||
+            null;
 
-            document.body.dataset.enginePage =
-                engine.currentEntityPage;
 
-        }else{
+        this.syncDocumentState(
+            view,
+            currentEntityPage
+        );
 
-            delete document.body.dataset.enginePage;
-
-        }
 
         let screenHTML =
             "";
 
-        try {
+
+        try{
 
             screenHTML =
                 this.renderScreen({
@@ -91,54 +300,92 @@ const Renderer = {
                 error
             );
 
+
             screenHTML =
-                components.errorState
-                    ? components.errorState(
-                        "Bu ekran şu anda açılamıyor."
-                    )
-                    : `
-                        <section class="section">
-
-                            <div class="eyebrow">
-                                EKRAN HATASI
-                            </div>
-
-                            <h1>
-                                Bu ekran şu anda açılamıyor.
-                            </h1>
-
-                        </section>
-                    `;
+                this.renderError(
+                    components,
+                    "Bu ekran şu anda açılamıyor."
+                );
 
         }
+
+
+        /*
+         * Rendering sonucunun yanlışlıkla
+         * undefined/null olması halinde shell içine
+         * bozuk içerik basılmasını engeller.
+         */
+
+        if(
+            typeof screenHTML !==
+                "string"
+        ){
+
+            screenHTML =
+                this.renderError(
+                    components,
+                    "Ekran geçerli bir görünüm üretmedi."
+                );
+
+        }
+
+
+        let navigationHTML =
+            "";
+
+
+        try{
+
+            if(
+                typeof components.navigation ===
+                    "function"
+            ){
+
+                navigationHTML =
+                    components.navigation({
+                        view,
+                        page:
+                            currentEntityPage
+                    }) ||
+                    "";
+
+            }
+
+        } catch(error){
+
+            console.error(
+                "Navigation render failed:",
+                error
+            );
+
+        }
+
 
         root.innerHTML = `
             <main
                 class="vaero-shell"
                 data-engine-view="${view}"
-                data-engine-page="${
-                    engine.currentEntityPage ||
-                    ""
-                }"
+                data-engine-page="${currentEntityPage || ""}"
             >
 
                 <div class="engine-screen">
                     ${screenHTML}
                 </div>
 
-                ${components.navigation({
-                    view,
-                    page:
-                        engine.currentEntityPage ||
-                        null
-                })}
+                ${navigationHTML}
 
             </main>
         `;
 
+
         return true;
 
     },
+
+
+    /* =====================================================
+       SCREEN ROUTER
+    ===================================================== */
 
     renderScreen({
         view,
@@ -151,74 +398,41 @@ const Renderer = {
             engine.currentEntityPage ||
             null;
 
-        /*
-         * =====================================================
-         * VAERO SYSTEM APP
-         * =====================================================
-         *
-         * Eski yapı:
-         *
-         * currentEntityPage.startsWith("vaero")
-         *
-         * şeklinde tüm vaero-* sayfalarını tek uygulamaya
-         * gönderiyordu.
-         *
-         * Bu kaldırıldı.
-         *
-         * VaeroApp şu anda yalnızca VAERO Engine hizmet /
-         * Payment Core sistem ekranıdır.
-         */
 
-        if(
-    currentEntityPage ===
-        "vaero"
-){
+        /* =================================================
+           SYSTEM APPLICATIONS
+        ================================================= */
 
-    if(
-        window.VaeroApp &&
-        typeof window.VaeroApp.render ===
-            "function"
-    ){
+        if(currentEntityPage){
 
-        return window.VaeroApp.render();
-
-    }
-
-    return components.errorState(
-        "VAERO sistem katmanı yüklenemedi."
-    );
-
-}
+            const systemApplication =
+                this.renderSystemApplication(
+                    currentEntityPage,
+                    components
+                );
 
 
-if(
-    currentEntityPage ===
-        "applications"
-){
+            if(
+                systemApplication !==
+                    null
+            ){
 
-    if(
-        window.ApplicationsApp &&
-        typeof window.ApplicationsApp.render ===
-            "function"
-    ){
+                return systemApplication;
 
-        return window.ApplicationsApp.render();
+            }
 
-    }
+        }
 
-    return components.errorState(
-        "Applications katmanı yüklenemedi."
-    );
 
-}
-
-        /*
-         * =====================================================
-         * ENGINE VIEWS
-         * =====================================================
-         */
+        /* =================================================
+           ENGINE VIEWS
+        ================================================= */
 
         switch(view){
+
+            /* -------------------------------------------------
+               IDENTITY
+            ------------------------------------------------- */
 
             case "identity":
 
@@ -227,6 +441,11 @@ if(
                     rootEntity
                 );
 
+
+            /* -------------------------------------------------
+               PROFILE
+            ------------------------------------------------- */
+
             case "profile":
 
                 return components.entityProfile(
@@ -234,18 +453,29 @@ if(
                     rootEntity
                 );
 
+
+            /* -------------------------------------------------
+               CREATE
+            ------------------------------------------------- */
+
             case "create":
 
                 return components.createView(
                     rootEntity
                 );
 
+
+            /* -------------------------------------------------
+               WORLDS
+            ------------------------------------------------- */
+
             case "worlds": {
 
                 const worldService =
-                    VAERO.get(
+                    this.getService(
                         "world"
                     );
+
 
                 const worlds =
                     worldService &&
@@ -254,13 +484,21 @@ if(
                         ? worldService.all()
                         : [];
 
+
                 return components.worldsView(
-                    worlds
+                    Array.isArray(worlds)
+                        ? worlds
+                        : []
                 );
 
             }
 
-            case "world":
+
+            /* -------------------------------------------------
+               WORLD
+            ------------------------------------------------- */
+
+            case "world": {
 
                 if(
                     !engine.currentWorld ||
@@ -271,10 +509,12 @@ if(
                         "World view requested without a valid world."
                     );
 
+
                     const worldService =
-                        VAERO.get(
+                        this.getService(
                             "world"
                         );
+
 
                     const worlds =
                         worldService &&
@@ -283,15 +523,26 @@ if(
                             ? worldService.all()
                             : [];
 
+
                     return components.worldsView(
-                        worlds
+                        Array.isArray(worlds)
+                            ? worlds
+                            : []
                     );
 
                 }
 
+
                 return components.worldView(
                     engine.currentWorld
                 );
+
+            }
+
+
+            /* -------------------------------------------------
+               ENTITY
+            ------------------------------------------------- */
 
             case "entity":
 
@@ -299,15 +550,22 @@ if(
                     !engine.currentOpenedEntity
                 ){
 
-                    return components.errorState(
+                    return this.renderError(
+                        components,
                         "Açılacak varlık bulunamadı."
                     );
 
                 }
 
+
                 return components.entityApp(
                     engine.currentOpenedEntity
                 );
+
+
+            /* -------------------------------------------------
+               HOME
+            ------------------------------------------------- */
 
             case "home":
             default:
@@ -322,10 +580,20 @@ if(
 
 };
 
+
+/* =========================================================
+   VAERO BINDING
+========================================================= */
+
 VAERO.renderer =
     Renderer;
+
 
 VAERO.register(
     "renderer",
     Renderer
 );
+
+
+window.Renderer =
+    Renderer;
