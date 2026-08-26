@@ -33,6 +33,12 @@ const Engine = {
     entityType:
         null,
 
+    worldEditMode:
+        false,
+
+    entityEditMode:
+        false,
+
     renderer:
         null,
 
@@ -85,14 +91,19 @@ const Engine = {
 
             if(
                 typeof VAERO === "undefined" ||
-                typeof VAERO.get !== "function"
+                typeof VAERO.get !==
+                    "function"
             ){
+
                 return null;
+
             }
 
 
             return (
-                VAERO.get(name) ||
+                VAERO.get(
+                    name
+                ) ||
                 null
             );
 
@@ -102,6 +113,7 @@ const Engine = {
                 `Engine service lookup failed: ${name}`,
                 error
             );
+
 
             return null;
 
@@ -130,7 +142,9 @@ const Engine = {
             typeof awareness.enter !==
                 "function"
         ){
+
             return false;
+
         }
 
 
@@ -139,6 +153,7 @@ const Engine = {
             awareness.enter(
                 location,
                 {
+
                     page:
                         this.currentEntityPage,
 
@@ -151,9 +166,23 @@ const Engine = {
 
                     entityId:
                         this.currentOpenedEntity?.id ||
+                        this.currentEntity?.id ||
                         null,
 
+                    worldEditMode:
+                        this.worldEditMode,
+
+                    entityEditMode:
+                        this.entityEditMode,
+
+                    entityCreateMode:
+                        this.entityCreateMode,
+
+                    entityType:
+                        this.entityType,
+
                     ...metadata
+
                 }
             );
 
@@ -166,6 +195,7 @@ const Engine = {
                 "Engine awareness sync failed:",
                 error
             );
+
 
             return false;
 
@@ -216,7 +246,9 @@ const Engine = {
             typeof service.boot !==
                 "function"
         ){
+
             return true;
+
         }
 
 
@@ -226,11 +258,15 @@ const Engine = {
                 service.boot();
 
 
-            if(result === false){
+            if(
+                result ===
+                false
+            ){
 
                 console.warn(
                     `${name} boot returned false.`
                 );
+
 
                 return false;
 
@@ -246,9 +282,99 @@ const Engine = {
                 error
             );
 
+
             return false;
 
         }
+
+    },
+
+
+    /* =====================================================
+       RESOLVE KERNEL SERVICE
+    ===================================================== */
+
+    resolveKernelService(
+        kernel,
+        name,
+        fallback = null
+    ){
+
+        try{
+
+            if(
+                kernel &&
+                typeof kernel.service ===
+                    "function"
+            ){
+
+                const service =
+                    kernel.service(
+                        name
+                    );
+
+
+                if(service){
+
+                    return service;
+
+                }
+
+            }
+
+        } catch(error){
+
+            /* VAERO fallback */
+
+        }
+
+
+        return (
+            this.getService(
+                name
+            ) ||
+            fallback ||
+            null
+        );
+
+    },
+
+
+    /* =====================================================
+       RESET TRANSIENT STATE
+    ===================================================== */
+
+    resetTransientState(){
+
+        this.currentWorld =
+            null;
+
+
+        this.currentOpenedEntity =
+            null;
+
+
+        this.currentEntityPage =
+            null;
+
+
+        this.entityCreateMode =
+            false;
+
+
+        this.entityType =
+            null;
+
+
+        this.worldEditMode =
+            false;
+
+
+        this.entityEditMode =
+            false;
+
+
+        return true;
 
     },
 
@@ -265,6 +391,7 @@ const Engine = {
                 "VAERO Engine is already running."
             );
 
+
             return false;
 
         }
@@ -275,6 +402,7 @@ const Engine = {
             console.warn(
                 "VAERO Engine is already starting."
             );
+
 
             return false;
 
@@ -287,14 +415,36 @@ const Engine = {
 
         try{
 
+            if(
+                typeof VAERO ===
+                    "undefined"
+            ){
+
+                console.error(
+                    "VAERO runtime is unavailable."
+                );
+
+
+                return false;
+
+            }
+
+
             VAERO.engine =
                 this;
 
 
-            VAERO.register(
-                "engine",
-                this
-            );
+            if(
+                typeof VAERO.register ===
+                    "function"
+            ){
+
+                VAERO.register(
+                    "engine",
+                    this
+                );
+
+            }
 
 
             /* =================================================
@@ -313,18 +463,11 @@ const Engine = {
                     "VAERO Kernel could not be found."
                 );
 
+
                 return false;
 
             }
 
-
-            /*
-             * Engine dosyasının altındaki bootstrap normalde
-             * Kernel'i önceden boot eder.
-             *
-             * Bu kontrol Engine.start doğrudan çağrılırsa
-             * güvenli fallback sağlar.
-             */
 
             if(
                 kernel.booted !==
@@ -346,6 +489,7 @@ const Engine = {
                         "VAERO Kernel could not be booted."
                     );
 
+
                     return false;
 
                 }
@@ -358,99 +502,152 @@ const Engine = {
             ================================================= */
 
             const entityManager =
-                kernel.service(
+                this.resolveKernelService(
+                    kernel,
                     "entityManager"
                 );
 
 
             const identity =
-                kernel.service(
+                this.resolveKernelService(
+                    kernel,
                     "identity"
                 );
 
 
             const profile =
-                kernel.service(
+                this.resolveKernelService(
+                    kernel,
                     "profile"
                 );
 
 
             const organSystem =
-                kernel.service(
-                    "organSystem"
+                this.resolveKernelService(
+                    kernel,
+                    "organSystem",
+                    window.OrganSystem ||
+                    null
+                );
+
+
+            const organStatus =
+                this.resolveKernelService(
+                    kernel,
+                    "organStatus",
+                    window.OrganStatus ||
+                    null
+                );
+
+
+            const appRegistry =
+                this.resolveKernelService(
+                    kernel,
+                    "appRegistry",
+                    window.AppRegistry ||
+                    null
                 );
 
 
             const timeline =
-                kernel.service(
+                this.resolveKernelService(
+                    kernel,
                     "timeline"
                 );
 
 
             const bridge =
-                kernel.service(
+                this.resolveKernelService(
+                    kernel,
                     "bridge"
                 );
 
 
             const graph =
-                kernel.service(
+                this.resolveKernelService(
+                    kernel,
                     "graph"
                 );
 
 
             const universe =
-                kernel.service(
+                this.resolveKernelService(
+                    kernel,
                     "universe"
                 );
 
 
             const world =
-                kernel.service(
+                this.resolveKernelService(
+                    kernel,
                     "world"
                 );
 
 
             const runtime =
-                kernel.service(
+                this.resolveKernelService(
+                    kernel,
                     "runtime"
                 );
 
 
             const guardian =
-                kernel.service(
+                this.resolveKernelService(
+                    kernel,
                     "guardian"
                 );
 
 
             const evolution =
-                kernel.service(
+                this.resolveKernelService(
+                    kernel,
                     "evolution"
                 );
 
 
             const brain =
-                kernel.service(
+                this.resolveKernelService(
+                    kernel,
                     "brain"
                 );
 
 
+            const brainService =
+                this.resolveKernelService(
+                    kernel,
+                    "brainService"
+                );
+
+
             const memory =
-                kernel.service(
+                this.resolveKernelService(
+                    kernel,
                     "memorySystem"
+                ) ||
+                this.resolveKernelService(
+                    kernel,
+                    "memory"
                 );
 
 
             const events =
-                kernel.service(
+                this.resolveKernelService(
+                    kernel,
                     "events"
                 );
 
 
-            this.renderer =
-                kernel.service(
-                    "renderer"
+            const renderer =
+                this.resolveKernelService(
+                    kernel,
+                    "renderer",
+                    window.Renderer ||
+                    null
                 );
+
+
+            this.renderer =
+                renderer;
 
 
             /* =================================================
@@ -470,9 +667,7 @@ const Engine = {
                 memory,
                 timeline,
                 events,
-
-                renderer:
-                    this.renderer
+                renderer
 
             };
 
@@ -482,7 +677,7 @@ const Engine = {
                     requiredServices
                 )
                     .filter(
-                        ([, service]) =>
+                        ([,service]) =>
                             !service
                     )
                     .map(
@@ -500,6 +695,7 @@ const Engine = {
                     "Engine could not start. Missing services:",
                     missingServices
                 );
+
 
                 return false;
 
@@ -528,6 +724,7 @@ const Engine = {
                         "Engine start blocked: security layer is not ready."
                     );
 
+
                     return false;
 
                 }
@@ -542,8 +739,28 @@ const Engine = {
             const bootServices = [
 
                 [
+                    "organSystem",
+                    organSystem
+                ],
+
+                [
+                    "organStatus",
+                    organStatus
+                ],
+
+                [
+                    "appRegistry",
+                    appRegistry
+                ],
+
+                [
                     "brain",
                     brain
+                ],
+
+                [
+                    "brainService",
+                    brainService
                 ],
 
                 [
@@ -591,10 +808,23 @@ const Engine = {
                 ] of bootServices
             ){
 
-                this.bootService(
-                    service,
-                    name
-                );
+                const booted =
+                    this.bootService(
+                        service,
+                        name
+                    );
+
+
+                if(
+                    booted ===
+                    false
+                ){
+
+                    console.warn(
+                        `${name} could not complete boot.`
+                    );
+
+                }
 
             }
 
@@ -603,26 +833,56 @@ const Engine = {
                ROOT ENTITY
             ================================================= */
 
-            const vaeroEntity =
-                entityManager.create({
-                    id:
-                        "vaero-root",
+            let vaeroEntity =
+                null;
 
-                    type:
-                        "brand",
 
-                    name:
-                        "VAERO",
+            try{
 
-                    description:
-                        "Living Digital Universe",
+                if(
+                    typeof entityManager.get ===
+                        "function"
+                ){
 
-                    status:
-                        "online",
+                    vaeroEntity =
+                        entityManager.get(
+                            "vaero-root"
+                        );
 
-                    organs:
-                        []
-                });
+                }
+
+            } catch(error){
+
+                vaeroEntity =
+                    null;
+
+            }
+
+
+            if(!vaeroEntity){
+
+                vaeroEntity =
+                    entityManager.create({
+                        id:
+                            "vaero-root",
+
+                        type:
+                            "brand",
+
+                        name:
+                            "VAERO",
+
+                        description:
+                            "Living Digital Universe",
+
+                        status:
+                            "active",
+
+                        organs:
+                            []
+                    });
+
+            }
 
 
             if(!vaeroEntity){
@@ -630,6 +890,7 @@ const Engine = {
                 console.error(
                     "VAERO root entity could not be created."
                 );
+
 
                 return false;
 
@@ -640,21 +901,65 @@ const Engine = {
                ROOT IDENTITY
             ================================================= */
 
-            vaeroEntity.identity =
-                identity.create(
-                    vaeroEntity
-                );
+            let rootIdentity =
+                vaeroEntity.identity ||
+                null;
 
 
-            if(!vaeroEntity.identity){
+            if(!rootIdentity){
+
+                try{
+
+                    if(
+                        typeof identity.get ===
+                            "function"
+                    ){
+
+                        rootIdentity =
+                            identity.get(
+                                vaeroEntity.id
+                            );
+
+                    }
+
+                } catch(error){
+
+                    rootIdentity =
+                        null;
+
+                }
+
+            }
+
+
+            if(
+                !rootIdentity &&
+                typeof identity.create ===
+                    "function"
+            ){
+
+                rootIdentity =
+                    identity.create(
+                        vaeroEntity
+                    );
+
+            }
+
+
+            if(!rootIdentity){
 
                 console.error(
                     "VAERO root identity could not be created."
                 );
 
+
                 return false;
 
             }
+
+
+            vaeroEntity.identity =
+                rootIdentity;
 
 
             if(
@@ -662,9 +967,20 @@ const Engine = {
                     "function"
             ){
 
-                identity.verify(
-                    vaeroEntity.identity
-                );
+                try{
+
+                    identity.verify(
+                        rootIdentity
+                    );
+
+                } catch(error){
+
+                    console.warn(
+                        "VAERO root identity verification failed:",
+                        error
+                    );
+
+                }
 
             }
 
@@ -673,10 +989,57 @@ const Engine = {
                ROOT PROFILE
             ================================================= */
 
-            vaeroEntity.profile =
-                profile.create(
-                    vaeroEntity
-                );
+            let rootProfile =
+                vaeroEntity.profile ||
+                null;
+
+
+            if(!rootProfile){
+
+                try{
+
+                    if(
+                        typeof profile.get ===
+                            "function"
+                    ){
+
+                        rootProfile =
+                            profile.get(
+                                vaeroEntity.id
+                            );
+
+                    }
+
+                } catch(error){
+
+                    rootProfile =
+                        null;
+
+                }
+
+            }
+
+
+            if(
+                !rootProfile &&
+                typeof profile.create ===
+                    "function"
+            ){
+
+                rootProfile =
+                    profile.create(
+                        vaeroEntity
+                    );
+
+            }
+
+
+            if(rootProfile){
+
+                vaeroEntity.profile =
+                    rootProfile;
+
+            }
 
 
             /* =================================================
@@ -687,86 +1050,42 @@ const Engine = {
 
                 [
                     "Identity",
-                    "active",
-                    {
-                        slug:
-                            "identity",
-
-                        type:
-                            "system",
-
-                        source:
-                            "system",
-
-                        trusted:
-                            true,
-
-                        removable:
-                            false
-                    }
+                    "identity"
                 ],
 
                 [
                     "Engine",
-                    "active",
-                    {
-                        slug:
-                            "engine",
-
-                        type:
-                            "system",
-
-                        source:
-                            "system",
-
-                        trusted:
-                            true,
-
-                        removable:
-                            false
-                    }
+                    "engine"
                 ],
 
                 [
                     "Renderer",
-                    "active",
-                    {
-                        slug:
-                            "renderer",
-
-                        type:
-                            "system",
-
-                        source:
-                            "system",
-
-                        trusted:
-                            true,
-
-                        removable:
-                            false
-                    }
+                    "renderer"
                 ],
 
                 [
                     "Bridge",
-                    "active",
-                    {
-                        slug:
-                            "bridge",
+                    "bridge"
+                ],
 
-                        type:
-                            "system",
+                [
+                    "Memory",
+                    "memory"
+                ],
 
-                        source:
-                            "system",
+                [
+                    "Timeline",
+                    "timeline"
+                ],
 
-                        trusted:
-                            true,
+                [
+                    "Evolution",
+                    "evolution"
+                ],
 
-                        removable:
-                            false
-                    }
+                [
+                    "Applications",
+                    "applications"
                 ]
 
             ];
@@ -775,16 +1094,67 @@ const Engine = {
             rootOrgans.forEach(
                 ([
                     name,
-                    status,
-                    meta
+                    slug
                 ]) => {
 
-                    const organ =
-                        organSystem.create(
-                            name,
-                            status,
-                            meta
-                        );
+                    let organ =
+                        null;
+
+
+                    try{
+
+                        organ =
+                            organSystem.get?.(
+                                slug
+                            ) ||
+                            organSystem.findBySlug?.(
+                                slug
+                            ) ||
+                            null;
+
+                    } catch(error){
+
+                        organ =
+                            null;
+
+                    }
+
+
+                    if(!organ){
+
+                        organ =
+                            organSystem.create(
+                                name,
+                                "active",
+                                {
+
+                                    id:
+                                        slug,
+
+                                    slug,
+
+                                    type:
+                                        "system",
+
+                                    source:
+                                        "system",
+
+                                    installed:
+                                        true,
+
+                                    trusted:
+                                        true,
+
+                                    removable:
+                                        false,
+
+                                    protected:
+                                        true
+
+                                }
+                            );
+
+                    }
 
 
                     if(
@@ -793,9 +1163,42 @@ const Engine = {
                             "function"
                     ){
 
-                        vaeroEntity.addOrgan(
-                            organ
-                        );
+                        try{
+
+                            const existing =
+                                typeof vaeroEntity.getOrgan ===
+                                    "function"
+
+                                    ? vaeroEntity.getOrgan(
+                                        organ.id
+                                    )
+
+                                    : null;
+
+
+                            if(!existing){
+
+                                vaeroEntity.addOrgan(
+                                    organ
+                                );
+
+                            }
+
+                        } catch(error){
+
+                            try{
+
+                                vaeroEntity.addOrgan(
+                                    organ
+                                );
+
+                            } catch(secondError){
+
+                                /* non-fatal */
+
+                            }
+
+                        }
 
                     }
 
@@ -816,27 +1219,59 @@ const Engine = {
                     "Guardian validation API is unavailable."
                 );
 
+
                 return false;
 
             }
 
 
-            if(
-                !guardian.validate(
-                    vaeroEntity,
-                    {
-                        operation:
-                            "engine-root-mount",
+            let guardianAccepted =
+                false;
 
-                        scope:
-                            "entity"
-                    }
-                )
-            ){
+
+            try{
+
+                const validation =
+                    guardian.validate(
+                        vaeroEntity,
+                        {
+                            operation:
+                                "engine-root-mount",
+
+                            scope:
+                                "entity"
+                        }
+                    );
+
+
+                guardianAccepted =
+                    !(
+                        validation ===
+                            false ||
+                        validation?.valid ===
+                            false
+                    );
+
+            } catch(error){
+
+                console.error(
+                    "Guardian root validation failed:",
+                    error
+                );
+
+
+                guardianAccepted =
+                    false;
+
+            }
+
+
+            if(!guardianAccepted){
 
                 console.error(
                     "Entity rejected by Guardian."
                 );
+
 
                 return false;
 
@@ -855,28 +1290,11 @@ const Engine = {
                 vaeroEntity;
 
 
-            this.currentWorld =
-                null;
-
-
-            this.currentOpenedEntity =
-                null;
-
-
-            this.currentEntityPage =
-                null;
-
-
             this.currentView =
                 "home";
 
 
-            this.entityCreateMode =
-                false;
-
-
-            this.entityType =
-                null;
+            this.resetTransientState();
 
 
             /* =================================================
@@ -888,9 +1306,35 @@ const Engine = {
                     "function"
             ){
 
-                world.ensureRootWorld(
-                    vaeroEntity.id
-                );
+                try{
+
+                    const rootWorld =
+                        world.ensureRootWorld(
+                            vaeroEntity.id
+                        );
+
+
+                    if(
+                        rootWorld &&
+                        this.currentWorld ===
+                            null
+                    ){
+
+                        /*
+                         * Root world exists in the World system,
+                         * but Home remains the initial Engine view.
+                         */
+
+                    }
+
+                } catch(error){
+
+                    console.warn(
+                        "VAERO root world could not be ensured:",
+                        error
+                    );
+
+                }
 
             }
 
@@ -906,7 +1350,10 @@ const Engine = {
                         vaeroEntity.id,
 
                     entityName:
-                        vaeroEntity.name
+                        vaeroEntity.name,
+
+                    time:
+                        Date.now()
                 }
             );
 
@@ -918,7 +1365,9 @@ const Engine = {
             const evolutionHistory =
                 typeof evolution.all ===
                     "function"
+
                     ? evolution.all()
+
                     : [];
 
 
@@ -985,9 +1434,11 @@ const Engine = {
                 this.started =
                     false;
 
+
                 console.error(
                     "VAERO Engine initial render failed."
                 );
+
 
                 return false;
 
@@ -1061,13 +1512,6 @@ const Engine = {
             nextView;
 
 
-        /*
-         * Normal Engine view açıldığında eski system-app
-         * page state'in ekranda kalmasını engeller.
-         *
-         * State açıkça page içeriyorsa aşağıda uygulanır.
-         */
-
         if(
             !Object.prototype
                 .hasOwnProperty.call(
@@ -1124,7 +1568,9 @@ const Engine = {
 
             this.currentEntityPage =
                 page
-                    ? String(page)
+                    ? String(
+                        page
+                    )
                     : null;
 
         }
@@ -1156,6 +1602,38 @@ const Engine = {
 
             this.entityType =
                 state.entityType;
+
+        }
+
+
+        if(
+            Object.prototype
+                .hasOwnProperty.call(
+                    state,
+                    "worldEditMode"
+                )
+        ){
+
+            this.worldEditMode =
+                Boolean(
+                    state.worldEditMode
+                );
+
+        }
+
+
+        if(
+            Object.prototype
+                .hasOwnProperty.call(
+                    state,
+                    "entityEditMode"
+                )
+        ){
+
+            this.entityEditMode =
+                Boolean(
+                    state.entityEditMode
+                );
 
         }
 
@@ -1198,9 +1676,14 @@ const Engine = {
                 normalizedPage
             );
 
+
             return false;
 
         }
+
+
+        this.currentView =
+            "home";
 
 
         this.currentWorld =
@@ -1221,6 +1704,14 @@ const Engine = {
 
         this.entityType =
             null;
+
+
+        this.worldEditMode =
+            false;
+
+
+        this.entityEditMode =
+            false;
 
 
         this.syncAwareness(
@@ -1245,28 +1736,20 @@ const Engine = {
 
     openHome(){
 
-        this.currentWorld =
-            null;
+        this.currentView =
+            "home";
 
 
-        this.currentOpenedEntity =
-            null;
+        this.resetTransientState();
 
 
-        this.currentEntityPage =
-            null;
-
-
-        this.entityCreateMode =
-            false;
-
-
-        this.entityType =
-            null;
-
-
-        return this.setView(
+        this.syncAwareness(
             "home"
+        );
+
+
+        return this.mount(
+            this.currentEntity
         );
 
     },
@@ -1287,6 +1770,7 @@ const Engine = {
                 "Engine.mount requires an entity."
             );
 
+
             return false;
 
         }
@@ -1302,6 +1786,7 @@ const Engine = {
                 "Renderer is not available."
             );
 
+
             return false;
 
         }
@@ -1313,10 +1798,15 @@ const Engine = {
 
         try{
 
-            return (
+            const result =
                 this.renderer.render(
                     entity
-                ) !== false
+                );
+
+
+            return (
+                result !==
+                false
             );
 
         } catch(error){
@@ -1325,6 +1815,7 @@ const Engine = {
                 "Engine mount failed:",
                 error
             );
+
 
             return false;
 
@@ -1338,6 +1829,54 @@ const Engine = {
     ===================================================== */
 
     report(){
+
+        const organSystem =
+            this.getService(
+                "organSystem"
+            );
+
+
+        const organStatus =
+            this.getService(
+                "organStatus"
+            );
+
+
+        let organReport =
+            null;
+
+
+        let healthReport =
+            null;
+
+
+        try{
+
+            organReport =
+                organSystem?.report?.() ||
+                null;
+
+        } catch(error){
+
+            organReport =
+                null;
+
+        }
+
+
+        try{
+
+            healthReport =
+                organStatus?.report?.() ||
+                null;
+
+        } catch(error){
+
+            healthReport =
+                null;
+
+        }
+
 
         return {
 
@@ -1364,6 +1903,10 @@ const Engine = {
                 this.currentOpenedEntity?.id ||
                 null,
 
+            currentEntityId:
+                this.currentEntity?.id ||
+                null,
+
             rootEntityId:
                 this.rootEntity?.id ||
                 null,
@@ -1372,7 +1915,19 @@ const Engine = {
                 this.entityCreateMode,
 
             entityType:
-                this.entityType
+                this.entityType,
+
+            worldEditMode:
+                this.worldEditMode,
+
+            entityEditMode:
+                this.entityEditMode,
+
+            organs:
+                organReport,
+
+            organHealth:
+                healthReport
 
         };
 
@@ -1385,10 +1940,32 @@ const Engine = {
    KERNEL BOOTSTRAP
 ========================================================= */
 
-const vaeroKernel =
-    VAERO.get(
-        "kernel"
-    );
+let vaeroKernel =
+    null;
+
+
+try{
+
+    if(
+        typeof VAERO !==
+            "undefined" &&
+        typeof VAERO.get ===
+            "function"
+    ){
+
+        vaeroKernel =
+            VAERO.get(
+                "kernel"
+            );
+
+    }
+
+} catch(error){
+
+    vaeroKernel =
+        null;
+
+}
 
 
 if(vaeroKernel){
@@ -1398,7 +1975,18 @@ if(vaeroKernel){
             "function"
     ){
 
-        vaeroKernel.boot();
+        try{
+
+            vaeroKernel.boot();
+
+        } catch(error){
+
+            console.error(
+                "VAERO Kernel boot failed:",
+                error
+            );
+
+        }
 
     }
 
