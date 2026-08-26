@@ -1,22 +1,77 @@
 /* =========================================================
    VAERO BRAIN
-   Compact viewport-native assistant panel
+   COMPACT VIEWPORT-NATIVE ASSISTANT PANEL
+   FINAL CONSOLIDATED EDITION
+========================================================= */
+
+
+/* =========================================================
+   01. TOKENS
+========================================================= */
+
+.brain-panel{
+    --brain-text:#f7f8fb;
+
+    --brain-muted:
+        rgba(245,241,233,.48);
+
+    --brain-muted-soft:
+        rgba(245,241,233,.28);
+
+    --brain-gold:#e4bd81;
+    --brain-gold-bright:#f1d395;
+    --brain-gold-deep:#b98a45;
+
+    --brain-blue:#7eb6ff;
+
+    --brain-border:
+        rgba(255,255,255,.075);
+
+    --brain-border-strong:
+        rgba(255,255,255,.11);
+
+    --brain-surface:
+        rgba(7,15,25,.98);
+
+    --brain-radius-lg:21px;
+    --brain-radius-md:14px;
+    --brain-radius-sm:10px;
+
+    --brain-ease:
+        cubic-bezier(.22,.78,.2,1);
+}
+
+
+/* =========================================================
+   02. PANEL
 ========================================================= */
 
 .brain-panel{
     position:fixed;
 
     right:14px;
+
     bottom:
         calc(
             76px +
-            env(safe-area-inset-bottom)
+            env(
+                safe-area-inset-bottom,
+                0px
+            )
         );
+
+    z-index:99999;
+
+    display:none;
+
+    flex-direction:column;
 
     width:
         min(
             380px,
-            calc(100vw - 28px)
+            calc(
+                100vw - 28px
+            )
         );
 
     height:auto;
@@ -27,12 +82,12 @@
             calc(
                 100dvh -
                 100px -
-                env(safe-area-inset-bottom)
+                env(
+                    safe-area-inset-bottom,
+                    0px
+                )
             )
         );
-
-    display:none;
-    flex-direction:column;
 
     min-width:0;
     min-height:0;
@@ -45,13 +100,19 @@
         1px solid
         rgba(255,255,255,.085);
 
-    border-radius:21px;
+    border-radius:
+        var(--brain-radius-lg);
 
     background:
         radial-gradient(
             circle at 85% 0%,
             rgba(71,137,192,.1),
             transparent 36%
+        ),
+        radial-gradient(
+            circle at 10% 100%,
+            rgba(228,189,129,.035),
+            transparent 32%
         ),
         linear-gradient(
             160deg,
@@ -60,8 +121,16 @@
         );
 
     box-shadow:
-        0 22px 62px rgba(0,0,0,.48),
-        inset 0 1px 0 rgba(255,255,255,.03);
+        0
+        22px
+        62px
+        rgba(0,0,0,.48),
+
+        inset
+        0
+        1px
+        0
+        rgba(255,255,255,.03);
 
     backdrop-filter:
         blur(24px)
@@ -71,21 +140,85 @@
         blur(24px)
         saturate(125%);
 
-    z-index:99999;
-
     transform-origin:
         calc(100% - 38px)
         100%;
 
+    isolation:isolate;
+
     animation:
         brainPanelEnter
-        .2s
-        ease-out;
+        .22s
+        var(--brain-ease);
 }
 
 
 /* =========================================================
-   PANEL STATES
+   03. PANEL AMBIENT
+========================================================= */
+
+.brain-panel::before{
+    content:"";
+
+    position:absolute;
+
+    top:0;
+    left:16%;
+
+    width:68%;
+    height:1px;
+
+    pointer-events:none;
+
+    background:
+        linear-gradient(
+            90deg,
+            transparent,
+            rgba(255,255,255,.09),
+            transparent
+        );
+
+    opacity:.75;
+}
+
+.brain-panel::after{
+    content:"";
+
+    position:absolute;
+
+    top:-110px;
+    right:-80px;
+
+    z-index:-1;
+
+    width:220px;
+    height:220px;
+
+    pointer-events:none;
+
+    border-radius:50%;
+
+    background:
+        rgba(86,154,208,.045);
+
+    filter:blur(50px);
+}
+
+
+/* =========================================================
+   04. BOX MODEL
+========================================================= */
+
+.brain-panel,
+.brain-panel *,
+.brain-panel *::before,
+.brain-panel *::after{
+    box-sizing:border-box;
+}
+
+
+/* =========================================================
+   05. PANEL STATES
 ========================================================= */
 
 .brain-panel.is-compact,
@@ -105,7 +238,9 @@
     width:
         min(
             420px,
-            calc(100vw - 28px)
+            calc(
+                100vw - 28px
+            )
         );
 
     height:
@@ -114,7 +249,10 @@
             calc(
                 100dvh -
                 100px -
-                env(safe-area-inset-bottom)
+                env(
+                    safe-area-inset-bottom,
+                    0px
+                )
             )
         );
 
@@ -122,13 +260,16 @@
         calc(
             100dvh -
             100px -
-            env(safe-area-inset-bottom)
+            env(
+                safe-area-inset-bottom,
+                0px
+            )
         );
 }
 
 
 /* =========================================================
-   ENTER
+   06. ENTER
 ========================================================= */
 
 @keyframes brainPanelEnter{
@@ -153,7 +294,7 @@
 
 
 /* =========================================================
-   MOBILE HANDLE
+   07. MOBILE HANDLE
 ========================================================= */
 
 .brain-panel-handle{
@@ -162,7 +303,10 @@
     width:34px;
     height:3px;
 
-    flex:0 0 auto;
+    flex:
+        0
+        0
+        auto;
 
     margin:
         0
@@ -177,17 +321,27 @@
 
 
 /* =========================================================
-   HEADER
+   08. HEADER
 ========================================================= */
 
 .brain-panel-header{
-    flex:0 0 auto;
+    position:relative;
+
+    z-index:2;
 
     display:flex;
+
+    flex:
+        0
+        0
+        auto;
+
     align-items:flex-start;
     justify-content:space-between;
 
     gap:12px;
+
+    min-width:0;
 }
 
 .brain-panel-header > div{
@@ -197,21 +351,34 @@
 .brain-panel-header .eyebrow{
     margin-bottom:5px;
 
-    color:#e4bd81;
+    color:
+        var(--brain-gold);
+
+    font-size:8px;
+
+    letter-spacing:.15em;
 }
+
+
+/* =========================================================
+   09. TITLE
+========================================================= */
 
 .brain-title{
     margin:0;
+
     padding:0;
 
     overflow:hidden;
 
-    color:#f7f8fb;
+    color:
+        var(--brain-text);
 
     font-size:21px;
     font-weight:500;
 
     line-height:1.05;
+
     letter-spacing:-.025em;
 
     text-overflow:ellipsis;
@@ -220,17 +387,21 @@
 
 
 /* =========================================================
-   CLOSE
+   10. CLOSE
 ========================================================= */
 
 .brain-close{
+    display:grid;
+
+    place-items:center;
+
     width:30px;
     height:30px;
 
-    flex:0 0 30px;
-
-    display:grid;
-    place-items:center;
+    flex:
+        0
+        0
+        30px;
 
     padding:0;
 
@@ -240,20 +411,30 @@
 
     border-radius:50%;
 
+    outline:none;
+
     background:
         rgba(255,255,255,.025);
 
     color:
         rgba(255,255,255,.62);
 
+    font:inherit;
+
     font-size:17px;
+
     line-height:1;
 
+    cursor:pointer;
+
+    -webkit-tap-highlight-color:transparent;
+
     transition:
-        color var(--transition),
-        border-color var(--transition),
-        background var(--transition),
-        transform var(--transition);
+        color .18s ease,
+        border-color .18s ease,
+        background .18s ease,
+        transform .18s
+        var(--brain-ease);
 }
 
 .brain-close:hover{
@@ -263,27 +444,46 @@
     background:
         rgba(230,199,141,.055);
 
-    color:#f1d395;
+    color:
+        var(--brain-gold-bright);
 
-    transform:rotate(3deg);
+    transform:
+        rotate(3deg);
+}
+
+.brain-close:active{
+    transform:
+        scale(.95);
+}
+
+.brain-close:focus-visible{
+    outline:
+        1px solid
+        rgba(230,199,141,.45);
+
+    outline-offset:2px;
 }
 
 
 /* =========================================================
-   CONTEXT
+   11. CONTEXT
 ========================================================= */
 
 .brain-context{
-    flex:0 0 auto;
+    flex:
+        0
+        0
+        auto;
 
     margin-top:7px;
 
     overflow:hidden;
 
     color:
-        rgba(245,241,233,.48);
+        var(--brain-muted);
 
     font-size:9px;
+
     line-height:1.4;
 
     text-overflow:ellipsis;
@@ -292,15 +492,24 @@
 
 
 /* =========================================================
-   SUGGESTION
+   12. SUGGESTION
 ========================================================= */
 
 .brain-suggestion{
-    flex:0 0 auto;
+    position:relative;
+
+    flex:
+        0
+        0
+        auto;
 
     margin-top:8px;
 
-    padding:8px 10px;
+    padding:
+        8px
+        10px;
+
+    overflow:hidden;
 
     border:
         1px solid
@@ -319,16 +528,40 @@
         rgba(245,241,233,.65);
 
     font-size:9px;
+
     line-height:1.4;
+}
+
+.brain-suggestion::before{
+    content:"";
+
+    position:absolute;
+
+    top:0;
+    left:18%;
+
+    width:54%;
+    height:1px;
+
+    background:
+        linear-gradient(
+            90deg,
+            transparent,
+            rgba(230,199,141,.09),
+            transparent
+        );
 }
 
 
 /* =========================================================
-   HISTORY
+   13. HISTORY WRAPPER
 ========================================================= */
 
 .brain-mini-history{
-    flex:0 0 auto;
+    flex:
+        0
+        0
+        auto;
 
     min-height:0;
 
@@ -336,35 +569,50 @@
 }
 
 .brain-history{
+    min-width:0;
     min-height:0;
 
     margin-top:8px;
+
     padding-right:3px;
 
     overflow-x:hidden;
     overflow-y:auto;
 
-    overscroll-behavior:contain;
+    overscroll-behavior-y:contain;
 
     scrollbar-width:thin;
 
     scrollbar-color:
         rgba(255,255,255,.12)
         transparent;
+
+    -webkit-overflow-scrolling:touch;
 }
 
-.brain-panel.is-compact .brain-history{
+
+/* =========================================================
+   14. HISTORY STATE
+========================================================= */
+
+.brain-panel.is-compact
+.brain-history{
     display:none;
 }
 
-.brain-panel.is-expanded .brain-mini-history{
+.brain-panel.is-expanded
+.brain-mini-history{
     display:none;
 }
 
-.brain-panel.is-expanded .brain-history{
+.brain-panel.is-expanded
+.brain-history{
     display:block;
 
-    flex:1 1 auto;
+    flex:
+        1
+        1
+        auto;
 }
 
 .brain-history::-webkit-scrollbar{
@@ -384,175 +632,21 @@
 
 
 /* =========================================================
-   COMPOSER
-========================================================= */
-
-.brain-composer{
-    flex:0 0 auto;
-
-    min-height:42px;
-
-    margin-top:9px;
-    padding:
-        4px
-        4px
-        4px
-        12px;
-
-    display:flex;
-    align-items:center;
-
-    gap:6px;
-
-    border:
-        1px solid
-        rgba(255,255,255,.075);
-
-    border-radius:14px;
-
-    background:
-        rgba(255,255,255,.028);
-
-    transition:
-        border-color var(--transition),
-        background var(--transition),
-        box-shadow var(--transition);
-}
-
-.brain-composer:focus-within{
-    border-color:
-        rgba(230,199,141,.26);
-
-    background:
-        rgba(255,255,255,.04);
-
-    box-shadow:
-        0
-        0
-        0
-        3px
-        rgba(230,199,141,.03);
-}
-
-
-/* =========================================================
-   INPUT
-========================================================= */
-
-.brain-input{
-    min-width:0;
-
-    height:32px;
-
-    flex:1;
-
-    padding:0;
-
-    border:0;
-    outline:0;
-
-    background:transparent;
-
-    color:#f7f8fb;
-
-    font-size:11px;
-
-    line-height:32px;
-}
-
-.brain-input::placeholder{
-    color:
-        rgba(245,241,233,.3);
-}
-
-
-/* =========================================================
-   SEND
-========================================================= */
-
-.brain-send{
-    width:32px;
-    height:32px;
-
-    flex:0 0 32px;
-
-    display:grid;
-    place-items:center;
-
-    padding:0;
-
-    border:
-        1px solid
-        rgba(240,218,165,.36);
-
-    border-radius:10px;
-
-    background:
-        linear-gradient(
-            140deg,
-            #e3c482,
-            #b98a45
-        );
-
-    color:#07111d;
-
-    font-size:14px;
-    font-weight:800;
-
-    box-shadow:
-        inset 0 1px 0
-        rgba(255,255,255,.3),
-        0 6px 14px
-        rgba(190,145,72,.11);
-
-    transition:
-        transform var(--transition),
-        box-shadow var(--transition);
-}
-
-.brain-send:hover{
-    transform:
-        translateX(1px);
-
-    box-shadow:
-        inset 0 1px 0
-        rgba(255,255,255,.37),
-        0 8px 17px
-        rgba(190,145,72,.17);
-}
-
-
-/* =========================================================
-   INPUT HINT
-========================================================= */
-
-.brain-input-hint{
-    flex:0 0 auto;
-
-    display:block;
-
-    margin-top:4px;
-
-    color:
-        rgba(245,241,233,.24);
-
-    font-size:7px;
-
-    text-align:right;
-}
-
-
-/* =========================================================
-   MINI CONVERSATION
+   15. MINI CONVERSATION
 ========================================================= */
 
 .brain-mini-chat-flow{
     display:flex;
+
     flex-direction:column;
 
     gap:5px;
 
-    padding:8px 10px;
+    padding:
+        8px
+        10px;
+
+    overflow:hidden;
 
     border:
         1px solid
@@ -561,15 +655,31 @@
     border-radius:12px;
 
     background:
-        rgba(255,255,255,.02);
+        linear-gradient(
+            145deg,
+            rgba(255,255,255,.022),
+            rgba(255,255,255,.01)
+        );
 
     cursor:pointer;
+
+    transition:
+        border-color .18s ease,
+        background .18s ease;
+}
+
+.brain-mini-chat-flow:hover{
+    border-color:
+        rgba(255,255,255,.08);
+
+    background:
+        rgba(255,255,255,.028);
 }
 
 .brain-mini-chat-message{
-    min-width:0;
-
     display:flex;
+
+    min-width:0;
 
     gap:5px;
 
@@ -577,17 +687,23 @@
         rgba(255,255,255,.48);
 
     font-size:8px;
+
     line-height:1.3;
 }
 
 .brain-mini-chat-message strong{
-    flex:0 0 auto;
+    flex:
+        0
+        0
+        auto;
 
     color:
         rgba(255,255,255,.75);
 }
 
 .brain-mini-chat-message span{
+    min-width:0;
+
     overflow:hidden;
 
     text-overflow:ellipsis;
@@ -596,14 +712,17 @@
 
 
 /* =========================================================
-   DAILY CHAT
+   16. DAILY CHAT
 ========================================================= */
 
 .brain-chat-flow{
     display:flex;
+
     flex-direction:column;
 
     gap:7px;
+
+    min-width:0;
 
     padding:
         2px
@@ -611,19 +730,32 @@
         8px;
 }
 
-.brain-chat-message{
-    max-width:86%;
 
-    padding:7px 9px;
+/* =========================================================
+   17. CHAT MESSAGE
+========================================================= */
+
+.brain-chat-message{
+    position:relative;
 
     display:flex;
+
     flex-direction:column;
 
     gap:3px;
 
+    max-width:86%;
+
+    min-width:0;
+
+    padding:
+        7px
+        9px;
+
     border-radius:12px;
 
     font-size:9px;
+
     line-height:1.4;
 }
 
@@ -659,11 +791,12 @@
 
 
 /* =========================================================
-   CHAT META
+   18. CHAT META
 ========================================================= */
 
 .brain-chat-meta{
     display:flex;
+
     align-items:center;
 
     gap:4px;
@@ -672,6 +805,8 @@
         rgba(255,255,255,.27);
 
     font-size:6px;
+
+    line-height:1.2;
 }
 
 .brain-chat-context{
@@ -690,20 +825,27 @@
 
 
 /* =========================================================
-   SYSTEM MESSAGE
+   19. SYSTEM MESSAGE
 ========================================================= */
 
 .brain-chat-system{
     align-self:center;
 
-    max-width:94%;
-
-    padding:4px 7px;
-
     display:flex;
+
     align-items:center;
 
     gap:5px;
+
+    max-width:94%;
+
+    padding:
+        4px
+        7px;
+
+    border:
+        1px solid
+        rgba(255,255,255,.025);
 
     border-radius:999px;
 
@@ -715,6 +857,8 @@
 
     font-size:7px;
 
+    line-height:1.3;
+
     text-align:center;
 }
 
@@ -725,20 +869,22 @@
 
 
 /* =========================================================
-   EMPTY CHAT
+   20. EMPTY CHAT
 ========================================================= */
 
 .brain-chat-empty{
-    min-height:78px;
-
-    padding:12px;
-
     display:flex;
+
     flex-direction:column;
+
     align-items:center;
     justify-content:center;
 
     gap:4px;
+
+    min-height:78px;
+
+    padding:12px;
 
     border:
         1px dashed
@@ -761,21 +907,24 @@
 
 
 /* =========================================================
-   APP LINKS
+   21. APP LINKS
 ========================================================= */
 
 .brain-message-app-links{
-    width:100%;
-
-    margin-top:6px;
-    padding-top:6px;
-
     display:flex;
+
     align-items:center;
     justify-content:flex-end;
+
     flex-wrap:wrap;
 
     gap:4px;
+
+    width:100%;
+
+    margin-top:6px;
+
+    padding-top:6px;
 
     border-top:
         1px solid
@@ -783,21 +932,24 @@
 }
 
 .brain-message-app-link{
+    display:inline-flex;
+
+    align-items:center;
+    justify-content:center;
+
     min-height:25px;
 
     padding:
         4px
         7px;
 
-    display:inline-flex;
-    align-items:center;
-    justify-content:center;
-
     border:
         1px solid
         rgba(230,199,141,.22);
 
     border-radius:999px;
+
+    outline:none;
 
     background:
         linear-gradient(
@@ -813,13 +965,22 @@
     font-size:7px;
     font-weight:700;
 
+    line-height:1;
+
     letter-spacing:.03em;
 
     text-transform:uppercase;
 
+    cursor:pointer;
+
+    -webkit-tap-highlight-color:transparent;
+
     transition:
-        transform .16s ease,
+        transform .16s
+        var(--brain-ease),
+
         border-color .16s ease,
+
         background .16s ease;
 }
 
@@ -836,7 +997,261 @@
 
 
 /* =========================================================
-   MOBILE
+   22. COMPOSER
+========================================================= */
+
+.brain-composer{
+    position:relative;
+
+    z-index:3;
+
+    display:flex;
+
+    flex:
+        0
+        0
+        auto;
+
+    align-items:center;
+
+    gap:6px;
+
+    min-height:42px;
+
+    margin-top:9px;
+
+    padding:
+        4px
+        4px
+        4px
+        12px;
+
+    border:
+        1px solid
+        rgba(255,255,255,.075);
+
+    border-radius:14px;
+
+    background:
+        rgba(255,255,255,.028);
+
+    transition:
+        border-color .18s ease,
+        background .18s ease,
+        box-shadow .18s ease;
+}
+
+.brain-composer:focus-within{
+    border-color:
+        rgba(230,199,141,.26);
+
+    background:
+        rgba(255,255,255,.04);
+
+    box-shadow:
+        0
+        0
+        0
+        3px
+        rgba(230,199,141,.03);
+}
+
+
+/* =========================================================
+   23. INPUT
+========================================================= */
+
+.brain-input{
+    flex:
+        1
+        1
+        auto;
+
+    min-width:0;
+
+    height:32px;
+
+    padding:0;
+
+    border:0;
+
+    outline:0;
+
+    background:transparent;
+
+    color:
+        var(--brain-text);
+
+    caret-color:
+        var(--brain-gold);
+
+    font:inherit;
+
+    font-size:11px;
+
+    line-height:32px;
+}
+
+.brain-input::placeholder{
+    color:
+        rgba(245,241,233,.3);
+}
+
+
+/* =========================================================
+   24. SEND
+========================================================= */
+
+.brain-send{
+    display:grid;
+
+    place-items:center;
+
+    width:32px;
+    height:32px;
+
+    flex:
+        0
+        0
+        32px;
+
+    padding:0;
+
+    border:
+        1px solid
+        rgba(240,218,165,.36);
+
+    border-radius:10px;
+
+    outline:none;
+
+    background:
+        linear-gradient(
+            140deg,
+            #e3c482,
+            #b98a45
+        );
+
+    color:#07111d;
+
+    box-shadow:
+        inset
+        0
+        1px
+        0
+        rgba(255,255,255,.3),
+
+        0
+        6px
+        14px
+        rgba(190,145,72,.11);
+
+    font:inherit;
+
+    font-size:14px;
+    font-weight:800;
+
+    cursor:pointer;
+
+    -webkit-tap-highlight-color:transparent;
+
+    transition:
+        transform .18s
+        var(--brain-ease),
+
+        box-shadow .18s ease,
+
+        filter .18s ease;
+}
+
+.brain-send:hover{
+    transform:
+        translateX(1px);
+
+    box-shadow:
+        inset
+        0
+        1px
+        0
+        rgba(255,255,255,.37),
+
+        0
+        8px
+        17px
+        rgba(190,145,72,.17);
+}
+
+.brain-send:active{
+    transform:
+        scale(.96);
+}
+
+.brain-send:focus-visible{
+    outline:
+        1px solid
+        rgba(240,218,165,.6);
+
+    outline-offset:2px;
+}
+
+
+/* =========================================================
+   25. INPUT HINT
+========================================================= */
+
+.brain-input-hint{
+    display:block;
+
+    flex:
+        0
+        0
+        auto;
+
+    margin-top:4px;
+
+    color:
+        rgba(245,241,233,.24);
+
+    font-size:7px;
+
+    line-height:1.2;
+
+    text-align:right;
+}
+
+/* =========================================================
+   26. TABLET
+========================================================= */
+
+@media (max-width:820px){
+
+    .brain-panel{
+        right:10px;
+
+        width:
+            min(
+                390px,
+                calc(
+                    100vw - 20px
+                )
+            );
+    }
+
+    .brain-panel.is-expanded{
+        width:
+            min(
+                410px,
+                calc(
+                    100vw - 20px
+                )
+            );
+    }
+
+}
+
+
+/* =========================================================
+   27. MOBILE
 ========================================================= */
 
 @media (max-width:600px){
@@ -847,7 +1262,10 @@
         bottom:
             calc(
                 68px +
-                env(safe-area-inset-bottom)
+                env(
+                    safe-area-inset-bottom,
+                    0px
+                )
             );
 
         width:
@@ -859,7 +1277,10 @@
             calc(
                 100dvh -
                 82px -
-                env(safe-area-inset-bottom)
+                env(
+                    safe-area-inset-bottom,
+                    0px
+                )
             );
 
         padding:10px;
@@ -871,8 +1292,14 @@
             14px;
 
         transform-origin:
-            center bottom;
+            center
+            bottom;
     }
+
+
+    /* -----------------------------------------------------
+       MOBILE COMPACT
+    ----------------------------------------------------- */
 
     .brain-panel.is-compact{
         max-height:
@@ -882,7 +1309,14 @@
             );
     }
 
+
+    /* -----------------------------------------------------
+       MOBILE EXPANDED
+    ----------------------------------------------------- */
+
     .brain-panel.is-expanded{
+        right:7px;
+
         width:
             calc(
                 100vw - 14px
@@ -892,22 +1326,38 @@
             calc(
                 100dvh -
                 82px -
-                env(safe-area-inset-bottom)
+                env(
+                    safe-area-inset-bottom,
+                    0px
+                )
             );
 
         max-height:
             calc(
                 100dvh -
                 82px -
-                env(safe-area-inset-bottom)
+                env(
+                    safe-area-inset-bottom,
+                    0px
+                )
             );
     }
+
+
+    /* -----------------------------------------------------
+       HANDLE
+    ----------------------------------------------------- */
 
     .brain-panel-handle{
         display:block;
 
         margin-bottom:6px;
     }
+
+
+    /* -----------------------------------------------------
+       HEADER
+    ----------------------------------------------------- */
 
     .brain-title{
         font-size:17px;
@@ -928,33 +1378,67 @@
         font-size:7px;
     }
 
+
+    /* -----------------------------------------------------
+       SUGGESTION
+    ----------------------------------------------------- */
+
     .brain-suggestion{
         margin-top:6px;
 
-        padding:6px 7px;
+        padding:
+            6px
+            7px;
 
         font-size:7px;
     }
+
+
+    /* -----------------------------------------------------
+       MINI HISTORY
+    ----------------------------------------------------- */
 
     .brain-mini-history{
         margin-top:6px;
     }
 
     .brain-mini-chat-flow{
-        padding:6px 7px;
+        padding:
+            6px
+            7px;
     }
 
     .brain-mini-chat-message{
         font-size:6.5px;
     }
 
+
+    /* -----------------------------------------------------
+       CHAT
+    ----------------------------------------------------- */
+
+    .brain-history{
+        margin-top:6px;
+    }
+
+    .brain-chat-flow{
+        gap:6px;
+    }
+
     .brain-chat-message{
         max-width:90%;
 
-        padding:6px 7px;
+        padding:
+            6px
+            7px;
 
         font-size:8px;
     }
+
+
+    /* -----------------------------------------------------
+       COMPOSER
+    ----------------------------------------------------- */
 
     .brain-composer{
         min-height:38px;
@@ -995,7 +1479,7 @@
 
 
 /* =========================================================
-   SMALL PHONE
+   28. SMALL PHONE
 ========================================================= */
 
 @media (max-width:390px){
@@ -1007,9 +1491,14 @@
             calc(
                 100vw - 10px
             );
+
+        padding:
+            9px;
     }
 
     .brain-panel.is-expanded{
+        right:5px;
+
         width:
             calc(
                 100vw - 10px
@@ -1020,21 +1509,37 @@
         font-size:16px;
     }
 
+    .brain-chat-message{
+        max-width:92%;
+    }
+
 }
 
 
 /* =========================================================
-   SHORT VIEWPORT
+   29. SHORT VIEWPORT
 ========================================================= */
 
 @media (max-height:720px){
 
     .brain-panel{
+        bottom:
+            calc(
+                62px +
+                env(
+                    safe-area-inset-bottom,
+                    0px
+                )
+            );
+
         max-height:
             calc(
                 100dvh -
                 72px -
-                env(safe-area-inset-bottom)
+                env(
+                    safe-area-inset-bottom,
+                    0px
+                )
             );
     }
 
@@ -1043,14 +1548,20 @@
             calc(
                 100dvh -
                 72px -
-                env(safe-area-inset-bottom)
+                env(
+                    safe-area-inset-bottom,
+                    0px
+                )
             );
 
         max-height:
             calc(
                 100dvh -
                 72px -
-                env(safe-area-inset-bottom)
+                env(
+                    safe-area-inset-bottom,
+                    0px
+                )
             );
     }
 
@@ -1070,7 +1581,345 @@
 
 
 /* =========================================================
-   REDUCED MOTION
+   30. MOBILE + SHORT VIEWPORT
+========================================================= */
+
+@media
+(
+    max-width:600px
+)
+and
+(
+    max-height:720px
+){
+
+    .brain-panel{
+        bottom:
+            calc(
+                60px +
+                env(
+                    safe-area-inset-bottom,
+                    0px
+                )
+            );
+
+        max-height:
+            calc(
+                100dvh -
+                68px -
+                env(
+                    safe-area-inset-bottom,
+                    0px
+                )
+            );
+    }
+
+    .brain-panel.is-expanded{
+        height:
+            calc(
+                100dvh -
+                68px -
+                env(
+                    safe-area-inset-bottom,
+                    0px
+                )
+            );
+
+        max-height:
+            calc(
+                100dvh -
+                68px -
+                env(
+                    safe-area-inset-bottom,
+                    0px
+                )
+            );
+    }
+
+    .brain-panel.is-compact{
+        max-height:
+            min(
+                245px,
+                38dvh
+            );
+    }
+
+    .brain-panel-handle{
+        margin-bottom:4px;
+    }
+
+    .brain-context{
+        display:none;
+    }
+
+    .brain-mini-history{
+        margin-top:4px;
+    }
+
+    .brain-composer{
+        margin-top:5px;
+    }
+
+}
+
+
+/* =========================================================
+   31. VERY SHORT VIEWPORT
+========================================================= */
+
+@media (max-height:620px){
+
+    .brain-panel{
+        bottom:
+            calc(
+                56px +
+                env(
+                    safe-area-inset-bottom,
+                    0px
+                )
+            );
+
+        max-height:
+            calc(
+                100dvh -
+                62px -
+                env(
+                    safe-area-inset-bottom,
+                    0px
+                )
+            );
+
+        padding:
+            8px;
+    }
+
+    .brain-panel.is-expanded{
+        height:
+            calc(
+                100dvh -
+                62px -
+                env(
+                    safe-area-inset-bottom,
+                    0px
+                )
+            );
+
+        max-height:
+            calc(
+                100dvh -
+                62px -
+                env(
+                    safe-area-inset-bottom,
+                    0px
+                )
+            );
+    }
+
+    .brain-panel.is-compact{
+        max-height:
+            min(
+                220px,
+                36dvh
+            );
+    }
+
+    .brain-panel-header .eyebrow{
+        display:none;
+    }
+
+    .brain-title{
+        font-size:15px;
+    }
+
+    .brain-close{
+        width:25px;
+        height:25px;
+
+        flex-basis:25px;
+    }
+
+    .brain-suggestion{
+        display:none;
+    }
+
+    .brain-chat-flow{
+        gap:5px;
+    }
+
+    .brain-chat-message{
+        padding:
+            5px
+            6px;
+
+        font-size:7px;
+    }
+
+    .brain-composer{
+        min-height:34px;
+    }
+
+    .brain-input{
+        height:28px;
+
+        line-height:28px;
+    }
+
+    .brain-send{
+        width:28px;
+        height:28px;
+
+        flex-basis:28px;
+    }
+
+}
+
+
+/* =========================================================
+   32. LANDSCAPE MOBILE
+========================================================= */
+
+@media
+(
+    orientation:landscape
+)
+and
+(
+    max-height:520px
+){
+
+    .brain-panel{
+        right:
+            max(
+                6px,
+                env(
+                    safe-area-inset-right,
+                    0px
+                )
+            );
+
+        bottom:6px;
+
+        width:
+            min(
+                430px,
+                calc(
+                    100vw -
+                    12px -
+                    env(
+                        safe-area-inset-left,
+                        0px
+                    ) -
+                    env(
+                        safe-area-inset-right,
+                        0px
+                    )
+                )
+            );
+
+        max-height:
+            calc(
+                100dvh - 12px
+            );
+
+        border-radius:15px;
+    }
+
+    .brain-panel.is-expanded{
+        width:
+            min(
+                430px,
+                calc(
+                    100vw -
+                    12px -
+                    env(
+                        safe-area-inset-left,
+                        0px
+                    ) -
+                    env(
+                        safe-area-inset-right,
+                        0px
+                    )
+                )
+            );
+
+        height:
+            calc(
+                100dvh - 12px
+            );
+
+        max-height:
+            calc(
+                100dvh - 12px
+            );
+    }
+
+    .brain-panel.is-compact{
+        max-height:
+            min(
+                220px,
+                calc(
+                    100dvh - 12px
+                )
+            );
+    }
+
+}
+
+
+/* =========================================================
+   33. TOUCH DEVICES
+========================================================= */
+
+@media (hover:none){
+
+    .brain-close:hover{
+        border-color:
+            rgba(255,255,255,.07);
+
+        background:
+            rgba(255,255,255,.025);
+
+        color:
+            rgba(255,255,255,.62);
+
+        transform:none;
+    }
+
+    .brain-mini-chat-flow:hover{
+        border-color:
+            rgba(255,255,255,.055);
+
+        background:
+            linear-gradient(
+                145deg,
+                rgba(255,255,255,.022),
+                rgba(255,255,255,.01)
+            );
+    }
+
+    .brain-message-app-link:hover{
+        transform:none;
+
+        border-color:
+            rgba(230,199,141,.22);
+
+        background:
+            linear-gradient(
+                180deg,
+                rgba(230,199,141,.08),
+                rgba(230,199,141,.025)
+            );
+    }
+
+    .brain-send:hover{
+        transform:none;
+    }
+
+}
+
+
+/* =========================================================
+   34. REDUCED MOTION
 ========================================================= */
 
 @media (prefers-reduced-motion:reduce){
@@ -1079,4 +1928,139 @@
         animation:none;
     }
 
+    .brain-close,
+    .brain-mini-chat-flow,
+    .brain-message-app-link,
+    .brain-composer,
+    .brain-send{
+        transition:none;
+    }
+
 }
+
+
+/* =========================================================
+   35. HIGH CONTRAST
+========================================================= */
+
+@media (prefers-contrast:more){
+
+    .brain-panel{
+        border-color:
+            rgba(255,255,255,.16);
+    }
+
+    .brain-composer,
+    .brain-mini-chat-flow,
+    .brain-chat-brain,
+    .brain-chat-user{
+        border-color:
+            rgba(255,255,255,.13);
+    }
+
+    .brain-chat-content{
+        color:
+            rgba(255,255,255,.94);
+    }
+
+}
+
+
+/* =========================================================
+   36. IOS VIEWPORT STABILITY
+========================================================= */
+
+@supports (-webkit-touch-callout:none){
+
+    .brain-panel{
+        max-height:
+            calc(
+                100% -
+                92px -
+                env(
+                    safe-area-inset-bottom,
+                    0px
+                )
+            );
+    }
+
+}
+
+
+/* =========================================================
+   37. DYNAMIC VIEWPORT
+========================================================= */
+
+@supports (height:100dvh){
+
+    .brain-panel.is-expanded{
+        max-height:
+            calc(
+                100dvh -
+                100px -
+                env(
+                    safe-area-inset-bottom,
+                    0px
+                )
+            );
+    }
+
+}
+
+
+/* =========================================================
+   38. FINAL STRUCTURE SAFETY
+========================================================= */
+
+.brain-panel,
+.brain-panel-header,
+.brain-history,
+.brain-mini-history,
+.brain-mini-chat-flow,
+.brain-mini-chat-message,
+.brain-chat-flow,
+.brain-chat-message,
+.brain-composer,
+.brain-input,
+.brain-message-app-links{
+    min-width:0;
+}
+
+.brain-panel,
+.brain-history{
+    min-height:0;
+}
+
+
+/* =========================================================
+   39. INTERNAL SCROLL AUTHORITY
+========================================================= */
+
+.brain-panel{
+    overflow:hidden;
+}
+
+.brain-panel.is-expanded
+.brain-history{
+    overflow-x:hidden;
+    overflow-y:auto;
+}
+
+
+/* =========================================================
+   40. POINTER SAFETY
+========================================================= */
+
+.brain-panel{
+    pointer-events:auto;
+}
+
+.brain-panel button,
+.brain-panel input{
+    pointer-events:auto;
+}
+
+
+/* =========================================================
+   END — VAERO BRAIN
+========================================================= */
