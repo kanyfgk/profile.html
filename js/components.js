@@ -12,13 +12,29 @@ const Components = {
     escapeHTML(value){
 
         return String(
-            value ?? ""
+            value ??
+            ""
         )
-            .replaceAll("&", "&amp;")
-            .replaceAll("<", "&lt;")
-            .replaceAll(">", "&gt;")
-            .replaceAll('"', "&quot;")
-            .replaceAll("'", "&#039;");
+            .replaceAll(
+                "&",
+                "&amp;"
+            )
+            .replaceAll(
+                "<",
+                "&lt;"
+            )
+            .replaceAll(
+                ">",
+                "&gt;"
+            )
+            .replaceAll(
+                '"',
+                "&quot;"
+            )
+            .replaceAll(
+                "'",
+                "&#039;"
+            );
 
     },
 
@@ -27,7 +43,8 @@ const Components = {
 
         const action =
             String(
-                value ?? ""
+                value ??
+                ""
             )
                 .trim()
                 .toLowerCase();
@@ -42,11 +59,52 @@ const Components = {
     },
 
 
+    normalizeList(value){
+
+        if(
+            Array.isArray(
+                value
+            )
+        ){
+
+            return value
+                .map(
+                    item =>
+                        String(
+                            item ??
+                            ""
+                        ).trim()
+                )
+                .filter(Boolean);
+
+        }
+
+
+        if(
+            value instanceof
+                Set
+        ){
+
+            return this.normalizeList(
+                [
+                    ...value
+                ]
+            );
+
+        }
+
+
+        return [];
+
+    },
+
+
     translate(value){
 
         const text =
             String(
-                value ?? ""
+                value ??
+                ""
             );
 
 
@@ -82,6 +140,12 @@ const Components = {
             "disabled":
                 "Devre Dışı",
 
+            "installing":
+                "Kuruluyor",
+
+            "updating":
+                "Güncelleniyor",
+
             "error":
                 "Hata",
 
@@ -100,6 +164,9 @@ const Components = {
             "unverified":
                 "Doğrulanmadı",
 
+            "pending":
+                "Bekliyor",
+
             "identity":
                 "Kimlik",
 
@@ -111,6 +178,18 @@ const Components = {
 
             "bridge":
                 "Köprü",
+
+            "memory":
+                "Hafıza",
+
+            "timeline":
+                "Zaman Çizelgesi",
+
+            "applications":
+                "Applications",
+
+            "evolution":
+                "Evolution",
 
             "entity:mounted":
                 "Varlık sisteme bağlandı",
@@ -170,7 +249,9 @@ const Components = {
 
 
         return (
-            translations[key] ||
+            translations[
+                key
+            ] ||
             text
         );
 
@@ -186,15 +267,21 @@ const Components = {
         try{
 
             if(
-                typeof VAERO === "undefined" ||
-                typeof VAERO.get !== "function"
+                typeof VAERO ===
+                    "undefined" ||
+                typeof VAERO.get !==
+                    "function"
             ){
+
                 return null;
+
             }
 
 
             return (
-                VAERO.get(name) ||
+                VAERO.get(
+                    name
+                ) ||
                 null
             );
 
@@ -205,7 +292,33 @@ const Components = {
                 error
             );
 
+
             return null;
+
+        }
+
+    },
+
+
+    getEngine(){
+
+        try{
+
+            return (
+                VAERO?.engine ||
+                this.getService(
+                    "engine"
+                ) ||
+                window.Engine ||
+                null
+            );
+
+        } catch(error){
+
+            return (
+                window.Engine ||
+                null
+            );
 
         }
 
@@ -225,7 +338,9 @@ const Components = {
             typeof worldService.all !==
                 "function"
         ){
+
             return [];
+
         }
 
 
@@ -235,7 +350,9 @@ const Components = {
                 worldService.all();
 
 
-            return Array.isArray(result)
+            return Array.isArray(
+                result
+            )
                 ? result
                 : [];
 
@@ -261,7 +378,9 @@ const Components = {
             typeof evolution.all !==
                 "function"
         ){
+
             return [];
+
         }
 
 
@@ -271,7 +390,9 @@ const Components = {
                 evolution.all();
 
 
-            return Array.isArray(events)
+            return Array.isArray(
+                events
+            )
                 ? events
                     .filter(
                         event =>
@@ -279,7 +400,10 @@ const Components = {
                             event.type !==
                                 "runtime:tick"
                     )
-                    .slice(0,4)
+                    .slice(
+                        0,
+                        4
+                    )
                 : [];
 
         } catch(error){
@@ -295,6 +419,10 @@ const Components = {
 
         const registry =
             this.getService(
+                "appRegistry"
+            ) ||
+            window.AppRegistry ||
+            this.getService(
                 "organRegistry"
             ) ||
             window.OrganRegistry ||
@@ -306,7 +434,9 @@ const Components = {
             typeof registry.all !==
                 "function"
         ){
+
             return [];
+
         }
 
 
@@ -316,7 +446,9 @@ const Components = {
                 registry.all();
 
 
-            return Array.isArray(apps)
+            return Array.isArray(
+                apps
+            )
                 ? apps
                 : [];
 
@@ -329,11 +461,119 @@ const Components = {
     },
 
 
+    getOrganStatus(){
+
+        const organStatus =
+            this.getService(
+                "organStatus"
+            ) ||
+            window.OrganStatus ||
+            null;
+
+
+        if(
+            !organStatus ||
+            typeof organStatus.report !==
+                "function"
+        ){
+
+            return null;
+
+        }
+
+
+        try{
+
+            return (
+                organStatus.report() ||
+                null
+            );
+
+        } catch(error){
+
+            return null;
+
+        }
+
+    },
+
+
     /* =====================================================
        USER DISPLAY
     ===================================================== */
 
     getDisplayName(entity){
+
+        const profile =
+            entity?.profile;
+
+
+        const profileName =
+            String(
+                profile?.name ||
+                profile?.displayName ||
+                ""
+            ).trim();
+
+
+        if(
+            profileName &&
+            profileName.toLowerCase() !==
+                "vaero"
+        ){
+
+            return profileName;
+
+        }
+
+
+        const profileService =
+            this.getService(
+                "profile"
+            );
+
+
+        try{
+
+            if(
+                entity?.id &&
+                profileService &&
+                typeof profileService.get ===
+                    "function"
+            ){
+
+                const storedProfile =
+                    profileService.get(
+                        entity.id
+                    );
+
+
+                const storedName =
+                    String(
+                        storedProfile?.name ||
+                        storedProfile?.displayName ||
+                        ""
+                    ).trim();
+
+
+                if(
+                    storedName &&
+                    storedName.toLowerCase() !==
+                        "vaero"
+                ){
+
+                    return storedName;
+
+                }
+
+            }
+
+        } catch(error){
+
+            /* compatibility fallback */
+
+        }
+
 
         try{
 
@@ -359,34 +599,17 @@ const Components = {
 
 
                 if(savedName){
+
                     return savedName;
+
                 }
 
             }
 
         } catch(error){
 
-            console.warn(
-                "Kullanıcı adı okunamadı:",
-                error
-            );
+            /* old local profile is optional */
 
-        }
-
-
-        const profileName =
-            String(
-                entity?.profile?.name ||
-                ""
-            ).trim();
-
-
-        if(
-            profileName &&
-            profileName.toLowerCase() !==
-                "vaero"
-        ){
-            return profileName;
         }
 
 
@@ -408,7 +631,9 @@ const Components = {
                 value
             )
         ){
+
             return "";
+
         }
 
 
@@ -421,22 +646,27 @@ const Components = {
 
 
         const minute =
-            60 * 1000;
+            60 *
+            1000;
 
 
         const hour =
-            60 * minute;
+            60 *
+            minute;
 
 
         const day =
-            24 * hour;
+            24 *
+            hour;
 
 
         if(
             difference <
             minute
         ){
+
             return "Şimdi";
+
         }
 
 
@@ -492,7 +722,11 @@ const Components = {
                     world?.archived !==
                         true
             ) ||
-            worlds[0] ||
+            worlds.find(
+                world =>
+                    world?.archived !==
+                        true
+            ) ||
             null;
 
 
@@ -530,8 +764,24 @@ const Components = {
 
         const welcomeText =
             displayName
-                ? `Hoş geldin, ${this.escapeHTML(displayName)}`
+                ? `Hoş geldin, ${this.escapeHTML(
+                    displayName
+                )}`
                 : "Hoş geldin";
+
+
+        const health =
+            this.getOrganStatus();
+
+
+        const engineStatus =
+            health?.status ||
+            (
+                this.getEngine()
+                    ?.started
+                    ? "healthy"
+                    : "unknown"
+            );
 
 
         return `
@@ -594,7 +844,12 @@ const Components = {
                             Yaşayan dijital evrenin kontrol merkezi
                         </p>
 
-                        <div class="engine-status-pill">
+                        <div
+                            class="engine-status-pill"
+                            data-engine-health="${this.escapeHTML(
+                                engineStatus
+                            )}"
+                        >
 
                             <span
                                 class="engine-status-dot"
@@ -602,7 +857,15 @@ const Components = {
                             ></span>
 
                             <strong>
-                                Sistem Online
+                                ${
+                                    engineStatus ===
+                                        "critical"
+                                        ? "Sistem Uyarısı"
+                                        : engineStatus ===
+                                            "degraded"
+                                            ? "Sistem İzleniyor"
+                                            : "Sistem Online"
+                                }
                             </strong>
 
                             <span
@@ -632,8 +895,10 @@ const Components = {
                         <span class="brain-orbit brain-orbit-3"></span>
 
                         <span class="brain-core">
+
                             <span class="brain-eye"></span>
                             <span class="brain-eye"></span>
+
                         </span>
 
                     </button>
@@ -729,7 +994,10 @@ const Components = {
 
                                     ${activities
                                         .map(
-                                            (event,index) =>
+                                            (
+                                                event,
+                                                index
+                                            ) =>
                                                 this.activityItem(
                                                     event,
                                                     index
@@ -738,7 +1006,7 @@ const Components = {
                                         .join("")}
 
                                 </div>
-                              `
+                            `
                             : `
                                 <div class="engine-empty-state">
 
@@ -751,7 +1019,7 @@ const Components = {
                                     </span>
 
                                 </div>
-                              `
+                            `
                     }
 
                 </section>
@@ -775,7 +1043,9 @@ const Components = {
                 type="button"
                 class="
                     engine-shortcut-card
-                    engine-shortcut-${this.escapeHTML(tone)}
+                    engine-shortcut-${this.escapeHTML(
+                        tone
+                    )}
                 "
                 data-action="${this.escapeHTML(
                     this.safeAction(
@@ -785,15 +1055,21 @@ const Components = {
             >
 
                 <span class="engine-shortcut-icon">
-                    ${this.escapeHTML(icon)}
+                    ${this.escapeHTML(
+                        icon
+                    )}
                 </span>
 
                 <strong>
-                    ${this.escapeHTML(title)}
+                    ${this.escapeHTML(
+                        title
+                    )}
                 </strong>
 
                 <small>
-                    ${this.escapeHTML(subtitle)}
+                    ${this.escapeHTML(
+                        subtitle
+                    )}
                 </small>
 
                 <span
@@ -831,7 +1107,9 @@ const Components = {
                     </h2>
 
                     <strong class="engine-active-count">
-                        ${this.escapeHTML(activeCount)}
+                        ${this.escapeHTML(
+                            activeCount
+                        )}
                         aktif varlık
                     </strong>
 
@@ -839,7 +1117,9 @@ const Components = {
                         type="button"
                         class="engine-world-enter"
                         data-action="world:open"
-                        data-world-id="${this.escapeHTML(world.id)}"
+                        data-world-id="${this.escapeHTML(
+                            world.id
+                        )}"
                     >
                         Dünyaya Git
                         <span aria-hidden="true">→</span>
@@ -851,8 +1131,10 @@ const Components = {
                     class="engine-world-visual"
                     aria-hidden="true"
                 >
+
                     <div class="engine-world-glow"></div>
                     <div class="engine-world-planet"></div>
+
                 </div>
 
             </section>
@@ -864,7 +1146,10 @@ const Components = {
     emptyWorldCard(){
 
         return `
-            <section class="engine-active-world engine-active-world-empty">
+            <section class="
+                engine-active-world
+                engine-active-world-empty
+            ">
 
                 <div class="engine-active-world-copy">
 
@@ -929,7 +1214,9 @@ const Components = {
                 ></span>
 
                 <span>
-                    ${this.escapeHTML(title)}
+                    ${this.escapeHTML(
+                        title
+                    )}
                 </span>
 
                 <small>
@@ -945,16 +1232,24 @@ const Components = {
 
     },
 
-
-    /* =====================================================
+   /* =====================================================
        WORLDS LIST
     ===================================================== */
 
-    worldsView(worlds = []){
+    worldsView(
+        worlds = []
+    ){
 
         const safeWorlds =
-            Array.isArray(worlds)
-                ? worlds.filter(Boolean)
+            Array.isArray(
+                worlds
+            )
+                ? worlds.filter(
+                    world =>
+                        world &&
+                        world.archived !==
+                            true
+                )
                 : [];
 
 
@@ -974,7 +1269,6 @@ const Components = {
                         "Yeni Dünya"
                 })}
 
-
                 ${
                     safeWorlds.length
                         ? `
@@ -990,7 +1284,7 @@ const Components = {
                                     .join("")}
 
                             </div>
-                          `
+                        `
                         : this.emptyState({
                             icon:
                                 "◯",
@@ -1017,21 +1311,21 @@ const Components = {
             Array.isArray(
                 world?.entities
             )
-                ? world.entities
+                ? world.entities.filter(
+                    entity =>
+                        entity?.archived !==
+                            true
+                )
                 : [];
 
 
         const activeCount =
             entities.filter(
                 entity =>
-                    entity?.archived !==
-                        true &&
-                    (
-                        entity?.status ===
-                            "active" ||
-                        entity?.status ===
-                            "online"
-                    )
+                    entity?.status ===
+                        "active" ||
+                    entity?.status ===
+                        "online"
             ).length;
 
 
@@ -1040,7 +1334,9 @@ const Components = {
                 type="button"
                 class="world-card"
                 data-action="world:open"
-                data-world-id="${this.escapeHTML(world?.id)}"
+                data-world-id="${this.escapeHTML(
+                    world?.id
+                )}"
             >
 
                 <span
@@ -1110,7 +1406,6 @@ const Components = {
                         "Bir proje, topluluk, fikir veya kişisel alan için yaşayan bir dijital dünya başlat."
                 })}
 
-
                 <div class="create-layout">
 
                     <form
@@ -1121,7 +1416,6 @@ const Components = {
                         <div class="eyebrow">
                             DÜNYA BİLGİLERİ
                         </div>
-
 
                         <label class="engine-field">
 
@@ -1141,7 +1435,6 @@ const Components = {
 
                         </label>
 
-
                         <label class="engine-field">
 
                             <span>
@@ -1157,7 +1450,6 @@ const Components = {
                             ></textarea>
 
                         </label>
-
 
                         <label class="engine-field">
 
@@ -1175,7 +1467,6 @@ const Components = {
                             >
 
                         </label>
-
 
                         <button
                             type="submit"
@@ -1243,12 +1534,12 @@ const Components = {
 
 
         const engine =
-            VAERO.engine;
+            this.getEngine();
 
 
         if(
             engine?.worldEditMode ===
-                true
+            true
         ){
 
             return this.worldEditView(
@@ -1325,7 +1616,7 @@ const Components = {
                                     >
                                         Arşivle
                                     </button>
-                                  `
+                                `
                                 : ""
                         }
 
@@ -1348,7 +1639,9 @@ const Components = {
                         </div>
 
                         <h1 class="world-title">
-                            ${this.escapeHTML(world.name)}
+                            ${this.escapeHTML(
+                                world.name
+                            )}
                         </h1>
 
                         <p class="world-description">
@@ -1357,7 +1650,6 @@ const Components = {
                                 "Bu dünya yaşayan bir ekosistemdir. Varlıklar burada doğar, gelişir ve tarih oluşturur."
                             )}
                         </p>
-
 
                         <div class="world-stats">
 
@@ -1381,7 +1673,6 @@ const Components = {
                         </div>
 
                     </div>
-
 
                     <div
                         class="world-hero-planet"
@@ -1435,7 +1726,7 @@ const Components = {
                                         .join("")}
 
                                 </div>
-                              `
+                            `
                             : this.emptyState({
                                 icon:
                                     "⬡",
@@ -1468,7 +1759,9 @@ const Components = {
             Array.isArray(
                 world.tags
             )
-                ? world.tags.join(", ")
+                ? world.tags.join(
+                    ", "
+                )
                 : "";
 
 
@@ -1514,7 +1807,9 @@ const Components = {
                             name="worldName"
                             type="text"
                             maxlength="60"
-                            value="${this.escapeHTML(world.name)}"
+                            value="${this.escapeHTML(
+                                world.name
+                            )}"
                             required
                         >
 
@@ -1551,7 +1846,9 @@ const Components = {
                             name="worldTags"
                             type="text"
                             maxlength="160"
-                            value="${this.escapeHTML(tags)}"
+                            value="${this.escapeHTML(
+                                tags
+                            )}"
                             placeholder="proje, araştırma, kişisel"
                         >
 
@@ -1637,14 +1934,23 @@ const Components = {
 
     },
 
-    /* =====================================================
+
+    worldEditor(world){
+
+        return this.worldEditView(
+            world
+        );
+
+    },
+
+   /* =====================================================
        ENTITY CREATE
     ===================================================== */
 
     entityCreateView(world){
 
         const selectedType =
-            VAERO.engine
+            this.getEngine()
                 ?.entityType;
 
 
@@ -1733,7 +2039,10 @@ const Components = {
                     class="engine-back-btn"
                     data-action="entity:create:cancel"
                 >
-                    ← ${this.escapeHTML(world.name)}
+                    ← ${this.escapeHTML(
+                        world?.name ||
+                        "Dünya"
+                    )}
                 </button>
 
 
@@ -1742,7 +2051,9 @@ const Components = {
                         "YENİ VARLIK",
                     title:
                         selectedType
-                            ? `${this.translate(selectedType)} oluştur`
+                            ? `${this.translate(
+                                selectedType
+                            )} oluştur`
                             : "Ne oluşturmak istiyorsun?",
                     text:
                         selectedType
@@ -1838,7 +2149,7 @@ const Components = {
                                 </div>
 
                             </form>
-                          `
+                        `
                         : `
                             <div class="entity-type-grid">
 
@@ -1849,15 +2160,21 @@ const Components = {
                                                 type="button"
                                                 class="entity-type-card"
                                                 data-action="entity:type:select"
-                                                data-entity-type="${this.escapeHTML(type.id)}"
+                                                data-entity-type="${this.escapeHTML(
+                                                    type.id
+                                                )}"
                                             >
 
                                                 <span>
-                                                    ${this.escapeHTML(type.icon)}
+                                                    ${this.escapeHTML(
+                                                        type.icon
+                                                    )}
                                                 </span>
 
                                                 <strong>
-                                                    ${this.escapeHTML(type.label)}
+                                                    ${this.escapeHTML(
+                                                        type.label
+                                                    )}
                                                 </strong>
 
                                             </button>
@@ -1866,7 +2183,7 @@ const Components = {
                                     .join("")}
 
                             </div>
-                          `
+                        `
                 }
 
             </section>
@@ -1885,8 +2202,10 @@ const Components = {
             Array.isArray(
                 entity?.tags
             )
-                ? entity.tags
-                    .slice(0,2)
+                ? entity.tags.slice(
+                    0,
+                    2
+                )
                 : [];
 
 
@@ -1895,7 +2214,9 @@ const Components = {
                 type="button"
                 class="world-entity-btn"
                 data-action="entity:open"
-                data-entity-id="${this.escapeHTML(entity?.id)}"
+                data-entity-id="${this.escapeHTML(
+                    entity?.id
+                )}"
             >
 
                 <span class="world-entity-symbol">
@@ -1939,7 +2260,7 @@ const Components = {
                                         )
                                         .join(" · ")}
                                 </span>
-                              `
+                            `
                             : ""
                     }
 
@@ -1964,9 +2285,12 @@ const Components = {
 
     entityApp(entity){
 
+        const engine =
+            this.getEngine();
+
+
         switch(
-            VAERO.engine
-                ?.currentEntityPage
+            engine?.currentEntityPage
         ){
 
             case "identity":
@@ -2058,10 +2382,13 @@ const Components = {
         }
 
 
+        const engine =
+            this.getEngine();
+
+
         if(
-            VAERO.engine
-                ?.entityEditMode ===
-                true
+            engine?.entityEditMode ===
+            true
         ){
 
             return this.entityEditView(
@@ -2105,9 +2432,7 @@ const Components = {
 
                         ${
                             entity.id !==
-                                VAERO.engine
-                                    ?.rootEntity
-                                    ?.id
+                                engine?.rootEntity?.id
                                 ? `
                                     <button
                                         type="button"
@@ -2116,7 +2441,7 @@ const Components = {
                                     >
                                         Arşivle
                                     </button>
-                                  `
+                                `
                                 : ""
                         }
 
@@ -2137,7 +2462,6 @@ const Components = {
                                 .toUpperCase()
                         )}
                     </span>
-
 
                     <div>
 
@@ -2171,14 +2495,16 @@ const Components = {
                                             .map(
                                                 tag => `
                                                     <span>
-                                                        ${this.escapeHTML(tag)}
+                                                        ${this.escapeHTML(
+                                                            tag
+                                                        )}
                                                     </span>
                                                 `
                                             )
                                             .join("")}
 
                                     </div>
-                                  `
+                                `
                                 : ""
                         }
 
@@ -2263,7 +2589,9 @@ const Components = {
             Array.isArray(
                 entity.tags
             )
-                ? entity.tags.join(", ")
+                ? entity.tags.join(
+                    ", "
+                )
                 : "";
 
 
@@ -2305,7 +2633,9 @@ const Components = {
                             name="entityName"
                             type="text"
                             maxlength="60"
-                            value="${this.escapeHTML(entity.name)}"
+                            value="${this.escapeHTML(
+                                entity.name
+                            )}"
                             required
                         >
 
@@ -2342,7 +2672,9 @@ const Components = {
                             name="entityTags"
                             type="text"
                             maxlength="160"
-                            value="${this.escapeHTML(tags)}"
+                            value="${this.escapeHTML(
+                                tags
+                            )}"
                         >
 
                     </label>
@@ -2428,7 +2760,15 @@ const Components = {
     },
 
 
-    /* =====================================================
+    entityEditor(entity){
+
+        return this.entityEditView(
+            entity
+        );
+
+    },
+
+   /* =====================================================
        ENTITY APPS
     ===================================================== */
 
@@ -2451,19 +2791,51 @@ const Components = {
             >
 
                 <span>
-                    ${this.escapeHTML(icon)}
+                    ${this.escapeHTML(
+                        icon
+                    )}
                 </span>
 
                 <strong>
-                    ${this.escapeHTML(title)}
+                    ${this.escapeHTML(
+                        title
+                    )}
                 </strong>
 
                 <small>
-                    ${this.escapeHTML(subtitle)}
+                    ${this.escapeHTML(
+                        subtitle
+                    )}
                 </small>
 
             </button>
         `;
+
+    },
+
+
+    resolveApplication(
+        serviceName,
+        globalName
+    ){
+
+        try{
+
+            return (
+                this.getService(
+                    serviceName
+                ) ||
+                window[
+                    globalName
+                ] ||
+                null
+            );
+
+        } catch(error){
+
+            return null;
+
+        }
 
     },
 
@@ -2482,9 +2854,20 @@ const Components = {
 
             try{
 
-                return app.render(
-                    entity
-                );
+                const result =
+                    app.render(
+                        entity
+                    );
+
+
+                if(
+                    typeof result ===
+                    "string"
+                ){
+
+                    return result;
+
+                }
 
             } catch(error){
 
@@ -2508,7 +2891,10 @@ const Components = {
     entityIdentity(entity){
 
         return this.renderAppSafely(
-            window.IdentityApp,
+            this.resolveApplication(
+                "identityApp",
+                "IdentityApp"
+            ),
             entity,
             "Kimlik uygulaması yüklenemedi."
         );
@@ -2519,7 +2905,10 @@ const Components = {
     entityProfile(entity){
 
         return this.renderAppSafely(
-            window.ProfileApp,
+            this.resolveApplication(
+                "profileApp",
+                "ProfileApp"
+            ),
             entity,
             "Profil uygulaması yüklenemedi."
         );
@@ -2530,7 +2919,10 @@ const Components = {
     entityOrgans(entity){
 
         return this.renderAppSafely(
-            window.OrgansApp,
+            this.resolveApplication(
+                "organsApp",
+                "OrgansApp"
+            ),
             entity,
             "Organlar uygulaması yüklenemedi."
         );
@@ -2541,7 +2933,10 @@ const Components = {
     entityTimeline(entity){
 
         return this.renderAppSafely(
-            window.TimelineApp,
+            this.resolveApplication(
+                "timelineApp",
+                "TimelineApp"
+            ),
             entity,
             "Timeline uygulaması yüklenemedi."
         );
@@ -2552,7 +2947,10 @@ const Components = {
     entityBridge(entity){
 
         return this.renderAppSafely(
-            window.BridgeApp,
+            this.resolveApplication(
+                "bridgeApp",
+                "BridgeApp"
+            ),
             entity,
             "Bridge uygulaması yüklenemedi."
         );
@@ -2563,7 +2961,10 @@ const Components = {
     entityMemory(entity){
 
         return this.renderAppSafely(
-            window.MemoryApp,
+            this.resolveApplication(
+                "memoryApp",
+                "MemoryApp"
+            ),
             entity,
             "Hafıza uygulaması yüklenemedi."
         );
@@ -2574,7 +2975,10 @@ const Components = {
     entityEvolution(entity){
 
         return this.renderAppSafely(
-            window.EvolutionApp,
+            this.resolveApplication(
+                "evolutionApp",
+                "EvolutionApp"
+            ),
             entity,
             "Evolution uygulaması yüklenemedi."
         );
@@ -2585,7 +2989,10 @@ const Components = {
     entitySettings(entity){
 
         return this.renderAppSafely(
-            window.SettingsApp,
+            this.resolveApplication(
+                "settingsApp",
+                "SettingsApp"
+            ),
             entity,
             "Ayarlar uygulaması yüklenemedi."
         );
@@ -2593,7 +3000,29 @@ const Components = {
     },
 
 
-    entityDiscovery(){
+    entityDiscovery(entity){
+
+        const discoveryApp =
+            this.resolveApplication(
+                "discoveryApp",
+                "DiscoveryApp"
+            );
+
+
+        if(
+            discoveryApp &&
+            typeof discoveryApp.render ===
+                "function"
+        ){
+
+            return this.renderAppSafely(
+                discoveryApp,
+                entity,
+                "Discovery uygulaması yüklenemedi."
+            );
+
+        }
+
 
         return `
             <section class="engine-page">
@@ -2607,14 +3036,13 @@ const Components = {
                         "İlgi alanlarını, hedeflerini ve VAERO’dan beklentilerini yeniden değerlendirebilirsin."
                 })}
 
-
                 ${this.emptyState({
                     icon:
                         "◇",
                     title:
                         "Discovery Journey",
                     text:
-                        "Mevcut cevapların Profil ekranında korunur. Yeniden başlatırsan yeni seçimlerin önceki yönünün yerini alır.",
+                        "Mevcut yönünü yeniden değerlendirmek için Discovery Journey’i yeniden başlatabilirsin.",
                     action:
                         "discovery:restart",
                     actionLabel:
@@ -2645,19 +3073,32 @@ const Components = {
                 <div>
 
                     <span class="engine-section-label">
-                        ${this.escapeHTML(eyebrow)}
+                        ${this.escapeHTML(
+                            eyebrow ||
+                            ""
+                        )}
                     </span>
 
                     <h1>
-                        ${this.escapeHTML(title)}
+                        ${this.escapeHTML(
+                            title ||
+                            ""
+                        )}
                     </h1>
 
-                    <p>
-                        ${this.escapeHTML(text)}
-                    </p>
+                    ${
+                        text
+                            ? `
+                                <p>
+                                    ${this.escapeHTML(
+                                        text
+                                    )}
+                                </p>
+                            `
+                            : ""
+                    }
 
                 </div>
-
 
                 ${
                     action &&
@@ -2676,7 +3117,7 @@ const Components = {
                                     actionLabel
                                 )}
                             </button>
-                          `
+                        `
                         : ""
                 }
 
@@ -2695,11 +3136,15 @@ const Components = {
             <div class="world-stat">
 
                 <strong>
-                    ${this.escapeHTML(value)}
+                    ${this.escapeHTML(
+                        value
+                    )}
                 </strong>
 
                 <span>
-                    ${this.escapeHTML(label)}
+                    ${this.escapeHTML(
+                        label
+                    )}
                 </span>
 
             </div>
@@ -2711,25 +3156,45 @@ const Components = {
     emptyState({
         icon = "◌",
         title,
-        text,
+        text = "",
+        description = "",
         action = null,
         actionLabel = null
     }){
+
+        const bodyText =
+            text ||
+            description ||
+            "";
+
 
         return `
             <div class="section engine-page-empty">
 
                 <span class="engine-page-empty-icon">
-                    ${this.escapeHTML(icon)}
+                    ${this.escapeHTML(
+                        icon
+                    )}
                 </span>
 
                 <h2>
-                    ${this.escapeHTML(title)}
+                    ${this.escapeHTML(
+                        title ||
+                        "Henüz içerik yok"
+                    )}
                 </h2>
 
-                <p>
-                    ${this.escapeHTML(text)}
-                </p>
+                ${
+                    bodyText
+                        ? `
+                            <p>
+                                ${this.escapeHTML(
+                                    bodyText
+                                )}
+                            </p>
+                        `
+                        : ""
+                }
 
                 ${
                     action &&
@@ -2748,7 +3213,7 @@ const Components = {
                                     actionLabel
                                 )}
                             </button>
-                          `
+                        `
                         : ""
                 }
 
@@ -2772,7 +3237,10 @@ const Components = {
                 </h1>
 
                 <p>
-                    ${this.escapeHTML(message)}
+                    ${this.escapeHTML(
+                        message ||
+                        "Bilinmeyen ekran hatası."
+                    )}
                 </p>
 
                 <button
@@ -2793,7 +3261,9 @@ const Components = {
        NAVIGATION
     ===================================================== */
 
-    navigation(state = {}){
+    navigation(
+        state = {}
+    ){
 
         const view =
             state.view ||
@@ -2807,7 +3277,8 @@ const Components = {
 
         const homeActive =
             view ===
-            "home";
+                "home" &&
+            !page;
 
 
         const identityActive =
@@ -2829,7 +3300,7 @@ const Components = {
 
         const createActive =
             view ===
-            "create";
+                "create";
 
 
         const worldsActive =
@@ -2879,8 +3350,10 @@ const Components = {
                     <span class="nav-brain-orbit"></span>
 
                     <span class="nav-brain-core">
+
                         <span class="nav-brain-eye"></span>
                         <span class="nav-brain-eye"></span>
+
                     </span>
 
                 </button>
@@ -2930,11 +3403,14 @@ const Components = {
         return `
             <button
                 type="button"
-                class="nav-btn ${
-                    active
-                        ? "active"
-                        : ""
-                }"
+                class="
+                    nav-btn
+                    ${
+                        active
+                            ? "active"
+                            : ""
+                    }
+                "
                 data-action="${this.escapeHTML(
                     this.safeAction(
                         action
@@ -2948,11 +3424,15 @@ const Components = {
             >
 
                 <span class="nav-icon">
-                    ${this.escapeHTML(icon)}
+                    ${this.escapeHTML(
+                        icon
+                    )}
                 </span>
 
                 <span>
-                    ${this.escapeHTML(label)}
+                    ${this.escapeHTML(
+                        label
+                    )}
                 </span>
 
             </button>
@@ -2963,10 +3443,34 @@ const Components = {
 };
 
 
-VAERO.register(
-    "components",
-    Components
-);
+/* =========================================================
+   REGISTER
+========================================================= */
+
+try{
+
+    if(
+        typeof VAERO !==
+            "undefined" &&
+        typeof VAERO.register ===
+            "function"
+    ){
+
+        VAERO.register(
+            "components",
+            Components
+        );
+
+    }
+
+} catch(error){
+
+    console.warn(
+        "Components VAERO register başarısız:",
+        error
+    );
+
+}
 
 
 window.Components =
