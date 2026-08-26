@@ -1,13 +1,24 @@
 /* =========================================================
    VAERO EVOLUTION APP
-   Life Events / Progress / Organ Impact
+   Life Events / Goals / Decisions / Progress
 ========================================================= */
 
 const EvolutionApp = {
 
-    activeFilter: "all",
+    activeFilter:
+        "all",
 
-    selectedEventId: null,
+    searchQuery:
+        "",
+
+    selectedEventId:
+        null,
+
+    editorMode:
+        null,
+
+    searchTimer:
+        null,
 
 
     /* =====================================================
@@ -29,33 +40,127 @@ const EvolutionApp = {
 
 
     /* =====================================================
+       ENGINE / SERVICES
+    ===================================================== */
+
+    getEngine(){
+
+        try{
+
+            if(
+                typeof VAERO !== "undefined" &&
+                VAERO.engine
+            ){
+                return VAERO.engine;
+            }
+
+        } catch(error){
+
+            /* fallback */
+        }
+
+
+        return (
+            window.Engine ||
+            null
+        );
+
+    },
+
+
+    getService(name){
+
+        try{
+
+            if(
+                typeof VAERO === "undefined" ||
+                typeof VAERO.get !==
+                    "function"
+            ){
+                return null;
+            }
+
+
+            return (
+                VAERO.get(name) ||
+                null
+            );
+
+        } catch(error){
+
+            return null;
+
+        }
+
+    },
+
+
+    getCurrentEntity(){
+
+        const engine =
+            this.getEngine();
+
+
+        return (
+            engine?.currentOpenedEntity ||
+            engine?.currentEntity ||
+            engine?.rootEntity ||
+            null
+        );
+
+    },
+
+
+    remount(){
+
+        const engine =
+            this.getEngine();
+
+
+        if(
+            !engine ||
+            typeof engine.mount !==
+                "function"
+        ){
+            return false;
+        }
+
+
+        return engine.mount(
+            engine.currentEntity
+        );
+
+    },
+
+
+    /* =====================================================
        BRAIN CONTEXT
     ===================================================== */
 
-    enterBrainContext(){
+    enterBrainContext(entity = null){
 
         try{
 
             const awareness =
-                typeof VAERO !== "undefined" &&
-                typeof VAERO.get === "function"
-                    ? VAERO.get(
-                        "brainAwareness"
-                    )
-                    : null;
-
-
-            if(
-                awareness &&
-                typeof awareness.enter ===
-                    "function"
-            ){
-
-                awareness.enter(
-                    "evolution"
+                this.getService(
+                    "brainAwareness"
                 );
 
-            }
+
+            awareness?.enter?.(
+                "evolution",
+                {
+                    entityId:
+                        entity?.id ||
+                        null,
+
+                    filter:
+                        this.activeFilter,
+
+                    selectedEventId:
+                        this.selectedEventId
+                }
+            );
 
         } catch(error){
 
@@ -75,34 +180,14 @@ const EvolutionApp = {
 
     getEvolutionCore(){
 
-        try{
-
-            if(
-                typeof VAERO === "undefined" ||
-                typeof VAERO.get !== "function"
-            ){
-                return null;
-            }
-
-            return VAERO.get(
-                "evolution"
-            ) || null;
-
-        } catch(error){
-
-            console.warn(
-                "Evolution core okunamadı:",
-                error
-            );
-
-            return null;
-
-        }
+        return this.getService(
+            "evolution"
+        );
 
     },
 
 
-    getEvents(){
+    getEvents(entity = null){
 
         const evolution =
             this.getEvolutionCore();
@@ -117,14 +202,30 @@ const EvolutionApp = {
         }
 
 
+        let events = [];
+
+
         try{
 
-            const events =
-                evolution.all();
+            if(
+                entity?.id &&
+                typeof evolution.forEntity ===
+                    "function"
+            ){
 
-            return Array.isArray(events)
-                ? events
-                : [];
+                events =
+                    evolution.forEntity(
+                        entity.id
+                    ) ||
+                    [];
+
+            } else {
+
+                events =
+                    evolution.all() ||
+                    [];
+
+            }
 
         } catch(error){
 
@@ -133,7 +234,338 @@ const EvolutionApp = {
                 error
             );
 
+
             return [];
+
+        }
+
+
+        if(
+            !Array.isArray(events)
+        ){
+            return [];
+        }
+
+
+        return events
+            .filter(Boolean)
+            .filter(
+                event =>
+                    event.archived !==
+                        true
+            )
+            .filter(
+                event =>
+                    event.type !==
+                        "runtime:tick"
+            )
+            .sort(
+                (a,b) =>
+                    this.getTimestamp(b) -
+                    this.getTimestamp(a)
+            );
+
+    },
+
+
+    /* =====================================================
+       TYPES
+    ===================================================== */
+
+    getTypes(){
+
+        return [
+
+            {
+                id:
+                    "achievement",
+                label:
+                    "Başarı"
+            },
+
+            {
+                id:
+                    "decision",
+                label:
+                    "Karar"
+            },
+
+            {
+                id:
+                    "goal",
+                label:
+                    "Hedef"
+            },
+
+            {
+                id:
+                    "milestone",
+                label:
+                    "Dönüm Noktası"
+            },
+
+            {
+                id:
+                    "work",
+                label:
+                    "İş"
+            },
+
+            {
+                id:
+                    "relationship",
+                label:
+                    "İlişki"
+            },
+
+            {
+                id:
+                    "finance",
+                label:
+                    "Finans"
+            },
+
+            {
+                id:
+                    "failure",
+                label:
+                    "Deneyim"
+            },
+
+            {
+                id:
+                    "general",
+                label:
+                    "Genel"
+            }
+
+        ];
+
+    },
+
+
+    normalizeType(value){
+
+        const type =
+            String(
+                value ||
+                "general"
+            )
+                .trim()
+                .toLowerCase();
+
+
+        const allowed =
+            this.getTypes()
+                .map(
+                    item =>
+                        item.id
+                );
+
+
+        return allowed.includes(type)
+            ? type
+            : "general";
+
+    },
+
+
+    getTypeLabel(type){
+
+        return (
+            this.getTypes()
+                .find(
+                    item =>
+                        item.id ===
+                        type
+                )
+                ?.label ||
+            "Genel"
+        );
+
+    },
+
+
+    /* =====================================================
+       IMPORTANCE
+    ===================================================== */
+
+    getImportanceLabel(value){
+
+        const labels = {
+
+            low:
+                "Düşük",
+
+            medium:
+                "Orta",
+
+            high:
+                "Yüksek",
+
+            critical:
+                "Kritik"
+
+        };
+
+
+        return (
+            labels[value] ||
+            "Orta"
+        );
+
+    },
+
+
+    normalizeImportance(value){
+
+        const importance =
+            String(
+                value ||
+                "medium"
+            )
+                .trim()
+                .toLowerCase();
+
+
+        return [
+            "low",
+            "medium",
+            "high",
+            "critical"
+        ].includes(
+            importance
+        )
+            ? importance
+            : "medium";
+
+    },
+
+
+    /* =====================================================
+       STATUS
+    ===================================================== */
+
+    normalizeStatus(value){
+
+        const status =
+            String(
+                value ||
+                "completed"
+            )
+                .trim()
+                .toLowerCase();
+
+
+        return [
+            "planned",
+            "progress",
+            "completed",
+            "paused",
+            "cancelled"
+        ].includes(
+            status
+        )
+            ? status
+            : "completed";
+
+    },
+
+
+    getStatusLabel(value){
+
+        const labels = {
+
+            planned:
+                "Planlandı",
+
+            progress:
+                "Devam Ediyor",
+
+            completed:
+                "Tamamlandı",
+
+            paused:
+                "Duraklatıldı",
+
+            cancelled:
+                "İptal Edildi"
+
+        };
+
+
+        return (
+            labels[value] ||
+            value ||
+            "Tamamlandı"
+        );
+
+    },
+
+
+    /* =====================================================
+       DATE
+    ===================================================== */
+
+    getTimestamp(event){
+
+        return Number(
+            event?.occurredAt ||
+            event?.updatedAt ||
+            event?.createdAt ||
+            0
+        ) || 0;
+
+    },
+
+
+    formatDate(timestamp){
+
+        const value =
+            Number(
+                timestamp
+            );
+
+
+        if(
+            !Number.isFinite(value) ||
+            value <= 0
+        ){
+            return "Tarih bilinmiyor";
+        }
+
+
+        try{
+
+            return new Intl.DateTimeFormat(
+                "tr-TR",
+                {
+                    day:
+                        "2-digit",
+
+                    month:
+                        "short",
+
+                    year:
+                        "numeric",
+
+                    hour:
+                        "2-digit",
+
+                    minute:
+                        "2-digit"
+                }
+            ).format(
+                new Date(value)
+            );
+
+        } catch(error){
+
+            return new Date(
+                value
+            ).toLocaleString(
+                "tr-TR"
+            );
 
         }
 
@@ -141,26 +573,212 @@ const EvolutionApp = {
 
 
     /* =====================================================
-       FILTER
+       TAGS
+    ===================================================== */
+
+    parseTags(value){
+
+        return [
+            ...new Set(
+                String(
+                    value ||
+                    ""
+                )
+                    .split(",")
+                    .map(
+                        item =>
+                            item.trim()
+                    )
+                    .filter(Boolean)
+            )
+        ];
+
+    },
+
+
+    /* =====================================================
+       XP / PROGRESS
+    ===================================================== */
+
+    getEventXP(event = {}){
+
+        const direct =
+            Number(
+                event.xp
+            );
+
+
+        if(
+            Number.isFinite(direct) &&
+            direct >= 0
+        ){
+            return direct;
+        }
+
+
+        const payloadXP =
+            Number(
+                event.payload?.xp
+            );
+
+
+        if(
+            Number.isFinite(payloadXP) &&
+            payloadXP >= 0
+        ){
+            return payloadXP;
+        }
+
+
+        const defaults = {
+
+            low:
+                5,
+
+            medium:
+                10,
+
+            high:
+                25,
+
+            critical:
+                50
+
+        };
+
+
+        return (
+            defaults[
+                event.importance
+            ] ||
+            10
+        );
+
+    },
+
+
+    getEvolutionProgress(events){
+
+        const totalXP =
+            events.reduce(
+                (total,event) =>
+                    total +
+                    this.getEventXP(
+                        event
+                    ),
+                0
+            );
+
+
+        const level =
+            Math.floor(
+                totalXP / 100
+            ) + 1;
+
+
+        const currentLevelXP =
+            totalXP % 100;
+
+
+        return {
+
+            level,
+
+            totalXP,
+
+            currentLevelXP,
+
+            nextLevelXP:
+                100,
+
+            progressPercent:
+                currentLevelXP
+
+        };
+
+    },
+
+
+    getGoalProgress(event){
+
+        const direct =
+            Number(
+                event.progress
+            );
+
+
+        if(
+            Number.isFinite(direct)
+        ){
+
+            return Math.min(
+                100,
+                Math.max(
+                    0,
+                    direct
+                )
+            );
+
+        }
+
+
+        const payload =
+            Number(
+                event.payload?.progress
+            );
+
+
+        if(
+            Number.isFinite(payload)
+        ){
+
+            return Math.min(
+                100,
+                Math.max(
+                    0,
+                    payload
+                )
+            );
+
+        }
+
+
+        return (
+            event.status ===
+                "completed"
+                ? 100
+                : 0
+        );
+
+    },
+
+
+    /* =====================================================
+       FILTER / SEARCH
     ===================================================== */
 
     setFilter(filter){
 
-        const allowedFilters = [
+        const allowed = [
             "all",
             "important",
             "achievement",
+            "decision",
             "goal",
-            "finance"
+            "milestone"
         ];
 
 
         this.activeFilter =
-            allowedFilters.includes(
+            allowed.includes(
                 filter
             )
                 ? filter
                 : "all";
+
+
+        this.selectedEventId =
+            null;
 
 
         return this.activeFilter;
@@ -168,73 +786,87 @@ const EvolutionApp = {
     },
 
 
-    filterEvents(events = []){
+    getVisibleEvents(entity){
 
-        if(!Array.isArray(events)){
-            return [];
-        }
+        let events =
+            this.getEvents(
+                entity
+            );
 
 
         if(
             this.activeFilter ===
-            "important"
+                "important"
         ){
 
-            return events.filter(
-                event =>
-                    event &&
-                    (
+            events =
+                events.filter(
+                    event =>
                         event.importance ===
                             "high" ||
                         event.importance ===
                             "critical"
-                    )
-            );
+                );
+
+        } else if(
+            this.activeFilter !==
+                "all"
+        ){
+
+            events =
+                events.filter(
+                    event =>
+                        event.type ===
+                        this.activeFilter
+                );
 
         }
 
 
-        if(
-            this.activeFilter ===
-            "achievement"
-        ){
-
-            return events.filter(
-                event =>
-                    event &&
-                    event.type ===
-                        "achievement"
-            );
-
-        }
+        const query =
+            String(
+                this.searchQuery ||
+                ""
+            )
+                .trim()
+                .toLocaleLowerCase(
+                    "tr-TR"
+                );
 
 
-        if(
-            this.activeFilter ===
-            "goal"
-        ){
+        if(query){
 
-            return events.filter(
-                event =>
-                    event &&
-                    event.type ===
-                        "goal"
-            );
+            events =
+                events.filter(
+                    event => {
 
-        }
+                        const haystack = [
+
+                            event.title,
+
+                            event.description,
+
+                            event.type,
+
+                            event.status,
+
+                            event.source,
+
+                            ...(event.tags || [])
+
+                        ]
+                            .join(" ")
+                            .toLocaleLowerCase(
+                                "tr-TR"
+                            );
 
 
-        if(
-            this.activeFilter ===
-            "finance"
-        ){
+                        return haystack.includes(
+                            query
+                        );
 
-            return events.filter(
-                event =>
-                    event &&
-                    event.type ===
-                        "finance"
-            );
+                    }
+                );
 
         }
 
@@ -245,15 +877,71 @@ const EvolutionApp = {
 
 
     /* =====================================================
-       EVENT SELECTION
+       EVENT RESOLUTION
     ===================================================== */
+
+    findEvent(eventId){
+
+        if(!eventId){
+            return null;
+        }
+
+
+        const evolution =
+            this.getEvolutionCore();
+
+
+        if(
+            evolution &&
+            typeof evolution.find ===
+                "function"
+        ){
+
+            try{
+
+                return (
+                    evolution.find(
+                        eventId
+                    ) ||
+                    null
+                );
+
+            } catch(error){
+
+                /* fallback */
+            }
+
+        }
+
+
+        return (
+            this
+                .getEvents(
+                    this.getCurrentEntity()
+                )
+                .find(
+                    event =>
+                        event.id ===
+                        eventId
+                ) ||
+            null
+        );
+
+    },
+
 
     selectEvent(eventId){
 
         this.selectedEventId =
             String(
-                eventId || ""
-            ).trim() || null;
+                eventId ||
+                ""
+            ).trim() ||
+            null;
+
+
+        this.editorMode =
+            null;
 
 
         return this.selectedEventId;
@@ -266,513 +954,442 @@ const EvolutionApp = {
         this.selectedEventId =
             null;
 
+        this.editorMode =
+            null;
+
+
         return true;
 
     },
 
 
     /* =====================================================
-       DATE
+       CREATE
     ===================================================== */
 
-    formatDate(timestamp){
-
-        const numericTimestamp =
-            Number(timestamp);
-
+    createEvent(entity){
 
         if(
-            !Number.isFinite(
-                numericTimestamp
-            ) ||
-            numericTimestamp <= 0
+            !entity ||
+            !entity.id
         ){
+            return false;
+        }
 
-            return "Tarih bilinmiyor";
+
+        const titleInput =
+            document.getElementById(
+                "evolutionTitleInput"
+            );
+
+
+        const descriptionInput =
+            document.getElementById(
+                "evolutionDescriptionInput"
+            );
+
+
+        const typeInput =
+            document.getElementById(
+                "evolutionTypeInput"
+            );
+
+
+        const importanceInput =
+            document.getElementById(
+                "evolutionImportanceInput"
+            );
+
+
+        const statusInput =
+            document.getElementById(
+                "evolutionStatusInput"
+            );
+
+
+        const tagsInput =
+            document.getElementById(
+                "evolutionTagsInput"
+            );
+
+
+        const progressInput =
+            document.getElementById(
+                "evolutionProgressInput"
+            );
+
+
+        const title =
+            String(
+                titleInput?.value ||
+                ""
+            ).trim();
+
+
+        if(!title){
+
+            titleInput?.focus();
+
+            return false;
 
         }
 
 
-        const date =
-            new Date(
-                numericTimestamp
+        const type =
+            this.normalizeType(
+                typeInput?.value
             );
 
 
+        const status =
+            this.normalizeStatus(
+                statusInput?.value
+            );
+
+
+        const importance =
+            this.normalizeImportance(
+                importanceInput?.value
+            );
+
+
+        const progress =
+            type === "goal"
+                ? Math.min(
+                    100,
+                    Math.max(
+                        0,
+                        Number(
+                            progressInput?.value ||
+                            0
+                        )
+                    )
+                )
+                : undefined;
+
+
+        const evolution =
+            this.getEvolutionCore();
+
+
         if(
-            Number.isNaN(
-                date.getTime()
-            )
+            !evolution ||
+            typeof evolution.record !==
+                "function"
+        ){
+            return false;
+        }
+
+
+        let created =
+            null;
+
+
+        const metadata = {
+
+            title,
+
+            description:
+                String(
+                    descriptionInput?.value ||
+                    ""
+                ).trim(),
+
+            relatedEntityId:
+                entity.id,
+
+            relatedWorldId:
+                this.getEngine()
+                    ?.currentWorld
+                    ?.id ||
+                null,
+
+            source:
+                "evolution-app",
+
+            status,
+
+            importance,
+
+            tags:
+                this.parseTags(
+                    tagsInput?.value
+                )
+        };
+
+
+        if(
+            progress !== undefined
         ){
 
-            return "Tarih bilinmiyor";
+            metadata.progress =
+                progress;
 
         }
 
 
         try{
 
-            return new Intl.DateTimeFormat(
-                "tr-TR",
-                {
-                    day:"2-digit",
-                    month:"long",
-                    year:"numeric",
-                    hour:"2-digit",
-                    minute:"2-digit"
-                }
-            ).format(date);
+            created =
+                evolution.record(
+                    type,
+                    metadata.description ||
+                    title,
+                    metadata
+                );
 
         } catch(error){
 
-            return date.toLocaleString();
-
-        }
-
-    },
-
-
-    /* =====================================================
-       LABELS
-    ===================================================== */
-
-    getTypeLabel(type){
-
-        const labels = {
-
-            achievement:"Başarı",
-            decision:"Karar",
-            failure:"Başarısızlık",
-            relationship:"İlişki",
-            work:"İş",
-            health:"Sağlık",
-            finance:"Finans",
-            location:"Konum",
-            goal:"Hedef",
-            milestone:"Dönüm Noktası",
-            general:"Genel"
-
-        };
-
-
-        return labels[type] ||
-            "Genel";
-
-    },
-
-
-    getImportanceLabel(
-        importance
-    ){
-
-        const labels = {
-
-            low:"Düşük",
-            medium:"Orta",
-            high:"Yüksek",
-            critical:"Kritik"
-
-        };
-
-
-        return labels[importance] ||
-            "Orta";
-
-    },
-
-
-    getImportanceColor(
-        importance
-    ){
-
-        if(
-            importance ===
-            "critical"
-        ){
-
-            return "var(--engine-danger)";
-
-        }
-
-
-        if(
-            importance ===
-            "high"
-        ){
-
-            return "var(--engine-gold)";
-
-        }
-
-
-        if(
-            importance ===
-            "low"
-        ){
-
-            return "var(--engine-muted)";
-
-        }
-
-
-        return "var(--engine-blue)";
-
-    },
-
-
-    /* =====================================================
-       XP
-    ===================================================== */
-
-    getEventXP(event = {}){
-
-        const directXP =
-            Number(
-                event.xp
-            );
-
-
-        if(
-            Number.isFinite(
-                directXP
-            ) &&
-            directXP > 0
-        ){
-
-            return directXP;
-
-        }
-
-
-        const payloadXP =
-            Number(
-                event.payload?.xp
-            );
-
-
-        if(
-            Number.isFinite(
-                payloadXP
-            ) &&
-            payloadXP > 0
-        ){
-
-            return payloadXP;
-
-        }
-
-
-        const importanceXP = {
-
-            low:5,
-            medium:10,
-            high:25,
-            critical:50
-
-        };
-
-
-        return (
-            importanceXP[
-                event.importance
-            ] ||
-            10
-        );
-
-    },
-
-
-    getEvolutionProgress(
-        totalXP = 0
-    ){
-
-        const safeXP =
-            Math.max(
-                0,
-                Number(totalXP) || 0
-            );
-
-
-        const level =
-            Math.floor(
-                safeXP / 100
-            ) + 1;
-
-
-        const currentLevelXP =
-            safeXP % 100;
-
-
-        const nextLevelXP =
-            100;
-
-
-        const progressPercent =
-            Math.min(
-                100,
-                Math.round(
-                    (
-                        currentLevelXP /
-                        nextLevelXP
-                    ) * 100
-                )
-            );
-
-
-        return {
-            level,
-            totalXP:safeXP,
-            currentLevelXP,
-            nextLevelXP,
-            progressPercent
-        };
-
-    },
-
-
-    /* =====================================================
-       AFFECTED ORGANS
-    ===================================================== */
-
-    getAffectedOrgans(
-        event = {}
-    ){
-
-        const organs =
-            new Set(
-                (
-                    Array.isArray(
-                        event.organs
-                    )
-                        ? event.organs
-                        : []
-                )
-                    .map(
-                        value =>
-                            String(
-                                value || ""
-                            )
-                                .trim()
-                                .toLowerCase()
-                    )
-                    .filter(Boolean)
-            );
-
-
-        const searchableText = [
-
-            event.type,
-            event.title,
-            event.description,
-            event.source,
-            event.payload?.action,
-            event.payload?.category
-
-        ]
-            .filter(Boolean)
-            .join(" ")
-            .toLowerCase();
-
-
-        if(
-            searchableText.includes(
-                "memory"
-            ) ||
-            searchableText.includes(
-                "hafıza"
-            ) ||
-            searchableText.includes(
-                "hatıra"
-            )
-        ){
-
-            organs.add(
-                "memory"
-            );
-
-        }
-
-
-        if(
-            searchableText.includes(
-                "timeline"
-            ) ||
-            searchableText.includes(
-                "zaman çizelgesi"
-            ) ||
-            searchableText.includes(
-                "geçmiş"
-            )
-        ){
-
-            organs.add(
-                "timeline"
-            );
-
-        }
-
-
-        if(
-            searchableText.includes(
-                "identity"
-            ) ||
-            searchableText.includes(
-                "kimlik"
-            ) ||
-            searchableText.includes(
-                "doğrulama"
-            )
-        ){
-
-            organs.add(
-                "identity"
-            );
-
-        }
-
-
-        if(
-            searchableText.includes(
-                "profile"
-            ) ||
-            searchableText.includes(
-                "profil"
-            )
-        ){
-
-            organs.add(
-                "profile"
-            );
-
-        }
-
-
-        if(
-            searchableText.includes(
-                "bridge"
-            ) ||
-            searchableText.includes(
-                "köprü"
-            ) ||
-            searchableText.includes(
-                "bağlantı"
-            )
-        ){
-
-            organs.add(
-                "bridge"
-            );
-
-        }
-
-
-        if(
-            searchableText.includes(
-                "finance"
-            ) ||
-            searchableText.includes(
-                "finans"
-            ) ||
-            searchableText.includes(
-                "satış"
-            ) ||
-            searchableText.includes(
-                "ödeme"
-            ) ||
-            searchableText.includes(
-                "gelir"
-            )
-        ){
-
-            organs.add(
-                "finance"
-            );
-
-        }
-
-
-        if(
-            event.type ===
-            "achievement"
-        ){
-
-            organs.add(
-                "timeline"
-            );
-
-            organs.add(
-                "memory"
-            );
-
-        }
-
-
-        if(
-            event.type ===
-            "engine:start"
-        ){
-
-            organs.add(
-                "timeline"
-            );
-
-        }
-
-
-        return [
-            ...organs
-        ];
-
-    },
-
-
-    /* =====================================================
-       ORGAN LABEL
-    ===================================================== */
-
-    getOrganLabel(id){
-
-        try{
-
-            if(
-                typeof OrganRegistry !==
-                    "undefined" &&
-                typeof OrganRegistry.find ===
-                    "function"
-            ){
-
-                const organ =
-                    OrganRegistry.find(
-                        id
-                    );
-
-
-                if(organ){
-
-                    return [
-                        organ.icon,
-                        organ.title
-                    ]
-                        .filter(Boolean)
-                        .join(" ");
-
-                }
-
-            }
-
-        } catch(error){
-
-            console.warn(
-                "Organ etiketi okunamadı:",
+            console.error(
+                "Evolution olayı oluşturulamadı:",
                 error
             );
 
+
+            return false;
+
         }
 
 
-        return String(
-            id || "organ"
-        );
+        if(!created){
+            return false;
+        }
+
+
+        this.selectedEventId =
+            created.id ||
+            null;
+
+        this.editorMode =
+            null;
+
+
+        return this.remount();
+
+    },
+
+
+    /* =====================================================
+       UPDATE
+    ===================================================== */
+
+    updateEvent(){
+
+        const event =
+            this.findEvent(
+                this.selectedEventId
+            );
+
+
+        if(!event){
+            return false;
+        }
+
+
+        const evolution =
+            this.getEvolutionCore();
+
+
+        if(
+            !evolution ||
+            typeof evolution.update !==
+                "function"
+        ){
+
+            console.warn(
+                "Evolution Core update API henüz kullanılamıyor."
+            );
+
+
+            return false;
+
+        }
+
+
+        const title =
+            String(
+                document.getElementById(
+                    "evolutionTitleInput"
+                )?.value ||
+                ""
+            ).trim();
+
+
+        if(!title){
+            return false;
+        }
+
+
+        const type =
+            this.normalizeType(
+                document.getElementById(
+                    "evolutionTypeInput"
+                )?.value
+            );
+
+
+        const changes = {
+
+            title,
+
+            description:
+                String(
+                    document.getElementById(
+                        "evolutionDescriptionInput"
+                    )?.value ||
+                    ""
+                ).trim(),
+
+            type,
+
+            importance:
+                this.normalizeImportance(
+                    document.getElementById(
+                        "evolutionImportanceInput"
+                    )?.value
+                ),
+
+            status:
+                this.normalizeStatus(
+                    document.getElementById(
+                        "evolutionStatusInput"
+                    )?.value
+                ),
+
+            tags:
+                this.parseTags(
+                    document.getElementById(
+                        "evolutionTagsInput"
+                    )?.value
+                )
+
+        };
+
+
+        if(type === "goal"){
+
+            changes.progress =
+                Math.min(
+                    100,
+                    Math.max(
+                        0,
+                        Number(
+                            document.getElementById(
+                                "evolutionProgressInput"
+                            )?.value ||
+                            0
+                        )
+                    )
+                );
+
+        }
+
+
+        let updated =
+            null;
+
+
+        try{
+
+            updated =
+                evolution.update(
+                    event.id,
+                    changes
+                );
+
+        } catch(error){
+
+            console.error(
+                "Evolution olayı güncellenemedi:",
+                error
+            );
+
+
+            return false;
+
+        }
+
+
+        if(!updated){
+            return false;
+        }
+
+
+        this.selectedEventId =
+            updated.id;
+
+        this.editorMode =
+            null;
+
+
+        return this.remount();
+
+    },
+
+
+    /* =====================================================
+       ARCHIVE
+    ===================================================== */
+
+    archiveEvent(){
+
+        const event =
+            this.findEvent(
+                this.selectedEventId
+            );
+
+
+        const evolution =
+            this.getEvolutionCore();
+
+
+        if(
+            !event ||
+            !evolution ||
+            typeof evolution.archive !==
+                "function"
+        ){
+            return false;
+        }
+
+
+        let result =
+            false;
+
+
+        try{
+
+            result =
+                evolution.archive(
+                    event.id
+                );
+
+        } catch(error){
+
+            console.error(
+                "Evolution olayı arşivlenemedi:",
+                error
+            );
+
+
+            return false;
+
+        }
+
+
+        if(!result){
+            return false;
+        }
+
+
+        this.selectedEventId =
+            null;
+
+        this.editorMode =
+            null;
+
+
+        return this.remount();
 
     },
 
@@ -781,11 +1398,9 @@ const EvolutionApp = {
        LINKED RECORDS
     ===================================================== */
 
-    getLinkedRecordCounts(
-        event = {}
-    ){
+    getLinkedRecordCounts(event){
 
-        if(!event.id){
+        if(!event?.id){
 
             return {
                 timeline:0,
@@ -795,78 +1410,49 @@ const EvolutionApp = {
         }
 
 
-        let timelineEvents =
-            [];
+        const timeline =
+            this.getService(
+                "timeline"
+            );
 
-        let memoryRecords =
-            [];
+
+        const memory =
+            this.getService(
+                "memorySystem"
+            );
+
+
+        let timelineRecords = [];
+
+        let memoryRecords = [];
 
 
         try{
 
-            if(
-                typeof VAERO !==
-                    "undefined" &&
-                typeof VAERO.get ===
-                    "function"
-            ){
-
-                const timeline =
-                    VAERO.get(
-                        "timeline"
-                    );
-
-                const memory =
-                    VAERO.get(
-                        "memorySystem"
-                    );
-
-
-                if(
-                    timeline &&
-                    typeof timeline.all ===
-                        "function"
-                ){
-
-                    const result =
-                        timeline.all();
-
-                    timelineEvents =
-                        Array.isArray(
-                            result
-                        )
-                            ? result
-                            : [];
-
-                }
-
-
-                if(
-                    memory &&
-                    typeof memory.all ===
-                        "function"
-                ){
-
-                    const result =
-                        memory.all();
-
-                    memoryRecords =
-                        Array.isArray(
-                            result
-                        )
-                            ? result
-                            : [];
-
-                }
-
-            }
+            timelineRecords =
+                timeline?.all?.({
+                    includeArchived:true
+                }) ||
+                [];
 
         } catch(error){
 
-            console.warn(
-                "Evolution bağlantılı kayıtları okunamadı:",
-                error
-            );
+            timelineRecords = [];
+
+        }
+
+
+        try{
+
+            memoryRecords =
+                memory?.all?.({
+                    includeArchived:true
+                }) ||
+                [];
+
+        } catch(error){
+
+            memoryRecords = [];
 
         }
 
@@ -874,23 +1460,19 @@ const EvolutionApp = {
         return {
 
             timeline:
-                timelineEvents.filter(
-                    item =>
-                        item &&
-                        item.payload &&
-                        item.payload
-                            .sourceEventId ===
-                            event.id
+                timelineRecords.filter(
+                    record =>
+                        record?.payload
+                            ?.sourceEventId ===
+                        event.id
                 ).length,
 
             memory:
                 memoryRecords.filter(
-                    item =>
-                        item &&
-                        item.payload &&
-                        item.payload
-                            .sourceEventId ===
-                            event.id
+                    record =>
+                        record?.payload
+                            ?.sourceEventId ===
+                        event.id
                 ).length
 
         };
@@ -900,681 +1482,174 @@ const EvolutionApp = {
 
     /* =====================================================
        BRAIN ANALYSIS
+       Local deterministic interpretation.
     ===================================================== */
 
-    getBrainAnalysis(
-        event = {}
-    ){
+    getBrainAnalysis(event){
 
-        let summary =
-            "Bu olay varlığın yaşam akışına kaydedildi.";
+        const analysis = {
 
-        let impact =
-            "Orta";
+            summary:
+                "Bu olay varlığın yaşam akışında yeni bir değişim oluşturdu.",
 
-        let risk =
-            "Düşük";
+            impact:
+                "Orta",
 
-        let suggestion =
-            "Olayın gelecekteki etkileri izlenebilir.";
+            risk:
+                "Düşük",
+
+            suggestion:
+                "Olayın sonraki etkileri Timeline üzerinden takip edilebilir."
+
+        };
 
 
-        if(
-            event.type ===
-            "achievement"
+        switch(
+            event?.type
         ){
 
-            summary =
-                "Bu olay varlığın gelişiminde olumlu bir ilerleme oluşturuyor.";
+            case "achievement":
 
-            impact =
-                "Yüksek";
+                analysis.summary =
+                    "Bu olay tamamlanmış bir ilerleme veya başarı gösteriyor.";
 
-            suggestion =
-                "Bu başarı yeni bir hedef veya dönüm noktasıyla ilişkilendirilebilir.";
+                analysis.impact =
+                    "Yüksek";
 
-        }
-        else if(
-            event.type ===
-            "failure"
-        ){
+                analysis.suggestion =
+                    "Bu başarıyı yeni bir hedef veya dönüm noktasıyla ilişkilendirebilirsin.";
 
-            summary =
-                "Bu olay başarısızlık olarak görünse de deneyim ve öğrenme üretiyor.";
+                break;
 
-            impact =
-                "Yüksek";
 
-            risk =
-                "Orta";
+            case "goal":
 
-            suggestion =
-                "Sebep, sonuç ve çıkarılan dersler Hafıza organına eklenebilir.";
+                analysis.summary =
+                    "Bu kayıt geleceğe yönelik aktif bir gelişim yönü oluşturuyor.";
 
-        }
-        else if(
-            event.type ===
-            "goal"
-        ){
+                analysis.suggestion =
+                    "Hedef ilerlemesini düzenli güncelleyerek değişimi ölçebilirsin.";
 
-            summary =
-                "Bu olay geleceğe yönelik bir gelişim yönü oluşturuyor.";
+                break;
 
-            suggestion =
-                "Hedef için ölçülebilir adımlar ve tamamlanma tarihi belirlenebilir.";
 
-        }
-        else if(
-            event.type ===
-            "finance"
-        ){
+            case "decision":
 
-            summary =
-                "Bu olay varlığın finansal gelişimini veya yükümlülüklerini etkiliyor.";
+                analysis.summary =
+                    "Bu karar sonraki olayların yönünü değiştirebilir.";
 
-            impact =
-                "Yüksek";
+                analysis.suggestion =
+                    "Kararın nedenini ve sonuçlarını Memory ile ilişkilendirmek faydalı olur.";
 
-            risk =
-                "Orta";
+                break;
 
-            suggestion =
-                "Ödeme, gelir, borç ve sonuç bilgileri düzenli olarak güncellenebilir.";
 
-        }
-        else if(
-            event.type ===
-            "decision"
-        ){
+            case "failure":
 
-            summary =
-                "Bu karar varlığın sonraki yaşam akışını değiştirebilir.";
+                analysis.summary =
+                    "Bu deneyim gelişim için öğrenme verisi oluşturuyor.";
 
-            suggestion =
-                "Kararın nedeni ve sonraki sonuçları Timeline üzerinden izlenebilir.";
+                analysis.impact =
+                    "Yüksek";
+
+                analysis.risk =
+                    "Orta";
+
+                analysis.suggestion =
+                    "Çıkarılan dersleri Memory içinde kalıcı bir kayda dönüştürebilirsin.";
+
+                break;
+
+
+            case "finance":
+
+                analysis.summary =
+                    "Bu olay finansal durumu veya yükümlülükleri etkileyebilir.";
+
+                analysis.impact =
+                    "Yüksek";
+
+                analysis.risk =
+                    "Orta";
+
+                break;
 
         }
 
 
         if(
-            event.importance ===
-            "critical"
+            event?.importance ===
+                "critical"
         ){
 
-            impact =
+            analysis.impact =
                 "Kritik";
 
-            risk =
+            analysis.risk =
                 "Yüksek";
 
-        }
-        else if(
-            event.importance ===
-            "high"
+        } else if(
+            event?.importance ===
+                "high"
         ){
 
-            impact =
-                "Yüksek";
-
-        }
-
-
-        const affectedOrgans =
-            this.getAffectedOrgans(
-                event
-            );
-
-
-        if(
-            affectedOrgans.includes(
-                "memory"
-            )
-        ){
-
-            suggestion =
-                "Bu olay hafızada uzun süreli iz bırakabilir.";
-
-        }
-
-
-        if(
-            affectedOrgans.includes(
-                "identity"
-            )
-        ){
-
-            impact =
+            analysis.impact =
                 "Yüksek";
 
         }
 
 
-        if(
-            affectedOrgans.includes(
-                "timeline"
-            )
-        ){
+        return analysis;
 
-            summary +=
-                " Timeline üzerinde önemli bir kayıt oluşturdu.";
+    },
 
-        }
 
+    /* =====================================================
+       STATS
+    ===================================================== */
+
+    getStats(events){
 
         return {
-            summary,
-            impact,
-            risk,
-            suggestion
+
+            total:
+                events.length,
+
+            important:
+                events.filter(
+                    event =>
+                        event.importance ===
+                            "high" ||
+                        event.importance ===
+                            "critical"
+                ).length,
+
+            achievements:
+                events.filter(
+                    event =>
+                        event.type ===
+                            "achievement"
+                ).length,
+
+            goals:
+                events.filter(
+                    event =>
+                        event.type ===
+                            "goal" &&
+                        event.status !==
+                            "completed"
+                ).length
+
         };
 
     },
 
 
     /* =====================================================
-       EFFECTS
-    ===================================================== */
-
-    renderEffects(
-        effects = {}
-    ){
-
-        const entries =
-            Object.entries(
-                effects
-            );
-
-
-        if(
-            entries.length === 0
-        ){
-            return "";
-        }
-
-
-        return `
-            <div
-                style="
-                    display:flex;
-                    flex-wrap:wrap;
-                    gap:5px;
-                    margin-top:8px;
-                "
-            >
-
-                ${entries
-                    .map(
-                        ([name, value]) => {
-
-                            const numericValue =
-                                Number(value);
-
-                            const safeValue =
-                                Number.isFinite(
-                                    numericValue
-                                )
-                                    ? numericValue
-                                    : 0;
-
-                            return `
-                                <span
-                                    style="
-                                        padding:4px 7px;
-                                        border-radius:999px;
-                                        border:
-                                            1px solid
-                                            var(--engine-line);
-                                        background:
-                                            rgba(
-                                                255,
-                                                255,
-                                                255,
-                                                .02
-                                            );
-                                        color:
-                                            var(--engine-muted);
-                                        font-size:7px;
-                                    "
-                                >
-                                    ${this.escapeHTML(
-                                        name
-                                    )}
-
-                                    <strong
-                                        style="
-                                            color:
-                                                var(--engine-text);
-                                            margin-left:3px;
-                                        "
-                                    >
-                                        ${
-                                            safeValue > 0
-                                                ? "+"
-                                                : ""
-                                        }${safeValue}
-                                    </strong>
-                                </span>
-                            `;
-
-                        }
-                    )
-                    .join("")}
-
-            </div>
-        `;
-
-    },
-
-
-    /* =====================================================
-       EVOLUTION PROGRESS
-    ===================================================== */
-
-    renderEvolutionProgress(
-        progress = {}
-    ){
-
-        return `
-            <section
-                class="card"
-                style="
-                    margin-top:7px;
-                    padding:12px;
-                "
-            >
-
-                <div
-                    style="
-                        display:flex;
-                        align-items:center;
-                        justify-content:space-between;
-                        gap:10px;
-                    "
-                >
-
-                    <div>
-
-                        <div
-                            style="
-                                color:
-                                    var(--engine-muted);
-                                font-size:7px;
-                            "
-                        >
-                            EVOLUTION SEVİYESİ
-                        </div>
-
-                        <strong
-                            style="
-                                display:block;
-                                margin-top:2px;
-                                color:
-                                    var(--engine-text);
-                                font-size:15px;
-                            "
-                        >
-                            Seviye
-                            ${progress.level}
-                        </strong>
-
-                    </div>
-
-
-                    <strong
-                        style="
-                            color:
-                                var(--engine-gold-soft);
-                            font-size:9px;
-                        "
-                    >
-                        ${progress.totalXP}
-                        XP
-                    </strong>
-
-                </div>
-
-
-                <div
-                    style="
-                        margin-top:8px;
-                        height:5px;
-                        overflow:hidden;
-                        border-radius:999px;
-                        background:
-                            rgba(
-                                255,
-                                255,
-                                255,
-                                .05
-                            );
-                    "
-                >
-
-                    <div
-                        style="
-                            width:
-                                ${progress.progressPercent}%;
-                            height:100%;
-                            border-radius:999px;
-                            background:
-                                linear-gradient(
-                                    90deg,
-                                    var(--engine-gold),
-                                    var(--engine-gold-soft)
-                                );
-                        "
-                    ></div>
-
-                </div>
-
-
-                <div
-                    style="
-                        display:flex;
-                        justify-content:space-between;
-                        gap:8px;
-                        margin-top:5px;
-                        color:
-                            var(--engine-muted);
-                        font-size:6px;
-                    "
-                >
-
-                    <span>
-                        ${progress.currentLevelXP}
-                        /
-                        ${progress.nextLevelXP}
-                        XP
-                    </span>
-
-                    <span>
-                        %${progress.progressPercent}
-                    </span>
-
-                </div>
-
-            </section>
-        `;
-
-    },
-
-
-    /* =====================================================
-       EVENT CARD
-    ===================================================== */
-
-    renderEvent(event){
-
-        const importanceColor =
-            this.getImportanceColor(
-                event.importance
-            );
-
-
-        const affectedOrgans =
-            this.getAffectedOrgans(
-                event
-            );
-
-
-        return `
-            <article
-                class="
-                    card
-                    evolution-event-card
-                "
-                data-action="evolution:event:open"
-                data-event-id="${this.escapeHTML(
-                    event.id
-                )}"
-                style="
-                    padding:11px;
-                "
-            >
-
-                <div
-                    style="
-                        display:flex;
-                        align-items:flex-start;
-                        justify-content:space-between;
-                        gap:10px;
-                    "
-                >
-
-                    <div
-                        style="
-                            min-width:0;
-                        "
-                    >
-
-                        <div
-                            style="
-                                display:flex;
-                                gap:5px;
-                                flex-wrap:wrap;
-                                margin-bottom:6px;
-                            "
-                        >
-
-                            <span
-                                style="
-                                    padding:4px 6px;
-                                    border-radius:999px;
-                                    background:
-                                        rgba(
-                                            255,
-                                            255,
-                                            255,
-                                            .025
-                                        );
-                                    color:
-                                        var(--engine-muted);
-                                    font-size:6px;
-                                "
-                            >
-                                ${this.escapeHTML(
-                                    this.getTypeLabel(
-                                        event.type
-                                    )
-                                )}
-                            </span>
-
-
-                            <span
-                                style="
-                                    padding:4px 6px;
-                                    border-radius:999px;
-                                    border:
-                                        1px solid
-                                        ${importanceColor};
-                                    color:
-                                        ${importanceColor};
-                                    font-size:6px;
-                                "
-                            >
-                                ${this.escapeHTML(
-                                    this.getImportanceLabel(
-                                        event.importance
-                                    )
-                                )}
-                            </span>
-
-                        </div>
-
-
-                        <h3
-                            style="
-                                margin:0;
-                                overflow:hidden;
-                                color:
-                                    var(--engine-text);
-                                font-size:10px;
-                                line-height:1.3;
-                                text-overflow:ellipsis;
-                                white-space:nowrap;
-                            "
-                        >
-                            ${this.escapeHTML(
-                                event.title ||
-                                "Yaşam olayı"
-                            )}
-                        </h3>
-
-
-                        ${
-                            event.description
-                                ? `
-                                    <p
-                                        style="
-                                            margin:4px 0 0;
-                                            display:
-                                                -webkit-box;
-                                            overflow:hidden;
-                                            color:
-                                                var(--engine-muted);
-                                            font-size:7px;
-                                            line-height:1.35;
-                                            -webkit-line-clamp:2;
-                                            -webkit-box-orient:
-                                                vertical;
-                                        "
-                                    >
-                                        ${this.escapeHTML(
-                                            event.description
-                                        )}
-                                    </p>
-                                  `
-                                : ""
-                        }
-
-                    </div>
-
-
-                    <span
-                        aria-hidden="true"
-                        style="
-                            width:7px;
-                            height:7px;
-                            flex:0 0 7px;
-                            margin-top:3px;
-                            border-radius:50%;
-                            background:
-                                ${importanceColor};
-                            box-shadow:
-                                0
-                                0
-                                8px
-                                ${importanceColor};
-                        "
-                    ></span>
-
-                </div>
-
-
-                ${this.renderEffects(
-                    event.effects
-                )}
-
-
-                ${
-                    affectedOrgans.length
-                        ? `
-                            <div
-                                style="
-                                    display:flex;
-                                    flex-wrap:wrap;
-                                    gap:4px;
-                                    margin-top:7px;
-                                "
-                            >
-
-                                ${affectedOrgans
-                                    .slice(0, 4)
-                                    .map(
-                                        id => `
-                                            <span
-                                                style="
-                                                    padding:
-                                                        3px
-                                                        6px;
-                                                    border-radius:
-                                                        999px;
-                                                    background:
-                                                        rgba(
-                                                            255,
-                                                            255,
-                                                            255,
-                                                            .018
-                                                        );
-                                                    border:
-                                                        1px solid
-                                                        var(--engine-line);
-                                                    color:
-                                                        var(--engine-muted);
-                                                    font-size:
-                                                        6px;
-                                                "
-                                            >
-                                                ${this.escapeHTML(
-                                                    this.getOrganLabel(
-                                                        id
-                                                    )
-                                                )}
-                                            </span>
-                                        `
-                                    )
-                                    .join("")}
-
-                            </div>
-                          `
-                        : ""
-                }
-
-
-                <div
-                    style="
-                        margin-top:7px;
-                        padding-top:6px;
-                        border-top:
-                            1px solid
-                            var(--engine-line);
-                        display:flex;
-                        justify-content:space-between;
-                        gap:8px;
-                        color:
-                            var(--engine-dim);
-                        font-size:6px;
-                    "
-                >
-
-                    <span>
-                        ${this.escapeHTML(
-                            this.formatDate(
-                                event.occurredAt ||
-                                event.createdAt
-                            )
-                        )}
-                    </span>
-
-                    <span>
-                        ${this.escapeHTML(
-                            event.status ||
-                            "completed"
-                        )}
-                    </span>
-
-                </div>
-
-            </article>
-        `;
-
-    },
-
-    /* =====================================================
        FILTER BAR
     ===================================================== */
 
-    renderFilters(){
+    renderToolbar(){
 
         const filters = [
 
@@ -1590,84 +1665,85 @@ const EvolutionApp = {
 
             {
                 id:"achievement",
-                label:"Başarılar"
+                label:"Başarı"
+            },
+
+            {
+                id:"decision",
+                label:"Karar"
             },
 
             {
                 id:"goal",
-                label:"Hedefler"
+                label:"Hedef"
             },
 
             {
-                id:"finance",
-                label:"Finans"
+                id:"milestone",
+                label:"Dönüm Noktası"
             }
 
         ];
 
 
         return `
-            <div
-                style="
-                    display:flex;
-                    gap:5px;
-                    overflow-x:auto;
-                    padding:7px 0 3px;
-                    scrollbar-width:none;
-                "
-            >
+            <div class="evolution-toolbar">
 
-                ${filters
-                    .map(
-                        filter => {
+                <label class="evolution-search">
 
-                            const isActive =
-                                this.activeFilter ===
-                                filter.id;
+                    <span aria-hidden="true">
+                        ⌕
+                    </span>
 
-                            return `
+                    <input
+                        id="evolutionSearchInput"
+                        type="search"
+                        autocomplete="off"
+                        placeholder="Evolution içinde ara"
+                        value="${this.escapeHTML(
+                            this.searchQuery
+                        )}"
+                    >
+
+                </label>
+
+
+                <div class="evolution-filter-row">
+
+                    ${filters
+                        .map(
+                            filter => `
                                 <button
                                     type="button"
+                                    class="evolution-filter-btn ${
+                                        this.activeFilter ===
+                                            filter.id
+                                            ? "is-active"
+                                            : ""
+                                    }"
                                     data-action="evolution:filter"
-                                    data-filter="${filter.id}"
-                                    style="
-                                        flex:0 0 auto;
-                                        padding:
-                                            5px
-                                            8px;
-                                        border:
-                                            1px solid
-                                            ${
-                                                isActive
-                                                    ? "rgba(223,189,122,.34)"
-                                                    : "var(--engine-line)"
-                                            };
-                                        border-radius:
-                                            999px;
-                                        background:
-                                            ${
-                                                isActive
-                                                    ? "rgba(223,189,122,.07)"
-                                                    : "rgba(255,255,255,.018)"
-                                            };
-                                        color:
-                                            ${
-                                                isActive
-                                                    ? "var(--engine-gold-soft)"
-                                                    : "var(--engine-muted)"
-                                            };
-                                        font-size:7px;
-                                        font-weight:650;
-                                        white-space:nowrap;
-                                    "
+                                    data-filter="${this.escapeHTML(
+                                        filter.id
+                                    )}"
                                 >
-                                    ${filter.label}
+                                    ${this.escapeHTML(
+                                        filter.label
+                                    )}
                                 </button>
-                            `;
+                            `
+                        )
+                        .join("")}
 
-                        }
-                    )
-                    .join("")}
+                </div>
+
+
+                <button
+                    type="button"
+                    class="primary-btn"
+                    data-evolution-action="create"
+                >
+                    + Yaşam Olayı
+                </button>
 
             </div>
         `;
@@ -1676,77 +1752,552 @@ const EvolutionApp = {
 
 
     /* =====================================================
-       STAT
+       PROGRESS
     ===================================================== */
 
-    renderStat(
-        label,
-        value
-    ){
+    renderEvolutionProgress(progress){
 
         return `
-            <div
-                class="card"
-                style="
-                    min-width:0;
-                    padding:10px 11px;
+            <section class="evolution-progress-card">
+
+                <div>
+
+                    <span class="engine-section-label">
+                        EVOLUTION LEVEL
+                    </span>
+
+                    <strong>
+                        Seviye ${progress.level}
+                    </strong>
+
+                </div>
+
+
+                <div class="evolution-progress-value">
+
+                    <strong>
+                        ${progress.totalXP} XP
+                    </strong>
+
+                    <small>
+                        ${progress.currentLevelXP}
+                        / 100
+                    </small>
+
+                </div>
+
+
+                <div class="evolution-progress-track">
+
+                    <span
+                        style="
+                            width:${progress.progressPercent}%;
+                        "
+                    ></span>
+
+                </div>
+
+            </section>
+        `;
+
+    },
+
+
+    /* =====================================================
+       EVENT CARD
+    ===================================================== */
+
+    renderEvent(event){
+
+        const progress =
+            event.type ===
+                "goal"
+                ? this.getGoalProgress(
+                    event
+                )
+                : null;
+
+
+        return `
+            <button
+                type="button"
+                class="
+                    evolution-record
+                    evolution-importance-${this.escapeHTML(
+                        event.importance ||
+                        "medium"
+                    )}
                 "
+                data-action="evolution:event:open"
+                data-event-id="${this.escapeHTML(
+                    event.id
+                )}"
             >
 
-                <span
-                    style="
-                        display:block;
-                        color:
-                            var(--engine-muted);
-                        font-size:6px;
-                    "
-                >
-                    ${this.escapeHTML(
-                        label
-                    )}
+                <span class="evolution-record-marker">
+                    ${
+                        event.type ===
+                            "achievement"
+                            ? "★"
+                            : event.type ===
+                                "goal"
+                                ? "◎"
+                                : event.type ===
+                                    "decision"
+                                    ? "◇"
+                                    : event.type ===
+                                        "milestone"
+                                        ? "◆"
+                                        : "⌬"
+                    }
                 </span>
 
-                <strong
-                    style="
-                        display:block;
-                        margin-top:2px;
-                        color:
-                            var(--engine-text);
-                        font-size:15px;
-                        font-weight:650;
-                    "
-                >
-                    ${this.escapeHTML(
-                        value
-                    )}
-                </strong>
 
-            </div>
+                <span class="evolution-record-body">
+
+                    <span class="evolution-record-meta">
+
+                        <small>
+                            ${this.escapeHTML(
+                                this.getTypeLabel(
+                                    event.type
+                                )
+                            )}
+                        </small>
+
+                        <small>
+                            ${this.escapeHTML(
+                                this.getImportanceLabel(
+                                    event.importance
+                                )
+                            )}
+                        </small>
+
+                        <small>
+                            ${this.escapeHTML(
+                                this.getStatusLabel(
+                                    event.status
+                                )
+                            )}
+                        </small>
+
+                    </span>
+
+
+                    <strong>
+                        ${this.escapeHTML(
+                            event.title ||
+                            "Yaşam olayı"
+                        )}
+                    </strong>
+
+
+                    ${
+                        event.description
+                            ? `
+                                <span class="evolution-record-description">
+                                    ${this.escapeHTML(
+                                        event.description.length > 150
+                                            ? `${event.description
+                                                .slice(
+                                                    0,
+                                                    150
+                                                )
+                                                .trim()}…`
+                                            : event.description
+                                    )}
+                                </span>
+                              `
+                            : ""
+                    }
+
+
+                    ${
+                        progress !== null
+                            ? `
+                                <span class="evolution-goal-progress">
+
+                                    <span>
+                                        <i
+                                            style="
+                                                width:${progress}%;
+                                            "
+                                        ></i>
+                                    </span>
+
+                                    <small>
+                                        %${progress}
+                                    </small>
+
+                                </span>
+                              `
+                            : ""
+                    }
+
+
+                    ${
+                        Array.isArray(
+                            event.tags
+                        ) &&
+                        event.tags.length
+                            ? `
+                                <span class="evolution-record-tags">
+
+                                    ${event.tags
+                                        .slice(0,3)
+                                        .map(
+                                            tag => `
+                                                <small>
+                                                    ${this.escapeHTML(
+                                                        tag
+                                                    )}
+                                                </small>
+                                            `
+                                        )
+                                        .join("")}
+
+                                </span>
+                              `
+                            : ""
+                    }
+
+                </span>
+
+
+                <span class="evolution-record-side">
+
+                    <small>
+                        ${this.escapeHTML(
+                            this.formatDate(
+                                this.getTimestamp(
+                                    event
+                                )
+                            )
+                        )}
+                    </small>
+
+                    <strong>
+                        +${this.getEventXP(
+                            event
+                        )} XP
+                    </strong>
+
+                </span>
+
+            </button>
         `;
 
     },
 
-
-    /* =====================================================
-       EMPTY STATE
+   /* =====================================================
+       EDITOR
     ===================================================== */
 
-    renderEmptyState(){
+    renderEditor(event = null){
+
+        const editing =
+            Boolean(
+                event
+            );
+
+
+        const type =
+            event?.type ||
+            "general";
+
+
+        const progress =
+            this.getGoalProgress(
+                event ||
+                {}
+            );
+
 
         return `
-            <div
-                class="engine-empty-state"
-                style="
-                    margin-top:7px;
-                "
-            >
+            <div class="evolution-detail-layer">
 
-                <strong>
-                    Henüz yaşam olayı yok
-                </strong>
+                <div
+                    class="evolution-detail-backdrop"
+                    data-evolution-action="editor:cancel"
+                ></div>
 
-                Yeni bir olay oluştuğunda
-                Evolution akışında burada görünecek.
+
+                <form
+                    class="evolution-editor"
+                    data-evolution-form="${
+                        editing
+                            ? "edit"
+                            : "create"
+                    }"
+                >
+
+                    <header class="evolution-detail-header">
+
+                        <div>
+
+                            <span class="engine-section-label">
+                                EVOLUTION EDITOR
+                            </span>
+
+                            <h2>
+                                ${
+                                    editing
+                                        ? "Yaşam olayını düzenle"
+                                        : "Yeni yaşam olayı"
+                                }
+                            </h2>
+
+                        </div>
+
+
+                        <button
+                            type="button"
+                            class="engine-icon-btn"
+                            data-evolution-action="editor:cancel"
+                            aria-label="Kapat"
+                        >
+                            ×
+                        </button>
+
+                    </header>
+
+
+                    <div class="evolution-editor-scroll">
+
+                        <label class="engine-field">
+
+                            <span>
+                                Başlık
+                            </span>
+
+                            <input
+                                id="evolutionTitleInput"
+                                type="text"
+                                maxlength="100"
+                                value="${this.escapeHTML(
+                                    event?.title ||
+                                    ""
+                                )}"
+                                placeholder="Ne oldu?"
+                                required
+                            >
+
+                        </label>
+
+
+                        <label class="engine-field">
+
+                            <span>
+                                Açıklama
+                            </span>
+
+                            <textarea
+                                id="evolutionDescriptionInput"
+                                maxlength="1500"
+                                rows="6"
+                                placeholder="Olayın bağlamını ve etkisini yaz"
+                            >${this.escapeHTML(
+                                event?.description ||
+                                ""
+                            )}</textarea>
+
+                        </label>
+
+
+                        <label class="engine-field">
+
+                            <span>
+                                Tür
+                            </span>
+
+                            <select
+                                id="evolutionTypeInput"
+                            >
+
+                                ${this.getTypes()
+                                    .map(
+                                        item => `
+                                            <option
+                                                value="${this.escapeHTML(
+                                                    item.id
+                                                )}"
+                                                ${
+                                                    item.id ===
+                                                        type
+                                                        ? "selected"
+                                                        : ""
+                                                }
+                                            >
+                                                ${this.escapeHTML(
+                                                    item.label
+                                                )}
+                                            </option>
+                                        `
+                                    )
+                                    .join("")}
+
+                            </select>
+
+                        </label>
+
+
+                        <label class="engine-field">
+
+                            <span>
+                                Durum
+                            </span>
+
+                            <select
+                                id="evolutionStatusInput"
+                            >
+
+                                ${[
+                                    ["planned","Planlandı"],
+                                    ["progress","Devam Ediyor"],
+                                    ["completed","Tamamlandı"],
+                                    ["paused","Duraklatıldı"],
+                                    ["cancelled","İptal Edildi"]
+                                ]
+                                    .map(
+                                        ([value,label]) => `
+                                            <option
+                                                value="${value}"
+                                                ${
+                                                    (
+                                                        event?.status ||
+                                                        "completed"
+                                                    ) ===
+                                                    value
+                                                        ? "selected"
+                                                        : ""
+                                                }
+                                            >
+                                                ${label}
+                                            </option>
+                                        `
+                                    )
+                                    .join("")}
+
+                            </select>
+
+                        </label>
+
+
+                        <label class="engine-field">
+
+                            <span>
+                                Önem
+                            </span>
+
+                            <select
+                                id="evolutionImportanceInput"
+                            >
+
+                                ${[
+                                    ["low","Düşük"],
+                                    ["medium","Orta"],
+                                    ["high","Yüksek"],
+                                    ["critical","Kritik"]
+                                ]
+                                    .map(
+                                        ([value,label]) => `
+                                            <option
+                                                value="${value}"
+                                                ${
+                                                    (
+                                                        event?.importance ||
+                                                        "medium"
+                                                    ) ===
+                                                    value
+                                                        ? "selected"
+                                                        : ""
+                                                }
+                                            >
+                                                ${label}
+                                            </option>
+                                        `
+                                    )
+                                    .join("")}
+
+                            </select>
+
+                        </label>
+
+
+                        <label class="engine-field evolution-progress-field">
+
+                            <span>
+                                Hedef ilerlemesi (%)
+                            </span>
+
+                            <input
+                                id="evolutionProgressInput"
+                                type="number"
+                                min="0"
+                                max="100"
+                                step="1"
+                                value="${progress}"
+                            >
+
+                            <small>
+                                Yalnız Hedef türünde kullanılır.
+                            </small>
+
+                        </label>
+
+
+                        <label class="engine-field">
+
+                            <span>
+                                Etiketler
+                            </span>
+
+                            <input
+                                id="evolutionTagsInput"
+                                type="text"
+                                maxlength="220"
+                                value="${this.escapeHTML(
+                                    Array.isArray(
+                                        event?.tags
+                                    )
+                                        ? event.tags.join(
+                                            ", "
+                                        )
+                                        : ""
+                                )}"
+                                placeholder="iş, karar, gelişim"
+                            >
+
+                        </label>
+
+                    </div>
+
+
+                    <footer class="evolution-detail-actions">
+
+                        <button
+                            type="button"
+                            class="secondary-btn"
+                            data-evolution-action="editor:cancel"
+                        >
+                            Vazgeç
+                        </button>
+
+
+                        <button
+                            type="submit"
+                            class="primary-btn"
+                        >
+                            ${
+                                editing
+                                    ? "Değişiklikleri Kaydet"
+                                    : "Olayı Kaydet"
+                            }
+                        </button>
+
+                    </footer>
+
+                </form>
 
             </div>
         `;
@@ -1755,126 +2306,67 @@ const EvolutionApp = {
 
 
     /* =====================================================
-       SELECTED EVENT MODAL
+       DETAIL
     ===================================================== */
 
-    renderSelectedEvent(
-        selectedEvent
-    ){
+    renderSelectedEvent(event){
 
-        if(!selectedEvent){
+        if(!event){
             return "";
         }
 
 
         const analysis =
             this.getBrainAnalysis(
-                selectedEvent
+                event
             );
 
 
-        const affectedOrgans =
-            this.getAffectedOrgans(
-                selectedEvent
-            );
-
-
-        const linkedRecords =
+        const linked =
             this.getLinkedRecordCounts(
-                selectedEvent
+                event
             );
 
 
-        const importanceColor =
-            this.getImportanceColor(
-                selectedEvent.importance
-            );
-
-
-        const identities =
-            Array.isArray(
-                selectedEvent.identities
-            )
-                ? selectedEvent.identities
-                : [];
+        const progress =
+            event.type ===
+                "goal"
+                ? this.getGoalProgress(
+                    event
+                )
+                : null;
 
 
         return `
-            <div
-                style="
-                    position:fixed;
-                    inset:0;
-                    z-index:9998;
-                    display:flex;
-                    align-items:center;
-                    justify-content:center;
-                    padding:12px;
-                    background:
-                        rgba(
-                            2,
-                            8,
-                            18,
-                            .76
-                        );
-                    backdrop-filter:
-                        blur(12px);
-                "
-            >
+            <div class="evolution-detail-layer">
+
+                <div
+                    class="evolution-detail-backdrop"
+                    data-action="evolution:event:close"
+                ></div>
+
 
                 <section
-                    class="card"
-                    style="
-                        width:
-                            min(
-                                100%,
-                                580px
-                            );
-                        max-height:
-                            min(
-                                82dvh,
-                                680px
-                            );
-                        overflow-y:auto;
-                        overscroll-behavior:
-                            contain;
-                        padding:16px;
-                        border-radius:20px;
-                    "
+                    class="evolution-detail"
+                    role="dialog"
+                    aria-modal="true"
                 >
 
-                    <!-- HEADER -->
+                    <header class="evolution-detail-header">
 
-                    <div
-                        style="
-                            display:flex;
-                            align-items:flex-start;
-                            justify-content:space-between;
-                            gap:12px;
-                        "
-                    >
+                        <div>
 
-                        <div
-                            style="
-                                min-width:0;
-                            "
-                        >
-
-                            <div class="eyebrow">
-                                YAŞAM OLAYI
-                            </div>
-
-                            <h2
-                                style="
-                                    margin:4px 0 0;
-                                    color:
-                                        var(--engine-text);
-                                    font-size:18px;
-                                    line-height:1.2;
-                                "
-                            >
+                            <span class="engine-section-label">
                                 ${this.escapeHTML(
-                                    selectedEvent.title ||
-                                    "Yaşam olayı"
+                                    this.getTypeLabel(
+                                        event.type
+                                    )
+                                )}
+                            </span>
+
+                            <h2>
+                                ${this.escapeHTML(
+                                    event.title
                                 )}
                             </h2>
 
@@ -1883,791 +2375,324 @@ const EvolutionApp = {
 
                         <button
                             type="button"
+                            class="engine-icon-btn"
                             data-action="evolution:event:close"
-                            aria-label="Olay detayını kapat"
-                            style="
-                                width:32px;
-                                height:32px;
-                                flex:0 0 32px;
-                                display:grid;
-                                place-items:center;
-                                border:
-                                    1px solid
-                                    var(--engine-line);
-                                border-radius:50%;
-                                background:
-                                    rgba(
-                                        255,
-                                        255,
-                                        255,
-                                        .025
-                                    );
-                                color:
-                                    var(--engine-text);
-                                font-size:15px;
-                            "
                         >
                             ×
                         </button>
 
-                    </div>
+                    </header>
 
 
-                    <!-- TAGS -->
+                    <div class="evolution-detail-scroll">
 
-                    <div
-                        style="
-                            display:flex;
-                            flex-wrap:wrap;
-                            gap:5px;
-                            margin-top:9px;
-                        "
-                    >
-
-                        <span
-                            style="
-                                padding:4px 7px;
-                                border-radius:999px;
-                                background:
-                                    rgba(
-                                        255,
-                                        255,
-                                        255,
-                                        .025
-                                    );
-                                color:
-                                    var(--engine-muted);
-                                font-size:7px;
-                            "
-                        >
-                            ${this.escapeHTML(
-                                this.getTypeLabel(
-                                    selectedEvent.type
-                                )
-                            )}
-                        </span>
+                        ${
+                            event.description
+                                ? `
+                                    <p class="evolution-detail-description">
+                                        ${this.escapeHTML(
+                                            event.description
+                                        )}
+                                    </p>
+                                  `
+                                : ""
+                        }
 
 
-                        <span
-                            style="
-                                padding:4px 7px;
-                                border:
-                                    1px solid
-                                    ${importanceColor};
-                                border-radius:999px;
-                                color:
-                                    ${importanceColor};
-                                font-size:7px;
-                            "
-                        >
-                            ${this.escapeHTML(
-                                this.getImportanceLabel(
-                                    selectedEvent.importance
-                                )
-                            )}
-                        </span>
+                        ${
+                            progress !== null
+                                ? `
+                                    <section class="evolution-detail-progress">
 
-                    </div>
+                                        <div>
+
+                                            <span>
+                                                Hedef ilerlemesi
+                                            </span>
+
+                                            <strong>
+                                                %${progress}
+                                            </strong>
+
+                                        </div>
+
+                                        <div>
+                                            <span
+                                                style="
+                                                    width:${progress}%;
+                                                "
+                                            ></span>
+                                        </div>
+
+                                    </section>
+                                  `
+                                : ""
+                        }
 
 
-                    ${
-                        selectedEvent.description
-                            ? `
-                                <p
-                                    style="
-                                        margin:10px 0 0;
-                                        color:
-                                            var(--engine-muted);
-                                        font-size:8px;
-                                        line-height:1.5;
-                                    "
-                                >
+                        <div class="evolution-detail-meta">
+
+                            <div>
+
+                                <span>
+                                    Durum
+                                </span>
+
+                                <strong>
                                     ${this.escapeHTML(
-                                        selectedEvent.description
+                                        this.getStatusLabel(
+                                            event.status
+                                        )
                                     )}
-                                </p>
-                              `
-                            : ""
-                    }
+                                </strong>
+
+                            </div>
 
 
-                    ${this.renderEffects(
-                        selectedEvent.effects
-                    )}
+                            <div>
+
+                                <span>
+                                    Önem
+                                </span>
+
+                                <strong>
+                                    ${this.escapeHTML(
+                                        this.getImportanceLabel(
+                                            event.importance
+                                        )
+                                    )}
+                                </strong>
+
+                            </div>
 
 
-                    <!-- XP / ORGANS -->
+                            <div>
 
-                    <div
-                        style="
-                            margin-top:10px;
-                            display:grid;
-                            grid-template-columns:
-                                minmax(0,.7fr)
-                                minmax(0,1.3fr);
-                            gap:7px;
-                        "
-                    >
+                                <span>
+                                    XP
+                                </span>
 
-                        <div
-                            class="card"
-                            style="
-                                padding:10px;
-                            "
-                        >
+                                <strong>
+                                    +${this.getEventXP(
+                                        event
+                                    )}
+                                </strong>
 
-                            <span
-                                style="
-                                    display:block;
-                                    color:
-                                        var(--engine-muted);
-                                    font-size:6px;
-                                "
-                            >
-                                KAZANILAN DENEYİM
-                            </span>
+                            </div>
 
-                            <strong
-                                style="
-                                    display:block;
-                                    margin-top:3px;
-                                    color:
-                                        var(--engine-gold-soft);
-                                    font-size:16px;
-                                "
-                            >
-                                +${this.getEventXP(
-                                    selectedEvent
-                                )} XP
-                            </strong>
+
+                            <div>
+
+                                <span>
+                                    Tarih
+                                </span>
+
+                                <strong>
+                                    ${this.escapeHTML(
+                                        this.formatDate(
+                                            this.getTimestamp(
+                                                event
+                                            )
+                                        )
+                                    )}
+                                </strong>
+
+                            </div>
 
                         </div>
 
 
-                        <div
-                            class="card"
-                            style="
-                                padding:10px;
-                            "
-                        >
+                        ${
+                            event.tags?.length
+                                ? `
+                                    <div class="evolution-detail-tags">
 
-                            <span
-                                style="
-                                    display:block;
-                                    color:
-                                        var(--engine-muted);
-                                    font-size:6px;
-                                "
-                            >
-                                ETKİLENEN ORGANLAR
-                            </span>
-
-
-                            <div
-                                style="
-                                    display:flex;
-                                    flex-wrap:wrap;
-                                    gap:4px;
-                                    margin-top:5px;
-                                "
-                            >
-
-                                ${
-                                    affectedOrgans.length
-                                        ? affectedOrgans
+                                        ${event.tags
                                             .map(
-                                                id => `
-                                                    <span
-                                                        style="
-                                                            padding:
-                                                                3px
-                                                                6px;
-                                                            border:
-                                                                1px solid
-                                                                var(--engine-line);
-                                                            border-radius:
-                                                                999px;
-                                                            background:
-                                                                rgba(
-                                                                    255,
-                                                                    255,
-                                                                    255,
-                                                                    .018
-                                                                );
-                                                            color:
-                                                                var(--engine-muted);
-                                                            font-size:
-                                                                6px;
-                                                        "
-                                                    >
+                                                tag => `
+                                                    <span>
                                                         ${this.escapeHTML(
-                                                            this.getOrganLabel(
-                                                                id
-                                                            )
+                                                            tag
                                                         )}
                                                     </span>
                                                 `
                                             )
-                                            .join("")
-                                        : `
-                                            <span
-                                                style="
-                                                    color:
-                                                        var(--engine-dim);
-                                                    font-size:7px;
-                                                "
-                                            >
-                                                Yok
-                                            </span>
-                                          `
-                                }
+                                            .join("")}
 
-                            </div>
-
-                        </div>
-
-                    </div>
+                                    </div>
+                                  `
+                                : ""
+                        }
 
 
-                    <!-- BRAIN ANALYSIS -->
+                        <section class="evolution-analysis-card">
 
-                    <div
-                        style="
-                            margin-top:7px;
-                            padding:11px;
-                            border:
-                                1px solid
-                                rgba(
-                                    107,
-                                    183,
-                                    241,
-                                    .12
-                                );
-                            border-radius:14px;
-                            background:
-                                rgba(
-                                    107,
-                                    183,
-                                    241,
-                                    .035
-                                );
-                        "
-                    >
-
-                        <div
-                            style="
-                                display:flex;
-                                align-items:center;
-                                gap:6px;
-                            "
-                        >
-
-                            <span
-                                aria-hidden="true"
-                                style="
-                                    font-size:13px;
-                                "
-                            >
-                                🧠
+                            <span class="engine-section-label">
+                                BRAIN CONTEXT
                             </span>
 
-                            <strong
-                                style="
-                                    color:
-                                        var(--engine-text);
-                                    font-size:9px;
-                                "
-                            >
-                                Brain Analizi
-                            </strong>
-
-                        </div>
-
-
-                        <p
-                            style="
-                                margin:7px 0 0;
-                                color:
-                                    var(--engine-muted);
-                                font-size:8px;
-                                line-height:1.45;
-                            "
-                        >
-                            ${this.escapeHTML(
-                                analysis.summary
-                            )}
-                        </p>
-
-
-                        <div
-                            style="
-                                display:grid;
-                                grid-template-columns:
-                                    repeat(
-                                        2,
-                                        minmax(0,1fr)
-                                    );
-                                gap:6px;
-                                margin-top:8px;
-                            "
-                        >
-
-                            <div
-                                style="
-                                    padding:8px;
-                                    border-radius:10px;
-                                    background:
-                                        rgba(
-                                            255,
-                                            255,
-                                            255,
-                                            .022
-                                        );
-                                "
-                            >
-
-                                <span
-                                    style="
-                                        display:block;
-                                        color:
-                                            var(--engine-muted);
-                                        font-size:6px;
-                                    "
-                                >
-                                    Etki
-                                </span>
-
-                                <strong
-                                    style="
-                                        display:block;
-                                        margin-top:2px;
-                                        color:
-                                            var(--engine-text);
-                                        font-size:8px;
-                                    "
-                                >
-                                    ${this.escapeHTML(
-                                        analysis.impact
-                                    )}
-                                </strong>
-
-                            </div>
-
-
-                            <div
-                                style="
-                                    padding:8px;
-                                    border-radius:10px;
-                                    background:
-                                        rgba(
-                                            255,
-                                            255,
-                                            255,
-                                            .022
-                                        );
-                                "
-                            >
-
-                                <span
-                                    style="
-                                        display:block;
-                                        color:
-                                            var(--engine-muted);
-                                        font-size:6px;
-                                    "
-                                >
-                                    Risk
-                                </span>
-
-                                <strong
-                                    style="
-                                        display:block;
-                                        margin-top:2px;
-                                        color:
-                                            var(--engine-text);
-                                        font-size:8px;
-                                    "
-                                >
-                                    ${this.escapeHTML(
-                                        analysis.risk
-                                    )}
-                                </strong>
-
-                            </div>
-
-                        </div>
-
-
-                        <div
-                            style="
-                                margin-top:8px;
-                                padding-top:7px;
-                                border-top:
-                                    1px solid
-                                    var(--engine-line);
-                            "
-                        >
-
-                            <span
-                                style="
-                                    display:block;
-                                    color:
-                                        var(--engine-muted);
-                                    font-size:6px;
-                                "
-                            >
-                                ÖNERİ
-                            </span>
-
-                            <p
-                                style="
-                                    margin:3px 0 0;
-                                    color:
-                                        var(--engine-text);
-                                    font-size:8px;
-                                    line-height:1.4;
-                                "
-                            >
+                            <p>
                                 ${this.escapeHTML(
-                                    analysis.suggestion
+                                    analysis.summary
                                 )}
                             </p>
 
-                        </div>
 
-                    </div>
+                            <div>
 
+                                <span>
+                                    Etki
+                                    <strong>
+                                        ${this.escapeHTML(
+                                            analysis.impact
+                                        )}
+                                    </strong>
+                                </span>
 
-                    <!-- FUTURE IMPACT -->
+                                <span>
+                                    Risk
+                                    <strong>
+                                        ${this.escapeHTML(
+                                            analysis.risk
+                                        )}
+                                    </strong>
+                                </span>
 
-                    <div
-                        style="
-                            margin-top:7px;
-                            padding:10px;
-                            border:
-                                1px solid
-                                rgba(
-                                    223,
-                                    189,
-                                    122,
-                                    .11
-                                );
-                            border-radius:13px;
-                            background:
-                                rgba(
-                                    223,
-                                    189,
-                                    122,
-                                    .03
-                                );
-                        "
-                    >
-
-                        <span
-                            style="
-                                display:block;
-                                color:
-                                    var(--engine-muted);
-                                font-size:6px;
-                            "
-                        >
-                            GELECEK ETKİSİ
-                        </span>
-
-                        <strong
-                            style="
-                                display:block;
-                                margin-top:3px;
-                                color:
-                                    var(--engine-text);
-                                font-size:8px;
-                                line-height:1.4;
-                            "
-                        >
-                            ${
-                                analysis.impact ===
-                                "Kritik"
-                                    ? "Bu olay gelecekte birden fazla organı doğrudan etkileyebilir."
-                                    : analysis.impact ===
-                                      "Yüksek"
-                                        ? "Bu olay sonraki kararları ve gelişim yönünü belirleyebilir."
-                                        : "Bu olay yaşam akışında izlenmesi gereken bir kayıt oluşturur."
-                            }
-                        </strong>
-
-                    </div>
+                            </div>
 
 
-                    <!-- META -->
-
-                    <div
-                        style="
-                            margin-top:7px;
-                            display:grid;
-                            grid-template-columns:
-                                repeat(
-                                    3,
-                                    minmax(0,1fr)
-                                );
-                            gap:6px;
-                        "
-                    >
-
-                        <div
-                            class="card"
-                            style="
-                                min-width:0;
-                                padding:8px;
-                            "
-                        >
-
-                            <span
-                                style="
-                                    display:block;
-                                    color:
-                                        var(--engine-muted);
-                                    font-size:6px;
-                                "
-                            >
-                                TARİH
-                            </span>
-
-                            <strong
-                                style="
-                                    display:block;
-                                    margin-top:2px;
-                                    overflow:hidden;
-                                    color:
-                                        var(--engine-text);
-                                    font-size:7px;
-                                    text-overflow:ellipsis;
-                                    white-space:nowrap;
-                                "
-                            >
+                            <small>
                                 ${this.escapeHTML(
-                                    this.formatDate(
-                                        selectedEvent.occurredAt ||
-                                        selectedEvent.createdAt
-                                    )
+                                    analysis.suggestion
                                 )}
-                            </strong>
+                            </small>
 
-                        </div>
+                        </section>
 
 
-                        <div
-                            class="card"
-                            style="
-                                min-width:0;
-                                padding:8px;
-                            "
-                        >
+                        <div class="evolution-linked-records">
 
-                            <span
-                                style="
-                                    display:block;
-                                    color:
-                                        var(--engine-muted);
-                                    font-size:6px;
-                                "
+                            <button
+                                type="button"
+                                data-action="evolution:linked:open"
+                                data-target="timeline"
                             >
-                                DURUM
-                            </span>
+                                <span>
+                                    Timeline
+                                </span>
 
-                            <strong
-                                style="
-                                    display:block;
-                                    margin-top:2px;
-                                    overflow:hidden;
-                                    color:
-                                        var(--engine-text);
-                                    font-size:7px;
-                                    text-overflow:ellipsis;
-                                    white-space:nowrap;
-                                "
+                                <strong>
+                                    ${linked.timeline}
+                                </strong>
+                            </button>
+
+
+                            <button
+                                type="button"
+                                data-action="evolution:linked:open"
+                                data-target="memory"
                             >
-                                ${this.escapeHTML(
-                                    selectedEvent.status ||
-                                    "completed"
-                                )}
-                            </strong>
+                                <span>
+                                    Memory
+                                </span>
 
-                        </div>
-
-
-                        <div
-                            class="card"
-                            style="
-                                min-width:0;
-                                padding:8px;
-                            "
-                        >
-
-                            <span
-                                style="
-                                    display:block;
-                                    color:
-                                        var(--engine-muted);
-                                    font-size:6px;
-                                "
-                            >
-                                KAYNAK
-                            </span>
-
-                            <strong
-                                style="
-                                    display:block;
-                                    margin-top:2px;
-                                    overflow:hidden;
-                                    color:
-                                        var(--engine-text);
-                                    font-size:7px;
-                                    text-overflow:ellipsis;
-                                    white-space:nowrap;
-                                "
-                            >
-                                ${this.escapeHTML(
-                                    selectedEvent.source ||
-                                    "user"
-                                )}
-                            </strong>
+                                <strong>
+                                    ${linked.memory}
+                                </strong>
+                            </button>
 
                         </div>
 
                     </div>
 
 
-                    <!-- LINKED RECORDS -->
-
-                    <div
-                        style="
-                            margin-top:7px;
-                            display:grid;
-                            grid-template-columns:
-                                repeat(
-                                    2,
-                                    minmax(0,1fr)
-                                );
-                            gap:6px;
-                        "
-                    >
+                    <footer class="evolution-detail-actions">
 
                         <button
                             type="button"
-                            data-action="evolution:linked:open"
-                            data-target="timeline"
-                            class="card"
-                            style="
-                                padding:9px;
-                                text-align:left;
-                            "
+                            class="primary-btn"
+                            data-evolution-action="edit"
                         >
-
-                            <span
-                                style="
-                                    display:block;
-                                    color:
-                                        var(--engine-muted);
-                                    font-size:6px;
-                                "
-                            >
-                                TIMELINE BAĞLANTISI
-                            </span>
-
-                            <strong
-                                style="
-                                    display:block;
-                                    margin-top:2px;
-                                    color:
-                                        var(--engine-text);
-                                    font-size:14px;
-                                "
-                            >
-                                ${linkedRecords.timeline}
-                            </strong>
-
+                            Düzenle
                         </button>
 
 
                         <button
                             type="button"
-                            data-action="evolution:linked:open"
-                            data-target="memory"
-                            class="card"
-                            style="
-                                padding:9px;
-                                text-align:left;
-                            "
+                            class="secondary-btn"
+                            data-evolution-action="archive"
                         >
-
-                            <span
-                                style="
-                                    display:block;
-                                    color:
-                                        var(--engine-muted);
-                                    font-size:6px;
-                                "
-                            >
-                                HAFIZA BAĞLANTISI
-                            </span>
-
-                            <strong
-                                style="
-                                    display:block;
-                                    margin-top:2px;
-                                    color:
-                                        var(--engine-text);
-                                    font-size:14px;
-                                "
-                            >
-                                ${linkedRecords.memory}
-                            </strong>
-
+                            Arşivle
                         </button>
 
-                    </div>
 
-
-                    <!-- IDENTITIES -->
-
-                    <div
-                        style="
-                            margin-top:7px;
-                            padding-top:7px;
-                            border-top:
-                                1px solid
-                                var(--engine-line);
-                            color:
-                                var(--engine-muted);
-                            font-size:7px;
-                        "
-                    >
-
-                        Etkilenen Kimlikler:
-
-                        <strong
-                            style="
-                                color:
-                                    var(--engine-text);
-                            "
+                        <button
+                            type="button"
+                            class="secondary-btn"
+                            data-action="evolution:event:close"
                         >
-                            ${
-                                identities.length
-                                    ? identities
-                                        .map(
-                                            identity =>
-                                                this.escapeHTML(
-                                                    identity
-                                                )
-                                        )
-                                        .join(", ")
-                                    : "Yok"
-                            }
-                        </strong>
+                            Kapat
+                        </button>
 
-                    </div>
+                    </footer>
 
                 </section>
+
+            </div>
+        `;
+
+    },
+
+
+    /* =====================================================
+       EMPTY
+    ===================================================== */
+
+    renderEmptyState(){
+
+        return `
+            <div class="section evolution-empty">
+
+                <span aria-hidden="true">
+                    ⌬
+                </span>
+
+                <h3>
+                    ${
+                        this.searchQuery ||
+                        this.activeFilter !==
+                            "all"
+                            ? "Eşleşen olay bulunamadı"
+                            : "Evolution henüz sessiz"
+                    }
+                </h3>
+
+                <p>
+                    ${
+                        this.searchQuery ||
+                        this.activeFilter !==
+                            "all"
+                            ? "Arama veya filtreyi değiştirerek tekrar deneyebilirsin."
+                            : "İlk kararını, hedefini, başarını veya dönüm noktanı kaydederek gelişim akışını başlat."
+                    }
+                </p>
+
+
+                ${
+                    !this.searchQuery &&
+                    this.activeFilter ===
+                        "all"
+                        ? `
+                            <button
+                                type="button"
+                                class="primary-btn"
+                                data-evolution-action="create"
+                            >
+                                İlk Olayı Oluştur
+                            </button>
+                          `
+                        : ""
+                }
 
             </div>
         `;
@@ -2681,341 +2706,446 @@ const EvolutionApp = {
 
     render(entity){
 
-        this.enterBrainContext();
+        this.enterBrainContext(
+            entity
+        );
 
 
-        const evolution =
-            this.getEvolutionCore();
+        if(!entity){
+
+            return `
+                <section class="engine-page">
+
+                    <div class="section engine-error-state">
+
+                        <h1>
+                            Evolution açılamadı
+                        </h1>
+
+                        <p>
+                            Bu varlığın gelişim bağlamı bulunamadı.
+                        </p>
+
+                    </div>
+
+                </section>
+            `;
+
+        }
+
+
+        const allEvents =
+            this.getEvents(
+                entity
+            );
 
 
         const events =
-            this.getEvents();
+            this.getVisibleEvents(
+                entity
+            );
 
 
-        const selectedEvent =
-            this.selectedEventId &&
-            evolution &&
-            typeof evolution.find ===
-                "function"
-                ? (() => {
-
-                    try{
-
-                        return (
-                            evolution.find(
-                                this.selectedEventId
-                            ) ||
-                            null
-                        );
-
-                    } catch(error){
-
-                        console.warn(
-                            "Evolution olayı açılamadı:",
-                            error
-                        );
-
-                        return null;
-
-                    }
-
-                })()
+        let selected =
+            this.selectedEventId
+                ? this.findEvent(
+                    this.selectedEventId
+                )
                 : null;
 
 
         if(
             this.selectedEventId &&
-            !selectedEvent
+            !selected
         ){
 
-            this.clearSelectedEvent();
+            this.selectedEventId =
+                null;
+
+            selected =
+                null;
 
         }
 
 
-        const importantCount =
-            events.filter(
-                event =>
-                    event &&
-                    (
-                        event.importance ===
-                            "high" ||
-                        event.importance ===
-                            "critical"
-                    )
-            ).length;
-
-
-        const achievementCount =
-            events.filter(
-                event =>
-                    event &&
-                    event.type ===
-                        "achievement"
-            ).length;
-
-
-        const totalXP =
-            events.reduce(
-                (
-                    total,
-                    event
-                ) =>
-                    total +
-                    this.getEventXP(
-                        event
-                    ),
-                0
+        const stats =
+            this.getStats(
+                allEvents
             );
 
 
         const progress =
             this.getEvolutionProgress(
-                totalXP
+                allEvents
             );
 
 
-        const filteredEvents =
-            this.filterEvents(
-                events
-            );
-
-
-        const recentEvents =
-            filteredEvents.slice(
-                0,
-                8
-            );
+        const editorEvent =
+            this.editorMode ===
+                "edit"
+                ? selected
+                : null;
 
 
         return `
-            <div
-                class="
-                    section
-                    evolution-app
-                "
-                style="
-                    margin:0;
-                    padding:16px;
-                    overflow:hidden;
-                "
-            >
+            <section class="engine-page evolution-app-page">
 
-                <button
-                    type="button"
-                    class="secondary-btn"
-                    data-action="entity:organs"
-                    style="
-                        margin-bottom:8px;
-                    "
-                >
-                    ← Organlara Dön
-                </button>
+                <div class="evolution-app-shell">
 
+                    <div class="engine-page-toolbar">
 
-                <!-- TOP -->
-
-                <section
-                    class="card"
-                    style="
-                        padding:12px 13px;
-                        display:flex;
-                        align-items:center;
-                        justify-content:space-between;
-                        gap:12px;
-                    "
-                >
-
-                    <div
-                        style="
-                            min-width:0;
-                        "
-                    >
-
-                        <div class="eyebrow">
-                            EVOLUTION
-                        </div>
-
-                        <h2
-                            style="
-                                margin:3px 0 0;
-                                color:
-                                    var(--engine-text);
-                                font-size:17px;
-                            "
+                        <button
+                            type="button"
+                            class="engine-back-btn"
+                            data-action="entity:dashboard"
                         >
-                            Yaşam ve Gelişim
-                        </h2>
-
-                        <p
-                            style="
-                                margin:3px 0 0;
-                                color:
-                                    var(--engine-muted);
-                                font-size:8px;
-                                line-height:1.4;
-                            "
-                        >
-                            Varlığın yaşam olayları,
-                            gelişimi ve etkileri burada birleşir.
-                        </p>
+                            ← Varlığa Dön
+                        </button>
 
                     </div>
 
 
-                    <span
-                        aria-hidden="true"
-                        style="
-                            flex:0 0 auto;
-                            font-size:24px;
-                        "
-                    >
-                        🧬
-                    </span>
-
-                </section>
-
-
-                <!-- SUMMARY -->
-
-                <section
-                    style="
-                        margin-top:7px;
-                        display:grid;
-                        grid-template-columns:
-                            repeat(
-                                4,
-                                minmax(0,1fr)
-                            );
-                        gap:6px;
-                    "
-                >
-
-                    ${this.renderStat(
-                        "Toplam Olay",
-                        events.length
+                    ${UI.appHeader(
+                        this.escapeHTML(
+                            entity.name ||
+                            "VAERO Varlığı"
+                        ),
+                        "EVOLUTION",
+                        "⌬"
                     )}
 
-                    ${this.renderStat(
-                        "Önemli Olay",
-                        importantCount
-                    )}
 
-                    ${this.renderStat(
-                        "Başarı",
-                        achievementCount
-                    )}
-
-                    ${this.renderStat(
-                        "Toplam XP",
-                        totalXP
-                    )}
-
-                </section>
-
-
-                ${this.renderEvolutionProgress(
-                    progress
-                )}
-
-
-                <!-- LIFE FLOW -->
-
-                <section
-                    style="
-                        margin-top:8px;
-                    "
-                >
-
-                    <div
-                        style="
-                            display:flex;
-                            align-items:flex-end;
-                            justify-content:space-between;
-                            gap:10px;
-                        "
-                    >
+                    <section class="evolution-app-intro">
 
                         <div>
 
-                            <div class="eyebrow">
-                                YAŞAM AKIŞI
-                            </div>
+                            <span class="engine-section-label">
+                                LIVING EVOLUTION
+                            </span>
 
-                            <h2
-                                style="
-                                    margin:2px 0 0;
-                                    color:
-                                        var(--engine-text);
-                                    font-size:13px;
-                                "
-                            >
-                                Son Olaylar
+                            <h2>
+                                Yaşam ve gelişim
                             </h2>
+
+                            <p>
+                                Kararlar, hedefler, başarılar, deneyimler ve dönüm noktaları bu varlığın gelişim haritasını oluşturur.
+                            </p>
 
                         </div>
 
 
-                        <span
-                            style="
-                                color:
-                                    var(--engine-dim);
-                                font-size:6px;
-                            "
-                        >
-                            ${recentEvents.length}
-                            gösteriliyor
-                        </span>
+                        <div class="evolution-stats">
+
+                            <div>
+
+                                <strong>
+                                    ${stats.total}
+                                </strong>
+
+                                <span>
+                                    Olay
+                                </span>
+
+                            </div>
+
+
+                            <div>
+
+                                <strong>
+                                    ${stats.important}
+                                </strong>
+
+                                <span>
+                                    Önemli
+                                </span>
+
+                            </div>
+
+
+                            <div>
+
+                                <strong>
+                                    ${stats.achievements}
+                                </strong>
+
+                                <span>
+                                    Başarı
+                                </span>
+
+                            </div>
+
+
+                            <div>
+
+                                <strong>
+                                    ${stats.goals}
+                                </strong>
+
+                                <span>
+                                    Aktif Hedef
+                                </span>
+
+                            </div>
+
+                        </div>
+
+                    </section>
+
+
+                    ${this.renderEvolutionProgress(
+                        progress
+                    )}
+
+
+                    ${this.renderToolbar()}
+
+
+                    <div class="evolution-records-scroll">
+
+                        ${
+                            events.length
+                                ? `
+                                    <div class="evolution-record-list">
+
+                                        ${events
+                                            .map(
+                                                event =>
+                                                    this.renderEvent(
+                                                        event
+                                                    )
+                                            )
+                                            .join("")}
+
+                                    </div>
+                                  `
+                                : this.renderEmptyState()
+                        }
 
                     </div>
 
 
-                    ${this.renderFilters()}
+                    ${UI.brainPanel()}
+
+                </div>
 
 
-                    ${
-                        recentEvents.length
-                            ? `
-                                <div
-                                    style="
-                                        display:grid;
-                                        grid-template-columns:
-                                            repeat(
-                                                2,
-                                                minmax(0,1fr)
-                                            );
-                                        gap:6px;
-                                        margin-top:4px;
-                                    "
-                                >
+                ${
+                    this.editorMode
+                        ? this.renderEditor(
+                            editorEvent
+                        )
+                        : (
+                            selected
+                                ? this.renderSelectedEvent(
+                                    selected
+                                )
+                                : ""
+                        )
+                }
 
-                                    ${recentEvents
-                                        .map(
-                                            event =>
-                                                this.renderEvent(
-                                                    event
-                                                )
-                                        )
-                                        .join("")}
-
-                                </div>
-                              `
-                            : this.renderEmptyState()
-                    }
-
-                </section>
-
-
-                ${this.renderSelectedEvent(
-                    selectedEvent
-                )}
-
-            </div>
+            </section>
         `;
+
+    },
+
+
+    /* =====================================================
+       COMMANDS
+    ===================================================== */
+
+    handleCommand(
+        action
+    ){
+
+        switch(action){
+
+            case "create":
+
+                this.selectedEventId =
+                    null;
+
+                this.editorMode =
+                    "create";
+
+
+                return this.remount();
+
+
+            case "edit":
+
+                if(
+                    !this.selectedEventId
+                ){
+                    return false;
+                }
+
+
+                this.editorMode =
+                    "edit";
+
+
+                return this.remount();
+
+
+            case "archive":
+
+                return this.archiveEvent();
+
+
+            case "editor:cancel":
+
+                this.editorMode =
+                    null;
+
+
+                return this.remount();
+
+        }
+
+
+        return false;
 
     }
 
 };
+
+
+/* =========================================================
+   EVOLUTION COMMANDS
+========================================================= */
+
+document.addEventListener(
+    "click",
+    event => {
+
+        const button =
+            event.target.closest(
+                "[data-evolution-action]"
+            );
+
+
+        if(!button){
+            return;
+        }
+
+
+        event.preventDefault();
+
+
+        EvolutionApp.handleCommand(
+            button.dataset
+                .evolutionAction
+        );
+
+    }
+);
+
+
+/* =========================================================
+   EVOLUTION SEARCH
+========================================================= */
+
+document.addEventListener(
+    "input",
+    event => {
+
+        if(
+            event.target.id !==
+                "evolutionSearchInput"
+        ){
+            return;
+        }
+
+
+        EvolutionApp.searchQuery =
+            String(
+                event.target.value ||
+                ""
+            );
+
+
+        clearTimeout(
+            EvolutionApp.searchTimer
+        );
+
+
+        EvolutionApp.searchTimer =
+            setTimeout(
+                () => {
+
+                    EvolutionApp.selectedEventId =
+                        null;
+
+                    EvolutionApp.editorMode =
+                        null;
+
+                    EvolutionApp.remount();
+
+                },
+                120
+            );
+
+    }
+);
+
+
+/* =========================================================
+   EVOLUTION FORMS
+========================================================= */
+
+document.addEventListener(
+    "submit",
+    event => {
+
+        const form =
+            event.target.closest(
+                "[data-evolution-form]"
+            );
+
+
+        if(!form){
+            return;
+        }
+
+
+        event.preventDefault();
+
+
+        const entity =
+            EvolutionApp.getCurrentEntity();
+
+
+        if(!entity){
+            return;
+        }
+
+
+        if(
+            form.dataset.evolutionForm ===
+                "create"
+        ){
+
+            EvolutionApp.createEvent(
+                entity
+            );
+
+
+            return;
+
+        }
+
+
+        if(
+            form.dataset.evolutionForm ===
+                "edit"
+        ){
+
+            EvolutionApp.updateEvent();
+
+        }
+
+    }
+);
 
 
 window.EvolutionApp =
