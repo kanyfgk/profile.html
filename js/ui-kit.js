@@ -53,6 +53,24 @@ const UI = {
     },
 
 
+    safeId(value){
+
+        const id =
+            String(
+                value ?? ""
+            )
+                .trim();
+
+
+        return /^[a-zA-Z0-9:_\-.]+$/.test(
+            id
+        )
+            ? id
+            : "";
+
+    },
+
+
     /* =====================================================
        APP HEADER
     ===================================================== */
@@ -155,7 +173,8 @@ const UI = {
 
         const verified =
             entity?.identity
-                ?.verified !== false;
+                ?.verified ===
+                true;
 
 
         return `
@@ -254,7 +273,6 @@ const UI = {
 
     /* =====================================================
        APPLICATION CATALOG CARD
-       Applications app için ortak UI primitive
     ===================================================== */
 
     applicationCard(
@@ -268,12 +286,23 @@ const UI = {
 
 
         const trusted =
+            state.trusted ===
+            true ||
             app.trusted ===
             true;
 
 
         const system =
+            state.builtIn ===
+            true ||
             app.system ===
+            true ||
+            app.distribution ===
+            "built-in";
+
+
+        const updateAvailable =
+            state.updateAvailable ===
             true;
 
 
@@ -289,17 +318,34 @@ const UI = {
             "İncele";
 
 
-        if(system){
+        let command =
+            "details";
+
+
+        if(
+            updateAvailable
+        ){
+
+            buttonLabel =
+                "Güncelle";
+
+            command =
+                "update";
+
+        }
+        else if(
+            system ||
+            installed
+        ){
 
             buttonLabel =
                 "Aç";
 
-        } else if(installed){
+            command =
+                "open";
 
-            buttonLabel =
-                "Aç";
-
-        } else if(
+        }
+        else if(
             app.installable === true
         ){
 
@@ -308,6 +354,9 @@ const UI = {
                     "free"
                     ? "Yükle"
                     : "Al";
+
+            command =
+                "details";
 
         }
 
@@ -351,6 +400,15 @@ const UI = {
                                     ? this.statusBadge(
                                         "Doğrulanmış",
                                         "trusted"
+                                    )
+                                    : ""
+                            }
+
+                            ${
+                                updateAvailable
+                                    ? this.statusBadge(
+                                        "Güncelleme",
+                                        "info"
                                     )
                                     : ""
                             }
@@ -418,11 +476,9 @@ const UI = {
                     <button
                         type="button"
                         class="primary-btn ui-application-action"
-                        data-application-command="${
-                            installed || system
-                                ? "open"
-                                : "details"
-                        }"
+                        data-application-command="${this.escapeAttribute(
+                            command
+                        )}"
                         data-app-id="${this.escapeAttribute(
                             app.id ||
                             ""
@@ -455,7 +511,8 @@ const UI = {
                 "warning",
                 "danger",
                 "trusted",
-                "info"
+                "info",
+                "pending"
             ]);
 
 
@@ -479,6 +536,55 @@ const UI = {
 
 
     /* =====================================================
+       BRAIN STATUS BADGE
+    ===================================================== */
+
+    brainStatusBadge(status = {}){
+
+        const providerConnected =
+            status.providerConnected ===
+            true;
+
+
+        const pendingConfirmation =
+            Number(
+                status.pendingConfirmations
+            ) > 0;
+
+
+        if(
+            pendingConfirmation
+        ){
+
+            return this.statusBadge(
+                "Onay Bekliyor",
+                "warning"
+            );
+
+        }
+
+
+        if(
+            providerConnected
+        ){
+
+            return this.statusBadge(
+                "Brain Online",
+                "success"
+            );
+
+        }
+
+
+        return this.statusBadge(
+            "Local Brain",
+            "info"
+        );
+
+    },
+
+
+    /* =====================================================
        PRICING LABEL
     ===================================================== */
 
@@ -493,7 +599,10 @@ const UI = {
                 .toLowerCase();
 
 
-        if(model === "free"){
+        if(
+            model ===
+            "free"
+        ){
 
             return `
                 <span class="ui-price-label">
@@ -529,8 +638,12 @@ const UI = {
             return `
                 <span class="ui-price-label">
                     ${
-                        Number.isFinite(amount)
-                            ? this.escapeHTML(amount)
+                        Number.isFinite(
+                            amount
+                        )
+                            ? this.escapeHTML(
+                                amount
+                            )
                             : ""
                     }
                     ${this.escapeHTML(currency)}
@@ -544,8 +657,12 @@ const UI = {
         return `
             <span class="ui-price-label">
                 ${
-                    Number.isFinite(amount)
-                        ? this.escapeHTML(amount)
+                    Number.isFinite(
+                        amount
+                    )
+                        ? this.escapeHTML(
+                            amount
+                        )
                         : ""
                 }
                 ${this.escapeHTML(currency)}
@@ -567,7 +684,8 @@ const UI = {
             !Array.isArray(
                 permissions
             ) ||
-            permissions.length === 0
+            permissions.length ===
+            0
         ){
 
             return `
@@ -607,6 +725,103 @@ const UI = {
                         `
                     )
                     .join("")}
+
+            </div>
+        `;
+
+    },
+
+
+    /* =====================================================
+       APPLICATION PERMISSION ROW
+    ===================================================== */
+
+    permissionRow(
+        permission,
+        {
+            granted = false,
+            appId = "",
+            editable = true
+        } = {}
+    ){
+
+        const safePermission =
+            String(
+                permission ||
+                ""
+            ).trim();
+
+
+        if(!safePermission){
+            return "";
+        }
+
+
+        const command =
+            granted
+                ? "permission-revoke"
+                : "permission-grant";
+
+
+        return `
+            <div
+                class="ui-permission-row"
+                data-permission="${this.escapeAttribute(
+                    safePermission
+                )}"
+            >
+
+                <div class="ui-permission-row-copy">
+
+                    <strong>
+                        ${this.escapeHTML(
+                            safePermission
+                        )}
+                    </strong>
+
+                    ${
+                        granted
+                            ? this.statusBadge(
+                                "İzin Verildi",
+                                "success"
+                            )
+                            : this.statusBadge(
+                                "Onay Bekliyor",
+                                "pending"
+                            )
+                    }
+
+                </div>
+
+                ${
+                    editable
+                        ? `
+                            <button
+                                type="button"
+                                class="${
+                                    granted
+                                        ? "secondary-btn"
+                                        : "primary-btn"
+                                }"
+                                data-application-command="${this.escapeAttribute(
+                                    command
+                                )}"
+                                data-app-id="${this.escapeAttribute(
+                                    appId
+                                )}"
+                                data-permission="${this.escapeAttribute(
+                                    safePermission
+                                )}"
+                            >
+                                ${
+                                    granted
+                                        ? "İzni Kaldır"
+                                        : "İzin Ver"
+                                }
+                            </button>
+                          `
+                        : ""
+                }
 
             </div>
         `;
@@ -679,6 +894,14 @@ const UI = {
         action = null
     ){
 
+        const safeAction =
+            action?.action
+                ? this.safeAction(
+                    action.action
+                )
+                : "";
+
+
         return `
             <div
                 class="card ui-empty-state"
@@ -703,21 +926,209 @@ const UI = {
                 ${
                     action &&
                     action.label &&
-                    action.action
+                    safeAction
                         ? `
                             <button
                                 type="button"
                                 class="primary-btn"
                                 data-action="${this.escapeAttribute(
-                                    this.safeAction(
-                                        action.action
-                                    )
+                                    safeAction
                                 )}"
                             >
                                 ${this.escapeHTML(
                                     action.label
                                 )}
                             </button>
+                          `
+                        : ""
+                }
+
+            </div>
+        `;
+
+    },
+
+
+    /* =====================================================
+       BRAIN CONFIRMATION CARD
+    ===================================================== */
+
+    brainConfirmationCard(
+        confirmation = {},
+        {
+            title =
+                "Onay gerekiyor",
+
+            message =
+                "Brain bu işlemi uygulamadan önce onayını bekliyor."
+        } = {}
+    ){
+
+        const confirmationId =
+            this.safeId(
+                confirmation.id ||
+                confirmation
+                    .confirmationId ||
+                ""
+            );
+
+
+        if(!confirmationId){
+
+            return "";
+        }
+
+
+        const actionType =
+            confirmation.actionType ||
+            confirmation.intent
+                ?.operation ||
+            null;
+
+
+        const expiresAt =
+            Number(
+                confirmation.expiresAt
+            );
+
+
+        return `
+            <div
+                class="card ui-brain-confirmation"
+                style="${Theme.card}"
+                data-brain-confirmation-id="${this.escapeAttribute(
+                    confirmationId
+                )}"
+            >
+
+                <div class="ui-brain-confirmation-head">
+
+                    <div>
+
+                        <div class="eyebrow">
+                            BRAIN ACTION
+                        </div>
+
+                        <h3>
+                            ${this.escapeHTML(title)}
+                        </h3>
+
+                    </div>
+
+                    ${this.statusBadge(
+                        "Onay Bekliyor",
+                        "warning"
+                    )}
+
+                </div>
+
+                <p class="ui-card-copy">
+                    ${this.escapeHTML(message)}
+                </p>
+
+                ${
+                    actionType
+                        ? `
+                            <div class="ui-brain-confirmation-action">
+                                ${this.escapeHTML(
+                                    actionType
+                                )}
+                            </div>
+                          `
+                        : ""
+                }
+
+                ${
+                    Number.isFinite(
+                        expiresAt
+                    )
+                        ? `
+                            <div
+                                class="ui-brain-confirmation-expiry"
+                                data-confirmation-expires-at="${this.escapeAttribute(
+                                    expiresAt
+                                )}"
+                            >
+                                Bu onay sınırlı süre için geçerlidir.
+                            </div>
+                          `
+                        : ""
+                }
+
+                <div class="ui-brain-confirmation-buttons">
+
+                    <button
+                        type="button"
+                        class="secondary-btn"
+                        data-brain-command="cancel-confirmation"
+                        data-confirmation-id="${this.escapeAttribute(
+                            confirmationId
+                        )}"
+                    >
+                        Vazgeç
+                    </button>
+
+                    <button
+                        type="button"
+                        class="primary-btn"
+                        data-brain-command="confirm"
+                        data-confirmation-id="${this.escapeAttribute(
+                            confirmationId
+                        )}"
+                    >
+                        Onayla
+                    </button>
+
+                </div>
+
+            </div>
+        `;
+
+    },
+
+
+    /* =====================================================
+       BRAIN MESSAGE
+    ===================================================== */
+
+    brainMessage(
+        message,
+        {
+            role = "brain",
+            meta = null
+        } = {}
+    ){
+
+        const normalizedRole =
+            [
+                "brain",
+                "user",
+                "system"
+            ].includes(
+                role
+            )
+                ? role
+                : "brain";
+
+
+        return `
+            <div
+                class="ui-brain-message is-${normalizedRole}"
+            >
+
+                <div class="ui-brain-message-copy">
+                    ${this.escapeHTML(
+                        message ||
+                        ""
+                    )}
+                </div>
+
+                ${
+                    meta
+                        ? `
+                            <div class="ui-brain-message-meta">
+                                ${this.escapeHTML(meta)}
+                            </div>
                           `
                         : ""
                 }
@@ -753,11 +1164,10 @@ const UI = {
     /* =====================================================
        BRAIN ENTRY POINT
 
-       Eski inline Brain panel kaldırıldı.
+       Inline Brain panel oluşturulmaz.
 
-       Gerçek panel artık BrainApp.render()
-       tarafından oluşturulur. Böylece sayfa içinde
-       ikinci bir #brainPanel oluşmaz.
+       Tek panel authority:
+       BrainApp.render()
     ===================================================== */
 
     brainPanel(){
