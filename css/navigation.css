@@ -1,15 +1,72 @@
 /* =========================================================
    VAERO ENGINE — GLOBAL NAVIGATION
+   PREMIUM SYSTEM NAVIGATION
+   Desktop + Mobile + Safe Area
+========================================================= */
+
+
+/* =========================================================
+   01. NAVIGATION TOKENS
+========================================================= */
+
+:root{
+    --nav-bg-top:
+        rgba(13,23,34,.945);
+
+    --nav-bg-bottom:
+        rgba(5,11,18,.972);
+
+    --nav-border:
+        rgba(255,255,255,.075);
+
+    --nav-border-soft:
+        rgba(255,255,255,.048);
+
+    --nav-text:
+        rgba(245,241,233,.47);
+
+    --nav-text-hover:
+        rgba(255,255,255,.9);
+
+    --nav-gold:
+        #f0d294;
+
+    --nav-gold-bright:
+        #efcc83;
+
+    --nav-blue:
+        #72b7ea;
+
+    --nav-green:
+        #72d7ba;
+
+    --nav-radius:
+        22px;
+
+    --nav-item-radius:
+        13px;
+
+    --nav-ease:
+        cubic-bezier(.22,.78,.2,1);
+}
+
+
+/* =========================================================
+   02. BOTTOM NAV ROOT
 ========================================================= */
 
 .bottom-nav{
     position:fixed;
 
     left:50%;
+
     bottom:
         calc(
             8px +
-            env(safe-area-inset-bottom)
+            env(
+                safe-area-inset-bottom,
+                0px
+            )
         );
 
     transform:
@@ -27,159 +84,312 @@
     display:grid;
 
     grid-template-columns:
-        1fr
-        1fr
+        minmax(0,1fr)
+        minmax(0,1fr)
         70px
-        1fr
-        1fr;
+        minmax(0,1fr)
+        minmax(0,1fr);
 
     align-items:center;
 
     gap:3px;
 
-    padding:4px 7px;
+    margin:0;
+
+    padding:
+        4px
+        7px;
 
     overflow:visible;
 
     border:
         1px solid
-        rgba(255,255,255,.075);
+        var(--nav-border);
 
-    border-radius:22px;
+    border-radius:
+        var(--nav-radius);
 
     background:
         linear-gradient(
             180deg,
-            rgba(12,21,31,.94),
-            rgba(5,11,18,.96)
+            var(--nav-bg-top),
+            var(--nav-bg-bottom)
         );
 
     backdrop-filter:
-        blur(22px)
-        saturate(125%);
+        blur(24px)
+        saturate(128%);
 
     -webkit-backdrop-filter:
-        blur(22px)
-        saturate(125%);
+        blur(24px)
+        saturate(128%);
 
     box-shadow:
-        0 -8px 24px rgba(0,0,0,.14),
-        0 18px 42px rgba(0,0,0,.35),
-        inset 0 1px 0 rgba(255,255,255,.035);
+        0
+        -8px
+        24px
+        rgba(0,0,0,.14),
+
+        0
+        20px
+        46px
+        rgba(0,0,0,.37),
+
+        inset
+        0
+        1px
+        0
+        rgba(255,255,255,.038),
+
+        inset
+        0
+        -1px
+        0
+        rgba(255,255,255,.012);
 
     isolation:isolate;
 
     z-index:1000;
+
+    -webkit-tap-highlight-color:transparent;
 }
 
 
 /* =========================================================
-   NAV BUTTON
+   03. NAV AMBIENT LAYERS
+========================================================= */
+
+.bottom-nav::before{
+    content:"";
+
+    position:absolute;
+
+    inset:0;
+
+    z-index:-2;
+
+    pointer-events:none;
+
+    border-radius:inherit;
+
+    background:
+        radial-gradient(
+            circle at 50% -18%,
+            rgba(229,189,111,.06),
+            transparent 32%
+        ),
+
+        radial-gradient(
+            circle at 50% 120%,
+            rgba(80,145,195,.025),
+            transparent 40%
+        );
+}
+
+.bottom-nav::after{
+    content:"";
+
+    position:absolute;
+
+    top:0;
+    left:13%;
+
+    width:74%;
+    height:1px;
+
+    z-index:-1;
+
+    pointer-events:none;
+
+    background:
+        linear-gradient(
+            90deg,
+            transparent,
+            rgba(255,255,255,.08),
+            transparent
+        );
+
+    opacity:.7;
+}
+
+
+/* =========================================================
+   04. NAV BUTTON
 ========================================================= */
 
 .nav-btn{
     position:relative;
 
     min-width:0;
+
     height:52px;
     min-height:52px;
 
     display:flex;
+
     flex-direction:column;
+
     align-items:center;
     justify-content:center;
 
-    padding:2px;
+    gap:0;
+
+    margin:0;
+
+    padding:
+        2px;
+
+    overflow:hidden;
 
     border:0;
-    border-radius:13px;
+
+    border-radius:
+        var(--nav-item-radius);
+
+    outline:none;
 
     background:transparent;
 
     color:
-        rgba(
-            245,
-            241,
-            233,
-            .48
-        );
+        var(--nav-text);
 
     font:inherit;
+
     font-size:9px;
     font-weight:650;
 
     line-height:1;
 
+    text-align:center;
+
     cursor:pointer;
 
-    -webkit-tap-highlight-color:
-        transparent;
+    -webkit-tap-highlight-color:transparent;
+
+    user-select:none;
 
     transition:
-        color .18s ease,
-        background .18s ease,
-        transform .18s ease;
+        color
+        .18s
+        ease,
+
+        background
+        .18s
+        ease,
+
+        transform
+        .2s
+        var(--nav-ease),
+
+        box-shadow
+        .18s
+        ease;
+}
+
+
+/* =========================================================
+   05. NAV BUTTON SURFACE
+========================================================= */
+
+.nav-btn::before{
+    content:"";
+
+    position:absolute;
+
+    inset:3px;
+
+    z-index:-1;
+
+    border:
+        1px solid
+        transparent;
+
+    border-radius:
+        calc(
+            var(--nav-item-radius) - 2px
+        );
+
+    background:
+        linear-gradient(
+            180deg,
+            rgba(255,255,255,.018),
+            rgba(255,255,255,.005)
+        );
+
+    opacity:0;
+
+    transition:
+        opacity
+        .18s
+        ease,
+
+        border-color
+        .18s
+        ease;
 }
 
 .nav-btn:hover{
     color:
-        rgba(
-            255,
-            255,
-            255,
-            .88
-        );
-
-    background:
-        rgba(
-            255,
-            255,
-            255,
-            .022
-        );
+        var(--nav-text-hover);
 
     transform:
         translateY(-1px);
 }
 
+.nav-btn:hover::before{
+    opacity:1;
+
+    border-color:
+        rgba(255,255,255,.035);
+}
+
 .nav-btn:active{
     transform:
-        scale(.97);
+        scale(.965);
 }
 
 
 /* =========================================================
-   ACCESSIBILITY
+   06. ACCESSIBILITY
 ========================================================= */
 
 .nav-btn:focus-visible,
 .nav-brain-btn:focus-visible{
     outline:
         2px solid
-        rgba(
-            232,
-            201,
-            135,
-            .75
-        );
+        rgba(232,201,135,.72);
 
-    outline-offset:
-        2px;
+    outline-offset:2px;
 }
 
 
 /* =========================================================
-   ACTIVE STATE
+   07. ACTIVE NAV STATE
 ========================================================= */
 
 .nav-btn.active{
-    color:#f0d294;
+    color:
+        var(--nav-gold);
 
     background:
         linear-gradient(
             180deg,
-            rgba(232,201,135,.06),
-            rgba(232,201,135,.018)
+            rgba(232,201,135,.055),
+            rgba(232,201,135,.014)
+        );
+}
+
+.nav-btn.active::before{
+    opacity:1;
+
+    border-color:
+        rgba(232,201,135,.045);
+
+    background:
+        radial-gradient(
+            circle at 50% 15%,
+            rgba(232,201,135,.05),
+            transparent 53%
         );
 }
 
@@ -199,26 +409,36 @@
 
     border-radius:50%;
 
-    background:#efcc83;
+    background:
+        var(--nav-gold-bright);
 
     box-shadow:
-        0 0 7px
-        rgba(
-            239,
-            204,
-            131,
-            .65
-        );
+        0
+        0
+        7px
+        rgba(239,204,131,.65),
+
+        0
+        0
+        14px
+        rgba(239,204,131,.18);
 }
 
 
 /* =========================================================
-   ICON
+   08. NAV ICON
 ========================================================= */
 
 .nav-icon{
+    position:relative;
+
     width:28px;
     height:28px;
+
+    flex:
+        0
+        0
+        28px;
 
     margin:
         0
@@ -226,64 +446,133 @@
         2px;
 
     display:flex;
+
     align-items:center;
     justify-content:center;
 
     border:
         1px solid
-        rgba(255,255,255,.055);
+        rgba(255,255,255,.052);
 
     border-radius:9px;
 
     background:
         linear-gradient(
             180deg,
-            rgba(255,255,255,.026),
-            rgba(255,255,255,.008)
+            rgba(255,255,255,.027),
+            rgba(255,255,255,.007)
         );
 
+    box-shadow:
+        inset
+        0
+        1px
+        0
+        rgba(255,255,255,.013);
+
     font-size:12px;
+
     line-height:1;
 
     transition:
-        border-color .18s ease,
-        background .18s ease,
-        box-shadow .18s ease;
+        border-color
+        .18s
+        ease,
+
+        background
+        .18s
+        ease,
+
+        box-shadow
+        .18s
+        ease,
+
+        transform
+        .2s
+        var(--nav-ease);
 }
 
-.nav-btn.active .nav-icon{
+.nav-icon::after{
+    content:"";
+
+    position:absolute;
+
+    inset:4px;
+
+    border:
+        1px solid
+        rgba(255,255,255,.012);
+
+    border-radius:6px;
+
+    pointer-events:none;
+}
+
+.nav-btn:hover
+.nav-icon{
     border-color:
-        rgba(
-            232,
-            201,
-            135,
-            .16
-        );
+        rgba(255,255,255,.085);
 
     background:
-        rgba(
-            232,
-            201,
-            135,
-            .042
+        linear-gradient(
+            180deg,
+            rgba(255,255,255,.04),
+            rgba(255,255,255,.012)
+        );
+}
+
+.nav-btn.active
+.nav-icon{
+    border-color:
+        rgba(232,201,135,.17);
+
+    background:
+        radial-gradient(
+            circle at 50% 20%,
+            rgba(232,201,135,.07),
+            rgba(232,201,135,.025) 60%,
+            transparent
         );
 
     box-shadow:
         inset
         0
         0
-        10px
-        rgba(
-            232,
-            201,
-            135,
-            .025
-        );
+        12px
+        rgba(232,201,135,.027),
+
+        0
+        0
+        18px
+        rgba(232,201,135,.018);
 }
 
 
 /* =========================================================
-   BRAIN NAV
+   09. NAV LABEL SAFETY
+========================================================= */
+
+.nav-btn{
+    text-overflow:ellipsis;
+    white-space:nowrap;
+}
+
+.nav-btn > span:not(.nav-icon){
+    display:block;
+
+    width:100%;
+
+    min-width:0;
+
+    overflow:hidden;
+
+    text-overflow:ellipsis;
+    white-space:nowrap;
+}
+
+
+/* =========================================================
+   10. BRAIN NAV BUTTON
 ========================================================= */
 
 .nav-brain-btn{
@@ -292,35 +581,150 @@
     width:68px;
     height:68px;
 
+    min-width:68px;
+    min-height:68px;
+
     display:block;
 
     justify-self:center;
     align-self:center;
 
-    margin-top:-20px;
+    margin:
+        -20px
+        0
+        0;
+
     padding:0;
 
+    overflow:visible;
+
     border:0;
+
     border-radius:50%;
+
+    outline:none;
 
     background:transparent;
 
     cursor:pointer;
 
     opacity:1;
+
     visibility:visible;
 
     z-index:2;
 
+    -webkit-tap-highlight-color:transparent;
+
     animation:
         navBrainBreath
-        9s
+        8s
         ease-in-out
         infinite;
 
-    -webkit-tap-highlight-color:
-        transparent;
+    transition:
+        transform
+        .22s
+        var(--nav-ease),
+
+        filter
+        .22s
+        ease;
 }
+
+
+/* =========================================================
+   11. BRAIN BACKLIGHT
+========================================================= */
+
+.nav-brain-btn::before{
+    content:"";
+
+    position:absolute;
+
+    inset:8px;
+
+    border-radius:50%;
+
+    pointer-events:none;
+
+    background:
+        radial-gradient(
+            circle,
+            rgba(87,157,210,.11),
+            rgba(87,157,210,.03) 52%,
+            transparent 72%
+        );
+
+    filter:blur(8px);
+
+    opacity:.72;
+
+    transition:
+        transform
+        .25s
+        ease,
+
+        opacity
+        .25s
+        ease;
+}
+
+.nav-brain-btn::after{
+    content:"";
+
+    position:absolute;
+
+    top:9px;
+    right:17px;
+
+    width:3px;
+    height:3px;
+
+    border-radius:50%;
+
+    background:
+        rgba(239,202,130,.82);
+
+    box-shadow:
+        0
+        0
+        8px
+        rgba(239,202,130,.6);
+
+    pointer-events:none;
+}
+
+
+/* =========================================================
+   12. BRAIN HOVER
+========================================================= */
+
+.nav-brain-btn:hover{
+    transform:
+        translateY(-2px)
+        scale(1.025);
+
+    filter:
+        brightness(1.05);
+}
+
+.nav-brain-btn:hover::before{
+    transform:
+        scale(1.14);
+
+    opacity:.95;
+}
+
+.nav-brain-btn:active{
+    transform:
+        scale(.96);
+}
+
+
+/* =========================================================
+   13. BRAIN ORBIT
+========================================================= */
 
 .nav-brain-orbit{
     position:absolute;
@@ -331,12 +735,7 @@
 
     border:
         1px solid
-        rgba(
-            224,
-            188,
-            125,
-            .34
-        );
+        rgba(224,188,125,.34);
 
     border-radius:50%;
 
@@ -344,14 +743,18 @@
         0
         0
         15px
-        rgba(
-            224,
-            188,
-            125,
-            .05
-        );
+        rgba(224,188,125,.05);
 
     pointer-events:none;
+
+    transition:
+        transform
+        .45s
+        var(--nav-ease),
+
+        border-color
+        .22s
+        ease;
 }
 
 .nav-brain-orbit::before,
@@ -361,6 +764,8 @@
     position:absolute;
 
     border-radius:50%;
+
+    pointer-events:none;
 }
 
 .nav-brain-orbit::before{
@@ -368,12 +773,16 @@
 
     border:
         1px solid
-        rgba(
-            97,
-            168,
-            230,
-            .14
-        );
+        rgba(97,168,230,.14);
+
+    transform:
+        rotate(25deg)
+        scaleY(.86);
+
+    transition:
+        transform
+        .45s
+        var(--nav-ease);
 }
 
 .nav-brain-orbit::after{
@@ -381,13 +790,50 @@
 
     border:
         1px solid
-        rgba(
-            224,
-            188,
-            125,
-            .16
-        );
+        rgba(224,188,125,.16);
+
+    transform:
+        rotate(-31deg)
+        scaleY(.92);
+
+    transition:
+        transform
+        .45s
+        var(--nav-ease);
 }
+
+
+/* =========================================================
+   14. BRAIN ORBIT INTERACTION
+========================================================= */
+
+.nav-brain-btn:hover
+.nav-brain-orbit{
+    transform:
+        rotate(9deg);
+
+    border-color:
+        rgba(224,188,125,.44);
+}
+
+.nav-brain-btn:hover
+.nav-brain-orbit::before{
+    transform:
+        rotate(-20deg)
+        scaleY(.84);
+}
+
+.nav-brain-btn:hover
+.nav-brain-orbit::after{
+    transform:
+        rotate(21deg)
+        scaleY(.9);
+}
+
+
+/* =========================================================
+   15. BRAIN CORE
+========================================================= */
 
 .nav-brain-core{
     position:absolute;
@@ -395,6 +841,7 @@
     inset:18px;
 
     display:flex;
+
     align-items:center;
     justify-content:center;
 
@@ -402,20 +849,16 @@
 
     border:
         1px solid
-        rgba(
-            240,
-            210,
-            150,
-            .6
-        );
+        rgba(240,210,150,.58);
 
     border-radius:50%;
 
     background:
         radial-gradient(
-            circle at 50% 35%,
-            rgba(35,70,96,.98),
-            rgba(3,11,19,1) 66%
+            circle at 50% 34%,
+            rgba(40,80,108,.99),
+            rgba(9,25,39,.99) 45%,
+            rgba(3,11,19,1) 68%
         );
 
     box-shadow:
@@ -423,40 +866,78 @@
         0
         0
         13px
-        rgba(
-            112,
-            183,
-            230,
-            .16
-        ),
+        rgba(112,183,230,.16),
+
+        inset
+        0
+        1px
+        0
+        rgba(255,255,255,.055),
 
         0
         0
         0
         3px
-        rgba(
-            230,
-            195,
-            125,
-            .04
-        ),
+        rgba(230,195,125,.04),
 
         0
         0
-        15px
-        rgba(
-            85,
-            163,
-            234,
-            .18
-        );
+        16px
+        rgba(85,163,234,.18);
 
     z-index:3;
 
     pointer-events:none;
 }
 
+.nav-brain-core::before{
+    content:"";
+
+    position:absolute;
+
+    inset:4px;
+
+    border:
+        1px solid
+        rgba(255,255,255,.02);
+
+    border-radius:50%;
+}
+
+.nav-brain-core::after{
+    content:"";
+
+    position:absolute;
+
+    top:5px;
+    left:8px;
+
+    width:12px;
+    height:5px;
+
+    border-radius:50%;
+
+    background:
+        radial-gradient(
+            ellipse,
+            rgba(255,255,255,.07),
+            transparent 70%
+        );
+
+    transform:
+        rotate(-20deg);
+}
+
+
+/* =========================================================
+   16. BRAIN EYES
+========================================================= */
+
 .nav-brain-eye{
+    position:relative;
+
+    z-index:2;
+
     width:6px;
     height:6px;
 
@@ -473,17 +954,29 @@
         0
         0
         10px
-        rgba(
-            255,
-            204,
-            118,
-            .55
-        );
+        rgba(255,204,118,.55);
+}
+
+.nav-brain-eye::after{
+    content:"";
+
+    position:absolute;
+
+    top:1px;
+    left:1px;
+
+    width:2px;
+    height:2px;
+
+    border-radius:50%;
+
+    background:
+        rgba(255,255,255,.72);
 }
 
 
 /* =========================================================
-   BRAIN LABEL
+   17. BRAIN LABEL
 ========================================================= */
 
 .nav-brain-label{
@@ -500,12 +993,7 @@
     overflow:hidden;
 
     color:
-        rgba(
-            225,
-            194,
-            137,
-            .62
-        );
+        rgba(225,194,137,.62);
 
     font-size:7px;
     font-weight:600;
@@ -513,15 +1001,81 @@
     line-height:1;
 
     text-align:center;
+
     text-overflow:ellipsis;
     white-space:nowrap;
 
     pointer-events:none;
+
+    text-shadow:
+        0
+        0
+        8px
+        rgba(225,194,137,.08);
 }
 
 
 /* =========================================================
-   ANIMATION
+   18. BRAIN ACTIVE / OPEN STATE SUPPORT
+========================================================= */
+
+.nav-brain-btn.active,
+.nav-brain-btn[aria-expanded="true"]{
+    filter:
+        brightness(1.07);
+}
+
+.nav-brain-btn.active
+.nav-brain-orbit,
+.nav-brain-btn[aria-expanded="true"]
+.nav-brain-orbit{
+    border-color:
+        rgba(238,202,130,.55);
+
+    box-shadow:
+        0
+        0
+        18px
+        rgba(224,188,125,.08);
+}
+
+.nav-brain-btn.active
+.nav-brain-core,
+.nav-brain-btn[aria-expanded="true"]
+.nav-brain-core{
+    border-color:
+        rgba(245,214,153,.72);
+
+    box-shadow:
+        inset
+        0
+        0
+        14px
+        rgba(112,183,230,.18),
+
+        0
+        0
+        0
+        3px
+        rgba(230,195,125,.055),
+
+        0
+        0
+        20px
+        rgba(85,163,234,.22);
+}
+
+.nav-brain-btn.active
+.nav-brain-label,
+.nav-brain-btn[aria-expanded="true"]
+.nav-brain-label{
+    color:
+        rgba(243,211,149,.84);
+}
+
+
+/* =========================================================
+   19. BRAIN ANIMATION
 ========================================================= */
 
 @keyframes navBrainBreath{
@@ -534,14 +1088,13 @@
 
     50%{
         transform:
-            scale(1.02);
+            scale(1.018);
     }
 
 }
 
-
 /* =========================================================
-   TABLET
+   20. TABLET
 ========================================================= */
 
 @media (max-width:820px){
@@ -553,18 +1106,34 @@
             );
 
         grid-template-columns:
-            1fr
-            1fr
+            minmax(0,1fr)
+            minmax(0,1fr)
             64px
-            1fr
-            1fr;
+            minmax(0,1fr)
+            minmax(0,1fr);
+
+        gap:2px;
+    }
+
+    .nav-brain-btn{
+        width:64px;
+        height:64px;
+
+        min-width:64px;
+        min-height:64px;
+
+        margin-top:-18px;
+    }
+
+    .nav-brain-core{
+        inset:17px;
     }
 
 }
 
 
 /* =========================================================
-   MOBILE
+   21. MOBILE
 ========================================================= */
 
 @media (max-width:600px){
@@ -574,7 +1143,8 @@
             calc(
                 6px +
                 env(
-                    safe-area-inset-bottom
+                    safe-area-inset-bottom,
+                    0px
                 )
             );
 
@@ -587,18 +1157,33 @@
         min-height:58px;
 
         grid-template-columns:
-            1fr
-            1fr
+            minmax(0,1fr)
+            minmax(0,1fr)
             58px
-            1fr
-            1fr;
+            minmax(0,1fr)
+            minmax(0,1fr);
+
+        gap:1px;
 
         padding:
             3px
             4px;
 
         border-radius:19px;
+
+        backdrop-filter:
+            blur(22px)
+            saturate(125%);
+
+        -webkit-backdrop-filter:
+            blur(22px)
+            saturate(125%);
     }
+
+
+    /* =====================================================
+       MOBILE NAV BUTTON
+    ===================================================== */
 
     .nav-btn{
         height:48px;
@@ -611,9 +1196,23 @@
         font-size:7px;
     }
 
+    .nav-btn.active::after{
+        bottom:1px;
+
+        width:2px;
+        height:2px;
+    }
+
+
+    /* =====================================================
+       MOBILE NAV ICON
+    ===================================================== */
+
     .nav-icon{
         width:24px;
         height:24px;
+
+        flex-basis:24px;
 
         margin-bottom:1px;
 
@@ -622,17 +1221,44 @@
         font-size:10px;
     }
 
+    .nav-icon::after{
+        inset:3px;
+
+        border-radius:5px;
+    }
+
+
+    /* =====================================================
+       MOBILE BRAIN
+    ===================================================== */
+
     .nav-brain-btn{
         width:58px;
         height:58px;
 
+        min-width:58px;
+        min-height:58px;
+
         margin-top:-17px;
+    }
+
+    .nav-brain-btn::after{
+        top:8px;
+        right:14px;
     }
 
     .nav-brain-core{
         inset:16px;
 
         gap:6px;
+    }
+
+    .nav-brain-core::after{
+        top:4px;
+        left:6px;
+
+        width:10px;
+        height:4px;
     }
 
     .nav-brain-eye{
@@ -652,7 +1278,7 @@
 
 
 /* =========================================================
-   SMALL PHONE
+   22. SMALL PHONE
 ========================================================= */
 
 @media (max-width:390px){
@@ -664,37 +1290,140 @@
             );
 
         grid-template-columns:
-            1fr
-            1fr
+            minmax(0,1fr)
+            minmax(0,1fr)
             54px
-            1fr
-            1fr;
+            minmax(0,1fr)
+            minmax(0,1fr);
 
-        padding-inline:
-            2px;
+        padding-inline:2px;
+
+        border-radius:18px;
     }
 
     .nav-brain-btn{
         width:54px;
         height:54px;
 
+        min-width:54px;
+        min-height:54px;
+
         margin-top:-15px;
+    }
+
+    .nav-brain-core{
+        inset:15px;
+
+        gap:5px;
+    }
+
+    .nav-brain-eye{
+        width:4px;
+        height:4px;
     }
 
     .nav-btn{
         font-size:6.5px;
     }
 
+    .nav-icon{
+        width:22px;
+        height:22px;
+
+        flex-basis:22px;
+
+        font-size:9px;
+    }
+
+    .nav-brain-label{
+        width:72px;
+
+        font-size:5.5px;
+    }
+
 }
 
 
 /* =========================================================
-   SHORT HEIGHT
+   23. EXTRA SMALL PHONE
+========================================================= */
+
+@media (max-width:350px){
+
+    .bottom-nav{
+        width:
+            calc(
+                100% - 8px
+            );
+
+        grid-template-columns:
+            minmax(0,1fr)
+            minmax(0,1fr)
+            50px
+            minmax(0,1fr)
+            minmax(0,1fr);
+
+        height:54px;
+        min-height:54px;
+
+        padding-inline:1px;
+    }
+
+    .nav-btn{
+        height:45px;
+        min-height:45px;
+
+        font-size:6px;
+    }
+
+    .nav-icon{
+        width:20px;
+        height:20px;
+
+        flex-basis:20px;
+
+        font-size:8px;
+    }
+
+    .nav-brain-btn{
+        width:50px;
+        height:50px;
+
+        min-width:50px;
+        min-height:50px;
+
+        margin-top:-14px;
+    }
+
+    .nav-brain-core{
+        inset:14px;
+    }
+
+    .nav-brain-label{
+        width:66px;
+
+        font-size:5px;
+    }
+
+}
+
+
+/* =========================================================
+   24. SHORT HEIGHT
 ========================================================= */
 
 @media (max-height:720px){
 
     .bottom-nav{
+        bottom:
+            calc(
+                5px +
+                env(
+                    safe-area-inset-bottom,
+                    0px
+                )
+            );
+
         height:54px;
         min-height:54px;
     }
@@ -704,18 +1433,301 @@
         min-height:45px;
     }
 
+    .nav-icon{
+        width:23px;
+        height:23px;
+
+        flex-basis:23px;
+    }
+
     .nav-brain-btn{
         width:54px;
         height:54px;
 
+        min-width:54px;
+        min-height:54px;
+
         margin-top:-15px;
+    }
+
+    .nav-brain-core{
+        inset:15px;
+    }
+
+    .nav-brain-label{
+        bottom:1px;
     }
 
 }
 
 
 /* =========================================================
-   REDUCED MOTION
+   25. VERY SHORT HEIGHT
+========================================================= */
+
+@media (max-height:620px){
+
+    .bottom-nav{
+        bottom:
+            calc(
+                4px +
+                env(
+                    safe-area-inset-bottom,
+                    0px
+                )
+            );
+
+        height:50px;
+        min-height:50px;
+
+        border-radius:17px;
+    }
+
+    .nav-btn{
+        height:42px;
+        min-height:42px;
+
+        font-size:6px;
+    }
+
+    .nav-icon{
+        width:21px;
+        height:21px;
+
+        flex-basis:21px;
+
+        font-size:8px;
+    }
+
+    .nav-brain-btn{
+        width:50px;
+        height:50px;
+
+        min-width:50px;
+        min-height:50px;
+
+        margin-top:-14px;
+    }
+
+    .nav-brain-core{
+        inset:14px;
+    }
+
+    .nav-brain-eye{
+        width:4px;
+        height:4px;
+    }
+
+    .nav-brain-label{
+        width:68px;
+
+        font-size:5px;
+    }
+
+}
+
+
+/* =========================================================
+   26. LANDSCAPE MOBILE
+========================================================= */
+
+@media
+(
+    orientation:landscape
+)
+and
+(
+    max-height:520px
+){
+
+    .bottom-nav{
+        bottom:
+            calc(
+                3px +
+                env(
+                    safe-area-inset-bottom,
+                    0px
+                )
+            );
+
+        width:
+            min(
+                560px,
+                calc(
+                    100% -
+                    max(
+                        18px,
+                        env(
+                            safe-area-inset-left,
+                            0px
+                        )
+                    ) -
+                    max(
+                        18px,
+                        env(
+                            safe-area-inset-right,
+                            0px
+                        )
+                    )
+                )
+            );
+
+        height:48px;
+        min-height:48px;
+
+        grid-template-columns:
+            minmax(0,1fr)
+            minmax(0,1fr)
+            48px
+            minmax(0,1fr)
+            minmax(0,1fr);
+
+        border-radius:16px;
+
+        padding:
+            2px
+            4px;
+    }
+
+    .nav-btn{
+        height:40px;
+        min-height:40px;
+
+        font-size:6px;
+    }
+
+    .nav-icon{
+        width:20px;
+        height:20px;
+
+        flex-basis:20px;
+
+        font-size:8px;
+    }
+
+    .nav-brain-btn{
+        width:48px;
+        height:48px;
+
+        min-width:48px;
+        min-height:48px;
+
+        margin-top:-13px;
+    }
+
+    .nav-brain-core{
+        inset:13px;
+    }
+
+    .nav-brain-label{
+        width:65px;
+
+        font-size:5px;
+    }
+
+}
+
+
+/* =========================================================
+   27. TOUCH DEVICES
+========================================================= */
+
+@media (hover:none){
+
+    .nav-btn:hover{
+        color:
+            var(--nav-text);
+
+        transform:none;
+    }
+
+    .nav-btn:hover::before{
+        opacity:0;
+    }
+
+    .nav-btn.active:hover{
+        color:
+            var(--nav-gold);
+    }
+
+    .nav-btn.active:hover::before{
+        opacity:1;
+    }
+
+    .nav-brain-btn:hover{
+        transform:none;
+
+        filter:none;
+    }
+
+    .nav-brain-btn:hover::before{
+        transform:none;
+
+        opacity:.72;
+    }
+
+    .nav-brain-btn:hover
+    .nav-brain-orbit{
+        transform:none;
+
+        border-color:
+            rgba(224,188,125,.34);
+    }
+
+    .nav-brain-btn:hover
+    .nav-brain-orbit::before{
+        transform:
+            rotate(25deg)
+            scaleY(.86);
+    }
+
+    .nav-brain-btn:hover
+    .nav-brain-orbit::after{
+        transform:
+            rotate(-31deg)
+            scaleY(.92);
+    }
+
+}
+
+
+/* =========================================================
+   28. IOS SAFE AREA STABILITY
+========================================================= */
+
+@supports (-webkit-touch-callout:none){
+
+    .bottom-nav{
+        bottom:
+            max(
+                8px,
+                env(
+                    safe-area-inset-bottom,
+                    0px
+                )
+            );
+    }
+
+    @media (max-width:600px){
+
+        .bottom-nav{
+            bottom:
+                max(
+                    6px,
+                    env(
+                        safe-area-inset-bottom,
+                        0px
+                    )
+                );
+        }
+
+    }
+
+}
+
+
+/* =========================================================
+   29. REDUCED MOTION
 ========================================================= */
 
 @media (prefers-reduced-motion:reduce){
@@ -725,8 +1737,124 @@
     }
 
     .nav-btn,
-    .nav-icon{
+    .nav-icon,
+    .nav-brain-btn,
+    .nav-brain-orbit,
+    .nav-brain-orbit::before,
+    .nav-brain-orbit::after{
         transition:none;
     }
 
 }
+
+
+/* =========================================================
+   30. HIGH CONTRAST
+========================================================= */
+
+@media (prefers-contrast:more){
+
+    .bottom-nav{
+        border-color:
+            rgba(255,255,255,.16);
+    }
+
+    .nav-btn{
+        color:
+            rgba(255,255,255,.7);
+    }
+
+    .nav-btn.active{
+        color:
+            #ffe0a1;
+    }
+
+    .nav-icon{
+        border-color:
+            rgba(255,255,255,.12);
+    }
+
+    .nav-brain-orbit{
+        border-color:
+            rgba(240,205,142,.55);
+    }
+
+}
+
+
+/* =========================================================
+   31. NAVIGATION STRUCTURE SAFETY
+========================================================= */
+
+.bottom-nav,
+.nav-btn,
+.nav-icon,
+.nav-brain-btn,
+.nav-brain-orbit,
+.nav-brain-core{
+    box-sizing:border-box;
+}
+
+.bottom-nav > *{
+    min-width:0;
+}
+
+.bottom-nav button{
+    font-family:inherit;
+}
+
+.bottom-nav,
+.nav-brain-btn{
+    touch-action:manipulation;
+}
+
+
+/* =========================================================
+   32. NAV LAYER SAFETY
+========================================================= */
+
+.bottom-nav{
+    pointer-events:auto;
+}
+
+.nav-btn,
+.nav-brain-btn{
+    pointer-events:auto;
+}
+
+.nav-brain-orbit,
+.nav-brain-core,
+.nav-brain-eye,
+.nav-brain-label{
+    pointer-events:none;
+}
+
+
+/* =========================================================
+   33. FINAL VISUAL POLISH
+========================================================= */
+
+.bottom-nav{
+    transform:
+        translate3d(
+            -50%,
+            0,
+            0
+        );
+
+    backface-visibility:hidden;
+
+    -webkit-backface-visibility:hidden;
+}
+
+.nav-btn,
+.nav-brain-btn{
+    backface-visibility:hidden;
+
+    -webkit-backface-visibility:hidden;
+}
+
+
+/* =========================================================
+   END — VAERO ENGINE GLOBAL NAVIGATION
+========================================================= */
