@@ -1,6 +1,22 @@
 /* =========================================================
    VAERO APP
-   Engine System Overview / Continuity / Intelligence Hub
+   Official VAERO Brand Application
+
+   Product / Atmosphere / Vision / Care / Payment Core
+
+   IMPORTANT
+   ---------------------------------------------------------
+   VAERO App is NOT the Engine system dashboard.
+
+   It is the official VAERO brand application living
+   inside VAERO Engine.
+
+   Archive inspiration:
+   • VAERO Device
+   • Atmospheres
+   • Verified experience
+   • VAERO Care
+   • "Vizyonunu yarat, dünyaya göster."
 ========================================================= */
 
 const VaeroApp = {
@@ -13,6 +29,234 @@ const VaeroApp = {
 
 
     /* =====================================================
+       STATE
+    ===================================================== */
+
+    activeView:
+        "discover",
+
+    activeProductId:
+        "device",
+
+    visionDraft:
+        null,
+
+
+    /* =====================================================
+       PRODUCT CATALOG
+    ===================================================== */
+
+    products:[
+
+        {
+            id:
+                "device",
+
+            type:
+                "device",
+
+            name:
+                "VAERO Device",
+
+            eyebrow:
+                "PERSONAL ATMOSPHERE SYSTEM",
+
+            subtitle:
+                "Atmosferin merkezindeki cihaz",
+
+            description:
+                "VAERO Device, bulunduğun ortamda kokuyu sürekli yoğunlaştırmak yerine dengeli ve kontrollü bir atmosfer deneyimi oluşturmak için tasarlanmıştır.",
+
+            featured:
+                true,
+
+            purchasable:
+                true,
+
+            amount:
+                2490,
+
+            currency:
+                "TRY",
+
+            atmosphere:
+                null,
+
+            tags:[
+                "device",
+                "atmosphere",
+                "vaero"
+            ]
+        },
+
+
+        {
+            id:
+                "white-tea",
+
+            type:
+                "atmosphere",
+
+            name:
+                "White Tea",
+
+            eyebrow:
+                "ATMOSPHERE 01",
+
+            subtitle:
+                "Temiz. Hafif. Dengeli.",
+
+            description:
+                "VAERO'nun ilk atmosferi. Ortama baskın bir parfüm hissi vermeden temiz ve dengeli bir karakter oluşturmak için tasarlandı.",
+
+            featured:
+                true,
+
+            purchasable:
+                false,
+
+            amount:
+                null,
+
+            currency:
+                null,
+
+            atmosphere:
+                "clean",
+
+            tags:[
+                "white-tea",
+                "clean",
+                "balanced"
+            ]
+        },
+
+
+        {
+            id:
+                "ocean",
+
+            type:
+                "atmosphere",
+
+            name:
+                "Ocean",
+
+            eyebrow:
+                "ATMOSPHERE 02",
+
+            subtitle:
+                "Serin. Açık. Ferah.",
+
+            description:
+                "Daha açık ve serin bir atmosfer isteyen kullanıcılar için geliştirilen ikinci VAERO atmosferi.",
+
+            featured:
+                false,
+
+            purchasable:
+                false,
+
+            amount:
+                null,
+
+            currency:
+                null,
+
+            atmosphere:
+                "fresh",
+
+            tags:[
+                "ocean",
+                "fresh",
+                "open"
+            ]
+        }
+
+    ],
+
+
+    /* =====================================================
+       ARCHIVE-INSPIRED EXPERIENCE LAYER
+    ===================================================== */
+
+    experiences:[
+
+        {
+            id:
+                "experience-white-tea",
+
+            productId:
+                "white-tea",
+
+            type:
+                "Deneyim",
+
+            title:
+                "White Tea atmosferi",
+
+            description:
+                "Temiz, hafif ve dengeli bir atmosfer karakteri."
+        },
+
+
+        {
+            id:
+                "experience-device",
+
+            productId:
+                "device",
+
+            type:
+                "Kullanım",
+
+            title:
+                "Tek koku değil, sistem",
+
+            description:
+                "VAERO Device atmosferi kontrollü şekilde yöneten ana sistemdir."
+        },
+
+
+        {
+            id:
+                "experience-care",
+
+            productId:
+                "device",
+
+            type:
+                "VAERO Care",
+
+            title:
+                "Satıştan sonra devam eder",
+
+            description:
+                "Kurulum, kullanım, bakım ve uygun durumlarda çözüm desteği VAERO Care katmanında devam eder."
+        },
+
+
+        {
+            id:
+                "experience-ocean",
+
+            productId:
+                "ocean",
+
+            type:
+                "Atmosfer",
+
+            title:
+                "Ocean",
+
+            description:
+                "White Tea'den sonra daha serin ve açık bir atmosfer yönü."
+        }
+
+    ],
+
+
+    /* =====================================================
        SAFETY
     ===================================================== */
 
@@ -21,11 +265,26 @@ const VaeroApp = {
         return String(
             value ?? ""
         )
-            .replaceAll("&", "&amp;")
-            .replaceAll("<", "&lt;")
-            .replaceAll(">", "&gt;")
-            .replaceAll('"', "&quot;")
-            .replaceAll("'", "&#039;");
+            .replaceAll(
+                "&",
+                "&amp;"
+            )
+            .replaceAll(
+                "<",
+                "&lt;"
+            )
+            .replaceAll(
+                ">",
+                "&gt;"
+            )
+            .replaceAll(
+                '"',
+                "&quot;"
+            )
+            .replaceAll(
+                "'",
+                "&#039;"
+            );
 
     },
 
@@ -39,15 +298,19 @@ const VaeroApp = {
         try{
 
             if(
-                typeof VAERO !== "undefined" &&
+                typeof VAERO !==
+                    "undefined" &&
                 VAERO.engine
             ){
+
                 return VAERO.engine;
+
             }
 
         } catch(error){
 
             /* fallback */
+
         }
 
 
@@ -64,16 +327,21 @@ const VaeroApp = {
         try{
 
             if(
-                typeof VAERO === "undefined" ||
+                typeof VAERO ===
+                    "undefined" ||
                 typeof VAERO.get !==
                     "function"
             ){
+
                 return null;
+
             }
 
 
             return (
-                VAERO.get(name) ||
+                VAERO.get(
+                    name
+                ) ||
                 null
             );
 
@@ -86,39 +354,206 @@ const VaeroApp = {
     },
 
 
-    safeAll(
-        service,
-        options = undefined
+    /* =====================================================
+       STORAGE
+    ===================================================== */
+
+    storageKeys:{
+
+        vision:
+            "vaero:brand:vision:draft:v1",
+
+        payment:
+            "vaero:payment:intents:v1",
+
+        entitlements:
+            "vaero:payment:entitlements:v1"
+
+    },
+
+
+    readJSON(
+        key,
+        fallback
     ){
 
+        try{
+
+            const raw =
+                localStorage.getItem(
+                    key
+                );
+
+
+            if(!raw){
+
+                return fallback;
+
+            }
+
+
+            return JSON.parse(
+                raw
+            );
+
+        } catch(error){
+
+            return fallback;
+
+        }
+
+    },
+
+
+    writeJSON(
+        key,
+        value
+    ){
+
+        try{
+
+            localStorage.setItem(
+                key,
+                JSON.stringify(
+                    value
+                )
+            );
+
+
+            return true;
+
+        } catch(error){
+
+            return false;
+
+        }
+
+    },
+
+
+    /* =====================================================
+       ID
+    ===================================================== */
+
+    createId(
+        prefix = "vaero"
+    ){
+
+        try{
+
+            if(
+                typeof crypto !==
+                    "undefined" &&
+                typeof crypto.randomUUID ===
+                    "function"
+            ){
+
+                return `${prefix}_${crypto.randomUUID()}`;
+
+            }
+
+        } catch(error){
+
+            /* fallback */
+
+        }
+
+
+        return `${prefix}_${Date.now()}_${Math.random()
+            .toString(36)
+            .slice(2,10)}`;
+
+    },
+
+
+    /* =====================================================
+       PRODUCT HELPERS
+    ===================================================== */
+
+    getProduct(id){
+
+        return (
+            this.products.find(
+                product =>
+                    product.id ===
+                    id
+            ) ||
+            null
+        );
+
+    },
+
+
+    getActiveProduct(){
+
+        return (
+            this.getProduct(
+                this.activeProductId
+            ) ||
+            this.products[0] ||
+            null
+        );
+
+    },
+
+
+    getProductExperiences(
+        productId
+    ){
+
+        return this.experiences.filter(
+            item =>
+                item.productId ===
+                productId
+        );
+
+    },
+
+
+    formatMoney(
+        amount,
+        currency
+    ){
+
+        const numeric =
+            Number(
+                amount
+            );
+
+
         if(
-            !service ||
-            typeof service.all !==
-                "function"
+            !Number.isFinite(
+                numeric
+            )
         ){
-            return [];
+
+            return "Yakında";
+
         }
 
 
         try{
 
-            const result =
-                options === undefined
-                    ? service.all()
-                    : service.all(
-                        options
-                    );
+            return new Intl.NumberFormat(
+                "tr-TR",
+                {
+                    style:
+                        "currency",
 
+                    currency:
+                        currency ||
+                        "TRY",
 
-            return Array.isArray(
-                result
-            )
-                ? result
-                : [];
+                    maximumFractionDigits:
+                        0
+                }
+            ).format(
+                numeric
+            );
 
         } catch(error){
 
-            return [];
+            return `${numeric} ${currency || "TRY"}`;
 
         }
 
@@ -129,7 +564,9 @@ const VaeroApp = {
        BRAIN CONTEXT
     ===================================================== */
 
-    enterBrainContext(){
+    enterBrainContext(
+        extra = {}
+    ){
 
         try{
 
@@ -158,8 +595,20 @@ const VaeroApp = {
                             ?.id ||
                         null,
 
-                    system:
-                        true
+                    brand:
+                        "VAERO",
+
+                    application:
+                        "vaero",
+
+                    view:
+                        this.activeView,
+
+                    productId:
+                        this.activeProductId ||
+                        null,
+
+                    ...extra
                 }
             );
 
@@ -176,286 +625,820 @@ const VaeroApp = {
 
 
     /* =====================================================
-       WORLDS
+       VIEW NAVIGATION
     ===================================================== */
 
-    getWorlds(){
+    openView(view){
 
-        const world =
-            this.getService(
-                "world"
-            );
+        const allowed = [
 
+            "discover",
+            "product",
+            "vision",
+            "care",
+            "payment"
 
-        try{
-
-            if(
-                world &&
-                typeof world.all ===
-                    "function"
-            ){
-
-                const result =
-                    world.all();
+        ];
 
 
-                return Array.isArray(
-                    result
-                )
-                    ? result
-                    : [];
+        if(
+            !allowed.includes(
+                view
+            )
+        ){
 
-            }
-
-        } catch(error){
-
-            return [];
+            return false;
 
         }
 
 
-        return [];
+        this.activeView =
+            view;
+
+
+        this.enterBrainContext();
+
+
+        return this.refresh();
+
+    },
+
+
+    openProduct(productId){
+
+        const product =
+            this.getProduct(
+                productId
+            );
+
+
+        if(!product){
+
+            return false;
+
+        }
+
+
+        this.activeProductId =
+            product.id;
+
+        this.activeView =
+            "product";
+
+
+        this.enterBrainContext({
+            productId:
+                product.id
+        });
+
+
+        return this.refresh();
+
+    },
+
+
+    backToDiscover(){
+
+        this.activeView =
+            "discover";
+
+
+        return this.refresh();
 
     },
 
 
     /* =====================================================
-       ENTITIES
+       RERENDER
     ===================================================== */
 
-    getEntities(){
+    refresh(){
 
-        const manager =
-            this.getService(
-                "entityManager"
+        const engine =
+            this.getEngine();
+
+
+        if(
+            engine &&
+            typeof engine.mount ===
+                "function"
+        ){
+
+            engine.mount(
+                engine.currentEntity
+            );
+
+
+            return true;
+
+        }
+
+
+        return false;
+
+    },
+
+
+    /* =====================================================
+       PAYMENT CORE
+    ===================================================== */
+
+    paymentCore:{
+
+        intents:[],
+
+
+        getHost(){
+
+            return (
+                window.VaeroApp ||
+                null
+            );
+
+        },
+
+
+        load(){
+
+            const host =
+                this.getHost();
+
+
+            if(!host){
+
+                this.intents =
+                    [];
+
+                return;
+            }
+
+
+            const saved =
+                host.readJSON(
+                    host.storageKeys.payment,
+                    []
+                );
+
+
+            this.intents =
+                Array.isArray(
+                    saved
+                )
+                    ? saved
+                    : [];
+
+        },
+
+
+        save(){
+
+            const host =
+                this.getHost();
+
+
+            if(!host){
+
+                return false;
+
+            }
+
+
+            return host.writeJSON(
+                host.storageKeys.payment,
+                this.intents
+            );
+
+        },
+
+
+        all(){
+
+            return this.intents.map(
+                intent => ({
+                    ...intent
+                })
+            );
+
+        },
+
+
+        get(intentId){
+
+            const intent =
+                this.intents.find(
+                    item =>
+                        item.id ===
+                        intentId
+                );
+
+
+            return intent
+                ? {
+                    ...intent
+                }
+                : null;
+
+        },
+
+
+        createIntent(
+            payload = {}
+        ){
+
+            const host =
+                this.getHost();
+
+
+            if(!host){
+
+                return null;
+
+            }
+
+
+            const amountValue =
+                Number(
+                    payload.amount
+                );
+
+
+            const amount =
+                Number.isFinite(
+                    amountValue
+                ) &&
+                amountValue >= 0
+                    ? amountValue
+                    : null;
+
+
+            const intent = {
+
+                id:
+                    host.createId(
+                        "payment"
+                    ),
+
+                source:
+                    String(
+                        payload.source ||
+                        "vaero"
+                    ),
+
+                productId:
+                    payload.productId ||
+                    null,
+
+                title:
+                    String(
+                        payload.title ||
+                        "VAERO Payment"
+                    ),
+
+                amount,
+
+                currency:
+                    payload.currency
+                        ? String(
+                            payload.currency
+                        )
+                            .trim()
+                            .toUpperCase()
+                        : null,
+
+                quantity:
+                    Math.max(
+                        1,
+                        Number(
+                            payload.quantity
+                        ) ||
+                        1
+                    ),
+
+                method:
+                    null,
+
+                provider:
+                    null,
+
+                status:
+                    "draft",
+
+                createdAt:
+                    Date.now(),
+
+                updatedAt:
+                    Date.now(),
+
+                metadata:
+                    (
+                        payload.metadata &&
+                        typeof payload.metadata ===
+                            "object"
+                    )
+                        ? {
+                            ...payload.metadata
+                        }
+                        : {}
+
+            };
+
+
+            this.intents.unshift(
+                intent
+            );
+
+
+            this.save();
+
+
+            return {
+                ...intent
+            };
+
+        },
+
+
+        setMethod(
+            intentId,
+            method
+        ){
+
+            const intent =
+                this.intents.find(
+                    item =>
+                        item.id ===
+                        intentId
+                );
+
+
+            if(
+                !intent ||
+                !method
+            ){
+
+                return false;
+
+            }
+
+
+            intent.method =
+                String(
+                    method
+                )
+                    .trim()
+                    .toLowerCase();
+
+
+            intent.status =
+                intent.provider
+                    ? "ready"
+                    : "draft";
+
+
+            intent.updatedAt =
+                Date.now();
+
+
+            this.save();
+
+
+            return {
+                ...intent
+            };
+
+        },
+
+
+        selectMethod(
+            intentId,
+            method
+        ){
+
+            return this.setMethod(
+                intentId,
+                method
+            );
+
+        },
+
+
+        setProvider(
+            intentId,
+            provider
+        ){
+
+            const intent =
+                this.intents.find(
+                    item =>
+                        item.id ===
+                        intentId
+                );
+
+
+            if(
+                !intent ||
+                !provider
+            ){
+
+                return false;
+
+            }
+
+
+            intent.provider =
+                String(
+                    provider
+                )
+                    .trim()
+                    .toLowerCase();
+
+
+            intent.status =
+                intent.method
+                    ? "ready"
+                    : "draft";
+
+
+            intent.updatedAt =
+                Date.now();
+
+
+            this.save();
+
+
+            return {
+                ...intent
+            };
+
+        },
+
+
+        selectProvider(
+            intentId,
+            provider
+        ){
+
+            return this.setProvider(
+                intentId,
+                provider
+            );
+
+        },
+
+
+        start(intentId){
+
+            const intent =
+                this.intents.find(
+                    item =>
+                        item.id ===
+                        intentId
+                );
+
+
+            if(!intent){
+
+                return false;
+
+            }
+
+
+            /*
+             * Gerçek provider henüz bu dosyada
+             * taklit edilmez.
+             *
+             * Kullanıcıdan ödeme alınmış gibi
+             * sahte "completed" üretmiyoruz.
+             */
+
+            if(
+                !intent.method ||
+                !intent.provider
+            ){
+
+                intent.status =
+                    "requires-selection";
+
+                intent.updatedAt =
+                    Date.now();
+
+
+                this.save();
+
+
+                return {
+                    ...intent
+                };
+
+            }
+
+
+            intent.status =
+                "awaiting-provider";
+
+            intent.updatedAt =
+                Date.now();
+
+
+            this.save();
+
+
+            return {
+                ...intent
+            };
+
+        },
+
+
+        startIntent(intentId){
+
+            return this.start(
+                intentId
+            );
+
+        },
+
+
+        cancel(intentId){
+
+            const intent =
+                this.intents.find(
+                    item =>
+                        item.id ===
+                        intentId
+                );
+
+
+            if(!intent){
+
+                return false;
+
+            }
+
+
+            if(
+                intent.status ===
+                    "completed" ||
+                intent.status ===
+                    "refunded"
+            ){
+
+                return false;
+
+            }
+
+
+            intent.status =
+                "cancelled";
+
+            intent.updatedAt =
+                Date.now();
+
+
+            this.save();
+
+
+            return {
+                ...intent
+            };
+
+        },
+
+
+        cancelIntent(intentId){
+
+            return this.cancel(
+                intentId
+            );
+
+        },
+
+
+        refund(transactionId){
+
+            const intent =
+                this.intents.find(
+                    item =>
+                        item.id ===
+                        transactionId
+                );
+
+
+            /*
+             * Yalnız doğrulanmış tamamlanmış işlem
+             * refund akışına alınabilir.
+             */
+
+            if(
+                !intent ||
+                intent.status !==
+                    "completed"
+            ){
+
+                return false;
+
+            }
+
+
+            intent.status =
+                "refund-requested";
+
+            intent.updatedAt =
+                Date.now();
+
+
+            this.save();
+
+
+            return {
+                ...intent
+            };
+
+        },
+
+
+        hasVerifiedEntitlement(
+            applicationId
+        ){
+
+            const host =
+                this.getHost();
+
+
+            if(!host){
+
+                return false;
+
+            }
+
+
+            const entitlements =
+                host.readJSON(
+                    host.storageKeys
+                        .entitlements,
+                    []
+                );
+
+
+            if(
+                !Array.isArray(
+                    entitlements
+                )
+            ){
+
+                return false;
+
+            }
+
+
+            return entitlements.some(
+                entitlement =>
+                    entitlement
+                        ?.applicationId ===
+                        applicationId &&
+                    entitlement
+                        ?.verified ===
+                        true &&
+                    entitlement
+                        ?.revoked !==
+                        true
+            );
+
+        }
+
+    },
+
+
+    getPaymentCore(){
+
+        return this.paymentCore;
+
+    },
+
+
+    /* =====================================================
+       PRODUCT → PAYMENT INTENT
+    ===================================================== */
+
+    startProductPurchase(
+        productId
+    ){
+
+        const product =
+            this.getProduct(
+                productId
             );
 
 
         if(
-            !manager ||
-            typeof manager.all !==
-                "function"
+            !product ||
+            product.purchasable !==
+                true
         ){
-            return [];
+
+            return false;
+
         }
 
 
-        try{
+        const intent =
+            this.paymentCore
+                .createIntent({
 
-            const result =
-                manager.all({
-                    includeArchived:false
+                    source:
+                        "vaero-product",
+
+                    productId:
+                        product.id,
+
+                    title:
+                        product.name,
+
+                    amount:
+                        product.amount,
+
+                    currency:
+                        product.currency,
+
+                    quantity:
+                        1,
+
+                    metadata:{
+                        productType:
+                            product.type,
+
+                        atmosphere:
+                            product.atmosphere
+                    }
+
                 });
 
 
-            return Array.isArray(
-                result
-            )
-                ? result
-                : [];
+        if(!intent){
 
-        } catch(error){
-
-            return [];
+            return false;
 
         }
+
+
+        const engine =
+            this.getEngine();
+
+
+        if(engine){
+
+            engine.currentVaeroPaymentIntent =
+                intent;
+
+        }
+
+
+        this.activeProductId =
+            product.id;
+
+        this.activeView =
+            "payment";
+
+
+        this.enterBrainContext({
+            paymentIntentId:
+                intent.id
+        });
+
+
+        return this.refresh();
 
     },
 
 
-    /* =====================================================
-       APPLICATIONS
-    ===================================================== */
+    getCurrentPaymentIntent(){
 
-    getApplicationRegistry(){
-
-        return (
-            this.getService(
-                "appRegistry"
-            ) ||
-            this.getService(
-                "applicationRegistry"
-            ) ||
-            (
-                typeof AppRegistry !==
-                    "undefined"
-                    ? AppRegistry
-                    : null
-            )
-        );
-
-    },
+        const engine =
+            this.getEngine();
 
 
-    getApplications(){
-
-        const registry =
-            this.getApplicationRegistry();
-
-
-        if(
-            !registry ||
-            typeof registry.all !==
-                "function"
-        ){
-            return [];
-        }
+        const current =
+            engine
+                ?.currentVaeroPaymentIntent;
 
 
-        try{
+        if(current?.id){
 
-            const apps =
-                registry.all();
-
-
-            return Array.isArray(
-                apps
-            )
-                ? apps
-                : [];
-
-        } catch(error){
-
-            return [];
-
-        }
-
-    },
-
-
-    /* =====================================================
-       ORGAN HEALTH
-    ===================================================== */
-
-    getOrganHealth(){
-
-        const status =
-            this.getService(
-                "organStatus"
-            );
-
-
-        if(
-            !status ||
-            typeof status.health !==
-                "function"
-        ){
-
-            return {
-
-                status:
-                    "unknown",
-
-                averageHealth:
-                    null,
-
-                total:
-                    0,
-
-                active:
-                    0,
-
-                problematic:[],
-
-                organs:[]
-
-            };
-
-        }
-
-
-        try{
-
-            const result =
-                status.health();
-
-
-            return (
-                result &&
-                typeof result ===
-                    "object"
-            )
-                ? result
-                : {
-                    status:"unknown",
-                    averageHealth:null,
-                    total:0,
-                    active:0,
-                    problematic:[],
-                    organs:[]
-                };
-
-        } catch(error){
-
-            return {
-                status:"unknown",
-                averageHealth:null,
-                total:0,
-                active:0,
-                problematic:[],
-                organs:[]
-            };
-
-        }
-
-    },
-
-
-    /* =====================================================
-       RUNTIME
-    ===================================================== */
-
-    getRuntimeReport(){
-
-        const runtime =
-            this.getService(
-                "runtime"
-            );
-
-
-        if(!runtime){
-
-            return null;
-        }
-
-
-        try{
-
-            if(
-                typeof runtime.report ===
-                    "function"
-            ){
-
-                return (
-                    runtime.report() ||
-                    null
+            const stored =
+                this.paymentCore.get(
+                    current.id
                 );
 
-            }
 
-        } catch(error){
+            if(stored){
 
-            /* fallback */
-        }
+                engine.currentVaeroPaymentIntent =
+                    stored;
 
 
-        try{
-
-            if(
-                typeof runtime.health ===
-                    "function"
-            ){
-
-                return (
-                    runtime.health() ||
-                    null
-                );
+                return stored;
 
             }
-
-        } catch(error){
-
-            return null;
 
         }
 
@@ -465,169 +1448,106 @@ const VaeroApp = {
     },
 
 
-    /* =====================================================
-       MEMORY
-    ===================================================== */
+    selectPaymentMethod(method){
 
-    getMemoryStats(){
-
-        const memory =
-            this.getService(
-                "memorySystem"
-            );
+        const intent =
+            this.getCurrentPaymentIntent();
 
 
-        const records =
-            this.safeAll(
-                memory
-            );
+        if(!intent){
 
-
-        return {
-
-            total:
-                records.filter(
-                    record =>
-                        record?.archived !==
-                            true
-                ).length,
-
-            important:
-                records.filter(
-                    record =>
-                        record?.archived !==
-                            true &&
-                        record?.important ===
-                            true
-                ).length
-
-        };
-
-    },
-
-
-    /* =====================================================
-       EVOLUTION
-    ===================================================== */
-
-    getEvolutionStats(){
-
-        const evolution =
-            this.getService(
-                "evolution"
-            );
-
-
-        if(!evolution){
-
-            return {
-                total:0,
-                xp:0,
-                level:1,
-                goals:0
-            };
+            return false;
 
         }
+
+
+        const updated =
+            this.paymentCore
+                .setMethod(
+                    intent.id,
+                    method
+                );
 
 
         const engine =
             this.getEngine();
 
 
-        const entityId =
-            engine?.currentEntity
-                ?.id ||
-            null;
+        if(
+            engine &&
+            updated
+        ){
 
-
-        let events = [];
-
-
-        try{
-
-            if(
-                entityId &&
-                typeof evolution.forEntity ===
-                    "function"
-            ){
-
-                events =
-                    evolution.forEntity(
-                        entityId
-                    );
-
-            } else {
-
-                events =
-                    this.safeAll(
-                        evolution
-                    );
-
-            }
-
-        } catch(error){
-
-            events =
-                [];
+            engine.currentVaeroPaymentIntent =
+                updated;
 
         }
 
 
-        const xp =
-            events.reduce(
-                (
-                    total,
-                    event
-                ) =>
-                    total +
-                    Math.max(
-                        0,
-                        Number(
-                            event?.xp
-                        ) ||
-                        0
-                    ),
-                0
-            );
-
-
-        return {
-
-            total:
-                events.length,
-
-            xp,
-
-            level:
-                Math.floor(
-                    xp / 100
-                ) + 1,
-
-            goals:
-                events.filter(
-                    event =>
-                        event?.type ===
-                            "goal" &&
-                        event?.status !==
-                            "completed" &&
-                        event?.status !==
-                            "cancelled"
-                ).length
-
-        };
+        return this.refresh();
 
     },
 
 
-    /* =====================================================
-       BRIDGE
-    ===================================================== */
+    selectPaymentProvider(
+        provider
+    ){
 
-    getBridgeStats(){
+        const intent =
+            this.getCurrentPaymentIntent();
 
-        const bridge =
-            this.getService(
-                "bridge"
+
+        if(!intent){
+
+            return false;
+
+        }
+
+
+        const updated =
+            this.paymentCore
+                .setProvider(
+                    intent.id,
+                    provider
+                );
+
+
+        const engine =
+            this.getEngine();
+
+
+        if(
+            engine &&
+            updated
+        ){
+
+            engine.currentVaeroPaymentIntent =
+                updated;
+
+        }
+
+
+        return this.refresh();
+
+    },
+
+
+    beginPayment(){
+
+        const intent =
+            this.getCurrentPaymentIntent();
+
+
+        if(!intent){
+
+            return false;
+
+        }
+
+
+        const updated =
+            this.paymentCore.start(
+                intent.id
             );
 
 
@@ -635,330 +1555,229 @@ const VaeroApp = {
             this.getEngine();
 
 
-        const entityId =
-            engine?.currentEntity
-                ?.id ||
-            null;
+        if(
+            engine &&
+            updated
+        ){
 
-
-        if(!bridge){
-
-            return {
-                total:0,
-                favorites:0
-            };
+            engine.currentVaeroPaymentIntent =
+                updated;
 
         }
 
 
-        let links = [];
+        return this.refresh();
+
+    },
 
 
-        try{
+    cancelPayment(){
 
-            if(
-                entityId &&
-                typeof bridge.forEntity ===
-                    "function"
-            ){
+        const intent =
+            this.getCurrentPaymentIntent();
 
-                links =
-                    bridge.forEntity(
-                        entityId
-                    );
 
-            } else {
+        if(!intent){
 
-                links =
-                    this.safeAll(
-                        bridge
-                    );
+            this.activeView =
+                "product";
 
-            }
 
-        } catch(error){
-
-            links =
-                [];
+            return this.refresh();
 
         }
 
 
-        return {
+        const updated =
+            this.paymentCore.cancel(
+                intent.id
+            );
 
-            total:
-                links.length,
 
-            favorites:
-                links.filter(
-                    link =>
-                        link?.favorite ===
-                            true
-                ).length
+        const engine =
+            this.getEngine();
 
-        };
+
+        if(
+            engine &&
+            updated
+        ){
+
+            engine.currentVaeroPaymentIntent =
+                updated;
+
+        }
+
+
+        this.activeView =
+            "product";
+
+
+        return this.refresh();
 
     },
 
 
     /* =====================================================
-       DISCOVERY
+       VISION STUDIO
     ===================================================== */
 
-    getDiscoveryResult(){
+    loadVisionDraft(){
 
-        try{
-
-            if(
-                window.DiscoveryApp &&
-                typeof window
-                    .DiscoveryApp
-                    .getResult ===
-                    "function"
-            ){
-
-                return (
-                    window
-                        .DiscoveryApp
-                        .getResult() ||
-                    null
-                );
-
-            }
-
-        } catch(error){
-
-            /* storage fallback */
-        }
+        const saved =
+            this.readJSON(
+                this.storageKeys.vision,
+                null
+            );
 
 
-        try{
-
-            const saved =
-                localStorage.getItem(
-                    "vaero:discovery:result:v2"
-                );
-
-
-            if(!saved){
-                return null;
-            }
-
-
-            const parsed =
-                JSON.parse(
-                    saved
-                );
-
-
-            return (
-                parsed &&
-                typeof parsed ===
+        this.visionDraft =
+            (
+                saved &&
+                typeof saved ===
                     "object" &&
                 !Array.isArray(
-                    parsed
+                    saved
                 )
             )
-                ? parsed
+                ? saved
                 : null;
 
-        } catch(error){
 
-            return null;
+        return this.visionDraft;
+
+    },
+
+
+    saveVision(){
+
+        const titleInput =
+            document.getElementById(
+                "vaeroVisionTitle"
+            );
+
+
+        const directionInput =
+            document.getElementById(
+                "vaeroVisionDirection"
+            );
+
+
+        const descriptionInput =
+            document.getElementById(
+                "vaeroVisionDescription"
+            );
+
+
+        const title =
+            String(
+                titleInput?.value ||
+                ""
+            ).trim();
+
+
+        const direction =
+            String(
+                directionInput?.value ||
+                ""
+            ).trim();
+
+
+        const description =
+            String(
+                descriptionInput?.value ||
+                ""
+            ).trim();
+
+
+        if(!title){
+
+            titleInput?.focus();
+
+            return false;
 
         }
 
-    },
 
+        const draft = {
 
-    /* =====================================================
-       CONTINUITY
-    ===================================================== */
-
-    getContinuity(){
-
-        const engine =
-            this.getEngine();
-
-
-        const worlds =
-            this.getWorlds();
-
-
-        const entities =
-            this.getEntities();
-
-
-        const memory =
-            this.getMemoryStats();
-
-
-        const evolution =
-            this.getEvolutionStats();
-
-
-        const bridge =
-            this.getBridgeStats();
-
-
-        const discovery =
-            this.getDiscoveryResult();
-
-
-        return {
-
-            currentEntity:
-                engine?.currentEntity ||
-                null,
-
-            currentWorld:
-                engine?.currentWorld ||
-                null,
-
-            worlds:
-                worlds.length,
-
-            entities:
-                entities.length,
-
-            memories:
-                memory.total,
-
-            importantMemories:
-                memory.important,
-
-            evolutionEvents:
-                evolution.total,
-
-            xp:
-                evolution.xp,
-
-            level:
-                evolution.level,
-
-            activeGoals:
-                evolution.goals,
-
-            connections:
-                bridge.total,
-
-            favoriteConnections:
-                bridge.favorites,
-
-            discoveryDirection:
-                discovery
-                    ?.primaryDirection
-                    ?.label ||
-                null,
-
-            brainMode:
-                discovery
-                    ?.signals
-                    ?.brainMode ||
-                null
-
-        };
-
-    },
-
-
-    /* =====================================================
-       SYSTEM SUMMARY
-    ===================================================== */
-
-    getSystemSummary(){
-
-        const engine =
-            this.getEngine();
-
-
-        const organs =
-            this.getOrganHealth();
-
-
-        const runtime =
-            this.getRuntimeReport();
-
-
-        const worlds =
-            this.getWorlds();
-
-
-        const entities =
-            this.getEntities();
-
-
-        const applications =
-            this.getApplications();
-
-
-        return {
-
-            engineStarted:
-                Boolean(
-                    engine?.started
+            id:
+                this.visionDraft?.id ||
+                this.createId(
+                    "vision"
                 ),
 
-            engineStartedAt:
-                engine?.startedAt ||
-                null,
+            title,
 
-            runtime,
+            direction,
 
-            worlds:
-                worlds.length,
+            description,
 
-            entities:
-                entities.length,
+            status:
+                "draft",
 
-            applications:
-                applications.length,
+            createdAt:
+                this.visionDraft
+                    ?.createdAt ||
+                Date.now(),
 
-            organHealth:
-                organs.averageHealth,
-
-            organStatus:
-                organs.status,
-
-            activeOrgans:
-                organs.active ||
-                0,
-
-            totalOrgans:
-                organs.total ||
-                0,
-
-            problematicOrgans:
-                Array.isArray(
-                    organs.problematic
-                )
-                    ? organs.problematic
-                    : []
+            updatedAt:
+                Date.now()
 
         };
 
+
+        this.visionDraft =
+            draft;
+
+
+        this.writeJSON(
+            this.storageKeys.vision,
+            draft
+        );
+
+
+        this.enterBrainContext({
+            visionId:
+                draft.id
+        });
+
+
+        return this.refresh();
+
     },
 
-
-    /* =====================================================
-       STATUS LABELS
+   /* =====================================================
+       VIEW LABELS
     ===================================================== */
 
-    getSystemStatusLabel(status){
+    getPaymentStatusLabel(status){
 
         const labels = {
 
-            healthy:
-                "Sağlıklı",
+            draft:
+                "Hazırlanıyor",
 
-            degraded:
-                "Dikkat",
+            ready:
+                "Ödemeye hazır",
 
-            critical:
-                "Kritik",
+            "requires-selection":
+                "Ödeme yöntemi seç",
 
-            unknown:
-                "Bilinmiyor"
+            "awaiting-provider":
+                "Ödeme sağlayıcısı bekleniyor",
+
+            cancelled:
+                "İptal edildi",
+
+            completed:
+                "Tamamlandı",
+
+            "refund-requested":
+                "İade talebi alındı",
+
+            refunded:
+                "İade edildi"
 
         };
 
@@ -967,125 +1786,107 @@ const VaeroApp = {
             labels[
                 status
             ] ||
-            "Bilinmiyor"
-        );
-
-    },
-
-
-    getBrainModeLabel(mode){
-
-        const labels = {
-
-            direction:
-                "Yön",
-
-            evolution:
-                "Gelişim",
-
-            connections:
-                "Eşleşme",
-
-            opportunities:
-                "Fırsat",
-
-            balanced:
-                "Dengeli"
-
-        };
-
-
-        return (
-            labels[
-                mode
-            ] ||
-            "Dengeli"
+            "Hazırlanıyor"
         );
 
     },
 
 
     /* =====================================================
-       TIME
+       HEADER
     ===================================================== */
 
-    formatStartedAt(value){
-
-        const timestamp =
-            Number(
-                value
-            );
-
-
-        if(
-            !Number.isFinite(
-                timestamp
-            ) ||
-            timestamp <= 0
-        ){
-            return "Bu oturum";
-        }
-
-
-        try{
-
-            return new Date(
-                timestamp
-            ).toLocaleString(
-                "tr-TR",
-                {
-                    day:"2-digit",
-                    month:"short",
-                    hour:"2-digit",
-                    minute:"2-digit"
-                }
-            );
-
-        } catch(error){
-
-            return "Bu oturum";
-
-        }
-
-    },
-
-
-    /* =====================================================
-       STAT CARD
-    ===================================================== */
-
-    renderStat(
-        label,
-        value,
-        detail = ""
-    ){
+    renderHeader(){
 
         return `
-            <div class="vaero-system-stat">
+            <header class="vaero-commerce-header">
 
-                <span>
-                    ${this.escapeHTML(
-                        label
-                    )}
-                </span>
+                <div>
 
-                <strong>
-                    ${this.escapeHTML(
-                        value
-                    )}
-                </strong>
+                    <span class="vaero-commerce-eyebrow">
+                        PERSONAL ATMOSPHERE SYSTEM
+                    </span>
 
-                ${
-                    detail
-                        ? `
-                            <small>
-                                ${this.escapeHTML(
-                                    detail
-                                )}
-                            </small>
-                          `
-                        : ""
-                }
+                    <h1>
+                        VAERO
+                    </h1>
+
+                    <p>
+                        Bu bir koku değil. Bir atmosfer.
+                    </p>
+
+                </div>
+
+
+                <button
+                    type="button"
+                    class="vaero-commerce-id-btn"
+                    onclick="VaeroApp.openView('care')"
+                >
+                    VAERO
+
+                    <span>
+                        V
+                    </span>
+                </button>
+
+            </header>
+        `;
+
+    },
+
+
+    /* =====================================================
+       APP NAVIGATION
+    ===================================================== */
+
+    renderNavigation(){
+
+        return `
+            <div class="vaero-commerce-actions">
+
+                <button
+                    type="button"
+                    class="${
+                        this.activeView ===
+                            "discover" ||
+                        this.activeView ===
+                            "product"
+                            ? "is-active"
+                            : ""
+                    }"
+                    onclick="VaeroApp.openView('discover')"
+                >
+                    Keşfet
+                </button>
+
+
+                <button
+                    type="button"
+                    class="${
+                        this.activeView ===
+                            "vision"
+                            ? "is-active"
+                            : ""
+                    }"
+                    onclick="VaeroApp.openView('vision')"
+                >
+                    Vizyon
+                </button>
+
+
+                <button
+                    type="button"
+                    class="${
+                        this.activeView ===
+                            "care"
+                            ? "is-active"
+                            : ""
+                    }"
+                    onclick="VaeroApp.openView('care')"
+                >
+                    Care
+                </button>
 
             </div>
         `;
@@ -1094,395 +1895,259 @@ const VaeroApp = {
 
 
     /* =====================================================
-       SYSTEM HERO
+       DISCOVER HERO
     ===================================================== */
 
-    renderHero(
-        summary,
-        continuity
-    ){
-
-        const engine =
-            this.getEngine();
-
-
-        const entityName =
-            engine
-                ?.currentEntity
-                ?.name ||
-            "VAERO Entity";
-
+    renderDiscoverHero(){
 
         return `
-            <section class="vaero-system-hero">
+            <div class="vaero-core-status">
 
-                <div class="vaero-system-hero-copy">
+                <div>
 
-                    <span class="engine-section-label">
-                        LIVING ENGINE
-                    </span>
-
-
-                    <h1>
-                        VAERO
-                    </h1>
-
-
-                    <p>
-                        Dünyalarını, varlıklarını, hafızanı, bağlantılarını ve kişisel Brain bağlamını tek yaşayan sistem içinde birleştirir.
-                    </p>
-
-
-                    <div class="vaero-system-hero-context">
-
-                        <span>
-                            Aktif varlık
-                            <strong>
-                                ${this.escapeHTML(
-                                    entityName
-                                )}
-                            </strong>
-                        </span>
-
-
-                        <span>
-                            Seviye
-                            <strong>
-                                ${continuity.level}
-                            </strong>
-                        </span>
-
-
-                        <span>
-                            Sistem
-                            <strong>
-                                ${this.escapeHTML(
-                                    this.getSystemStatusLabel(
-                                        summary.organStatus
-                                    )
-                                )}
-                            </strong>
-                        </span>
-
-                    </div>
-
-                </div>
-
-
-                <div class="vaero-system-mark">
-
-                    <span>
-                        V
-                    </span>
+                    <strong>
+                        Kişisel atmosferini oluştur
+                    </strong>
 
                     <small>
-                        ENGINE
+                        Cihaz, atmosfer ve yaşam alanın tek VAERO deneyiminde birleşir.
                     </small>
 
                 </div>
 
-            </section>
+
+                <span class="vaero-commerce-eyebrow">
+                    VAERO
+                </span>
+
+            </div>
         `;
 
     },
 
 
     /* =====================================================
-       QUICK ACTIONS
+       PRODUCTS
     ===================================================== */
 
-    renderQuickActions(){
+    renderProducts(){
 
         return `
-            <section class="vaero-system-actions">
+            <div class="vaero-cart-items">
 
-                <button
-                    type="button"
-                    data-action="worlds"
-                >
+                ${this.products
+                    .map(
+                        product => `
+                            <button
+                                type="button"
+                                class="vaero-cart-item"
+                                onclick="VaeroApp.openProduct('${this.escapeHTML(
+                                    product.id
+                                )}')"
+                            >
 
-                    <span>
-                        ◉
-                    </span>
+                                <div class="vaero-cart-item-copy">
 
-                    <strong>
-                        Worlds
-                    </strong>
-
-                    <small>
-                        Dünyalarını yönet
-                    </small>
-
-                </button>
-
-
-                <button
-                    type="button"
-                    data-action="app:applications"
-                >
-
-                    <span>
-                        ▦
-                    </span>
-
-                    <strong>
-                        Applications
-                    </strong>
-
-                    <small>
-                        Uygulama katmanını aç
-                    </small>
-
-                </button>
-
-
-                <button
-                    type="button"
-                    data-action="brain:open"
-                >
-
-                    <span>
-                        ◇
-                    </span>
-
-                    <strong>
-                        Brain
-                    </strong>
-
-                    <small>
-                        Sistem zekâsını aç
-                    </small>
-
-                </button>
-
-
-                <button
-                    type="button"
-                    data-action="create"
-                >
-
-                    <span>
-                        ＋
-                    </span>
-
-                    <strong>
-                        Oluştur
-                    </strong>
-
-                    <small>
-                        Yeni World veya Entity
-                    </small>
-
-                </button>
-
-            </section>
-        `;
-
-    },
-
-
-    /* =====================================================
-       CONTINUITY
-    ===================================================== */
-
-    renderContinuity(continuity){
-
-        return `
-            <section class="vaero-system-panel">
-
-                <header>
-
-                    <span class="engine-section-label">
-                        CONTINUITY
-                    </span>
-
-                    <h2>
-                        Sistem seninle birlikte birikiyor
-                    </h2>
-
-                    <p>
-                        VAERO'nun kişisel süreklilik katmanı; dünyalar, hafıza, gelişim ve bağlantılar arasında bağ kurar.
-                    </p>
-
-                </header>
-
-
-                <div class="vaero-system-stat-grid">
-
-                    ${this.renderStat(
-                        "WORLD",
-                        continuity.worlds
-                    )}
-
-
-                    ${this.renderStat(
-                        "ENTITY",
-                        continuity.entities
-                    )}
-
-
-                    ${this.renderStat(
-                        "MEMORY",
-                        continuity.memories,
-                        continuity.importantMemories
-                            ? `${continuity.importantMemories} önemli`
-                            : ""
-                    )}
-
-
-                    ${this.renderStat(
-                        "BRIDGE",
-                        continuity.connections,
-                        continuity.favoriteConnections
-                            ? `${continuity.favoriteConnections} favori`
-                            : ""
-                    )}
-
-
-                    ${this.renderStat(
-                        "EVOLUTION",
-                        continuity.evolutionEvents,
-                        `${continuity.xp} XP`
-                    )}
-
-
-                    ${this.renderStat(
-                        "AKTİF HEDEF",
-                        continuity.activeGoals
-                    )}
-
-                </div>
-
-            </section>
-        `;
-
-    },
-
-
-    /* =====================================================
-       DIRECTION
-    ===================================================== */
-
-    renderDirection(continuity){
-
-        return `
-            <section class="vaero-system-panel">
-
-                <header>
-
-                    <span class="engine-section-label">
-                        PERSONAL DIRECTION
-                    </span>
-
-                    <h2>
-                        İlk yön
-                    </h2>
-
-                </header>
-
-
-                ${
-                    continuity.discoveryDirection
-                        ? `
-                            <div class="vaero-direction-card">
-
-                                <div>
-
-                                    <span>
-                                        Discovery yönü
+                                    <span class="vaero-product-type">
+                                        ${this.escapeHTML(
+                                            product.eyebrow
+                                        )}
                                     </span>
 
                                     <strong>
                                         ${this.escapeHTML(
-                                            continuity.discoveryDirection
+                                            product.name
                                         )}
                                     </strong>
+
+                                    <small>
+                                        ${this.escapeHTML(
+                                            product.subtitle
+                                        )}
+                                    </small>
 
                                 </div>
 
 
                                 <div>
 
-                                    <span>
-                                        Brain modu
-                                    </span>
-
-                                    <strong>
-                                        ${this.escapeHTML(
-                                            this.getBrainModeLabel(
-                                                continuity.brainMode
-                                            )
-                                        )}
-                                    </strong>
+                                    ${
+                                        product.purchasable
+                                            ? `
+                                                <strong>
+                                                    ${this.escapeHTML(
+                                                        this.formatMoney(
+                                                            product.amount,
+                                                            product.currency
+                                                        )
+                                                    )}
+                                                </strong>
+                                              `
+                                            : `
+                                                <small>
+                                                    Keşfet
+                                                </small>
+                                              `
+                                    }
 
                                 </div>
 
-                            </div>
-                          `
-                        : `
-                            <div class="engine-empty-state">
+                            </button>
+                        `
+                    )
+                    .join("")}
 
-                                <strong>
-                                    Discovery yönü bulunamadı
-                                </strong>
-
-                                İlk Discovery Journey tamamlandığında kişisel yön burada görünür.
-
-                            </div>
-                          `
-                }
-
-            </section>
+            </div>
         `;
 
     },
 
 
     /* =====================================================
-       ENGINE HEALTH
+       DISCOVER
     ===================================================== */
 
-    renderEngineHealth(summary){
+    renderDiscover(){
 
-        const healthValue =
-            Number.isFinite(
-                Number(
-                    summary.organHealth
-                )
-            )
-                ? `${summary.organHealth}%`
-                : "—";
+        return `
+            ${this.renderDiscoverHero()}
+
+
+            <div class="vaero-commerce-section-head">
+
+                <span>
+                    ATMOSPHERE COLLECTION
+                </span>
+
+                <button
+                    type="button"
+                    onclick="VaeroApp.openProduct('device')"
+                >
+                    Cihazı gör
+                </button>
+
+            </div>
+
+
+            ${this.renderProducts()}
+
+
+            <div class="vaero-payment-intent">
+
+                <strong>
+                    Kendi vizyonunu yarat
+                </strong>
+
+                <small>
+                    Bir atmosfer, ürün veya yaşam fikri oluştur. VAERO bunu zamanla Brain, topluluk ve yaratıcı araçlarla geliştirecek.
+                </small>
+
+
+                <div class="vaero-commerce-actions">
+
+                    <button
+                        type="button"
+                        onclick="VaeroApp.openView('vision')"
+                    >
+                        Vizyon Stüdyosu
+                    </button>
+
+                </div>
+
+            </div>
+        `;
+
+    },
+
+
+    /* =====================================================
+       PRODUCT DETAIL
+    ===================================================== */
+
+    renderProduct(){
+
+        const product =
+            this.getActiveProduct();
+
+
+        if(!product){
+
+            return this.renderDiscover();
+
+        }
+
+
+        const experiences =
+            this.getProductExperiences(
+                product.id
+            );
 
 
         return `
-            <section class="vaero-system-panel">
+            <div class="vaero-commerce-section-head">
 
-                <header>
+                <span>
+                    ${this.escapeHTML(
+                        product.eyebrow
+                    )}
+                </span>
 
-                    <span class="engine-section-label">
-                        ENGINE HEALTH
-                    </span>
+                <button
+                    type="button"
+                    onclick="VaeroApp.backToDiscover()"
+                >
+                    ← Koleksiyon
+                </button>
 
-                    <h2>
-                        Sistem durumu
-                    </h2>
-
-                </header>
+            </div>
 
 
-                <div class="vaero-engine-health">
+            <div class="vaero-payment-intent">
+
+                <strong>
+                    ${this.escapeHTML(
+                        product.name
+                    )}
+                </strong>
+
+                <small>
+                    ${this.escapeHTML(
+                        product.description
+                    )}
+                </small>
+
+
+                <div class="vaero-payment-meta">
 
                     <div>
 
                         <span>
-                            Engine
+                            TÜR
+                        </span>
+
+                        <strong>
+                            ${this.escapeHTML(
+                                product.type ===
+                                    "device"
+                                    ? "Device"
+                                    : "Atmosphere"
+                            )}
+                        </strong>
+
+                    </div>
+
+
+                    <div>
+
+                        <span>
+                            DURUM
                         </span>
 
                         <strong>
                             ${
-                                summary.engineStarted
-                                    ? "Çalışıyor"
-                                    : "Hazır değil"
+                                product.purchasable
+                                    ? "Satışta"
+                                    : "Koleksiyon"
                             }
                         </strong>
 
@@ -1492,13 +2157,11 @@ const VaeroApp = {
                     <div>
 
                         <span>
-                            Organ Health
+                            MARKA
                         </span>
 
                         <strong>
-                            ${this.escapeHTML(
-                                healthValue
-                            )}
+                            VAERO
                         </strong>
 
                     </div>
@@ -1507,110 +2170,450 @@ const VaeroApp = {
                     <div>
 
                         <span>
-                            Aktif Organ
+                            FİYAT
                         </span>
 
                         <strong>
-                            ${summary.activeOrgans}
-                            /
-                            ${summary.totalOrgans}
-                        </strong>
-
-                    </div>
-
-
-                    <div>
-
-                        <span>
-                            Applications
-                        </span>
-
-                        <strong>
-                            ${summary.applications}
+                            ${
+                                product.amount !==
+                                    null
+                                    ? this.escapeHTML(
+                                        this.formatMoney(
+                                            product.amount,
+                                            product.currency
+                                        )
+                                    )
+                                    : "—"
+                            }
                         </strong>
 
                     </div>
 
                 </div>
 
+            </div>
+
+
+            ${
+                experiences.length
+                    ? `
+                        <div class="vaero-cart-items">
+
+                            ${experiences
+                                .map(
+                                    experience => `
+                                        <div class="vaero-cart-item">
+
+                                            <div class="vaero-cart-item-copy">
+
+                                                <span class="vaero-product-type">
+                                                    ${this.escapeHTML(
+                                                        experience.type
+                                                    )}
+                                                </span>
+
+                                                <strong>
+                                                    ${this.escapeHTML(
+                                                        experience.title
+                                                    )}
+                                                </strong>
+
+                                                <small>
+                                                    ${this.escapeHTML(
+                                                        experience.description
+                                                    )}
+                                                </small>
+
+                                            </div>
+
+                                        </div>
+                                    `
+                                )
+                                .join("")}
+
+                        </div>
+                      `
+                    : ""
+            }
+
+
+            <div class="vaero-commerce-actions">
 
                 ${
-                    summary.problematicOrgans
-                        .length
+                    product.purchasable
                         ? `
-                            <div class="vaero-system-warning">
-
-                                <strong>
-                                    Dikkat isteyen organlar
-                                </strong>
-
-                                <p>
-                                    ${this.escapeHTML(
-                                        summary
-                                            .problematicOrgans
-                                            .join(", ")
-                                    )}
-                                </p>
-
-                            </div>
+                            <button
+                                type="button"
+                                onclick="VaeroApp.startProductPurchase('${this.escapeHTML(
+                                    product.id
+                                )}')"
+                            >
+                                Satın Al
+                            </button>
                           `
-                        : ""
+                        : `
+                            <button
+                                type="button"
+                                onclick="VaeroApp.openView('vision')"
+                            >
+                                Atmosferden İlham Al
+                            </button>
+                          `
                 }
 
-            </section>
+
+                <button
+                    type="button"
+                    onclick="VaeroApp.openView('care')"
+                >
+                    VAERO Care
+                </button>
+
+            </div>
         `;
 
     },
 
 
     /* =====================================================
-       CURRENT CONTEXT
+       VISION STUDIO
     ===================================================== */
 
-    renderCurrentContext(){
+    renderVision(){
 
-        const engine =
-            this.getEngine();
-
-
-        const entity =
-            engine?.currentEntity ||
-            null;
-
-
-        const world =
-            engine?.currentWorld ||
-            null;
+        const draft =
+            this.visionDraft ||
+            this.loadVisionDraft();
 
 
         return `
-            <section class="vaero-system-panel">
+            <div class="vaero-commerce-section-head">
 
-                <header>
+                <span>
+                    VISION STUDIO
+                </span>
 
-                    <span class="engine-section-label">
-                        CURRENT CONTEXT
+                <button
+                    type="button"
+                    onclick="VaeroApp.openView('discover')"
+                >
+                    ← VAERO
+                </button>
+
+            </div>
+
+
+            <div class="vaero-payment-intent">
+
+                <strong>
+                    Vizyonunu yarat, dünyaya göster.
+                </strong>
+
+                <small>
+                    Eski VAERO vizyonunun yeni Engine karşılığı. Burada fikir önce sana ait bir taslak olarak doğar; ileride Brain ve topluluk katmanlarıyla gelişebilir.
+                </small>
+
+            </div>
+
+
+            <div class="engine-field">
+
+                <span>
+                    Vizyon adı
+                </span>
+
+                <input
+                    id="vaeroVisionTitle"
+                    type="text"
+                    maxlength="80"
+                    autocomplete="off"
+                    placeholder="Örn. Midnight Atmosphere"
+                    value="${this.escapeHTML(
+                        draft?.title ||
+                        ""
+                    )}"
+                >
+
+            </div>
+
+
+            <div class="engine-field">
+
+                <span>
+                    Yön
+                </span>
+
+                <input
+                    id="vaeroVisionDirection"
+                    type="text"
+                    maxlength="100"
+                    autocomplete="off"
+                    placeholder="Atmosfer, ürün, moda, yaşam..."
+                    value="${this.escapeHTML(
+                        draft?.direction ||
+                        ""
+                    )}"
+                >
+
+            </div>
+
+
+            <div class="engine-field">
+
+                <span>
+                    Vizyon
+                </span>
+
+                <textarea
+                    id="vaeroVisionDescription"
+                    maxlength="700"
+                    rows="4"
+                    placeholder="Ne hissettirmeli? Nasıl görünmeli? İnsanların hayatında ne değiştirmeli?"
+                >${this.escapeHTML(
+                    draft?.description ||
+                    ""
+                )}</textarea>
+
+            </div>
+
+
+            <div class="vaero-commerce-actions">
+
+                <button
+                    type="button"
+                    onclick="VaeroApp.saveVision()"
+                >
+                    Taslağı Kaydet
+                </button>
+
+            </div>
+
+
+            ${
+                draft
+                    ? `
+                        <div class="vaero-payment-status">
+
+                            <strong>
+                                Vizyon taslağın kayıtlı
+                            </strong>
+
+                            <small>
+                                ${this.escapeHTML(
+                                    draft.title
+                                )}
+                            </small>
+
+                        </div>
+                      `
+                    : ""
+            }
+        `;
+
+    },
+
+
+    /* =====================================================
+       CARE
+    ===================================================== */
+
+    renderCare(){
+
+        return `
+            <div class="vaero-commerce-section-head">
+
+                <span>
+                    VAERO CARE
+                </span>
+
+                <button
+                    type="button"
+                    onclick="VaeroApp.openView('discover')"
+                >
+                    ← VAERO
+                </button>
+
+            </div>
+
+
+            <div class="vaero-core-status">
+
+                <div>
+
+                    <strong>
+                        Satıştan sonra da VAERO
+                    </strong>
+
+                    <small>
+                        Cihaz kullanımı, kurulum, bakım ve atmosfer deneyimin için destek katmanı.
+                    </small>
+
+                </div>
+
+            </div>
+
+
+            <div class="vaero-cart-items">
+
+                <div class="vaero-cart-item">
+
+                    <div class="vaero-cart-item-copy">
+
+                        <span class="vaero-product-type">
+                            DEVICE
+                        </span>
+
+                        <strong>
+                            Kurulum
+                        </strong>
+
+                        <small>
+                            Cihazın ilk kullanım ve yerleşim yönlendirmeleri.
+                        </small>
+
+                    </div>
+
+                </div>
+
+
+                <div class="vaero-cart-item">
+
+                    <div class="vaero-cart-item-copy">
+
+                        <span class="vaero-product-type">
+                            ATMOSPHERE
+                        </span>
+
+                        <strong>
+                            Kullanım
+                        </strong>
+
+                        <small>
+                            Atmosfer yoğunluğu ve kullanım alışkanlığı konusunda rehberlik.
+                        </small>
+
+                    </div>
+
+                </div>
+
+
+                <div class="vaero-cart-item">
+
+                    <div class="vaero-cart-item-copy">
+
+                        <span class="vaero-product-type">
+                            CARE
+                        </span>
+
+                        <strong>
+                            Destek
+                        </strong>
+
+                        <small>
+                            Ürün deneyimin devam ederken ihtiyaç duyduğun VAERO desteği.
+                        </small>
+
+                    </div>
+
+                </div>
+
+            </div>
+        `;
+
+    },
+
+
+    /* =====================================================
+       PAYMENT
+    ===================================================== */
+
+    renderPayment(){
+
+        const intent =
+            this.getCurrentPaymentIntent();
+
+
+        const product =
+            this.getActiveProduct();
+
+
+        if(
+            !intent ||
+            !product
+        ){
+
+            return `
+                <div class="vaero-payment-empty">
+
+                    <strong>
+                        Aktif ödeme bulunamadı
+                    </strong>
+
+                    <span>
+                        Önce bir VAERO ürünü seç.
                     </span>
 
-                    <h2>
-                        Şu an neredesin?
-                    </h2>
+                    <div class="vaero-commerce-actions">
 
-                </header>
+                        <button
+                            type="button"
+                            onclick="VaeroApp.openView('discover')"
+                        >
+                            Koleksiyona Dön
+                        </button>
+
+                    </div>
+
+                </div>
+            `;
+
+        }
 
 
-                <div class="vaero-context-list">
+        return `
+            <div class="vaero-commerce-section-head">
+
+                <span>
+                    SECURE PURCHASE
+                </span>
+
+                <button
+                    type="button"
+                    onclick="VaeroApp.cancelPayment()"
+                >
+                    İptal
+                </button>
+
+            </div>
+
+
+            <div class="vaero-payment-intent">
+
+                <strong>
+                    ${this.escapeHTML(
+                        product.name
+                    )}
+                </strong>
+
+                <small>
+                    VAERO Engine ödeme niyeti oluşturuldu.
+                </small>
+
+
+                <div class="vaero-payment-meta">
 
                     <div>
 
                         <span>
-                            World
+                            TUTAR
                         </span>
 
                         <strong>
                             ${this.escapeHTML(
-                                world?.name ||
-                                "World seçilmedi"
+                                this.formatMoney(
+                                    intent.amount,
+                                    intent.currency
+                                )
                             )}
                         </strong>
 
@@ -1620,13 +2623,26 @@ const VaeroApp = {
                     <div>
 
                         <span>
-                            Entity
+                            ADET
+                        </span>
+
+                        <strong>
+                            ${intent.quantity}
+                        </strong>
+
+                    </div>
+
+
+                    <div>
+
+                        <span>
+                            YÖNTEM
                         </span>
 
                         <strong>
                             ${this.escapeHTML(
-                                entity?.name ||
-                                "Entity seçilmedi"
+                                intent.method ||
+                                "Seçilmedi"
                             )}
                         </strong>
 
@@ -1636,29 +2652,13 @@ const VaeroApp = {
                     <div>
 
                         <span>
-                            Entity türü
+                            DURUM
                         </span>
 
                         <strong>
                             ${this.escapeHTML(
-                                entity?.type ||
-                                "—"
-                            )}
-                        </strong>
-
-                    </div>
-
-
-                    <div>
-
-                        <span>
-                            Engine başlangıcı
-                        </span>
-
-                        <strong>
-                            ${this.escapeHTML(
-                                this.formatStartedAt(
-                                    engine?.startedAt
+                                this.getPaymentStatusLabel(
+                                    intent.status
                                 )
                             )}
                         </strong>
@@ -1667,50 +2667,161 @@ const VaeroApp = {
 
                 </div>
 
+            </div>
 
-                ${
-                    entity
-                        ? `
-                            <button
-                                type="button"
-                                class="secondary-btn"
-                                data-action="entity:dashboard"
-                            >
-                                Varlığı Aç
-                            </button>
-                          `
-                        : ""
-                }
 
-            </section>
+            <div class="vaero-payment-methods">
+
+                <strong>
+                    Ödeme yöntemi
+                </strong>
+
+                <small>
+                    Kullanacağın yöntemi seç.
+                </small>
+
+
+                <div class="vaero-commerce-actions">
+
+                    <button
+                        type="button"
+                        class="${
+                            intent.method ===
+                                "card"
+                                ? "is-active"
+                                : ""
+                        }"
+                        onclick="VaeroApp.selectPaymentMethod('card')"
+                    >
+                        Kart
+                    </button>
+
+
+                    <button
+                        type="button"
+                        class="${
+                            intent.method ===
+                                "bank"
+                                ? "is-active"
+                                : ""
+                        }"
+                        onclick="VaeroApp.selectPaymentMethod('bank')"
+                    >
+                        Banka
+                    </button>
+
+                </div>
+
+            </div>
+
+
+            <div class="vaero-payment-methods">
+
+                <strong>
+                    Sağlayıcı
+                </strong>
+
+                <small>
+                    Gerçek ödeme sağlayıcısı bağlandığında işlem bu katmandan devredilecek.
+                </small>
+
+
+                <div class="vaero-commerce-actions">
+
+                    <button
+                        type="button"
+                        class="${
+                            intent.provider ===
+                                "vaero-checkout"
+                                ? "is-active"
+                                : ""
+                        }"
+                        onclick="VaeroApp.selectPaymentProvider('vaero-checkout')"
+                    >
+                        VAERO Checkout
+                    </button>
+
+                </div>
+
+            </div>
+
+
+            <div class="vaero-payment-status">
+
+                <strong>
+                    ${this.escapeHTML(
+                        this.getPaymentStatusLabel(
+                            intent.status
+                        )
+                    )}
+                </strong>
+
+                <small>
+                    Ödeme sağlayıcısı entegrasyonu tamamlanmadan VAERO bu işlemi başarılı ödeme olarak işaretlemez.
+                </small>
+
+            </div>
+
+
+            <div class="vaero-commerce-actions">
+
+                <button
+                    type="button"
+                    onclick="VaeroApp.beginPayment()"
+                >
+                    Ödemeye Devam Et
+                </button>
+
+
+                <button
+                    type="button"
+                    onclick="VaeroApp.cancelPayment()"
+                >
+                    Vazgeç
+                </button>
+
+            </div>
         `;
 
     },
 
 
     /* =====================================================
-       SYSTEM PRINCIPLE
+       ACTIVE CONTENT
     ===================================================== */
 
-    renderSystemPrinciple(){
+    renderActiveView(){
 
-        return `
-            <section class="vaero-system-principle">
+        switch(
+            this.activeView
+        ){
 
-                <span class="engine-section-label">
-                    VAERO PRINCIPLE
-                </span>
+            case "product":
 
-                <blockquote>
-                    VAERO seni kullandıkça sana dönüşür.
-                </blockquote>
+                return this.renderProduct();
 
-                <p>
-                    Hafıza, Identity, Profile, Worlds, Bridge, Evolution ve Brain birbirinden kopuk uygulamalar değil; aynı kişisel sistemin farklı organlarıdır.
-                </p>
 
-            </section>
-        `;
+            case "vision":
+
+                return this.renderVision();
+
+
+            case "care":
+
+                return this.renderCare();
+
+
+            case "payment":
+
+                return this.renderPayment();
+
+
+            case "discover":
+            default:
+
+                return this.renderDiscover();
+
+        }
 
     },
 
@@ -1721,84 +2832,30 @@ const VaeroApp = {
 
     render(){
 
+        this.paymentCore.load();
+
+        this.loadVisionDraft();
+
         this.enterBrainContext();
 
 
-        const summary =
-            this.getSystemSummary();
-
-
-        const continuity =
-            this.getContinuity();
-
-
         return `
-            <section class="engine-page vaero-system-app">
+            <section class="engine-page vaero-commerce-app">
 
-                <div class="vaero-system-shell">
-
-                    <div class="engine-page-toolbar">
-
-                        <button
-                            type="button"
-                            class="engine-back-btn"
-                            data-action="home"
-                        >
-                            ← Engine
-                        </button>
-
-                    </div>
+                ${this.renderHeader()}
 
 
-                    ${this.renderHero(
-                        summary,
-                        continuity
-                    )}
+                <section class="vaero-commerce-section">
+
+                    ${this.renderNavigation()}
 
 
-                    ${this.renderQuickActions()}
+                    ${this.renderActiveView()}
+
+                </section>
 
 
-                    <div class="vaero-system-scroll">
-
-                        <div class="vaero-system-grid">
-
-                            <div>
-
-                                ${this.renderContinuity(
-                                    continuity
-                                )}
-
-
-                                ${this.renderDirection(
-                                    continuity
-                                )}
-
-                            </div>
-
-
-                            <div>
-
-                                ${this.renderEngineHealth(
-                                    summary
-                                )}
-
-
-                                ${this.renderCurrentContext()}
-
-                            </div>
-
-                        </div>
-
-
-                        ${this.renderSystemPrinciple()}
-
-                    </div>
-
-
-                    ${UI.brainPanel()}
-
-                </div>
+                ${UI.brainPanel()}
 
             </section>
         `;
@@ -1807,6 +2864,40 @@ const VaeroApp = {
 
 };
 
+
+/* =========================================================
+   REGISTER PAYMENT CORE
+========================================================= */
+
+try{
+
+    if(
+        typeof VAERO !==
+            "undefined" &&
+        typeof VAERO.register ===
+            "function"
+    ){
+
+        VAERO.register(
+            "paymentCore",
+            VaeroApp.paymentCore
+        );
+
+    }
+
+} catch(error){
+
+    console.warn(
+        "VAERO Payment Core kaydedilemedi:",
+        error
+    );
+
+}
+
+
+/* =========================================================
+   GLOBAL
+========================================================= */
 
 window.VaeroApp =
     VaeroApp;
