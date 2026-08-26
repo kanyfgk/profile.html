@@ -1,13 +1,29 @@
 /* =========================================================
    VAERO ENGINE — FINAL VISUAL LAYER
+   PREMIUM VISUAL AUTHORITY
 
-   Bu dosya:
-   - Engine görsel dilini güçlendirir.
-   - Renk / yüzey / glow / hover / focus yönetir.
-   - Viewport veya ana layout ölçülerini yönetmez.
+   RESPONSIBILITY
+   ---------------------------------------------------------
+   • Color language
+   • Surface hierarchy
+   • Border language
+   • Glow / depth
+   • Hover / focus
+   • Shared visual consistency
+
+   DOES NOT OWN
+   ---------------------------------------------------------
+   • Viewport geometry
+   • Page sizing
+   • Main scroll behaviour
+   • Navigation geometry
+   • Brain geometry
 
    Layout:
    layout.css
+
+   Core:
+   core.css
 
    Shared pages:
    components.css
@@ -24,122 +40,95 @@
 
 
 /* =========================================================
-   ENGINE TOKENS
+   01. ENGINE TOKENS
 ========================================================= */
 
 :root{
-
-    --engine-bg:
-        #050b13;
-
-    --engine-bg-soft:
-        #091321;
+    --engine-bg:#050b13;
+    --engine-bg-soft:#091321;
 
     --engine-panel:
-        rgba(
-            14,
-            25,
-            39,
-            .82
-        );
+        rgba(14,25,39,.82);
+
+    --engine-panel-soft:
+        rgba(11,20,32,.72);
 
     --engine-panel-strong:
         #101d2c;
 
     --engine-line:
-        rgba(
-            255,
-            255,
-            255,
-            .075
-        );
+        rgba(255,255,255,.075);
+
+    --engine-line-soft:
+        rgba(255,255,255,.045);
 
     --engine-line-strong:
-        rgba(
-            221,
-            190,
-            128,
-            .22
-        );
+        rgba(221,190,128,.22);
 
-    --engine-text:
-        #f7f4ed;
+    --engine-text:#f7f4ed;
 
     --engine-muted:
-        rgba(
-            233,
-            239,
-            246,
-            .58
-        );
+        rgba(233,239,246,.58);
 
     --engine-dim:
-        rgba(
-            233,
-            239,
-            246,
-            .34
-        );
+        rgba(233,239,246,.34);
 
-    --engine-gold:
-        #dfbd7a;
+    --engine-gold:#dfbd7a;
+    --engine-gold-soft:#f2dda9;
 
-    --engine-gold-soft:
-        #f2dda9;
+    --engine-blue:#6bb7f1;
+    --engine-green:#64d89d;
+    --engine-violet:#a58af1;
+    --engine-danger:#ff7b85;
 
-    --engine-blue:
-        #6bb7f1;
+    --engine-shadow:
+        0
+        16px
+        42px
+        rgba(0,0,0,.18);
 
-    --engine-green:
-        #64d89d;
+    --engine-shadow-hover:
+        0
+        18px
+        48px
+        rgba(0,0,0,.24);
 
-    --engine-violet:
-        #a58af1;
-
-    --engine-danger:
-        #ff7b85;
-
+    --engine-focus:
+        0
+        0
+        0
+        3px
+        rgba(223,189,122,.075);
 }
 
 
 /* =========================================================
-   ENGINE BACKGROUND DETAIL
+   02. ENGINE BACKGROUND DETAIL
 ========================================================= */
 
 body::before{
-
     content:"";
 
     position:fixed;
+
     inset:0;
 
     z-index:-1;
 
     pointer-events:none;
 
-    opacity:.13;
+    opacity:.11;
 
     background-image:
-
         linear-gradient(
-            rgba(
-                255,
-                255,
-                255,
-                .014
-            )
+            rgba(255,255,255,.013)
             1px,
             transparent 1px
         ),
 
         linear-gradient(
             90deg,
-            rgba(
-                255,
-                255,
-                255,
-                .014
-            )
+            rgba(255,255,255,.013)
             1px,
             transparent 1px
         );
@@ -151,22 +140,21 @@ body::before{
     mask-image:
         linear-gradient(
             to bottom,
-            black,
+            #000,
             transparent 78%
         );
 
     -webkit-mask-image:
         linear-gradient(
             to bottom,
-            black,
+            #000,
             transparent 78%
         );
-
 }
 
 
 /* =========================================================
-   SHARED PREMIUM SURFACE
+   03. SHARED PREMIUM SURFACE
 ========================================================= */
 
 .section,
@@ -183,88 +171,112 @@ body::before{
 .create-world-form,
 .entity-create-form,
 .create-preview{
-
     border-color:
         var(--engine-line);
 
     background:
-
         linear-gradient(
             150deg,
-            rgba(
-                18,
-                31,
-                47,
-                .88
-            ),
-            rgba(
-                8,
-                16,
-                26,
-                .88
-            )
+            rgba(18,31,47,.88),
+            rgba(8,16,26,.88)
         );
 
     box-shadow:
-
         inset
         0
         1px
         0
-        rgba(
-            255,
-            255,
-            255,
-            .018
-        ),
+        rgba(255,255,255,.018),
 
-        0
-        12px
-        34px
-        rgba(
-            0,
-            0,
-            0,
-            .14
-        );
-
+        var(--engine-shadow);
 }
 
 
 /* =========================================================
-   PAGE TYPE
+   04. GENERIC SURFACE HIGHLIGHT
+========================================================= */
+
+.card,
+.engine-shortcut-card,
+.engine-active-world,
+.engine-activity,
+.world-card,
+.world-hero,
+.world-entity-btn,
+.entity-type-card,
+.entity-header,
+.entity-app-link,
+.create-world-form,
+.entity-create-form,
+.create-preview{
+    position:relative;
+
+    isolation:isolate;
+}
+
+.card::before,
+.engine-shortcut-card::before,
+.engine-active-world::before,
+.engine-activity::before,
+.world-card::before,
+.world-entity-btn::before,
+.entity-type-card::before,
+.entity-header::before,
+.entity-app-link::before,
+.create-world-form::before,
+.entity-create-form::before,
+.create-preview::before{
+    content:"";
+
+    position:absolute;
+
+    inset:0;
+
+    z-index:-1;
+
+    pointer-events:none;
+
+    border-radius:inherit;
+
+    background:
+        linear-gradient(
+            118deg,
+            rgba(255,255,255,.02),
+            transparent 26%,
+            transparent 74%,
+            rgba(255,255,255,.008)
+        );
+}
+
+
+/* =========================================================
+   05. PAGE TYPE
 ========================================================= */
 
 .engine-page,
 .vaero-engine-home{
-
     color:
         var(--engine-text);
-
 }
 
 .engine-page-header h1,
 .entity-header h1,
 .world-title,
 .engine-active-world h2{
-
     color:
         var(--engine-text);
-
 }
 
 .engine-page-header p,
 .entity-header p,
 .world-description{
-
     color:
         var(--engine-muted);
-
 }
 
 
 /* =========================================================
-   ENGINE LABELS
+   06. ENGINE LABELS
 ========================================================= */
 
 .engine-welcome,
@@ -272,354 +284,223 @@ body::before{
 .world-badge,
 .world-card-content small,
 .world-entity-type{
-
     color:
         var(--engine-gold);
-
 }
 
 
 /* =========================================================
-   TOP ACTIONS
+   07. TOP ACTIONS
 ========================================================= */
 
 .engine-icon-btn{
-
     border-color:
         var(--engine-line);
 
     background:
-        rgba(
-            255,
-            255,
-            255,
-            .025
+        linear-gradient(
+            180deg,
+            rgba(255,255,255,.03),
+            rgba(255,255,255,.014)
         );
 
     color:
         var(--engine-gold-soft);
 
+    box-shadow:
+        inset
+        0
+        1px
+        0
+        rgba(255,255,255,.018);
 }
 
 .engine-icon-btn:hover:not(:disabled){
-
     border-color:
         var(--engine-line-strong);
 
     background:
-        rgba(
-            223,
-            189,
-            122,
-            .055
-        );
-
+        rgba(223,189,122,.055);
 }
 
 
 /* =========================================================
-   BACK BUTTON
+   08. BACK BUTTON
 ========================================================= */
 
 .engine-back-btn{
-
     color:
         var(--engine-muted);
-
 }
 
 .engine-back-btn:hover:not(:disabled){
-
     color:
         var(--engine-gold-soft);
-
 }
 
 
 /* =========================================================
-   HOME HERO
+   09. HOME HERO
 ========================================================= */
 
 .engine-hero{
-
     background:
-
         radial-gradient(
             circle at 78% 45%,
-            rgba(
-                68,
-                135,
-                183,
-                .15
-            ),
+            rgba(68,135,183,.15),
             transparent 30%
         ),
 
         radial-gradient(
             circle at 12% 0%,
-            rgba(
-                223,
-                189,
-                122,
-                .075
-            ),
+            rgba(223,189,122,.075),
             transparent 32%
         ),
 
         linear-gradient(
             135deg,
-            rgba(
-                17,
-                30,
-                46,
-                .92
-            ),
-            rgba(
-                5,
-                13,
-                22,
-                .93
-            )
+            rgba(17,30,46,.92),
+            rgba(5,13,22,.93)
         );
-
 }
 
 .engine-hero::before{
-
     content:"";
 
     position:absolute;
+
     inset:0;
 
     pointer-events:none;
 
     background:
-
         linear-gradient(
             110deg,
-            rgba(
-                255,
-                255,
-                255,
-                .025
-            ),
+            rgba(255,255,255,.025),
             transparent 42%
         );
-
 }
 
 .engine-hero h1{
-
     color:
         var(--engine-text);
-
 }
 
 .engine-hero-copy > p{
-
     color:
         var(--engine-muted);
-
 }
 
 
 /* =========================================================
-   SYSTEM STATUS
+   10. SYSTEM STATUS
 ========================================================= */
 
 .engine-status-pill{
-
     border-color:
-        rgba(
-            100,
-            216,
-            157,
-            .13
-        );
+        rgba(100,216,157,.13);
 
     background:
-        rgba(
-            100,
-            216,
-            157,
-            .04
-        );
-
+        rgba(100,216,157,.04);
 }
 
 .engine-status-dot{
-
     background:
         var(--engine-green);
 
     box-shadow:
-
         0
         0
         11px
-        rgba(
-            100,
-            216,
-            157,
-            .62
-        );
-
+        rgba(100,216,157,.62);
 }
 
 .engine-status-pill strong{
-
-    color:
-        #dffbec;
-
+    color:#dffbec;
 }
 
 .engine-status-pill small{
-
     color:
         var(--engine-muted);
-
 }
 
 
 /* =========================================================
-   HOME BRAIN
+   11. HOME BRAIN
 ========================================================= */
 
 .engine-brain-orb::before{
-
     background:
-
         radial-gradient(
             circle,
-            rgba(
-                95,
-                170,
-                224,
-                .12
-            ),
+            rgba(95,170,224,.12),
             transparent 70%
         );
-
 }
 
 .engine-brain-orb:hover::before{
-
     background:
-
         radial-gradient(
             circle,
-            rgba(
-                223,
-                189,
-                122,
-                .16
-            ),
+            rgba(223,189,122,.16),
             transparent 70%
         );
-
 }
 
 .engine-brain-orb .brain-orbit{
-
     border-color:
-        rgba(
-            136,
-            195,
-            238,
-            .22
-        );
-
+        rgba(136,195,238,.22);
 }
 
 .engine-brain-orb .brain-core{
-
     border-color:
-        rgba(
-            255,
-            255,
-            255,
-            .14
-        );
+        rgba(255,255,255,.14);
 
     background:
-
         radial-gradient(
             circle at 50% 34%,
-            rgba(
-                43,
-                88,
-                120,
-                .96
-            ),
-            rgba(
-                8,
-                25,
-                40,
-                .98
-            )
-            68%
+            rgba(43,88,120,.96),
+            rgba(8,25,40,.98) 68%
         );
 
     box-shadow:
-
         inset
         0
         0
         24px
-        rgba(
-            255,
-            255,
-            255,
-            .055
-        ),
+        rgba(255,255,255,.055),
 
         0
         0
         25px
-        rgba(
-            91,
-            174,
-            230,
-            .17
-        );
-
+        rgba(91,174,230,.17);
 }
 
 .engine-brain-orb .brain-eye{
-
     background:
         var(--engine-gold-soft);
 
     box-shadow:
-
         0
         0
         12px
-        rgba(
-            242,
-            221,
-            169,
-            .74
-        );
-
+        rgba(242,221,169,.74);
 }
 
 
 /* =========================================================
-   SHORTCUTS
+   12. SHORTCUTS
 ========================================================= */
 
 .engine-shortcut-card{
-
     position:relative;
-
 }
 
 .engine-shortcut-card::after{
-
     content:"";
 
     position:absolute;
+
     inset:0;
 
     opacity:0;
@@ -629,553 +510,456 @@ body::before{
     border-radius:inherit;
 
     background:
-
         radial-gradient(
             circle at 20% 0%,
-            rgba(
-                223,
-                189,
-                122,
-                .055
-            ),
+            rgba(223,189,122,.055),
             transparent 42%
         );
 
     transition:
         opacity .2s ease;
-
 }
 
 .engine-shortcut-card:hover::after{
-
     opacity:1;
-
 }
 
 .engine-shortcut-card:hover{
-
     border-color:
         var(--engine-line-strong);
-
 }
 
 .engine-shortcut-icon{
-
     border-color:
         var(--engine-line);
 
     background:
-        rgba(
-            255,
-            255,
-            255,
-            .03
+        linear-gradient(
+            145deg,
+            rgba(255,255,255,.035),
+            rgba(255,255,255,.014)
         );
 
     color:
         var(--engine-gold-soft);
-
 }
 
 .engine-shortcut-blue
 .engine-shortcut-icon{
-
     color:
         var(--engine-blue);
-
 }
 
 .engine-shortcut-violet
 .engine-shortcut-icon{
-
     color:
         var(--engine-violet);
-
 }
 
 .engine-shortcut-green
 .engine-shortcut-icon{
-
     color:
         var(--engine-green);
-
 }
 
 .engine-shortcut-card small{
-
     color:
         var(--engine-muted);
-
 }
 
 
 /* =========================================================
-   ACTIVE WORLD
+   13. ACTIVE WORLD
 ========================================================= */
 
 .engine-active-world{
-
     background:
-
         radial-gradient(
             circle at 84% 72%,
-            rgba(
-                71,
-                143,
-                195,
-                .12
-            ),
+            rgba(71,143,195,.12),
             transparent 35%
+        ),
+
+        radial-gradient(
+            circle at 12% 0%,
+            rgba(223,189,122,.035),
+            transparent 30%
         ),
 
         linear-gradient(
             145deg,
-            rgba(
-                17,
-                30,
-                46,
-                .91
-            ),
-            rgba(
-                6,
-                14,
-                23,
-                .93
-            )
+            rgba(17,30,46,.91),
+            rgba(6,14,23,.93)
         );
-
 }
 
 .engine-active-count{
-
     color:
         var(--engine-green);
-
 }
 
 .engine-world-planet{
-
     border-color:
-        rgba(
-            161,
-            206,
-            237,
-            .18
-        );
-
+        rgba(161,206,237,.18);
 }
 
 .engine-world-glow{
-
     opacity:.8;
-
 }
 
 
 /* =========================================================
-   WORLD / ENTITY CARDS
+   14. WORLD / ENTITY CARDS
 ========================================================= */
 
 .world-card:hover,
 .world-entity-btn:hover,
 .entity-type-card:hover,
 .entity-app-link:hover{
-
     border-color:
         var(--engine-line-strong);
-
 }
 
 .world-card-content > span,
 .entity-app-link small{
-
     color:
         var(--engine-muted);
-
 }
 
 .world-card-arrow,
 .world-entity-arrow{
-
     color:
         var(--engine-dim);
-
 }
 
 
 /* =========================================================
-   WORLD ORBIT
+   15. WORLD ORBIT
 ========================================================= */
 
 .world-card-orbit{
-
     border-color:
-        rgba(
-            107,
-            183,
-            241,
-            .2
-        );
+        rgba(107,183,241,.2);
+}
 
+.world-card-orbit::before{
+    border-color:
+        rgba(223,189,122,.17);
 }
 
 .world-card-orbit span{
-
     box-shadow:
-
         0
         0
         18px
-        rgba(
-            107,
-            183,
-            241,
-            .13
-        );
-
+        rgba(107,183,241,.13);
 }
 
 
 /* =========================================================
-   WORLD HERO
+   16. WORLD HERO
 ========================================================= */
 
 .world-hero{
-
     background:
-
         radial-gradient(
             circle at 84% 58%,
-            rgba(
-                75,
-                147,
-                197,
-                .13
-            ),
+            rgba(75,147,197,.13),
             transparent 33%
+        ),
+
+        radial-gradient(
+            circle at 10% 0%,
+            rgba(223,189,122,.035),
+            transparent 30%
         ),
 
         linear-gradient(
             145deg,
-            rgba(
-                17,
-                30,
-                46,
-                .92
-            ),
-            rgba(
-                6,
-                14,
-                23,
-                .94
-            )
+            rgba(17,30,46,.92),
+            rgba(6,14,23,.94)
         );
-
 }
 
 .world-stat{
-
     border-color:
         var(--engine-line);
 
     background:
-        rgba(
-            255,
-            255,
-            255,
-            .018
-        );
-
+        rgba(255,255,255,.018);
 }
 
 .world-stat span{
-
     color:
         var(--engine-muted);
-
 }
 
 
 /* =========================================================
-   ENTITY SYMBOLS
+   17. ENTITY SYMBOLS
 ========================================================= */
 
 .world-entity-symbol,
 .entity-header-symbol{
-
     border-color:
-        rgba(
-            223,
-            189,
-            122,
-            .17
-        );
+        rgba(223,189,122,.17);
 
     background:
-        rgba(
-            223,
-            189,
-            122,
-            .045
+        linear-gradient(
+            145deg,
+            rgba(223,189,122,.055),
+            rgba(91,174,230,.02)
         );
 
     color:
         var(--engine-gold-soft);
-
 }
 
 
 /* =========================================================
-   FORMS
+   18. ENTITY TYPE CARDS
+========================================================= */
+
+.entity-type-card > span{
+    color:
+        var(--engine-gold);
+}
+
+.entity-type-card strong{
+    color:
+        var(--engine-text);
+}
+
+
+/* =========================================================
+   19. ENTITY APP LINKS
+========================================================= */
+
+.entity-app-link > span{
+    color:
+        var(--engine-gold);
+}
+
+.entity-app-link strong{
+    color:
+        var(--engine-text);
+}
+
+
+/* =========================================================
+   20. FORMS
 ========================================================= */
 
 .engine-field > span{
-
     color:
         var(--engine-muted);
-
 }
 
 .engine-field input,
-.engine-field textarea{
-
+.engine-field textarea,
+.engine-field select{
     border-color:
         var(--engine-line);
 
     background:
-        rgba(
-            3,
-            9,
-            16,
-            .48
+        linear-gradient(
+            180deg,
+            rgba(3,9,16,.52),
+            rgba(5,12,20,.43)
         );
 
     color:
         var(--engine-text);
+}
 
+.engine-field input:hover,
+.engine-field textarea:hover,
+.engine-field select:hover{
+    border-color:
+        rgba(255,255,255,.1);
+
+    background:
+        rgba(5,12,20,.58);
 }
 
 .engine-field input:focus,
-.engine-field textarea:focus{
-
+.engine-field textarea:focus,
+.engine-field select:focus{
     border-color:
-        rgba(
-            223,
-            189,
-            122,
-            .38
-        );
+        rgba(223,189,122,.38);
 
     background:
-        rgba(
-            5,
-            12,
-            20,
-            .67
-        );
+        rgba(5,12,20,.67);
 
     box-shadow:
-
-        0
-        0
-        0
-        3px
-        rgba(
-            223,
-            189,
-            122,
-            .045
-        );
-
+        var(--engine-focus);
 }
 
 
 /* =========================================================
-   CREATE PREVIEW
+   21. CREATE PREVIEW
 ========================================================= */
 
 .create-preview-orbit{
-
     border-color:
-        rgba(
-            107,
-            183,
-            241,
-            .17
-        );
+        rgba(107,183,241,.17);
+}
 
+.create-preview-orbit::before{
+    border-color:
+        rgba(223,189,122,.13);
 }
 
 .create-preview p{
-
     color:
         var(--engine-muted);
-
 }
 
 .create-preview small{
-
     color:
         var(--engine-dim);
-
 }
 
 
 /* =========================================================
-   EMPTY STATES
+   22. EMPTY STATES
 ========================================================= */
 
 .world-empty > span,
 .engine-page-empty-icon{
-
     border-color:
         var(--engine-line);
 
     background:
-        rgba(
-            255,
-            255,
-            255,
-            .025
-        );
+        rgba(255,255,255,.025);
 
     color:
         var(--engine-gold);
+}
 
+.world-empty h3,
+.engine-page-empty h2{
+    color:
+        var(--engine-text);
 }
 
 .world-empty p,
 .engine-page-empty p{
-
     color:
         var(--engine-muted);
-
 }
 
 
 /* =========================================================
-   ACTIVITY
+   23. ACTIVITY
 ========================================================= */
 
 .engine-activity{
-
     background:
-
         linear-gradient(
             145deg,
-            rgba(
-                16,
-                28,
-                43,
-                .82
-            ),
-            rgba(
-                7,
-                14,
-                23,
-                .86
-            )
+            rgba(16,28,43,.82),
+            rgba(7,14,23,.86)
         );
-
 }
 
 .engine-activity-item{
-
     border-color:
         var(--engine-line);
-
 }
 
 .engine-activity-item small{
-
     color:
         var(--engine-dim);
-
 }
 
 .activity-dot{
-
     background:
         var(--engine-blue);
 
     box-shadow:
-
         0
         0
         8px
-        rgba(
-            107,
-            183,
-            241,
-            .45
-        );
-
+        rgba(107,183,241,.45);
 }
 
 
 /* =========================================================
-   BUTTON VISUALS
+   24. PRIMARY BUTTON VISUAL
 ========================================================= */
 
 .primary-btn,
 .engine-world-enter{
-
-    background:
-
-        linear-gradient(
-            135deg,
-            var(--engine-gold),
-            var(--engine-gold-soft)
-        );
-
-    color:#11161d;
-
-}
-
-.secondary-btn{
-
     border-color:
-        var(--engine-line);
+        rgba(243,225,184,.34);
 
     background:
-        rgba(
-            255,
-            255,
-            255,
-            .025
+        linear-gradient(
+            115deg,
+            #b98943 0%,
+            #e5c987 46%,
+            #f2dda5 58%,
+            #b9873f 100%
         );
 
-    color:
-        var(--engine-text);
+    color:#08111c;
 
+    box-shadow:
+        inset
+        0
+        1px
+        0
+        rgba(255,255,255,.4),
+
+        inset
+        0
+        -1px
+        0
+        rgba(70,42,7,.1),
+
+        0
+        9px
+        24px
+        rgba(199,157,76,.12);
 }
 
 .primary-btn:hover,
 .engine-world-enter:hover{
-
     filter:
-        brightness(1.045);
-
-}
-
-.secondary-btn:hover{
-
-    border-color:
-        var(--engine-line-strong);
-
-    background:
-        rgba(
-            223,
-            189,
-            122,
-            .055
-        );
-
+        brightness(1.035);
 }
 
 
 /* =========================================================
-   GENERIC ENGINE APP CARDS
+   25. SECONDARY BUTTON VISUAL
+========================================================= */
+
+.secondary-btn{
+    border-color:
+        var(--engine-line);
+
+    background:
+        linear-gradient(
+            180deg,
+            rgba(255,255,255,.035),
+            rgba(255,255,255,.016)
+        );
+
+    color:
+        var(--engine-text);
+}
+
+.secondary-btn:hover{
+    border-color:
+        var(--engine-line-strong);
+
+    background:
+        rgba(223,189,122,.05);
+}
+
+/* =========================================================
+   26. GENERIC ENGINE APP CARDS
 ========================================================= */
 
 .engine-screen
@@ -1190,327 +974,534 @@ body::before{
 .engine-screen
 > .section
 .organ-launcher-card{
-
     border-color:
-        var(--engine-line) !important;
+        var(--engine-line);
 
     background:
-        rgba(
-            255,
-            255,
-            255,
-            .022
-        ) !important;
+        linear-gradient(
+            145deg,
+            rgba(255,255,255,.028),
+            rgba(255,255,255,.01)
+        );
 
     box-shadow:
-        none !important;
-
+        inset
+        0
+        1px
+        0
+        rgba(255,255,255,.014);
 }
 
 
 /* =========================================================
-   NAVIGATION — VISUAL ONLY
+   27. SHARED UI KIT
 ========================================================= */
 
-.bottom-nav{
-
+.ui-app-header-card,
+.ui-info-card,
+.ui-identity-card,
+.ui-stats-card,
+.ui-empty-state,
+.ui-brain-confirmation,
+.ui-launcher-card{
     border-color:
-        rgba(
-            255,
-            255,
-            255,
-            .08
-        );
+        var(--engine-line);
 
     background:
-
         linear-gradient(
-            180deg,
-            rgba(
-                11,
-                20,
-                31,
-                .93
-            ),
-            rgba(
-                5,
-                11,
-                18,
-                .95
-            )
+            145deg,
+            rgba(17,29,44,.7),
+            rgba(8,15,24,.72)
         );
 
     box-shadow:
+        inset
+        0
+        1px
+        0
+        rgba(255,255,255,.014);
+}
 
+.ui-app-header-copy h2,
+.ui-identity-id,
+.ui-stats-card h3{
+    color:
+        var(--engine-text);
+}
+
+.ui-info-card p,
+.ui-card-copy{
+    color:
+        var(--engine-muted);
+}
+
+
+/* =========================================================
+   28. SHARED UI LAUNCHER
+========================================================= */
+
+.ui-launcher-card{
+    transition:
+        border-color var(--transition),
+        background var(--transition),
+        box-shadow var(--transition),
+        transform var(--transition);
+}
+
+.ui-launcher-card:hover{
+    border-color:
+        var(--engine-line-strong);
+
+    background:
+        linear-gradient(
+            145deg,
+            rgba(19,33,49,.8),
+            rgba(9,17,27,.82)
+        );
+}
+
+
+/* =========================================================
+   29. STATUS LANGUAGE
+========================================================= */
+
+.ui-status-text.is-success,
+.ui-status-badge.is-success,
+.ui-status-badge.is-trusted{
+    color:
+        var(--engine-green);
+}
+
+.ui-status-text.is-pending,
+.ui-status-badge.is-warning{
+    color:#dfb76f;
+}
+
+.ui-status-badge.is-danger{
+    color:
+        var(--engine-danger);
+}
+
+
+/* =========================================================
+   30. NAVIGATION — VISUAL ONLY
+========================================================= */
+
+.bottom-nav{
+    border-color:
+        rgba(255,255,255,.08);
+
+    background:
+        radial-gradient(
+            circle at 50% -20%,
+            rgba(223,189,122,.035),
+            transparent 30%
+        ),
+
+        linear-gradient(
+            180deg,
+            rgba(11,20,31,.93),
+            rgba(5,11,18,.95)
+        );
+
+    box-shadow:
         0
         18px
         44px
-        rgba(
-            0,
-            0,
-            0,
-            .34
-        ),
+        rgba(0,0,0,.34),
 
         inset
         0
         1px
         0
-        rgba(
-            255,
-            255,
-            255,
-            .03
-        );
-
+        rgba(255,255,255,.03);
 }
 
 .nav-btn{
-
     color:
         var(--engine-dim);
-
 }
 
 .nav-btn:hover{
-
     color:
         var(--engine-text);
-
 }
 
 .nav-btn.active{
-
     color:
         var(--engine-gold-soft);
-
 }
 
 .nav-brain-btn{
-
     filter:
         drop-shadow(
             0
             10px
             16px
-            rgba(
-                0,
-                0,
-                0,
-                .22
-            )
+            rgba(0,0,0,.22)
         );
-
 }
 
 .nav-brain-orbit{
-
     border-color:
-        rgba(
-            129,
-            193,
-            237,
-            .18
-        );
+        rgba(129,193,237,.18);
+}
 
+.nav-brain-core{
+    background:
+        radial-gradient(
+            circle at 50% 34%,
+            rgba(38,77,106,.98),
+            rgba(8,23,37,.99) 48%,
+            rgba(3,11,19,1) 70%
+        );
 }
 
 .nav-brain-eye{
-
     background:
         var(--engine-gold-soft);
-
 }
 
 
 /* =========================================================
-   BRAIN PANEL — VISUAL ONLY
+   31. BRAIN PANEL — VISUAL ONLY
 ========================================================= */
 
 .brain-panel{
-
     border-color:
-        var(--engine-line) !important;
+        var(--engine-line);
 
     background:
-
         radial-gradient(
             circle at 85% 0%,
-            rgba(
-                71,
-                137,
-                192,
-                .08
-            ),
+            rgba(71,137,192,.08),
             transparent 38%
+        ),
+
+        radial-gradient(
+            circle at 12% 100%,
+            rgba(223,189,122,.025),
+            transparent 30%
         ),
 
         linear-gradient(
             160deg,
-            rgba(
-                13,
-                25,
-                39,
-                .96
-            ),
-            rgba(
-                5,
-                13,
-                22,
-                .97
-            )
-        ) !important;
+            rgba(13,25,39,.96),
+            rgba(5,13,22,.97)
+        );
 
     box-shadow:
-
         0
         24px
         68px
-        rgba(
-            0,
-            0,
-            0,
-            .48
-        ),
+        rgba(0,0,0,.48),
 
         inset
         0
         1px
         0
-        rgba(
-            255,
-            255,
-            255,
-            .025
-        ) !important;
-
+        rgba(255,255,255,.025);
 }
 
 
 /* =========================================================
-   FOCUS LANGUAGE
+   32. APPLICATION VISUAL BRIDGE
+========================================================= */
+
+.applications-header-stat,
+.applications-search,
+.applications-card,
+.applications-empty,
+.applications-detail{
+    border-color:
+        var(--engine-line);
+}
+
+.applications-search,
+.applications-card,
+.applications-empty{
+    background:
+        linear-gradient(
+            145deg,
+            rgba(17,29,44,.54),
+            rgba(8,15,24,.58)
+        );
+}
+
+.applications-card-title-row h3,
+.applications-detail-head h2{
+    color:
+        var(--engine-text);
+}
+
+.applications-card-copy > p,
+.applications-card-meta,
+.applications-muted{
+    color:
+        var(--engine-muted);
+}
+
+
+/* =========================================================
+   33. APPLICATION TRUSTED
+========================================================= */
+
+.applications-trusted{
+    border-color:
+        rgba(100,216,157,.18);
+
+    background:
+        rgba(100,216,157,.055);
+
+    color:
+        var(--engine-green);
+}
+
+
+/* =========================================================
+   34. APPLICATION ACTIONS
+========================================================= */
+
+.applications-main-btn{
+    border-color:
+        rgba(223,189,122,.24);
+
+    background:
+        rgba(223,189,122,.075);
+
+    color:
+        var(--engine-gold-soft);
+}
+
+.applications-main-btn:hover{
+    border-color:
+        rgba(223,189,122,.38);
+
+    background:
+        rgba(223,189,122,.11);
+}
+
+
+/* =========================================================
+   35. FOCUS LANGUAGE
 ========================================================= */
 
 .engine-shortcut-card:focus-visible,
 .world-card:focus-visible,
 .world-entity-btn:focus-visible,
 .entity-type-card:focus-visible,
-.entity-app-link:focus-visible{
-
+.entity-app-link:focus-visible,
+.ui-launcher-card:focus-visible{
     outline:
         1px solid
-        rgba(
-            223,
-            189,
-            122,
-            .6
-        );
+        rgba(223,189,122,.6);
 
-    outline-offset:
-        2px;
+    outline-offset:2px;
 
+    box-shadow:
+        var(--engine-focus);
 }
 
 
 /* =========================================================
-   DESKTOP POINTER POLISH
+   36. INPUT FOCUS LANGUAGE
 ========================================================= */
 
-@media (hover:hover)
-and (pointer:fine){
+.engine-field input:focus-visible,
+.engine-field textarea:focus-visible,
+.engine-field select:focus-visible{
+    outline:none;
+
+    box-shadow:
+        var(--engine-focus);
+}
+
+
+/* =========================================================
+   37. DESKTOP POINTER POLISH
+========================================================= */
+
+@media
+(
+    hover:hover
+)
+and
+(
+    pointer:fine
+){
 
     .engine-shortcut-card:hover,
     .world-card:hover,
     .world-entity-btn:hover,
     .entity-type-card:hover,
-    .entity-app-link:hover{
-
+    .entity-app-link:hover,
+    .ui-launcher-card:hover{
         box-shadow:
-
             inset
             0
             1px
             0
-            rgba(
-                255,
-                255,
-                255,
-                .025
-            ),
+            rgba(255,255,255,.025),
 
-            0
-            15px
-            34px
-            rgba(
-                0,
-                0,
-                0,
-                .2
-            );
-
+            var(--engine-shadow-hover);
     }
 
 }
 
 
 /* =========================================================
-   MOBILE VISUAL REFINEMENT
+   38. TOUCH DEVICES
+========================================================= */
+
+@media (hover:none){
+
+    .engine-shortcut-card:hover,
+    .world-card:hover,
+    .world-entity-btn:hover,
+    .entity-type-card:hover,
+    .entity-app-link:hover,
+    .ui-launcher-card:hover{
+        box-shadow:
+            inset
+            0
+            1px
+            0
+            rgba(255,255,255,.018),
+
+            var(--engine-shadow);
+    }
+
+    .engine-shortcut-card:hover::after{
+        opacity:0;
+    }
+
+}
+
+
+/* =========================================================
+   39. MOBILE VISUAL REFINEMENT
 ========================================================= */
 
 @media (max-width:600px){
 
     body::before{
-
-        opacity:.08;
+        opacity:.07;
 
         background-size:
             44px
             44px;
-
     }
 
     .engine-hero,
     .engine-active-world,
     .world-hero{
-
         box-shadow:
-
             inset
             0
             1px
             0
-            rgba(
-                255,
-                255,
-                255,
-                .015
-            ),
+            rgba(255,255,255,.015),
 
             0
             8px
             22px
-            rgba(
-                0,
-                0,
-                0,
-                .13
-            );
+            rgba(0,0,0,.13);
+    }
 
+    .section,
+    .card,
+    .world-card,
+    .world-entity-btn,
+    .entity-type-card,
+    .entity-app-link{
+        box-shadow:
+            inset
+            0
+            1px
+            0
+            rgba(255,255,255,.014);
     }
 
 }
 
 
 /* =========================================================
-   REDUCED MOTION
+   40. HIGH CONTRAST
+========================================================= */
+
+@media (prefers-contrast:more){
+
+    :root{
+        --engine-line:
+            rgba(255,255,255,.14);
+
+        --engine-line-strong:
+            rgba(223,189,122,.38);
+
+        --engine-muted:
+            rgba(239,243,248,.72);
+    }
+
+    .section,
+    .card,
+    .world-card,
+    .world-hero,
+    .world-entity-btn,
+    .entity-type-card,
+    .entity-header,
+    .entity-app-link{
+        border-color:
+            var(--engine-line);
+    }
+
+}
+
+
+/* =========================================================
+   41. REDUCED MOTION
 ========================================================= */
 
 @media (prefers-reduced-motion:reduce){
 
-    .engine-shortcut-card::after{
-
+    .engine-shortcut-card::after,
+    .ui-launcher-card{
         transition:none;
-
     }
 
 }
+
+
+/* =========================================================
+   42. FINAL VISUAL SAFETY
+========================================================= */
+
+.engine-page,
+.vaero-engine-home,
+.engine-hero,
+.engine-shortcut-card,
+.engine-active-world,
+.engine-activity,
+.world-card,
+.world-hero,
+.world-entity-btn,
+.entity-type-card,
+.entity-header,
+.entity-app-link,
+.create-world-form,
+.entity-create-form,
+.create-preview{
+    -webkit-font-smoothing:antialiased;
+}
+
+
+/* =========================================================
+   43. NO GEOMETRY AUTHORITY
+   Intentionally no:
+   width / height / top / right / bottom / left
+   viewport sizing / overflow authority
+========================================================= */
+
+
+/* =========================================================
+   END — VAERO ENGINE FINAL VISUAL LAYER
+========================================================= */
