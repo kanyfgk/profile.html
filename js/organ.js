@@ -1,20 +1,27 @@
 /* =========================================================
    VAERO ORGAN SYSTEM
-   Engine Organ / Application Registry
+   Central Organ / Capability / Permission / Runtime Registry
 ========================================================= */
 
 const OrganSystem = {
 
-    organs: new Map(),
+    organs:
+        new Map(),
 
-    allowedStatuses: new Set([
-        "active",
-        "inactive",
-        "disabled",
-        "installing",
-        "updating",
-        "error"
-    ]),
+    booted:
+        false,
+
+
+    allowedStatuses:
+        new Set([
+            "active",
+            "inactive",
+            "paused",
+            "disabled",
+            "installing",
+            "updating",
+            "error"
+        ]),
 
 
     /* =====================================================
@@ -27,12 +34,17 @@ const OrganSystem = {
 
             if(
                 typeof VAERO === "undefined" ||
-                typeof VAERO.get !== "function"
+                typeof VAERO.get !==
+                    "function"
             ){
                 return null;
             }
 
-            return VAERO.get(name) || null;
+
+            return (
+                VAERO.get(name) ||
+                null
+            );
 
         } catch(error){
 
@@ -41,9 +53,76 @@ const OrganSystem = {
                 error
             );
 
+
             return null;
 
         }
+
+    },
+
+
+    /* =====================================================
+       EVENTS
+    ===================================================== */
+
+    emit(
+        eventName,
+        payload = {}
+    ){
+
+        try{
+
+            if(
+                typeof VAERO !==
+                    "undefined" &&
+                typeof VAERO.emit ===
+                    "function"
+            ){
+
+                VAERO.emit(
+                    eventName,
+                    payload
+                );
+
+
+                return true;
+
+            }
+
+
+            const events =
+                this.getService(
+                    "events"
+                );
+
+
+            if(
+                events &&
+                typeof events.emit ===
+                    "function"
+            ){
+
+                events.emit(
+                    eventName,
+                    payload
+                );
+
+
+                return true;
+
+            }
+
+        } catch(error){
+
+            console.warn(
+                `Organ event gönderilemedi: ${eventName}`,
+                error
+            );
+
+        }
+
+
+        return false;
 
     },
 
@@ -55,16 +134,20 @@ const OrganSystem = {
     createId(prefix = "organ"){
 
         if(
-            typeof crypto !== "undefined" &&
+            typeof crypto !==
+                "undefined" &&
             typeof crypto.randomUUID ===
                 "function"
         ){
+
             return crypto.randomUUID();
+
         }
+
 
         return `${prefix}_${Date.now()}_${Math.random()
             .toString(36)
-            .slice(2, 10)}`;
+            .slice(2,10)}`;
 
     },
 
@@ -82,11 +165,37 @@ const OrganSystem = {
     },
 
 
+    normalizeSlug(value){
+
+        return String(
+            value ??
+            ""
+        )
+            .trim()
+            .toLowerCase()
+            .replace(/\s+/g,"-")
+            .replace(
+                /[^a-z0-9-_]/g,
+                "-"
+            )
+            .replace(
+                /-+/g,
+                "-"
+            )
+            .replace(
+                /^-|-$/g,
+                ""
+            );
+
+    },
+
+
     normalizeStatus(status){
 
         const normalized =
             String(
-                status ?? "active"
+                status ??
+                "active"
             )
                 .trim()
                 .toLowerCase();
@@ -101,33 +210,46 @@ const OrganSystem = {
     },
 
 
-    normalizePermissions(
-        permissions
-    ){
+    normalizeList(value){
 
         if(
-            !Array.isArray(
-                permissions
+            Array.isArray(
+                value
             )
         ){
-            return [];
+
+            return [
+                ...new Set(
+                    value
+                        .map(
+                            item =>
+                                String(
+                                    item ??
+                                    ""
+                                )
+                                    .trim()
+                                    .toLowerCase()
+                        )
+                        .filter(Boolean)
+                )
+            ];
+
         }
 
 
-        return [
-            ...new Set(
-                permissions
-                    .map(
-                        item =>
-                            String(
-                                item ?? ""
-                            )
-                                .trim()
-                                .toLowerCase()
-                    )
-                    .filter(Boolean)
-            )
-        ];
+        if(
+            value instanceof
+                Set
+        ){
+
+            return this.normalizeList(
+                [...value]
+            );
+
+        }
+
+
+        return [];
 
     },
 
@@ -136,8 +258,11 @@ const OrganSystem = {
 
         if(
             !meta ||
-            typeof meta !== "object" ||
-            Array.isArray(meta)
+            typeof meta !==
+                "object" ||
+            Array.isArray(
+                meta
+            )
         ){
             return {};
         }
@@ -146,6 +271,225 @@ const OrganSystem = {
         return {
             ...meta
         };
+
+    },
+
+
+    normalizeHealth(value){
+
+        const health =
+            Number(
+                value
+            );
+
+
+        if(
+            !Number.isFinite(
+                health
+            )
+        ){
+            return 100;
+        }
+
+
+        return Math.max(
+            0,
+            Math.min(
+                100,
+                Math.round(
+                    health
+                )
+            )
+        );
+
+    },
+
+
+    /* =====================================================
+       RUNTIME API
+    ===================================================== */
+
+    attachRuntimeAPI(organ){
+
+        if(!organ){
+            return null;
+        }
+
+
+        /*
+         * Bu fonksiyonlar Organ record'unun üzerinde
+         * görünür runtime API sağlar.
+         *
+         * OrgansApp runtimeOrgan üzerinden bunları
+         * güvenli şekilde çağırabilir.
+         */
+
+        Object.defineProperties(
+            organ,
+            {
+
+                hasPermission:{
+                    enumerable:false,
+                    configurable:true,
+                    value:
+                        permission =>
+                            this.hasPermission(
+                                organ.id,
+                                permission
+                            )
+                },
+
+
+                grantPermission:{
+                    enumerable:false,
+                    configurable:true,
+                    value:
+                        permission =>
+                            this.grantPermission(
+                                organ.id,
+                                permission
+                            )
+                },
+
+
+                setPermission:{
+                    enumerable:false,
+                    configurable:true,
+                    value:
+                        permission =>
+                            this.grantPermission(
+                                organ.id,
+                                permission
+                            )
+                },
+
+
+                revokePermission:{
+                    enumerable:false,
+                    configurable:true,
+                    value:
+                        permission =>
+                            this.revokePermission(
+                                organ.id,
+                                permission
+                            )
+                },
+
+
+                hasCapability:{
+                    enumerable:false,
+                    configurable:true,
+                    value:
+                        capability =>
+                            this.hasCapability(
+                                organ.id,
+                                capability
+                            )
+                },
+
+
+                setStatus:{
+                    enumerable:false,
+                    configurable:true,
+                    value:
+                        status =>
+                            this.setStatus(
+                                organ.id,
+                                status
+                            )
+                },
+
+
+                report:{
+                    enumerable:false,
+                    configurable:true,
+                    value:
+                        () =>
+                            this.organReport(
+                                organ.id
+                            )
+                }
+
+            }
+        );
+
+
+        return organ;
+
+    },
+
+
+    /* =====================================================
+       GUARDIAN CHECK
+    ===================================================== */
+
+    guardianCheck(
+        organ,
+        operation,
+        context = {}
+    ){
+
+        const guardian =
+            this.getService(
+                "guardian"
+            );
+
+
+        if(
+            !guardian ||
+            typeof guardian.check !==
+                "function"
+        ){
+            return true;
+        }
+
+
+        try{
+
+            const validation =
+                guardian.check(
+                    organ,
+                    "organ",
+                    {
+                        operation,
+                        ...context
+                    }
+                );
+
+
+            if(
+                validation &&
+                validation.valid ===
+                    false
+            ){
+
+                console.warn(
+                    `Guardian organ işlemini engelledi: ${operation}`,
+                    validation.failures
+                );
+
+
+                return false;
+
+            }
+
+        } catch(error){
+
+            console.warn(
+                "Guardian organ kontrolü başarısız:",
+                error
+            );
+
+
+            /*
+             * Frontend prototipinde Guardian hatası
+             * organ registry'yi tamamen çökertmesin.
+             */
+
+        }
+
+
+        return true;
 
     },
 
@@ -172,6 +516,7 @@ const OrganSystem = {
                 "Organ oluşturulamadı: isim eksik."
             );
 
+
             return null;
 
         }
@@ -183,23 +528,96 @@ const OrganSystem = {
             );
 
 
+        const id =
+            String(
+                safeMeta.id ||
+                this.createId()
+            ).trim();
+
+
+        if(!id){
+            return null;
+        }
+
+
+        /*
+         * Aynı id iki kez oluşturulmaz.
+         */
+
+        if(
+            this.organs.has(
+                id
+            )
+        ){
+
+            return this.organs.get(
+                id
+            );
+
+        }
+
+
+        const slug =
+            this.normalizeSlug(
+                safeMeta.slug ||
+                organName
+            );
+
+
+        const duplicateSlug =
+            this.findBySlug(
+                slug
+            );
+
+
+        if(duplicateSlug){
+
+            return duplicateSlug;
+
+        }
+
+
+        const metadata =
+            this.normalizeMeta(
+                safeMeta.metadata ||
+                safeMeta.meta ||
+                {}
+            );
+
+
         const organ = {
 
-            id:
-                safeMeta.id ||
-                this.createId(),
+            id,
 
             name:
                 organName,
 
-            slug:
+            title:
                 String(
-                    safeMeta.slug ||
+                    safeMeta.title ||
                     organName
-                )
-                    .trim()
-                    .toLowerCase()
-                    .replace(/\s+/g, "-"),
+                ).trim(),
+
+            description:
+                String(
+                    safeMeta.description ||
+                    safeMeta.subtitle ||
+                    ""
+                ).trim(),
+
+            icon:
+                String(
+                    safeMeta.icon ||
+                    "◈"
+                ),
+
+            action:
+                String(
+                    safeMeta.action ||
+                    ""
+                ).trim(),
+
+            slug,
 
             status:
                 this.normalizeStatus(
@@ -216,26 +634,52 @@ const OrganSystem = {
                 String(
                     safeMeta.type ||
                     "organ"
-                ),
+                )
+                    .trim()
+                    .toLowerCase(),
 
             source:
                 String(
                     safeMeta.source ||
                     "system"
-                ),
+                )
+                    .trim()
+                    .toLowerCase(),
 
             installed:
                 safeMeta.installed !==
-                false,
+                    false,
+
+            protected:
+                safeMeta.protected ===
+                    true ||
+                (
+                    (
+                        safeMeta.source ||
+                        "system"
+                    ) === "system" &&
+                    safeMeta.removable !==
+                        true
+                ),
+
+            removable:
+                safeMeta.removable ===
+                    true,
 
             permissions:
-                this.normalizePermissions(
+                this.normalizeList(
                     safeMeta.permissions
                 ),
 
             capabilities:
-                this.normalizePermissions(
+                this.normalizeList(
                     safeMeta.capabilities
+                ),
+
+            dependencies:
+                this.normalizeList(
+                    safeMeta.dependencies ||
+                    safeMeta.dependsOn
                 ),
 
             developer:
@@ -248,12 +692,37 @@ const OrganSystem = {
 
             trusted:
                 safeMeta.trusted ===
-                true,
+                    true,
 
-            meta:
-                safeMeta,
+            health:
+                this.normalizeHealth(
+                    safeMeta.health ??
+                    safeMeta.healthScore ??
+                    100
+                ),
+
+            healthScore:
+                this.normalizeHealth(
+                    safeMeta.healthScore ??
+                    safeMeta.health ??
+                    100
+                ),
+
+            metadata,
+
+            /*
+             * Legacy compatibility.
+             */
+
+            meta:{
+                ...safeMeta,
+                ...metadata
+            },
 
             createdAt:
+                Number(
+                    safeMeta.createdAt
+                ) ||
                 Date.now(),
 
             updatedAt:
@@ -262,45 +731,19 @@ const OrganSystem = {
         };
 
 
-        const guardian =
-            this.getService(
-                "guardian"
-            );
-
-
         if(
-            guardian &&
-            typeof guardian.check ===
-                "function"
+            !this.guardianCheck(
+                organ,
+                "create"
+            )
         ){
-
-            const validation =
-                guardian.check(
-                    organ,
-                    "organ",
-                    {
-                        operation:
-                            "create"
-                    }
-                );
-
-
-            if(
-                validation &&
-                validation.valid ===
-                    false
-            ){
-
-                console.warn(
-                    "Guardian organ oluşturmayı engelledi.",
-                    validation.failures
-                );
-
-                return null;
-
-            }
-
+            return null;
         }
+
+
+        this.attachRuntimeAPI(
+            organ
+        );
 
 
         this.organs.set(
@@ -311,11 +754,48 @@ const OrganSystem = {
 
         this.emit(
             "organ:created",
-            organ
+            {
+                organ,
+                organId:
+                    organ.id,
+                time:
+                    Date.now()
+            }
         );
 
 
         return organ;
+
+    },
+
+
+    /* =====================================================
+       REGISTER EXISTING
+    ===================================================== */
+
+    register(data = {}){
+
+        if(
+            !data ||
+            typeof data !==
+                "object" ||
+            Array.isArray(
+                data
+            )
+        ){
+            return null;
+        }
+
+
+        return this.create(
+            data.name ||
+            data.title ||
+            data.slug ||
+            "Organ",
+            data.status ||
+            "active",
+            data
+        );
 
     },
 
@@ -326,13 +806,34 @@ const OrganSystem = {
 
     get(id){
 
-        return (
+        const organ =
             this.organs.get(
                 String(
-                    id ?? ""
+                    id ??
+                    ""
                 )
             ) ||
-            null
+            null;
+
+
+        if(organ){
+
+            this.attachRuntimeAPI(
+                organ
+            );
+
+        }
+
+
+        return organ;
+
+    },
+
+
+    find(id){
+
+        return this.get(
+            id
         );
 
     },
@@ -341,11 +842,9 @@ const OrganSystem = {
     findBySlug(slug){
 
         const target =
-            String(
-                slug ?? ""
-            )
-                .trim()
-                .toLowerCase();
+            this.normalizeSlug(
+                slug
+            );
 
 
         if(!target){
@@ -354,11 +853,12 @@ const OrganSystem = {
 
 
         return (
-            this.all().find(
-                organ =>
-                    organ.slug ===
-                    target
-            ) ||
+            this.all()
+                .find(
+                    organ =>
+                        organ.slug ===
+                        target
+                ) ||
             null
         );
 
@@ -369,40 +869,365 @@ const OrganSystem = {
 
         return this.organs.has(
             String(
-                id ?? ""
+                id ??
+                ""
             )
         );
 
     },
 
 
-    all(){
+    all(options = {}){
 
-        return [
-            ...this.organs.values()
-        ];
+        let organs =
+            [
+                ...this.organs.values()
+            ];
+
+
+        if(
+            options.installed ===
+                true
+        ){
+
+            organs =
+                organs.filter(
+                    organ =>
+                        organ.installed ===
+                            true
+                );
+
+        }
+
+
+        if(options.status){
+
+            const status =
+                this.normalizeStatus(
+                    options.status
+                );
+
+
+            organs =
+                organs.filter(
+                    organ =>
+                        organ.status ===
+                        status
+                );
+
+        }
+
+
+        if(
+            options.trusted ===
+                true
+        ){
+
+            organs =
+                organs.filter(
+                    organ =>
+                        organ.trusted ===
+                            true
+                );
+
+        }
+
+
+        return organs.map(
+            organ =>
+                this.attachRuntimeAPI(
+                    organ
+                )
+        );
 
     },
 
 
     installed(){
 
-        return this.all().filter(
-            organ =>
-                organ.installed
-        );
+        return this.all({
+            installed:true
+        });
 
     },
 
 
     active(){
 
-        return this.all().filter(
-            organ =>
-                organ.installed &&
-                organ.status ===
-                    "active"
+        return this.all()
+            .filter(
+                organ =>
+                    organ.installed &&
+                    organ.status ===
+                        "active"
+            );
+
+    },
+
+
+    /* =====================================================
+       DEPENDENCIES
+    ===================================================== */
+
+    resolveDependency(
+        dependency
+    ){
+
+        const id =
+            String(
+                dependency ||
+                ""
+            )
+                .trim()
+                .toLowerCase();
+
+
+        if(!id){
+            return null;
+        }
+
+
+        return (
+            this.get(
+                dependency
+            ) ||
+            this.findBySlug(
+                dependency
+            ) ||
+            this.all()
+                .find(
+                    organ =>
+                        String(
+                            organ.name ||
+                            ""
+                        )
+                            .trim()
+                            .toLowerCase() ===
+                        id
+                ) ||
+            null
         );
+
+    },
+
+
+    checkDependencies(id){
+
+        const organ =
+            this.get(
+                id
+            );
+
+
+        if(!organ){
+
+            return {
+                valid:false,
+                missing:[],
+                inactive:[],
+                dependencies:[]
+            };
+
+        }
+
+
+        const missing = [];
+
+        const inactive = [];
+
+
+        organ.dependencies.forEach(
+            dependency => {
+
+                const resolved =
+                    this.resolveDependency(
+                        dependency
+                    );
+
+
+                if(!resolved){
+
+                    missing.push(
+                        dependency
+                    );
+
+                    return;
+
+                }
+
+
+                if(
+                    !resolved.installed ||
+                    resolved.status !==
+                        "active"
+                ){
+
+                    inactive.push(
+                        dependency
+                    );
+
+                }
+
+            }
+        );
+
+
+        return {
+
+            valid:
+                missing.length === 0 &&
+                inactive.length === 0,
+
+            missing,
+
+            inactive,
+
+            dependencies:[
+                ...organ.dependencies
+            ]
+
+        };
+
+    },
+
+
+    addDependency(
+        id,
+        dependency
+    ){
+
+        const organ =
+            this.get(
+                id
+            );
+
+
+        const target =
+            String(
+                dependency ||
+                ""
+            )
+                .trim()
+                .toLowerCase();
+
+
+        if(
+            !organ ||
+            !target ||
+            target ===
+                organ.id.toLowerCase() ||
+            target ===
+                organ.slug
+        ){
+            return false;
+        }
+
+
+        if(
+            !organ.dependencies.includes(
+                target
+            )
+        ){
+
+            organ.dependencies.push(
+                target
+            );
+
+
+            organ.updatedAt =
+                Date.now();
+
+
+            this.emit(
+                "organ:dependency:added",
+                {
+                    organId:
+                        organ.id,
+
+                    dependency:
+                        target,
+
+                    time:
+                        Date.now()
+                }
+            );
+
+        }
+
+
+        return true;
+
+    },
+
+
+    removeDependency(
+        id,
+        dependency
+    ){
+
+        const organ =
+            this.get(
+                id
+            );
+
+
+        const target =
+            String(
+                dependency ||
+                ""
+            )
+                .trim()
+                .toLowerCase();
+
+
+        if(
+            !organ ||
+            !target
+        ){
+            return false;
+        }
+
+
+        const before =
+            organ.dependencies.length;
+
+
+        organ.dependencies =
+            organ.dependencies.filter(
+                item =>
+                    item !==
+                    target
+            );
+
+
+        if(
+            before ===
+            organ.dependencies.length
+        ){
+            return false;
+        }
+
+
+        organ.updatedAt =
+            Date.now();
+
+
+        this.emit(
+            "organ:dependency:removed",
+            {
+                organId:
+                    organ.id,
+
+                dependency:
+                    target,
+
+                time:
+                    Date.now()
+            }
+        );
+
+
+        return true;
 
     },
 
@@ -433,9 +1258,40 @@ const OrganSystem = {
             );
 
 
+        if(
+            nextStatus ===
+                "active"
+        ){
+
+            const dependencies =
+                this.checkDependencies(
+                    organ.id
+                );
+
+
+            if(
+                !dependencies.valid
+            ){
+
+                console.warn(
+                    "Organ aktif edilemedi: bağımlılıklar hazır değil.",
+                    dependencies
+                );
+
+
+                return false;
+
+            }
+
+        }
+
+
+        const previousStatus =
+            organ.status;
+
+
         organ.status =
             nextStatus;
-
 
         organ.updatedAt =
             Date.now();
@@ -447,8 +1303,117 @@ const OrganSystem = {
                 id:
                     organ.id,
 
+                organId:
+                    organ.id,
+
+                previousStatus,
+
                 status:
-                    nextStatus
+                    nextStatus,
+
+                time:
+                    Date.now()
+            }
+        );
+
+
+        return true;
+
+    },
+
+
+    pause(id){
+
+        return this.setStatus(
+            id,
+            "paused"
+        );
+
+    },
+
+
+    resume(id){
+
+        return this.setStatus(
+            id,
+            "active"
+        );
+
+    },
+
+
+    disable(id){
+
+        return this.setStatus(
+            id,
+            "disabled"
+        );
+
+    },
+
+
+    /* =====================================================
+       HEALTH
+    ===================================================== */
+
+    setHealth(
+        id,
+        health
+    ){
+
+        const organ =
+            this.get(
+                id
+            );
+
+
+        if(!organ){
+            return false;
+        }
+
+
+        const score =
+            this.normalizeHealth(
+                health
+            );
+
+
+        organ.health =
+            score;
+
+        organ.healthScore =
+            score;
+
+        organ.updatedAt =
+            Date.now();
+
+
+        if(
+            score <= 20 &&
+            organ.status ===
+                "active"
+        ){
+
+            organ.status =
+                "error";
+
+        }
+
+
+        this.emit(
+            "organ:health",
+            {
+                organId:
+                    organ.id,
+
+                health:
+                    score,
+
+                status:
+                    organ.status,
+
+                time:
+                    Date.now()
             }
         );
 
@@ -475,19 +1440,59 @@ const OrganSystem = {
         }
 
 
+        if(organ.installed){
+
+            return true;
+
+        }
+
+
+        const dependencies =
+            this.checkDependencies(
+                organ.id
+            );
+
+
+        if(
+            dependencies.missing.length
+        ){
+
+            console.warn(
+                "Organ kurulamadı: bağımlılık eksik.",
+                dependencies.missing
+            );
+
+
+            return false;
+
+        }
+
+
+        if(
+            !this.guardianCheck(
+                organ,
+                "install"
+            )
+        ){
+            return false;
+        }
+
+
+        organ.status =
+            "installing";
+
+        organ.updatedAt =
+            Date.now();
+
+
         organ.installed =
             true;
 
 
-        if(
-            organ.status ===
-            "inactive"
-        ){
-
-            organ.status =
-                "active";
-
-        }
+        organ.status =
+            dependencies.inactive.length
+                ? "inactive"
+                : "active";
 
 
         organ.updatedAt =
@@ -496,7 +1501,13 @@ const OrganSystem = {
 
         this.emit(
             "organ:installed",
-            organ
+            {
+                organ,
+                organId:
+                    organ.id,
+                time:
+                    Date.now()
+            }
         );
 
 
@@ -518,20 +1529,77 @@ const OrganSystem = {
         }
 
 
-        /*
-         * System organları son kullanıcı tarafından
-         * kaldırılamaz.
-         */
-
         if(
-            organ.source ===
-                "system" &&
-            organ.meta?.removable !==
-                true
+            organ.protected ===
+                true ||
+            (
+                organ.source ===
+                    "system" &&
+                organ.removable !==
+                    true
+            )
         ){
+
+            console.warn(
+                "System organı kaldırılamaz:",
+                organ.id
+            );
+
 
             return false;
 
+        }
+
+
+        const dependents =
+            this.all()
+                .filter(
+                    candidate =>
+                        candidate.id !==
+                            organ.id &&
+                        candidate.installed &&
+                        candidate.dependencies.some(
+                            dependency => {
+
+                                const resolved =
+                                    this.resolveDependency(
+                                        dependency
+                                    );
+
+
+                                return (
+                                    resolved?.id ===
+                                    organ.id
+                                );
+
+                            }
+                        )
+                );
+
+
+        if(dependents.length){
+
+            console.warn(
+                "Organ kaldırılamaz: başka organlar buna bağlı.",
+                dependents.map(
+                    item =>
+                        item.id
+                )
+            );
+
+
+            return false;
+
+        }
+
+
+        if(
+            !this.guardianCheck(
+                organ,
+                "uninstall"
+            )
+        ){
+            return false;
         }
 
 
@@ -547,7 +1615,13 @@ const OrganSystem = {
 
         this.emit(
             "organ:uninstalled",
-            organ
+            {
+                organ,
+                organId:
+                    organ.id,
+                time:
+                    Date.now()
+            }
         );
 
 
@@ -578,10 +1652,16 @@ const OrganSystem = {
 
         const target =
             String(
-                permission ?? ""
+                permission ??
+                ""
             )
                 .trim()
                 .toLowerCase();
+
+
+        if(!target){
+            return false;
+        }
 
 
         return organ.permissions.includes(
@@ -593,7 +1673,8 @@ const OrganSystem = {
 
     grantPermission(
         id,
-        permission
+        permission,
+        context = {}
     ){
 
         const organ =
@@ -602,44 +1683,63 @@ const OrganSystem = {
             );
 
 
-        if(!organ){
-            return false;
-        }
-
-
         const target =
             String(
-                permission ?? ""
+                permission ??
+                ""
             )
                 .trim()
                 .toLowerCase();
 
 
-        if(!target){
+        if(
+            !organ ||
+            !target
+        ){
             return false;
         }
 
 
         /*
-         * Bu fonksiyon registry seviyesinde permission
-         * kaydeder.
-         *
-         * Gerçek kullanıcı onayı / policy kontrolü
-         * Applications + Brain Action Policy + backend
-         * katmanında yapılmalıdır.
+         * Bu Core hâlâ Engine registry/policy katmanıdır.
+         * Kullanıcı onayı ve gerçek authorization backend
+         * tarafında enforce edilmelidir.
          */
 
         if(
-            !organ.permissions.includes(
+            !this.guardianCheck(
+                organ,
+                "permission-grant",
+                {
+                    permission:
+                        target,
+
+                    ...context
+                }
+            )
+        ){
+            return false;
+        }
+
+
+        if(
+            organ.permissions.includes(
                 target
             )
         ){
-
-            organ.permissions.push(
-                target
-            );
-
+            return true;
         }
+
+
+        organ.permissions.push(
+            target
+        );
+
+
+        organ.permissions =
+            this.normalizeList(
+                organ.permissions
+            );
 
 
         organ.updatedAt =
@@ -653,7 +1753,10 @@ const OrganSystem = {
                     organ.id,
 
                 permission:
-                    target
+                    target,
+
+                time:
+                    Date.now()
             }
         );
 
@@ -674,17 +1777,25 @@ const OrganSystem = {
             );
 
 
-        if(!organ){
+        const target =
+            String(
+                permission ??
+                ""
+            )
+                .trim()
+                .toLowerCase();
+
+
+        if(
+            !organ ||
+            !target
+        ){
             return false;
         }
 
 
-        const target =
-            String(
-                permission ?? ""
-            )
-                .trim()
-                .toLowerCase();
+        const before =
+            organ.permissions.length;
 
 
         organ.permissions =
@@ -693,6 +1804,14 @@ const OrganSystem = {
                     item !==
                     target
             );
+
+
+        if(
+            before ===
+            organ.permissions.length
+        ){
+            return false;
+        }
 
 
         organ.updatedAt =
@@ -706,7 +1825,265 @@ const OrganSystem = {
                     organ.id,
 
                 permission:
+                    target,
+
+                time:
+                    Date.now()
+            }
+        );
+
+
+        return true;
+
+    },
+
+
+    /* =====================================================
+       CAPABILITIES
+    ===================================================== */
+
+    hasCapability(
+        id,
+        capability
+    ){
+
+        const organ =
+            this.get(
+                id
+            );
+
+
+        const target =
+            String(
+                capability ||
+                ""
+            )
+                .trim()
+                .toLowerCase();
+
+
+        if(
+            !organ ||
+            !target
+        ){
+            return false;
+        }
+
+
+        return organ.capabilities.includes(
+            target
+        );
+
+    },
+
+
+    addCapability(
+        id,
+        capability
+    ){
+
+        const organ =
+            this.get(
+                id
+            );
+
+
+        const target =
+            String(
+                capability ||
+                ""
+            )
+                .trim()
+                .toLowerCase();
+
+
+        if(
+            !organ ||
+            !target
+        ){
+            return false;
+        }
+
+
+        if(
+            !organ.capabilities.includes(
+                target
+            )
+        ){
+
+            organ.capabilities.push(
+                target
+            );
+
+
+            organ.capabilities =
+                this.normalizeList(
+                    organ.capabilities
+                );
+
+
+            organ.updatedAt =
+                Date.now();
+
+
+            this.emit(
+                "organ:capability:added",
+                {
+                    organId:
+                        organ.id,
+
+                    capability:
+                        target,
+
+                    time:
+                        Date.now()
+                }
+            );
+
+        }
+
+
+        return true;
+
+    },
+
+
+    removeCapability(
+        id,
+        capability
+    ){
+
+        const organ =
+            this.get(
+                id
+            );
+
+
+        const target =
+            String(
+                capability ||
+                ""
+            )
+                .trim()
+                .toLowerCase();
+
+
+        if(
+            !organ ||
+            !target
+        ){
+            return false;
+        }
+
+
+        const before =
+            organ.capabilities.length;
+
+
+        organ.capabilities =
+            organ.capabilities.filter(
+                item =>
+                    item !==
                     target
+            );
+
+
+        if(
+            before ===
+            organ.capabilities.length
+        ){
+            return false;
+        }
+
+
+        organ.updatedAt =
+            Date.now();
+
+
+        this.emit(
+            "organ:capability:removed",
+            {
+                organId:
+                    organ.id,
+
+                capability:
+                    target,
+
+                time:
+                    Date.now()
+            }
+        );
+
+
+        return true;
+
+    },
+
+
+    /* =====================================================
+       TRUST
+    ===================================================== */
+
+    setTrusted(
+        id,
+        trusted,
+        context = {}
+    ){
+
+        const organ =
+            this.get(
+                id
+            );
+
+
+        if(!organ){
+            return false;
+        }
+
+
+        /*
+         * Bu fonksiyon yalnız registry sonucunu saklar.
+         * External app trust üretmek için tek başına
+         * kullanılmamalıdır.
+         */
+
+        if(
+            organ.source !==
+                "system" &&
+            context.verified !==
+                true
+        ){
+
+            console.warn(
+                "Harici organ trusted yapılamadı: verifier sonucu gerekli."
+            );
+
+
+            return false;
+
+        }
+
+
+        organ.trusted =
+            Boolean(
+                trusted
+            );
+
+        organ.updatedAt =
+            Date.now();
+
+
+        this.emit(
+            "organ:trust",
+            {
+                organId:
+                    organ.id,
+
+                trusted:
+                    organ.trusted,
+
+                time:
+                    Date.now()
             }
         );
 
@@ -736,20 +2113,34 @@ const OrganSystem = {
             !patch ||
             typeof patch !==
                 "object" ||
-            Array.isArray(patch)
+            Array.isArray(
+                patch
+            )
         ){
             return false;
         }
 
 
-        /*
-         * Kimlik ve güvenlik alanları rastgele
-         * overwrite edilmez.
-         */
+        const before = {
+
+            name:
+                organ.name,
+
+            status:
+                organ.status,
+
+            version:
+                organ.version,
+
+            health:
+                organ.health
+
+        };
+
 
         if(
             patch.name !==
-            undefined
+                undefined
         ){
 
             const name =
@@ -759,34 +2150,182 @@ const OrganSystem = {
 
 
             if(name){
-                organ.name = name;
+
+                organ.name =
+                    name;
+
             }
 
         }
 
 
         if(
-            patch.status !==
-            undefined
+            patch.title !==
+                undefined
         ){
 
-            organ.status =
-                this.normalizeStatus(
-                    patch.status
+            organ.title =
+                String(
+                    patch.title ||
+                    organ.name
+                ).trim();
+
+        }
+
+
+        if(
+            patch.description !==
+                undefined
+        ){
+
+            organ.description =
+                String(
+                    patch.description ||
+                    ""
+                ).trim();
+
+        }
+
+
+        if(
+            patch.icon !==
+                undefined
+        ){
+
+            organ.icon =
+                String(
+                    patch.icon ||
+                    "◈"
                 );
 
         }
 
 
         if(
+            patch.action !==
+                undefined
+        ){
+
+            organ.action =
+                String(
+                    patch.action ||
+                    ""
+                ).trim();
+
+        }
+
+
+        if(
+            patch.status !==
+                undefined
+        ){
+
+            const statusResult =
+                this.setStatus(
+                    organ.id,
+                    patch.status
+                );
+
+
+            if(
+                statusResult ===
+                    false
+            ){
+                return false;
+            }
+
+        }
+
+
+        if(
             patch.version !==
-            undefined
+                undefined
         ){
 
             organ.version =
                 String(
-                    patch.version
+                    patch.version ||
+                    organ.version
+                ).trim();
+
+        }
+
+
+        if(
+            patch.health !==
+                undefined ||
+            patch.healthScore !==
+                undefined
+        ){
+
+            const health =
+                this.normalizeHealth(
+                    patch.health ??
+                    patch.healthScore
                 );
+
+
+            organ.health =
+                health;
+
+            organ.healthScore =
+                health;
+
+        }
+
+
+        if(
+            patch.permissions !==
+                undefined
+        ){
+
+            organ.permissions =
+                this.normalizeList(
+                    patch.permissions
+                );
+
+        }
+
+
+        if(
+            patch.capabilities !==
+                undefined
+        ){
+
+            organ.capabilities =
+                this.normalizeList(
+                    patch.capabilities
+                );
+
+        }
+
+
+        if(
+            patch.dependencies !==
+                undefined
+        ){
+
+            organ.dependencies =
+                this.normalizeList(
+                    patch.dependencies
+                );
+
+        }
+
+
+        if(
+            patch.metadata &&
+            typeof patch.metadata ===
+                "object" &&
+            !Array.isArray(
+                patch.metadata
+            )
+        ){
+
+            organ.metadata = {
+                ...organ.metadata,
+                ...patch.metadata
+            };
 
         }
 
@@ -805,6 +2344,12 @@ const OrganSystem = {
                 ...patch.meta
             };
 
+
+            organ.metadata = {
+                ...organ.metadata,
+                ...patch.meta
+            };
+
         }
 
 
@@ -814,7 +2359,14 @@ const OrganSystem = {
 
         this.emit(
             "organ:updated",
-            organ
+            {
+                organ,
+                before,
+                organId:
+                    organ.id,
+                time:
+                    Date.now()
+            }
         );
 
 
@@ -824,71 +2376,177 @@ const OrganSystem = {
 
 
     /* =====================================================
-       EVENTS
+       REMOVE
     ===================================================== */
 
-    emit(
-        eventName,
-        payload
+    remove(
+        id,
+        options = {}
     ){
 
-        try{
-
-            if(
-                typeof VAERO !==
-                    "undefined" &&
-                typeof VAERO.emit ===
-                    "function"
-            ){
-
-                VAERO.emit(
-                    eventName,
-                    payload
-                );
-
-                return true;
-
-            }
-
-
-            const events =
-                this.getService(
-                    "events"
-                );
-
-
-            if(
-                events &&
-                typeof events.emit ===
-                    "function"
-            ){
-
-                events.emit(
-                    eventName,
-                    payload
-                );
-
-                return true;
-
-            }
-
-        } catch(error){
-
-            console.warn(
-                `Organ event gönderilemedi: ${eventName}`,
-                error
+        const organ =
+            this.get(
+                id
             );
+
+
+        if(!organ){
+            return false;
+        }
+
+
+        if(
+            organ.protected &&
+            options.force !==
+                true
+        ){
+
+            return false;
 
         }
 
 
-        return false;
+        const dependents =
+            this.all()
+                .filter(
+                    candidate =>
+                        candidate.id !==
+                            organ.id &&
+                        candidate.dependencies.some(
+                            dependency =>
+                                this.resolveDependency(
+                                    dependency
+                                )?.id ===
+                                organ.id
+                        )
+                );
+
+
+        if(
+            dependents.length &&
+            options.force !==
+                true
+        ){
+
+            return false;
+
+        }
+
+
+        this.organs.delete(
+            organ.id
+        );
+
+
+        this.emit(
+            "organ:removed",
+            {
+                organ,
+                organId:
+                    organ.id,
+                time:
+                    Date.now()
+            }
+        );
+
+
+        return true;
 
     },
 
 
     /* =====================================================
-       STATUS
+       SINGLE ORGAN REPORT
+    ===================================================== */
+
+    organReport(id){
+
+        const organ =
+            this.get(
+                id
+            );
+
+
+        if(!organ){
+            return null;
+        }
+
+
+        const dependencies =
+            this.checkDependencies(
+                organ.id
+            );
+
+
+        return {
+
+            id:
+                organ.id,
+
+            slug:
+                organ.slug,
+
+            name:
+                organ.name,
+
+            status:
+                organ.status,
+
+            installed:
+                organ.installed,
+
+            trusted:
+                organ.trusted,
+
+            protected:
+                organ.protected,
+
+            health:
+                organ.health,
+
+            healthScore:
+                organ.healthScore,
+
+            version:
+                organ.version,
+
+            permissions:[
+                ...organ.permissions
+            ],
+
+            capabilities:[
+                ...organ.capabilities
+            ],
+
+            dependencies:[
+                ...organ.dependencies
+            ],
+
+            dependenciesHealthy:
+                dependencies.valid,
+
+            missingDependencies:[
+                ...dependencies.missing
+            ],
+
+            inactiveDependencies:[
+                ...dependencies.inactive
+            ],
+
+            metadata:{
+                ...organ.metadata
+            },
+
+            updatedAt:
+                organ.updatedAt
+
+        };
+
+    },
+
+
+    /* =====================================================
+       SYSTEM REPORT
     ===================================================== */
 
     report(){
@@ -897,7 +2555,38 @@ const OrganSystem = {
             this.all();
 
 
+        const dependencyProblems =
+            organs.filter(
+                organ =>
+                    !this
+                        .checkDependencies(
+                            organ.id
+                        )
+                        .valid
+            );
+
+
+        const health =
+            organs.length
+                ? Math.round(
+                    organs.reduce(
+                        (
+                            total,
+                            organ
+                        ) =>
+                            total +
+                            organ.health,
+                        0
+                    ) /
+                    organs.length
+                )
+                : 0;
+
+
         return {
+
+            booted:
+                this.booted,
 
             total:
                 organs.length,
@@ -916,6 +2605,13 @@ const OrganSystem = {
                             "active"
                 ).length,
 
+            paused:
+                organs.filter(
+                    organ =>
+                        organ.status ===
+                            "paused"
+                ).length,
+
             disabled:
                 organs.filter(
                     organ =>
@@ -923,13 +2619,97 @@ const OrganSystem = {
                             "disabled"
                 ).length,
 
+            errors:
+                organs.filter(
+                    organ =>
+                        organ.status ===
+                            "error"
+                ).length,
+
             trusted:
                 organs.filter(
                     organ =>
                         organ.trusted
-                ).length
+                ).length,
+
+            untrusted:
+                organs.filter(
+                    organ =>
+                        !organ.trusted
+                ).length,
+
+            protected:
+                organs.filter(
+                    organ =>
+                        organ.protected
+                ).length,
+
+            dependencyProblems:
+                dependencyProblems.map(
+                    organ =>
+                        organ.id
+                ),
+
+            health,
+
+            status:
+                organs.some(
+                    organ =>
+                        organ.status ===
+                            "error" ||
+                        organ.health <
+                            40
+                )
+                    ? "critical"
+                    : dependencyProblems.length
+                        ? "degraded"
+                        : "healthy"
 
         };
+
+    },
+
+
+    /* =====================================================
+       BOOT
+    ===================================================== */
+
+    boot(){
+
+        if(this.booted){
+            return true;
+        }
+
+
+        /*
+         * Mevcut kayıtlar varsa runtime API bağlanır.
+         */
+
+        this.organs.forEach(
+            organ =>
+                this.attachRuntimeAPI(
+                    organ
+                )
+        );
+
+
+        this.booted =
+            true;
+
+
+        this.emit(
+            "organ:ready",
+            {
+                count:
+                    this.organs.size,
+
+                time:
+                    Date.now()
+            }
+        );
+
+
+        return true;
 
     }
 
@@ -944,3 +2724,10 @@ VAERO.register(
 
 window.OrganSystem =
     OrganSystem;
+
+
+/*
+ * Engine boot ayrıca çağırsa da idempotent.
+ */
+
+OrganSystem.boot();
