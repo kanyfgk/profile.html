@@ -1,6 +1,6 @@
 /* =========================================================
    VAERO APPLICATIONS
-   Application Discovery / Installation / Permissions / Updates
+   Application Discovery / Installation / Permissions / Updates / Built-In Safety
 ========================================================= */
 
 const ApplicationsApp = {
@@ -116,11 +116,26 @@ const ApplicationsApp = {
         return String(
             value ?? ""
         )
-            .replaceAll("&", "&amp;")
-            .replaceAll("<", "&lt;")
-            .replaceAll(">", "&gt;")
-            .replaceAll('"', "&quot;")
-            .replaceAll("'", "&#039;");
+            .replaceAll(
+                "&",
+                "&amp;"
+            )
+            .replaceAll(
+                "<",
+                "&lt;"
+            )
+            .replaceAll(
+                ">",
+                "&gt;"
+            )
+            .replaceAll(
+                '"',
+                "&quot;"
+            )
+            .replaceAll(
+                "'",
+                "&#039;"
+            );
 
     },
 
@@ -142,7 +157,6 @@ const ApplicationsApp = {
             awareness?.enter?.(
                 "applications",
                 {
-
                     entityId:
                         this.getCurrentEntity()
                             ?.id ||
@@ -156,7 +170,6 @@ const ApplicationsApp = {
 
                     selectedAppId:
                         this.selectedAppId
-
                 }
             );
 
@@ -179,35 +192,25 @@ const ApplicationsApp = {
     getRegistry(){
 
         return (
-
             this.getService(
                 "appRegistry"
             ) ||
-
             this.getService(
                 "applicationRegistry"
             ) ||
-
             (
                 typeof AppRegistry !==
                     "undefined"
-
                     ? AppRegistry
-
                     : null
             ) ||
-
             (
                 typeof OrganRegistry !==
                     "undefined"
-
                     ? OrganRegistry
-
                     : null
             ) ||
-
             null
-
         );
 
     },
@@ -216,15 +219,11 @@ const ApplicationsApp = {
     getOrganSystem(){
 
         return (
-
             this.getService(
                 "organSystem"
             ) ||
-
             window.OrganSystem ||
-
             null
-
         );
 
     },
@@ -248,9 +247,7 @@ const ApplicationsApp = {
 
 
         return [
-
             ...new Set(
-
                 value
                     .map(
                         item =>
@@ -259,9 +256,7 @@ const ApplicationsApp = {
                             ).trim()
                     )
                     .filter(Boolean)
-
             )
-
         ];
 
     },
@@ -270,13 +265,10 @@ const ApplicationsApp = {
     isBuiltIn(app){
 
         return Boolean(
-
             app?.system ===
                 true ||
-
             app?.distribution ===
                 "built-in"
-
         );
 
     },
@@ -295,7 +287,7 @@ const ApplicationsApp = {
 
         return (
             model !==
-            "free"
+                "free"
         );
 
     },
@@ -412,16 +404,13 @@ const ApplicationsApp = {
 
 
         return (
-
             this.getCatalogApps()
                 .find(
                     app =>
                         app?.id ===
                         id
                 ) ||
-
             null
-
         );
 
     },
@@ -622,21 +611,15 @@ const ApplicationsApp = {
 
         const updateAvailable =
             Boolean(
-
                 installed &&
-
                 organ &&
-
                 app.version &&
-
                 organ.version &&
-
                 this.compareVersions(
                     organ.version,
                     app.version
                 ) ===
                     1
-
             );
 
 
@@ -683,13 +666,13 @@ const ApplicationsApp = {
                 .filter(
                     app =>
                         app.enabled !==
-                        false
+                            false
                 );
 
 
         if(
             this.view ===
-            "installed"
+                "installed"
         ){
 
             apps =
@@ -705,7 +688,7 @@ const ApplicationsApp = {
 
         if(
             this.view ===
-            "updates"
+                "updates"
         ){
 
             apps =
@@ -722,7 +705,7 @@ const ApplicationsApp = {
 
         if(
             this.category !==
-            "all"
+                "all"
         ){
 
             apps =
@@ -752,22 +735,26 @@ const ApplicationsApp = {
                         const searchable = [
 
                             app.id,
-
                             app.title,
-
                             app.subtitle,
-
                             app.description,
-
                             app.developer,
-
                             app.category,
 
-                            ...(app.tags || []),
+                            ...(
+                                app.tags ||
+                                []
+                            ),
 
-                            ...(app.capabilities || []),
+                            ...(
+                                app.capabilities ||
+                                []
+                            ),
 
-                            ...(app.requestedPermissions || [])
+                            ...(
+                                app.requestedPermissions ||
+                                []
+                            )
 
                         ]
                             .join(" ")
@@ -835,7 +822,6 @@ const ApplicationsApp = {
         const ids = [
 
             ...new Set(
-
                 this.getCatalogApps()
                     .map(
                         app =>
@@ -844,7 +830,6 @@ const ApplicationsApp = {
                                 "other"
                             )
                     )
-
             )
 
         ];
@@ -1125,7 +1110,7 @@ const ApplicationsApp = {
                     .hasVerifiedEntitlement(
                         app.id
                     ) ===
-                    true
+                true
             );
 
         } catch(error){
@@ -1170,7 +1155,6 @@ const ApplicationsApp = {
                     app,
                     "application-install",
                     {
-
                         operation,
 
                         appId:
@@ -1178,7 +1162,6 @@ const ApplicationsApp = {
 
                         distribution:
                             app.distribution
-
                     }
                 );
 
@@ -1213,7 +1196,7 @@ const ApplicationsApp = {
 
         if(
             result ===
-            true
+                true
         ){
 
             return true;
@@ -1256,7 +1239,7 @@ const ApplicationsApp = {
 
         return (
             result !==
-            false
+                false
         );
 
     },
@@ -1288,6 +1271,11 @@ const ApplicationsApp = {
         }
 
 
+        /*
+         * Built-in applications are already part of Engine.
+         * They are not installed through external package flow.
+         */
+
         if(
             this.isBuiltIn(
                 app
@@ -1305,7 +1293,7 @@ const ApplicationsApp = {
 
         if(
             policy.allowInstall !==
-            true
+                true
         ){
 
             console.warn(
@@ -1320,7 +1308,7 @@ const ApplicationsApp = {
 
         if(
             policy.allowExternalApps !==
-            true
+                true
         ){
 
             console.warn(
@@ -1335,7 +1323,7 @@ const ApplicationsApp = {
 
         if(
             app.installable !==
-            true
+                true
         ){
 
             return false;
@@ -1389,7 +1377,7 @@ const ApplicationsApp = {
 
             if(
                 existing.installed ===
-                true
+                    true
             ){
 
                 return true;
@@ -1457,7 +1445,6 @@ const ApplicationsApp = {
                 app.title,
                 "inactive",
                 {
-
                     id:
                         app.id,
 
@@ -1508,7 +1495,7 @@ const ApplicationsApp = {
 
                     removable:
                         app.removable !==
-                        false,
+                            false,
 
                     permissions:
                         [],
@@ -1595,12 +1582,10 @@ const ApplicationsApp = {
                 organ.id,
                 true,
                 {
-
                     verified:
                         true,
 
                     verification
-
                 }
             );
 
@@ -1635,8 +1620,7 @@ const ApplicationsApp = {
                 "active"
             );
 
-        }
-        else {
+        } else {
 
             organSystem.setStatus?.(
                 organ.id,
@@ -1758,13 +1742,11 @@ const ApplicationsApp = {
                 organ.id,
                 normalized,
                 {
-
                     source:
                         "applications-consent",
 
                     confirmed:
                         true
-
                 }
             );
 
@@ -1876,8 +1858,7 @@ const ApplicationsApp = {
 
     },
 
-
-    revokePermission(
+   revokePermission(
         appId,
         permission
     ){
@@ -1988,7 +1969,8 @@ const ApplicationsApp = {
 
     },
 
-   /* =====================================================
+
+    /* =====================================================
        BRAIN ACTION COMPATIBILITY
     ===================================================== */
 
@@ -2040,6 +2022,11 @@ const ApplicationsApp = {
 
         }
 
+
+        /*
+         * Built-in applications Engine sürümüyle birlikte
+         * güncellenir. Application Store update akışına girmez.
+         */
 
         if(
             this.isBuiltIn(
@@ -2100,7 +2087,6 @@ const ApplicationsApp = {
             organSystem.update(
                 state.organ.id,
                 {
-
                     version:
                         app.version,
 
@@ -2189,12 +2175,10 @@ const ApplicationsApp = {
                     : state.organ
             ),
             {
-
                 previousVersion,
 
                 version:
                     app.version
-
             }
         );
 
@@ -2244,7 +2228,7 @@ const ApplicationsApp = {
 
         if(
             app.removable ===
-            false
+                false
         ){
 
             return false;
@@ -2546,6 +2530,7 @@ const ApplicationsApp = {
                 "Güncelle";
 
         }
+
         else if(
             state.installed
         ){
@@ -2554,6 +2539,7 @@ const ApplicationsApp = {
                 "Aç";
 
         }
+
         else if(
             pricing.model ===
                 "free"
@@ -2563,6 +2549,7 @@ const ApplicationsApp = {
                 "Yükle";
 
         }
+
         else {
 
             actionLabel =
@@ -2580,11 +2567,14 @@ const ApplicationsApp = {
             >
 
                 <div class="applications-card-icon">
+
                     ${this.escapeHTML(
                         app.icon ||
                         "◌"
                     )}
+
                 </div>
+
 
                 <div class="applications-card-copy">
 
@@ -2595,6 +2585,7 @@ const ApplicationsApp = {
                                 app.title
                             )}
                         </h3>
+
 
                         ${
                             state.trusted ||
@@ -2612,12 +2603,14 @@ const ApplicationsApp = {
 
                     </div>
 
+
                     <p>
                         ${this.escapeHTML(
                             app.subtitle ||
                             ""
                         )}
                     </p>
+
 
                     <div class="applications-card-meta">
 
@@ -2628,12 +2621,14 @@ const ApplicationsApp = {
                             )}
                         </span>
 
+
                         <span>
                             v${this.escapeHTML(
                                 app.version ||
                                 "1.0.0"
                             )}
                         </span>
+
 
                         ${
                             state.updateAvailable
@@ -2649,6 +2644,7 @@ const ApplicationsApp = {
 
                 </div>
 
+
                 <div class="applications-card-actions">
 
                     <button
@@ -2661,6 +2657,7 @@ const ApplicationsApp = {
                     >
                         Bilgi
                     </button>
+
 
                     <button
                         type="button"
@@ -2747,7 +2744,6 @@ const ApplicationsApp = {
                                 return UI.permissionRow(
                                     permission,
                                     {
-
                                         granted:
                                             isGranted,
 
@@ -2760,7 +2756,6 @@ const ApplicationsApp = {
                                                 !state.builtIn &&
                                                 state.trusted
                                             )
-
                                     }
                                 );
 
@@ -2812,6 +2807,7 @@ const ApplicationsApp = {
                                         </small>
 
                                     </div>
+
 
                                     ${
                                         state.installed &&
@@ -2896,7 +2892,8 @@ const ApplicationsApp = {
 
         const granted =
             this.normalizeList(
-                state.organ?.permissions
+                state.organ
+                    ?.permissions
             );
 
 
@@ -2924,6 +2921,7 @@ const ApplicationsApp = {
                     data-applications-command="close-details"
                 ></div>
 
+
                 <section
                     class="applications-detail"
                     role="dialog"
@@ -2938,32 +2936,40 @@ const ApplicationsApp = {
                         ×
                     </button>
 
+
                     <div class="applications-detail-head">
 
                         <div class="applications-detail-icon">
+
                             ${this.escapeHTML(
                                 app.icon ||
                                 "◌"
                             )}
+
                         </div>
+
 
                         <div>
 
                             <div class="eyebrow">
+
                                 ${
                                     state.builtIn
-                                        ? "VAERO SYSTEM APPLICATION"
+                                        ? "VAERO BUILT-IN APPLICATION"
                                         : state.trusted
                                             ? "DOĞRULANMIŞ UYGULAMA"
                                             : "UYGULAMA"
                                 }
+
                             </div>
+
 
                             <h2>
                                 ${this.escapeHTML(
                                     app.title
                                 )}
                             </h2>
+
 
                             <p>
                                 ${this.escapeHTML(
@@ -2976,6 +2982,7 @@ const ApplicationsApp = {
                         </div>
 
                     </div>
+
 
                     <div class="applications-detail-grid">
 
@@ -2994,6 +3001,7 @@ const ApplicationsApp = {
 
                         </div>
 
+
                         <div>
 
                             <span>
@@ -3009,6 +3017,7 @@ const ApplicationsApp = {
 
                         </div>
 
+
                         <div>
 
                             <span>
@@ -3016,6 +3025,7 @@ const ApplicationsApp = {
                             </span>
 
                             <strong>
+
                                 ${
                                     state.installed
                                         ? state.updateAvailable
@@ -3026,9 +3036,11 @@ const ApplicationsApp = {
                                                 : "İzin incelemesi gerekiyor"
                                         : "Yüklü değil"
                                 }
+
                             </strong>
 
                         </div>
+
 
                         <div>
 
@@ -3045,6 +3057,7 @@ const ApplicationsApp = {
 
                         </div>
 
+
                         <div>
 
                             <span>
@@ -3059,6 +3072,7 @@ const ApplicationsApp = {
                             </strong>
 
                         </div>
+
 
                         <div>
 
@@ -3076,11 +3090,13 @@ const ApplicationsApp = {
 
                     </div>
 
+
                     <div class="applications-detail-section">
 
                         <div class="eyebrow">
                             YETENEKLER
                         </div>
+
 
                         ${
                             capabilities.length
@@ -3110,11 +3126,13 @@ const ApplicationsApp = {
 
                     </div>
 
+
                     <div class="applications-detail-section">
 
                         <div class="eyebrow">
                             İZİNLER
                         </div>
+
 
                         ${this.renderPermissions(
                             app,
@@ -3122,6 +3140,7 @@ const ApplicationsApp = {
                         )}
 
                     </div>
+
 
                     ${
                         state.installed &&
@@ -3143,6 +3162,7 @@ const ApplicationsApp = {
                             : ""
                     }
 
+
                     ${
                         !state.builtIn &&
                         !state.trusted
@@ -3161,6 +3181,7 @@ const ApplicationsApp = {
                               `
                             : ""
                     }
+
 
                     <div class="applications-detail-actions">
 
@@ -3195,6 +3216,7 @@ const ApplicationsApp = {
                                                     : ""
                                             }
                                         >
+
                                             ${
                                                 !state.builtIn &&
                                                 state.status !==
@@ -3202,6 +3224,7 @@ const ApplicationsApp = {
                                                     ? "İzinleri Tamamla"
                                                     : "Aç"
                                             }
+
                                         </button>
                                       `
                                     : `
@@ -3213,6 +3236,7 @@ const ApplicationsApp = {
                                                 app.id
                                             )}"
                                         >
+
                                             ${
                                                 this.isPaid(
                                                     app
@@ -3220,9 +3244,11 @@ const ApplicationsApp = {
                                                     ? "Satın Al / Yükle"
                                                     : "Yükle"
                                             }
+
                                         </button>
                                       `
                         }
+
 
                         ${
                             state.installed &&
@@ -3290,7 +3316,7 @@ const ApplicationsApp = {
                                 type="button"
                                 class="${
                                     this.view ===
-                                    id
+                                        id
                                         ? "is-active"
                                         : ""
                                 }"
@@ -3373,6 +3399,7 @@ const ApplicationsApp = {
 
                     </div>
 
+
                     <header class="applications-header">
 
                         <div>
@@ -3381,15 +3408,18 @@ const ApplicationsApp = {
                                 VAERO APPLICATIONS
                             </div>
 
+
                             <h1>
                                 Uygulamalar
                             </h1>
+
 
                             <p>
                                 Engine'ini yeni yeteneklerle genişlet. Uygulamaları keşfet, izinlerini incele ve kurulu uygulamalarını yönet.
                             </p>
 
                         </div>
+
 
                         <div class="applications-header-stats">
 
@@ -3405,6 +3435,7 @@ const ApplicationsApp = {
 
                             </div>
 
+
                             <div>
 
                                 <strong>
@@ -3416,6 +3447,7 @@ const ApplicationsApp = {
                                 </span>
 
                             </div>
+
 
                             <div>
 
@@ -3433,7 +3465,9 @@ const ApplicationsApp = {
 
                     </header>
 
+
                     ${this.renderViewNavigation()}
+
 
                     <div class="applications-toolbar">
 
@@ -3442,6 +3476,7 @@ const ApplicationsApp = {
                             <span>
                                 ⌕
                             </span>
+
 
                             <input
                                 type="search"
@@ -3455,13 +3490,14 @@ const ApplicationsApp = {
 
                         </label>
 
+
                         <div class="applications-categories">
 
                             <button
                                 type="button"
                                 class="${
                                     this.category ===
-                                    "all"
+                                        "all"
                                         ? "is-active"
                                         : ""
                                 }"
@@ -3470,6 +3506,7 @@ const ApplicationsApp = {
                             >
                                 Tümü
                             </button>
+
 
                             ${categories
                                 .map(
@@ -3487,7 +3524,7 @@ const ApplicationsApp = {
                                                 type="button"
                                                 class="${
                                                     this.category ===
-                                                    id
+                                                        id
                                                         ? "is-active"
                                                         : ""
                                                 }"
@@ -3511,6 +3548,7 @@ const ApplicationsApp = {
                         </div>
 
                     </div>
+
 
                     <div class="applications-scroll">
 
@@ -3537,7 +3575,9 @@ const ApplicationsApp = {
                                             ◌
                                         </div>
 
+
                                         <strong>
+
                                             ${
                                                 this.view ===
                                                     "updates"
@@ -3547,9 +3587,12 @@ const ApplicationsApp = {
                                                         ? "Yüklü uygulama bulunamadı"
                                                         : "Uygulama bulunamadı"
                                             }
+
                                         </strong>
 
+
                                         <span>
+
                                             ${
                                                 this.searchQuery ||
                                                 this.category !==
@@ -3560,6 +3603,7 @@ const ApplicationsApp = {
                                                         ? "Kurulu uygulamalar güncel."
                                                         : "Application Registry şu anda eşleşen bir uygulama döndürmedi."
                                             }
+
                                         </span>
 
                                     </div>
@@ -3568,6 +3612,7 @@ const ApplicationsApp = {
 
                     </div>
 
+
                     ${
                         window.UI
                             ?.brainPanel?.() ||
@@ -3575,6 +3620,7 @@ const ApplicationsApp = {
                     }
 
                 </div>
+
 
                 ${
                     selectedApp
@@ -3740,7 +3786,6 @@ const ApplicationsApp = {
 
 
             case "permission:grant":
-
             case "permission-grant":
 
                 return this.grantRequestedPermission(
@@ -3751,7 +3796,6 @@ const ApplicationsApp = {
 
 
             case "permission:revoke":
-
             case "permission-revoke":
 
                 return this.revokePermission(
@@ -3816,7 +3860,7 @@ document.addEventListener(
 
         if(
             event.target.id !==
-            "applicationsSearch"
+                "applicationsSearch"
         ){
 
             return;
