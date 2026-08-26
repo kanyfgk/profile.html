@@ -1,5 +1,20 @@
+/* =========================================================
+   VAERO ENGINE — CORE
+   GLOBAL TOKENS / RESET / FOUNDATION
+   FINAL CONSOLIDATED EDITION
+========================================================= */
+
+
+/* =========================================================
+   01. CORE TOKENS
+========================================================= */
+
 :root{
     color-scheme:dark;
+
+    /* -----------------------------------------------------
+       BASE
+    ----------------------------------------------------- */
 
     --bg:#06101b;
     --bg-deep:#030a12;
@@ -8,8 +23,24 @@
     --surface-2:#162434;
     --surface-3:#1d2d40;
 
+
+    /* -----------------------------------------------------
+       BRAND
+    ----------------------------------------------------- */
+
     --gold:#e6d7b0;
     --gold-soft:#f2e2bb;
+
+    --blue:#72b7f2;
+    --green:#6ee7a8;
+
+    --warning:#d6a84c;
+    --danger:#d46f72;
+
+
+    /* -----------------------------------------------------
+       TEXT
+    ----------------------------------------------------- */
 
     --text:#f5f1e9;
 
@@ -29,8 +60,18 @@
             .42
         );
 
-    --green:#6ee7a8;
-    --blue:#72b7f2;
+    --muted-faint:
+        rgba(
+            245,
+            241,
+            233,
+            .26
+        );
+
+
+    /* -----------------------------------------------------
+       BORDER
+    ----------------------------------------------------- */
 
     --border-soft:
         rgba(
@@ -48,9 +89,21 @@
             .13
         );
 
+
+    /* -----------------------------------------------------
+       RADIUS
+    ----------------------------------------------------- */
+
+    --radius-xs:10px;
     --radius-sm:13px;
     --radius-md:18px;
     --radius-lg:24px;
+    --radius-xl:30px;
+
+
+    /* -----------------------------------------------------
+       SHADOW
+    ----------------------------------------------------- */
 
     --shadow:
         0
@@ -74,6 +127,22 @@
             .2
         );
 
+    --shadow-deep:
+        0
+        28px
+        80px
+        rgba(
+            0,
+            0,
+            0,
+            .42
+        );
+
+
+    /* -----------------------------------------------------
+       TRANSITION
+    ----------------------------------------------------- */
+
     --transition:
         .22s
         cubic-bezier(
@@ -82,11 +151,49 @@
             .2,
             1
         );
+
+    --transition-fast:
+        .16s
+        cubic-bezier(
+            .2,
+            .8,
+            .2,
+            1
+        );
+
+
+    /* -----------------------------------------------------
+       SAFE AREA
+    ----------------------------------------------------- */
+
+    --safe-top:
+        env(
+            safe-area-inset-top,
+            0px
+        );
+
+    --safe-right:
+        env(
+            safe-area-inset-right,
+            0px
+        );
+
+    --safe-bottom:
+        env(
+            safe-area-inset-bottom,
+            0px
+        );
+
+    --safe-left:
+        env(
+            safe-area-inset-left,
+            0px
+        );
 }
 
 
 /* =========================================================
-   GLOBAL RESET
+   02. GLOBAL RESET
 ========================================================= */
 
 *,
@@ -95,6 +202,10 @@
     box-sizing:border-box;
 }
 
+
+/* =========================================================
+   03. DOCUMENT ROOT
+========================================================= */
 
 html{
     width:100%;
@@ -108,18 +219,40 @@ html{
 
     overflow:hidden;
 
+    overscroll-behavior:none;
+
     -webkit-text-size-adjust:100%;
     text-size-adjust:100%;
+
+    -webkit-tap-highlight-color:
+        transparent;
 }
 
+
+/* =========================================================
+   04. BODY
+========================================================= */
 
 body{
     width:100%;
     height:100%;
 
+    min-width:0;
+    min-height:0;
+
     margin:0;
+    padding:0;
+
+    overflow:hidden;
+
+    overscroll-behavior:none;
 
     background:
+        radial-gradient(
+            circle at 50% 0%,
+            rgba(63,124,175,.025),
+            transparent 34%
+        ),
         var(--bg);
 
     color:
@@ -129,15 +262,18 @@ body{
         Inter,
         -apple-system,
         BlinkMacSystemFont,
+        "SF Pro Display",
+        "SF Pro Text",
         "Segoe UI",
         Arial,
         sans-serif;
 
     font-size:14px;
+    font-weight:400;
 
     line-height:1.4;
 
-    overflow:hidden;
+    text-rendering:optimizeLegibility;
 
     -webkit-font-smoothing:
         antialiased;
@@ -148,7 +284,7 @@ body{
 
 
 /* =========================================================
-   TEXT
+   05. TEXT
 ========================================================= */
 
 h1,
@@ -169,6 +305,8 @@ h5,
 h6{
     color:
         var(--text);
+
+    font-family:inherit;
 }
 
 p{
@@ -178,7 +316,26 @@ p{
 
 
 /* =========================================================
-   INTERACTIVE ELEMENTS
+   06. TEXT SAFETY
+========================================================= */
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+p,
+span,
+strong,
+small,
+label{
+    overflow-wrap:break-word;
+}
+
+
+/* =========================================================
+   07. INTERACTIVE ELEMENTS
 ========================================================= */
 
 button,
@@ -191,7 +348,12 @@ select{
 button{
     margin:0;
 
+    border:0;
+
     color:inherit;
+
+    -webkit-tap-highlight-color:
+        transparent;
 }
 
 button:not(:disabled){
@@ -207,6 +369,8 @@ button:disabled{
 input,
 textarea,
 select{
+    min-width:0;
+
     color:
         var(--text);
 }
@@ -221,35 +385,105 @@ textarea{
     font-family:inherit;
 }
 
+select{
+    color-scheme:dark;
+}
+
 
 /* =========================================================
-   LINKS
+   08. REMOVE NATIVE MOBILE APPEARANCE
+========================================================= */
+
+button,
+input,
+textarea,
+select{
+    -webkit-appearance:none;
+    appearance:none;
+}
+
+
+/* =========================================================
+   09. LINKS
 ========================================================= */
 
 a{
     color:inherit;
 
     text-decoration:none;
+
+    -webkit-tap-highlight-color:
+        transparent;
 }
 
 
 /* =========================================================
-   MEDIA
+   10. MEDIA
 ========================================================= */
 
 img,
 svg,
 video,
-canvas{
+canvas,
+picture{
     display:block;
 
     max-width:100%;
 }
 
+img,
+video{
+    height:auto;
+}
+
 
 /* =========================================================
-   ACCESSIBILITY
+   11. SVG
 ========================================================= */
+
+svg{
+    flex:
+        0
+        0
+        auto;
+}
+
+
+/* =========================================================
+   12. TABLE
+========================================================= */
+
+table{
+    border-collapse:collapse;
+    border-spacing:0;
+}
+
+
+/* =========================================================
+   13. FORM SAFETY
+========================================================= */
+
+input,
+textarea,
+button,
+select{
+    max-width:100%;
+}
+
+input,
+textarea{
+    caret-color:
+        var(--gold-soft);
+}
+
+
+/* =========================================================
+   14. ACCESSIBILITY
+========================================================= */
+
+:focus{
+    outline:none;
+}
 
 :focus-visible{
     outline:
@@ -258,16 +492,15 @@ canvas{
             232,
             201,
             135,
-            .78
+            .72
         );
 
-    outline-offset:
-        2px;
+    outline-offset:2px;
 }
 
 
 /* =========================================================
-   EYEBROW
+   15. EYEBROW
 ========================================================= */
 
 .eyebrow{
@@ -288,7 +521,7 @@ canvas{
 
 
 /* =========================================================
-   SELECTION
+   16. SELECTION
 ========================================================= */
 
 ::selection{
@@ -300,13 +533,83 @@ canvas{
             .22
         );
 
-    color:
-        #fff;
+    color:#fff;
 }
 
 
 /* =========================================================
-   DESKTOP
+   17. SCROLLBAR FOUNDATION
+========================================================= */
+
+*{
+    scrollbar-color:
+        rgba(
+            255,
+            255,
+            255,
+            .11
+        )
+        transparent;
+}
+
+*::-webkit-scrollbar{
+    width:5px;
+    height:5px;
+}
+
+*::-webkit-scrollbar-track{
+    background:transparent;
+}
+
+*::-webkit-scrollbar-thumb{
+    border-radius:999px;
+
+    background:
+        rgba(
+            255,
+            255,
+            255,
+            .1
+        );
+}
+
+
+/* =========================================================
+   18. HIDDEN ATTRIBUTE
+========================================================= */
+
+[hidden]{
+    display:none !important;
+}
+
+
+/* =========================================================
+   19. DISABLED INTERACTION SAFETY
+========================================================= */
+
+button:disabled,
+input:disabled,
+textarea:disabled,
+select:disabled{
+    pointer-events:none;
+}
+
+
+/* =========================================================
+   20. TOUCH TARGET BEHAVIOUR
+========================================================= */
+
+button,
+a,
+input,
+textarea,
+select{
+    touch-action:manipulation;
+}
+
+
+/* =========================================================
+   21. DESKTOP
 ========================================================= */
 
 @media (min-width:1000px){
@@ -319,7 +622,7 @@ canvas{
 
 
 /* =========================================================
-   MOBILE
+   22. MOBILE
 ========================================================= */
 
 @media (max-width:600px){
@@ -331,6 +634,10 @@ canvas{
     input,
     textarea,
     select{
+        /*
+           Prevent iOS Safari automatic zoom
+           when focusing form fields.
+        */
         font-size:16px;
     }
 
@@ -344,7 +651,7 @@ canvas{
 
 
 /* =========================================================
-   SMALL PHONE
+   23. SMALL PHONE
 ========================================================= */
 
 @media (max-width:390px){
@@ -357,17 +664,68 @@ canvas{
 
 
 /* =========================================================
-   REDUCED MOTION
+   24. TOUCH DEVICES
+========================================================= */
+
+@media (hover:none){
+
+    button,
+    a{
+        -webkit-user-select:none;
+        user-select:none;
+    }
+
+}
+
+
+/* =========================================================
+   25. HIGH CONTRAST
+========================================================= */
+
+@media (prefers-contrast:more){
+
+    :root{
+        --border-soft:
+            rgba(
+                255,
+                255,
+                255,
+                .12
+            );
+
+        --border-strong:
+            rgba(
+                255,
+                255,
+                255,
+                .2
+            );
+
+        --muted:
+            rgba(
+                245,
+                241,
+                233,
+                .76
+            );
+    }
+
+}
+
+
+/* =========================================================
+   26. REDUCED MOTION
 ========================================================= */
 
 @media (prefers-reduced-motion:reduce){
 
+    html{
+        scroll-behavior:auto;
+    }
+
     *,
     *::before,
     *::after{
-        scroll-behavior:
-            auto !important;
-
         animation-duration:
             .01ms !important;
 
@@ -376,6 +734,59 @@ canvas{
 
         transition-duration:
             .01ms !important;
+
+        scroll-behavior:
+            auto !important;
     }
 
-} 
+}
+
+
+/* =========================================================
+   27. IOS VIEWPORT FOUNDATION
+========================================================= */
+
+@supports (-webkit-touch-callout:none){
+
+    html,
+    body{
+        min-height:
+            -webkit-fill-available;
+    }
+
+}
+
+
+/* =========================================================
+   28. DYNAMIC VIEWPORT FOUNDATION
+========================================================= */
+
+@supports (height:100dvh){
+
+    html,
+    body{
+        height:100dvh;
+    }
+
+}
+
+
+/* =========================================================
+   29. FINAL GLOBAL SAFETY
+========================================================= */
+
+html,
+body{
+    max-width:100%;
+
+    overscroll-behavior:none;
+}
+
+body{
+    isolation:isolate;
+}
+
+
+/* =========================================================
+   END — VAERO ENGINE CORE
+========================================================= */
