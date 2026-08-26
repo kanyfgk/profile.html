@@ -1,6 +1,7 @@
 /* =========================================================
    VAERO APPLICATION REGISTRY
    Application Catalog / Manifest Authority
+   Final Built-In Registry
 ========================================================= */
 
 const AppRegistry = (() => {
@@ -320,8 +321,13 @@ const AppRegistry = (() => {
             ){
 
                 return {
-                    minEngineVersion:null,
-                    maxEngineVersion:null
+
+                    minEngineVersion:
+                        null,
+
+                    maxEngineVersion:
+                        null
+
                 };
 
             }
@@ -669,11 +675,13 @@ const AppRegistry = (() => {
 
             const compatibility =
                 this.normalizeCompatibility({
+
                     minEngineVersion:
                         app.minEngineVersion,
 
                     maxEngineVersion:
                         app.maxEngineVersion
+
                 });
 
 
@@ -1051,7 +1059,7 @@ const AppRegistry = (() => {
 
             /*
              * Built-in entry runtime'dan silinmez;
-             * ama catalog visibility değiştirilmemeli.
+             * catalog visibility değiştirilemez.
              */
 
             if(
@@ -1317,15 +1325,10 @@ const AppRegistry = (() => {
                     const haystack = [
 
                         app.id,
-
                         app.title,
-
                         app.subtitle,
-
                         app.description,
-
                         app.developer,
-
                         app.category,
 
                         ...(
@@ -1400,7 +1403,6 @@ const AppRegistry = (() => {
                     ]) => ({
 
                         id,
-
                         total
 
                     })
@@ -1818,6 +1820,51 @@ const AppRegistry = (() => {
 
 
         /* =====================================================
+           ORGANS
+        ===================================================== */
+
+        {
+            id:
+                "organs",
+
+            icon:
+                "⬡",
+
+            title:
+                "Organlar",
+
+            subtitle:
+                "Varlığının çalışan sistemlerini gör",
+
+            description:
+                "Kimlik, Hafıza, Zaman Çizelgesi, Bridge, Evolution ve diğer aktif organların durumunu ve bağlantılarını tek yerde gösterir.",
+
+            action:
+                "entity:organs",
+
+            category:
+                "system",
+
+            version:
+                "2.0.0",
+
+            capabilities:[
+                "organs.read",
+                "organs.status",
+                "organs.inspect",
+                "organs.navigate"
+            ],
+
+            tags:[
+                "organs",
+                "system",
+                "entity",
+                "status"
+            ]
+        },
+
+
+        /* =====================================================
            SETTINGS
         ===================================================== */
 
@@ -2031,10 +2078,6 @@ try{
             "function"
     ){
 
-        /*
-         * Doğru servis adı.
-         */
-
         VAERO.register(
             "appRegistry",
             AppRegistry
@@ -2042,10 +2085,10 @@ try{
 
 
         /*
-         * Eski kodların kırılmaması için compatibility alias.
+         * Legacy compatibility alias.
          *
-         * Yeni kod Application katalogları için
-         * appRegistry kullanmalı.
+         * Yeni application katalog kodu
+         * appRegistry kullanmalıdır.
          */
 
         VAERO.register(
