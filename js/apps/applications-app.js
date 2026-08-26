@@ -1,13 +1,24 @@
 /* =========================================================
    VAERO APPLICATIONS
-   Engine Application Discovery / Management Center
+   Application Discovery / Installation / Permissions / Updates
 ========================================================= */
 
 const ApplicationsApp = {
 
-    searchQuery: "",
-    category: "all",
-    selectedAppId: null,
+    searchQuery:
+        "",
+
+    category:
+        "all",
+
+    view:
+        "discover",
+
+    selectedAppId:
+        null,
+
+    searchTimer:
+        null,
 
 
     /* =====================================================
@@ -20,12 +31,17 @@ const ApplicationsApp = {
 
             if(
                 typeof VAERO === "undefined" ||
-                typeof VAERO.get !== "function"
+                typeof VAERO.get !==
+                    "function"
             ){
                 return null;
             }
 
-            return VAERO.get(name) || null;
+
+            return (
+                VAERO.get(name) ||
+                null
+            );
 
         } catch(error){
 
@@ -33,6 +49,7 @@ const ApplicationsApp = {
                 `Applications service lookup failed: ${name}`,
                 error
             );
+
 
             return null;
 
@@ -53,9 +70,28 @@ const ApplicationsApp = {
 
         } catch(error){
 
-            return null;
+            return (
+                window.Engine ||
+                null
+            );
 
         }
+
+    },
+
+
+    getCurrentEntity(){
+
+        const engine =
+            this.getEngine();
+
+
+        return (
+            engine?.currentOpenedEntity ||
+            engine?.currentEntity ||
+            engine?.rootEntity ||
+            null
+        );
 
     },
 
@@ -74,7 +110,10 @@ const ApplicationsApp = {
 
         }
 
-        return String(value ?? "")
+
+        return String(
+            value ?? ""
+        )
             .replaceAll("&", "&amp;")
             .replaceAll("<", "&lt;")
             .replaceAll(">", "&gt;")
@@ -85,16 +124,75 @@ const ApplicationsApp = {
 
 
     /* =====================================================
-       REGISTRY
+       BRAIN CONTEXT
+    ===================================================== */
+
+    enterBrainContext(){
+
+        try{
+
+            const awareness =
+                this.getService(
+                    "brainAwareness"
+                );
+
+
+            awareness?.enter?.(
+                "applications",
+                {
+                    entityId:
+                        this.getCurrentEntity()
+                            ?.id ||
+                        null,
+
+                    view:
+                        this.view,
+
+                    category:
+                        this.category,
+
+                    selectedAppId:
+                        this.selectedAppId
+                }
+            );
+
+        } catch(error){
+
+            console.warn(
+                "Applications Brain context açılamadı:",
+                error
+            );
+
+        }
+
+    },
+
+
+    /* =====================================================
+       APPLICATION REGISTRY
     ===================================================== */
 
     getRegistry(){
 
         return (
             this.getService(
-                "organRegistry"
+                "appRegistry"
             ) ||
-            window.OrganRegistry ||
+            this.getService(
+                "applicationRegistry"
+            ) ||
+            (
+                typeof AppRegistry !==
+                    "undefined"
+                    ? AppRegistry
+                    : null
+            ) ||
+            (
+                typeof OrganRegistry !==
+                    "undefined"
+                    ? OrganRegistry
+                    : null
+            ) ||
             null
         );
 
@@ -114,7 +212,72 @@ const ApplicationsApp = {
     },
 
 
-    getApps(){
+    /* =====================================================
+       MANIFEST HELPERS
+    ===================================================== */
+
+    normalizeList(value){
+
+        if(
+            !Array.isArray(
+                value
+            )
+        ){
+            return [];
+        }
+
+
+        return [
+            ...new Set(
+                value
+                    .map(
+                        item =>
+                            String(
+                                item ?? ""
+                            ).trim()
+                    )
+                    .filter(Boolean)
+            )
+        ];
+
+    },
+
+
+    isBuiltIn(app){
+
+        return Boolean(
+            app?.system ===
+                true ||
+            app?.distribution ===
+                "built-in"
+        );
+
+    },
+
+
+    isPaid(app){
+
+        const model =
+            String(
+                app?.pricing?.model ||
+                "free"
+            )
+                .trim()
+                .toLowerCase();
+
+
+        return (
+            model !== "free"
+        );
+
+    },
+
+
+    /* =====================================================
+       CATALOG
+    ===================================================== */
+
+    getCatalogApps(){
 
         const registry =
             this.getRegistry();
@@ -129,133 +292,303 @@ const ApplicationsApp = {
         }
 
 
-        let apps = [];
-
-
         try{
 
-            apps =
+            const apps =
                 registry.all({
                     includeDisabled:true
                 });
 
+
+            return Array.isArray(
+                apps
+            )
+                ? apps.filter(Boolean)
+                : [];
+
         } catch(error){
 
-            return [];
+            try{
+
+                const apps =
+                    registry.all();
+
+
+                return Array.isArray(
+                    apps
+                )
+                    ? apps.filter(Boolean)
+                    : [];
+
+            } catch(secondError){
+
+                return [];
+
+            }
 
         }
 
+    },
 
-        if(
-            !Array.isArray(apps)
-        ){
-            return [];
+
+    findApp(appId){
+
+        const id =
+            String(
+                appId ||
+                ""
+            ).trim();
+
+
+        if(!id){
+            return null;
         }
 
 
-        return apps.filter(
-            app => {
-
-                if(
-                    app.enabled ===
-                    false
-                ){
-                    return false;
-                }
+        const registry =
+            this.getRegistry();
 
 
-                if(
-                    this.category !==
-                        "all" &&
-                    app.category !==
-                        this.category
-                ){
-                    return false;
-                }
+        try{
 
+            if(
+                registry &&
+                typeof registry.find ===
+                    "function"
+            ){
 
-                const query =
-                    this.searchQuery
-                        .trim()
-                        .toLocaleLowerCase(
-                            "tr-TR"
-                        );
-
-
-                if(!query){
-                    return true;
-                }
-
-
-                const searchable = [
-                    app.id,
-                    app.title,
-                    app.subtitle,
-                    app.description,
-                    app.developer,
-                    app.category,
-                    ...(app.tags || [])
-                ]
-                    .join(" ")
-                    .toLocaleLowerCase(
-                        "tr-TR"
+                const app =
+                    registry.find(
+                        id
                     );
 
 
-                return searchable.includes(
-                    query
+                if(app){
+                    return app;
+                }
+
+            }
+
+        } catch(error){
+
+            /* catalog fallback */
+        }
+
+
+        return (
+            this.getCatalogApps()
+                .find(
+                    app =>
+                        app?.id ===
+                        id
+                ) ||
+            null
+        );
+
+    },
+
+
+    /* =====================================================
+       ORGAN LOOKUP
+    ===================================================== */
+
+    getInstalledOrgan(app){
+
+        if(!app){
+            return null;
+        }
+
+
+        const organSystem =
+            this.getOrganSystem();
+
+
+        if(!organSystem){
+            return null;
+        }
+
+
+        try{
+
+            if(
+                typeof organSystem.get ===
+                    "function"
+            ){
+
+                const byId =
+                    organSystem.get(
+                        app.id
+                    );
+
+
+                if(byId){
+                    return byId;
+                }
+
+            }
+
+        } catch(error){
+
+            /* slug fallback */
+        }
+
+
+        try{
+
+            if(
+                typeof organSystem.findBySlug ===
+                    "function"
+            ){
+
+                return (
+                    organSystem.findBySlug(
+                        app.id
+                    ) ||
+                    null
                 );
 
             }
-        );
+
+        } catch(error){
+
+            return null;
+
+        }
+
+
+        return null;
+
+    },
+
+
+    /* =====================================================
+       VERSION
+    ===================================================== */
+
+    compareVersions(
+        installedVersion,
+        catalogVersion
+    ){
+
+        const parse =
+            value =>
+                String(
+                    value ||
+                    "0"
+                )
+                    .split(".")
+                    .map(
+                        part =>
+                            Number(
+                                String(
+                                    part
+                                ).replace(
+                                    /[^0-9]/g,
+                                    ""
+                                )
+                            ) ||
+                            0
+                    );
+
+
+        const installed =
+            parse(
+                installedVersion
+            );
+
+
+        const catalog =
+            parse(
+                catalogVersion
+            );
+
+
+        const length =
+            Math.max(
+                installed.length,
+                catalog.length
+            );
+
+
+        for(
+            let index = 0;
+            index < length;
+            index += 1
+        ){
+
+            const currentInstalled =
+                installed[index] ||
+                0;
+
+
+            const currentCatalog =
+                catalog[index] ||
+                0;
+
+
+            if(
+                currentCatalog >
+                currentInstalled
+            ){
+                return 1;
+            }
+
+
+            if(
+                currentCatalog <
+                currentInstalled
+            ){
+                return -1;
+            }
+
+        }
+
+
+        return 0;
 
     },
 
 
     getAppState(app){
 
-        const organSystem =
-            this.getOrganSystem();
-
-
-        let organ =
-            null;
-
-
-        if(
-            organSystem &&
-            typeof organSystem.findBySlug ===
-                "function"
-        ){
-
-            try{
-
-                organ =
-                    organSystem.findBySlug(
-                        app.id
-                    );
-
-            } catch(error){
-
-                organ = null;
-
-            }
-
-        }
-
-
         const builtIn =
-            app.distribution ===
-                "built-in" ||
-            app.system === true;
+            this.isBuiltIn(
+                app
+            );
+
+
+        const organ =
+            this.getInstalledOrgan(
+                app
+            );
+
+
+        const installed =
+            builtIn ||
+            organ?.installed ===
+                true;
+
+
+        const updateAvailable =
+            Boolean(
+                installed &&
+                organ &&
+                app.version &&
+                organ.version &&
+                this.compareVersions(
+                    organ.version,
+                    app.version
+                ) === 1
+            );
 
 
         return {
 
-            installed:
-                builtIn ||
-                organ?.installed ===
-                    true,
+            builtIn,
+
+            installed,
+
+            updateAvailable,
 
             status:
                 organ?.status ||
@@ -266,8 +599,10 @@ const ApplicationsApp = {
                 ),
 
             trusted:
-                app.trusted ===
-                    true,
+                builtIn
+                    ? true
+                    : organ?.trusted ===
+                        true,
 
             organ
 
@@ -277,7 +612,118 @@ const ApplicationsApp = {
 
 
     /* =====================================================
-       CATEGORY
+       VISIBLE CATALOG
+    ===================================================== */
+
+    getApps(){
+
+        let apps =
+            this.getCatalogApps()
+                .filter(
+                    app =>
+                        app.enabled !==
+                            false
+                );
+
+
+        if(
+            this.view ===
+                "installed"
+        ){
+
+            apps =
+                apps.filter(
+                    app =>
+                        this.getAppState(
+                            app
+                        ).installed
+                );
+
+        }
+
+
+        if(
+            this.view ===
+                "updates"
+        ){
+
+            apps =
+                apps.filter(
+                    app =>
+                        this.getAppState(
+                            app
+                        )
+                            .updateAvailable
+                );
+
+        }
+
+
+        if(
+            this.category !==
+                "all"
+        ){
+
+            apps =
+                apps.filter(
+                    app =>
+                        app.category ===
+                        this.category
+                );
+
+        }
+
+
+        const query =
+            this.searchQuery
+                .trim()
+                .toLocaleLowerCase(
+                    "tr-TR"
+                );
+
+
+        if(query){
+
+            apps =
+                apps.filter(
+                    app => {
+
+                        const searchable = [
+
+                            app.id,
+                            app.title,
+                            app.subtitle,
+                            app.description,
+                            app.developer,
+                            app.category,
+                            ...(app.tags || []),
+                            ...(app.capabilities || []),
+                            ...(app.requestedPermissions || [])
+
+                        ]
+                            .join(" ")
+                            .toLocaleLowerCase(
+                                "tr-TR"
+                            );
+
+
+                        return searchable.includes(
+                            query
+                        );
+
+                    }
+                );
+
+        }
+
+
+        return apps;
+
+    },
+
+
+    /* =====================================================
+       CATEGORIES
     ===================================================== */
 
     getCategories(){
@@ -287,33 +733,55 @@ const ApplicationsApp = {
 
 
         if(
-            !registry ||
-            typeof registry.categories !==
+            registry &&
+            typeof registry.categories ===
                 "function"
         ){
 
-            return [];
+            try{
+
+                const categories =
+                    registry.categories();
+
+
+                if(
+                    Array.isArray(
+                        categories
+                    )
+                ){
+
+                    return categories;
+
+                }
+
+            } catch(error){
+
+                /* derive below */
+            }
 
         }
 
 
-        try{
+        const ids =
+            [
+                ...new Set(
+                    this.getCatalogApps()
+                        .map(
+                            app =>
+                                String(
+                                    app?.category ||
+                                    "other"
+                                )
+                        )
+                )
+            ];
 
-            const categories =
-                registry.categories();
 
-
-            return Array.isArray(
-                categories
-            )
-                ? categories
-                : [];
-
-        } catch(error){
-
-            return [];
-
-        }
+        return ids.map(
+            id => ({
+                id
+            })
+        );
 
     },
 
@@ -346,6 +814,12 @@ const ApplicationsApp = {
             service:
                 "Hizmetler",
 
+            communication:
+                "İletişim",
+
+            finance:
+                "Finans",
+
             other:
                 "Diğer"
 
@@ -361,7 +835,1179 @@ const ApplicationsApp = {
 
 
     /* =====================================================
-       CATALOG CARD
+       ENTITY SETTINGS POLICY
+    ===================================================== */
+
+    getApplicationPolicy(){
+
+        const entity =
+            this.getCurrentEntity();
+
+
+        const defaults = {
+
+            allowInstall:
+                true,
+
+            requirePermissionReview:
+                true,
+
+            allowExternalApps:
+                false,
+
+            allowBackgroundActivity:
+                false
+
+        };
+
+
+        if(!entity?.id){
+            return defaults;
+        }
+
+
+        try{
+
+            const saved =
+                localStorage.getItem(
+                    `vaero:settings:entity:v2:${entity.id}`
+                );
+
+
+            if(!saved){
+                return defaults;
+            }
+
+
+            const parsed =
+                JSON.parse(
+                    saved
+                );
+
+
+            return {
+                ...defaults,
+                ...(
+                    parsed
+                        ?.applications ||
+                    {}
+                )
+            };
+
+        } catch(error){
+
+            return defaults;
+
+        }
+
+    },
+
+
+    /* =====================================================
+       VERIFIER
+    ===================================================== */
+
+    verifyPackage(app){
+
+        const verifier =
+            this.getService(
+                "applicationVerifier"
+            );
+
+
+        if(
+            !verifier ||
+            typeof verifier.verify !==
+                "function"
+        ){
+
+            console.warn(
+                "Applications install blocked: package verifier unavailable.",
+                app?.id
+            );
+
+
+            return null;
+
+        }
+
+
+        try{
+
+            const result =
+                verifier.verify(
+                    app
+                );
+
+
+            if(
+                result &&
+                typeof result.then ===
+                    "function"
+            ){
+
+                console.warn(
+                    "Applications install blocked: async verification is not wired yet.",
+                    app.id
+                );
+
+
+                return null;
+
+            }
+
+
+            if(
+                !result ||
+                result.valid !==
+                    true
+            ){
+
+                return null;
+
+            }
+
+
+            if(
+                result.appId &&
+                result.appId !==
+                    app.id
+            ){
+
+                return null;
+
+            }
+
+
+            return result;
+
+        } catch(error){
+
+            console.error(
+                "Application verification failed:",
+                error
+            );
+
+
+            return null;
+
+        }
+
+    },
+
+
+    /* =====================================================
+       PAYMENT ENTITLEMENT
+    ===================================================== */
+
+    hasEntitlement(app){
+
+        if(
+            !this.isPaid(
+                app
+            )
+        ){
+            return true;
+        }
+
+
+        const paymentCore =
+            this.getService(
+                "paymentCore"
+            );
+
+
+        if(
+            !paymentCore ||
+            typeof paymentCore.hasVerifiedEntitlement !==
+                "function"
+        ){
+
+            console.warn(
+                "Applications install blocked: verified entitlement unavailable.",
+                app.id
+            );
+
+
+            return false;
+
+        }
+
+
+        try{
+
+            return (
+                paymentCore
+                    .hasVerifiedEntitlement(
+                        app.id
+                    ) === true
+            );
+
+        } catch(error){
+
+            return false;
+
+        }
+
+    },
+
+
+    /* =====================================================
+       GUARDIAN
+    ===================================================== */
+
+    guardianAllows(
+        app,
+        operation
+    ){
+
+        const guardian =
+            this.getService(
+                "guardian"
+            );
+
+
+        if(
+            !guardian ||
+            typeof guardian.check !==
+                "function"
+        ){
+            return true;
+        }
+
+
+        try{
+
+            const validation =
+                guardian.check(
+                    app,
+                    "application-install",
+                    {
+                        operation,
+
+                        appId:
+                            app.id,
+
+                        distribution:
+                            app.distribution
+                    }
+                );
+
+
+            return !(
+                validation ===
+                    false ||
+                validation?.valid ===
+                    false
+            );
+
+        } catch(error){
+
+            console.error(
+                "Applications Guardian check failed:",
+                error
+            );
+
+
+            return false;
+
+        }
+
+    },
+
+
+    /* =====================================================
+       INSTALL
+    ===================================================== */
+
+    install(appId){
+
+        const app =
+            this.findApp(
+                appId
+            );
+
+
+        const organSystem =
+            this.getOrganSystem();
+
+
+        if(
+            !app ||
+            !organSystem
+        ){
+
+            return false;
+
+        }
+
+
+        if(
+            this.isBuiltIn(
+                app
+            )
+        ){
+
+            return false;
+
+        }
+
+
+        const policy =
+            this.getApplicationPolicy();
+
+
+        if(
+            policy.allowInstall !==
+                true
+        ){
+
+            console.warn(
+                "Applications install blocked by Entity policy."
+            );
+
+
+            return false;
+
+        }
+
+
+        if(
+            policy.allowExternalApps !==
+                true
+        ){
+
+            console.warn(
+                "Applications install blocked: external applications disabled in Settings."
+            );
+
+
+            return false;
+
+        }
+
+
+        if(
+            app.installable !==
+                true
+        ){
+
+            return false;
+
+        }
+
+
+        if(
+            !this.guardianAllows(
+                app,
+                "install"
+            )
+        ){
+
+            return false;
+
+        }
+
+
+        const verification =
+            this.verifyPackage(
+                app
+            );
+
+
+        if(!verification){
+            return false;
+        }
+
+
+        if(
+            !this.hasEntitlement(
+                app
+            )
+        ){
+
+            return false;
+
+        }
+
+
+        const existing =
+            this.getInstalledOrgan(
+                app
+            );
+
+
+        if(existing){
+
+            if(
+                existing.installed ===
+                    true
+            ){
+
+                return true;
+
+            }
+
+
+            if(
+                typeof organSystem.install !==
+                    "function"
+            ){
+                return false;
+            }
+
+
+            return (
+                organSystem.install(
+                    existing.id
+                ) === true
+            );
+
+        }
+
+
+        const organ =
+            organSystem.create(
+                app.title,
+                "inactive",
+                {
+                    id:
+                        app.id,
+
+                    slug:
+                        app.id,
+
+                    title:
+                        app.title,
+
+                    description:
+                        app.description ||
+                        app.subtitle ||
+                        "",
+
+                    icon:
+                        app.icon ||
+                        "◌",
+
+                    action:
+                        app.action ||
+                        "",
+
+                    version:
+                        app.version ||
+                        "1.0.0",
+
+                    type:
+                        "application",
+
+                    source:
+                        app.distribution ||
+                        "external",
+
+                    developer:
+                        app.developer ||
+                        null,
+
+                    signature:
+                        verification.signature ||
+                        app.signature ||
+                        null,
+
+                    trusted:
+                        false,
+
+                    installed:
+                        true,
+
+                    removable:
+                        app.removable !==
+                        false,
+
+                    permissions:
+                        [],
+
+                    capabilities:
+                        this.normalizeList(
+                            app.capabilities
+                        ),
+
+                    dependencies:
+                        this.normalizeList(
+                            app.dependencies
+                        ),
+
+                    metadata:{
+                        applicationId:
+                            app.id,
+
+                        requestedPermissions:
+                            this.normalizeList(
+                                app.requestedPermissions
+                            ),
+
+                        verification:{
+                            verified:true,
+
+                            verifiedAt:
+                                Date.now(),
+
+                            authority:
+                                verification.authority ||
+                                null,
+
+                            hash:
+                                verification.hash ||
+                                null,
+
+                            reference:
+                                verification.reference ||
+                                null
+                        }
+                    }
+                }
+            );
+
+
+        if(!organ){
+            return false;
+        }
+
+
+        if(
+            typeof organSystem.setTrusted !==
+                "function"
+        ){
+
+            organSystem.remove?.(
+                organ.id,
+                {
+                    force:true
+                }
+            );
+
+
+            return false;
+
+        }
+
+
+        const trustResult =
+            organSystem.setTrusted(
+                organ.id,
+                true,
+                {
+                    verified:true,
+
+                    verification
+                }
+            );
+
+
+        if(
+            trustResult !==
+                true
+        ){
+
+            organSystem.remove?.(
+                organ.id,
+                {
+                    force:true
+                }
+            );
+
+
+            return false;
+
+        }
+
+
+        const requestedPermissions =
+            this.normalizeList(
+                app.requestedPermissions
+            );
+
+
+        if(
+            requestedPermissions.length ===
+                0
+        ){
+
+            organSystem.setStatus?.(
+                organ.id,
+                "active"
+            );
+
+        } else {
+
+            organSystem.setStatus?.(
+                organ.id,
+                "inactive"
+            );
+
+        }
+
+
+        this.emitLifecycle(
+            "installed",
+            app,
+            organ
+        );
+
+
+        return true;
+
+    },
+
+
+    /* =====================================================
+       PERMISSION CONSENT
+    ===================================================== */
+
+    grantRequestedPermission(
+        appId,
+        permission
+    ){
+
+        const app =
+            this.findApp(
+                appId
+            );
+
+
+        if(!app){
+            return false;
+        }
+
+
+        const state =
+            this.getAppState(
+                app
+            );
+
+
+        const organ =
+            state.organ;
+
+
+        if(
+            !organ ||
+            !state.trusted
+        ){
+            return false;
+        }
+
+
+        const requested =
+            this.normalizeList(
+                app.requestedPermissions
+            );
+
+
+        const normalized =
+            String(
+                permission ||
+                ""
+            )
+                .trim()
+                .toLowerCase();
+
+
+        if(
+            !requested
+                .map(
+                    item =>
+                        item.toLowerCase()
+                )
+                .includes(
+                    normalized
+                )
+        ){
+
+            return false;
+
+        }
+
+
+        const organSystem =
+            this.getOrganSystem();
+
+
+        if(
+            !organSystem ||
+            typeof organSystem.grantPermission !==
+                "function"
+        ){
+            return false;
+        }
+
+
+        const result =
+            organSystem.grantPermission(
+                organ.id,
+                normalized,
+                {
+                    source:
+                        "applications-consent",
+
+                    confirmed:
+                        true
+                }
+            );
+
+
+        if(result !== true){
+            return false;
+        }
+
+
+        return this.remount();
+
+    },
+
+
+    revokePermission(
+        appId,
+        permission
+    ){
+
+        const app =
+            this.findApp(
+                appId
+            );
+
+
+        const organ =
+            app
+                ? this.getInstalledOrgan(
+                    app
+                )
+                : null;
+
+
+        const organSystem =
+            this.getOrganSystem();
+
+
+        if(
+            !organ ||
+            !organSystem ||
+            typeof organSystem.revokePermission !==
+                "function"
+        ){
+            return false;
+        }
+
+
+        const result =
+            organSystem.revokePermission(
+                organ.id,
+                permission
+            );
+
+
+        if(result !== true){
+            return false;
+        }
+
+
+        return this.remount();
+
+    },
+
+   /* =====================================================
+       UPDATE
+    ===================================================== */
+
+    updateApplication(appId){
+
+        const app =
+            this.findApp(
+                appId
+            );
+
+
+        if(!app){
+            return false;
+        }
+
+
+        const state =
+            this.getAppState(
+                app
+            );
+
+
+        if(
+            !state.installed ||
+            !state.organ ||
+            !state.updateAvailable
+        ){
+            return false;
+        }
+
+
+        if(
+            this.isBuiltIn(
+                app
+            )
+        ){
+
+            return false;
+
+        }
+
+
+        if(
+            !this.guardianAllows(
+                app,
+                "update"
+            )
+        ){
+            return false;
+        }
+
+
+        const verification =
+            this.verifyPackage(
+                app
+            );
+
+
+        if(!verification){
+            return false;
+        }
+
+
+        const organSystem =
+            this.getOrganSystem();
+
+
+        if(
+            !organSystem ||
+            typeof organSystem.update !==
+                "function"
+        ){
+            return false;
+        }
+
+
+        const previousVersion =
+            state.organ.version;
+
+
+        const updated =
+            organSystem.update(
+                state.organ.id,
+                {
+                    version:
+                        app.version,
+
+                    title:
+                        app.title,
+
+                    description:
+                        app.description ||
+                        app.subtitle ||
+                        "",
+
+                    icon:
+                        app.icon,
+
+                    action:
+                        app.action,
+
+                    capabilities:
+                        this.normalizeList(
+                            app.capabilities
+                        ),
+
+                    dependencies:
+                        this.normalizeList(
+                            app.dependencies
+                        ),
+
+                    metadata:{
+                        ...(
+                            state.organ.metadata ||
+                            {}
+                        ),
+
+                        requestedPermissions:
+                            this.normalizeList(
+                                app.requestedPermissions
+                            ),
+
+                        verification:{
+                            verified:true,
+
+                            verifiedAt:
+                                Date.now(),
+
+                            authority:
+                                verification.authority ||
+                                null,
+
+                            hash:
+                                verification.hash ||
+                                null,
+
+                            reference:
+                                verification.reference ||
+                                null
+                        }
+                    }
+                }
+            );
+
+
+        if(!updated){
+            return false;
+        }
+
+
+        this.emitLifecycle(
+            "updated",
+            app,
+            updated,
+            {
+                previousVersion,
+                version:
+                    app.version
+            }
+        );
+
+
+        return this.remount();
+
+    },
+
+
+    /* =====================================================
+       REMOVE
+    ===================================================== */
+
+    remove(appId){
+
+        const app =
+            this.findApp(
+                appId
+            );
+
+
+        if(!app){
+            return false;
+        }
+
+
+        const state =
+            this.getAppState(
+                app
+            );
+
+
+        if(
+            state.builtIn ||
+            !state.organ
+        ){
+
+            return false;
+
+        }
+
+
+        if(
+            app.removable ===
+                false
+        ){
+
+            return false;
+        }
+
+
+        const organSystem =
+            this.getOrganSystem();
+
+
+        if(
+            !organSystem ||
+            typeof organSystem.uninstall !==
+                "function"
+        ){
+            return false;
+        }
+
+
+        const result =
+            organSystem.uninstall(
+                state.organ.id
+            );
+
+
+        if(result !== true){
+            return false;
+        }
+
+
+        this.emitLifecycle(
+            "removed",
+            app,
+            state.organ
+        );
+
+
+        this.selectedAppId =
+            null;
+
+
+        return this.remount();
+
+    },
+
+
+    /* =====================================================
+       LIFECYCLE EVENT
+    ===================================================== */
+
+    emitLifecycle(
+        action,
+        app,
+        organ,
+        extra = {}
+    ){
+
+        const payload = {
+
+            appId:
+                app?.id ||
+                null,
+
+            organId:
+                organ?.id ||
+                null,
+
+            action,
+
+            ...extra,
+
+            time:
+                Date.now()
+
+        };
+
+
+        try{
+
+            VAERO?.emit?.(
+                `application:${action}`,
+                payload
+            );
+
+        } catch(error){
+
+            /* non-fatal */
+        }
+
+
+        try{
+
+            this.getService(
+                "events"
+            )?.emit?.(
+                `application:${action}`,
+                payload
+            );
+
+        } catch(error){
+
+            /* non-fatal */
+        }
+
+    },
+
+
+    /* =====================================================
+       OPEN
+    ===================================================== */
+
+    open(app){
+
+        if(
+            !app ||
+            !app.action
+        ){
+            return false;
+        }
+
+
+        const state =
+            this.getAppState(
+                app
+            );
+
+
+        if(!state.installed){
+            return false;
+        }
+
+
+        if(
+            !state.builtIn &&
+            state.trusted !==
+                true
+        ){
+
+            return false;
+
+        }
+
+
+        try{
+
+            const button =
+                document.createElement(
+                    "button"
+                );
+
+
+            button.type =
+                "button";
+
+            button.dataset.action =
+                app.action;
+
+            button.style.display =
+                "none";
+
+
+            document.body.appendChild(
+                button
+            );
+
+
+            button.click();
+
+            button.remove();
+
+
+            return true;
+
+        } catch(error){
+
+            console.warn(
+                "Application açılamadı:",
+                error
+            );
+
+
+            return false;
+
+        }
+
+    },
+
+
+    /* =====================================================
+       APP CARD
     ===================================================== */
 
     renderAppCard(app){
@@ -370,11 +2016,6 @@ const ApplicationsApp = {
             this.getAppState(
                 app
             );
-
-
-        const trusted =
-            app.trusted ===
-            true;
 
 
         const pricing =
@@ -387,14 +2028,23 @@ const ApplicationsApp = {
             "İncele";
 
 
-        if(state.installed){
+        if(
+            state.updateAvailable
+        ){
+
+            actionLabel =
+                "Güncelle";
+
+        } else if(
+            state.installed
+        ){
 
             actionLabel =
                 "Aç";
 
         } else if(
             pricing.model ===
-            "free"
+                "free"
         ){
 
             actionLabel =
@@ -411,14 +2061,18 @@ const ApplicationsApp = {
         return `
             <article
                 class="applications-card"
-                data-app-id="${this.escapeHTML(app.id)}"
+                data-app-id="${this.escapeHTML(
+                    app.id
+                )}"
             >
 
                 <div class="applications-card-icon">
                     ${this.escapeHTML(
-                        app.icon || "◌"
+                        app.icon ||
+                        "◌"
                     )}
                 </div>
+
 
                 <div class="applications-card-copy">
 
@@ -430,10 +2084,15 @@ const ApplicationsApp = {
                             )}
                         </h3>
 
+
                         ${
-                            trusted
+                            state.trusted ||
+                            state.builtIn
                                 ? `
-                                    <span class="applications-trusted">
+                                    <span
+                                        class="applications-trusted"
+                                        title="Güvenilir kaynak"
+                                    >
                                         ✓
                                     </span>
                                   `
@@ -442,12 +2101,14 @@ const ApplicationsApp = {
 
                     </div>
 
+
                     <p>
                         ${this.escapeHTML(
                             app.subtitle ||
                             ""
                         )}
                     </p>
+
 
                     <div class="applications-card-meta">
 
@@ -458,6 +2119,7 @@ const ApplicationsApp = {
                             )}
                         </span>
 
+
                         <span>
                             v${this.escapeHTML(
                                 app.version ||
@@ -465,9 +2127,21 @@ const ApplicationsApp = {
                             )}
                         </span>
 
+
+                        ${
+                            state.updateAvailable
+                                ? `
+                                    <span>
+                                        Güncelleme
+                                    </span>
+                                  `
+                                : ""
+                        }
+
                     </div>
 
                 </div>
+
 
                 <div class="applications-card-actions">
 
@@ -475,39 +2149,154 @@ const ApplicationsApp = {
                         type="button"
                         class="applications-more-btn"
                         data-applications-command="details"
-                        data-app-id="${this.escapeHTML(app.id)}"
+                        data-app-id="${this.escapeHTML(
+                            app.id
+                        )}"
                     >
                         Bilgi
                     </button>
 
-                    ${
-                        state.installed
-                            ? `
-                                <button
-                                    type="button"
-                                    class="primary-btn applications-main-btn"
-                                    data-action="${this.escapeHTML(
-                                        app.action
-                                    )}"
-                                >
-                                    ${actionLabel}
-                                </button>
-                              `
-                            : `
-                                <button
-                                    type="button"
-                                    class="primary-btn applications-main-btn"
-                                    data-applications-command="install"
-                                    data-app-id="${this.escapeHTML(app.id)}"
-                                >
-                                    ${actionLabel}
-                                </button>
-                              `
-                    }
+
+                    <button
+                        type="button"
+                        class="primary-btn applications-main-btn"
+                        data-applications-command="${
+                            state.updateAvailable
+                                ? "update"
+                                : state.installed
+                                    ? "open"
+                                    : "install"
+                        }"
+                        data-app-id="${this.escapeHTML(
+                            app.id
+                        )}"
+                    >
+                        ${actionLabel}
+                    </button>
 
                 </div>
 
             </article>
+        `;
+
+    },
+
+
+    /* =====================================================
+       PERMISSION UI
+    ===================================================== */
+
+    renderPermissions(
+        app,
+        state
+    ){
+
+        const requested =
+            this.normalizeList(
+                app.requestedPermissions
+            );
+
+
+        if(!requested.length){
+
+            return `
+                <p class="applications-muted">
+                    Özel izin istemiyor.
+                </p>
+            `;
+
+        }
+
+
+        const granted =
+            this.normalizeList(
+                state.organ
+                    ?.permissions
+            )
+                .map(
+                    item =>
+                        item.toLowerCase()
+                );
+
+
+        return `
+            <div class="applications-permission-list">
+
+                ${requested
+                    .map(
+                        permission => {
+
+                            const normalized =
+                                permission
+                                    .toLowerCase();
+
+
+                            const isGranted =
+                                granted.includes(
+                                    normalized
+                                );
+
+
+                            return `
+                                <div class="applications-permission-row">
+
+                                    <div>
+
+                                        <strong>
+                                            ${this.escapeHTML(
+                                                permission
+                                            )}
+                                        </strong>
+
+                                        <small>
+                                            ${
+                                                isGranted
+                                                    ? "İzin verildi"
+                                                    : "İzin verilmedi"
+                                            }
+                                        </small>
+
+                                    </div>
+
+
+                                    ${
+                                        state.installed &&
+                                        !state.builtIn &&
+                                        state.trusted
+                                            ? `
+                                                <button
+                                                    type="button"
+                                                    class="secondary-btn"
+                                                    data-applications-command="${
+                                                        isGranted
+                                                            ? "permission:revoke"
+                                                            : "permission:grant"
+                                                    }"
+                                                    data-app-id="${this.escapeHTML(
+                                                        app.id
+                                                    )}"
+                                                    data-permission="${this.escapeHTML(
+                                                        permission
+                                                    )}"
+                                                >
+                                                    ${
+                                                        isGranted
+                                                            ? "Kaldır"
+                                                            : "İzin Ver"
+                                                    }
+                                                </button>
+                                              `
+                                            : ""
+                                    }
+
+                                </div>
+                            `;
+
+                        }
+                    )
+                    .join("")}
+
+            </div>
         `;
 
     },
@@ -530,26 +2319,32 @@ const ApplicationsApp = {
             );
 
 
-        const permissions =
-            Array.isArray(
-                app.requestedPermissions
-            )
-                ? app.requestedPermissions
-                : [];
-
-
         const capabilities =
-            Array.isArray(
+            this.normalizeList(
                 app.capabilities
-            )
-                ? app.capabilities
-                : [];
+            );
+
+
+        const pricing =
+            app.pricing || {
+                model:"free"
+            };
 
 
         return `
             <div class="applications-detail-overlay">
 
-                <section class="applications-detail">
+                <div
+                    class="applications-detail-backdrop"
+                    data-applications-command="close-details"
+                ></div>
+
+
+                <section
+                    class="applications-detail"
+                    role="dialog"
+                    aria-modal="true"
+                >
 
                     <button
                         type="button"
@@ -558,6 +2353,7 @@ const ApplicationsApp = {
                     >
                         ×
                     </button>
+
 
                     <div class="applications-detail-head">
 
@@ -568,21 +2364,28 @@ const ApplicationsApp = {
                             )}
                         </div>
 
+
                         <div>
 
                             <div class="eyebrow">
+
                                 ${
-                                    app.trusted
-                                        ? "DOĞRULANMIŞ UYGULAMA"
-                                        : "UYGULAMA"
+                                    state.builtIn
+                                        ? "VAERO SYSTEM APPLICATION"
+                                        : state.trusted
+                                            ? "DOĞRULANMIŞ UYGULAMA"
+                                            : "UYGULAMA"
                                 }
+
                             </div>
+
 
                             <h2>
                                 ${this.escapeHTML(
                                     app.title
                                 )}
                             </h2>
+
 
                             <p>
                                 ${this.escapeHTML(
@@ -596,56 +2399,115 @@ const ApplicationsApp = {
 
                     </div>
 
+
                     <div class="applications-detail-grid">
 
                         <div>
-                            <span>Geliştirici</span>
+
+                            <span>
+                                Geliştirici
+                            </span>
+
                             <strong>
                                 ${this.escapeHTML(
                                     app.developer ||
                                     "VAERO"
                                 )}
                             </strong>
+
                         </div>
 
+
                         <div>
-                            <span>Sürüm</span>
+
+                            <span>
+                                Sürüm
+                            </span>
+
                             <strong>
                                 ${this.escapeHTML(
                                     app.version ||
                                     "1.0.0"
                                 )}
                             </strong>
+
                         </div>
 
+
                         <div>
-                            <span>Durum</span>
+
+                            <span>
+                                Durum
+                            </span>
+
                             <strong>
                                 ${
                                     state.installed
-                                        ? "Yüklü"
+                                        ? state.updateAvailable
+                                            ? "Güncelleme mevcut"
+                                            : "Yüklü"
                                         : "Yüklü değil"
                                 }
                             </strong>
+
                         </div>
 
+
                         <div>
-                            <span>Dağıtım</span>
+
+                            <span>
+                                Dağıtım
+                            </span>
+
                             <strong>
                                 ${this.escapeHTML(
                                     app.distribution ||
                                     "built-in"
                                 )}
                             </strong>
+
+                        </div>
+
+
+                        <div>
+
+                            <span>
+                                Fiyat modeli
+                            </span>
+
+                            <strong>
+                                ${this.escapeHTML(
+                                    pricing.model ||
+                                    "free"
+                                )}
+                            </strong>
+
+                        </div>
+
+
+                        <div>
+
+                            <span>
+                                Runtime
+                            </span>
+
+                            <strong>
+                                ${this.escapeHTML(
+                                    state.status
+                                )}
+                            </strong>
+
                         </div>
 
                     </div>
+
 
                     <div class="applications-detail-section">
 
                         <div class="eyebrow">
                             YETENEKLER
                         </div>
+
 
                         ${
                             capabilities.length
@@ -656,7 +2518,9 @@ const ApplicationsApp = {
                                             .map(
                                                 item => `
                                                     <span>
-                                                        ${this.escapeHTML(item)}
+                                                        ${this.escapeHTML(
+                                                            item
+                                                        )}
                                                     </span>
                                                 `
                                             )
@@ -666,47 +2530,32 @@ const ApplicationsApp = {
                                   `
                                 : `
                                     <p class="applications-muted">
-                                        Özel yetenek tanımlanmamış.
+                                        Özel capability tanımlanmamış.
                                     </p>
                                   `
                         }
 
                     </div>
+
 
                     <div class="applications-detail-section">
 
                         <div class="eyebrow">
-                            İSTENEN İZİNLER
+                            İZİNLER
                         </div>
 
-                        ${
-                            permissions.length
-                                ? `
-                                    <div class="applications-chip-row">
 
-                                        ${permissions
-                                            .map(
-                                                item => `
-                                                    <span>
-                                                        ${this.escapeHTML(item)}
-                                                    </span>
-                                                `
-                                            )
-                                            .join("")}
-
-                                    </div>
-                                  `
-                                : `
-                                    <p class="applications-muted">
-                                        Özel izin istemiyor.
-                                    </p>
-                                  `
-                        }
+                        ${this.renderPermissions(
+                            app,
+                            state
+                        )}
 
                     </div>
 
+
                     ${
-                        !app.trusted
+                        !state.builtIn &&
+                        !state.trusted
                             ? `
                                 <div class="applications-security-warning">
 
@@ -715,7 +2564,7 @@ const ApplicationsApp = {
                                     </strong>
 
                                     <span>
-                                        Bu uygulama doğrulanmadan VAERO sistem kaynaklarına erişemez.
+                                        Manifest içindeki trusted değeri tek başına güven kanıtı değildir. Paket doğrulaması ve VAERO trust sonucu olmadan sistem kaynaklarına erişemez.
                                     </span>
 
                                 </div>
@@ -723,7 +2572,126 @@ const ApplicationsApp = {
                             : ""
                     }
 
+
+                    <div class="applications-detail-actions">
+
+                        ${
+                            state.updateAvailable
+                                ? `
+                                    <button
+                                        type="button"
+                                        class="primary-btn"
+                                        data-applications-command="update"
+                                        data-app-id="${this.escapeHTML(
+                                            app.id
+                                        )}"
+                                    >
+                                        Güncelle
+                                    </button>
+                                  `
+                                : state.installed
+                                    ? `
+                                        <button
+                                            type="button"
+                                            class="primary-btn"
+                                            data-applications-command="open"
+                                            data-app-id="${this.escapeHTML(
+                                                app.id
+                                            )}"
+                                        >
+                                            Aç
+                                        </button>
+                                      `
+                                    : `
+                                        <button
+                                            type="button"
+                                            class="primary-btn"
+                                            data-applications-command="install"
+                                            data-app-id="${this.escapeHTML(
+                                                app.id
+                                            )}"
+                                        >
+                                            ${
+                                                this.isPaid(
+                                                    app
+                                                )
+                                                    ? "Satın Al / Yükle"
+                                                    : "Yükle"
+                                            }
+                                        </button>
+                                      `
+                        }
+
+
+                        ${
+                            state.installed &&
+                            !state.builtIn &&
+                            app.removable !==
+                                false
+                                ? `
+                                    <button
+                                        type="button"
+                                        class="secondary-btn"
+                                        data-applications-command="remove"
+                                        data-app-id="${this.escapeHTML(
+                                            app.id
+                                        )}"
+                                    >
+                                        Kaldır
+                                    </button>
+                                  `
+                                : ""
+                        }
+
+                    </div>
+
                 </section>
+
+            </div>
+        `;
+
+    },
+
+
+    /* =====================================================
+       NAVIGATION
+    ===================================================== */
+
+    renderViewNavigation(){
+
+        const views = [
+
+            ["discover","Keşfet"],
+
+            ["installed","Yüklü"],
+
+            ["updates","Güncellemeler"]
+
+        ];
+
+
+        return `
+            <div class="applications-view-nav">
+
+                ${views
+                    .map(
+                        ([id,label]) => `
+                            <button
+                                type="button"
+                                class="${
+                                    this.view ===
+                                        id
+                                        ? "is-active"
+                                        : ""
+                                }"
+                                data-applications-command="view"
+                                data-view="${id}"
+                            >
+                                ${label}
+                            </button>
+                        `
+                    )
+                    .join("")}
 
             </div>
         `;
@@ -737,176 +2705,276 @@ const ApplicationsApp = {
 
     render(){
 
+        this.enterBrainContext();
+
+
         const apps =
             this.getApps();
+
+
+        const catalogApps =
+            this.getCatalogApps();
 
 
         const categories =
             this.getCategories();
 
 
-        const registry =
-            this.getRegistry();
+        const installedCount =
+            catalogApps.filter(
+                app =>
+                    this.getAppState(
+                        app
+                    ).installed
+            ).length;
 
 
-        const catalog =
-            registry &&
-            typeof registry.catalog ===
-                "function"
-                ? registry.catalog()
-                : null;
+        const updatesCount =
+            catalogApps.filter(
+                app =>
+                    this.getAppState(
+                        app
+                    ).updateAvailable
+            ).length;
 
 
         const selectedApp =
-            this.selectedAppId &&
-            registry &&
-            typeof registry.find ===
-                "function"
-                ? registry.find(
+            this.selectedAppId
+                ? this.findApp(
                     this.selectedAppId
                 )
                 : null;
 
 
         return `
-            <section class="applications-app">
+            <section class="engine-page applications-app">
 
-                <header class="applications-header">
+                <div class="applications-shell">
 
-                    <div>
-
-                        <div class="eyebrow">
-                            VAERO APPLICATIONS
-                        </div>
-
-                        <h1>
-                            Uygulamalar
-                        </h1>
-
-                        <p>
-                            Engine'ini yeni yeteneklerle genişlet.
-                        </p>
-
-                    </div>
-
-                    <div class="applications-header-stat">
-
-                        <strong>
-                            ${catalog?.total || apps.length}
-                        </strong>
-
-                        <span>
-                            uygulama
-                        </span>
-
-                    </div>
-
-                </header>
-
-                <div class="applications-toolbar">
-
-                    <label class="applications-search">
-
-                        <span>
-                            ⌕
-                        </span>
-
-                        <input
-                            type="search"
-                            id="applicationsSearch"
-                            placeholder="Uygulama ara"
-                            value="${this.escapeHTML(
-                                this.searchQuery
-                            )}"
-                            autocomplete="off"
-                        >
-
-                    </label>
-
-                    <div class="applications-categories">
+                    <div class="engine-page-toolbar">
 
                         <button
                             type="button"
-                            class="${
-                                this.category ===
-                                    "all"
-                                    ? "is-active"
-                                    : ""
-                            }"
-                            data-applications-command="category"
-                            data-category="all"
+                            class="engine-back-btn"
+                            data-action="home"
                         >
-                            Tümü
+                            ← Engine
                         </button>
-
-                        ${categories
-                            .map(
-                                category => `
-                                    <button
-                                        type="button"
-                                        class="${
-                                            this.category ===
-                                                category.id
-                                                ? "is-active"
-                                                : ""
-                                        }"
-                                        data-applications-command="category"
-                                        data-category="${this.escapeHTML(
-                                            category.id
-                                        )}"
-                                    >
-                                        ${this.escapeHTML(
-                                            this.getCategoryLabel(
-                                                category.id
-                                            )
-                                        )}
-                                    </button>
-                                `
-                            )
-                            .join("")}
 
                     </div>
 
-                </div>
 
-                <div class="applications-scroll">
+                    <header class="applications-header">
 
-                    ${
-                        apps.length
-                            ? `
-                                <div class="applications-grid">
+                        <div>
 
-                                    ${apps
-                                        .map(
-                                            app =>
-                                                this.renderAppCard(
-                                                    app
-                                                )
-                                        )
-                                        .join("")}
+                            <div class="eyebrow">
+                                VAERO APPLICATIONS
+                            </div>
 
-                                </div>
-                              `
-                            : `
-                                <div class="applications-empty">
 
-                                    <div>
-                                        ◌
+                            <h1>
+                                Uygulamalar
+                            </h1>
+
+
+                            <p>
+                                Engine'ini yeni yeteneklerle genişlet. Uygulamaları keşfet, izinlerini incele ve kurulu uygulamalarını yönet.
+                            </p>
+
+                        </div>
+
+
+                        <div class="applications-header-stats">
+
+                            <div>
+
+                                <strong>
+                                    ${catalogApps.length}
+                                </strong>
+
+                                <span>
+                                    Katalog
+                                </span>
+
+                            </div>
+
+
+                            <div>
+
+                                <strong>
+                                    ${installedCount}
+                                </strong>
+
+                                <span>
+                                    Yüklü
+                                </span>
+
+                            </div>
+
+
+                            <div>
+
+                                <strong>
+                                    ${updatesCount}
+                                </strong>
+
+                                <span>
+                                    Güncelleme
+                                </span>
+
+                            </div>
+
+                        </div>
+
+                    </header>
+
+
+                    ${this.renderViewNavigation()}
+
+
+                    <div class="applications-toolbar">
+
+                        <label class="applications-search">
+
+                            <span>
+                                ⌕
+                            </span>
+
+
+                            <input
+                                type="search"
+                                id="applicationsSearch"
+                                placeholder="Uygulama, yetenek veya geliştirici ara"
+                                value="${this.escapeHTML(
+                                    this.searchQuery
+                                )}"
+                                autocomplete="off"
+                            >
+
+                        </label>
+
+
+                        <div class="applications-categories">
+
+                            <button
+                                type="button"
+                                class="${
+                                    this.category ===
+                                        "all"
+                                        ? "is-active"
+                                        : ""
+                                }"
+                                data-applications-command="category"
+                                data-category="all"
+                            >
+                                Tümü
+                            </button>
+
+
+                            ${categories
+                                .map(
+                                    category => {
+
+                                        const id =
+                                            typeof category ===
+                                                "string"
+                                                ? category
+                                                : category.id;
+
+
+                                        return `
+                                            <button
+                                                type="button"
+                                                class="${
+                                                    this.category ===
+                                                        id
+                                                        ? "is-active"
+                                                        : ""
+                                                }"
+                                                data-applications-command="category"
+                                                data-category="${this.escapeHTML(
+                                                    id
+                                                )}"
+                                            >
+                                                ${this.escapeHTML(
+                                                    this.getCategoryLabel(
+                                                        id
+                                                    )
+                                                )}
+                                            </button>
+                                        `;
+
+                                    }
+                                )
+                                .join("")}
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="applications-scroll">
+
+                        ${
+                            apps.length
+                                ? `
+                                    <div class="applications-grid">
+
+                                        ${apps
+                                            .map(
+                                                app =>
+                                                    this.renderAppCard(
+                                                        app
+                                                    )
+                                            )
+                                            .join("")}
+
                                     </div>
+                                  `
+                                : `
+                                    <div class="applications-empty">
 
-                                    <strong>
-                                        Uygulama bulunamadı
-                                    </strong>
+                                        <div>
+                                            ◌
+                                        </div>
 
-                                    <span>
-                                        Arama veya kategori filtresini değiştir.
-                                    </span>
+                                        <strong>
+                                            ${
+                                                this.view ===
+                                                    "updates"
+                                                    ? "Bekleyen güncelleme yok"
+                                                    : this.view ===
+                                                        "installed"
+                                                        ? "Yüklü uygulama bulunamadı"
+                                                        : "Uygulama bulunamadı"
+                                            }
+                                        </strong>
 
-                                </div>
-                              `
-                    }
+                                        <span>
+                                            ${
+                                                this.searchQuery ||
+                                                this.category !==
+                                                    "all"
+                                                    ? "Arama veya kategori filtresini değiştir."
+                                                    : this.view ===
+                                                        "updates"
+                                                        ? "Kurulu uygulamalar güncel."
+                                                        : "Application Registry şu anda eşleşen bir uygulama döndürmedi."
+                                            }
+                                        </span>
+
+                                    </div>
+                                  `
+                        }
+
+                    </div>
+
+
+                    ${UI.brainPanel()}
 
                 </div>
+
 
                 ${
                     selectedApp
@@ -928,552 +2996,25 @@ const ApplicationsApp = {
 
     remount(){
 
-    const engine =
-        this.getEngine();
-
-
-    if(
-        !engine ||
-        typeof engine.mount !==
-            "function"
-    ){
-        return false;
-    }
-
-
-    return engine.mount(
-        engine.currentEntity
-    );
-
-},
-
-    /* =====================================================
-       INSTALL SECURITY GATE
-    ===================================================== */
-
-    install(appId){
-
-    const registry =
-        this.getRegistry();
-
-
-    const organSystem =
-        this.getOrganSystem();
-
-
-    const guardian =
-        this.getService(
-            "guardian"
-        );
-
-
-    const app =
-        registry &&
-        typeof registry.find ===
-            "function"
-            ? registry.find(
-                appId
-            )
-            : null;
-
-
-    /* =====================================================
-       BASIC VALIDATION
-    ===================================================== */
-
-    if(
-        !app ||
-        !organSystem
-    ){
-
-        console.warn(
-            "Applications install failed: registry or OrganSystem unavailable."
-        );
-
-        return false;
-
-    }
-
-
-    if(
-        !app.id ||
-        typeof app.id !==
-            "string"
-    ){
-
-        console.warn(
-            "Applications install blocked: invalid application manifest."
-        );
-
-        return false;
-
-    }
-
-
-    /* =====================================================
-       BUILT-IN APPLICATIONS
-
-       Built-in uygulamalar Engine paketinin parçasıdır.
-       Applications üzerinden yeniden kurulmaz.
-    ===================================================== */
-
-    if(
-        app.system === true ||
-        app.distribution ===
-            "built-in"
-    ){
-
-        console.info(
-            "Application is already part of VAERO Engine:",
-            app.id
-        );
-
-        return false;
-
-    }
-
-
-    /* =====================================================
-       INSTALLABILITY
-    ===================================================== */
-
-    if(
-        app.installable !==
-            true
-    ){
-
-        console.warn(
-            "Applications install blocked: application is not installable.",
-            app.id
-        );
-
-        return false;
-
-    }
-
-
-    /* =====================================================
-       GUARDIAN PRE-CHECK
-
-       Guardian burada yalnız istemci tarafındaki
-       ilk güvenlik filtresidir.
-
-       Gerçek trust/signature doğrulamasının yerine geçmez.
-    ===================================================== */
-
-    if(
-        guardian &&
-        typeof guardian.check ===
-            "function"
-    ){
-
-        try{
-
-            const validation =
-                guardian.check(
-                    app,
-                    "application-install",
-                    {
-                        operation:
-                            "install",
-
-                        appId:
-                            app.id,
-
-                        distribution:
-                            app.distribution
-                    }
-                );
-
-
-            if(
-                validation ===
-                    false ||
-                (
-                    validation &&
-                    validation.valid ===
-                        false
-                )
-            ){
-
-                console.warn(
-                    "Applications install blocked by Guardian.",
-                    app.id
-                );
-
-                return false;
-
-            }
-
-        } catch(error){
-
-            console.error(
-                "Applications Guardian check failed:",
-                error
-            );
-
-            return false;
-
-        }
-
-    }
-
-
-    /* =====================================================
-       PACKAGE / SIGNATURE AUTHORITY
-
-       KRİTİK:
-       Manifest içindeki `trusted: true` tek başına
-       güven kanıtı değildir.
-
-       Gerçek uygulama kurulumu için daha sonra:
-
-       package fetch
-           ↓
-       package hash
-           ↓
-       developer signature
-           ↓
-       VAERO trust authority
-           ↓
-       compatibility check
-           ↓
-       permission consent
-           ↓
-       installation
-
-       zinciri kurulacaktır.
-
-       Bu doğrulama sistemi henüz mevcut olmadığı için
-       third-party / first-party dış paket kurulumu burada
-       fail-closed davranır.
-    ===================================================== */
-
-    const packageVerifier =
-        this.getService(
-            "applicationVerifier"
-        );
-
-
-    if(
-        !packageVerifier ||
-        typeof packageVerifier.verify !==
-            "function"
-    ){
-
-        console.warn(
-            "Applications install blocked: verified package installation is not available yet.",
-            app.id
-        );
-
-        return false;
-
-    }
-
-
-    /* =====================================================
-       PACKAGE VERIFICATION
-    ===================================================== */
-
-    let verification =
-        null;
-
-
-    try{
-
-        verification =
-            packageVerifier.verify(
-                app
-            );
-
-    } catch(error){
-
-        console.error(
-            "Application verification failed:",
-            error
-        );
-
-        return false;
-
-    }
-
-
-    /*
-     * Şimdilik async verifier kabul etmiyoruz.
-     * Async paket doğrulamasını kurduğumuzda install()
-     * fonksiyonunu da kontrollü şekilde async yapacağız.
-     */
-
-    if(
-        verification &&
-        typeof verification.then ===
-            "function"
-    ){
-
-        console.warn(
-            "Applications install blocked: asynchronous verifier is not wired yet.",
-            app.id
-        );
-
-        return false;
-
-    }
-
-
-    if(
-        !verification ||
-        verification.valid !==
-            true
-    ){
-
-        console.warn(
-            "Applications install blocked: package verification failed.",
-            app.id
-        );
-
-        return false;
-
-    }
-
-
-    /* =====================================================
-       VERIFIED IDENTITY MATCH
-
-       İmzalanan paketin gerçekten katalogdaki aynı
-       uygulamaya ait olduğundan emin olunur.
-    ===================================================== */
-
-    if(
-        verification.appId &&
-        verification.appId !==
-            app.id
-    ){
-
-        console.warn(
-            "Applications install blocked: verified package identity mismatch.",
-            app.id
-        );
-
-        return false;
-
-    }
-
-
-    /* =====================================================
-       PAYMENT AUTHORITY
-
-       Ücretli uygulamada frontend ödeme sonucu
-       yeterli değildir.
-
-       Backend/provider doğrulaması gerekir.
-    ===================================================== */
-
-    if(
-        app.pricing?.model &&
-        app.pricing.model !==
-            "free"
-    ){
-
-        const paymentCore =
-            this.getService(
-                "paymentCore"
-            );
+        const engine =
+            this.getEngine();
 
 
         if(
-            !paymentCore ||
-            typeof paymentCore.hasVerifiedEntitlement !==
-                "function"
-        ){
-
-            console.warn(
-                "Applications install blocked: verified purchase entitlement unavailable.",
-                app.id
-            );
-
-            return false;
-
-        }
-
-
-        let entitled =
-            false;
-
-
-        try{
-
-            entitled =
-                paymentCore.hasVerifiedEntitlement(
-                    app.id
-                ) === true;
-
-        } catch(error){
-
-            console.error(
-                "Application entitlement check failed:",
-                error
-            );
-
-            return false;
-
-        }
-
-
-        if(!entitled){
-
-            console.warn(
-                "Applications install blocked: purchase is not verified.",
-                app.id
-            );
-
-            return false;
-
-        }
-
-    }
-
-
-    /* =====================================================
-       EXISTING INSTALLATION
-    ===================================================== */
-
-    const existing =
-        typeof organSystem.findBySlug ===
-            "function"
-            ? organSystem.findBySlug(
-                app.id
-            )
-            : null;
-
-
-    if(existing){
-
-        /*
-         * Daha önce kayıt edilmiş organ yalnız doğrulanmış
-         * paket sonucu yeniden aktive edilebilir.
-         */
-
-        if(
-            typeof organSystem.install !==
+            !engine ||
+            typeof engine.mount !==
                 "function"
         ){
             return false;
         }
 
 
-        return (
-            organSystem.install(
-                existing.id
-            ) === true
+        return engine.mount(
+            engine.currentEntity
         );
 
-    }
+    },
 
-
-    /* =====================================================
-       PERMISSIONS
-
-       requestedPermissions burada otomatik olarak
-       granted permissions haline GELMEZ.
-
-       Kullanıcı onayı daha sonra ayrı permission flow
-       üzerinden verilecek.
-    ===================================================== */
-
-    const organ =
-        organSystem.create(
-            app.title,
-            "active",
-            {
-                id:
-                    app.id,
-
-                slug:
-                    app.id,
-
-                version:
-                    app.version,
-
-                type:
-                    "application",
-
-                source:
-                    app.distribution,
-
-                developer:
-                    app.developer,
-
-                trusted:
-                    true,
-
-                signature:
-                    verification.signature ||
-                    app.signature ||
-                    null,
-
-                verification:
-                    {
-                        verified:
-                            true,
-
-                        verifiedAt:
-                            Date.now(),
-
-                        authority:
-                            verification.authority ||
-                            null,
-
-                        hash:
-                            verification.hash ||
-                            null
-                    },
-
-                permissions:
-                    [],
-
-                requestedPermissions:
-                    Array.isArray(
-                        app.requestedPermissions
-                    )
-                        ? [
-                            ...app.requestedPermissions
-                        ]
-                        : [],
-
-                capabilities:
-                    Array.isArray(
-                        app.capabilities
-                    )
-                        ? [
-                            ...app.capabilities
-                        ]
-                        : [],
-
-                installed:
-                    true,
-
-                removable:
-                    app.removable ===
-                    true
-            }
-        );
-
-
-    if(!organ){
-
-        console.warn(
-            "Applications install failed: OrganSystem rejected application.",
-            app.id
-        );
-
-        return false;
-
-    }
-
-
-    return true;
-
-},
 
     /* =====================================================
        COMMANDS
@@ -1484,14 +3025,19 @@ const ApplicationsApp = {
         element
     ){
 
+        const appId =
+            element?.dataset
+                ?.appId ||
+            null;
+
+
         switch(command){
 
             case "details":
 
                 this.selectedAppId =
-                    element.dataset
-                        .appId ||
-                    null;
+                    appId;
+
 
                 return this.remount();
 
@@ -1500,6 +3046,7 @@ const ApplicationsApp = {
 
                 this.selectedAppId =
                     null;
+
 
                 return this.remount();
 
@@ -1511,22 +3058,50 @@ const ApplicationsApp = {
                         .category ||
                     "all";
 
+
                 this.selectedAppId =
                     null;
+
 
                 return this.remount();
 
 
-            case "install": {
+            case "view":
+
+                this.view =
+                    [
+                        "discover",
+                        "installed",
+                        "updates"
+                    ].includes(
+                        element.dataset
+                            .view
+                    )
+                        ? element.dataset
+                            .view
+                        : "discover";
+
+
+                this.selectedAppId =
+                    null;
+
+
+                return this.remount();
+
+
+            case "install":{
 
                 const installed =
                     this.install(
-                        element.dataset
-                            .appId
+                        appId
                     );
 
 
                 if(installed){
+
+                    this.selectedAppId =
+                        appId;
+
 
                     return this.remount();
 
@@ -1536,6 +3111,47 @@ const ApplicationsApp = {
                 return false;
 
             }
+
+
+            case "open":
+
+                return this.open(
+                    this.findApp(
+                        appId
+                    )
+                );
+
+
+            case "update":
+
+                return this.updateApplication(
+                    appId
+                );
+
+
+            case "remove":
+
+                return this.remove(
+                    appId
+                );
+
+
+            case "permission:grant":
+
+                return this.grantRequestedPermission(
+                    appId,
+                    element.dataset
+                        .permission
+                );
+
+
+            case "permission:revoke":
+
+                return this.revokePermission(
+                    appId,
+                    element.dataset
+                        .permission
+                );
 
 
             default:
@@ -1568,13 +3184,12 @@ document.addEventListener(
         }
 
 
-        const command =
-            target.dataset
-                .applicationsCommand;
+        event.preventDefault();
 
 
         ApplicationsApp.handleCommand(
-            command,
+            target.dataset
+                .applicationsCommand,
             target
         );
 
@@ -1582,31 +3197,41 @@ document.addEventListener(
 );
 
 
+/* =========================================================
+   SEARCH
+========================================================= */
+
 document.addEventListener(
     "input",
     event => {
 
         if(
             event.target.id !==
-            "applicationsSearch"
+                "applicationsSearch"
         ){
             return;
         }
 
 
         ApplicationsApp.searchQuery =
-            event.target.value;
+            String(
+                event.target.value ||
+                ""
+            );
 
 
         clearTimeout(
-            ApplicationsApp
-                .searchTimer
+            ApplicationsApp.searchTimer
         );
 
 
         ApplicationsApp.searchTimer =
             setTimeout(
                 () => {
+
+                    ApplicationsApp.selectedAppId =
+                        null;
+
 
                     ApplicationsApp.remount();
 
