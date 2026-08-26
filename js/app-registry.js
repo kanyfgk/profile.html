@@ -1,22 +1,21 @@
 /* =========================================================
-   VAERO ORGAN REGISTRY
-   Application / Organ Catalog & Manifest Registry
+   VAERO APPLICATION REGISTRY
+   Application Catalog / Manifest Authority
 ========================================================= */
 
-const OrganRegistry = (() => {
+const AppRegistry = (() => {
 
     /*
-     * Built-in yetkisi registry dışından erişilemeyen
-     * private token ile verilir.
+     * Built-in yetkisi yalnız bu closure içinde bulunan
+     * private token ile verilebilir.
      *
-     * Böylece dış manifest:
+     * Dış bir manifest:
      *
-     * distribution: "built-in"
-     * system: true
-     * trusted: true
+     * system:true
+     * trusted:true
+     * distribution:"built-in"
      *
-     * yazsa bile kendisini VAERO sistem uygulaması
-     * olarak kaydedemez.
+     * yazsa bile kendisini sistem uygulaması yapamaz.
      */
 
     const BUILT_IN_TOKEN =
@@ -27,10 +26,10 @@ const OrganRegistry = (() => {
 
     const Registry = {
 
-        apps: [],
+        apps:[],
 
         manifestVersion:
-            1,
+            2,
 
 
         /* =====================================================
@@ -100,7 +99,7 @@ const OrganRegistry = (() => {
             const value =
                 String(
                     category ||
-                    "system"
+                    "other"
                 )
                     .trim()
                     .toLowerCase();
@@ -113,9 +112,11 @@ const OrganRegistry = (() => {
                 "productivity",
                 "knowledge",
                 "social",
+                "communication",
                 "development",
                 "utility",
                 "service",
+                "finance",
                 "other"
 
             ];
@@ -202,7 +203,7 @@ const OrganRegistry = (() => {
             const requestedModel =
                 String(
                     pricing.model ||
-                    ""
+                    "free"
                 )
                     .trim()
                     .toLowerCase();
@@ -216,10 +217,40 @@ const OrganRegistry = (() => {
                     : "free";
 
 
-            const amount =
+            const numericAmount =
                 Number(
                     pricing.amount
                 );
+
+
+            const amount =
+                Number.isFinite(
+                    numericAmount
+                ) &&
+                numericAmount >= 0
+                    ? numericAmount
+                    : 0;
+
+
+            let currency =
+                null;
+
+
+            if(
+                model !==
+                    "free"
+            ){
+
+                currency =
+                    pricing.currency
+                        ? String(
+                            pricing.currency
+                        )
+                            .trim()
+                            .toUpperCase()
+                        : null;
+
+            }
 
 
             let interval =
@@ -228,7 +259,7 @@ const OrganRegistry = (() => {
 
             if(
                 model ===
-                "subscription"
+                    "subscription"
             ){
 
                 const requestedInterval =
@@ -263,23 +294,54 @@ const OrganRegistry = (() => {
                 model,
 
                 amount:
-                    Number.isFinite(
-                        amount
-                    ) &&
-                    amount >= 0
-                        ? amount
-                        : 0,
+                    model ===
+                        "free"
+                        ? 0
+                        : amount,
 
-                currency:
-                    pricing.currency
-                        ? String(
-                            pricing.currency
-                        )
-                            .trim()
-                            .toUpperCase()
-                        : null,
+                currency,
 
                 interval
+
+            };
+
+        },
+
+
+        normalizeCompatibility(value){
+
+            if(
+                !value ||
+                typeof value !==
+                    "object" ||
+                Array.isArray(
+                    value
+                )
+            ){
+
+                return {
+                    minEngineVersion:null,
+                    maxEngineVersion:null
+                };
+
+            }
+
+
+            return {
+
+                minEngineVersion:
+                    value.minEngineVersion
+                        ? this.normalizeText(
+                            value.minEngineVersion
+                        )
+                        : null,
+
+                maxEngineVersion:
+                    value.maxEngineVersion
+                        ? this.normalizeText(
+                            value.maxEngineVersion
+                        )
+                        : null
 
             };
 
@@ -334,6 +396,20 @@ const OrganRegistry = (() => {
                         app.pricing ||
                         {}
                     )
+                },
+
+                compatibility:{
+                    ...(
+                        app.compatibility ||
+                        {}
+                    )
+                },
+
+                metadata:{
+                    ...(
+                        app.metadata ||
+                        {}
+                    )
                 }
 
             };
@@ -358,11 +434,10 @@ const OrganRegistry = (() => {
 
                 return {
 
-                    valid:
-                        false,
+                    valid:false,
 
                     reason:
-                        "App manifest geçerli bir object değil."
+                        "Application manifest object değil."
 
                 };
 
@@ -379,11 +454,10 @@ const OrganRegistry = (() => {
 
                 return {
 
-                    valid:
-                        false,
+                    valid:false,
 
                     reason:
-                        "App id eksik."
+                        "Application id eksik."
 
                 };
 
@@ -398,11 +472,10 @@ const OrganRegistry = (() => {
 
                 return {
 
-                    valid:
-                        false,
+                    valid:false,
 
                     reason:
-                        "App id formatı geçersiz."
+                        "Application id formatı geçersiz."
 
                 };
 
@@ -411,16 +484,15 @@ const OrganRegistry = (() => {
 
             if(
                 id.length >
-                100
+                    100
             ){
 
                 return {
 
-                    valid:
-                        false,
+                    valid:false,
 
                     reason:
-                        "App id çok uzun."
+                        "Application id çok uzun."
 
                 };
 
@@ -438,11 +510,10 @@ const OrganRegistry = (() => {
 
                 return {
 
-                    valid:
-                        false,
+                    valid:false,
 
                     reason:
-                        "App title eksik."
+                        "Application title eksik."
 
                 };
 
@@ -451,16 +522,15 @@ const OrganRegistry = (() => {
 
             if(
                 title.length >
-                120
+                    120
             ){
 
                 return {
 
-                    valid:
-                        false,
+                    valid:false,
 
                     reason:
-                        "App title çok uzun."
+                        "Application title çok uzun."
 
                 };
 
@@ -482,11 +552,52 @@ const OrganRegistry = (() => {
 
                 return {
 
-                    valid:
-                        false,
+                    valid:false,
 
                     reason:
-                        "App action formatı geçersiz."
+                        "Application action formatı geçersiz."
+
+                };
+
+            }
+
+
+            const pricing =
+                this.normalizePricing(
+                    app.pricing
+                );
+
+
+            if(
+                pricing.model !==
+                    "free" &&
+                !pricing.currency
+            ){
+
+                return {
+
+                    valid:false,
+
+                    reason:
+                        "Ücretli application için currency gerekli."
+
+                };
+
+            }
+
+
+            if(
+                pricing.model ===
+                    "subscription" &&
+                !pricing.interval
+            ){
+
+                return {
+
+                    valid:false,
+
+                    reason:
+                        "Subscription application için interval gerekli."
 
                 };
 
@@ -495,10 +606,13 @@ const OrganRegistry = (() => {
 
             return {
 
-                valid:
-                    true,
+                valid:true,
 
-                id
+                id,
+
+                action,
+
+                pricing
 
             };
 
@@ -525,10 +639,11 @@ const OrganRegistry = (() => {
             ){
 
                 console.warn(
-                    "Organ kaydedilemedi:",
+                    "Application kaydedilemedi:",
                     validation.reason,
                     app
                 );
+
 
                 return null;
 
@@ -544,17 +659,22 @@ const OrganRegistry = (() => {
                     BUILT_IN_TOKEN;
 
 
-            /*
-             * Built-in dağıtım değeri yalnız private
-             * internal token ile atanabilir.
-             */
-
             const distribution =
                 isBuiltIn
                     ? "built-in"
                     : this.normalizeDistribution(
                         app.distribution
                     );
+
+
+            const compatibility =
+                this.normalizeCompatibility({
+                    minEngineVersion:
+                        app.minEngineVersion,
+
+                    maxEngineVersion:
+                        app.maxEngineVersion
+                });
 
 
             const normalizedApp = {
@@ -588,10 +708,7 @@ const OrganRegistry = (() => {
                     ),
 
                 action:
-                    this.normalizeText(
-                        app.action,
-                        `entity:${id}`
-                    ),
+                    validation.action,
 
                 category:
                     this.normalizeCategory(
@@ -616,40 +733,37 @@ const OrganRegistry = (() => {
 
                 enabled:
                     app.enabled !==
-                    false,
-
-                /*
-                 * system ve trusted dış manifestten
-                 * asla alınmaz.
-                 */
+                        false,
 
                 system:
                     isBuiltIn,
+
+                /*
+                 * Registry trusted yalnız built-in için
+                 * doğrudan true olabilir.
+                 *
+                 * External runtime trust OrganSystem +
+                 * ApplicationVerifier tarafından tutulur.
+                 */
 
                 trusted:
                     isBuiltIn,
 
                 removable:
-                    !isBuiltIn &&
-                    app.removable ===
-                        true,
+                    isBuiltIn
+                        ? false
+                        : app.removable !==
+                            false,
 
                 installable:
-                    !isBuiltIn &&
-                    app.installable ===
-                        true,
+                    isBuiltIn
+                        ? false
+                        : app.installable ===
+                            true,
 
                 updateable:
                     app.updateable !==
-                    false,
-
-                /*
-                 * Signature burada yalnız manifest
-                 * metadata'sıdır.
-                 *
-                 * "signature var" = "signature doğrulandı"
-                 * anlamına gelmez.
-                 */
+                        false,
 
                 signature:
                     isBuiltIn
@@ -675,21 +789,36 @@ const OrganRegistry = (() => {
                     ),
 
                 pricing:
-                    this.normalizePricing(
-                        app.pricing
-                    ),
+                    validation.pricing,
 
                 minEngineVersion:
-                    app.minEngineVersion
-                        ? this.normalizeText(
-                            app.minEngineVersion
-                        )
-                        : null,
+                    compatibility
+                        .minEngineVersion,
+
+                maxEngineVersion:
+                    compatibility
+                        .maxEngineVersion,
+
+                compatibility,
 
                 tags:
                     this.normalizeArray(
                         app.tags
                     ),
+
+                metadata:
+                    (
+                        app.metadata &&
+                        typeof app.metadata ===
+                            "object" &&
+                        !Array.isArray(
+                            app.metadata
+                        )
+                    )
+                        ? {
+                            ...app.metadata
+                        }
+                        : {},
 
                 createdAt:
                     Number.isFinite(
@@ -731,8 +860,8 @@ const OrganRegistry = (() => {
 
 
                 /*
-                 * Mevcut built-in uygulama dış manifest
-                 * tarafından overwrite edilemez.
+                 * Built-in manifest dış kayıt tarafından
+                 * değiştirilemez.
                  */
 
                 if(
@@ -742,7 +871,7 @@ const OrganRegistry = (() => {
                 ){
 
                     console.warn(
-                        "Built-in application manifest cannot be overwritten:",
+                        "Built-in application manifest overwrite engellendi:",
                         id
                     );
 
@@ -750,27 +879,6 @@ const OrganRegistry = (() => {
                     return this.cloneApp(
                         existing
                     );
-
-                }
-
-
-                /*
-                 * Dış uygulama sonradan kendisini built-in
-                 * yapamaz.
-                 */
-
-                if(
-                    existing.system !==
-                        true &&
-                    isBuiltIn !==
-                        true
-                ){
-
-                    normalizedApp.system =
-                        false;
-
-                    normalizedApp.trusted =
-                        false;
 
                 }
 
@@ -792,6 +900,14 @@ const OrganRegistry = (() => {
                     normalizedApp.installable =
                         false;
 
+                } else {
+
+                    normalizedApp.system =
+                        false;
+
+                    normalizedApp.trusted =
+                        false;
+
                 }
 
 
@@ -805,6 +921,7 @@ const OrganRegistry = (() => {
                 ] = {
 
                     ...existing,
+
                     ...normalizedApp
 
                 };
@@ -836,6 +953,20 @@ const OrganRegistry = (() => {
 
 
         /* =====================================================
+           REGISTER EXTERNAL MANIFEST
+        ===================================================== */
+
+        registerExternal(app = {}){
+
+            return this.register(
+                app,
+                null
+            );
+
+        },
+
+
+        /* =====================================================
            REMOVE MANIFEST
         ===================================================== */
 
@@ -857,7 +988,7 @@ const OrganRegistry = (() => {
 
             if(
                 index <
-                0
+                    0
             ){
                 return false;
             }
@@ -869,14 +1000,9 @@ const OrganRegistry = (() => {
                 ];
 
 
-            /*
-             * Built-in VAERO uygulamaları runtime
-             * sırasında registry'den kaldırılamaz.
-             */
-
             if(
                 app.system ===
-                true
+                    true
             ){
 
                 return false;
@@ -888,6 +1014,65 @@ const OrganRegistry = (() => {
                 index,
                 1
             );
+
+
+            return true;
+
+        },
+
+
+        /* =====================================================
+           ENABLE / DISABLE CATALOG ENTRY
+        ===================================================== */
+
+        setEnabled(
+            id,
+            enabled
+        ){
+
+            const normalizedId =
+                this.normalizeId(
+                    id
+                );
+
+
+            const app =
+                this.apps.find(
+                    item =>
+                        item.id ===
+                        normalizedId
+                );
+
+
+            if(!app){
+                return false;
+            }
+
+
+            /*
+             * Built-in entry runtime'dan silinmez;
+             * ama catalog visibility değiştirilmemeli.
+             */
+
+            if(
+                app.system ===
+                    true &&
+                enabled ===
+                    false
+            ){
+
+                return false;
+
+            }
+
+
+            app.enabled =
+                Boolean(
+                    enabled
+                );
+
+            app.updatedAt =
+                Date.now();
 
 
             return true;
@@ -918,6 +1103,15 @@ const OrganRegistry = (() => {
             return this.cloneApp(
                 app ||
                 null
+            );
+
+        },
+
+
+        get(id){
+
+            return this.find(
+                id
             );
 
         },
@@ -958,7 +1152,8 @@ const OrganRegistry = (() => {
                     ]
                     : this.apps.filter(
                         app =>
-                            app.enabled
+                            app.enabled ===
+                                true
                     );
 
 
@@ -984,14 +1179,14 @@ const OrganRegistry = (() => {
 
             if(
                 options.installable ===
-                true
+                    true
             ){
 
                 apps =
                     apps.filter(
                         app =>
                             app.installable ===
-                            true
+                                true
                     );
 
             }
@@ -999,29 +1194,75 @@ const OrganRegistry = (() => {
 
             if(
                 options.system ===
-                true
+                    true
             ){
 
                 apps =
                     apps.filter(
                         app =>
                             app.system ===
-                            true
+                                true
                     );
 
             }
 
 
             if(
-                options.trusted ===
-                true
+                options.external ===
+                    true
             ){
 
                 apps =
                     apps.filter(
                         app =>
-                            app.trusted ===
-                            true
+                            app.system !==
+                                true
+                    );
+
+            }
+
+
+            if(
+                options.firstParty ===
+                    true
+            ){
+
+                apps =
+                    apps.filter(
+                        app =>
+                            app.distribution ===
+                                "first-party"
+                    );
+
+            }
+
+
+            if(
+                options.thirdParty ===
+                    true
+            ){
+
+                apps =
+                    apps.filter(
+                        app =>
+                            app.distribution ===
+                                "third-party"
+                    );
+
+            }
+
+
+            if(
+                options.paid ===
+                    true
+            ){
+
+                apps =
+                    apps.filter(
+                        app =>
+                            app.pricing
+                                ?.model !==
+                            "free"
                     );
 
             }
@@ -1041,7 +1282,10 @@ const OrganRegistry = (() => {
            SEARCH
         ===================================================== */
 
-        search(query){
+        search(
+            query,
+            options = {}
+        ){
 
             const text =
                 String(
@@ -1054,49 +1298,64 @@ const OrganRegistry = (() => {
                     );
 
 
+            const apps =
+                this.all(
+                    options
+                );
+
+
             if(!text){
 
-                return this.all();
+                return apps;
 
             }
 
 
-            return this.all()
-                .filter(
-                    app => {
+            return apps.filter(
+                app => {
 
-                        const haystack = [
+                    const haystack = [
 
-                            app.id,
+                        app.id,
 
-                            app.title,
+                        app.title,
 
-                            app.subtitle,
+                        app.subtitle,
 
-                            app.description,
+                        app.description,
 
-                            app.developer,
+                        app.developer,
 
-                            app.category,
+                        app.category,
 
-                            ...(
-                                app.tags ||
-                                []
-                            )
+                        ...(
+                            app.tags ||
+                            []
+                        ),
 
-                        ]
-                            .join(" ")
-                            .toLocaleLowerCase(
-                                "tr-TR"
-                            );
+                        ...(
+                            app.capabilities ||
+                            []
+                        ),
 
+                        ...(
+                            app.requestedPermissions ||
+                            []
+                        )
 
-                        return haystack.includes(
-                            text
+                    ]
+                        .join(" ")
+                        .toLocaleLowerCase(
+                            "tr-TR"
                         );
 
-                    }
-                );
+
+                    return haystack.includes(
+                        text
+                    );
+
+                }
+            );
 
         },
 
@@ -1141,28 +1400,40 @@ const OrganRegistry = (() => {
                     ]) => ({
 
                         id,
+
                         total
 
                     })
+                )
+                .sort(
+                    (
+                        a,
+                        b
+                    ) =>
+                        a.id.localeCompare(
+                            b.id
+                        )
                 );
 
         },
 
 
         /* =====================================================
-           APPLICATIONS CATALOG SNAPSHOT
+           CATALOG SNAPSHOT
         ===================================================== */
 
         catalog(){
 
             const apps =
                 this.all({
-                    includeDisabled:
-                        true
+                    includeDisabled:true
                 });
 
 
             return {
+
+                manifestVersion:
+                    this.manifestVersion,
 
                 total:
                     apps.length,
@@ -1171,55 +1442,105 @@ const OrganRegistry = (() => {
                     apps.filter(
                         app =>
                             app.enabled ===
-                            true
+                                true
                     ).length,
 
                 builtIn:
                     apps.filter(
                         app =>
-                            app.distribution ===
-                            "built-in"
+                            app.system ===
+                                true
                     ).length,
 
                 firstParty:
                     apps.filter(
                         app =>
                             app.distribution ===
-                            "first-party"
+                                "first-party"
                     ).length,
 
                 thirdParty:
                     apps.filter(
                         app =>
                             app.distribution ===
-                            "third-party"
+                                "third-party"
                     ).length,
 
                 installable:
                     apps.filter(
                         app =>
                             app.installable ===
-                            true
+                                true
                     ).length,
 
-                trusted:
+                free:
                     apps.filter(
                         app =>
-                            app.trusted ===
-                            true
+                            app.pricing?.model ===
+                                "free"
                     ).length,
 
                 paid:
                     apps.filter(
                         app =>
-                            app.pricing?.model !==
-                            "free"
+                            app.pricing?.model ===
+                                "paid"
+                    ).length,
+
+                subscriptions:
+                    apps.filter(
+                        app =>
+                            app.pricing?.model ===
+                                "subscription"
                     ).length,
 
                 categories:
                     this.categories(),
 
                 apps
+
+            };
+
+        },
+
+
+        /* =====================================================
+           REPORT
+        ===================================================== */
+
+        report(){
+
+            const catalog =
+                this.catalog();
+
+
+            return {
+
+                manifestVersion:
+                    catalog.manifestVersion,
+
+                total:
+                    catalog.total,
+
+                enabled:
+                    catalog.enabled,
+
+                builtIn:
+                    catalog.builtIn,
+
+                external:
+                    catalog.firstParty +
+                    catalog.thirdParty,
+
+                installable:
+                    catalog.installable,
+
+                paid:
+                    catalog.paid +
+                    catalog.subscriptions,
+
+                categories:
+                    catalog.categories.length
 
             };
 
@@ -1233,6 +1554,10 @@ const OrganRegistry = (() => {
     ========================================================= */
 
     const builtInApplications = [
+
+        /* =====================================================
+           IDENTITY
+        ===================================================== */
 
         {
             id:
@@ -1248,7 +1573,7 @@ const OrganRegistry = (() => {
                 "Dijital kimliğini yönet",
 
             description:
-                "VAERO kimlik kaydını ve varlık kimliği bağlamını yönetir.",
+                "VAERO ID, kimlik görünürlüğü ve doğrulama durumunu yönetir.",
 
             action:
                 "entity:identity",
@@ -1256,11 +1581,26 @@ const OrganRegistry = (() => {
             category:
                 "identity",
 
+            version:
+                "2.0.0",
+
             capabilities:[
-                "identity.read"
+                "identity.read",
+                "identity.manage",
+                "identity.verification.request"
+            ],
+
+            tags:[
+                "identity",
+                "va-id",
+                "verification"
             ]
         },
 
+
+        /* =====================================================
+           PROFILE
+        ===================================================== */
 
         {
             id:
@@ -1273,10 +1613,10 @@ const OrganRegistry = (() => {
                 "Profil",
 
             subtitle:
-                "Profilini ve yönünü görüntüle",
+                "Kendini VAERO içinde ifade et",
 
             description:
-                "Görünen profil bilgilerini ve kişisel yönünü yönetir.",
+                "Görünen isim, bio, yetenekler, ilgi alanları ve Discovery yönünü yönetir.",
 
             action:
                 "entity:profile",
@@ -1284,12 +1624,26 @@ const OrganRegistry = (() => {
             category:
                 "identity",
 
+            version:
+                "2.0.0",
+
             capabilities:[
                 "profile.read",
-                "profile.manage"
+                "profile.manage",
+                "profile.discovery"
+            ],
+
+            tags:[
+                "profile",
+                "discovery",
+                "presentation"
             ]
         },
 
+
+        /* =====================================================
+           MEMORY
+        ===================================================== */
 
         {
             id:
@@ -1302,10 +1656,10 @@ const OrganRegistry = (() => {
                 "Hafıza",
 
             subtitle:
-                "Kalıcı kayıtlarını görüntüle",
+                "Kalıcı bağlamlarını yönet",
 
             description:
-                "VAERO içindeki kalıcı bağlamları ve önemli kayıtları yönetir.",
+                "Notları, kararları, fikirleri, olayları ve önemli kişisel kayıtları saklar.",
 
             action:
                 "entity:memory",
@@ -1313,11 +1667,27 @@ const OrganRegistry = (() => {
             category:
                 "knowledge",
 
+            version:
+                "2.0.0",
+
             capabilities:[
-                "memory.read"
+                "memory.read",
+                "memory.create",
+                "memory.manage",
+                "memory.search"
+            ],
+
+            tags:[
+                "memory",
+                "knowledge",
+                "context"
             ]
         },
 
+
+        /* =====================================================
+           TIMELINE
+        ===================================================== */
 
         {
             id:
@@ -1330,10 +1700,10 @@ const OrganRegistry = (() => {
                 "Zaman Çizelgesi",
 
             subtitle:
-                "Geçmiş olaylarını görüntüle",
+                "Yaşam ve sistem akışını gör",
 
             description:
-                "Olayları ve değişimleri kronolojik bir yaşam akışında gösterir.",
+                "Memory, Evolution ve sistem olaylarını kronolojik bir akışta birleştirir.",
 
             action:
                 "entity:timeline",
@@ -1341,11 +1711,26 @@ const OrganRegistry = (() => {
             category:
                 "knowledge",
 
+            version:
+                "2.0.0",
+
             capabilities:[
-                "timeline.read"
+                "timeline.read",
+                "timeline.search",
+                "timeline.link"
+            ],
+
+            tags:[
+                "timeline",
+                "history",
+                "events"
             ]
         },
 
+
+        /* =====================================================
+           BRIDGE
+        ===================================================== */
 
         {
             id:
@@ -1355,13 +1740,13 @@ const OrganRegistry = (() => {
                 "⌁",
 
             title:
-                "Köprü",
+                "Bridge",
 
             subtitle:
                 "Bağlantılarını yönet",
 
             description:
-                "VAERO varlıkları ve sistem bağlamları arasındaki ilişkileri temsil eder.",
+                "İnsanlar, varlıklar ve dünyalar arasındaki ilişki ağını temsil eder.",
 
             action:
                 "entity:bridge",
@@ -1369,11 +1754,27 @@ const OrganRegistry = (() => {
             category:
                 "social",
 
+            version:
+                "2.0.0",
+
             capabilities:[
-                "bridge.read"
+                "bridge.read",
+                "bridge.create",
+                "bridge.manage",
+                "bridge.search"
+            ],
+
+            tags:[
+                "bridge",
+                "connections",
+                "network"
             ]
         },
 
+
+        /* =====================================================
+           EVOLUTION
+        ===================================================== */
 
         {
             id:
@@ -1383,13 +1784,13 @@ const OrganRegistry = (() => {
                 "⌬",
 
             title:
-                "Evrim",
+                "Evolution",
 
             subtitle:
-                "Gelişim olaylarını incele",
+                "Gelişimini takip et",
 
             description:
-                "Kararların, başarıların ve yaşam olaylarının zaman içindeki etkisini gösterir.",
+                "Hedefleri, kararları, başarıları, kilometre taşlarını ve XP gelişimini takip eder.",
 
             action:
                 "entity:evolution",
@@ -1397,11 +1798,28 @@ const OrganRegistry = (() => {
             category:
                 "development",
 
+            version:
+                "2.0.0",
+
             capabilities:[
-                "evolution.read"
+                "evolution.read",
+                "evolution.create",
+                "evolution.manage",
+                "evolution.goals"
+            ],
+
+            tags:[
+                "evolution",
+                "goals",
+                "progress",
+                "xp"
             ]
         },
 
+
+        /* =====================================================
+           SETTINGS
+        ===================================================== */
 
         {
             id:
@@ -1414,10 +1832,10 @@ const OrganRegistry = (() => {
                 "Ayarlar",
 
             subtitle:
-                "Sistem tercihlerini yönet",
+                "Engine tercihlerini yönet",
 
             description:
-                "VAERO görünümünü, davranışlarını ve kullanıcı tercihlerini yönetir.",
+                "Privacy, Brain, Memory, Notifications, Applications, Security ve görünüm tercihlerini yönetir.",
 
             action:
                 "entity:settings",
@@ -1425,11 +1843,26 @@ const OrganRegistry = (() => {
             category:
                 "system",
 
+            version:
+                "2.0.0",
+
             capabilities:[
-                "settings.read"
+                "settings.read",
+                "settings.manage",
+                "privacy.manage"
+            ],
+
+            tags:[
+                "settings",
+                "privacy",
+                "security"
             ]
         },
 
+
+        /* =====================================================
+           DISCOVERY
+        ===================================================== */
 
         {
             id:
@@ -1442,10 +1875,10 @@ const OrganRegistry = (() => {
                 "Discovery",
 
             subtitle:
-                "Keşif cevaplarını yeniden değerlendir",
+                "Kişisel yönünü keşfet",
 
             description:
-                "Hedefleri, ilgi alanlarını, güçlü yönleri ve kişisel yönü değerlendirir.",
+                "Amaç, ilgi, güçlü yön, hedef ve bağlantı sinyallerinden kişisel başlangıç yönü üretir.",
 
             action:
                 "entity:discovery",
@@ -1453,11 +1886,26 @@ const OrganRegistry = (() => {
             category:
                 "development",
 
+            version:
+                "3.0.0",
+
             capabilities:[
-                "discovery.read"
+                "discovery.read",
+                "discovery.analyse",
+                "discovery.personalise"
+            ],
+
+            tags:[
+                "discovery",
+                "direction",
+                "personalisation"
             ]
         },
 
+
+        /* =====================================================
+           APPLICATIONS
+        ===================================================== */
 
         {
             id:
@@ -1470,10 +1918,10 @@ const OrganRegistry = (() => {
                 "Applications",
 
             subtitle:
-                "Engine'ini yeni uygulamalarla genişlet",
+                "Engine yeteneklerini genişlet",
 
             description:
-                "VAERO uygulamalarını keşfet, incele, yükle ve yönet.",
+                "Uygulamaları keşfet, kurulu uygulamaları yönet, izinleri incele ve güncellemeleri takip et.",
 
             action:
                 "app:applications",
@@ -1481,13 +1929,29 @@ const OrganRegistry = (() => {
             category:
                 "system",
 
+            version:
+                "2.0.0",
+
             capabilities:[
                 "applications.catalog",
+                "applications.install",
                 "applications.manage",
-                "permissions.request"
+                "applications.update",
+                "permissions.review"
+            ],
+
+            tags:[
+                "applications",
+                "catalog",
+                "permissions",
+                "updates"
             ]
         },
 
+
+        /* =====================================================
+           VAERO SYSTEM APP
+        ===================================================== */
 
         {
             id:
@@ -1500,10 +1964,10 @@ const OrganRegistry = (() => {
                 "VAERO",
 
             subtitle:
-                "Engine hizmetlerini yönet",
+                "Living Engine merkezi",
 
             description:
-                "Engine hizmetleri, abonelik ve merkezi ödeme altyapısına erişim sağlar.",
+                "Worlds, Entities, Memory, Evolution, Bridge, Applications, Brain ve Engine durumunu tek sistem bağlamında birleştirir.",
 
             action:
                 "app:vaero",
@@ -1511,14 +1975,30 @@ const OrganRegistry = (() => {
             category:
                 "system",
 
+            version:
+                "2.0.0",
+
             capabilities:[
-                "engine.services",
-                "payment.intent"
+                "engine.overview",
+                "engine.context",
+                "engine.health",
+                "engine.continuity"
+            ],
+
+            tags:[
+                "vaero",
+                "engine",
+                "continuity",
+                "system"
             ]
         }
 
     ];
 
+
+    /* =========================================================
+       INTERNAL BUILT-IN REGISTRATION
+    ========================================================= */
 
     builtInApplications
         .forEach(
@@ -1539,7 +2019,7 @@ const OrganRegistry = (() => {
 
 
 /* =========================================================
-   REGISTER
+   REGISTER SERVICES
 ========================================================= */
 
 try{
@@ -1551,9 +2031,26 @@ try{
             "function"
     ){
 
+        /*
+         * Doğru servis adı.
+         */
+
+        VAERO.register(
+            "appRegistry",
+            AppRegistry
+        );
+
+
+        /*
+         * Eski kodların kırılmaması için compatibility alias.
+         *
+         * Yeni kod Application katalogları için
+         * appRegistry kullanmalı.
+         */
+
         VAERO.register(
             "organRegistry",
-            OrganRegistry
+            AppRegistry
         );
 
     }
@@ -1561,7 +2058,7 @@ try{
 } catch(error){
 
     console.warn(
-        "OrganRegistry VAERO registry'ye eklenemedi:",
+        "AppRegistry VAERO servislerine eklenemedi:",
         error
     );
 
@@ -1569,8 +2066,19 @@ try{
 
 
 /* =========================================================
-   GLOBAL
+   GLOBALS
 ========================================================= */
 
+window.AppRegistry =
+    AppRegistry;
+
+
+/*
+ * Legacy compatibility.
+ *
+ * Eski OrgansApp / OrganStatus kodu henüz bu globali
+ * kullanabiliyor.
+ */
+
 window.OrganRegistry =
-    OrganRegistry;
+    AppRegistry;
