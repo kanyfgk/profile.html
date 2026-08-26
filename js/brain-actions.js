@@ -1,11 +1,12 @@
 /* =========================================================
    VAERO BRAIN ACTIONS
-   Safe Engine Action Execution Layer
+   Policy-Aware Engine Action Execution Layer
 ========================================================= */
 
 const BrainActions = {
 
-    lastResult: null,
+    lastResult:
+        null,
 
 
     /* =====================================================
@@ -23,6 +24,7 @@ const BrainActions = {
                 return null;
             }
 
+
             return (
                 VAERO.get(name) ||
                 null
@@ -34,6 +36,7 @@ const BrainActions = {
                 `Brain Actions servisi okunamadı: ${name}`,
                 error
             );
+
 
             return null;
 
@@ -57,7 +60,7 @@ const BrainActions = {
 
         if(
             typeof Actions !==
-            "undefined"
+                "undefined"
         ){
             return Actions;
         }
@@ -81,19 +84,88 @@ const BrainActions = {
 
         } catch(error){
 
-            /* window fallback below */
+            /* fallback */
         }
 
+
+        return (
+            window.Engine ||
+            null
+        );
+
+    },
+
+
+    getPolicy(){
+
+        return (
+            this.getService(
+                "brainActionPolicy"
+            ) ||
+            window.BrainActionPolicy ||
+            null
+        );
+
+    },
+
+
+    /* =====================================================
+       HELPERS
+    ===================================================== */
+
+    normalizeValue(value){
+
+        return String(
+            value ?? ""
+        )
+            .trim()
+            .toLowerCase();
+
+    },
+
+
+    clone(value){
 
         if(
-            typeof window !== "undefined" &&
-            window.Engine
+            value === null ||
+            value === undefined
         ){
-            return window.Engine;
+            return value;
         }
 
 
-        return null;
+        try{
+
+            if(
+                typeof structuredClone ===
+                    "function"
+            ){
+
+                return structuredClone(
+                    value
+                );
+
+            }
+
+        } catch(error){
+
+            /* fallback */
+        }
+
+
+        try{
+
+            return JSON.parse(
+                JSON.stringify(
+                    value
+                )
+            );
+
+        } catch(error){
+
+            return null;
+
+        }
 
     },
 
@@ -114,19 +186,26 @@ const BrainActions = {
         this.lastResult = {
 
             success:
-                Boolean(success),
+                Boolean(
+                    success
+                ),
 
             executed:
-                Boolean(success),
+                Boolean(
+                    success
+                ),
 
             intent:
-                intent || null,
+                intent ||
+                null,
 
             action:
-                action || null,
+                action ||
+                null,
 
             reason:
-                reason || null,
+                reason ||
+                null,
 
             message:
                 message ||
@@ -138,7 +217,12 @@ const BrainActions = {
                 ),
 
             data:
-                data || null,
+                data !==
+                    undefined
+                    ? this.clone(
+                        data
+                    )
+                    : null,
 
             executedAt:
                 Date.now()
@@ -147,12 +231,13 @@ const BrainActions = {
 
 
         /*
-         * Mevcut sistemin boolean dönüş beklentisini
-         * koruyoruz. BrainCore ayrıntılı sonucu
-         * lastResult üzerinden alabiliyor.
+         * BrainCore eski boolean sözleşmesini koruyor.
+         * Ayrıntılı sonuç lastResult üzerinden okunur.
          */
 
-        return Boolean(success);
+        return Boolean(
+            success
+        );
 
     },
 
@@ -190,6 +275,27 @@ const BrainActions = {
                 );
 
 
+            /*
+             * Promise yaşam döngüsü bu katmanda henüz
+             * yürütülmüyor.
+             */
+
+            if(
+                value &&
+                typeof value.then ===
+                    "function"
+            ){
+
+                return {
+                    success:false,
+                    value:null,
+                    missing:false,
+                    asyncUnsupported:true
+                };
+
+            }
+
+
             return {
                 success:
                     value !== false,
@@ -215,6 +321,161 @@ const BrainActions = {
             };
 
         }
+
+    },
+
+
+    /* =====================================================
+       POLICY AUTHORIZATION
+
+       BrainActions ikinci güvenlik sınırıdır.
+       BrainCore policy kontrol etmiş olsa bile bu katman
+       tekrar doğrular.
+
+       Backend authority değildir.
+    ===================================================== */
+
+    authorize(
+        intent,
+        context = {}
+    ){
+
+        const policy =
+            this.getPolicy();
+
+
+        if(
+            !policy ||
+            typeof policy.evaluateIntent !==
+                "function"
+        ){
+
+            return {
+                allowed:false,
+                reason:
+                    "Brain Action Policy bulunamadı.",
+                evaluation:null
+            };
+
+        }
+
+
+        let evaluation =
+            null;
+
+
+        try{
+
+            evaluation =
+                policy.evaluateIntent(
+                    intent,
+                    context
+                );
+
+        } catch(error){
+
+            return {
+                allowed:false,
+                reason:
+                    "Brain Action Policy değerlendirilemedi.",
+                evaluation:null
+            };
+
+        }
+
+
+        if(
+            !evaluation ||
+            evaluation.executable !==
+                true
+        ){
+
+            return {
+                allowed:false,
+                reason:
+                    evaluation?.reason ||
+                    "Intent yürütülebilir değil.",
+                evaluation
+            };
+
+        }
+
+
+        if(
+            evaluation.blocked ===
+                true ||
+            evaluation.allowed !==
+                true
+        ){
+
+            return {
+                allowed:false,
+                reason:
+                    evaluation.reason ||
+                    "İşlem policy tarafından engellendi.",
+                evaluation
+            };
+
+        }
+
+
+        if(
+            evaluation.requiresConfirmation
+        ){
+
+            if(
+                context.confirmed !==
+                    true
+            ){
+
+                return {
+                    allowed:false,
+                    reason:
+                        evaluation.reason ||
+                        "Kullanıcı onayı gerekiyor.",
+                    evaluation
+                };
+
+            }
+
+
+            /*
+             * BrainCore confirmationId yolunda
+             * confirmationMode = bound-confirmation gönderir.
+             *
+             * legacy-boolean geçici uyumluluk olarak
+             * BrainCore tarafından hâlâ üretilebilir.
+             */
+
+            const confirmationMode =
+                context.confirmationMode ||
+                null;
+
+
+            if(
+                confirmationMode !==
+                    "bound-confirmation" &&
+                confirmationMode !==
+                    "legacy-boolean"
+            ){
+
+                return {
+                    allowed:false,
+                    reason:
+                        "Onay kaynağı doğrulanamadı.",
+                    evaluation
+                };
+
+            }
+
+        }
+
+
+        return {
+            allowed:true,
+            reason:null,
+            evaluation
+        };
 
     },
 
@@ -250,6 +511,39 @@ const BrainActions = {
         }
 
 
+        const authorization =
+            this.authorize(
+                intent,
+                context
+            );
+
+
+        if(
+            authorization.allowed !==
+                true
+        ){
+
+            return this.setResult({
+
+                success:false,
+
+                intent,
+
+                action:
+                    authorization
+                        .evaluation
+                        ?.actionType ||
+                    null,
+
+                reason:
+                    authorization.reason ||
+                    "Brain Actions işlemi reddetti."
+
+            });
+
+        }
+
+
         const actions =
             this.getActions();
 
@@ -262,7 +556,11 @@ const BrainActions = {
 
                 intent,
 
-                action:null,
+                action:
+                    authorization
+                        .evaluation
+                        ?.actionType ||
+                    null,
 
                 reason:
                     "Actions servisi bulunamadı."
@@ -272,7 +570,11 @@ const BrainActions = {
         }
 
 
-        switch(intent.type){
+        switch(
+            this.normalizeValue(
+                intent.type
+            )
+        ){
 
             case "navigate":
 
@@ -316,6 +618,53 @@ const BrainActions = {
                 );
 
 
+            case "application:install":
+
+                return this.executeApplicationInstall(
+                    intent
+                );
+
+
+            case "application:update":
+
+                return this.executeApplicationUpdate(
+                    intent
+                );
+
+
+            case "application:remove":
+
+                return this.executeApplicationRemove(
+                    intent
+                );
+
+
+            case "permission:grant":
+
+                return this.executePermissionGrant(
+                    intent
+                );
+
+
+            case "permission:revoke":
+
+                return this.executePermissionRevoke(
+                    intent
+                );
+
+
+            case "message:send":
+
+            case "call:start":
+
+            case "screen-share:start":
+
+                return this.executeCommunicationIntent(
+                    intent,
+                    context
+                );
+
+
             default:
 
                 return this.setResult({
@@ -324,10 +673,14 @@ const BrainActions = {
 
                     intent,
 
-                    action:null,
+                    action:
+                        authorization
+                            .evaluation
+                            ?.actionType ||
+                        null,
 
                     reason:
-                        "Bu intent doğrudan sistem işlemi gerektirmiyor."
+                        "Bu intent için Brain Actions yürütücüsü bağlı değil."
 
                 });
 
@@ -346,15 +699,17 @@ const BrainActions = {
     ){
 
         const target =
-            String(
-                intent.target ||
-                ""
+            this.normalizeValue(
+                intent.target
             );
 
 
-        let result = null;
+        let result =
+            null;
 
-        let action = null;
+
+        let action =
+            null;
 
 
         switch(target){
@@ -398,7 +753,9 @@ const BrainActions = {
                     null;
 
 
-                if(currentWorld?.id){
+                if(
+                    currentWorld?.id
+                ){
 
                     result =
                         this.callAction(
@@ -424,6 +781,7 @@ const BrainActions = {
                         "worlds:open";
 
                 }
+
 
                 break;
 
@@ -477,10 +835,15 @@ const BrainActions = {
 
 
             case "memory":
+
             case "timeline":
+
             case "bridge":
+
             case "evolution":
+
             case "organs":
+
             case "settings":
 
                 result =
@@ -494,6 +857,34 @@ const BrainActions = {
 
                 action =
                     `entity:${target}`;
+
+                break;
+
+
+            case "applications":
+
+                result =
+                    this.callAction(
+                        actions,
+                        "openApplicationsApp"
+                    );
+
+                action =
+                    "app:applications";
+
+                break;
+
+
+            case "vaero":
+
+                result =
+                    this.callAction(
+                        actions,
+                        "openVaeroApp"
+                    );
+
+                action =
+                    "app:vaero";
 
                 break;
 
@@ -512,28 +903,12 @@ const BrainActions = {
                 break;
 
 
-            /*
-             * Discovery onboarding ekranıdır.
-             * Normal entity page gibi açmıyoruz.
-             */
-
             case "discovery":
 
-                return this.setResult({
-
-                    success:false,
-
+                return this.executeDiscoveryNavigation(
                     intent,
-
-                    action:null,
-
-                    reason:
-                        "Discovery normal bir varlık uygulaması değildir.",
-
-                    message:
-                        "Discovery onboarding akışından yönetiliyor."
-
-                });
+                    actions
+                );
 
 
             default:
@@ -570,12 +945,98 @@ const BrainActions = {
                     ? null
                     : result?.missing
                         ? "Bu ekran için gerekli Actions metodu bağlı değil."
-                        : "Hedef ekran açılamadı.",
+                        : result?.asyncUnsupported
+                            ? "Bu Actions metodu async çalışıyor ve Brain Actions henüz async yürütme kullanmıyor."
+                            : "Hedef ekran açılamadı.",
 
             message:
                 result?.success
                     ? "İlgili ekran açıldı."
                     : null
+
+        });
+
+    },
+
+
+    /* =====================================================
+       DISCOVERY NAVIGATION
+    ===================================================== */
+
+    executeDiscoveryNavigation(
+        intent,
+        actions
+    ){
+
+        /*
+         * Önce Actions üzerinden varsa gerçek route.
+         */
+
+        const directMethods = [
+            "openDiscovery",
+            "openDiscoveryApp",
+            "restartDiscovery"
+        ];
+
+
+        for(
+            const method of
+            directMethods
+        ){
+
+            if(
+                typeof actions?.[method] ===
+                    "function"
+            ){
+
+                const result =
+                    this.callAction(
+                        actions,
+                        method
+                    );
+
+
+                return this.setResult({
+
+                    success:
+                        result.success,
+
+                    intent,
+
+                    action:
+                        `discovery:${method}`,
+
+                    reason:
+                        result.success
+                            ? null
+                            : "Discovery açılamadı.",
+
+                    message:
+                        result.success
+                            ? "Discovery açıldı."
+                            : null
+
+                });
+
+            }
+
+        }
+
+
+        /*
+         * Uydurma route yok.
+         */
+
+        return this.setResult({
+
+            success:false,
+
+            intent,
+
+            action:null,
+
+            reason:
+                "Discovery için bağlı Actions route'u bulunamadı."
 
         });
 
@@ -615,9 +1076,11 @@ const BrainActions = {
 
             message:
                 success
-                    ? `${page === "identity"
-                        ? "Kimlik"
-                        : "Profil"} ekranı açıldı.`
+                    ? (
+                        page === "identity"
+                            ? "Kimlik ekranı açıldı."
+                            : "Profil ekranı açıldı."
+                    )
                     : null
 
         });
@@ -643,11 +1106,6 @@ const BrainActions = {
             engine?.rootEntity ||
             null;
 
-
-        /*
-         * Özel bir varlık açıksa uygulamayı
-         * doğrudan o varlığın bağlamında aç.
-         */
 
         if(
             openedEntity &&
@@ -696,7 +1154,7 @@ const BrainActions = {
 
 
     /* =====================================================
-       CREATE
+       CREATE SURFACE
     ===================================================== */
 
     executeCreate(
@@ -704,9 +1162,22 @@ const BrainActions = {
         actions
     ){
 
+        const target =
+            this.normalizeValue(
+                intent.target
+            );
+
+
+        /*
+         * Policy tarafında world/entity create intenti
+         * gerçek mutation değil app:open kabul ediliyor.
+         *
+         * Burada yalnız editor surface açılır.
+         */
+
+
         if(
-            intent.target ===
-            "world"
+            target === "world"
         ){
 
             const result =
@@ -729,11 +1200,11 @@ const BrainActions = {
                 reason:
                     result.success
                         ? null
-                        : "Dünya oluşturma ekranı açılamadı.",
+                        : "World oluşturma ekranı açılamadı.",
 
                 message:
                     result.success
-                        ? "Dünya oluşturma ekranı açıldı."
+                        ? "World oluşturma ekranı açıldı."
                         : null
 
             });
@@ -742,8 +1213,7 @@ const BrainActions = {
 
 
         if(
-            intent.target ===
-            "entity"
+            target === "entity"
         ){
 
             const engine =
@@ -775,11 +1245,11 @@ const BrainActions = {
                         "worlds:open",
 
                     reason:
-                        "Önce varlığın ekleneceği dünya seçilmeli.",
+                        "Önce Entity'nin ekleneceği World seçilmeli.",
 
                     message:
                         result.success
-                            ? "Önce varlığın ekleneceği dünyayı seç."
+                            ? "Önce Entity'nin ekleneceği World'ü seç."
                             : null
 
                 });
@@ -802,16 +1272,16 @@ const BrainActions = {
                 intent,
 
                 action:
-                    "entity:create:first",
+                    "entity:create:surface",
 
                 reason:
                     result.success
                         ? null
-                        : "Varlık oluşturma akışı başlatılamadı.",
+                        : "Entity oluşturma akışı başlatılamadı.",
 
                 message:
                     result.success
-                        ? "Varlık oluşturma ekranı açıldı."
+                        ? "Entity oluşturma ekranı açıldı."
                         : null
 
             });
@@ -926,8 +1396,7 @@ const BrainActions = {
 
     },
 
-
-    /* =====================================================
+   /* =====================================================
        REQUEST
     ===================================================== */
 
@@ -938,33 +1407,101 @@ const BrainActions = {
     ){
 
         const target =
-            String(
-                intent.target ||
-                ""
+            this.normalizeValue(
+                intent.target
             );
 
 
         const operation =
-            String(
-                intent.operation ||
-                ""
+            this.normalizeValue(
+                intent.operation
             );
 
 
         /* -------------------------------------------------
-           DELETE
-
-           BrainCore buraya yalnız confirmation sonrası
-           ulaşabilir. Fakat gerçek destructive API
-           bağlı değilse işlem uydurulmaz.
+           OPEN / VIEW
         ------------------------------------------------- */
 
         if(
-            operation ===
-            "delete"
+            operation === "open" ||
+            operation === "view" ||
+            operation === "read"
+        ){
+
+            return this.executeNavigation(
+                {
+                    ...intent,
+                    type:"navigate",
+                    target
+                },
+                actions
+            );
+
+        }
+
+
+        /* -------------------------------------------------
+           EDIT
+
+           Şu aşamada doğrudan veri değiştirmez.
+           Yalnız edit surface açar.
+        ------------------------------------------------- */
+
+        if(
+            operation === "edit"
+        ){
+
+            return this.executeEditSurface(
+                intent,
+                actions
+            );
+
+        }
+
+
+        /* -------------------------------------------------
+           SEARCH
+        ------------------------------------------------- */
+
+        if(
+            operation === "search"
+        ){
+
+            return this.executeSearchSurface(
+                intent,
+                actions
+            );
+
+        }
+
+
+        /* -------------------------------------------------
+           DELETE
+        ------------------------------------------------- */
+
+        if(
+            operation === "delete" ||
+            operation === "remove"
         ){
 
             return this.executeConfirmedDelete(
+                intent,
+                context,
+                actions
+            );
+
+        }
+
+
+        /* -------------------------------------------------
+           ARCHIVE
+        ------------------------------------------------- */
+
+        if(
+            operation === "archive"
+        ){
+
+            return this.executeConfirmedArchive(
                 intent,
                 context,
                 actions
@@ -978,8 +1515,7 @@ const BrainActions = {
         ------------------------------------------------- */
 
         if(
-            operation ===
-            "restore"
+            operation === "restore"
         ){
 
             return this.executeConfirmedRestore(
@@ -992,197 +1528,35 @@ const BrainActions = {
 
 
         /* -------------------------------------------------
-           EDIT
-           Şimdilik ilgili yönetim yüzeyini açar.
+           APPLICATION
         ------------------------------------------------- */
 
         if(
-            operation ===
-            "edit"
+            target === "application" ||
+            target === "applications" ||
+            target === "app"
         ){
 
             if(
-                target ===
-                "profile"
+                operation === "install"
             ){
 
-                return this.executeEntityAwareNavigation(
-                    "profile",
-                    intent,
-                    actions
+                return this.executeApplicationInstall(
+                    intent
                 );
 
             }
 
 
             if(
-                target ===
-                "identity"
+                operation === "update"
             ){
 
-                return this.executeEntityAwareNavigation(
-                    "identity",
-                    intent,
-                    actions
+                return this.executeApplicationUpdate(
+                    intent
                 );
 
             }
-
-
-            if(
-                target ===
-                "settings"
-            ){
-
-                const result =
-                    this.callAction(
-                        actions,
-                        "openEntityPage",
-                        [
-                            "settings"
-                        ]
-                    );
-
-
-                return this.setResult({
-
-                    success:
-                        result.success,
-
-                    intent,
-
-                    action:
-                        "entity:settings",
-
-                    reason:
-                        result.success
-                            ? null
-                            : "Settings açılamadı.",
-
-                    message:
-                        result.success
-                            ? "Ayarlar ekranı açıldı."
-                            : null
-
-                });
-
-            }
-
-
-            return this.setResult({
-
-                success:false,
-
-                intent,
-
-                action:null,
-
-                reason:
-                    "Bu hedef için düzenleme yüzeyi bağlı değil."
-
-            });
-
-        }
-
-
-        /* -------------------------------------------------
-           SEARCH
-
-           Gerçek arama motoru henüz BrainActions
-           tarafından sağlanmıyor. Desteklenen hedeflerde
-           ilgili liste ekranı açılır.
-        ------------------------------------------------- */
-
-        if(
-            operation ===
-            "search"
-        ){
-
-            if(
-                target === "world" ||
-                target === "worlds"
-            ){
-
-                const result =
-                    this.callAction(
-                        actions,
-                        "openWorlds"
-                    );
-
-
-                return this.setResult({
-
-                    success:
-                        result.success,
-
-                    intent,
-
-                    action:
-                        "worlds:open",
-
-                    reason:
-                        result.success
-                            ? null
-                            : "Dünyalar açılamadı.",
-
-                    message:
-                        result.success
-                            ? "Dünyalar listesi açıldı."
-                            : null
-
-                });
-
-            }
-
-
-            if(
-                target === "entities"
-            ){
-
-                const result =
-                    this.callAction(
-                        actions,
-                        "openEntities"
-                    );
-
-
-                return this.setResult({
-
-                    success:
-                        result.success,
-
-                    intent,
-
-                    action:
-                        "entities:open",
-
-                    reason:
-                        result.success
-                            ? null
-                            : "Varlıklar açılamadı.",
-
-                    message:
-                        result.success
-                            ? "Varlıklar listesi açıldı."
-                            : null
-
-                });
-
-            }
-
-
-            return this.setResult({
-
-                success:false,
-
-                intent,
-
-                action:null,
-
-                reason:
-                    "Bu hedef için gerçek arama işlemi henüz bağlı değil."
-
-            });
 
         }
 
@@ -1204,7 +1578,1238 @@ const BrainActions = {
 
 
     /* =====================================================
-       CONFIRMED DESTRUCTIVE OPERATIONS
+       EDIT SURFACES
+    ===================================================== */
+
+    executeEditSurface(
+        intent,
+        actions
+    ){
+
+        const target =
+            this.normalizeValue(
+                intent.target
+            );
+
+
+        if(
+            target === "profile"
+        ){
+
+            return this.executeEntityAwareNavigation(
+                "profile",
+                intent,
+                actions
+            );
+
+        }
+
+
+        if(
+            target === "identity"
+        ){
+
+            return this.executeEntityAwareNavigation(
+                "identity",
+                intent,
+                actions
+            );
+
+        }
+
+
+        if(
+            target === "settings"
+        ){
+
+            const result =
+                this.callAction(
+                    actions,
+                    "openEntityPage",
+                    [
+                        "settings"
+                    ]
+                );
+
+
+            return this.setResult({
+
+                success:
+                    result.success,
+
+                intent,
+
+                action:
+                    "entity:settings",
+
+                reason:
+                    result.success
+                        ? null
+                        : "Settings açılamadı.",
+
+                message:
+                    result.success
+                        ? "Ayarlar ekranı açıldı."
+                        : null
+
+            });
+
+        }
+
+
+        if(
+            target === "world"
+        ){
+
+            /*
+             * Actions-v2 içindeki gerçek editor surface
+             * varsa kullanılır.
+             */
+
+            const methods = [
+                "openWorldEdit",
+                "startWorldEdit"
+            ];
+
+
+            for(
+                const method of
+                methods
+            ){
+
+                if(
+                    typeof actions?.[method] ===
+                        "function"
+                ){
+
+                    const result =
+                        this.callAction(
+                            actions,
+                            method
+                        );
+
+
+                    return this.setResult({
+
+                        success:
+                            result.success,
+
+                        intent,
+
+                        action:
+                            "world:edit:surface",
+
+                        reason:
+                            result.success
+                                ? null
+                                : "World editor açılamadı.",
+
+                        message:
+                            result.success
+                                ? "World düzenleme ekranı açıldı."
+                                : null
+
+                    });
+
+                }
+
+            }
+
+        }
+
+
+        if(
+            target === "entity"
+        ){
+
+            const methods = [
+                "openEntityEdit",
+                "startEntityEdit"
+            ];
+
+
+            for(
+                const method of
+                methods
+            ){
+
+                if(
+                    typeof actions?.[method] ===
+                        "function"
+                ){
+
+                    const result =
+                        this.callAction(
+                            actions,
+                            method
+                        );
+
+
+                    return this.setResult({
+
+                        success:
+                            result.success,
+
+                        intent,
+
+                        action:
+                            "entity:edit:surface",
+
+                        reason:
+                            result.success
+                                ? null
+                                : "Entity editor açılamadı.",
+
+                        message:
+                            result.success
+                                ? "Entity düzenleme ekranı açıldı."
+                                : null
+
+                    });
+
+                }
+
+            }
+
+        }
+
+
+        const entityPages =
+            new Set([
+                "memory",
+                "timeline",
+                "bridge",
+                "evolution",
+                "organs"
+            ]);
+
+
+        if(
+            entityPages.has(
+                target
+            )
+        ){
+
+            const result =
+                this.callAction(
+                    actions,
+                    "openEntityPage",
+                    [
+                        target
+                    ]
+                );
+
+
+            return this.setResult({
+
+                success:
+                    result.success,
+
+                intent,
+
+                action:
+                    `entity:${target}`,
+
+                reason:
+                    result.success
+                        ? null
+                        : "İlgili yönetim yüzeyi açılamadı.",
+
+                message:
+                    result.success
+                        ? "İlgili yönetim yüzeyi açıldı."
+                        : null
+
+            });
+
+        }
+
+
+        return this.setResult({
+
+            success:false,
+
+            intent,
+
+            action:null,
+
+            reason:
+                "Bu hedef için bağlı bir düzenleme yüzeyi bulunmuyor."
+
+        });
+
+    },
+
+
+    /* =====================================================
+       SEARCH SURFACES
+    ===================================================== */
+
+    executeSearchSurface(
+        intent,
+        actions
+    ){
+
+        const target =
+            this.normalizeValue(
+                intent.target
+            );
+
+
+        if(
+            target === "world" ||
+            target === "worlds"
+        ){
+
+            const result =
+                this.callAction(
+                    actions,
+                    "openWorlds"
+                );
+
+
+            return this.setResult({
+
+                success:
+                    result.success,
+
+                intent,
+
+                action:
+                    "worlds:open",
+
+                reason:
+                    result.success
+                        ? null
+                        : "Worlds açılamadı.",
+
+                message:
+                    result.success
+                        ? "Worlds listesi açıldı."
+                        : null
+
+            });
+
+        }
+
+
+        if(
+            target === "entity" ||
+            target === "entities"
+        ){
+
+            const result =
+                this.callAction(
+                    actions,
+                    "openEntities"
+                );
+
+
+            return this.setResult({
+
+                success:
+                    result.success,
+
+                intent,
+
+                action:
+                    "entities:open",
+
+                reason:
+                    result.success
+                        ? null
+                        : "Entities açılamadı.",
+
+                message:
+                    result.success
+                        ? "Entities listesi açıldı."
+                        : null
+
+            });
+
+        }
+
+
+        if(
+            target === "application" ||
+            target === "applications" ||
+            target === "app"
+        ){
+
+            const result =
+                this.callAction(
+                    actions,
+                    "openApplicationsApp"
+                );
+
+
+            return this.setResult({
+
+                success:
+                    result.success,
+
+                intent,
+
+                action:
+                    "app:applications",
+
+                reason:
+                    result.success
+                        ? null
+                        : "Applications açılamadı.",
+
+                message:
+                    result.success
+                        ? "Applications açıldı."
+                        : null
+
+            });
+
+        }
+
+
+        /*
+         * Global Search uygulaması henüz bağlanmadı.
+         * Sahte arama sonucu üretilmez.
+         */
+
+        return this.setResult({
+
+            success:false,
+
+            intent,
+
+            action:null,
+
+            reason:
+                "Bu hedef için gerçek Search uygulaması henüz Brain Actions'a bağlı değil."
+
+        });
+
+    },
+
+
+    /* =====================================================
+       APPLICATION IDENTIFIER
+    ===================================================== */
+
+    resolveApplicationId(intent){
+
+        const candidates = [
+
+            intent?.appId,
+
+            intent?.applicationId,
+
+            intent?.id,
+
+            intent?.subjectId,
+
+            intent?.value
+
+        ];
+
+
+        const id =
+            candidates.find(
+                value =>
+                    typeof value ===
+                        "string" &&
+                    value.trim()
+            );
+
+
+        return id
+            ? id.trim()
+            : null;
+
+    },
+
+
+    /* =====================================================
+       APPLICATION INSTALL
+    ===================================================== */
+
+    executeApplicationInstall(
+        intent
+    ){
+
+        const appId =
+            this.resolveApplicationId(
+                intent
+            );
+
+
+        if(!appId){
+
+            return this.setResult({
+
+                success:false,
+
+                intent,
+
+                action:
+                    "application:install",
+
+                reason:
+                    "Kurulacak application ID belirtilmedi."
+
+            });
+
+        }
+
+
+        const app =
+            window.ApplicationsApp ||
+            null;
+
+
+        if(
+            !app ||
+            typeof app.install !==
+                "function"
+        ){
+
+            return this.setResult({
+
+                success:false,
+
+                intent,
+
+                action:
+                    "application:install",
+
+                reason:
+                    "Applications install motoru bağlı değil."
+
+            });
+
+        }
+
+
+        try{
+
+            const success =
+                app.install(
+                    appId
+                ) === true;
+
+
+            return this.setResult({
+
+                success,
+
+                intent,
+
+                action:
+                    "application:install",
+
+                reason:
+                    success
+                        ? null
+                        : "Application kurulamadı veya güvenlik doğrulaması tamamlanmadı.",
+
+                message:
+                    success
+                        ? "Application kuruldu."
+                        : null,
+
+                data:{
+                    appId
+                }
+
+            });
+
+        } catch(error){
+
+            return this.setResult({
+
+                success:false,
+
+                intent,
+
+                action:
+                    "application:install",
+
+                reason:
+                    "Application kurulumu sırasında hata oluştu."
+
+            });
+
+        }
+
+    },
+
+
+    /* =====================================================
+       APPLICATION UPDATE
+    ===================================================== */
+
+    executeApplicationUpdate(
+        intent
+    ){
+
+        const appId =
+            this.resolveApplicationId(
+                intent
+            );
+
+
+        if(!appId){
+
+            return this.setResult({
+
+                success:false,
+
+                intent,
+
+                action:
+                    "application:update",
+
+                reason:
+                    "Güncellenecek application ID belirtilmedi."
+
+            });
+
+        }
+
+
+        const app =
+            window.ApplicationsApp ||
+            null;
+
+
+        if(
+            !app ||
+            typeof app.updateApplication !==
+                "function"
+        ){
+
+            return this.setResult({
+
+                success:false,
+
+                intent,
+
+                action:
+                    "application:update",
+
+                reason:
+                    "Applications update motoru bağlı değil."
+
+            });
+
+        }
+
+
+        try{
+
+            const success =
+                app.updateApplication(
+                    appId
+                ) !== false;
+
+
+            return this.setResult({
+
+                success,
+
+                intent,
+
+                action:
+                    "application:update",
+
+                reason:
+                    success
+                        ? null
+                        : "Application güncellenemedi.",
+
+                message:
+                    success
+                        ? "Application güncellendi."
+                        : null,
+
+                data:{
+                    appId
+                }
+
+            });
+
+        } catch(error){
+
+            return this.setResult({
+
+                success:false,
+
+                intent,
+
+                action:
+                    "application:update",
+
+                reason:
+                    "Application güncellemesi sırasında hata oluştu."
+
+            });
+
+        }
+
+    },
+
+
+    /* =====================================================
+       APPLICATION REMOVE
+    ===================================================== */
+
+    executeApplicationRemove(
+        intent
+    ){
+
+        const appId =
+            this.resolveApplicationId(
+                intent
+            );
+
+
+        if(!appId){
+
+            return this.setResult({
+
+                success:false,
+
+                intent,
+
+                action:
+                    "application:remove",
+
+                reason:
+                    "Kaldırılacak application ID belirtilmedi."
+
+            });
+
+        }
+
+
+        const app =
+            window.ApplicationsApp ||
+            null;
+
+
+        if(
+            !app ||
+            typeof app.remove !==
+                "function"
+        ){
+
+            return this.setResult({
+
+                success:false,
+
+                intent,
+
+                action:
+                    "application:remove",
+
+                reason:
+                    "Applications remove motoru bağlı değil."
+
+            });
+
+        }
+
+
+        try{
+
+            const success =
+                app.remove(
+                    appId
+                ) !== false;
+
+
+            return this.setResult({
+
+                success,
+
+                intent,
+
+                action:
+                    "application:remove",
+
+                reason:
+                    success
+                        ? null
+                        : "Application kaldırılamadı.",
+
+                message:
+                    success
+                        ? "Application kaldırıldı."
+                        : null,
+
+                data:{
+                    appId
+                }
+
+            });
+
+        } catch(error){
+
+            return this.setResult({
+
+                success:false,
+
+                intent,
+
+                action:
+                    "application:remove",
+
+                reason:
+                    "Application kaldırma sırasında hata oluştu."
+
+            });
+
+        }
+
+    },
+
+
+    /* =====================================================
+       PERMISSION IDENTIFIERS
+    ===================================================== */
+
+    resolvePermission(
+        intent
+    ){
+
+        const value =
+            intent?.permission ||
+            intent?.permissionId ||
+            null;
+
+
+        return typeof value ===
+            "string"
+            ? value.trim()
+            : null;
+
+    },
+
+
+    /* =====================================================
+       PERMISSION GRANT
+    ===================================================== */
+
+    executePermissionGrant(
+        intent
+    ){
+
+        const appId =
+            this.resolveApplicationId(
+                intent
+            );
+
+
+        const permission =
+            this.resolvePermission(
+                intent
+            );
+
+
+        if(
+            !appId ||
+            !permission
+        ){
+
+            return this.setResult({
+
+                success:false,
+
+                intent,
+
+                action:
+                    "permission:grant",
+
+                reason:
+                    "Application ve permission bilgisi gerekli."
+
+            });
+
+        }
+
+
+        const app =
+            window.ApplicationsApp ||
+            null;
+
+
+        if(
+            !app ||
+            typeof app.grantRequestedPermission !==
+                "function"
+        ){
+
+            return this.setResult({
+
+                success:false,
+
+                intent,
+
+                action:
+                    "permission:grant",
+
+                reason:
+                    "Permission yönetim motoru bağlı değil."
+
+            });
+
+        }
+
+
+        try{
+
+            const result =
+                app.grantRequestedPermission(
+                    appId,
+                    permission
+                );
+
+
+            const success =
+                result !== false;
+
+
+            return this.setResult({
+
+                success,
+
+                intent,
+
+                action:
+                    "permission:grant",
+
+                reason:
+                    success
+                        ? null
+                        : "Permission verilemedi.",
+
+                message:
+                    success
+                        ? "Permission verildi."
+                        : null,
+
+                data:{
+                    appId,
+                    permission
+                }
+
+            });
+
+        } catch(error){
+
+            return this.setResult({
+
+                success:false,
+
+                intent,
+
+                action:
+                    "permission:grant",
+
+                reason:
+                    "Permission verme işlemi başarısız."
+
+            });
+
+        }
+
+    },
+
+
+    /* =====================================================
+       PERMISSION REVOKE
+    ===================================================== */
+
+    executePermissionRevoke(
+        intent
+    ){
+
+        const appId =
+            this.resolveApplicationId(
+                intent
+            );
+
+
+        const permission =
+            this.resolvePermission(
+                intent
+            );
+
+
+        if(
+            !appId ||
+            !permission
+        ){
+
+            return this.setResult({
+
+                success:false,
+
+                intent,
+
+                action:
+                    "permission:revoke",
+
+                reason:
+                    "Application ve permission bilgisi gerekli."
+
+            });
+
+        }
+
+
+        const app =
+            window.ApplicationsApp ||
+            null;
+
+
+        if(
+            !app ||
+            typeof app.revokePermission !==
+                "function"
+        ){
+
+            return this.setResult({
+
+                success:false,
+
+                intent,
+
+                action:
+                    "permission:revoke",
+
+                reason:
+                    "Permission yönetim motoru bağlı değil."
+
+            });
+
+        }
+
+
+        try{
+
+            const result =
+                app.revokePermission(
+                    appId,
+                    permission
+                );
+
+
+            const success =
+                result !== false;
+
+
+            return this.setResult({
+
+                success,
+
+                intent,
+
+                action:
+                    "permission:revoke",
+
+                reason:
+                    success
+                        ? null
+                        : "Permission kaldırılamadı.",
+
+                message:
+                    success
+                        ? "Permission kaldırıldı."
+                        : null,
+
+                data:{
+                    appId,
+                    permission
+                }
+
+            });
+
+        } catch(error){
+
+            return this.setResult({
+
+                success:false,
+
+                intent,
+
+                action:
+                    "permission:revoke",
+
+                reason:
+                    "Permission kaldırma işlemi başarısız."
+
+            });
+
+        }
+
+    },
+
+
+    /* =====================================================
+       CONFIRMED ARCHIVE
+    ===================================================== */
+
+    executeConfirmedArchive(
+        intent,
+        context,
+        actions
+    ){
+
+        if(
+            context.confirmed !==
+                true
+        ){
+
+            return this.setResult({
+
+                success:false,
+
+                intent,
+
+                action:null,
+
+                reason:
+                    "Arşivleme işlemi kullanıcı onayı gerektiriyor."
+
+            });
+
+        }
+
+
+        const target =
+            this.normalizeValue(
+                intent.target
+            );
+
+
+        if(
+            target === "world" ||
+            target === "worlds"
+        ){
+
+            const method =
+                typeof actions.archiveWorld ===
+                    "function"
+                    ? "archiveWorld"
+                    : typeof actions.archiveCurrentWorld ===
+                        "function"
+                        ? "archiveCurrentWorld"
+                        : null;
+
+
+            if(method){
+
+                const result =
+                    this.callAction(
+                        actions,
+                        method
+                    );
+
+
+                return this.setResult({
+
+                    success:
+                        result.success,
+
+                    intent,
+
+                    action:
+                        "world:archive",
+
+                    reason:
+                        result.success
+                            ? null
+                            : "World arşivlenemedi.",
+
+                    message:
+                        result.success
+                            ? "World arşivlendi."
+                            : null
+
+                });
+
+            }
+
+        }
+
+
+        if(
+            target === "entity" ||
+            target === "entities"
+        ){
+
+            const method =
+                typeof actions.archiveEntity ===
+                    "function"
+                    ? "archiveEntity"
+                    : typeof actions.archiveCurrentEntity ===
+                        "function"
+                        ? "archiveCurrentEntity"
+                        : null;
+
+
+            if(method){
+
+                const result =
+                    this.callAction(
+                        actions,
+                        method
+                    );
+
+
+                return this.setResult({
+
+                    success:
+                        result.success,
+
+                    intent,
+
+                    action:
+                        "entity:archive",
+
+                    reason:
+                        result.success
+                            ? null
+                            : "Entity arşivlenemedi.",
+
+                    message:
+                        result.success
+                            ? "Entity arşivlendi."
+                            : null
+
+                });
+
+            }
+
+        }
+
+
+        return this.setResult({
+
+            success:false,
+
+            intent,
+
+            action:null,
+
+            reason:
+                "Bu hedef için doğrulanmış archive bağlantısı bulunmuyor."
+
+        });
+
+    },
+
+
+    /* =====================================================
+       CONFIRMED DELETE
     ===================================================== */
 
     executeConfirmedDelete(
@@ -1215,7 +2820,7 @@ const BrainActions = {
 
         if(
             context.confirmed !==
-            true
+                true
         ){
 
             return this.setResult({
@@ -1234,13 +2839,131 @@ const BrainActions = {
         }
 
 
+        const target =
+            this.normalizeValue(
+                intent.target
+            );
+
+
         /*
-         * Henüz Actions katmanında doğrulanmış
-         * destructive API görmedik.
-         *
-         * deleteWorld / deleteEntity / deleteRecord gibi
-         * fonksiyonlar uydurulmuyor.
+         * Hard delete metodunu ancak gerçekten mevcutsa
+         * kullanıyoruz.
          */
+
+
+        if(
+            target === "world" ||
+            target === "worlds"
+        ){
+
+            const methods = [
+                "deleteWorld",
+                "removeWorld"
+            ];
+
+
+            for(
+                const method of
+                methods
+            ){
+
+                if(
+                    typeof actions?.[method] ===
+                        "function"
+                ){
+
+                    const result =
+                        this.callAction(
+                            actions,
+                            method
+                        );
+
+
+                    return this.setResult({
+
+                        success:
+                            result.success,
+
+                        intent,
+
+                        action:
+                            "world:delete",
+
+                        reason:
+                            result.success
+                                ? null
+                                : "World silinemedi.",
+
+                        message:
+                            result.success
+                                ? "World silindi."
+                                : null
+
+                    });
+
+                }
+
+            }
+
+        }
+
+
+        if(
+            target === "entity" ||
+            target === "entities"
+        ){
+
+            const methods = [
+                "deleteEntity",
+                "removeEntity"
+            ];
+
+
+            for(
+                const method of
+                methods
+            ){
+
+                if(
+                    typeof actions?.[method] ===
+                        "function"
+                ){
+
+                    const result =
+                        this.callAction(
+                            actions,
+                            method
+                        );
+
+
+                    return this.setResult({
+
+                        success:
+                            result.success,
+
+                        intent,
+
+                        action:
+                            "entity:delete",
+
+                        reason:
+                            result.success
+                                ? null
+                                : "Entity silinemedi.",
+
+                        message:
+                            result.success
+                                ? "Entity silindi."
+                                : null
+
+                    });
+
+                }
+
+            }
+
+        }
+
 
         return this.setResult({
 
@@ -1251,15 +2974,19 @@ const BrainActions = {
             action:null,
 
             reason:
-                "Silme işlemi için doğrulanmış sistem bağlantısı henüz mevcut değil.",
+                "Onay alındı ancak bu hedef için doğrulanmış hard-delete motoru bağlı değil.",
 
             message:
-                "Onay alındı ancak bağlı bir silme motoru olmadığı için hiçbir veri değiştirilmedi."
+                "Hiçbir veri silinmedi."
 
         });
 
     },
 
+
+    /* =====================================================
+       CONFIRMED RESTORE
+    ===================================================== */
 
     executeConfirmedRestore(
         intent,
@@ -1269,7 +2996,7 @@ const BrainActions = {
 
         if(
             context.confirmed !==
-            true
+                true
         ){
 
             return this.setResult({
@@ -1288,11 +3015,107 @@ const BrainActions = {
         }
 
 
-        /*
-         * Resume restore ayrı ve güvenli akıştır.
-         * Generic record restore için gerçek API
-         * görülmeden işlem yapılmaz.
-         */
+        const target =
+            this.normalizeValue(
+                intent.target
+            );
+
+
+        if(
+            target === "world" ||
+            target === "worlds"
+        ){
+
+            const method =
+                typeof actions.restoreWorld ===
+                    "function"
+                    ? "restoreWorld"
+                    : null;
+
+
+            if(method){
+
+                const result =
+                    this.callAction(
+                        actions,
+                        method
+                    );
+
+
+                return this.setResult({
+
+                    success:
+                        result.success,
+
+                    intent,
+
+                    action:
+                        "world:restore",
+
+                    reason:
+                        result.success
+                            ? null
+                            : "World geri yüklenemedi.",
+
+                    message:
+                        result.success
+                            ? "World geri yüklendi."
+                            : null
+
+                });
+
+            }
+
+        }
+
+
+        if(
+            target === "entity" ||
+            target === "entities"
+        ){
+
+            const method =
+                typeof actions.restoreEntity ===
+                    "function"
+                    ? "restoreEntity"
+                    : null;
+
+
+            if(method){
+
+                const result =
+                    this.callAction(
+                        actions,
+                        method
+                    );
+
+
+                return this.setResult({
+
+                    success:
+                        result.success,
+
+                    intent,
+
+                    action:
+                        "entity:restore",
+
+                    reason:
+                        result.success
+                            ? null
+                            : "Entity geri yüklenemedi.",
+
+                    message:
+                        result.success
+                            ? "Entity geri yüklendi."
+                            : null
+
+                });
+
+            }
+
+        }
+
 
         return this.setResult({
 
@@ -1303,12 +3126,186 @@ const BrainActions = {
             action:null,
 
             reason:
-                "Kayıt geri yükleme motoru henüz Brain Actions katmanına bağlı değil.",
+                "Onay alındı ancak bu hedef için doğrulanmış restore motoru bağlı değil.",
 
             message:
-                "Onay alındı ancak doğrulanmış geri yükleme bağlantısı olmadığı için veri değiştirilmedi."
+                "Hiçbir kayıt değiştirilmedi."
 
         });
+
+    },
+
+
+    /* =====================================================
+       COMMUNICATION
+
+       UI ve gerçek communication service henüz kurulmadığı
+       için gönderim / arama / ekran paylaşımı taklit edilmez.
+    ===================================================== */
+
+    executeCommunicationIntent(
+        intent,
+        context = {}
+    ){
+
+        const type =
+            this.normalizeValue(
+                intent.type
+            );
+
+
+        const service =
+            this.getService(
+                "communication"
+            );
+
+
+        if(!service){
+
+            return this.setResult({
+
+                success:false,
+
+                intent,
+
+                action:
+                    type,
+
+                reason:
+                    "Communication Core henüz bağlı değil.",
+
+                message:
+                    "İletişim altyapısı kurulmadan bu işlem uygulanmayacak."
+
+            });
+
+        }
+
+
+        const methodMap = {
+
+            "message:send":
+                "sendMessage",
+
+            "call:start":
+                "startCall",
+
+            "screen-share:start":
+                "startScreenShare"
+
+        };
+
+
+        const method =
+            methodMap[
+                type
+            ];
+
+
+        if(
+            !method ||
+            typeof service[method] !==
+                "function"
+        ){
+
+            return this.setResult({
+
+                success:false,
+
+                intent,
+
+                action:
+                    type,
+
+                reason:
+                    "Communication işlemi için gerekli runtime metodu bağlı değil."
+
+            });
+
+        }
+
+
+        try{
+
+            const result =
+                service[method](
+                    intent,
+                    context
+                );
+
+
+            if(
+                result &&
+                typeof result.then ===
+                    "function"
+            ){
+
+                return this.setResult({
+
+                    success:false,
+
+                    intent,
+
+                    action:
+                        type,
+
+                    reason:
+                        "Async Communication execution henüz BrainActions synchronous zincirine bağlanmadı."
+
+                });
+
+            }
+
+
+            const success =
+                result !== false;
+
+
+            return this.setResult({
+
+                success,
+
+                intent,
+
+                action:
+                    type,
+
+                reason:
+                    success
+                        ? null
+                        : "Communication işlemi başlatılamadı.",
+
+                message:
+                    success
+                        ? "Communication işlemi başlatıldı."
+                        : null,
+
+                data:
+                    result &&
+                    typeof result ===
+                        "object"
+                        ? result
+                        : null
+
+            });
+
+        } catch(error){
+
+            return this.setResult({
+
+                success:false,
+
+                intent,
+
+                action:
+                    type,
+
+                reason:
+                    "Communication işlemi sırasında hata oluştu."
+
+            });
+
+        }
 
     },
 
@@ -1323,14 +3320,37 @@ const BrainActions = {
             this.getActions();
 
 
+        const policy =
+            this.getPolicy();
+
+
         return {
 
             available:
-                Boolean(actions),
+                Boolean(
+                    actions
+                ),
 
             engineAvailable:
                 Boolean(
                     this.getEngine()
+                ),
+
+            policyAvailable:
+                Boolean(
+                    policy
+                ),
+
+            applicationsAvailable:
+                Boolean(
+                    window.ApplicationsApp
+                ),
+
+            communicationAvailable:
+                Boolean(
+                    this.getService(
+                        "communication"
+                    )
                 ),
 
             hasLastResult:
@@ -1340,10 +3360,50 @@ const BrainActions = {
 
             lastResult:
                 this.lastResult
-                    ? {
-                        ...this.lastResult
-                    }
+                    ? this.clone(
+                        this.lastResult
+                    )
                     : null
+
+        };
+
+    },
+
+
+    /* =====================================================
+       REPORT
+    ===================================================== */
+
+    report(){
+
+        const status =
+            this.status();
+
+
+        return {
+
+            ...status,
+
+            layers:{
+
+                actions:
+                    status.available,
+
+                policy:
+                    status.policyAvailable,
+
+                engine:
+                    status.engineAvailable,
+
+                applications:
+                    status
+                        .applicationsAvailable,
+
+                communication:
+                    status
+                        .communicationAvailable
+
+            }
 
         };
 
