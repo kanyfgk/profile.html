@@ -928,28 +928,24 @@ const ApplicationsApp = {
 
     remount(){
 
-        const engine =
-            this.getEngine();
+    const engine =
+        this.getEngine();
 
 
-        if(
-            !engine ||
-            typeof engine.mount !==
-                "function"
-        ){
-            return false;
-        }
+    if(
+        !engine ||
+        typeof engine.mount !==
+            "function"
+    ){
+        return false;
+    }
 
 
-        engine.mount(
-            engine.currentEntity
-        );
+    return engine.mount(
+        engine.currentEntity
+    );
 
-
-        return true;
-
-    },
-
+},
 
     /* =====================================================
        INSTALL SECURITY GATE
@@ -957,158 +953,527 @@ const ApplicationsApp = {
 
     install(appId){
 
-        const registry =
-            this.getRegistry();
+    const registry =
+        this.getRegistry();
 
 
-        const organSystem =
-            this.getOrganSystem();
+    const organSystem =
+        this.getOrganSystem();
 
 
-        const app =
-            registry &&
-            typeof registry.find ===
-                "function"
-                ? registry.find(
-                    appId
-                )
-                : null;
-
-
-        if(
-            !app ||
-            !organSystem
-        ){
-            return false;
-        }
-
-
-        /*
-         * Built-in uygulamalar zaten Engine'in
-         * parçasıdır.
-         */
-
-        if(
-            app.system ||
-            app.distribution ===
-                "built-in"
-        ){
-            return false;
-        }
-
-
-        /*
-         * Güven doğrulaması olmadan third-party
-         * uygulama kurulmaz.
-         */
-
-        if(
-            app.trusted !== true
-        ){
-
-            console.warn(
-                "Applications install blocked: app is not trusted.",
-                app.id
-            );
-
-            return false;
-        }
-
-
-        /*
-         * Ücretli uygulamalar gerçek provider/backend
-         * ödeme doğrulaması olmadan kurulmaz.
-         */
-
-        if(
-            app.pricing?.model &&
-            app.pricing.model !==
-                "free"
-        ){
-
-            console.warn(
-                "Applications install waiting for verified payment.",
-                app.id
-            );
-
-            return false;
-        }
-
-
-        /*
-         * Gerçek remote package download henüz yok.
-         * Registry'de mevcut ve doğrulanmış uygulama
-         * OrganSystem'e kurulabilir.
-         */
-
-        const existing =
-            typeof organSystem.findBySlug ===
-                "function"
-                ? organSystem.findBySlug(
-                    app.id
-                )
-                : null;
-
-
-        if(existing){
-
-            return organSystem.install(
-                existing.id
-            );
-
-        }
-
-
-        const organ =
-            organSystem.create(
-                app.title,
-                "active",
-                {
-                    id:
-                        app.id,
-
-                    slug:
-                        app.id,
-
-                    version:
-                        app.version,
-
-                    type:
-                        "application",
-
-                    source:
-                        app.distribution,
-
-                    developer:
-                        app.developer,
-
-                    trusted:
-                        app.trusted,
-
-                    signature:
-                        app.signature,
-
-                    permissions:
-                        [],
-
-                    capabilities:
-                        app.capabilities,
-
-                    installed:
-                        true,
-
-                    removable:
-                        app.removable
-                }
-            );
-
-
-        return Boolean(
-            organ
+    const guardian =
+        this.getService(
+            "guardian"
         );
 
-    },
 
+    const app =
+        registry &&
+        typeof registry.find ===
+            "function"
+            ? registry.find(
+                appId
+            )
+            : null;
+
+
+    /* =====================================================
+       BASIC VALIDATION
+    ===================================================== */
+
+    if(
+        !app ||
+        !organSystem
+    ){
+
+        console.warn(
+            "Applications install failed: registry or OrganSystem unavailable."
+        );
+
+        return false;
+
+    }
+
+
+    if(
+        !app.id ||
+        typeof app.id !==
+            "string"
+    ){
+
+        console.warn(
+            "Applications install blocked: invalid application manifest."
+        );
+
+        return false;
+
+    }
+
+
+    /* =====================================================
+       BUILT-IN APPLICATIONS
+
+       Built-in uygulamalar Engine paketinin parçasıdır.
+       Applications üzerinden yeniden kurulmaz.
+    ===================================================== */
+
+    if(
+        app.system === true ||
+        app.distribution ===
+            "built-in"
+    ){
+
+        console.info(
+            "Application is already part of VAERO Engine:",
+            app.id
+        );
+
+        return false;
+
+    }
+
+
+    /* =====================================================
+       INSTALLABILITY
+    ===================================================== */
+
+    if(
+        app.installable !==
+            true
+    ){
+
+        console.warn(
+            "Applications install blocked: application is not installable.",
+            app.id
+        );
+
+        return false;
+
+    }
+
+
+    /* =====================================================
+       GUARDIAN PRE-CHECK
+
+       Guardian burada yalnız istemci tarafındaki
+       ilk güvenlik filtresidir.
+
+       Gerçek trust/signature doğrulamasının yerine geçmez.
+    ===================================================== */
+
+    if(
+        guardian &&
+        typeof guardian.check ===
+            "function"
+    ){
+
+        try{
+
+            const validation =
+                guardian.check(
+                    app,
+                    "application-install",
+                    {
+                        operation:
+                            "install",
+
+                        appId:
+                            app.id,
+
+                        distribution:
+                            app.distribution
+                    }
+                );
+
+
+            if(
+                validation ===
+                    false ||
+                (
+                    validation &&
+                    validation.valid ===
+                        false
+                )
+            ){
+
+                console.warn(
+                    "Applications install blocked by Guardian.",
+                    app.id
+                );
+
+                return false;
+
+            }
+
+        } catch(error){
+
+            console.error(
+                "Applications Guardian check failed:",
+                error
+            );
+
+            return false;
+
+        }
+
+    }
+
+
+    /* =====================================================
+       PACKAGE / SIGNATURE AUTHORITY
+
+       KRİTİK:
+       Manifest içindeki `trusted: true` tek başına
+       güven kanıtı değildir.
+
+       Gerçek uygulama kurulumu için daha sonra:
+
+       package fetch
+           ↓
+       package hash
+           ↓
+       developer signature
+           ↓
+       VAERO trust authority
+           ↓
+       compatibility check
+           ↓
+       permission consent
+           ↓
+       installation
+
+       zinciri kurulacaktır.
+
+       Bu doğrulama sistemi henüz mevcut olmadığı için
+       third-party / first-party dış paket kurulumu burada
+       fail-closed davranır.
+    ===================================================== */
+
+    const packageVerifier =
+        this.getService(
+            "applicationVerifier"
+        );
+
+
+    if(
+        !packageVerifier ||
+        typeof packageVerifier.verify !==
+            "function"
+    ){
+
+        console.warn(
+            "Applications install blocked: verified package installation is not available yet.",
+            app.id
+        );
+
+        return false;
+
+    }
+
+
+    /* =====================================================
+       PACKAGE VERIFICATION
+    ===================================================== */
+
+    let verification =
+        null;
+
+
+    try{
+
+        verification =
+            packageVerifier.verify(
+                app
+            );
+
+    } catch(error){
+
+        console.error(
+            "Application verification failed:",
+            error
+        );
+
+        return false;
+
+    }
+
+
+    /*
+     * Şimdilik async verifier kabul etmiyoruz.
+     * Async paket doğrulamasını kurduğumuzda install()
+     * fonksiyonunu da kontrollü şekilde async yapacağız.
+     */
+
+    if(
+        verification &&
+        typeof verification.then ===
+            "function"
+    ){
+
+        console.warn(
+            "Applications install blocked: asynchronous verifier is not wired yet.",
+            app.id
+        );
+
+        return false;
+
+    }
+
+
+    if(
+        !verification ||
+        verification.valid !==
+            true
+    ){
+
+        console.warn(
+            "Applications install blocked: package verification failed.",
+            app.id
+        );
+
+        return false;
+
+    }
+
+
+    /* =====================================================
+       VERIFIED IDENTITY MATCH
+
+       İmzalanan paketin gerçekten katalogdaki aynı
+       uygulamaya ait olduğundan emin olunur.
+    ===================================================== */
+
+    if(
+        verification.appId &&
+        verification.appId !==
+            app.id
+    ){
+
+        console.warn(
+            "Applications install blocked: verified package identity mismatch.",
+            app.id
+        );
+
+        return false;
+
+    }
+
+
+    /* =====================================================
+       PAYMENT AUTHORITY
+
+       Ücretli uygulamada frontend ödeme sonucu
+       yeterli değildir.
+
+       Backend/provider doğrulaması gerekir.
+    ===================================================== */
+
+    if(
+        app.pricing?.model &&
+        app.pricing.model !==
+            "free"
+    ){
+
+        const paymentCore =
+            this.getService(
+                "paymentCore"
+            );
+
+
+        if(
+            !paymentCore ||
+            typeof paymentCore.hasVerifiedEntitlement !==
+                "function"
+        ){
+
+            console.warn(
+                "Applications install blocked: verified purchase entitlement unavailable.",
+                app.id
+            );
+
+            return false;
+
+        }
+
+
+        let entitled =
+            false;
+
+
+        try{
+
+            entitled =
+                paymentCore.hasVerifiedEntitlement(
+                    app.id
+                ) === true;
+
+        } catch(error){
+
+            console.error(
+                "Application entitlement check failed:",
+                error
+            );
+
+            return false;
+
+        }
+
+
+        if(!entitled){
+
+            console.warn(
+                "Applications install blocked: purchase is not verified.",
+                app.id
+            );
+
+            return false;
+
+        }
+
+    }
+
+
+    /* =====================================================
+       EXISTING INSTALLATION
+    ===================================================== */
+
+    const existing =
+        typeof organSystem.findBySlug ===
+            "function"
+            ? organSystem.findBySlug(
+                app.id
+            )
+            : null;
+
+
+    if(existing){
+
+        /*
+         * Daha önce kayıt edilmiş organ yalnız doğrulanmış
+         * paket sonucu yeniden aktive edilebilir.
+         */
+
+        if(
+            typeof organSystem.install !==
+                "function"
+        ){
+            return false;
+        }
+
+
+        return (
+            organSystem.install(
+                existing.id
+            ) === true
+        );
+
+    }
+
+
+    /* =====================================================
+       PERMISSIONS
+
+       requestedPermissions burada otomatik olarak
+       granted permissions haline GELMEZ.
+
+       Kullanıcı onayı daha sonra ayrı permission flow
+       üzerinden verilecek.
+    ===================================================== */
+
+    const organ =
+        organSystem.create(
+            app.title,
+            "active",
+            {
+                id:
+                    app.id,
+
+                slug:
+                    app.id,
+
+                version:
+                    app.version,
+
+                type:
+                    "application",
+
+                source:
+                    app.distribution,
+
+                developer:
+                    app.developer,
+
+                trusted:
+                    true,
+
+                signature:
+                    verification.signature ||
+                    app.signature ||
+                    null,
+
+                verification:
+                    {
+                        verified:
+                            true,
+
+                        verifiedAt:
+                            Date.now(),
+
+                        authority:
+                            verification.authority ||
+                            null,
+
+                        hash:
+                            verification.hash ||
+                            null
+                    },
+
+                permissions:
+                    [],
+
+                requestedPermissions:
+                    Array.isArray(
+                        app.requestedPermissions
+                    )
+                        ? [
+                            ...app.requestedPermissions
+                        ]
+                        : [],
+
+                capabilities:
+                    Array.isArray(
+                        app.capabilities
+                    )
+                        ? [
+                            ...app.capabilities
+                        ]
+                        : [],
+
+                installed:
+                    true,
+
+                removable:
+                    app.removable ===
+                    true
+            }
+        );
+
+
+    if(!organ){
+
+        console.warn(
+            "Applications install failed: OrganSystem rejected application.",
+            app.id
+        );
+
+        return false;
+
+    }
+
+
+    return true;
+
+},
 
     /* =====================================================
        COMMANDS
