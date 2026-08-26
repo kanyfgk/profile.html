@@ -1,13 +1,15 @@
 /* =========================================================
-   VAERO ACTIONS V2
-   Engine Interaction / Editors / Brain / Payment Bridge
+  VAERO ACTIONS V2
+  Engine Interaction / Editors / Brain Gateway / Payment Bridge
 ========================================================= */
 
 const Actions = {
 
-    brainOutsideHandler: null,
+    brainOutsideHandler:
+        null,
 
-    brainSending: false,
+    brainSending:
+        false,
 
 
     /* =====================================================
@@ -19,14 +21,21 @@ const Actions = {
         try{
 
             if(
-                typeof VAERO === "undefined" ||
-                typeof VAERO.get !== "function"
+                typeof VAERO ===
+                    "undefined" ||
+                typeof VAERO.get !==
+                    "function"
             ){
+
                 return null;
+
             }
 
+
             return (
-                VAERO.get(name) ||
+                VAERO.get(
+                    name
+                ) ||
                 null
             );
 
@@ -36,6 +45,7 @@ const Actions = {
                 `Actions servisi okunamadı: ${name}`,
                 error
             );
+
 
             return null;
 
@@ -49,10 +59,13 @@ const Actions = {
         try{
 
             if(
-                typeof VAERO !== "undefined" &&
+                typeof VAERO !==
+                    "undefined" &&
                 VAERO.engine
             ){
+
                 return VAERO.engine;
+
             }
 
         } catch(error){
@@ -63,10 +76,13 @@ const Actions = {
 
 
         if(
-            typeof window !== "undefined" &&
+            typeof window !==
+                "undefined" &&
             window.Engine
         ){
+
             return window.Engine;
+
         }
 
 
@@ -75,10 +91,13 @@ const Actions = {
     },
 
 
-    createId(prefix = "item"){
+    createId(
+        prefix = "item"
+    ){
 
         if(
-            typeof crypto !== "undefined" &&
+            typeof crypto !==
+                "undefined" &&
             typeof crypto.randomUUID ===
                 "function"
         ){
@@ -98,7 +117,9 @@ const Actions = {
     parseTags(value){
 
         return [
+
             ...new Set(
+
                 String(
                     value ?? ""
                 )
@@ -108,7 +129,9 @@ const Actions = {
                             item.trim()
                     )
                     .filter(Boolean)
+
             )
+
         ];
 
     },
@@ -130,7 +153,9 @@ const Actions = {
             typeof awareness.enter !==
                 "function"
         ){
+
             return false;
+
         }
 
 
@@ -141,6 +166,7 @@ const Actions = {
                 metadata
             );
 
+
             return true;
 
         } catch(error){
@@ -149,6 +175,7 @@ const Actions = {
                 "Brain Awareness güncellenemedi:",
                 error
             );
+
 
             return false;
 
@@ -174,7 +201,9 @@ const Actions = {
             typeof evolution.record !==
                 "function"
         ){
+
             return false;
+
         }
 
 
@@ -186,6 +215,7 @@ const Actions = {
                 metadata
             );
 
+
             return true;
 
         } catch(error){
@@ -194,6 +224,7 @@ const Actions = {
                 "Evolution kaydı oluşturulamadı:",
                 error
             );
+
 
             return false;
 
@@ -213,18 +244,23 @@ const Actions = {
 
 
         if(!engine){
+
             return false;
+
         }
 
 
         engine.worldEditMode =
             false;
 
+
         engine.entityEditMode =
             false;
 
+
         engine.entityCreateMode =
             false;
+
 
         engine.entityType =
             null;
@@ -250,7 +286,9 @@ const Actions = {
             typeof engine.openHome !==
                 "function"
         ){
+
             return false;
+
         }
 
 
@@ -261,7 +299,10 @@ const Actions = {
             engine.openHome();
 
 
-        if(result !== false){
+        if(
+            result !==
+                false
+        ){
 
             this.syncAwareness(
                 "home"
@@ -282,7 +323,9 @@ const Actions = {
 
 
         if(!engine){
+
             return false;
+
         }
 
 
@@ -295,12 +338,15 @@ const Actions = {
 
 
         if(!entity){
+
             return false;
+
         }
 
 
         engine.currentOpenedEntity =
             entity;
+
 
         engine.currentEntityPage =
             "identity";
@@ -310,27 +356,38 @@ const Actions = {
             engine.setView(
                 "identity",
                 {
+
                     entity,
+
                     page:
                         "identity",
+
                     world:
                         null,
+
                     entityCreateMode:
                         false,
+
                     entityType:
                         null
+
                 }
             );
 
 
-        if(result !== false){
+        if(
+            result !==
+                false
+        ){
 
             this.syncAwareness(
                 "identity",
                 {
+
                     entityId:
                         entity.id ||
                         null
+
                 }
             );
 
@@ -349,7 +406,9 @@ const Actions = {
 
 
         if(!engine){
+
             return false;
+
         }
 
 
@@ -362,12 +421,15 @@ const Actions = {
 
 
         if(!entity){
+
             return false;
+
         }
 
 
         engine.currentOpenedEntity =
             entity;
+
 
         engine.currentEntityPage =
             "profile";
@@ -377,27 +439,38 @@ const Actions = {
             engine.setView(
                 "profile",
                 {
+
                     entity,
+
                     page:
                         "profile",
+
                     world:
                         null,
+
                     entityCreateMode:
                         false,
+
                     entityType:
                         null
+
                 }
             );
 
 
-        if(result !== false){
+        if(
+            result !==
+                false
+        ){
 
             this.syncAwareness(
                 "profile",
                 {
+
                     entityId:
                         entity.id ||
                         null
+
                 }
             );
 
@@ -416,7 +489,9 @@ const Actions = {
 
 
         if(!engine){
+
             return false;
+
         }
 
 
@@ -427,21 +502,30 @@ const Actions = {
             engine.setView(
                 "create",
                 {
+
                     entity:
                         null,
+
                     page:
                         null,
+
                     world:
                         null,
+
                     entityCreateMode:
                         false,
+
                     entityType:
                         null
+
                 }
             );
 
 
-        if(result !== false){
+        if(
+            result !==
+                false
+        ){
 
             this.syncAwareness(
                 "create"
@@ -462,7 +546,9 @@ const Actions = {
 
 
         if(!engine){
+
             return false;
+
         }
 
 
@@ -473,21 +559,30 @@ const Actions = {
             engine.setView(
                 "worlds",
                 {
+
                     entity:
                         null,
+
                     page:
                         null,
+
                     world:
                         null,
+
                     entityCreateMode:
                         false,
+
                     entityType:
                         null
+
                 }
             );
 
 
-        if(result !== false){
+        if(
+            result !==
+                false
+        ){
 
             this.syncAwareness(
                 "worlds"
@@ -509,7 +604,8 @@ const Actions = {
             );
 
 
-        let worlds = [];
+        let worlds =
+            [];
 
 
         try{
@@ -518,12 +614,18 @@ const Actions = {
                 worldService &&
                 typeof worldService.all ===
                     "function"
-                    ? worldService.all() || []
+
+                    ? (
+                        worldService.all() ||
+                        []
+                    )
+
                     : [];
 
         } catch(error){
 
-            worlds = [];
+            worlds =
+                [];
 
         }
 
@@ -533,20 +635,28 @@ const Actions = {
 
 
         if(!engine){
+
             return false;
+
         }
 
 
         const targetWorld =
+
             engine.currentWorld ||
+
             worlds.find(
                 world =>
+
                     world?.status ===
                         "active" &&
+
                     world?.archived !==
                         true
             ) ||
+
             worlds[0] ||
+
             null;
 
 
@@ -580,7 +690,9 @@ const Actions = {
             !worldService ||
             !engine
         ){
+
             return false;
+
         }
 
 
@@ -600,7 +712,8 @@ const Actions = {
                         worldId
                     );
 
-            } else if(
+            }
+            else if(
                 typeof worldService.all ===
                     "function"
             ){
@@ -608,14 +721,16 @@ const Actions = {
                 world =
                     (
                         worldService.all({
-                            includeArchived:true
+                            includeArchived:
+                                true
                         }) ||
                         []
-                    ).find(
-                        item =>
-                            item?.id ===
-                            worldId
-                    ) ||
+                    )
+                        .find(
+                            item =>
+                                item?.id ===
+                                worldId
+                        ) ||
                     null;
 
             }
@@ -626,6 +741,7 @@ const Actions = {
                 "World açılamadı:",
                 error
             );
+
 
             return false;
 
@@ -642,6 +758,7 @@ const Actions = {
                 "World bulunamadı veya arşivlenmiş:",
                 worldId
             );
+
 
             return false;
 
@@ -667,27 +784,38 @@ const Actions = {
             engine.setView(
                 "world",
                 {
+
                     world,
+
                     entity:
                         null,
+
                     page:
                         null,
+
                     entityCreateMode:
                         false,
+
                     entityType:
                         null
+
                 }
             );
 
 
-        if(result !== false){
+        if(
+            result !==
+                false
+        ){
 
             this.syncAwareness(
                 "world",
                 {
+
                     worldId:
                         world.id ||
                         null
+
                 }
             );
 
@@ -723,6 +851,7 @@ const Actions = {
         engine.currentOpenedEntity =
             null;
 
+
         engine.currentEntityPage =
             null;
 
@@ -731,27 +860,38 @@ const Actions = {
             engine.setView(
                 "world",
                 {
+
                     world,
+
                     entity:
                         null,
+
                     page:
                         null,
+
                     entityCreateMode:
                         false,
+
                     entityType:
                         null
+
                 }
             );
 
 
-        if(result !== false){
+        if(
+            result !==
+                false
+        ){
 
             this.syncAwareness(
                 "world",
                 {
+
                     worldId:
                         world.id ||
                         null
+
                 }
             );
 
@@ -774,7 +914,9 @@ const Actions = {
 
 
         if(!engine){
+
             return false;
+
         }
 
 
@@ -806,6 +948,7 @@ const Actions = {
         if(!name){
 
             nameInput?.focus();
+
 
             return false;
 
@@ -843,6 +986,7 @@ const Actions = {
 
             world =
                 worldService.create({
+
                     id:
                         this.createId(
                             "world"
@@ -871,6 +1015,7 @@ const Actions = {
 
                     status:
                         "active"
+
                 });
 
         } catch(error){
@@ -880,13 +1025,16 @@ const Actions = {
                 error
             );
 
+
             return false;
 
         }
 
 
         if(!world){
+
             return false;
+
         }
 
 
@@ -894,6 +1042,7 @@ const Actions = {
             "milestone",
             `${name} dünyası oluşturuldu`,
             {
+
                 title:
                     `${name} dünyası oluşturuldu`,
 
@@ -914,6 +1063,7 @@ const Actions = {
                     "creation",
                     ...tags
                 ]
+
             }
         );
 
@@ -925,26 +1075,37 @@ const Actions = {
             engine.setView(
                 "world",
                 {
+
                     world,
+
                     entity:
                         null,
+
                     page:
                         null,
+
                     entityCreateMode:
                         false,
+
                     entityType:
                         null
+
                 }
             );
 
 
-        if(result !== false){
+        if(
+            result !==
+                false
+        ){
 
             this.syncAwareness(
                 "world",
                 {
+
                     worldId:
                         world.id
+
                 }
             );
 
@@ -977,18 +1138,23 @@ const Actions = {
             world.archived ===
                 true
         ){
+
             return false;
+
         }
 
 
         engine.worldEditMode =
             true;
 
+
         engine.entityEditMode =
             false;
 
+
         engine.entityCreateMode =
             false;
+
 
         engine.entityType =
             null;
@@ -997,17 +1163,48 @@ const Actions = {
         return engine.setView(
             "world",
             {
+
                 world,
+
                 entity:
                     null,
+
                 page:
                     null,
+
                 entityCreateMode:
                     false,
+
                 entityType:
                     null
+
             }
         );
+
+    },
+
+
+    /* =====================================================
+       WORLD EDITOR COMPATIBILITY API
+    ===================================================== */
+
+    openWorldEdit(){
+
+        return this.openWorldEditor();
+
+    },
+
+
+    startWorldEdit(){
+
+        return this.openWorldEditor();
+
+    },
+
+
+    archiveCurrentWorld(){
+
+        return this.archiveWorld();
 
     },
 
@@ -1019,7 +1216,9 @@ const Actions = {
 
 
         if(!engine){
+
             return false;
+
         }
 
 
@@ -1030,17 +1229,23 @@ const Actions = {
         return engine.setView(
             "world",
             {
+
                 world:
                     engine.currentWorld ||
                     null,
+
                 entity:
                     null,
+
                 page:
                     null,
+
                 entityCreateMode:
                     false,
+
                 entityType:
                     null
+
             }
         );
 
@@ -1062,7 +1267,9 @@ const Actions = {
             !engine ||
             !world
         ){
+
             return false;
+
         }
 
 
@@ -1101,6 +1308,7 @@ const Actions = {
 
             nameInput?.focus();
 
+
             return false;
 
         }
@@ -1117,7 +1325,9 @@ const Actions = {
             typeof worldService.update !==
                 "function"
         ){
+
             return false;
+
         }
 
 
@@ -1131,6 +1341,7 @@ const Actions = {
                 worldService.update(
                     world.id,
                     {
+
                         name,
 
                         description:
@@ -1149,6 +1360,7 @@ const Actions = {
                                 statusInput?.value ||
                                 "active"
                             )
+
                     }
                 );
 
@@ -1159,18 +1371,22 @@ const Actions = {
                 error
             );
 
+
             return false;
 
         }
 
 
         if(!updated){
+
             return false;
+
         }
 
 
         engine.currentWorld =
             updated;
+
 
         engine.worldEditMode =
             false;
@@ -1180,6 +1396,7 @@ const Actions = {
             "life-event",
             `${updated.name} dünyası güncellendi`,
             {
+
                 title:
                     `${updated.name} dünyası güncellendi`,
 
@@ -1199,6 +1416,7 @@ const Actions = {
                     "world",
                     "update"
                 ]
+
             }
         );
 
@@ -1206,16 +1424,22 @@ const Actions = {
         return engine.setView(
             "world",
             {
+
                 world:
                     updated,
+
                 entity:
                     null,
+
                 page:
                     null,
+
                 entityCreateMode:
                     false,
+
                 entityType:
                     null
+
             }
         );
 
@@ -1238,7 +1462,9 @@ const Actions = {
             world.id ===
                 "vaero-world"
         ){
+
             return false;
+
         }
 
 
@@ -1253,7 +1479,9 @@ const Actions = {
             typeof worldService.archive !==
                 "function"
         ){
+
             return false;
+
         }
 
 
@@ -1275,13 +1503,16 @@ const Actions = {
                 error
             );
 
+
             return false;
 
         }
 
 
         if(!archived){
+
             return false;
+
         }
 
 
@@ -1289,6 +1520,7 @@ const Actions = {
             "life-event",
             `${world.name} dünyası arşivlendi`,
             {
+
                 title:
                     `${world.name} dünyası arşivlendi`,
 
@@ -1308,12 +1540,14 @@ const Actions = {
                     "world",
                     "archive"
                 ]
+
             }
         );
 
 
         engine.currentWorld =
             null;
+
 
         engine.worldEditMode =
             false;
@@ -1349,6 +1583,7 @@ const Actions = {
         engine.worldEditMode =
             false;
 
+
         engine.entityEditMode =
             false;
 
@@ -1356,15 +1591,21 @@ const Actions = {
         return engine.setView(
             "world",
             {
+
                 world,
+
                 entity:
                     null,
+
                 page:
                     null,
+
                 entityCreateMode:
                     true,
+
                 entityType:
                     null
+
             }
         );
 
@@ -1381,13 +1622,16 @@ const Actions = {
             !engine ||
             !type
         ){
+
             return false;
+
         }
 
 
         return engine.setView(
             "world",
             {
+
                 world:
                     engine.currentWorld ||
                     null,
@@ -1403,6 +1647,7 @@ const Actions = {
 
                 entityType:
                     type
+
             }
         );
 
@@ -1416,13 +1661,16 @@ const Actions = {
 
 
         if(!engine){
+
             return false;
+
         }
 
 
         return engine.setView(
             "world",
             {
+
                 world:
                     engine.currentWorld ||
                     null,
@@ -1438,6 +1686,7 @@ const Actions = {
 
                 entityType:
                     null
+
             }
         );
 
@@ -1451,12 +1700,15 @@ const Actions = {
 
 
         if(!engine){
+
             return false;
+
         }
 
 
         engine.entityCreateMode =
             false;
+
 
         engine.entityType =
             null;
@@ -1465,6 +1717,7 @@ const Actions = {
         return engine.setView(
             "world",
             {
+
                 world:
                     engine.currentWorld ||
                     null,
@@ -1480,6 +1733,7 @@ const Actions = {
 
                 entityType:
                     null
+
             }
         );
 
@@ -1498,7 +1752,9 @@ const Actions = {
 
 
         if(!world){
+
             return false;
+
         }
 
 
@@ -1535,13 +1791,16 @@ const Actions = {
 
             nameInput?.focus();
 
+
             return false;
 
         }
 
 
         if(!type){
+
             return false;
+
         }
 
 
@@ -1575,7 +1834,9 @@ const Actions = {
             typeof entityManager.create !==
                 "function"
         ){
+
             return false;
+
         }
 
 
@@ -1593,6 +1854,7 @@ const Actions = {
 
             entity =
                 entityManager.create({
+
                     id:
                         this.createId(
                             "entity"
@@ -1624,11 +1886,14 @@ const Actions = {
 
                     capabilities:
                         []
+
                 });
 
 
             if(!entity){
+
                 return false;
+
             }
 
 
@@ -1670,14 +1935,18 @@ const Actions = {
                     entity
                 );
 
-            } else {
+            }
+            else {
 
                 if(
                     !Array.isArray(
                         world.entities
                     )
                 ){
-                    world.entities = [];
+
+                    world.entities =
+                        [];
+
                 }
 
 
@@ -1697,6 +1966,7 @@ const Actions = {
                 error
             );
 
+
             return false;
 
         }
@@ -1706,6 +1976,7 @@ const Actions = {
             "milestone",
             `${name} varlığı oluşturuldu`,
             {
+
                 title:
                     `${name} varlığı oluşturuldu`,
 
@@ -1734,6 +2005,7 @@ const Actions = {
                     "identity",
                     "profile"
                 ]
+
             }
         );
 
@@ -1741,11 +2013,14 @@ const Actions = {
         engine.currentOpenedEntity =
             entity;
 
+
         engine.entityCreateMode =
             false;
 
+
         engine.entityType =
             null;
+
 
         engine.entityEditMode =
             false;
@@ -1755,28 +2030,39 @@ const Actions = {
             engine.setView(
                 "entity",
                 {
+
                     world,
+
                     entity,
+
                     page:
                         null,
+
                     entityCreateMode:
                         false,
+
                     entityType:
                         null
+
                 }
             );
 
 
-        if(result !== false){
+        if(
+            result !==
+                false
+        ){
 
             this.syncAwareness(
                 "entity",
                 {
+
                     entityId:
                         entity.id,
 
                     worldId:
                         world.id
+
                 }
             );
 
@@ -1787,7 +2073,8 @@ const Actions = {
 
     },
 
-   /* =====================================================
+
+    /* =====================================================
        ENTITY OPEN / EDIT / ARCHIVE
     ===================================================== */
 
@@ -1808,22 +2095,28 @@ const Actions = {
                 world.entities
             )
         ){
+
             return false;
+
         }
 
 
         const savedEntity =
             world.entities.find(
                 item =>
+
                     item?.id ===
                         entityId &&
+
                     item?.archived !==
                         true
             );
 
 
         if(!savedEntity){
+
             return false;
+
         }
 
 
@@ -1863,11 +2156,14 @@ const Actions = {
         engine.currentOpenedEntity =
             entity;
 
+
         engine.currentEntityPage =
             null;
 
+
         engine.entityEditMode =
             false;
+
 
         engine.worldEditMode =
             false;
@@ -1877,23 +2173,33 @@ const Actions = {
             engine.setView(
                 "entity",
                 {
+
                     world,
+
                     entity,
+
                     page:
                         null,
+
                     entityCreateMode:
                         false,
+
                     entityType:
                         null
+
                 }
             );
 
 
-        if(result !== false){
+        if(
+            result !==
+                false
+        ){
 
             this.syncAwareness(
                 "entity",
                 {
+
                     entityId:
                         entity.id ||
                         null,
@@ -1901,6 +2207,7 @@ const Actions = {
                     worldId:
                         world.id ||
                         null
+
                 }
             );
 
@@ -1930,15 +2237,19 @@ const Actions = {
             entity.archived ===
                 true
         ){
+
             return false;
+
         }
 
 
         engine.entityEditMode =
             true;
 
+
         engine.worldEditMode =
             false;
+
 
         engine.currentEntityPage =
             null;
@@ -1947,6 +2258,7 @@ const Actions = {
         return engine.setView(
             "entity",
             {
+
                 world:
                     engine.currentWorld ||
                     null,
@@ -1961,8 +2273,34 @@ const Actions = {
 
                 entityType:
                     null
+
             }
         );
+
+    },
+
+
+    /* =====================================================
+       ENTITY EDITOR COMPATIBILITY API
+    ===================================================== */
+
+    openEntityEdit(){
+
+        return this.openEntityEditor();
+
+    },
+
+
+    startEntityEdit(){
+
+        return this.openEntityEditor();
+
+    },
+
+
+    archiveCurrentEntity(){
+
+        return this.archiveEntity();
 
     },
 
@@ -1983,7 +2321,9 @@ const Actions = {
             !engine ||
             !entity
         ){
+
             return false;
+
         }
 
 
@@ -1994,6 +2334,7 @@ const Actions = {
         return engine.setView(
             "entity",
             {
+
                 world:
                     engine.currentWorld ||
                     null,
@@ -2008,6 +2349,7 @@ const Actions = {
 
                 entityType:
                     null
+
             }
         );
 
@@ -2030,7 +2372,9 @@ const Actions = {
             !engine ||
             !entity
         ){
+
             return false;
+
         }
 
 
@@ -2069,6 +2413,7 @@ const Actions = {
 
             nameInput?.focus();
 
+
             return false;
 
         }
@@ -2091,7 +2436,9 @@ const Actions = {
             typeof entityManager.update !==
                 "function"
         ){
+
             return false;
+
         }
 
 
@@ -2105,6 +2452,7 @@ const Actions = {
                 entityManager.update(
                     entity.id,
                     {
+
                         name,
 
                         description:
@@ -2123,6 +2471,7 @@ const Actions = {
                                 statusInput?.value ||
                                 "active"
                             )
+
                     }
                 );
 
@@ -2133,13 +2482,16 @@ const Actions = {
                 error
             );
 
+
             return false;
 
         }
 
 
         if(!updated){
+
             return false;
+
         }
 
 
@@ -2168,7 +2520,9 @@ const Actions = {
                 );
 
 
-            if(index >= 0){
+            if(
+                index >= 0
+            ){
 
                 world.entities[index] =
                     updated;
@@ -2192,6 +2546,7 @@ const Actions = {
         engine.currentOpenedEntity =
             updated;
 
+
         engine.entityEditMode =
             false;
 
@@ -2200,6 +2555,7 @@ const Actions = {
             "life-event",
             `${updated.name} varlığı güncellendi`,
             {
+
                 title:
                     `${updated.name} varlığı güncellendi`,
 
@@ -2223,6 +2579,7 @@ const Actions = {
                     "entity",
                     "update"
                 ]
+
             }
         );
 
@@ -2230,15 +2587,21 @@ const Actions = {
         return engine.setView(
             "entity",
             {
+
                 world,
+
                 entity:
                     updated,
+
                 page:
                     null,
+
                 entityCreateMode:
                     false,
+
                 entityType:
                     null
+
             }
         );
 
@@ -2267,7 +2630,9 @@ const Actions = {
             entity.id ===
                 engine?.rootEntity?.id
         ){
+
             return false;
+
         }
 
 
@@ -2288,7 +2653,9 @@ const Actions = {
             typeof entityManager.archive !==
                 "function"
         ){
+
             return false;
+
         }
 
 
@@ -2310,13 +2677,16 @@ const Actions = {
                 error
             );
 
+
             return false;
 
         }
 
 
         if(!archived){
+
             return false;
+
         }
 
 
@@ -2335,10 +2705,18 @@ const Actions = {
                 );
 
 
-            if(index >= 0){
+            if(
+                index >= 0
+            ){
 
                 world.entities[index] =
-                    entity;
+                    archived &&
+                    typeof archived ===
+                        "object"
+
+                        ? archived
+
+                        : entity;
 
             }
 
@@ -2352,6 +2730,7 @@ const Actions = {
             "life-event",
             `${entity.name} varlığı arşivlendi`,
             {
+
                 title:
                     `${entity.name} varlığı arşivlendi`,
 
@@ -2375,6 +2754,7 @@ const Actions = {
                     "entity",
                     "archive"
                 ]
+
             }
         );
 
@@ -2382,8 +2762,10 @@ const Actions = {
         engine.currentOpenedEntity =
             null;
 
+
         engine.currentEntityPage =
             null;
+
 
         engine.entityEditMode =
             false;
@@ -2401,15 +2783,25 @@ const Actions = {
     openEntityPage(page){
 
         const allowedPages = [
+
             "identity",
+
             "profile",
+
             "organs",
+
             "timeline",
+
             "memory",
+
             "bridge",
+
             "evolution",
+
             "settings",
+
             "discovery"
+
         ];
 
 
@@ -2418,7 +2810,9 @@ const Actions = {
                 page
             )
         ){
+
             return false;
+
         }
 
 
@@ -2427,7 +2821,9 @@ const Actions = {
 
 
         if(!engine){
+
             return false;
+
         }
 
 
@@ -2438,18 +2834,23 @@ const Actions = {
 
 
         if(!entity){
+
             return false;
+
         }
 
 
         engine.currentOpenedEntity =
             entity;
 
+
         engine.currentEntityPage =
             page;
 
+
         engine.entityEditMode =
             false;
+
 
         engine.worldEditMode =
             false;
@@ -2489,24 +2890,34 @@ const Actions = {
             engine.setView(
                 view,
                 {
+
                     entity,
+
                     page,
+
                     entityCreateMode:
                         false,
+
                     entityType:
                         null
+
                 }
             );
 
 
-        if(opened !== false){
+        if(
+            opened !==
+                false
+        ){
 
             this.syncAwareness(
                 page,
                 {
+
                     entityId:
                         entity.id ||
                         null
+
                 }
             );
 
@@ -2544,6 +2955,7 @@ const Actions = {
         engine.currentEntityPage =
             null;
 
+
         engine.entityEditMode =
             false;
 
@@ -2551,6 +2963,7 @@ const Actions = {
         return engine.setView(
             "entity",
             {
+
                 world:
                     engine.currentWorld ||
                     null,
@@ -2565,6 +2978,7 @@ const Actions = {
 
                 entityType:
                     null
+
             }
         );
 
@@ -2600,6 +3014,7 @@ const Actions = {
 
             nameInput?.focus();
 
+
             return false;
 
         }
@@ -2623,7 +3038,9 @@ const Actions = {
 
 
         if(!entity){
+
             return false;
+
         }
 
 
@@ -2656,20 +3073,25 @@ const Actions = {
                 );
 
 
-                if(entity.profile){
+                if(
+                    entity.profile
+                ){
 
                     entity.profile.name =
                         name;
 
+
                     entity.profile.description =
                         description;
+
 
                     entity.profile.updatedAt =
                         Date.now();
 
                 }
 
-            } else {
+            }
+            else {
 
                 const entityManager =
                     this.getService(
@@ -2686,25 +3108,34 @@ const Actions = {
                     entityManager.update(
                         entity.id,
                         {
+
                             name,
+
                             description
+
                         }
                     );
 
-                } else if(
+                }
+                else if(
                     typeof entity.update ===
                         "function"
                 ){
 
                     entity.update({
+
                         name,
+
                         description
+
                     });
 
-                } else {
+                }
+                else {
 
                     entity.name =
                         name;
+
 
                     entity.description =
                         description;
@@ -2728,8 +3159,11 @@ const Actions = {
                     profileService.update(
                         entity.profile,
                         {
+
                             name,
+
                             description
+
                         }
                     );
 
@@ -2748,6 +3182,7 @@ const Actions = {
                 "Profil kaydedilemedi:",
                 error
             );
+
 
             return false;
 
@@ -2785,9 +3220,20 @@ const Actions = {
                 "vaero:discovery:completed"
             );
 
-            localStorage.removeItem(
-                "vaero:discovery:draft:v2"
-            );
+
+            [
+                "vaero:discovery:draft:v2",
+                "vaero:discovery:draft:v3",
+                "vaero:discovery:result:v2",
+                "vaero:discovery:result:v3"
+            ]
+                .forEach(
+                    key =>
+
+                        localStorage.removeItem(
+                            key
+                        )
+                );
 
         } catch(error){
 
@@ -2815,8 +3261,10 @@ const Actions = {
             window.DiscoveryApp.currentStep =
                 0;
 
+
             window.DiscoveryApp.answers =
                 {};
+
 
             window.DiscoveryApp.render(
                 engineRoot
@@ -2853,7 +3301,9 @@ const Actions = {
             typeof engine.openSystemPage !==
                 "function"
         ){
+
             return false;
+
         }
 
 
@@ -2891,7 +3341,9 @@ const Actions = {
             typeof engine.openSystemPage !==
                 "function"
         ){
+
             return false;
+
         }
 
 
@@ -3001,6 +3453,7 @@ const Actions = {
                 "VAERO Payment Core intent API bulunamadı."
             );
 
+
             return false;
 
         }
@@ -3015,7 +3468,9 @@ const Actions = {
 
 
             if(!intent){
+
                 return false;
+
             }
 
 
@@ -3027,6 +3482,7 @@ const Actions = {
 
                 engine.currentVaeroPaymentIntent =
                     intent;
+
 
                 engine.mount(
                     engine.currentEntity
@@ -3043,6 +3499,7 @@ const Actions = {
                 "Payment intent oluşturulamadı:",
                 error
             );
+
 
             return false;
 
@@ -3071,7 +3528,9 @@ const Actions = {
             !intent ||
             !method
         ){
+
             return false;
+
         }
 
 
@@ -3099,7 +3558,10 @@ const Actions = {
                 );
 
 
-                return result !== false;
+                return (
+                    result !==
+                    false
+                );
 
             }
 
@@ -3126,7 +3588,10 @@ const Actions = {
                 );
 
 
-                return result !== false;
+                return (
+                    result !==
+                    false
+                );
 
             }
 
@@ -3165,7 +3630,9 @@ const Actions = {
             !intent ||
             !provider
         ){
+
             return false;
+
         }
 
 
@@ -3193,7 +3660,10 @@ const Actions = {
                 );
 
 
-                return result !== false;
+                return (
+                    result !==
+                    false
+                );
 
             }
 
@@ -3220,7 +3690,10 @@ const Actions = {
                 );
 
 
-                return result !== false;
+                return (
+                    result !==
+                    false
+                );
 
             }
 
@@ -3258,7 +3731,9 @@ const Actions = {
             !core ||
             !intent
         ){
+
             return false;
+
         }
 
 
@@ -3321,7 +3796,9 @@ const Actions = {
             !core ||
             !intent
         ){
+
             return false;
+
         }
 
 
@@ -3365,7 +3842,9 @@ const Actions = {
     },
 
 
-    refundVaeroPayment(transactionId){
+    refundVaeroPayment(
+        transactionId
+    ){
 
         const core =
             this.getVaeroPaymentCore();
@@ -3375,7 +3854,9 @@ const Actions = {
             !core ||
             !transactionId
         ){
+
             return false;
+
         }
 
 
@@ -3406,7 +3887,6 @@ const Actions = {
 
     },
 
-
     /* =====================================================
        BRAIN STORAGE
     ===================================================== */
@@ -3435,19 +3915,21 @@ const Actions = {
         const month =
             String(
                 date.getMonth() + 1
-            ).padStart(
-                2,
-                "0"
-            );
+            )
+                .padStart(
+                    2,
+                    "0"
+                );
 
 
         const day =
             String(
                 date.getDate()
-            ).padStart(
-                2,
-                "0"
-            );
+            )
+                .padStart(
+                    2,
+                    "0"
+                );
 
 
         return `${year}-${month}-${day}`;
@@ -3462,42 +3944,55 @@ const Actions = {
                 sessions
             )
         ){
+
             return [];
+
         }
 
 
         return sessions
+
             .filter(
                 session =>
+
                     session &&
                     typeof session ===
                         "object"
             )
+
             .map(
                 session => {
 
                     const startedAt =
+
                         Number(
                             session.startedAt
                         ) ||
+
                         Number(
                             session.updatedAt
                         ) ||
+
                         Date.now();
 
 
                     const updatedAt =
+
                         Number(
                             session.updatedAt
                         ) ||
+
                         startedAt;
 
 
                     const actions =
+
                         Array.isArray(
                             session.actions
                         )
+
                             ? session.actions
+
                                 .map(
                                     action => {
 
@@ -3507,6 +4002,7 @@ const Actions = {
                                         ){
 
                                             return {
+
                                                 id:
                                                     this.createId(
                                                         "brain-action"
@@ -3529,6 +4025,7 @@ const Actions = {
 
                                                 appLinks:
                                                     []
+
                                             };
 
                                         }
@@ -3539,22 +4036,32 @@ const Actions = {
                                             typeof action !==
                                                 "object"
                                         ){
+
                                             return null;
+
                                         }
 
 
                                         const content =
                                             String(
+
                                                 action.content ||
+
                                                 action.fullContent ||
+
                                                 action.text ||
+
                                                 action.message ||
+
                                                 ""
+
                                             ).trim();
 
 
                                         if(!content){
+
                                             return null;
+
                                         }
 
 
@@ -3580,14 +4087,18 @@ const Actions = {
                                                 Array.isArray(
                                                     action.appLinks
                                                 )
+
                                                     ? action.appLinks
+
                                                     : []
 
                                         };
 
                                     }
                                 )
+
                                 .filter(Boolean)
+
                             : [];
 
 
@@ -3614,14 +4125,18 @@ const Actions = {
                         status:
                             session.status ===
                                 "error"
+
                                 ? "error"
+
                                 : (
                                     session.status ===
                                         "done" ||
                                     session.status ===
                                         "closed"
                                 )
+
                                     ? "done"
+
                                     : "progress",
 
                         startedAt,
@@ -3647,12 +4162,25 @@ const Actions = {
                             session.dayKey ||
                             this.getBrainDayKey(
                                 startedAt
-                            )
+                            ),
+
+                        pendingConfirmation:
+
+                            session.pendingConfirmation &&
+                            typeof session.pendingConfirmation ===
+                                "object"
+
+                                ? {
+                                    ...session.pendingConfirmation
+                                }
+
+                                : null
 
                     };
 
                 }
             )
+
             .sort(
                 (a,b) =>
                     b.updatedAt -
@@ -3671,7 +4199,9 @@ const Actions = {
 
 
         if(!brain){
+
             return false;
+
         }
 
 
@@ -3695,10 +4225,13 @@ const Actions = {
 
         if(!saved){
 
-            brain.sessions = [];
+            brain.sessions =
+                [];
+
 
             brain.resumePoint =
                 null;
+
 
             return true;
 
@@ -3734,7 +4267,9 @@ const Actions = {
             );
 
 
-            brain.sessions = [];
+            brain.sessions =
+                [];
+
 
             brain.resumePoint =
                 null;
@@ -3756,7 +4291,9 @@ const Actions = {
 
 
         if(!brain){
+
             return false;
+
         }
 
 
@@ -3765,11 +4302,14 @@ const Actions = {
             localStorage.setItem(
                 this.getBrainStorageKey(),
                 JSON.stringify({
+
                     sessions:
                         Array.isArray(
                             brain.sessions
                         )
+
                             ? brain.sessions
+
                             : [],
 
                     resumePoint:
@@ -3778,6 +4318,7 @@ const Actions = {
 
                     savedAt:
                         Date.now()
+
                 })
             );
 
@@ -3807,7 +4348,9 @@ const Actions = {
                 brain.sessions
             )
         ){
+
             return null;
+
         }
 
 
@@ -3816,14 +4359,19 @@ const Actions = {
 
 
         return (
+
             brain.sessions.find(
                 session =>
+
                     session.kind ===
                         "conversation" &&
+
                     session.dayKey ===
                         todayKey
             ) ||
+
             null
+
         );
 
     },
@@ -3875,7 +4423,10 @@ const Actions = {
             dayKey:
                 this.getBrainDayKey(
                     now
-                )
+                ),
+
+            pendingConfirmation:
+                null
 
         };
 
@@ -3899,7 +4450,9 @@ const Actions = {
 
 
         if(!brain){
+
             return false;
+
         }
 
 
@@ -3909,7 +4462,8 @@ const Actions = {
             )
         ){
 
-            brain.sessions = [];
+            brain.sessions =
+                [];
 
         }
 
@@ -3951,14 +4505,18 @@ const Actions = {
 
 
         if(!content){
+
             return false;
+
         }
 
 
         const session =
+
             this.getTodayBrainConversationSession(
                 brain
             ) ||
+
             this.createTodayBrainConversation(
                 brain
             );
@@ -4005,6 +4563,7 @@ const Actions = {
 
         this.saveBrainState();
 
+
         this.renderBrainHistory();
 
 
@@ -4012,9 +4571,83 @@ const Actions = {
 
     },
 
-   /* =====================================================
+
+    /* =====================================================
        BRAIN PANEL
     ===================================================== */
+
+    getBrainGateway(){
+
+        return (
+
+            this.getService(
+                "brainService"
+            ) ||
+
+            window.BrainService ||
+
+            null
+
+        );
+
+    },
+
+
+    getActiveBrainSession(){
+
+        const brain =
+            this.getService(
+                "brain"
+            );
+
+
+        if(!brain){
+
+            return null;
+
+        }
+
+
+        if(
+            !Array.isArray(
+                brain.sessions
+            )
+        ){
+
+            brain.sessions =
+                [];
+
+        }
+
+
+        return (
+
+            this.getTodayBrainConversationSession(
+                brain
+            ) ||
+
+            this.createTodayBrainConversation(
+                brain
+            )
+
+        );
+
+    },
+
+
+    getBrainPendingConfirmation(){
+
+        const session =
+            this.getActiveBrainSession();
+
+
+        return (
+            session?.pendingConfirmation ||
+            null
+        );
+
+    },
+
 
     openBrain(){
 
@@ -4034,7 +4667,9 @@ const Actions = {
                 typeof window.BrainApp.render !==
                     "function"
             ){
+
                 return false;
+
             }
 
 
@@ -4053,7 +4688,9 @@ const Actions = {
 
 
         if(!panel){
+
             return false;
+
         }
 
 
@@ -4061,169 +4698,40 @@ const Actions = {
             "is-expanded"
         );
 
+
         panel.classList.add(
             "is-compact"
         );
+
 
         panel.style.display =
             "flex";
 
 
-        const contextService =
-            this.getService(
-                "brainContext"
-            );
+        if(
+            window.BrainApp &&
+            typeof window.BrainApp.refresh ===
+                "function"
+        ){
 
-
-        let context =
-            null;
-
-
-        try{
-
-            context =
-                contextService &&
-                typeof contextService.build ===
-                    "function"
-                    ? contextService.build()
-                    : null;
-
-        } catch(error){
-
-            context = null;
+            window.BrainApp.refresh();
 
         }
 
 
-        const contextKey =
-            context?.page ||
-            context?.screen ||
-            context?.app ||
-            "home";
+        const pending =
+            this.getBrainPendingConfirmation();
 
 
-        const names = {
+        if(
+            window.BrainApp &&
+            typeof window.BrainApp.refreshConfirmation ===
+                "function"
+        ){
 
-            home:
-                "Ana Ekran",
-
-            identity:
-                "Kimlik",
-
-            profile:
-                "Profil",
-
-            create:
-                "Yarat",
-
-            worlds:
-                "Dünyalar",
-
-            world:
-                "Dünya",
-
-            entity:
-                "Varlık",
-
-            organs:
-                "Organlar",
-
-            timeline:
-                "Zaman Çizelgesi",
-
-            memory:
-                "Hafıza",
-
-            bridge:
-                "Köprü",
-
-            evolution:
-                "Evrim",
-
-            settings:
-                "Ayarlar",
-
-            discovery:
-                "Discovery",
-
-            applications:
-                "Applications",
-
-            vaero:
-                "VAERO"
-
-        };
-
-
-        const suggestions = {
-
-            home:
-                "Dünyalarını açabilir, Applications'a geçebilir veya yeni bir yapı oluşturabilirsin.",
-
-            identity:
-                "Kimlik bilgilerini inceleyebilir veya Profil ekranına geçebilirsin.",
-
-            profile:
-                "Profil bilgilerini yönetebilir veya Discovery yönünü inceleyebilirsin.",
-
-            create:
-                "Yeni dünyanın amacını belirleyerek başlayabilirsin.",
-
-            worlds:
-                "Mevcut dünyalarını açabilir veya yeni bir dünya oluşturabilirsin.",
-
-            world:
-                "Bu dünyadaki varlıkları inceleyebilir, düzenleyebilir veya yeni bir varlık oluşturabilirsin.",
-
-            entity:
-                "Varlığın Kimlik, Profil, Hafıza, Timeline, Bridge ve Organlar katmanlarını yönetebilirsin.",
-
-            memory:
-                "Geçmiş kayıtlarını ve önemli bağlamlarını inceleyebilirsin.",
-
-            timeline:
-                "Geçmiş olaylarının zaman içindeki akışını inceleyebilirsin.",
-
-            evolution:
-                "Gelişimini ve yaşam olaylarının etkisini inceleyebilirsin.",
-
-            applications:
-                "Engine'e bağlı uygulamaları keşfedebilir ve yönetebilirsin.",
-
-            vaero:
-                "Engine hizmetlerini ve ödeme altyapısını yönetebilirsin."
-
-        };
-
-
-        const contextText =
-            document.getElementById(
-                "brainContextText"
+            window.BrainApp.refreshConfirmation(
+                pending
             );
-
-
-        if(contextText){
-
-            contextText.textContent =
-                `Şu an ${
-                    names[contextKey] ||
-                    contextKey
-                } ekranındasın.`;
-
-        }
-
-
-        const suggestion =
-            document.getElementById(
-                "brainSuggestion"
-            );
-
-
-        if(suggestion){
-
-            suggestion.textContent =
-                suggestions[contextKey] ||
-                "Bir ekran açabilir veya ne yapmak istediğini yazabilirsin.";
 
         }
 
@@ -4242,13 +4750,15 @@ const Actions = {
                     "is-compact"
                 );
 
+
                 panel.classList.add(
                     "is-expanded"
                 );
 
             },
             {
-                once:true
+                once:
+                    true
             }
         );
 
@@ -4283,13 +4793,16 @@ const Actions = {
                         '[data-action="brain:open"]'
                     )
                 ){
+
                     return;
+
                 }
 
 
                 currentPanel.classList.remove(
                     "is-expanded"
                 );
+
 
                 currentPanel.classList.add(
                     "is-compact"
@@ -4307,13 +4820,30 @@ const Actions = {
         this.syncAwareness(
             "brain",
             {
+
                 source:
-                    "panel"
+                    "panel",
+
+                screen:
+                    this.getEngine()?.currentView ||
+                    "home",
+
+                page:
+                    this.getEngine()?.currentEntityPage ||
+                    null
+
             }
         );
 
 
         this.renderBrainHistory();
+
+
+        requestAnimationFrame(
+            () =>
+                window.BrainApp
+                    ?.focusInput?.()
+        );
 
 
         return true;
@@ -4358,6 +4888,368 @@ const Actions = {
 
 
     /* =====================================================
+       BRAIN CONFIRMATION
+    ===================================================== */
+
+    async confirmBrainAction(
+        confirmationId
+    ){
+
+        if(
+            this.brainSending
+        ){
+
+            return false;
+
+        }
+
+
+        const id =
+            String(
+                confirmationId ||
+                ""
+            ).trim();
+
+
+        if(!id){
+
+            return false;
+
+        }
+
+
+        const gateway =
+            this.getBrainGateway();
+
+
+        const session =
+            this.getActiveBrainSession();
+
+
+        const pending =
+            session?.pendingConfirmation ||
+            null;
+
+
+        if(
+            !gateway ||
+            typeof gateway.confirm !==
+                "function" ||
+            !session ||
+            !pending ||
+            pending.id !==
+                id
+        ){
+
+            return false;
+
+        }
+
+
+        this.brainSending =
+            true;
+
+
+        window.BrainApp?.setBusy?.(
+            true,
+            "Onaylanan işlem uygulanıyor..."
+        );
+
+
+        let result =
+            null;
+
+
+        try{
+
+            result =
+                await Promise.resolve(
+                    gateway.confirm(
+                        id,
+                        pending.prompt ||
+                        "",
+                        {
+
+                            context:
+                                pending.context ||
+                                {}
+
+                        }
+                    )
+                );
+
+        } catch(error){
+
+            console.error(
+                "Brain confirmation uygulanamadı:",
+                error
+            );
+
+
+            result = {
+
+                executed:
+                    false,
+
+                error:
+                    true,
+
+                message:
+                    "Onaylanan işlem uygulanamadı."
+
+            };
+
+        } finally {
+
+            this.brainSending =
+                false;
+
+
+            window.BrainApp?.setBusy?.(
+                false
+            );
+
+        }
+
+
+        const reply =
+
+            result?.actionResult
+                ?.message ||
+
+            result?.reply ||
+
+            result?.message ||
+
+            (
+                result?.executed
+
+                    ? "İşlem tamamlandı."
+
+                    : "İşlem uygulanamadı."
+            );
+
+
+        session.actions.push({
+
+            id:
+                this.createId(
+                    "brain-action"
+                ),
+
+            role:
+                "brain",
+
+            type:
+                result?.executed
+
+                    ? "action-result"
+
+                    : "action-failed",
+
+            content:
+                String(
+                    reply
+                ),
+
+            createdAt:
+                Date.now(),
+
+            confirmationId:
+                id,
+
+            executed:
+                Boolean(
+                    result?.executed
+                ),
+
+            actionType:
+                result?.policy?.actionType ||
+                pending.actionType ||
+                null,
+
+            context:{
+
+                page:
+                    pending.context?.page ||
+                    pending.context?.screen ||
+                    null
+
+            },
+
+            appLinks:
+                this.extractBrainAppMentions(
+                    reply
+                )
+
+        });
+
+
+        session.pendingConfirmation =
+            null;
+
+
+        session.updatedAt =
+            Date.now();
+
+
+        this.updateBrainConversationSummary(
+            session
+        );
+
+
+        this.saveBrainState();
+
+
+        this.renderBrainHistory();
+
+
+        window.BrainApp?.refreshConfirmation?.(
+            null
+        );
+
+
+        window.BrainApp?.refreshStatus?.();
+
+
+        window.BrainApp?.focusInput?.();
+
+
+        return Boolean(
+            result?.executed
+        );
+
+    },
+
+
+    cancelBrainConfirmation(
+        confirmationId
+    ){
+
+        const id =
+            String(
+                confirmationId ||
+                ""
+            ).trim();
+
+
+        if(!id){
+
+            return false;
+
+        }
+
+
+        const gateway =
+            this.getBrainGateway();
+
+
+        const session =
+            this.getActiveBrainSession();
+
+
+        if(
+            !session ||
+            session.pendingConfirmation?.id !==
+                id
+        ){
+
+            return false;
+
+        }
+
+
+        let cancelled =
+            true;
+
+
+        if(
+            gateway &&
+            typeof gateway.cancelConfirmation ===
+                "function"
+        ){
+
+            cancelled =
+                gateway.cancelConfirmation(
+                    id
+                ) !==
+                false;
+
+        }
+
+
+        if(!cancelled){
+
+            return false;
+
+        }
+
+
+        session.actions.push({
+
+            id:
+                this.createId(
+                    "brain-action"
+                ),
+
+            role:
+                "system",
+
+            type:
+                "confirmation-cancelled",
+
+            content:
+                "İşlem onayı iptal edildi.",
+
+            createdAt:
+                Date.now(),
+
+            confirmationId:
+                id,
+
+            context:{
+
+                page:
+                    session
+                        .pendingConfirmation
+                        ?.context?.page ||
+                    null
+
+            },
+
+            appLinks:
+                []
+
+        });
+
+
+        session.pendingConfirmation =
+            null;
+
+
+        session.updatedAt =
+            Date.now();
+
+
+        this.saveBrainState();
+
+
+        this.renderBrainHistory();
+
+
+        window.BrainApp?.refreshConfirmation?.(
+            null
+        );
+
+
+        window.BrainApp?.refreshStatus?.();
+
+
+        return true;
+
+    },
+
+   /* =====================================================
        BRAIN APP LINKS
     ===================================================== */
 
@@ -4366,79 +5258,174 @@ const Actions = {
         return [
 
             {
-                id:"profile",
-                label:"Profil",
+
+                id:
+                    "applications",
+
+                label:
+                    "Applications",
+
+                words:[
+                    "applications",
+                    "uygulamalar",
+                    "uygulama"
+                ]
+
+            },
+
+            {
+
+                id:
+                    "vaero",
+
+                label:
+                    "VAERO",
+
+                words:[
+                    "vaero",
+                    "engine"
+                ]
+
+            },
+
+            {
+
+                id:
+                    "profile",
+
+                label:
+                    "Profil",
+
                 words:[
                     "profil",
                     "profile"
                 ]
+
             },
 
             {
-                id:"identity",
-                label:"Kimlik",
+
+                id:
+                    "identity",
+
+                label:
+                    "Kimlik",
+
                 words:[
                     "kimlik",
                     "identity"
                 ]
+
             },
 
             {
-                id:"memory",
-                label:"Hafıza",
+
+                id:
+                    "memory",
+
+                label:
+                    "Hafıza",
+
                 words:[
                     "hafıza",
                     "hafiza",
                     "memory"
                 ]
+
             },
 
             {
-                id:"timeline",
-                label:"Zaman Çizelgesi",
+
+                id:
+                    "timeline",
+
+                label:
+                    "Zaman Çizelgesi",
+
                 words:[
                     "timeline",
                     "zaman çizelgesi",
                     "zaman cizelgesi"
                 ]
+
             },
 
             {
-                id:"bridge",
-                label:"Köprü",
+
+                id:
+                    "bridge",
+
+                label:
+                    "Köprü",
+
                 words:[
                     "köprü",
                     "kopru",
                     "bridge"
                 ]
+
             },
 
             {
-                id:"evolution",
-                label:"Evrim",
+
+                id:
+                    "evolution",
+
+                label:
+                    "Evrim",
+
                 words:[
                     "evrim",
                     "evolution"
                 ]
+
             },
 
             {
-                id:"organs",
-                label:"Organlar",
+
+                id:
+                    "organs",
+
+                label:
+                    "Organlar",
+
                 words:[
                     "organ",
                     "organlar"
                 ]
+
             },
 
             {
-                id:"settings",
-                label:"Ayarlar",
+
+                id:
+                    "settings",
+
+                label:
+                    "Ayarlar",
+
                 words:[
                     "ayar",
                     "ayarlar",
                     "settings"
                 ]
+
+            },
+
+            {
+
+                id:
+                    "discovery",
+
+                label:
+                    "Discovery",
+
+                words:[
+                    "discovery",
+                    "keşif",
+                    "kesif"
+                ]
+
             }
 
         ];
@@ -4460,24 +5447,88 @@ const Actions = {
 
         return this
             .getBrainAppDefinitions()
+
             .filter(
                 app =>
+
                     app.words.some(
                         word =>
+
                             normalized.includes(
                                 word
                             )
                     )
             )
+
             .map(
                 app => ({
+
                     app:
                         app.id,
 
                     label:
                         app.label
+
                 })
             );
+
+    },
+
+
+    openBrainAppLink(app){
+
+        const target =
+            String(
+                app ||
+                ""
+            )
+                .trim()
+                .toLowerCase();
+
+
+        if(!target){
+
+            return false;
+
+        }
+
+
+        this.closeBrain();
+
+
+        if(
+            target ===
+                "applications"
+        ){
+
+            return this.openApplicationsApp();
+
+        }
+
+
+        if(
+            target ===
+                "vaero"
+        ){
+
+            return this.openVaeroApp();
+
+        }
+
+
+        if(
+            target ===
+                "discovery"
+        ){
+
+            return this.restartDiscovery();
+
+        }
+
+
+        return this.openEntityPage(
+            target
+        );
 
     },
 
@@ -4488,8 +5539,12 @@ const Actions = {
 
     async sendBrainMessage(){
 
-        if(this.brainSending){
+        if(
+            this.brainSending
+        ){
+
             return false;
+
         }
 
 
@@ -4500,7 +5555,9 @@ const Actions = {
 
 
         if(!input){
+
             return false;
+
         }
 
 
@@ -4512,7 +5569,9 @@ const Actions = {
 
 
         if(!text){
+
             return false;
+
         }
 
 
@@ -4523,7 +5582,9 @@ const Actions = {
 
 
         if(!brain){
+
             return false;
+
         }
 
 
@@ -4533,9 +5594,14 @@ const Actions = {
             )
         ){
 
-            brain.sessions = [];
+            brain.sessions =
+                [];
 
         }
+
+
+        const gateway =
+            this.getBrainGateway();
 
 
         const contextService =
@@ -4554,22 +5620,28 @@ const Actions = {
                 contextService &&
                 typeof contextService.build ===
                     "function"
+
                     ? contextService.build({
-                        message:text
+                        message:
+                            text
                     })
+
                     : null;
 
         } catch(error){
 
-            context = null;
+            context =
+                null;
 
         }
 
 
         const session =
+
             this.getTodayBrainConversationSession(
                 brain
             ) ||
+
             this.createTodayBrainConversation(
                 brain
             );
@@ -4599,10 +5671,29 @@ const Actions = {
                 now,
 
             context:{
+
+                app:
+                    context?.app ||
+                    null,
+
+                screen:
+                    context?.screen ||
+                    null,
+
                 page:
                     context?.page ||
-                    context?.screen ||
+                    null,
+
+                entityId:
+                    context?.entity?.id ||
+                    context?.entityId ||
+                    null,
+
+                worldId:
+                    context?.world?.id ||
+                    context?.worldId ||
                     null
+
             },
 
             appLinks:
@@ -4620,72 +5711,74 @@ const Actions = {
         input.value =
             "";
 
+
         this.brainSending =
             true;
 
-        input.disabled =
-            true;
+
+        window.BrainApp?.setBusy?.(
+            true,
+            "Brain düşünüyor..."
+        );
 
 
         this.renderBrainHistory();
 
 
-        let replyText =
-            "";
+        let response =
+            null;
 
 
         try{
 
             if(
+                gateway &&
+                typeof gateway.ask ===
+                    "function"
+            ){
+
+                response =
+                    await gateway.ask(
+                        text,
+                        {
+
+                            context:
+                                context ||
+                                {}
+
+                        }
+                    );
+
+            }
+            else if(
                 typeof brain.ask ===
                     "function"
             ){
 
-                const response =
+                response =
                     await brain.ask(
                         text,
                         {
+
                             context:
                                 context ||
                                 {}
+
                         }
                     );
 
-
-                replyText =
-                    typeof response ===
-                        "string"
-                        ? response
-                        : (
-                            response?.reply ||
-                            response?.message ||
-                            response?.text ||
-                            ""
-                        );
-
-            } else if(
+            }
+            else if(
                 typeof brain.receive ===
                     "function"
             ){
 
-                const response =
+                response =
                     brain.receive(
                         text,
                         context ||
                         {}
                     );
-
-
-                replyText =
-                    typeof response ===
-                        "string"
-                        ? response
-                        : (
-                            response?.reply ||
-                            response?.message ||
-                            response?.text ||
-                            ""
-                        );
 
             }
 
@@ -4697,16 +5790,82 @@ const Actions = {
             );
 
 
-            replyText =
-                "Brain isteği şu anda tamamlanamadı.";
+            response = {
+
+                reply:
+                    "Brain isteği şu anda tamamlanamadı.",
+
+                error:
+                    true
+
+            };
 
         } finally {
 
             this.brainSending =
                 false;
 
-            input.disabled =
-                false;
+
+            window.BrainApp?.setBusy?.(
+                false
+            );
+
+        }
+
+
+        const replyText =
+
+            typeof response ===
+                "string"
+
+                ? response
+
+                : (
+                    response?.reply ||
+                    response?.message ||
+                    response?.text ||
+                    ""
+                );
+
+
+        if(
+            response?.confirmation &&
+            response.confirmation.id
+        ){
+
+            session.pendingConfirmation = {
+
+                ...response.confirmation,
+
+                prompt:
+                    text,
+
+                context:
+                    context ||
+                    {},
+
+                actionType:
+                    response?.policy?.actionType ||
+                    response.confirmation.actionType ||
+                    null,
+
+                receivedAt:
+                    Date.now()
+
+            };
+
+        }
+        else if(
+            response?.confirmationApproved ===
+                true ||
+            response?.executed ===
+                true ||
+            response?.blocked ===
+                true
+        ){
+
+            session.pendingConfirmation =
+                null;
 
         }
 
@@ -4724,7 +5883,12 @@ const Actions = {
                     "brain",
 
                 type:
-                    "reply",
+                    response?.requiresConfirmation &&
+                    !response?.confirmationApproved
+
+                        ? "confirmation-required"
+
+                        : "reply",
 
                 content:
                     String(
@@ -4734,11 +5898,43 @@ const Actions = {
                 createdAt:
                     Date.now(),
 
+                confirmationId:
+                    response?.confirmation?.id ||
+                    null,
+
+                requiresConfirmation:
+                    Boolean(
+                        response?.requiresConfirmation
+                    ),
+
+                blocked:
+                    Boolean(
+                        response?.blocked
+                    ),
+
+                executed:
+                    Boolean(
+                        response?.executed
+                    ),
+
+                actionType:
+                    response?.policy?.actionType ||
+                    null,
+
                 context:{
+
+                    app:
+                        context?.app ||
+                        null,
+
+                    screen:
+                        context?.screen ||
+                        null,
+
                     page:
                         context?.page ||
-                        context?.screen ||
                         null
+
                 },
 
                 appLinks:
@@ -4762,7 +5958,20 @@ const Actions = {
 
         this.saveBrainState();
 
+
         this.renderBrainHistory();
+
+
+        window.BrainApp?.refreshConfirmation?.(
+            session.pendingConfirmation ||
+            null
+        );
+
+
+        window.BrainApp?.refreshContext?.();
+
+
+        window.BrainApp?.refreshStatus?.();
 
 
         const panel =
@@ -4777,6 +5986,7 @@ const Actions = {
                 "is-compact"
             );
 
+
             panel.classList.add(
                 "is-expanded"
             );
@@ -4784,7 +5994,7 @@ const Actions = {
         }
 
 
-        input.focus();
+        window.BrainApp?.focusInput?.();
 
 
         return true;
@@ -4800,25 +6010,33 @@ const Actions = {
                 session.actions
             )
         ){
+
             return false;
+
         }
 
 
         const messages =
             session.actions
+
                 .filter(
                     action =>
+
                         action?.role ===
                             "user" &&
+
                         action.content
                 )
+
                 .map(
                     action =>
                         String(
                             action.content
                         ).trim()
                 )
+
                 .filter(Boolean)
+
                 .slice(-3);
 
 
@@ -4829,13 +6047,17 @@ const Actions = {
 
 
         session.summary =
-            summary.length > 160
+
+            summary.length >
+                160
+
                 ? `${summary
                     .slice(
                         0,
                         160
                     )
                     .trim()}…`
+
                 : (
                     summary ||
                     null
@@ -4866,7 +6088,9 @@ const Actions = {
 
 
         if(!brain){
+
             return false;
+
         }
 
 
@@ -4880,12 +6104,15 @@ const Actions = {
                 contextService &&
                 typeof contextService.build ===
                     "function"
+
                     ? contextService.build()
+
                     : null;
 
         } catch(error){
 
-            context = null;
+            context =
+                null;
 
         }
 
@@ -4931,6 +6158,7 @@ const Actions = {
 
         this.saveBrainState();
 
+
         this.renderBrainHistory();
 
 
@@ -4953,11 +6181,15 @@ const Actions = {
 
 
         if(!point){
+
             return false;
+
         }
 
 
-        if(point.worldId){
+        if(
+            point.worldId
+        ){
 
             const opened =
                 this.openWorld(
@@ -4994,7 +6226,9 @@ const Actions = {
         }
 
 
-        if(point.page){
+        if(
+            point.page
+        ){
 
             return this.openEntityPage(
                 point.page
@@ -5038,7 +6272,9 @@ const Actions = {
             typeof action ===
                 "string"
         ){
+
             return action;
+
         }
 
 
@@ -5049,10 +6285,15 @@ const Actions = {
         ){
 
             return String(
+
                 action.content ||
+
                 action.text ||
+
                 action.message ||
+
                 ""
+
             );
 
         }
@@ -5068,11 +6309,26 @@ const Actions = {
         return String(
             value ?? ""
         )
-            .replaceAll("&","&amp;")
-            .replaceAll("<","&lt;")
-            .replaceAll(">","&gt;")
-            .replaceAll('"',"&quot;")
-            .replaceAll("'","&#039;");
+            .replaceAll(
+                "&",
+                "&amp;"
+            )
+            .replaceAll(
+                "<",
+                "&lt;"
+            )
+            .replaceAll(
+                ">",
+                "&gt;"
+            )
+            .replaceAll(
+                '"',
+                "&quot;"
+            )
+            .replaceAll(
+                "'",
+                "&#039;"
+            );
 
     },
 
@@ -5101,7 +6357,9 @@ const Actions = {
             !history ||
             !brain
         ){
+
             return false;
+
         }
 
 
@@ -5124,31 +6382,39 @@ const Actions = {
 
 
         const actions =
+
             Array.isArray(
                 todaySession?.actions
             )
+
                 ? [
                     ...todaySession.actions
                 ]
+
                     .filter(
                         action =>
+
                             this
                                 .getBrainActionText(
                                     action
                                 )
                                 .trim()
                     )
+
                     .sort(
                         (a,b) =>
+
                             (
                                 a?.createdAt ||
                                 0
                             ) -
+
                             (
                                 b?.createdAt ||
                                 0
                             )
                     )
+
                 : [];
 
 
@@ -5162,10 +6428,15 @@ const Actions = {
             "brain-chat-flow";
 
 
-        if(actions.length === 0){
+        if(
+            actions.length ===
+                0
+        ){
 
             flow.innerHTML = `
+
                 <div class="brain-chat-empty">
+
                     <strong>
                         Bugünün sohbeti
                     </strong>
@@ -5173,10 +6444,13 @@ const Actions = {
                     <span>
                         Brain’e bir şey yazarak başlayabilirsin.
                     </span>
+
                 </div>
+
             `;
 
-        } else {
+        }
+        else {
 
             actions.forEach(
                 action => {
@@ -5191,16 +6465,19 @@ const Actions = {
                         new Date(
                             action.createdAt ||
                             Date.now()
-                        ).toLocaleTimeString(
-                            "tr-TR",
-                            {
-                                hour:
-                                    "2-digit",
+                        )
+                            .toLocaleTimeString(
+                                "tr-TR",
+                                {
 
-                                minute:
-                                    "2-digit"
-                            }
-                        );
+                                    hour:
+                                        "2-digit",
+
+                                    minute:
+                                        "2-digit"
+
+                                }
+                            );
 
 
                     if(
@@ -5221,6 +6498,7 @@ const Actions = {
 
 
                         systemRow.innerHTML = `
+
                             <span class="brain-chat-system-time">
                                 ${this.escapeBrainHTML(time)}
                             </span>
@@ -5228,6 +6506,7 @@ const Actions = {
                             <span>
                                 ${this.escapeBrainHTML(content)}
                             </span>
+
                         `;
 
 
@@ -5248,41 +6527,54 @@ const Actions = {
 
 
                     message.className =
+
                         action.role ===
                             "user"
+
                             ? "brain-chat-message brain-chat-user"
+
                             : "brain-chat-message brain-chat-brain";
 
 
                     const links =
+
                         Array.isArray(
                             action.appLinks
                         )
+
                             ? action.appLinks
+
                                 .filter(
                                     (
                                         link,
                                         index,
                                         all
                                     ) =>
+
                                         link?.app &&
+
                                         all.findIndex(
                                             item =>
                                                 item?.app ===
                                                 link.app
-                                        ) === index
+                                        ) ===
+                                            index
                                 )
+
                             : [];
 
 
                     message.innerHTML = `
+
                         <div class="brain-chat-meta">
+
                             <span>
                                 ${this.escapeBrainHTML(time)}
                             </span>
 
                             ${
                                 action?.context?.page
+
                                     ? `
                                         <span class="brain-chat-context">
                                             ${this.escapeBrainHTML(
@@ -5290,20 +6582,41 @@ const Actions = {
                                             )}
                                         </span>
                                       `
+
                                     : ""
                             }
+
+                            ${
+                                action?.actionType
+
+                                    ? `
+                                        <span class="brain-chat-context">
+                                            ${this.escapeBrainHTML(
+                                                action.actionType
+                                            )}
+                                        </span>
+                                      `
+
+                                    : ""
+                            }
+
                         </div>
 
+
                         <div class="brain-chat-content">
+
                             ${this.escapeBrainHTML(content)}
 
                             ${
                                 links.length
+
                                     ? `
                                         <span class="brain-message-app-links">
+
                                             ${links
                                                 .map(
                                                     link => `
+
                                                         <button
                                                             type="button"
                                                             class="brain-message-app-link"
@@ -5315,14 +6628,19 @@ const Actions = {
                                                                 link.label
                                                             )}
                                                         </button>
+
                                                     `
                                                 )
                                                 .join("")}
+
                                         </span>
                                       `
+
                                     : ""
                             }
+
                         </div>
+
                     `;
 
 
@@ -5352,15 +6670,9 @@ const Actions = {
                         "click",
                         () => {
 
-                            const app =
+                            this.openBrainAppLink(
                                 button.dataset
-                                    .brainApp;
-
-
-                            this.closeBrain();
-
-                            this.openEntityPage(
-                                app
+                                    .brainApp
                             );
 
                         }
@@ -5374,69 +6686,108 @@ const Actions = {
 
             const recent =
                 actions
+
                     .filter(
                         action =>
+
                             action.role ===
                                 "user" ||
+
                             action.role ===
                                 "brain"
                     )
+
                     .slice(-3);
 
 
-            const miniFlow =
-                document.createElement(
-                    "div"
-                );
+            if(
+                window.BrainApp &&
+                typeof window.BrainApp.renderMiniHistory ===
+                    "function"
+            ){
 
+                window.BrainApp.renderMiniHistory(
+                    recent.map(
+                        action => ({
 
-            miniFlow.className =
-                "brain-mini-chat-flow";
+                            role:
+                                action.role,
 
-
-            recent.forEach(
-                action => {
-
-                    const row =
-                        document.createElement(
-                            "div"
-                        );
-
-
-                    row.className =
-                        "brain-mini-chat-message";
-
-
-                    row.innerHTML = `
-                        <strong>
-                            ${
-                                action.role ===
-                                    "user"
-                                    ? "Sen:"
-                                    : "Brain:"
-                            }
-                        </strong>
-
-                        <span>
-                            ${this.escapeBrainHTML(
+                            message:
                                 this.getBrainActionText(
                                     action
                                 )
-                            )}
-                        </span>
-                    `;
 
+                        })
+                    )
+                );
 
-                    miniFlow.appendChild(
-                        row
+            }
+            else {
+
+                const miniFlow =
+                    document.createElement(
+                        "div"
                     );
 
-                }
-            );
+
+                miniFlow.className =
+                    "brain-mini-chat-flow";
 
 
-            miniFlow.addEventListener(
-                "click",
+                recent.forEach(
+                    action => {
+
+                        const row =
+                            document.createElement(
+                                "div"
+                            );
+
+
+                        row.className =
+                            "brain-mini-chat-message";
+
+
+                        row.innerHTML = `
+
+                            <strong>
+                                ${
+                                    action.role ===
+                                        "user"
+
+                                        ? "Sen:"
+
+                                        : "Brain:"
+                                }
+                            </strong>
+
+                            <span>
+                                ${this.escapeBrainHTML(
+                                    this.getBrainActionText(
+                                        action
+                                    )
+                                )}
+                            </span>
+
+                        `;
+
+
+                        miniFlow.appendChild(
+                            row
+                        );
+
+                    }
+                );
+
+
+                miniHistory.appendChild(
+                    miniFlow
+                );
+
+            }
+
+
+            miniHistory.onclick =
                 () => {
 
                     const panel =
@@ -5451,21 +6802,29 @@ const Actions = {
                             "is-compact"
                         );
 
+
                         panel.classList.add(
                             "is-expanded"
                         );
 
                     }
 
-                }
-            );
-
-
-            miniHistory.appendChild(
-                miniFlow
-            );
+                };
 
         }
+
+
+        window.BrainApp?.refreshConfirmation?.(
+            todaySession
+                ?.pendingConfirmation ||
+            null
+        );
+
+
+        window.BrainApp?.refreshContext?.();
+
+
+        window.BrainApp?.refreshStatus?.();
 
 
         requestAnimationFrame(
@@ -5584,7 +6943,9 @@ const Actions = {
                 target !==
                     "memory"
             ){
+
                 return false;
+
             }
 
 
@@ -5630,7 +6991,9 @@ document.addEventListener(
 
 
         if(!button){
+
             return;
+
         }
 
 
@@ -5644,7 +7007,9 @@ document.addEventListener(
                 "world:edit:submit",
                 "entity:create:submit",
                 "entity:edit:submit"
-            ].includes(action)
+            ].includes(
+                action
+            )
         ){
 
             event.preventDefault();
@@ -5657,36 +7022,42 @@ document.addEventListener(
             case "home:open":
 
                 Actions.openHome();
+
                 break;
 
 
             case "identity:open":
 
                 Actions.openIdentity();
+
                 break;
 
 
             case "profile:open":
 
                 Actions.openProfile();
+
                 break;
 
 
             case "create:open":
 
                 Actions.openCreate();
+
                 break;
 
 
             case "worlds:open":
 
                 Actions.openWorlds();
+
                 break;
 
 
             case "entities:open":
 
                 Actions.openEntities();
+
                 break;
 
 
@@ -5703,42 +7074,49 @@ document.addEventListener(
             case "world:create:submit":
 
                 Actions.createWorld();
+
                 break;
 
 
             case "world:edit:open":
 
                 Actions.openWorldEditor();
+
                 break;
 
 
             case "world:edit:cancel":
 
                 Actions.cancelWorldEditor();
+
                 break;
 
 
             case "world:edit:submit":
 
                 Actions.saveWorldEditor();
+
                 break;
 
 
             case "world:archive":
 
                 Actions.archiveWorld();
+
                 break;
 
 
             case "world:back":
 
                 Actions.backToWorld();
+
                 break;
 
 
             case "entity:create:first":
 
                 Actions.startEntityCreate();
+
                 break;
 
 
@@ -5755,18 +7133,21 @@ document.addEventListener(
             case "entity:type:clear":
 
                 Actions.clearEntityType();
+
                 break;
 
 
             case "entity:create:cancel":
 
                 Actions.cancelEntityCreate();
+
                 break;
 
 
             case "entity:create:submit":
 
                 Actions.createEntity();
+
                 break;
 
 
@@ -5783,30 +7164,35 @@ document.addEventListener(
             case "entity:edit:open":
 
                 Actions.openEntityEditor();
+
                 break;
 
 
             case "entity:edit:cancel":
 
                 Actions.cancelEntityEditor();
+
                 break;
 
 
             case "entity:edit:submit":
 
                 Actions.saveEntityEditor();
+
                 break;
 
 
             case "entity:archive":
 
                 Actions.archiveEntity();
+
                 break;
 
 
             case "entity:dashboard":
 
                 Actions.openEntityDashboard();
+
                 break;
 
 
@@ -5894,12 +7280,14 @@ document.addEventListener(
             case "profile:save":
 
                 Actions.saveProfile();
+
                 break;
 
 
             case "discovery:restart":
 
                 Actions.restartDiscovery();
+
                 break;
 
 
@@ -5910,12 +7298,14 @@ document.addEventListener(
             case "app:applications":
 
                 Actions.openApplicationsApp();
+
                 break;
 
 
             case "app:vaero":
 
                 Actions.openVaeroApp();
+
                 break;
 
 
@@ -5946,12 +7336,14 @@ document.addEventListener(
             case "vaero:payment:start":
 
                 Actions.startVaeroPayment();
+
                 break;
 
 
             case "vaero:payment:cancel":
 
                 Actions.cancelVaeroPayment();
+
                 break;
 
 
@@ -5972,18 +7364,21 @@ document.addEventListener(
             case "brain:open":
 
                 Actions.openBrain();
+
                 break;
 
 
             case "brain:close":
 
                 Actions.closeBrain();
+
                 break;
 
 
             case "brain:send":
 
                 Actions.sendBrainMessage();
+
                 break;
 
 
@@ -5993,6 +7388,74 @@ document.addEventListener(
                     action,
                     button
                 );
+
+        }
+
+    }
+);
+
+
+/* =========================================================
+   BRAIN COMMAND ROUTER
+========================================================= */
+
+document.addEventListener(
+    "click",
+    event => {
+
+        const button =
+            event.target.closest(
+                "[data-brain-command]"
+            );
+
+
+        if(!button){
+
+            return;
+
+        }
+
+
+        const command =
+            button.dataset
+                .brainCommand;
+
+
+        const confirmationId =
+            button.dataset
+                .confirmationId ||
+            null;
+
+
+        if(
+            command ===
+                "confirm"
+        ){
+
+            event.preventDefault();
+
+
+            Actions.confirmBrainAction(
+                confirmationId
+            );
+
+
+            return;
+
+        }
+
+
+        if(
+            command ===
+                "cancel-confirmation"
+        ){
+
+            event.preventDefault();
+
+
+            Actions.cancelBrainConfirmation(
+                confirmationId
+            );
 
         }
 
@@ -6015,7 +7478,9 @@ document.addEventListener(
 
 
         if(!form){
+
             return;
+
         }
 
 
@@ -6030,24 +7495,28 @@ document.addEventListener(
             case "world-create":
 
                 Actions.createWorld();
+
                 break;
 
 
             case "world-edit":
 
                 Actions.saveWorldEditor();
+
                 break;
 
 
             case "entity-create":
 
                 Actions.createEntity();
+
                 break;
 
 
             case "entity-edit":
 
                 Actions.saveEntityEditor();
+
                 break;
 
         }
@@ -6071,7 +7540,9 @@ document.addEventListener(
                 "Enter" ||
             event.shiftKey
         ){
+
             return;
+
         }
 
 
