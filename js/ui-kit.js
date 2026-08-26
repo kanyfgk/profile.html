@@ -71,6 +71,76 @@ const UI = {
     },
 
 
+    safeClass(value){
+
+        return String(
+            value ?? ""
+        )
+            .trim()
+            .toLowerCase()
+            .replace(
+                /[^a-z0-9_-]/g,
+                ""
+            );
+
+    },
+
+
+    /* =====================================================
+       THEME ACCESS
+    ===================================================== */
+
+    getTheme(){
+
+        try{
+
+            if(
+                typeof Theme !==
+                    "undefined" &&
+                Theme
+            ){
+
+                return Theme;
+
+            }
+
+
+            if(
+                typeof window !==
+                    "undefined" &&
+                window.Theme
+            ){
+
+                return window.Theme;
+
+            }
+
+        } catch(error){
+
+            /* optional theme fallback */
+
+        }
+
+
+        return null;
+
+    },
+
+
+    cardStyle(){
+
+        const theme =
+            this.getTheme();
+
+
+        return String(
+            theme?.card ||
+            ""
+        );
+
+    },
+
+
     /* =====================================================
        APP HEADER
     ===================================================== */
@@ -95,23 +165,30 @@ const UI = {
                     type="button"
                     class="secondary-btn ui-app-back"
                     data-action="${this.escapeAttribute(action)}"
+                    aria-label="Geri dön"
                 >
                     ← Geri
                 </button>
 
                 <div
                     class="card ui-app-header-card"
-                    style="${Theme.card}"
+                    style="${this.escapeAttribute(
+                        this.cardStyle()
+                    )}"
                 >
 
                     <div class="ui-app-header-copy">
 
                         <div class="eyebrow">
-                            ${this.escapeHTML(subtitle)}
+                            ${this.escapeHTML(
+                                subtitle
+                            )}
                         </div>
 
                         <h2>
-                            ${this.escapeHTML(title)}
+                            ${this.escapeHTML(
+                                title
+                            )}
                         </h2>
 
                     </div>
@@ -120,7 +197,9 @@ const UI = {
                         class="ui-app-header-icon"
                         aria-hidden="true"
                     >
-                        ${this.escapeHTML(icon)}
+                        ${this.escapeHTML(
+                            icon
+                        )}
                     </div>
 
                 </div>
@@ -143,15 +222,21 @@ const UI = {
         return `
             <div
                 class="card ui-info-card"
-                style="${Theme.card}"
+                style="${this.escapeAttribute(
+                    this.cardStyle()
+                )}"
             >
 
                 <div class="eyebrow">
-                    ${this.escapeHTML(title)}
+                    ${this.escapeHTML(
+                        title
+                    )}
                 </div>
 
                 <p>
-                    ${this.escapeHTML(text)}
+                    ${this.escapeHTML(
+                        text
+                    )}
                 </p>
 
             </div>
@@ -167,6 +252,8 @@ const UI = {
     identityCard(entity){
 
         const identityId =
+            entity?.identity?.id ||
+            entity?.identity?.vaId ||
             entity?.id ||
             "Kimlik bulunamadı";
 
@@ -177,10 +264,18 @@ const UI = {
                 true;
 
 
+        const status =
+            verified
+                ? "Doğrulandı"
+                : "Doğrulama Bekliyor";
+
+
         return `
             <div
                 class="card ui-identity-card"
-                style="${Theme.card}"
+                style="${this.escapeAttribute(
+                    this.cardStyle()
+                )}"
             >
 
                 <div class="eyebrow">
@@ -188,7 +283,9 @@ const UI = {
                 </div>
 
                 <h3 class="ui-identity-id">
-                    ${this.escapeHTML(identityId)}
+                    ${this.escapeHTML(
+                        identityId
+                    )}
                 </h3>
 
                 <p class="ui-card-copy">
@@ -202,11 +299,9 @@ const UI = {
                             : "is-pending"
                     }"
                 >
-                    ${
-                        verified
-                            ? "Doğrulandı"
-                            : "Doğrulama Bekliyor"
-                    }
+                    ${this.escapeHTML(
+                        status
+                    )}
                 </div>
 
             </div>
@@ -227,17 +322,38 @@ const UI = {
             );
 
 
+        const enabled =
+            app.enabled !==
+            false;
+
+
+        const title =
+            app.title ||
+            app.name ||
+            app.id ||
+            "Uygulama";
+
+
         return `
             <button
                 type="button"
                 class="card ui-launcher-card"
-                data-action="${this.escapeAttribute(action)}"
-                style="${Theme.card}"
+                data-action="${this.escapeAttribute(
+                    action
+                )}"
+                style="${this.escapeAttribute(
+                    this.cardStyle()
+                )}"
                 ${
-                    app.enabled === false
-                        ? "disabled"
-                        : ""
+                    enabled
+                        ? ""
+                        : "disabled"
                 }
+                aria-disabled="${
+                    enabled
+                        ? "false"
+                        : "true"
+                }"
             >
 
                 <span
@@ -252,15 +368,14 @@ const UI = {
 
                 <span class="ui-launcher-title">
                     ${this.escapeHTML(
-                        app.title ||
-                        app.id ||
-                        "Uygulama"
+                        title
                     )}
                 </span>
 
                 <span class="ui-launcher-subtitle">
                     ${this.escapeHTML(
                         app.subtitle ||
+                        app.description ||
                         ""
                     )}
                 </span>
@@ -280,38 +395,70 @@ const UI = {
         state = {}
     ){
 
+        const appId =
+            this.safeId(
+                app.id ||
+                app.slug ||
+                ""
+            );
+
+
         const installed =
             state.installed ===
-            true;
+                true ||
+            app.installed ===
+                true;
 
 
         const trusted =
             state.trusted ===
-            true ||
+                true ||
             app.trusted ===
-            true;
+                true;
 
 
         const system =
             state.builtIn ===
-            true ||
+                true ||
+            state.system ===
+                true ||
             app.system ===
-            true ||
+                true ||
+            app.builtIn ===
+                true ||
             app.distribution ===
-            "built-in";
+                "built-in";
+
+
+        const enabled =
+            state.enabled !==
+                false &&
+            app.enabled !==
+                false;
 
 
         const updateAvailable =
             state.updateAvailable ===
-            true;
+                true ||
+            app.updateAvailable ===
+                true;
+
+
+        const installable =
+            app.installable !==
+                false &&
+            !system;
 
 
         const pricing =
-            app.pricing ||
-            {
-                model:
-                    "free"
-            };
+            app.pricing &&
+            typeof app.pricing ===
+                "object"
+                ? app.pricing
+                : {
+                    model:
+                        "free"
+                };
 
 
         let buttonLabel =
@@ -322,9 +469,7 @@ const UI = {
             "details";
 
 
-        if(
-            updateAvailable
-        ){
+        if(updateAvailable){
 
             buttonLabel =
                 "Güncelle";
@@ -333,41 +478,69 @@ const UI = {
                 "update";
 
         }
+
         else if(
             system ||
             installed
         ){
 
             buttonLabel =
-                "Aç";
+                enabled
+                    ? "Aç"
+                    : "Devre Dışı";
 
             command =
-                "open";
+                enabled
+                    ? "open"
+                    : "details";
 
         }
-        else if(
-            app.installable === true
-        ){
+
+        else if(installable){
 
             buttonLabel =
                 pricing.model ===
                     "free"
                     ? "Yükle"
-                    : "Al";
+                    : "İncele";
 
             command =
-                "details";
+                pricing.model ===
+                    "free"
+                    ? "install"
+                    : "details";
 
         }
 
 
+        const title =
+            app.title ||
+            app.name ||
+            app.id ||
+            "Uygulama";
+
+
         return `
             <article
-                class="card ui-application-card"
-                style="${Theme.card}"
+                class="
+                    card
+                    ui-application-card
+                    ${
+                        installed
+                            ? "is-installed"
+                            : ""
+                    }
+                    ${
+                        updateAvailable
+                            ? "has-update"
+                            : ""
+                    }
+                "
+                style="${this.escapeAttribute(
+                    this.cardStyle()
+                )}"
                 data-app-id="${this.escapeAttribute(
-                    app.id ||
-                    ""
+                    appId
                 )}"
             >
 
@@ -389,11 +562,18 @@ const UI = {
 
                             <h3>
                                 ${this.escapeHTML(
-                                    app.title ||
-                                    app.id ||
-                                    "Uygulama"
+                                    title
                                 )}
                             </h3>
+
+                            ${
+                                system
+                                    ? this.statusBadge(
+                                        "Sistem",
+                                        "info"
+                                    )
+                                    : ""
+                            }
 
                             ${
                                 trusted
@@ -405,10 +585,20 @@ const UI = {
                             }
 
                             ${
+                                installed &&
+                                !system
+                                    ? this.statusBadge(
+                                        "Yüklü",
+                                        "success"
+                                    )
+                                    : ""
+                            }
+
+                            ${
                                 updateAvailable
                                     ? this.statusBadge(
                                         "Güncelleme",
-                                        "info"
+                                        "warning"
                                     )
                                     : ""
                             }
@@ -480,11 +670,17 @@ const UI = {
                             command
                         )}"
                         data-app-id="${this.escapeAttribute(
-                            app.id ||
-                            ""
+                            appId
                         )}"
+                        ${
+                            !appId
+                                ? "disabled"
+                                : ""
+                        }
                     >
-                        ${this.escapeHTML(buttonLabel)}
+                        ${this.escapeHTML(
+                            buttonLabel
+                        )}
                     </button>
 
                 </div>
@@ -528,7 +724,9 @@ const UI = {
             <span
                 class="ui-status-badge is-${safeTone}"
             >
-                ${this.escapeHTML(label)}
+                ${this.escapeHTML(
+                    label
+                )}
             </span>
         `;
 
@@ -543,18 +741,42 @@ const UI = {
 
         const providerConnected =
             status.providerConnected ===
-            true;
+                true;
 
 
         const pendingConfirmation =
             Number(
                 status.pendingConfirmations
-            ) > 0;
+            ) > 0 ||
+            status.pendingConfirmation ===
+                true;
 
 
-        if(
-            pendingConfirmation
-        ){
+        const busy =
+            status.busy ===
+                true ||
+            status.status ===
+                "busy";
+
+
+        const error =
+            status.error ===
+                true ||
+            status.status ===
+                "error";
+
+
+        if(error){
+
+            return this.statusBadge(
+                "Brain Hatası",
+                "danger"
+            );
+
+        }
+
+
+        if(pendingConfirmation){
 
             return this.statusBadge(
                 "Onay Bekliyor",
@@ -564,9 +786,17 @@ const UI = {
         }
 
 
-        if(
-            providerConnected
-        ){
+        if(busy){
+
+            return this.statusBadge(
+                "Brain Çalışıyor",
+                "pending"
+            );
+
+        }
+
+
+        if(providerConnected){
 
             return this.statusBadge(
                 "Brain Online",
@@ -599,10 +829,7 @@ const UI = {
                 .toLowerCase();
 
 
-        if(
-            model ===
-            "free"
-        ){
+        if(model === "free"){
 
             return `
                 <span class="ui-price-label">
@@ -620,8 +847,22 @@ const UI = {
 
 
         const currency =
-            pricing.currency ||
-            "";
+            String(
+                pricing.currency ||
+                ""
+            )
+                .trim()
+                .toUpperCase();
+
+
+        const formattedAmount =
+            Number.isFinite(
+                amount
+            )
+                ? String(
+                    amount
+                )
+                : "";
 
 
         if(
@@ -629,25 +870,65 @@ const UI = {
             "subscription"
         ){
 
+            const intervalMap = {
+
+                month:
+                    "ay",
+
+                monthly:
+                    "ay",
+
+                year:
+                    "yıl",
+
+                yearly:
+                    "yıl",
+
+                annual:
+                    "yıl"
+
+            };
+
+
+            const rawInterval =
+                String(
+                    pricing.interval ||
+                    ""
+                )
+                    .trim()
+                    .toLowerCase();
+
+
             const interval =
-                pricing.interval
-                    ? ` / ${pricing.interval}`
+                rawInterval
+                    ? (
+                        intervalMap[
+                            rawInterval
+                        ] ||
+                        rawInterval
+                    )
                     : "";
 
 
             return `
                 <span class="ui-price-label">
+
                     ${
-                        Number.isFinite(
-                            amount
-                        )
-                            ? this.escapeHTML(
-                                amount
-                            )
+                        formattedAmount
+                            ? `${this.escapeHTML(
+                                formattedAmount
+                            )} `
+                            : ""
+                    }${this.escapeHTML(
+                        currency
+                    )}${
+                        interval
+                            ? ` / ${this.escapeHTML(
+                                interval
+                            )}`
                             : ""
                     }
-                    ${this.escapeHTML(currency)}
-                    ${this.escapeHTML(interval)}
+
                 </span>
             `;
 
@@ -656,16 +937,17 @@ const UI = {
 
         return `
             <span class="ui-price-label">
+
                 ${
-                    Number.isFinite(
-                        amount
-                    )
-                        ? this.escapeHTML(
-                            amount
-                        )
+                    formattedAmount
+                        ? `${this.escapeHTML(
+                            formattedAmount
+                        )} `
                         : ""
-                }
-                ${this.escapeHTML(currency)}
+                }${this.escapeHTML(
+                    currency
+                )}
+
             </span>
         `;
 
@@ -685,7 +967,7 @@ const UI = {
                 permissions
             ) ||
             permissions.length ===
-            0
+                0
         ){
 
             return `
@@ -702,15 +984,48 @@ const UI = {
                 ...new Set(
                     permissions
                         .map(
-                            permission =>
-                                String(
+                            permission => {
+
+                                if(
+                                    permission &&
+                                    typeof permission ===
+                                        "object"
+                                ){
+
+                                    return String(
+                                        permission.id ||
+                                        permission.name ||
+                                        permission.permission ||
+                                        ""
+                                    ).trim();
+
+                                }
+
+
+                                return String(
                                     permission ??
                                     ""
-                                ).trim()
+                                ).trim();
+
+                            }
                         )
                         .filter(Boolean)
                 )
             ];
+
+
+        if(
+            unique.length ===
+            0
+        ){
+
+            return `
+                <div class="ui-permission-empty">
+                    Özel izin istemiyor
+                </div>
+            `;
+
+        }
 
 
         return `
@@ -720,7 +1035,9 @@ const UI = {
                     .map(
                         permission => `
                             <span class="ui-permission-chip">
-                                ${this.escapeHTML(permission)}
+                                ${this.escapeHTML(
+                                    permission
+                                )}
                             </span>
                         `
                     )
@@ -753,8 +1070,16 @@ const UI = {
 
 
         if(!safePermission){
+
             return "";
+
         }
+
+
+        const safeAppId =
+            this.safeId(
+                appId
+            );
 
 
         const command =
@@ -794,7 +1119,8 @@ const UI = {
                 </div>
 
                 ${
-                    editable
+                    editable &&
+                    safeAppId
                         ? `
                             <button
                                 type="button"
@@ -807,7 +1133,7 @@ const UI = {
                                     command
                                 )}"
                                 data-app-id="${this.escapeAttribute(
-                                    appId
+                                    safeAppId
                                 )}"
                                 data-permission="${this.escapeAttribute(
                                     safePermission
@@ -841,15 +1167,21 @@ const UI = {
         return `
             <div
                 class="card ui-stats-card"
-                style="${Theme.card}"
+                style="${this.escapeAttribute(
+                    this.cardStyle()
+                )}"
             >
 
                 <div class="eyebrow">
-                    ${this.escapeHTML(title)}
+                    ${this.escapeHTML(
+                        title
+                    )}
                 </div>
 
                 <h3>
-                    ${this.escapeHTML(value)}
+                    ${this.escapeHTML(
+                        value
+                    )}
                 </h3>
 
             </div>
@@ -871,11 +1203,15 @@ const UI = {
             <div class="ui-info-row">
 
                 <b>
-                    ${this.escapeHTML(label)}
+                    ${this.escapeHTML(
+                        label
+                    )}
                 </b>
 
                 <p>
-                    ${this.escapeHTML(value)}
+                    ${this.escapeHTML(
+                        value
+                    )}
                 </p>
 
             </div>
@@ -894,10 +1230,81 @@ const UI = {
         action = null
     ){
 
+        /*
+         * Compatibility:
+         *
+         * UI.emptyState("Başlık", "Metin", {...})
+         *
+         * veya
+         *
+         * UI.emptyState({
+         *   title,
+         *   text,
+         *   description,
+         *   action,
+         *   actionLabel,
+         *   icon
+         * })
+         */
+
+        let config = {
+
+            title,
+            text,
+            action,
+            icon:
+                "◌"
+
+        };
+
+
+        if(
+            title &&
+            typeof title ===
+                "object"
+        ){
+
+            config = {
+
+                title:
+                    title.title ||
+                    "Henüz içerik yok",
+
+                text:
+                    title.text ||
+                    title.description ||
+                    "",
+
+                action:
+                    title.action &&
+                    typeof title.action ===
+                        "object"
+                        ? title.action
+                        : (
+                            title.action &&
+                            title.actionLabel
+                                ? {
+                                    action:
+                                        title.action,
+                                    label:
+                                        title.actionLabel
+                                }
+                                : null
+                        ),
+
+                icon:
+                    title.icon ||
+                    "◌"
+
+            };
+
+        }
+
+
         const safeAction =
-            action?.action
+            config.action?.action
                 ? this.safeAction(
-                    action.action
+                    config.action.action
                 )
                 : "";
 
@@ -905,27 +1312,42 @@ const UI = {
         return `
             <div
                 class="card ui-empty-state"
-                style="${Theme.card}"
+                style="${this.escapeAttribute(
+                    this.cardStyle()
+                )}"
             >
 
                 <div
                     class="ui-empty-icon"
                     aria-hidden="true"
                 >
-                    ◌
+                    ${this.escapeHTML(
+                        config.icon
+                    )}
                 </div>
 
                 <h3>
-                    ${this.escapeHTML(title)}
+                    ${this.escapeHTML(
+                        config.title ||
+                        "Henüz içerik yok"
+                    )}
                 </h3>
 
-                <p>
-                    ${this.escapeHTML(text)}
-                </p>
+                ${
+                    config.text
+                        ? `
+                            <p>
+                                ${this.escapeHTML(
+                                    config.text
+                                )}
+                            </p>
+                          `
+                        : ""
+                }
 
                 ${
-                    action &&
-                    action.label &&
+                    config.action &&
+                    config.action.label &&
                     safeAction
                         ? `
                             <button
@@ -936,7 +1358,7 @@ const UI = {
                                 )}"
                             >
                                 ${this.escapeHTML(
-                                    action.label
+                                    config.action.label
                                 )}
                             </button>
                           `
@@ -967,8 +1389,7 @@ const UI = {
         const confirmationId =
             this.safeId(
                 confirmation.id ||
-                confirmation
-                    .confirmationId ||
+                confirmation.confirmationId ||
                 ""
             );
 
@@ -976,6 +1397,7 @@ const UI = {
         if(!confirmationId){
 
             return "";
+
         }
 
 
@@ -995,7 +1417,9 @@ const UI = {
         return `
             <div
                 class="card ui-brain-confirmation"
-                style="${Theme.card}"
+                style="${this.escapeAttribute(
+                    this.cardStyle()
+                )}"
                 data-brain-confirmation-id="${this.escapeAttribute(
                     confirmationId
                 )}"
@@ -1010,7 +1434,9 @@ const UI = {
                         </div>
 
                         <h3>
-                            ${this.escapeHTML(title)}
+                            ${this.escapeHTML(
+                                title
+                            )}
                         </h3>
 
                     </div>
@@ -1023,7 +1449,9 @@ const UI = {
                 </div>
 
                 <p class="ui-card-copy">
-                    ${this.escapeHTML(message)}
+                    ${this.escapeHTML(
+                        message
+                    )}
                 </p>
 
                 ${
@@ -1127,7 +1555,9 @@ const UI = {
                     meta
                         ? `
                             <div class="ui-brain-message-meta">
-                                ${this.escapeHTML(meta)}
+                                ${this.escapeHTML(
+                                    meta
+                                )}
                             </div>
                           `
                         : ""
@@ -1151,9 +1581,10 @@ const UI = {
                 class="ui-brain-trigger"
                 data-action="brain:open"
                 aria-label="VAERO Brain'i aç"
+                title="Brain"
             >
                 <span aria-hidden="true">
-                    ✨
+                    ✦
                 </span>
             </button>
         `;
@@ -1179,5 +1610,42 @@ const UI = {
 };
 
 
-window.UI =
-    UI;
+/* =========================================================
+   REGISTER
+========================================================= */
+
+try{
+
+    if(
+        typeof VAERO !==
+            "undefined" &&
+        typeof VAERO.register ===
+            "function"
+    ){
+
+        VAERO.register(
+            "ui",
+            UI
+        );
+
+    }
+
+} catch(error){
+
+    console.warn(
+        "UI Kit VAERO register başarısız:",
+        error
+    );
+
+}
+
+
+if(
+    typeof window !==
+    "undefined"
+){
+
+    window.UI =
+        UI;
+
+}
