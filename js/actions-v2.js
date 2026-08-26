@@ -1764,424 +1764,459 @@ const Actions = {
 
     openVaeroApp(){
 
-        const engine =
-            this.getEngine();
+    const engine =
+        this.getEngine();
 
 
-        if(!engine){
+    if(!engine){
+        return false;
+    }
+
+
+    engine.currentWorld =
+        null;
+
+    engine.currentOpenedEntity =
+        null;
+
+    engine.currentEntityPage =
+        "vaero";
+
+
+    engine.mount(
+        engine.currentEntity
+    );
+
+
+    this.syncAwareness(
+        "vaero"
+    );
+
+
+    return true;
+
+},
+
+
+openApplicationsApp(){
+
+    const engine =
+        this.getEngine();
+
+
+    if(!engine){
+        return false;
+    }
+
+
+    engine.currentWorld =
+        null;
+
+    engine.currentOpenedEntity =
+        null;
+
+    engine.currentEntityPage =
+        "applications";
+
+
+    engine.mount(
+        engine.currentEntity
+    );
+
+
+    this.syncAwareness(
+        "applications"
+    );
+
+
+    return true;
+
+},
+
+
+getVaeroPaymentCore(){
+
+    if(
+        typeof window !== "undefined" &&
+        window.VaeroApp
+    ){
+
+        if(
+            window.VaeroApp.paymentCore
+        ){
+
+            return window.VaeroApp
+                .paymentCore;
+
+        }
+
+
+        if(
+            window.VaeroApp.core
+        ){
+
+            return window.VaeroApp
+                .core;
+
+        }
+
+
+        if(
+            typeof window.VaeroApp
+                .getPaymentCore ===
+                    "function"
+        ){
+
+            try{
+
+                return window.VaeroApp
+                    .getPaymentCore();
+
+            } catch(error){
+
+                return null;
+
+            }
+
+        }
+
+    }
+
+
+    return (
+        this.getService(
+            "paymentCore"
+        ) ||
+        null
+    );
+
+},
+
+
+createVaeroPaymentIntent(
+    payload = {}
+){
+
+    const core =
+        this.getVaeroPaymentCore();
+
+
+    if(
+        !core ||
+        typeof core.createIntent !==
+            "function"
+    ){
+
+        console.warn(
+            "VAERO Payment Core intent API bulunamadı."
+        );
+
+        return false;
+
+    }
+
+
+    try{
+
+        const intent =
+            core.createIntent(
+                payload
+            );
+
+
+        if(!intent){
             return false;
         }
 
 
-        engine.currentWorld =
-            null;
-
-        engine.currentOpenedEntity =
-            null;
-
-        engine.currentEntityPage =
-            "vaero";
+        const engine =
+            this.getEngine();
 
 
-        engine.mount(
-            engine.currentEntity
-        );
+        if(engine){
 
+            engine.currentVaeroPaymentIntent =
+                intent;
 
-        this.syncAwareness(
-            "vaero"
-        );
-
-
-        return true;
-
-    },
-
-
-    getVaeroPaymentCore(){
-
-        if(
-            typeof window !== "undefined" &&
-            window.VaeroApp
-        ){
-
-            if(
-                window.VaeroApp.paymentCore
-            ){
-
-                return window.VaeroApp
-                    .paymentCore;
-
-            }
-
-
-            if(
-                window.VaeroApp.core
-            ){
-
-                return window.VaeroApp
-                    .core;
-
-            }
-
-
-            if(
-                typeof window.VaeroApp
-                    .getPaymentCore ===
-                    "function"
-            ){
-
-                try{
-
-                    return window.VaeroApp
-                        .getPaymentCore();
-
-                } catch(error){
-
-                    return null;
-
-                }
-
-            }
+            engine.mount(
+                engine.currentEntity
+            );
 
         }
 
 
-        return (
-            this.getService(
-                "paymentCore"
-            ) ||
-            null
+        return intent;
+
+    } catch(error){
+
+        console.error(
+            "Payment intent oluşturulamadı:",
+            error
         );
 
-    },
+        return false;
+
+    }
+
+},
 
 
-    createVaeroPaymentIntent(
-        payload = {}
+selectVaeroPaymentMethod(
+    method
+){
+
+    const core =
+        this.getVaeroPaymentCore();
+
+
+    const engine =
+        this.getEngine();
+
+
+    const intent =
+        engine
+            ?.currentVaeroPaymentIntent ||
+        null;
+
+
+    if(
+        !core ||
+        !intent ||
+        !method
     ){
+        return false;
+    }
 
-        const core =
-            this.getVaeroPaymentCore();
 
+    try{
 
         if(
-            !core ||
-            typeof core.createIntent !==
+            typeof core.setMethod ===
                 "function"
         ){
 
-            console.warn(
-                "VAERO Payment Core intent API bulunamadı."
+            const result =
+                core.setMethod(
+                    intent.id,
+                    method
+                );
+
+
+            engine.currentVaeroPaymentIntent =
+                result ||
+                intent;
+
+
+            engine.mount(
+                engine.currentEntity
             );
 
-            return false;
+
+            return result !== false;
 
         }
 
 
-        try{
+        if(
+            typeof core.selectMethod ===
+                "function"
+        ){
 
-            const intent =
-                core.createIntent(
-                    payload
+            const result =
+                core.selectMethod(
+                    intent.id,
+                    method
                 );
 
 
-            if(!intent){
-                return false;
-            }
+            engine.currentVaeroPaymentIntent =
+                result ||
+                intent;
 
 
-            const engine =
-                this.getEngine();
-
-
-            if(engine){
-
-                engine.currentVaeroPaymentIntent =
-                    intent;
-
-                engine.mount(
-                    engine.currentEntity
-                );
-
-            }
-
-
-            return intent;
-
-        } catch(error){
-
-            console.error(
-                "Payment intent oluşturulamadı:",
-                error
+            engine.mount(
+                engine.currentEntity
             );
 
-            return false;
+
+            return result !== false;
 
         }
 
-    },
+    } catch(error){
+
+        console.error(
+            "Payment method seçilemedi:",
+            error
+        );
+
+    }
 
 
-    selectVaeroPaymentMethod(
-        method
+    return false;
+
+},
+
+
+selectVaeroPaymentProvider(
+    provider
+){
+
+    const core =
+        this.getVaeroPaymentCore();
+
+
+    const engine =
+        this.getEngine();
+
+
+    const intent =
+        engine
+            ?.currentVaeroPaymentIntent ||
+        null;
+
+
+    if(
+        !core ||
+        !intent ||
+        !provider
     ){
-
-        const core =
-            this.getVaeroPaymentCore();
-
-
-        const engine =
-            this.getEngine();
+        return false;
+    }
 
 
-        const intent =
-            engine
-                ?.currentVaeroPaymentIntent ||
-            null;
+    try{
+
+        if(
+            typeof core.setProvider ===
+                "function"
+        ){
+
+            const result =
+                core.setProvider(
+                    intent.id,
+                    provider
+                );
+
+
+            engine.currentVaeroPaymentIntent =
+                result ||
+                intent;
+
+
+            engine.mount(
+                engine.currentEntity
+            );
+
+
+            return result !== false;
+
+        }
 
 
         if(
-            !core ||
-            !intent ||
-            !method
+            typeof core.selectProvider ===
+                "function"
         ){
-            return false;
-        }
 
-
-        try{
-
-            if(
-                typeof core.setMethod ===
-                    "function"
-            ){
-
-                const result =
-                    core.setMethod(
-                        intent.id,
-                        method
-                    );
-
-
-                engine.currentVaeroPaymentIntent =
-                    result ||
-                    intent;
-
-
-                engine.mount(
-                    engine.currentEntity
+            const result =
+                core.selectProvider(
+                    intent.id,
+                    provider
                 );
 
 
-                return result !== false;
-
-            }
-
-
-            if(
-                typeof core.selectMethod ===
-                    "function"
-            ){
-
-                const result =
-                    core.selectMethod(
-                        intent.id,
-                        method
-                    );
+            engine.currentVaeroPaymentIntent =
+                result ||
+                intent;
 
 
-                engine.currentVaeroPaymentIntent =
-                    result ||
-                    intent;
-
-
-                engine.mount(
-                    engine.currentEntity
-                );
-
-
-                return result !== false;
-
-            }
-
-        } catch(error){
-
-            console.error(
-                "Payment method seçilemedi:",
-                error
+            engine.mount(
+                engine.currentEntity
             );
 
+
+            return result !== false;
+
         }
 
+    } catch(error){
 
-        return false;
+        console.error(
+            "Payment provider seçilemedi:",
+            error
+        );
 
-    },
+    }
 
 
-    selectVaeroPaymentProvider(
-        provider
+    return false;
+
+},
+
+
+startVaeroPayment(){
+
+    const core =
+        this.getVaeroPaymentCore();
+
+
+    const engine =
+        this.getEngine();
+
+
+    const intent =
+        engine
+            ?.currentVaeroPaymentIntent ||
+        null;
+
+
+    if(
+        !core ||
+        !intent
     ){
-
-        const core =
-            this.getVaeroPaymentCore();
-
-
-        const engine =
-            this.getEngine();
+        return false;
+    }
 
 
-        const intent =
-            engine
-                ?.currentVaeroPaymentIntent ||
-            null;
-
+    try{
 
         if(
-            !core ||
-            !intent ||
-            !provider
+            typeof core.start ===
+                "function"
         ){
-            return false;
-        }
 
-
-        try{
-
-            if(
-                typeof core.setProvider ===
-                    "function"
-            ){
-
-                const result =
-                    core.setProvider(
-                        intent.id,
-                        provider
-                    );
-
-
-                engine.currentVaeroPaymentIntent =
-                    result ||
-                    intent;
-
-
-                engine.mount(
-                    engine.currentEntity
-                );
-
-
-                return result !== false;
-
-            }
-
-
-            if(
-                typeof core.selectProvider ===
-                    "function"
-            ){
-
-                const result =
-                    core.selectProvider(
-                        intent.id,
-                        provider
-                    );
-
-
-                engine.currentVaeroPaymentIntent =
-                    result ||
-                    intent;
-
-
-                engine.mount(
-                    engine.currentEntity
-                );
-
-
-                return result !== false;
-
-            }
-
-        } catch(error){
-
-            console.error(
-                "Payment provider seçilemedi:",
-                error
+            return core.start(
+                intent.id
             );
 
         }
 
 
-        return false;
-
-    },
-
-
-    startVaeroPayment(){
-
-        const core =
-            this.getVaeroPaymentCore();
-
-
-        const engine =
-            this.getEngine();
-
-
-        const intent =
-            engine
-                ?.currentVaeroPaymentIntent ||
-            null;
-
-
         if(
-            !core ||
-            !intent
+            typeof core.startIntent ===
+                "function"
         ){
-            return false;
-        }
 
-
-        try{
-
-            if(
-                typeof core.start ===
-                    "function"
-            ){
-
-                return core.start(
-                    intent.id
-                );
-
-            }
-
-
-            if(
-                typeof core.startIntent ===
-                    "function"
-            ){
-
-                return core.startIntent(
-                    intent.id
-                );
-
-            }
-
-        } catch(error){
-
-            console.error(
-                "Payment başlatılamadı:",
-                error
+            return core.startIntent(
+                intent.id
             );
 
         }
 
+    } catch(error){
 
-        return false;
+        console.error(
+            "Payment başlatılamadı:",
+            error
+        );
 
-    },
+    }
 
+
+    return false;
+
+},
 
     cancelVaeroPayment(){
 
@@ -4821,6 +4856,11 @@ document.addEventListener(
                 );
 
                 break;
+
+              case "app:applications":
+
+    Actions.openApplicationsApp();
+    break;
 
 
             case "profile:save":
