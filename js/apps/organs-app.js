@@ -1,9 +1,22 @@
 /* =========================================================
    VAERO ORGANS APP
-   Organ Launcher + Live Status
+   Organ Launcher / Health / Capabilities / Permissions
 ========================================================= */
 
 const OrgansApp = {
+
+    searchQuery:
+        "",
+
+    activeFilter:
+        "all",
+
+    selectedOrganId:
+        null,
+
+    searchTimer:
+        null,
+
 
     /* =====================================================
        SAFETY
@@ -24,27 +37,127 @@ const OrgansApp = {
 
 
     /* =====================================================
+       ENGINE / SERVICES
+    ===================================================== */
+
+    getEngine(){
+
+        try{
+
+            if(
+                typeof VAERO !== "undefined" &&
+                VAERO.engine
+            ){
+                return VAERO.engine;
+            }
+
+        } catch(error){
+
+            /* fallback */
+        }
+
+
+        return (
+            window.Engine ||
+            null
+        );
+
+    },
+
+
+    getService(name){
+
+        try{
+
+            if(
+                typeof VAERO === "undefined" ||
+                typeof VAERO.get !==
+                    "function"
+            ){
+                return null;
+            }
+
+
+            return (
+                VAERO.get(name) ||
+                null
+            );
+
+        } catch(error){
+
+            return null;
+
+        }
+
+    },
+
+
+    getCurrentEntity(){
+
+        const engine =
+            this.getEngine();
+
+
+        return (
+            engine?.currentOpenedEntity ||
+            engine?.currentEntity ||
+            engine?.rootEntity ||
+            null
+        );
+
+    },
+
+
+    remount(){
+
+        const engine =
+            this.getEngine();
+
+
+        if(
+            !engine ||
+            typeof engine.mount !==
+                "function"
+        ){
+            return false;
+        }
+
+
+        return engine.mount(
+            engine.currentEntity
+        );
+
+    },
+
+
+    /* =====================================================
        BRAIN CONTEXT
     ===================================================== */
 
-    enterBrainContext(){
+    enterBrainContext(entity = null){
 
         try{
 
             const awareness =
-                typeof VAERO !== "undefined" &&
-                typeof VAERO.get === "function"
-                    ? VAERO.get("brainAwareness")
-                    : null;
+                this.getService(
+                    "brainAwareness"
+                );
 
-            if(
-                awareness &&
-                typeof awareness.enter === "function"
-            ){
 
-                awareness.enter("organs");
+            awareness?.enter?.(
+                "organs",
+                {
+                    entityId:
+                        entity?.id ||
+                        null,
 
-            }
+                    selectedOrganId:
+                        this.selectedOrganId,
+
+                    filter:
+                        this.activeFilter
+                }
+            );
 
         } catch(error){
 
@@ -62,22 +175,58 @@ const OrgansApp = {
        ORGAN REGISTRY
     ===================================================== */
 
-    getRegisteredOrgans(){
+    getRegistry(){
 
         try{
 
             if(
-                typeof OrganRegistry === "undefined" ||
-                typeof OrganRegistry.all !== "function"
+                typeof OrganRegistry !==
+                    "undefined"
             ){
-                return [];
+                return OrganRegistry;
             }
 
-            const organs =
-                OrganRegistry.all();
+        } catch(error){
 
-            return Array.isArray(organs)
-                ? organs
+            /* service fallback */
+        }
+
+
+        return (
+            this.getService(
+                "organRegistry"
+            ) ||
+            null
+        );
+
+    },
+
+
+    getRegisteredOrgans(){
+
+        const registry =
+            this.getRegistry();
+
+
+        if(
+            !registry ||
+            typeof registry.all !==
+                "function"
+        ){
+            return [];
+        }
+
+
+        try{
+
+            const organs =
+                registry.all();
+
+
+            return Array.isArray(
+                organs
+            )
+                ? organs.filter(Boolean)
                 : [];
 
         } catch(error){
@@ -87,9 +236,187 @@ const OrgansApp = {
                 error
             );
 
+
             return [];
 
         }
+
+    },
+
+
+    findRegisteredOrgan(id){
+
+        const organId =
+            String(
+                id ||
+                ""
+            ).trim();
+
+
+        if(!organId){
+            return null;
+        }
+
+
+        const registry =
+            this.getRegistry();
+
+
+        try{
+
+            if(
+                registry &&
+                typeof registry.find ===
+                    "function"
+            ){
+
+                const found =
+                    registry.find(
+                        organId
+                    );
+
+
+                if(found){
+                    return found;
+                }
+
+            }
+
+        } catch(error){
+
+            /* array fallback */
+        }
+
+
+        return (
+            this.getRegisteredOrgans()
+                .find(
+                    organ =>
+                        organ?.id ===
+                        organId
+                ) ||
+            null
+        );
+
+    },
+
+
+    /* =====================================================
+       ORGAN SYSTEM
+    ===================================================== */
+
+    getOrganSystem(){
+
+        return (
+            this.getService(
+                "organSystem"
+            ) ||
+            this.getService(
+                "organ"
+            ) ||
+            (
+                typeof Organ !==
+                    "undefined"
+                    ? Organ
+                    : null
+            )
+        );
+
+    },
+
+
+    resolveRuntimeOrgan(id){
+
+        const system =
+            this.getOrganSystem();
+
+
+        if(!system){
+            return null;
+        }
+
+
+        try{
+
+            if(
+                typeof system.get ===
+                    "function"
+            ){
+
+                const organ =
+                    system.get(
+                        id
+                    );
+
+
+                if(organ){
+                    return organ;
+                }
+
+            }
+
+        } catch(error){
+
+            /* fallback */
+        }
+
+
+        try{
+
+            if(
+                typeof system.find ===
+                    "function"
+            ){
+
+                const organ =
+                    system.find(
+                        id
+                    );
+
+
+                if(organ){
+                    return organ;
+                }
+
+            }
+
+        } catch(error){
+
+            /* fallback */
+        }
+
+
+        if(
+            system.organs instanceof
+                Map
+        ){
+
+            return (
+                system.organs.get(
+                    id
+                ) ||
+                null
+            );
+
+        }
+
+
+        if(
+            system.registry instanceof
+                Map
+        ){
+
+            return (
+                system.registry.get(
+                    id
+                ) ||
+                null
+            );
+
+        }
+
+
+        return null;
 
     },
 
@@ -98,28 +425,40 @@ const OrgansApp = {
        LIVE STATUS
     ===================================================== */
 
+    getStatusService(){
+
+        return this.getService(
+            "organStatus"
+        );
+
+    },
+
+
     getLiveStatuses(){
 
+        const organStatus =
+            this.getStatusService();
+
+
+        if(
+            !organStatus ||
+            typeof organStatus.all !==
+                "function"
+        ){
+            return [];
+        }
+
+
         try{
-
-            const organStatus =
-                typeof VAERO !== "undefined" &&
-                typeof VAERO.get === "function"
-                    ? VAERO.get("organStatus")
-                    : null;
-
-            if(
-                !organStatus ||
-                typeof organStatus.all !== "function"
-            ){
-                return [];
-            }
 
             const statuses =
                 organStatus.all();
 
-            return Array.isArray(statuses)
-                ? statuses
+
+            return Array.isArray(
+                statuses
+            )
+                ? statuses.filter(Boolean)
                 : [];
 
         } catch(error){
@@ -129,6 +468,7 @@ const OrgansApp = {
                 error
             );
 
+
             return [];
 
         }
@@ -136,57 +476,94 @@ const OrgansApp = {
     },
 
 
-    /* =====================================================
-       STATUS MATCHING
-    ===================================================== */
+    normalizeText(value){
+
+        return String(
+            value ||
+            ""
+        )
+            .trim()
+            .toLocaleLowerCase(
+                "tr-TR"
+            );
+
+    },
+
+
+    inferStatusId(app){
+
+        const searchable =
+            this.normalizeText(
+                [
+                    app?.id,
+                    app?.title,
+                    app?.action
+                ]
+                    .filter(Boolean)
+                    .join(" ")
+            );
+
+
+        const mappings = [
+
+            ["memory","memory"],
+            ["hafıza","memory"],
+            ["hafiza","memory"],
+
+            ["timeline","timeline"],
+            ["zaman","timeline"],
+
+            ["evolution","evolution"],
+            ["evrim","evolution"],
+
+            ["bridge","bridge"],
+            ["bağlantı","bridge"],
+            ["baglanti","bridge"],
+
+            ["identity","identity"],
+            ["kimlik","identity"],
+
+            ["profile","profile"],
+            ["profil","profile"]
+
+        ];
+
+
+        for(
+            const [
+                token,
+                id
+            ] of mappings
+        ){
+
+            if(
+                searchable.includes(
+                    token
+                )
+            ){
+                return id;
+            }
+
+        }
+
+
+        return (
+            app?.id ||
+            null
+        );
+
+    },
+
 
     findLiveStatus(
         app,
         liveStatuses
     ){
 
-        const searchableText = [
-            app?.id,
-            app?.title,
-            app?.action
-        ]
-            .filter(Boolean)
-            .join(" ")
-            .toLowerCase();
-
-
-        let statusId = null;
-
-
-        if(
-            searchableText.includes("memory") ||
-            searchableText.includes("hafıza") ||
-            searchableText.includes("hafiza")
-        ){
-
-            statusId = "memory";
-
-        }
-
-
-        if(
-            searchableText.includes("timeline") ||
-            searchableText.includes("zaman")
-        ){
-
-            statusId = "timeline";
-
-        }
-
-
-        if(
-            searchableText.includes("evolution") ||
-            searchableText.includes("evrim")
-        ){
-
-            statusId = "evolution";
-
-        }
+        const statusId =
+            this.inferStatusId(
+                app
+            );
 
 
         if(!statusId){
@@ -197,8 +574,8 @@ const OrgansApp = {
         return (
             liveStatuses.find(
                 item =>
-                    item &&
-                    item.id === statusId
+                    item?.id ===
+                    statusId
             ) ||
             null
         );
@@ -207,50 +584,332 @@ const OrgansApp = {
 
 
     /* =====================================================
-       STATUS PRESENTATION
+       STATUS / HEALTH
     ===================================================== */
+
+    normalizeStatus(status){
+
+        const value =
+            String(
+                status ||
+                "ready"
+            )
+                .trim()
+                .toLowerCase();
+
+
+        if(
+            [
+                "active",
+                "ready",
+                "inactive",
+                "paused",
+                "missing",
+                "error",
+                "disabled"
+            ].includes(
+                value
+            )
+        ){
+            return value;
+        }
+
+
+        return "ready";
+
+    },
+
 
     getStatusPresentation(status){
 
-        if(status === "active"){
+        const normalized =
+            this.normalizeStatus(
+                status
+            );
+
+
+        const map = {
+
+            active:{
+                label:"Aktif",
+                tone:"good"
+            },
+
+            ready:{
+                label:"Hazır",
+                tone:"neutral"
+            },
+
+            inactive:{
+                label:"Pasif",
+                tone:"neutral"
+            },
+
+            paused:{
+                label:"Duraklatıldı",
+                tone:"warning"
+            },
+
+            missing:{
+                label:"Bağlı değil",
+                tone:"danger"
+            },
+
+            error:{
+                label:"Hata",
+                tone:"danger"
+            },
+
+            disabled:{
+                label:"Devre dışı",
+                tone:"warning"
+            }
+
+        };
+
+
+        return (
+            map[normalized] ||
+            map.ready
+        );
+
+    },
+
+
+    getHealth(
+        app,
+        liveStatus,
+        runtimeOrgan
+    ){
+
+        const raw =
+            liveStatus?.health ??
+            runtimeOrgan?.health ??
+            app?.health ??
+            null;
+
+
+        if(
+            typeof raw ===
+                "number"
+        ){
+
+            const score =
+                Math.max(
+                    0,
+                    Math.min(
+                        100,
+                        Math.round(
+                            raw
+                        )
+                    )
+                );
+
 
             return {
-                label:"Aktif",
-                color:"var(--engine-green)",
-                glow:"rgba(100,216,157,.42)"
+                score,
+                label:
+                    score >= 80
+                        ? "İyi"
+                        : score >= 50
+                            ? "Dikkat"
+                            : "Kritik"
             };
 
         }
 
 
-        if(status === "missing"){
+        const status =
+            this.normalizeStatus(
+                liveStatus?.status ||
+                runtimeOrgan?.status ||
+                app?.status
+            );
+
+
+        if(
+            status === "active" ||
+            status === "ready"
+        ){
 
             return {
-                label:"Bağlı değil",
-                color:"var(--engine-danger)",
-                glow:"rgba(255,123,133,.34)"
+                score:100,
+                label:"İyi"
+            };
+
+        }
+
+
+        if(
+            status === "paused" ||
+            status === "inactive"
+        ){
+
+            return {
+                score:60,
+                label:"Dikkat"
+            };
+
+        }
+
+
+        if(
+            status === "missing" ||
+            status === "error"
+        ){
+
+            return {
+                score:0,
+                label:"Kritik"
             };
 
         }
 
 
         return {
-            label:"Hazır",
-            color:"var(--engine-muted)",
-            glow:"transparent"
+            score:80,
+            label:"İyi"
         };
 
     },
 
 
     /* =====================================================
-       ORGAN CARD
+       ORGAN DATA
     ===================================================== */
 
-    renderOrganCard(
+    normalizeList(value){
+
+        if(
+            Array.isArray(
+                value
+            )
+        ){
+
+            return [
+                ...new Set(
+                    value
+                        .map(
+                            item =>
+                                String(
+                                    item ??
+                                    ""
+                                ).trim()
+                        )
+                        .filter(Boolean)
+                )
+            ];
+
+        }
+
+
+        if(
+            value instanceof
+                Set
+        ){
+
+            return [
+                ...value
+            ]
+                .map(
+                    item =>
+                        String(
+                            item ??
+                            ""
+                        ).trim()
+                )
+                .filter(Boolean);
+
+        }
+
+
+        return [];
+
+    },
+
+
+    getCapabilities(
+        app,
+        runtimeOrgan
+    ){
+
+        return this.normalizeList(
+            runtimeOrgan
+                ?.capabilities ||
+            app?.capabilities ||
+            []
+        );
+
+    },
+
+
+    getPermissions(
+        app,
+        runtimeOrgan
+    ){
+
+        return this.normalizeList(
+            runtimeOrgan
+                ?.permissions ||
+            app?.permissions ||
+            []
+        );
+
+    },
+
+
+    getDependencies(
+        app,
+        runtimeOrgan
+    ){
+
+        return this.normalizeList(
+            runtimeOrgan
+                ?.dependencies ||
+            runtimeOrgan
+                ?.dependsOn ||
+            app?.dependencies ||
+            []
+        );
+
+    },
+
+
+    getMetadata(
+        app,
+        runtimeOrgan
+    ){
+
+        const metadata =
+            runtimeOrgan?.metadata ||
+            app?.metadata ||
+            {};
+
+
+        return (
+            metadata &&
+            typeof metadata ===
+                "object" &&
+            !Array.isArray(
+                metadata
+            )
+        )
+            ? metadata
+            : {};
+
+    },
+
+
+    buildOrganModel(
         app,
         liveStatuses
     ){
+
+        const runtimeOrgan =
+            this.resolveRuntimeOrgan(
+                app?.id
+            );
+
 
         const liveStatus =
             this.findLiveStatus(
@@ -260,215 +919,1328 @@ const OrgansApp = {
 
 
         const status =
-            liveStatus?.status ||
-            "ready";
-
-
-        const statusUI =
-            this.getStatusPresentation(
-                status
+            this.normalizeStatus(
+                liveStatus?.status ||
+                runtimeOrgan?.status ||
+                app?.status ||
+                "ready"
             );
 
 
-        const total =
-            Number.isFinite(
-                liveStatus?.total
+        return {
+
+            id:
+                String(
+                    app?.id ||
+                    runtimeOrgan?.id ||
+                    ""
+                ).trim(),
+
+            title:
+                String(
+                    app?.title ||
+                    runtimeOrgan?.title ||
+                    app?.name ||
+                    runtimeOrgan?.name ||
+                    "Organ"
+                ).trim(),
+
+            subtitle:
+                String(
+                    app?.subtitle ||
+                    runtimeOrgan?.description ||
+                    "VAERO Engine organı"
+                ).trim(),
+
+            icon:
+                String(
+                    app?.icon ||
+                    runtimeOrgan?.icon ||
+                    "◈"
+                ),
+
+            action:
+                String(
+                    app?.action ||
+                    runtimeOrgan?.action ||
+                    ""
+                ).trim(),
+
+            status,
+
+            total:
+                Number.isFinite(
+                    Number(
+                        liveStatus?.total
+                    )
+                )
+                    ? Number(
+                        liveStatus.total
+                    )
+                    : null,
+
+            health:
+                this.getHealth(
+                    app,
+                    liveStatus,
+                    runtimeOrgan
+                ),
+
+            capabilities:
+                this.getCapabilities(
+                    app,
+                    runtimeOrgan
+                ),
+
+            permissions:
+                this.getPermissions(
+                    app,
+                    runtimeOrgan
+                ),
+
+            dependencies:
+                this.getDependencies(
+                    app,
+                    runtimeOrgan
+                ),
+
+            metadata:
+                this.getMetadata(
+                    app,
+                    runtimeOrgan
+                ),
+
+            runtimeOrgan,
+
+            source:
+                app
+
+        };
+
+    },
+
+
+    getOrgans(){
+
+        const statuses =
+            this.getLiveStatuses();
+
+
+        return this
+            .getRegisteredOrgans()
+            .map(
+                app =>
+                    this.buildOrganModel(
+                        app,
+                        statuses
+                    )
             )
-                ? liveStatus.total
-                : null;
-
-
-        const safeAction =
-            this.escapeHTML(
-                app?.action || ""
+            .filter(
+                organ =>
+                    organ.id
             );
 
-        const safeIcon =
-            this.escapeHTML(
-                app?.icon || "◈"
+    },
+
+
+    /* =====================================================
+       FILTER / SEARCH
+    ===================================================== */
+
+    getVisibleOrgans(){
+
+        let organs =
+            this.getOrgans();
+
+
+        if(
+            this.activeFilter ===
+                "active"
+        ){
+
+            organs =
+                organs.filter(
+                    organ =>
+                        organ.status ===
+                        "active"
+                );
+
+        }
+
+
+        if(
+            this.activeFilter ===
+                "attention"
+        ){
+
+            organs =
+                organs.filter(
+                    organ =>
+                        organ.status ===
+                            "error" ||
+                        organ.status ===
+                            "missing" ||
+                        organ.status ===
+                            "paused" ||
+                        organ.health.score <
+                            80
+                );
+
+        }
+
+
+        if(
+            this.activeFilter ===
+                "permissions"
+        ){
+
+            organs =
+                organs.filter(
+                    organ =>
+                        organ.permissions
+                            .length > 0
+                );
+
+        }
+
+
+        const query =
+            this.normalizeText(
+                this.searchQuery
             );
 
-        const safeTitle =
-            this.escapeHTML(
-                app?.title || "Organ"
+
+        if(query){
+
+            organs =
+                organs.filter(
+                    organ => {
+
+                        const haystack =
+                            this.normalizeText(
+                                [
+                                    organ.id,
+                                    organ.title,
+                                    organ.subtitle,
+                                    organ.status,
+                                    ...organ.capabilities,
+                                    ...organ.permissions,
+                                    ...organ.dependencies
+                                ].join(" ")
+                            );
+
+
+                        return haystack.includes(
+                            query
+                        );
+
+                    }
+                );
+
+        }
+
+
+        return organs;
+
+    },
+
+
+    /* =====================================================
+       SELECTED ORGAN
+    ===================================================== */
+
+    findOrgan(id){
+
+        return (
+            this.getOrgans()
+                .find(
+                    organ =>
+                        organ.id ===
+                        id
+                ) ||
+            null
+        );
+
+    },
+
+
+    selectOrgan(id){
+
+        const organ =
+            this.findOrgan(
+                id
             );
 
-        const safeSubtitle =
-            this.escapeHTML(
-                app?.subtitle ||
-                "VAERO Engine organı"
+
+        if(!organ){
+            return false;
+        }
+
+
+        this.selectedOrganId =
+            organ.id;
+
+
+        return this.remount();
+
+    },
+
+
+    closeOrgan(){
+
+        this.selectedOrganId =
+            null;
+
+
+        return this.remount();
+
+    },
+
+
+    /* =====================================================
+       PERMISSIONS
+    ===================================================== */
+
+    canManagePermissions(organ){
+
+        const runtime =
+            organ?.runtimeOrgan;
+
+
+        return Boolean(
+            runtime &&
+            (
+                typeof runtime.grantPermission ===
+                    "function" ||
+                typeof runtime.setPermission ===
+                    "function" ||
+                typeof runtime.revokePermission ===
+                    "function"
+            )
+        );
+
+    },
+
+
+    grantPermission(
+        organId,
+        permission
+    ){
+
+        const organ =
+            this.findOrgan(
+                organId
+            );
+
+
+        const runtime =
+            organ?.runtimeOrgan;
+
+
+        const normalized =
+            String(
+                permission ||
+                ""
+            ).trim();
+
+
+        if(
+            !runtime ||
+            !normalized
+        ){
+            return false;
+        }
+
+
+        try{
+
+            if(
+                typeof runtime.grantPermission ===
+                    "function"
+            ){
+
+                const result =
+                    runtime.grantPermission(
+                        normalized
+                    );
+
+
+                if(result === false){
+                    return false;
+                }
+
+            } else if(
+                typeof runtime.setPermission ===
+                    "function"
+            ){
+
+                const result =
+                    runtime.setPermission(
+                        normalized
+                    );
+
+
+                if(result === false){
+                    return false;
+                }
+
+            } else {
+
+                return false;
+
+            }
+
+        } catch(error){
+
+            console.warn(
+                "Organ izni verilemedi:",
+                error
+            );
+
+
+            return false;
+
+        }
+
+
+        this.emitPermissionEvent(
+            "granted",
+            organ,
+            normalized
+        );
+
+
+        return this.remount();
+
+    },
+
+
+    revokePermission(
+        organId,
+        permission
+    ){
+
+        const organ =
+            this.findOrgan(
+                organId
+            );
+
+
+        const runtime =
+            organ?.runtimeOrgan;
+
+
+        const normalized =
+            String(
+                permission ||
+                ""
+            ).trim();
+
+
+        if(
+            !runtime ||
+            !normalized ||
+            typeof runtime.revokePermission !==
+                "function"
+        ){
+            return false;
+        }
+
+
+        try{
+
+            const result =
+                runtime.revokePermission(
+                    normalized
+                );
+
+
+            if(result === false){
+                return false;
+            }
+
+        } catch(error){
+
+            console.warn(
+                "Organ izni kaldırılamadı:",
+                error
+            );
+
+
+            return false;
+
+        }
+
+
+        this.emitPermissionEvent(
+            "revoked",
+            organ,
+            normalized
+        );
+
+
+        return this.remount();
+
+    },
+
+
+    emitPermissionEvent(
+        action,
+        organ,
+        permission
+    ){
+
+        try{
+
+            VAERO?.emit?.(
+                `organ:permission-${action}`,
+                {
+                    organId:
+                        organ.id,
+
+                    permission,
+
+                    entityId:
+                        this.getCurrentEntity()
+                            ?.id ||
+                        null,
+
+                    time:
+                        Date.now()
+                }
+            );
+
+        } catch(error){
+
+            /* non-fatal */
+        }
+
+    },
+
+
+    /* =====================================================
+       ORGAN OPEN
+    ===================================================== */
+
+    openOrgan(organ){
+
+        if(!organ){
+            return false;
+        }
+
+
+        if(!organ.action){
+
+            this.selectedOrganId =
+                organ.id;
+
+
+            return this.remount();
+
+        }
+
+
+        try{
+
+            const trigger =
+                document.querySelector(
+                    `[data-action="${CSS.escape(
+                        organ.action
+                    )}"]`
+                );
+
+
+            if(
+                trigger &&
+                trigger !==
+                    document.activeElement
+            ){
+
+                trigger.click();
+
+                return true;
+
+            }
+
+        } catch(error){
+
+            /* fall through */
+        }
+
+
+        /*
+         * Actions router kullanıyorsa sentetik click
+         * mevcut sistem davranışını bozmadan çalışır.
+         */
+
+        try{
+
+            const button =
+                document.createElement(
+                    "button"
+                );
+
+
+            button.type =
+                "button";
+
+            button.dataset.action =
+                organ.action;
+
+            button.style.display =
+                "none";
+
+
+            document.body.appendChild(
+                button
+            );
+
+
+            button.click();
+
+            button.remove();
+
+
+            return true;
+
+        } catch(error){
+
+            console.warn(
+                "Organ açılamadı:",
+                error
+            );
+
+
+            return false;
+
+        }
+
+    },
+
+
+    /* =====================================================
+       SUMMARY
+    ===================================================== */
+
+    getSummary(organs){
+
+        return {
+
+            total:
+                organs.length,
+
+            active:
+                organs.filter(
+                    organ =>
+                        organ.status ===
+                        "active"
+                ).length,
+
+            healthy:
+                organs.filter(
+                    organ =>
+                        organ.health.score >=
+                        80
+                ).length,
+
+            attention:
+                organs.filter(
+                    organ =>
+                        organ.health.score <
+                            80 ||
+                        organ.status ===
+                            "error" ||
+                        organ.status ===
+                            "missing"
+                ).length
+
+        };
+
+    },
+
+
+    /* =====================================================
+       TOOLBAR
+    ===================================================== */
+
+    renderToolbar(){
+
+        const filters = [
+
+            ["all","Tümü"],
+
+            ["active","Aktif"],
+
+            ["attention","Dikkat"],
+
+            ["permissions","İzinli"]
+
+        ];
+
+
+        return `
+            <div class="organs-toolbar">
+
+                <label class="organs-search">
+
+                    <span aria-hidden="true">
+                        ⌕
+                    </span>
+
+                    <input
+                        id="organsSearchInput"
+                        type="search"
+                        autocomplete="off"
+                        placeholder="Organ, capability veya izin ara"
+                        value="${this.escapeHTML(
+                            this.searchQuery
+                        )}"
+                    >
+
+                </label>
+
+
+                <div class="organs-filter-row">
+
+                    ${filters
+                        .map(
+                            ([id,label]) => `
+                                <button
+                                    type="button"
+                                    class="organs-filter-btn ${
+                                        this.activeFilter ===
+                                            id
+                                            ? "is-active"
+                                            : ""
+                                    }"
+                                    data-organs-action="filter"
+                                    data-organs-filter="${id}"
+                                >
+                                    ${label}
+                                </button>
+                            `
+                        )
+                        .join("")}
+
+                </div>
+
+            </div>
+        `;
+
+    },
+
+
+    /* =====================================================
+       ORGAN CARD
+    ===================================================== */
+
+    renderOrganCard(organ){
+
+        const status =
+            this.getStatusPresentation(
+                organ.status
             );
 
 
         return `
-
-            <button
-                type="button"
-                class="card organ-launcher-card"
-                data-action="${safeAction}"
-                style="
-                    width:100%;
-                    min-width:0;
-                    min-height:92px;
-                    padding:12px;
-                    display:grid;
-                    grid-template-columns:
-                        38px
-                        minmax(0,1fr)
-                        auto;
-                    align-items:center;
-                    gap:10px;
-                    text-align:left;
-                    position:relative;
-                    overflow:hidden;
-                "
+            <article
+                class="organ-control-card"
+                data-organ-tone="${this.escapeHTML(
+                    status.tone
+                )}"
             >
 
-                <span
-                    aria-hidden="true"
-                    style="
-                        width:38px;
-                        height:38px;
-                        display:grid;
-                        place-items:center;
-                        border:
-                            1px solid
-                            var(--engine-line);
-                        border-radius:12px;
-                        background:
-                            rgba(
-                                255,
-                                255,
-                                255,
-                                .025
-                            );
-                        color:
-                            var(--engine-gold-soft);
-                        font-size:15px;
-                    "
-                >
-                    ${safeIcon}
-                </span>
-
-
-                <span
-                    style="
-                        min-width:0;
-                        display:block;
-                    "
+                <button
+                    type="button"
+                    class="organ-control-main"
+                    data-organs-action="detail"
+                    data-organ-id="${this.escapeHTML(
+                        organ.id
+                    )}"
                 >
 
-                    <strong
-                        style="
-                            display:block;
-                            overflow:hidden;
-                            color:
-                                var(--engine-text);
-                            font-size:11px;
-                            font-weight:650;
-                            text-overflow:ellipsis;
-                            white-space:nowrap;
-                        "
-                    >
-                        ${safeTitle}
-                    </strong>
+                    <span class="organ-control-icon">
+                        ${this.escapeHTML(
+                            organ.icon
+                        )}
+                    </span>
 
 
-                    <small
-                        style="
-                            display:block;
-                            margin-top:3px;
-                            overflow:hidden;
-                            color:
-                                var(--engine-muted);
-                            font-size:7px;
-                            line-height:1.35;
-                            text-overflow:ellipsis;
-                            white-space:nowrap;
-                        "
-                    >
-                        ${safeSubtitle}
-                    </small>
+                    <span class="organ-control-copy">
 
+                        <span class="organ-control-heading">
+
+                            <strong>
+                                ${this.escapeHTML(
+                                    organ.title
+                                )}
+                            </strong>
+
+                            <small>
+                                ${this.escapeHTML(
+                                    organ.id
+                                )}
+                            </small>
+
+                        </span>
+
+
+                        <span class="organ-control-subtitle">
+                            ${this.escapeHTML(
+                                organ.subtitle
+                            )}
+                        </span>
+
+
+                        <span class="organ-control-meta">
+
+                            <small>
+                                ${this.escapeHTML(
+                                    status.label
+                                )}
+                            </small>
+
+                            <small>
+                                Health ${organ.health.score}%
+                            </small>
+
+                            ${
+                                organ.total !== null
+                                    ? `
+                                        <small>
+                                            ${organ.total} kayıt
+                                        </small>
+                                      `
+                                    : ""
+                            }
+
+                        </span>
+
+                    </span>
+
+                </button>
+
+
+                <div class="organ-control-actions">
 
                     ${
-                        total !== null
+                        organ.action
                             ? `
-                                <small
-                                    style="
-                                        display:block;
-                                        margin-top:5px;
-                                        color:
-                                            var(--engine-dim);
-                                        font-size:7px;
-                                    "
+                                <button
+                                    type="button"
+                                    class="secondary-btn"
+                                    data-organs-action="open"
+                                    data-organ-id="${this.escapeHTML(
+                                        organ.id
+                                    )}"
                                 >
-                                    <strong
-                                        style="
-                                            color:
-                                                var(--engine-text);
-                                            font-size:8px;
-                                        "
-                                    >
-                                        ${total}
-                                    </strong>
-
-                                    kayıt
-                                </small>
+                                    Aç
+                                </button>
                               `
                             : ""
                     }
 
+
+                    <button
+                        type="button"
+                        class="secondary-btn"
+                        data-organs-action="detail"
+                        data-organ-id="${this.escapeHTML(
+                            organ.id
+                        )}"
+                    >
+                        İncele
+                    </button>
+
+                </div>
+
+            </article>
+        `;
+
+    },
+
+
+    /* =====================================================
+       TAG LIST
+    ===================================================== */
+
+    renderTagList(
+        values,
+        emptyText
+    ){
+
+        if(
+            !Array.isArray(values) ||
+            values.length === 0
+        ){
+
+            return `
+                <span class="organ-detail-empty">
+                    ${this.escapeHTML(
+                        emptyText
+                    )}
                 </span>
+            `;
+
+        }
 
 
-                <span
-                    style="
-                        display:flex;
-                        align-items:center;
-                        gap:5px;
-                        padding:4px 6px;
-                        border:
-                            1px solid
-                            var(--engine-line);
-                        border-radius:999px;
-                        background:
-                            rgba(
-                                255,
-                                255,
-                                255,
-                                .018
-                            );
-                        color:
-                            ${statusUI.color};
-                        font-size:6px;
-                        font-weight:700;
-                        white-space:nowrap;
-                    "
+        return `
+            <div class="organ-detail-tags">
+
+                ${values
+                    .map(
+                        item => `
+                            <span>
+                                ${this.escapeHTML(
+                                    item
+                                )}
+                            </span>
+                        `
+                    )
+                    .join("")}
+
+            </div>
+        `;
+
+    },
+
+
+    /* =====================================================
+       DETAIL
+    ===================================================== */
+
+    renderDetail(organ){
+
+        if(!organ){
+            return "";
+        }
+
+
+        const status =
+            this.getStatusPresentation(
+                organ.status
+            );
+
+
+        const metadataEntries =
+            Object.entries(
+                organ.metadata ||
+                {}
+            )
+                .filter(
+                    ([,value]) =>
+                        typeof value !==
+                            "object"
+                )
+                .slice(
+                    0,
+                    8
+                );
+
+
+        return `
+            <div class="organ-detail-layer">
+
+                <div
+                    class="organ-detail-backdrop"
+                    data-organs-action="close"
+                ></div>
+
+
+                <section
+                    class="organ-detail-panel"
+                    role="dialog"
+                    aria-modal="true"
                 >
 
-                    <span
-                        aria-hidden="true"
-                        style="
-                            width:6px;
-                            height:6px;
-                            border-radius:50%;
-                            background:
-                                ${statusUI.color};
-                            box-shadow:
-                                0
-                                0
-                                7px
-                                ${statusUI.glow};
-                        "
-                    ></span>
+                    <header class="organ-detail-header">
 
-                    ${statusUI.label}
+                        <div class="organ-detail-title">
 
-                </span>
+                            <span class="organ-detail-icon">
+                                ${this.escapeHTML(
+                                    organ.icon
+                                )}
+                            </span>
 
-            </button>
 
+                            <div>
+
+                                <span class="engine-section-label">
+                                    ORGAN CONTROL
+                                </span>
+
+                                <h2>
+                                    ${this.escapeHTML(
+                                        organ.title
+                                    )}
+                                </h2>
+
+                                <small>
+                                    ${this.escapeHTML(
+                                        organ.id
+                                    )}
+                                </small>
+
+                            </div>
+
+                        </div>
+
+
+                        <button
+                            type="button"
+                            class="engine-icon-btn"
+                            data-organs-action="close"
+                            aria-label="Kapat"
+                        >
+                            ×
+                        </button>
+
+                    </header>
+
+
+                    <div class="organ-detail-scroll">
+
+                        <section class="organ-health-card">
+
+                            <div>
+
+                                <span>
+                                    Durum
+                                </span>
+
+                                <strong>
+                                    ${this.escapeHTML(
+                                        status.label
+                                    )}
+                                </strong>
+
+                            </div>
+
+
+                            <div>
+
+                                <span>
+                                    Health
+                                </span>
+
+                                <strong>
+                                    ${organ.health.score}%
+                                </strong>
+
+                            </div>
+
+
+                            <div>
+
+                                <span>
+                                    Health durumu
+                                </span>
+
+                                <strong>
+                                    ${this.escapeHTML(
+                                        organ.health.label
+                                    )}
+                                </strong>
+
+                            </div>
+
+
+                            ${
+                                organ.total !== null
+                                    ? `
+                                        <div>
+
+                                            <span>
+                                                Kayıt
+                                            </span>
+
+                                            <strong>
+                                                ${organ.total}
+                                            </strong>
+
+                                        </div>
+                                      `
+                                    : ""
+                            }
+
+                        </section>
+
+
+                        <section class="organ-detail-section">
+
+                            <span class="engine-section-label">
+                                CAPABILITIES
+                            </span>
+
+                            <h3>
+                                Yetenekler
+                            </h3>
+
+
+                            ${this.renderTagList(
+                                organ.capabilities,
+                                "Bu organ için capability bilgisi tanımlanmamış."
+                            )}
+
+                        </section>
+
+
+                        <section class="organ-detail-section">
+
+                            <span class="engine-section-label">
+                                PERMISSIONS
+                            </span>
+
+                            <h3>
+                                İzinler
+                            </h3>
+
+
+                            ${
+                                organ.permissions.length
+                                    ? `
+                                        <div class="organ-permission-list">
+
+                                            ${organ.permissions
+                                                .map(
+                                                    permission => `
+                                                        <div>
+
+                                                            <span>
+                                                                ${this.escapeHTML(
+                                                                    permission
+                                                                )}
+                                                            </span>
+
+
+                                                            ${
+                                                                this.canManagePermissions(
+                                                                    organ
+                                                                ) &&
+                                                                typeof organ
+                                                                    .runtimeOrgan
+                                                                    ?.revokePermission ===
+                                                                    "function"
+                                                                    ? `
+                                                                        <button
+                                                                            type="button"
+                                                                            data-organs-action="permission:revoke"
+                                                                            data-organ-id="${this.escapeHTML(
+                                                                                organ.id
+                                                                            )}"
+                                                                            data-permission="${this.escapeHTML(
+                                                                                permission
+                                                                            )}"
+                                                                        >
+                                                                            Kaldır
+                                                                        </button>
+                                                                      `
+                                                                    : ""
+                                                            }
+
+                                                        </div>
+                                                    `
+                                                )
+                                                .join("")}
+
+                                        </div>
+                                      `
+                                    : `
+                                        <span class="organ-detail-empty">
+                                            Aktif izin bulunmuyor.
+                                        </span>
+                                      `
+                            }
+
+
+                            ${
+                                this.canManagePermissions(
+                                    organ
+                                )
+                                    ? `
+                                        <form
+                                            class="organ-permission-form"
+                                            data-organ-permission-form
+                                            data-organ-id="${this.escapeHTML(
+                                                organ.id
+                                            )}"
+                                        >
+
+                                            <input
+                                                type="text"
+                                                name="permission"
+                                                maxlength="120"
+                                                placeholder="permission.name"
+                                                required
+                                            >
+
+                                            <button
+                                                type="submit"
+                                                class="secondary-btn"
+                                            >
+                                                İzin Ver
+                                            </button>
+
+                                        </form>
+                                      `
+                                    : `
+                                        <p class="organ-detail-note">
+                                            Bu organın mevcut runtime API'si izin değişikliğini desteklemiyor. Arayüz kendi başına izin oluşturmaz.
+                                        </p>
+                                      `
+                            }
+
+                        </section>
+
+
+                        <section class="organ-detail-section">
+
+                            <span class="engine-section-label">
+                                DEPENDENCIES
+                            </span>
+
+                            <h3>
+                                Bağımlılıklar
+                            </h3>
+
+
+                            ${this.renderTagList(
+                                organ.dependencies,
+                                "Tanımlı bağımlılık bulunmuyor."
+                            )}
+
+                        </section>
+
+
+                        ${
+                            metadataEntries.length
+                                ? `
+                                    <section class="organ-detail-section">
+
+                                        <span class="engine-section-label">
+                                            METADATA
+                                        </span>
+
+                                        <h3>
+                                            Sistem bilgisi
+                                        </h3>
+
+
+                                        <div class="organ-metadata-list">
+
+                                            ${metadataEntries
+                                                .map(
+                                                    ([key,value]) => `
+                                                        <div>
+
+                                                            <span>
+                                                                ${this.escapeHTML(
+                                                                    key
+                                                                )}
+                                                            </span>
+
+                                                            <strong>
+                                                                ${this.escapeHTML(
+                                                                    value
+                                                                )}
+                                                            </strong>
+
+                                                        </div>
+                                                    `
+                                                )
+                                                .join("")}
+
+                                        </div>
+
+                                    </section>
+                                  `
+                                : ""
+                        }
+
+
+                        <div class="organ-security-note">
+
+                            <strong>
+                                Yetki sınırı
+                            </strong>
+
+                            <p>
+                                Buradaki permission bilgileri Engine içi organ politikasını temsil eder. Production yetkilendirmesi Guardian ve backend tarafında ayrıca uygulanmalıdır.
+                            </p>
+
+                        </div>
+
+                    </div>
+
+
+                    <footer class="organ-detail-actions">
+
+                        ${
+                            organ.action
+                                ? `
+                                    <button
+                                        type="button"
+                                        class="primary-btn"
+                                        data-organs-action="open"
+                                        data-organ-id="${this.escapeHTML(
+                                            organ.id
+                                        )}"
+                                    >
+                                        Organı Aç
+                                    </button>
+                                  `
+                                : ""
+                        }
+
+
+                        <button
+                            type="button"
+                            class="secondary-btn"
+                            data-organs-action="close"
+                        >
+                            Kapat
+                        </button>
+
+                    </footer>
+
+                </section>
+
+            </div>
+        `;
+
+    },
+
+
+    /* =====================================================
+       EMPTY
+    ===================================================== */
+
+    renderEmpty(){
+
+        return `
+            <div class="engine-empty-state organs-empty">
+
+                <strong>
+                    ${
+                        this.searchQuery ||
+                        this.activeFilter !==
+                            "all"
+                            ? "Eşleşen organ bulunamadı"
+                            : "Organ bulunamadı"
+                    }
+                </strong>
+
+                ${
+                    this.searchQuery ||
+                    this.activeFilter !==
+                        "all"
+                        ? "Arama veya filtreyi değiştir."
+                        : "Organ Registry kullanılabilir bir Engine organı döndürmedi."
+                }
+
+            </div>
         `;
 
     },
@@ -480,201 +2252,398 @@ const OrgansApp = {
 
     render(entity){
 
-        this.enterBrainContext();
+        this.enterBrainContext(
+            entity
+        );
+
+
+        const allOrgans =
+            this.getOrgans();
 
 
         const organs =
-            this.getRegisteredOrgans();
-
-        const liveStatuses =
-            this.getLiveStatuses();
+            this.getVisibleOrgans();
 
 
-        const activeConnections =
-            liveStatuses.filter(
-                item =>
-                    item &&
-                    item.status === "active"
-            ).length;
+        const summary =
+            this.getSummary(
+                allOrgans
+            );
+
+
+        const selectedOrgan =
+            this.selectedOrganId
+                ? this.findOrgan(
+                    this.selectedOrganId
+                )
+                : null;
+
+
+        if(
+            this.selectedOrganId &&
+            !selectedOrgan
+        ){
+
+            this.selectedOrganId =
+                null;
+
+        }
 
 
         return `
+            <section class="engine-page organs-app-page">
 
-            <div
-                class="section"
-                style="
-                    margin:0;
-                    padding:16px;
-                    overflow:hidden;
-                "
-            >
+                <div class="organs-app-shell">
 
-                <button
-                    type="button"
-                    class="secondary-btn"
-                    data-action="entity:dashboard"
-                    style="
-                        margin-bottom:8px;
-                    "
-                >
-                    ← Varlık Kontrol Paneli
-                </button>
+                    <div class="engine-page-toolbar">
+
+                        <button
+                            type="button"
+                            class="engine-back-btn"
+                            data-action="entity:dashboard"
+                        >
+                            ← Varlığa Dön
+                        </button>
+
+                    </div>
 
 
-                <div
-                    class="card"
-                    style="
-                        padding:13px;
-                        display:flex;
-                        align-items:center;
-                        justify-content:space-between;
-                        gap:14px;
-                    "
-                >
+                    ${UI.appHeader(
+                        this.escapeHTML(
+                            entity?.name ||
+                            "VAERO Varlığı"
+                        ),
+                        "ORGANS",
+                        "⌘"
+                    )}
 
-                    <div
-                        style="
-                            min-width:0;
-                        "
-                    >
 
-                        <div class="eyebrow">
-                            ORGAN LAUNCHER
+                    <section class="organs-intro">
+
+                        <div>
+
+                            <span class="engine-section-label">
+                                ORGAN CONTROL
+                            </span>
+
+                            <h2>
+                                Engine organları
+                            </h2>
+
+                            <p>
+                                Uygulamaları aç, çalışma durumlarını incele ve desteklenen organlarda capabilities, permissions ve dependencies katmanlarını yönet.
+                            </p>
+
                         </div>
 
-                        <h2
-                            style="
-                                margin:3px 0 0;
-                                color:
-                                    var(--engine-text);
-                                font-size:17px;
-                            "
-                        >
-                            Organlar
-                        </h2>
 
-                        <p
-                            style="
-                                margin:4px 0 0;
-                                max-width:520px;
-                                color:
-                                    var(--engine-muted);
-                                font-size:8px;
-                                line-height:1.4;
-                            "
-                        >
-                            Her organ bağımsız çalışan bir
-                            Engine uygulamasıdır. Canlı durumunu
-                            açmadan önce görebilirsin.
-                        </p>
+                        <div class="organs-summary">
+
+                            <div>
+
+                                <strong>
+                                    ${summary.total}
+                                </strong>
+
+                                <span>
+                                    Organ
+                                </span>
+
+                            </div>
+
+
+                            <div>
+
+                                <strong>
+                                    ${summary.active}
+                                </strong>
+
+                                <span>
+                                    Aktif
+                                </span>
+
+                            </div>
+
+
+                            <div>
+
+                                <strong>
+                                    ${summary.healthy}
+                                </strong>
+
+                                <span>
+                                    Sağlıklı
+                                </span>
+
+                            </div>
+
+
+                            <div>
+
+                                <strong>
+                                    ${summary.attention}
+                                </strong>
+
+                                <span>
+                                    Dikkat
+                                </span>
+
+                            </div>
+
+                        </div>
+
+                    </section>
+
+
+                    ${this.renderToolbar()}
+
+
+                    <div class="organs-list-scroll">
+
+                        ${
+                            organs.length
+                                ? `
+                                    <div class="organs-control-grid">
+
+                                        ${organs
+                                            .map(
+                                                organ =>
+                                                    this.renderOrganCard(
+                                                        organ
+                                                    )
+                                            )
+                                            .join("")}
+
+                                    </div>
+                                  `
+                                : this.renderEmpty()
+                        }
 
                     </div>
 
 
-                    <div
-                        style="
-                            flex:0 0 auto;
-                            display:flex;
-                            align-items:center;
-                            gap:6px;
-                        "
-                    >
-
-                        <span
-                            style="
-                                padding:5px 8px;
-                                border-radius:999px;
-                                background:
-                                    rgba(
-                                        255,
-                                        255,
-                                        255,
-                                        .025
-                                    );
-                                color:
-                                    var(--engine-muted);
-                                font-size:7px;
-                                white-space:nowrap;
-                            "
-                        >
-                            ${organs.length} organ
-                        </span>
-
-
-                        <span
-                            style="
-                                padding:5px 8px;
-                                border-radius:999px;
-                                background:
-                                    rgba(
-                                        100,
-                                        216,
-                                        157,
-                                        .045
-                                    );
-                                color:
-                                    var(--engine-green);
-                                font-size:7px;
-                                white-space:nowrap;
-                            "
-                        >
-                            ${activeConnections} canlı
-                        </span>
-
-                    </div>
+                    ${UI.brainPanel()}
 
                 </div>
 
 
-                ${
-                    organs.length
-                        ? `
-                            <div
-                                class="grid grid-2"
-                                style="
-                                    margin-top:8px;
-                                    gap:7px;
-                                "
-                            >
+                ${this.renderDetail(
+                    selectedOrgan
+                )}
 
-                                ${organs
-                                    .map(
-                                        app =>
-                                            this.renderOrganCard(
-                                                app,
-                                                liveStatuses
-                                            )
-                                    )
-                                    .join("")}
-
-                            </div>
-                          `
-                        : `
-                            <div
-                                class="engine-empty-state"
-                                style="
-                                    margin-top:8px;
-                                "
-                            >
-                                <strong>
-                                    Organ bulunamadı
-                                </strong>
-
-                                Organ Registry şu anda
-                                kullanılabilir bir organ
-                                döndürmedi.
-                            </div>
-                          `
-                }
-
-            </div>
-
+            </section>
         `;
+
+    },
+
+
+    /* =====================================================
+       COMMANDS
+    ===================================================== */
+
+    handleAction(
+        action,
+        element
+    ){
+
+        switch(action){
+
+            case "filter":
+
+                this.activeFilter =
+                    [
+                        "all",
+                        "active",
+                        "attention",
+                        "permissions"
+                    ].includes(
+                        element.dataset
+                            .organsFilter
+                    )
+                        ? element.dataset
+                            .organsFilter
+                        : "all";
+
+
+                this.selectedOrganId =
+                    null;
+
+
+                return this.remount();
+
+
+            case "detail":
+
+                return this.selectOrgan(
+                    element.dataset
+                        .organId
+                );
+
+
+            case "close":
+
+                return this.closeOrgan();
+
+
+            case "open":{
+
+                const organ =
+                    this.findOrgan(
+                        element.dataset
+                            .organId
+                    );
+
+
+                return this.openOrgan(
+                    organ
+                );
+
+            }
+
+
+            case "permission:revoke":
+
+                return this.revokePermission(
+                    element.dataset
+                        .organId,
+                    element.dataset
+                        .permission
+                );
+
+        }
+
+
+        return false;
 
     }
 
 };
 
 
+/* =========================================================
+   ORGAN COMMANDS
+========================================================= */
+
+document.addEventListener(
+    "click",
+    event => {
+
+        const element =
+            event.target.closest(
+                "[data-organs-action]"
+            );
+
+
+        if(!element){
+            return;
+        }
+
+
+        event.preventDefault();
+
+
+        OrgansApp.handleAction(
+            element.dataset
+                .organsAction,
+            element
+        );
+
+    }
+);
+
+
+/* =========================================================
+   ORGAN SEARCH
+========================================================= */
+
+document.addEventListener(
+    "input",
+    event => {
+
+        if(
+            event.target.id !==
+                "organsSearchInput"
+        ){
+            return;
+        }
+
+
+        OrgansApp.searchQuery =
+            String(
+                event.target.value ||
+                ""
+            );
+
+
+        clearTimeout(
+            OrgansApp.searchTimer
+        );
+
+
+        OrgansApp.searchTimer =
+            setTimeout(
+                () => {
+
+                    OrgansApp.selectedOrganId =
+                        null;
+
+                    OrgansApp.remount();
+
+                },
+                120
+            );
+
+    }
+);
+
+
+/* =========================================================
+   ORGAN PERMISSION FORM
+========================================================= */
+
+document.addEventListener(
+    "submit",
+    event => {
+
+        const form =
+            event.target.closest(
+                "[data-organ-permission-form]"
+            );
+
+
+        if(!form){
+            return;
+        }
+
+
+        event.preventDefault();
+
+
+        const permission =
+            String(
+                new FormData(
+                    form
+                ).get(
+                    "permission"
+                ) ||
+                ""
+            ).trim();
+
+
+        if(!permission){
+            return;
+        }
+
+
+        OrgansApp.grantPermission(
+            form.dataset
+                .organId,
+            permission
+        );
+
+    }
+);
+
+
 window.OrgansApp =
-    OrgansApp; 
+    OrgansApp;
