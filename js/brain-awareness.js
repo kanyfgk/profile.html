@@ -1,6 +1,6 @@
 /* =========================================================
    VAERO BRAIN AWARENESS
-   Runtime Screen / App Awareness State
+   Runtime App / Screen / Context Awareness
 ========================================================= */
 
 const BrainAwareness = {
@@ -8,7 +8,16 @@ const BrainAwareness = {
     currentApp:
         "home",
 
+    currentScreen:
+        "home",
+
+    currentPage:
+        null,
+
     previousApp:
+        null,
+
+    previousScreen:
         null,
 
     metadata:
@@ -21,7 +30,70 @@ const BrainAwareness = {
         [],
 
     historyLimit:
-        12,
+        20,
+
+    booted:
+        false,
+
+    bootedAt:
+        null,
+
+
+    /* =====================================================
+       SERVICE ACCESS
+    ===================================================== */
+
+    getService(name){
+
+        try{
+
+            if(
+                typeof VAERO === "undefined" ||
+                typeof VAERO.get !== "function"
+            ){
+                return null;
+            }
+
+
+            return (
+                VAERO.get(name) ||
+                null
+            );
+
+        } catch(error){
+
+            return null;
+
+        }
+
+    },
+
+
+    getEngine(){
+
+        try{
+
+            if(
+                typeof VAERO !== "undefined" &&
+                VAERO.engine
+            ){
+
+                return VAERO.engine;
+
+            }
+
+        } catch(error){
+
+            /* fallback */
+        }
+
+
+        return (
+            window.Engine ||
+            null
+        );
+
+    },
 
 
     /* =====================================================
@@ -38,8 +110,46 @@ const BrainAwareness = {
                 .toLowerCase();
 
 
-        return normalized ||
-            "home";
+        return (
+            normalized ||
+            "home"
+        );
+
+    },
+
+
+    normalizeScreen(screen){
+
+        const normalized =
+            String(
+                screen ?? ""
+            )
+                .trim()
+                .toLowerCase();
+
+
+        return (
+            normalized ||
+            "home"
+        );
+
+    },
+
+
+    normalizePage(page){
+
+        const normalized =
+            String(
+                page ?? ""
+            )
+                .trim()
+                .toLowerCase();
+
+
+        return (
+            normalized ||
+            null
+        );
 
     },
 
@@ -61,8 +171,7 @@ const BrainAwareness = {
         try{
 
             if(
-                typeof structuredClone ===
-                "function"
+                typeof structuredClone === "function"
             ){
 
                 return structuredClone(
@@ -73,7 +182,7 @@ const BrainAwareness = {
 
         } catch(error){
 
-            /* JSON fallback below */
+            /* JSON fallback */
         }
 
 
@@ -87,19 +196,22 @@ const BrainAwareness = {
 
         } catch(error){
 
-            return value;
+            return null;
 
         }
 
     },
 
 
+    /* =====================================================
+       METADATA
+    ===================================================== */
+
     normalizeMetadata(metadata){
 
         if(
             !metadata ||
-            typeof metadata !==
-                "object" ||
+            typeof metadata !== "object" ||
             Array.isArray(
                 metadata
             )
@@ -110,22 +222,134 @@ const BrainAwareness = {
         }
 
 
-        const cloned =
-            this.clone(
-                metadata
+        const safe = {};
+
+
+        Object.entries(
+            metadata
+        )
+            .slice(
+                0,
+                60
+            )
+            .forEach(
+                ([key,value]) => {
+
+                    const normalizedKey =
+                        String(
+                            key
+                        )
+                            .trim()
+                            .toLowerCase();
+
+
+                    const blocked =
+                        new Set([
+                            "password",
+                            "secret",
+                            "token",
+                            "authorization",
+                            "apikey",
+                            "api_key",
+                            "privatekey",
+                            "private_key",
+                            "cardnumber",
+                            "cvv"
+                        ]);
+
+
+                    if(
+                        blocked.has(
+                            normalizedKey
+                        )
+                    ){
+
+                        safe[key] =
+                            "[redacted]";
+
+                        return;
+
+                    }
+
+
+                    const cloned =
+                        this.clone(
+                            value
+                        );
+
+
+                    if(
+                        cloned !== undefined
+                    ){
+
+                        safe[key] =
+                            cloned;
+
+                    }
+
+                }
             );
 
 
-        return (
-            cloned &&
-            typeof cloned ===
-                "object" &&
-            !Array.isArray(
-                cloned
-            )
-        )
-            ? cloned
-            : {};
+        return safe;
+
+    },
+
+
+    /* =====================================================
+       ENGINE CONTEXT METADATA
+    ===================================================== */
+
+    buildEngineMetadata(
+        metadata = {}
+    ){
+
+        const engine =
+            this.getEngine();
+
+
+        const entity =
+            engine?.currentOpenedEntity ||
+            engine?.currentEntity ||
+            engine?.rootEntity ||
+            null;
+
+
+        const world =
+            engine?.currentWorld ||
+            null;
+
+
+        return this.normalizeMetadata({
+
+            ...metadata,
+
+            entityId:
+                metadata.entityId ||
+                entity?.id ||
+                null,
+
+            entityName:
+                metadata.entityName ||
+                entity?.name ||
+                null,
+
+            entityType:
+                metadata.entityType ||
+                entity?.type ||
+                null,
+
+            worldId:
+                metadata.worldId ||
+                world?.id ||
+                null,
+
+            worldName:
+                metadata.worldName ||
+                world?.name ||
+                null
+
+        });
 
     },
 
@@ -137,17 +361,40 @@ const BrainAwareness = {
     recordTransition({
         from,
         to,
-        metadata,
-        enteredAt
+        fromScreen = null,
+        toScreen = null,
+        page = null,
+        metadata = {},
+        enteredAt = null
     }){
 
         const transition = {
 
+            id:
+                `awareness_${Date.now()}_${Math.random()
+                    .toString(36)
+                    .slice(2,8)}`,
+
             from:
-                from || null,
+                from ||
+                null,
 
             to:
-                to || "home",
+                to ||
+                "home",
+
+            fromScreen:
+                fromScreen ||
+                null,
+
+            toScreen:
+                toScreen ||
+                to ||
+                "home",
+
+            page:
+                page ||
+                null,
 
             metadata:
                 this.normalizeMetadata(
@@ -155,7 +402,9 @@ const BrainAwareness = {
                 ),
 
             enteredAt:
-                Number(enteredAt) ||
+                Number(
+                    enteredAt
+                ) ||
                 Date.now()
 
         };
@@ -201,38 +450,81 @@ const BrainAwareness = {
             );
 
 
+        const engine =
+            this.getEngine();
+
+
+        const nextScreen =
+            this.normalizeScreen(
+                metadata.screen ||
+                engine?.currentView ||
+                nextApp
+            );
+
+
+        const nextPage =
+            this.normalizePage(
+                metadata.page ||
+                engine?.currentEntityPage ||
+                null
+            );
+
+
         const now =
             Date.now();
 
 
-        const previous =
+        const previousApp =
             this.currentApp ||
             "home";
 
 
-        /*
-         * Gerçek bir ekran/app değişimi varsa
-         * previousApp güncellenir.
-         */
+        const previousScreen =
+            this.currentScreen ||
+            previousApp;
 
-        if(
-            previous !==
-            nextApp
-        ){
+
+        const normalizedMetadata =
+            this.buildEngineMetadata(
+                metadata
+            );
+
+
+        const changed =
+            previousApp !== nextApp ||
+            previousScreen !== nextScreen ||
+            this.currentPage !== nextPage;
+
+
+        if(changed){
 
             this.previousApp =
-                previous;
+                previousApp;
+
+
+            this.previousScreen =
+                previousScreen;
 
 
             this.recordTransition({
 
                 from:
-                    previous,
+                    previousApp,
 
                 to:
                     nextApp,
 
-                metadata,
+                fromScreen:
+                    previousScreen,
+
+                toScreen:
+                    nextScreen,
+
+                page:
+                    nextPage,
+
+                metadata:
+                    normalizedMetadata,
 
                 enteredAt:
                     now
@@ -246,14 +538,26 @@ const BrainAwareness = {
             nextApp;
 
 
+        this.currentScreen =
+            nextScreen;
+
+
+        this.currentPage =
+            nextPage;
+
+
         this.metadata =
-            this.normalizeMetadata(
-                metadata
-            );
+            normalizedMetadata;
 
 
         this.enteredAt =
             now;
+
+
+        this.emit(
+            "brain:awareness:entered",
+            this.snapshot()
+        );
 
 
         return this.snapshot();
@@ -262,9 +566,48 @@ const BrainAwareness = {
 
 
     /* =====================================================
+       SCREEN UPDATE
+    ===================================================== */
+
+    setScreen(
+        screen,
+        page = null,
+        metadata = {}
+    ){
+
+        const nextScreen =
+            this.normalizeScreen(
+                screen
+            );
+
+
+        const nextPage =
+            this.normalizePage(
+                page
+            );
+
+
+        return this.enter(
+            this.currentApp ||
+            nextPage ||
+            nextScreen ||
+            "home",
+            {
+                ...metadata,
+
+                screen:
+                    nextScreen,
+
+                page:
+                    nextPage
+            }
+        );
+
+    },
+
+
+    /* =====================================================
        METADATA UPDATE
-       Aynı context içindeyken app değiştirmeden
-       awareness metadata güncellenebilir.
     ===================================================== */
 
     updateMetadata(
@@ -275,21 +618,92 @@ const BrainAwareness = {
     ){
 
         const nextMetadata =
-            this.normalizeMetadata(
+            this.buildEngineMetadata(
                 metadata
             );
 
 
         this.metadata =
             merge
-                ? {
+                ? this.normalizeMetadata({
                     ...this.metadata,
                     ...nextMetadata
-                }
+                })
                 : nextMetadata;
 
 
         return this.snapshot();
+
+    },
+
+
+    /* =====================================================
+       SYNC WITH ENGINE
+    ===================================================== */
+
+    syncFromEngine(
+        metadata = {}
+    ){
+
+        const engine =
+            this.getEngine();
+
+
+        if(!engine){
+            return this.snapshot();
+        }
+
+
+        const page =
+            engine.currentEntityPage ||
+            null;
+
+
+        const screen =
+            engine.currentView ||
+            "home";
+
+
+        let app =
+            page ||
+            screen ||
+            "home";
+
+
+        if(
+            screen === "vaero"
+        ){
+
+            app =
+                "vaero";
+
+        }
+
+
+        if(
+            screen === "applications"
+        ){
+
+            app =
+                "applications";
+
+        }
+
+
+        return this.enter(
+            app,
+            {
+                ...metadata,
+
+                screen,
+
+                page,
+
+                source:
+                    metadata.source ||
+                    "engine-sync"
+            }
+        );
 
     },
 
@@ -304,6 +718,26 @@ const BrainAwareness = {
             this.currentApp ||
             "home"
         );
+
+    },
+
+
+    currentContext(){
+
+        return {
+
+            app:
+                this.current(),
+
+            screen:
+                this.currentScreen ||
+                "home",
+
+            page:
+                this.currentPage ||
+                null
+
+        };
 
     },
 
@@ -351,8 +785,19 @@ const BrainAwareness = {
             app:
                 this.current(),
 
+            screen:
+                this.currentScreen ||
+                "home",
+
+            page:
+                this.currentPage ||
+                null,
+
             previousApp:
                 this.previousApp,
+
+            previousScreen:
+                this.previousScreen,
 
             metadata:
                 this.normalizeMetadata(
@@ -363,7 +808,10 @@ const BrainAwareness = {
                 this.enteredAt,
 
             duration:
-                this.duration()
+                this.duration(),
+
+            booted:
+                this.booted
 
         };
 
@@ -374,22 +822,25 @@ const BrainAwareness = {
        HISTORY
     ===================================================== */
 
-    history(limit = 6){
+    history(limit = 8){
 
         const safeLimit =
             Math.max(
                 1,
                 Math.min(
                     this.historyLimit,
-                    Number(limit) || 6
+                    Number(limit) || 8
                 )
             );
 
 
-        return this.clone(
-            this.transitions.slice(
-                -safeLimit
-            )
+        return (
+            this.clone(
+                this.transitions.slice(
+                    -safeLimit
+                )
+            ) ||
+            []
         );
 
     },
@@ -398,8 +849,7 @@ const BrainAwareness = {
     lastTransition(){
 
         if(
-            this.transitions.length ===
-            0
+            this.transitions.length === 0
         ){
             return null;
         }
@@ -410,6 +860,189 @@ const BrainAwareness = {
                 this.transitions.length - 1
             ]
         );
+
+    },
+
+
+    /* =====================================================
+       EVENT
+    ===================================================== */
+
+    emit(
+        eventName,
+        payload
+    ){
+
+        try{
+
+            if(
+                typeof VAERO !== "undefined" &&
+                typeof VAERO.emit === "function"
+            ){
+
+                VAERO.emit(
+                    eventName,
+                    payload
+                );
+
+
+                return true;
+
+            }
+
+        } catch(error){
+
+            /* fallback */
+        }
+
+
+        try{
+
+            const events =
+                this.getService(
+                    "events"
+                );
+
+
+            events?.emit?.(
+                eventName,
+                payload
+            );
+
+
+            return true;
+
+        } catch(error){
+
+            return false;
+
+        }
+
+    },
+
+
+    /* =====================================================
+       BOOT
+    ===================================================== */
+
+    boot(){
+
+        if(this.booted){
+
+            return this.snapshot();
+
+        }
+
+
+        this.booted =
+            true;
+
+
+        this.bootedAt =
+            Date.now();
+
+
+        const events =
+            this.getService(
+                "events"
+            );
+
+
+        if(
+            events &&
+            typeof events.on === "function"
+        ){
+
+            const sync =
+                source => {
+
+                    try{
+
+                        this.syncFromEngine({
+                            source
+                        });
+
+                    } catch(error){
+
+                        console.warn(
+                            `Brain Awareness sync başarısız: ${source}`,
+                            error
+                        );
+
+                    }
+
+                };
+
+
+            const subscriptions = [
+
+                "engine.started",
+
+                "engine:view:changed",
+
+                "engine.view.changed",
+
+                "entity:mounted",
+
+                "entity.mounted",
+
+                "world:opened",
+
+                "world.opened",
+
+                "application:opened",
+
+                "application.opened"
+
+            ];
+
+
+            subscriptions.forEach(
+                eventName => {
+
+                    try{
+
+                        events.on(
+                            eventName,
+                            () => {
+
+                                sync(
+                                    eventName
+                                );
+
+                            }
+                        );
+
+                    } catch(error){
+
+                        /* optional event */
+                    }
+
+                }
+            );
+
+        }
+
+
+        this.syncFromEngine({
+            source:
+                "brain-awareness:boot"
+        });
+
+
+        this.emit(
+            "brain:awareness:online",
+            {
+                bootedAt:
+                    this.bootedAt,
+
+                state:
+                    this.snapshot()
+            }
+        );
+
+
+        return this.snapshot();
 
     },
 
@@ -442,6 +1075,15 @@ const BrainAwareness = {
                 to:
                     "home",
 
+                fromScreen:
+                    this.currentScreen,
+
+                toScreen:
+                    "home",
+
+                page:
+                    null,
+
                 metadata:{},
 
                 enteredAt:
@@ -456,8 +1098,20 @@ const BrainAwareness = {
             previous;
 
 
+        this.previousScreen =
+            this.currentScreen;
+
+
         this.currentApp =
             "home";
+
+
+        this.currentScreen =
+            "home";
+
+
+        this.currentPage =
+            null;
 
 
         this.metadata =
@@ -475,7 +1129,6 @@ const BrainAwareness = {
 
     /* =====================================================
        HARD RESET
-       Debug / test için geçmiş dahil temizler.
     ===================================================== */
 
     clear(){
@@ -483,20 +1136,87 @@ const BrainAwareness = {
         this.currentApp =
             "home";
 
+
+        this.currentScreen =
+            "home";
+
+
+        this.currentPage =
+            null;
+
+
         this.previousApp =
             null;
+
+
+        this.previousScreen =
+            null;
+
 
         this.metadata =
             {};
 
+
         this.enteredAt =
             Date.now();
+
 
         this.transitions =
             [];
 
 
         return this.snapshot();
+
+    },
+
+
+    /* =====================================================
+       REPORT
+    ===================================================== */
+
+    report(){
+
+        const snapshot =
+            this.snapshot();
+
+
+        return {
+
+            booted:
+                this.booted,
+
+            bootedAt:
+                this.bootedAt,
+
+            app:
+                snapshot.app,
+
+            screen:
+                snapshot.screen,
+
+            page:
+                snapshot.page,
+
+            previousApp:
+                snapshot.previousApp,
+
+            duration:
+                snapshot.duration,
+
+            transitions:
+                this.transitions.length,
+
+            entityId:
+                snapshot.metadata
+                    ?.entityId ||
+                null,
+
+            worldId:
+                snapshot.metadata
+                    ?.worldId ||
+                null
+
+        };
 
     }
 
@@ -511,3 +1231,21 @@ VAERO.register(
 
 window.BrainAwareness =
     BrainAwareness;
+
+
+/* =========================================================
+   BOOT
+========================================================= */
+
+try{
+
+    BrainAwareness.boot();
+
+} catch(error){
+
+    console.warn(
+        "Brain Awareness boot başarısız:",
+        error
+    );
+
+}
