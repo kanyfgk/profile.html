@@ -1768,32 +1768,31 @@ const Actions = {
         this.getEngine();
 
 
-    if(!engine){
+    if(
+        !engine ||
+        typeof engine.openSystemPage !==
+            "function"
+    ){
         return false;
     }
 
 
-    engine.currentWorld =
-        null;
-
-    engine.currentOpenedEntity =
-        null;
-
-    engine.currentEntityPage =
-        "vaero";
+    const opened =
+        engine.openSystemPage(
+            "vaero"
+        );
 
 
-    engine.mount(
-        engine.currentEntity
-    );
+    if(opened){
+
+        this.syncAwareness(
+            "vaero"
+        );
+
+    }
 
 
-    this.syncAwareness(
-        "vaero"
-    );
-
-
-    return true;
+    return opened;
 
 },
 
@@ -1804,35 +1803,33 @@ openApplicationsApp(){
         this.getEngine();
 
 
-    if(!engine){
+    if(
+        !engine ||
+        typeof engine.openSystemPage !==
+            "function"
+    ){
         return false;
     }
 
 
-    engine.currentWorld =
-        null;
-
-    engine.currentOpenedEntity =
-        null;
-
-    engine.currentEntityPage =
-        "applications";
+    const opened =
+        engine.openSystemPage(
+            "applications"
+        );
 
 
-    engine.mount(
-        engine.currentEntity
-    );
+    if(opened){
+
+        this.syncAwareness(
+            "applications"
+        );
+
+    }
 
 
-    this.syncAwareness(
-        "applications"
-    );
-
-
-    return true;
+    return opened;
 
 },
-
 
 getVaeroPaymentCore(){
 
@@ -4857,42 +4854,46 @@ document.addEventListener(
 
                 break;
 
-              case "app:applications":
+              case "profile:save":
+
+    Actions.saveProfile();
+    break;
+
+
+case "discovery:restart":
+
+    Actions.restartDiscovery();
+    break;
+
+
+/* ---------------------------------------------
+   VAERO SYSTEM APPLICATIONS
+--------------------------------------------- */
+
+case "app:applications":
 
     Actions.openApplicationsApp();
     break;
 
 
-            case "profile:save":
+case "app:vaero":
 
-                Actions.saveProfile();
-                break;
-
-
-            case "discovery:restart":
-
-                Actions.restartDiscovery();
-                break;
+    Actions.openVaeroApp();
+    break;
 
 
-            /* ---------------------------------------------
-               VAERO PAYMENT CORE
-            --------------------------------------------- */
+/* ---------------------------------------------
+   VAERO PAYMENT CORE
+--------------------------------------------- */
 
-            case "app:vaero":
+case "vaero:payment:method":
 
-                Actions.openVaeroApp();
-                break;
+    Actions.selectVaeroPaymentMethod(
+        button.dataset
+            .paymentMethod
+    );
 
-
-            case "vaero:payment:method":
-
-                Actions.selectVaeroPaymentMethod(
-                    button.dataset
-                        .paymentMethod
-                );
-
-                break;
+    break;
 
 
             case "vaero:payment:provider":
