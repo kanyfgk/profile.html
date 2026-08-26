@@ -15,6 +15,16 @@ const Renderer = {
 
     getRoot(){
 
+        if(
+            typeof document ===
+                "undefined"
+        ){
+
+            return null;
+
+        }
+
+
         return document.getElementById(
             this.mountId
         );
@@ -31,15 +41,21 @@ const Renderer = {
         try{
 
             if(
-                typeof VAERO === "undefined" ||
-                typeof VAERO.get !== "function"
+                typeof VAERO ===
+                    "undefined" ||
+                typeof VAERO.get !==
+                    "function"
             ){
+
                 return null;
+
             }
 
 
             return (
-                VAERO.get(name) ||
+                VAERO.get(
+                    name
+                ) ||
                 null
             );
 
@@ -50,9 +66,48 @@ const Renderer = {
                 error
             );
 
+
             return null;
 
         }
+
+    },
+
+
+    /* =====================================================
+       SAFE ESCAPE
+    ===================================================== */
+
+    escapeHTML(value){
+
+        const text =
+            String(
+                value ??
+                ""
+            );
+
+
+        return text
+            .replace(
+                /&/g,
+                "&amp;"
+            )
+            .replace(
+                /</g,
+                "&lt;"
+            )
+            .replace(
+                />/g,
+                "&gt;"
+            )
+            .replace(
+                /"/g,
+                "&quot;"
+            )
+            .replace(
+                /'/g,
+                "&#039;"
+            );
 
     },
 
@@ -72,26 +127,101 @@ const Renderer = {
                 "function"
         ){
 
-            return components.errorState(
-                message
-            );
+            try{
+
+                return components.errorState(
+                    message
+                );
+
+            } catch(error){
+
+                /* fallback */
+
+            }
 
         }
 
 
+        const safeMessage =
+            this.escapeHTML(
+                message ||
+                "Bu ekran şu anda açılamıyor."
+            );
+
+
         return `
-            <section class="section">
+            <section class="section renderer-error-state">
 
                 <div class="eyebrow">
                     EKRAN HATASI
                 </div>
 
                 <h1>
-                    ${String(
-                        message ||
-                        "Bu ekran şu anda açılamıyor."
+                    ${safeMessage}
+                </h1>
+
+            </section>
+        `;
+
+    },
+
+
+    /* =====================================================
+       EMPTY STATE
+    ===================================================== */
+
+    renderUnavailable(
+        components,
+        title,
+        description = ""
+    ){
+
+        if(
+            components &&
+            typeof components.emptyState ===
+                "function"
+        ){
+
+            try{
+
+                return components.emptyState({
+                    title,
+                    description
+                });
+
+            } catch(error){
+
+                /* fallback */
+
+            }
+
+        }
+
+
+        return `
+            <section class="section renderer-empty-state">
+
+                <div class="eyebrow">
+                    VAERO
+                </div>
+
+                <h1>
+                    ${this.escapeHTML(
+                        title
                     )}
                 </h1>
+
+                ${
+                    description
+                        ? `
+                            <p>
+                                ${this.escapeHTML(
+                                    description
+                                )}
+                            </p>
+                        `
+                        : ""
+                }
 
             </section>
         `;
@@ -104,6 +234,7 @@ const Renderer = {
     ===================================================== */
 
     syncDocumentState(
+        engine,
         view,
         page
     ){
@@ -113,7 +244,9 @@ const Renderer = {
                 "undefined" ||
             !document.body
         ){
+
             return false;
+
         }
 
 
@@ -129,12 +262,136 @@ const Renderer = {
 
         } else {
 
-            delete document.body.dataset.enginePage;
+            delete document
+                .body
+                .dataset
+                .enginePage;
+
+        }
+
+
+        document.body.dataset.worldEdit =
+            engine?.worldEditMode
+                ? "true"
+                : "false";
+
+
+        document.body.dataset.entityEdit =
+            engine?.entityEditMode
+                ? "true"
+                : "false";
+
+
+        document.body.dataset.entityCreate =
+            engine?.entityCreateMode
+                ? "true"
+                : "false";
+
+
+        if(
+            engine?.currentWorld?.id
+        ){
+
+            document.body.dataset.worldId =
+                String(
+                    engine.currentWorld.id
+                );
+
+        } else {
+
+            delete document
+                .body
+                .dataset
+                .worldId;
+
+        }
+
+
+        if(
+            engine
+                ?.currentOpenedEntity
+                ?.id
+        ){
+
+            document.body.dataset.entityId =
+                String(
+                    engine
+                        .currentOpenedEntity
+                        .id
+                );
+
+        } else {
+
+            delete document
+                .body
+                .dataset
+                .entityId;
 
         }
 
 
         return true;
+
+    },
+
+
+    /* =====================================================
+       SYSTEM APPLICATION LOOKUP
+    ===================================================== */
+
+    getSystemApplication(page){
+
+        const normalized =
+            String(
+                page ||
+                ""
+            )
+                .trim()
+                .toLowerCase();
+
+
+        const apps = {
+
+            vaero: () =>
+                window.VaeroApp ||
+                this.getService(
+                    "vaeroApp"
+                ),
+
+            applications: () =>
+                window.ApplicationsApp ||
+                this.getService(
+                    "applicationsApp"
+                )
+
+        };
+
+
+        const getter =
+            apps[
+                normalized
+            ];
+
+
+        if(!getter){
+
+            return null;
+
+        }
+
+
+        try{
+
+            return (
+                getter() ||
+                null
+            );
+
+        } catch(error){
+
+            return null;
+
+        }
 
     },
 
@@ -148,57 +405,145 @@ const Renderer = {
         components
     ){
 
-        switch(page){
-
-            /* -------------------------------------------------
-               VAERO SYSTEM / PAYMENT CORE
-            ------------------------------------------------- */
-
-            case "vaero":
-
-                if(
-                    window.VaeroApp &&
-                    typeof window.VaeroApp.render ===
-                        "function"
-                ){
-
-                    return window.VaeroApp.render();
-
-                }
+        const normalized =
+            String(
+                page ||
+                ""
+            )
+                .trim()
+                .toLowerCase();
 
 
-                return this.renderError(
-                    components,
-                    "VAERO sistem katmanı yüklenemedi."
+        const application =
+            this.getSystemApplication(
+                normalized
+            );
+
+
+        if(!application){
+
+            return null;
+
+        }
+
+
+        if(
+            typeof application.render !==
+                "function"
+        ){
+
+            return this.renderError(
+                components,
+                `${normalized} uygulaması render API sunmuyor.`
+            );
+
+        }
+
+
+        try{
+
+            const result =
+                application.render();
+
+
+            if(
+                typeof result ===
+                    "string"
+            ){
+
+                return result;
+
+            }
+
+
+            return this.renderError(
+                components,
+                `${normalized} uygulaması geçerli bir ekran üretmedi.`
+            );
+
+        } catch(error){
+
+            console.error(
+                `System application render failed: ${normalized}`,
+                error
+            );
+
+
+            return this.renderError(
+                components,
+                `${normalized} uygulaması açılamadı.`
+            );
+
+        }
+
+    },
+
+
+    /* =====================================================
+       COMPONENT CALL
+    ===================================================== */
+
+    callComponent(
+        components,
+        method,
+        args = [],
+        fallbackMessage =
+            "Bu görünüm şu anda kullanılamıyor."
+    ){
+
+        if(
+            !components ||
+            typeof components[
+                method
+            ] !==
+                "function"
+        ){
+
+            return this.renderError(
+                components,
+                fallbackMessage
+            );
+
+        }
+
+
+        try{
+
+            const result =
+                components[
+                    method
+                ](
+                    ...args
                 );
 
 
-            /* -------------------------------------------------
-               APPLICATIONS
-            ------------------------------------------------- */
-
-            case "applications":
-
-                if(
-                    window.ApplicationsApp &&
-                    typeof window.ApplicationsApp.render ===
-                        "function"
-                ){
-
-                    return window.ApplicationsApp.render();
-
-                }
-
+            if(
+                typeof result !==
+                    "string"
+            ){
 
                 return this.renderError(
                     components,
-                    "Applications katmanı yüklenemedi."
+                    fallbackMessage
                 );
 
+            }
 
-            default:
 
-                return null;
+            return result;
+
+        } catch(error){
+
+            console.error(
+                `Renderer component failed: ${method}`,
+                error
+            );
+
+
+            return this.renderError(
+                components,
+                fallbackMessage
+            );
 
         }
 
@@ -221,6 +566,7 @@ const Renderer = {
                 "Engine root not found."
             );
 
+
             return false;
 
         }
@@ -238,13 +584,26 @@ const Renderer = {
                 "Components service not found."
             );
 
+
             return false;
 
         }
 
 
         const engine =
-            VAERO.engine;
+            (
+                typeof VAERO !==
+                    "undefined"
+
+                    ? VAERO.engine
+
+                    : null
+            ) ||
+            this.getService(
+                "engine"
+            ) ||
+            window.Engine ||
+            null;
 
 
         if(!engine){
@@ -253,6 +612,7 @@ const Renderer = {
                 "Engine state is not available."
             );
 
+
             return false;
 
         }
@@ -260,20 +620,41 @@ const Renderer = {
 
         const rootEntity =
             engine.rootEntity ||
-            entity;
-
-
-        const view =
-            engine.currentView ||
-            "home";
-
-
-        const currentEntityPage =
-            engine.currentEntityPage ||
+            entity ||
             null;
 
 
+        if(!rootEntity){
+
+            root.innerHTML =
+                this.renderError(
+                    components,
+                    "Engine root entity bulunamadı."
+                );
+
+
+            return false;
+
+        }
+
+
+        const view =
+            String(
+                engine.currentView ||
+                "home"
+            );
+
+
+        const currentEntityPage =
+            engine.currentEntityPage
+                ? String(
+                    engine.currentEntityPage
+                )
+                : null;
+
+
         this.syncDocumentState(
+            engine,
             view,
             currentEntityPage
         );
@@ -310,12 +691,6 @@ const Renderer = {
         }
 
 
-        /*
-         * Rendering sonucunun yanlışlıkla
-         * undefined/null olması halinde shell içine
-         * bozuk içerik basılmasını engeller.
-         */
-
         if(
             typeof screenHTML !==
                 "string"
@@ -341,13 +716,27 @@ const Renderer = {
                     "function"
             ){
 
-                navigationHTML =
+                const navigation =
                     components.navigation({
                         view,
                         page:
-                            currentEntityPage
-                    }) ||
-                    "";
+                            currentEntityPage,
+
+                        world:
+                            engine.currentWorld ||
+                            null,
+
+                        entity:
+                            engine.currentOpenedEntity ||
+                            null
+                    });
+
+
+                navigationHTML =
+                    typeof navigation ===
+                        "string"
+                        ? navigation
+                        : "";
 
             }
 
@@ -364,11 +753,37 @@ const Renderer = {
         root.innerHTML = `
             <main
                 class="vaero-shell"
-                data-engine-view="${view}"
-                data-engine-page="${currentEntityPage || ""}"
+                data-engine-view="${this.escapeHTML(
+                    view
+                )}"
+                data-engine-page="${this.escapeHTML(
+                    currentEntityPage ||
+                    ""
+                )}"
+                data-world-edit="${
+                    engine.worldEditMode
+                        ? "true"
+                        : "false"
+                }"
+                data-entity-edit="${
+                    engine.entityEditMode
+                        ? "true"
+                        : "false"
+                }"
+                data-entity-create="${
+                    engine.entityCreateMode
+                        ? "true"
+                        : "false"
+                }"
             >
 
-                <div class="engine-screen">
+                <div
+                    class="engine-screen"
+                    data-engine-screen="${this.escapeHTML(
+                        currentEntityPage ||
+                        view
+                    )}"
+                >
                     ${screenHTML}
                 </div>
 
@@ -376,6 +791,15 @@ const Renderer = {
 
             </main>
         `;
+
+
+        this.afterRender({
+            root,
+            engine,
+            view,
+            page:
+                currentEntityPage
+        });
 
 
         return true;
@@ -436,9 +860,14 @@ const Renderer = {
 
             case "identity":
 
-                return components.entityIdentity(
-                    engine.currentOpenedEntity ||
-                    rootEntity
+                return this.callComponent(
+                    components,
+                    "entityIdentity",
+                    [
+                        engine.currentOpenedEntity ||
+                        rootEntity
+                    ],
+                    "Kimlik görünümü açılamadı."
                 );
 
 
@@ -448,9 +877,14 @@ const Renderer = {
 
             case "profile":
 
-                return components.entityProfile(
-                    engine.currentOpenedEntity ||
-                    rootEntity
+                return this.callComponent(
+                    components,
+                    "entityProfile",
+                    [
+                        engine.currentOpenedEntity ||
+                        rootEntity
+                    ],
+                    "Profil görünümü açılamadı."
                 );
 
 
@@ -460,8 +894,13 @@ const Renderer = {
 
             case "create":
 
-                return components.createView(
-                    rootEntity
+                return this.callComponent(
+                    components,
+                    "createView",
+                    [
+                        rootEntity
+                    ],
+                    "Varlık oluşturma ekranı açılamadı."
                 );
 
 
@@ -477,18 +916,38 @@ const Renderer = {
                     );
 
 
-                const worlds =
-                    worldService &&
-                    typeof worldService.all ===
-                        "function"
-                        ? worldService.all()
-                        : [];
+                let worlds =
+                    [];
 
 
-                return components.worldsView(
-                    Array.isArray(worlds)
-                        ? worlds
-                        : []
+                try{
+
+                    worlds =
+                        worldService &&
+                        typeof worldService.all ===
+                            "function"
+                            ? worldService.all()
+                            : [];
+
+                } catch(error){
+
+                    worlds =
+                        [];
+
+                }
+
+
+                return this.callComponent(
+                    components,
+                    "worldsView",
+                    [
+                        Array.isArray(
+                            worlds
+                        )
+                            ? worlds
+                            : []
+                    ],
+                    "Dünyalar görünümü açılamadı."
                 );
 
             }
@@ -500,9 +959,13 @@ const Renderer = {
 
             case "world": {
 
+                const currentWorld =
+                    engine.currentWorld;
+
+
                 if(
-                    !engine.currentWorld ||
-                    !engine.currentWorld.id
+                    !currentWorld ||
+                    !currentWorld.id
                 ){
 
                     console.warn(
@@ -516,25 +979,68 @@ const Renderer = {
                         );
 
 
-                    const worlds =
-                        worldService &&
-                        typeof worldService.all ===
-                            "function"
-                            ? worldService.all()
-                            : [];
+                    let worlds =
+                        [];
 
 
-                    return components.worldsView(
-                        Array.isArray(worlds)
-                            ? worlds
-                            : []
+                    try{
+
+                        worlds =
+                            worldService &&
+                            typeof worldService.all ===
+                                "function"
+                                ? worldService.all()
+                                : [];
+
+                    } catch(error){
+
+                        worlds =
+                            [];
+
+                    }
+
+
+                    return this.callComponent(
+                        components,
+                        "worldsView",
+                        [
+                            Array.isArray(
+                                worlds
+                            )
+                                ? worlds
+                                : []
+                        ],
+                        "Dünya bulunamadı."
                     );
 
                 }
 
 
-                return components.worldView(
-                    engine.currentWorld
+                if(
+                    engine.worldEditMode &&
+                    typeof components.worldEditor ===
+                        "function"
+                ){
+
+                    return this.callComponent(
+                        components,
+                        "worldEditor",
+                        [
+                            currentWorld
+                        ],
+                        "Dünya düzenleyicisi açılamadı."
+                    );
+
+                }
+
+
+                return this.callComponent(
+                    components,
+                    "worldView",
+                    [
+                        currentWorld
+                    ],
+                    "Dünya görünümü açılamadı."
                 );
 
             }
@@ -544,11 +1050,13 @@ const Renderer = {
                ENTITY
             ------------------------------------------------- */
 
-            case "entity":
+            case "entity": {
 
-                if(
-                    !engine.currentOpenedEntity
-                ){
+                const openedEntity =
+                    engine.currentOpenedEntity;
+
+
+                if(!openedEntity){
 
                     return this.renderError(
                         components,
@@ -558,9 +1066,34 @@ const Renderer = {
                 }
 
 
-                return components.entityApp(
-                    engine.currentOpenedEntity
+                if(
+                    engine.entityEditMode &&
+                    typeof components.entityEditor ===
+                        "function"
+                ){
+
+                    return this.callComponent(
+                        components,
+                        "entityEditor",
+                        [
+                            openedEntity
+                        ],
+                        "Varlık düzenleyicisi açılamadı."
+                    );
+
+                }
+
+
+                return this.callComponent(
+                    components,
+                    "entityApp",
+                    [
+                        openedEntity
+                    ],
+                    "Varlık görünümü açılamadı."
                 );
+
+            }
 
 
             /* -------------------------------------------------
@@ -568,13 +1101,162 @@ const Renderer = {
             ------------------------------------------------- */
 
             case "home":
+
+                return this.callComponent(
+                    components,
+                    "home",
+                    [
+                        rootEntity
+                    ],
+                    "VAERO ana ekranı açılamadı."
+                );
+
+
             default:
 
-                return components.home(
-                    rootEntity
+                console.warn(
+                    "Unknown Engine view:",
+                    view
+                );
+
+
+                return this.callComponent(
+                    components,
+                    "home",
+                    [
+                        rootEntity
+                    ],
+                    "VAERO ana ekranı açılamadı."
                 );
 
         }
+
+    },
+
+
+    /* =====================================================
+       AFTER RENDER
+    ===================================================== */
+
+    afterRender({
+        root,
+        engine,
+        view,
+        page
+    }){
+
+        try{
+
+            const applications =
+                window.ApplicationsApp ||
+                this.getService(
+                    "applicationsApp"
+                );
+
+
+            if(
+                page ===
+                    "applications" &&
+                applications &&
+                typeof applications.afterRender ===
+                    "function"
+            ){
+
+                applications.afterRender(
+                    root
+                );
+
+            }
+
+        } catch(error){
+
+            console.warn(
+                "Applications post-render failed:",
+                error
+            );
+
+        }
+
+
+        try{
+
+            const brainApp =
+                window.BrainApp ||
+                this.getService(
+                    "brainApp"
+                );
+
+
+            if(
+                brainApp &&
+                typeof brainApp.refresh ===
+                    "function"
+            ){
+
+                brainApp.refresh();
+
+            }
+
+        } catch(error){
+
+            /* optional */
+
+        }
+
+
+        try{
+
+            const events =
+                this.getService(
+                    "events"
+                );
+
+
+            if(
+                events &&
+                typeof events.emit ===
+                    "function"
+            ){
+
+                events.emit(
+                    "renderer.rendered",
+                    {
+
+                        view,
+
+                        page:
+                            page ||
+                            null,
+
+                        worldId:
+                            engine.currentWorld?.id ||
+                            null,
+
+                        entityId:
+                            engine
+                                .currentOpenedEntity
+                                ?.id ||
+                            engine
+                                .currentEntity
+                                ?.id ||
+                            null,
+
+                        time:
+                            Date.now()
+
+                    }
+                );
+
+            }
+
+        } catch(error){
+
+            /* non-fatal */
+
+        }
+
+
+        return true;
 
     }
 
@@ -585,14 +1267,39 @@ const Renderer = {
    VAERO BINDING
 ========================================================= */
 
-VAERO.renderer =
-    Renderer;
+try{
+
+    if(
+        typeof VAERO !==
+            "undefined"
+    ){
+
+        VAERO.renderer =
+            Renderer;
 
 
-VAERO.register(
-    "renderer",
-    Renderer
-);
+        if(
+            typeof VAERO.register ===
+                "function"
+        ){
+
+            VAERO.register(
+                "renderer",
+                Renderer
+            );
+
+        }
+
+    }
+
+} catch(error){
+
+    console.warn(
+        "Renderer VAERO binding failed:",
+        error
+    );
+
+}
 
 
 window.Renderer =
