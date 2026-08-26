@@ -1,11 +1,12 @@
 /* =========================================================
    VAERO ENGINE — GLOBAL VIEWPORT SHELL
-   Stable Desktop + Mobile Geometry
+   PREMIUM SYSTEM GEOMETRY
+   Stable Desktop + Mobile + Safe Area Architecture
 ========================================================= */
 
 
 /* =========================================================
-   ROOT VIEWPORT
+   01. ROOT VIEWPORT
 ========================================================= */
 
 html{
@@ -20,9 +21,23 @@ html{
     overflow:hidden;
 
     background:#050c14;
+
+    overscroll-behavior:none;
+
+    -webkit-text-size-adjust:100%;
+    text-size-adjust:100%;
 }
 
+
+/* =========================================================
+   BODY VIEWPORT
+========================================================= */
+
 body{
+    position:fixed;
+
+    inset:0;
+
     width:100%;
     height:100%;
     min-height:100%;
@@ -34,24 +49,34 @@ body{
     overflow:hidden;
 
     display:flex;
+
     align-items:stretch;
     justify-content:center;
 
     background:
         radial-gradient(
-            circle at 50% -8%,
-            rgba(29,61,92,.95) 0%,
-            rgba(10,23,36,.98) 42%,
+            circle at 50% -10%,
+            rgba(34,69,101,.92) 0%,
+            rgba(10,24,38,.985) 39%,
             rgba(5,12,20,1) 100%
         );
 
-    color:var(--text);
+    color:
+        var(
+            --text,
+            #f5f5f2
+        );
 
     touch-action:manipulation;
 
     overscroll-behavior:none;
 
-    -webkit-text-size-adjust:100%;
+    -webkit-overflow-scrolling:auto;
+
+    -webkit-font-smoothing:antialiased;
+    -moz-osx-font-smoothing:grayscale;
+
+    text-rendering:optimizeLegibility;
 }
 
 
@@ -67,14 +92,35 @@ body{
 
 
 /* =========================================================
+   GLOBAL MEDIA SAFETY
+========================================================= */
+
+img,
+svg,
+video,
+canvas,
+picture{
+    max-width:100%;
+}
+
+img,
+video,
+canvas{
+    height:auto;
+}
+
+
+/* =========================================================
    ENGINE ROOT
 ========================================================= */
 
 #engine{
     position:relative;
 
+    isolation:isolate;
+
     width:100%;
-    height:100dvh;
+    height:100%;
 
     min-width:0;
     min-height:0;
@@ -89,9 +135,70 @@ body{
         12px;
 
     display:flex;
+
     flex-direction:column;
 
     overflow:hidden;
+
+    contain:
+        layout
+        paint;
+}
+
+
+/* =========================================================
+   ENGINE BACKDROP
+========================================================= */
+
+#engine::before{
+    content:"";
+
+    position:absolute;
+
+    inset:0;
+
+    z-index:-2;
+
+    pointer-events:none;
+
+    background:
+        radial-gradient(
+            circle at 78% 9%,
+            rgba(73,135,190,.035),
+            transparent 27%
+        ),
+
+        radial-gradient(
+            circle at 18% 64%,
+            rgba(194,151,81,.018),
+            transparent 31%
+        );
+}
+
+#engine::after{
+    content:"";
+
+    position:absolute;
+
+    top:-160px;
+    left:50%;
+
+    z-index:-1;
+
+    width:min(780px,76vw);
+    height:330px;
+
+    transform:
+        translateX(-50%);
+
+    pointer-events:none;
+
+    border-radius:50%;
+
+    background:
+        rgba(55,116,168,.025);
+
+    filter:blur(70px);
 }
 
 
@@ -108,9 +215,13 @@ body{
     min-width:0;
     min-height:0;
 
-    flex:1 1 auto;
+    flex:
+        1
+        1
+        auto;
 
     display:flex;
+
     flex-direction:column;
 
     overflow:hidden;
@@ -127,15 +238,21 @@ body{
     position:relative;
 
     width:100%;
+    height:100%;
 
     min-width:0;
     min-height:0;
 
-    flex:1 1 auto;
+    flex:
+        1
+        1
+        auto;
+
+    display:block;
 
     overflow:hidden;
 
-    display:block;
+    overscroll-behavior:none;
 }
 
 
@@ -146,13 +263,28 @@ body{
 .engine-page,
 .vaero-engine-home,
 .applications-app{
+    position:relative;
+
     width:100%;
     height:100%;
 
     min-width:0;
     min-height:0;
 
+    max-width:100%;
+
     overflow:hidden;
+}
+
+
+/* =========================================================
+   ENGINE PAGE
+========================================================= */
+
+.engine-page{
+    display:flex;
+
+    flex-direction:column;
 }
 
 
@@ -161,12 +293,15 @@ body{
 ========================================================= */
 
 .section{
+    position:relative;
+
     width:100%;
     height:auto;
 
     max-width:100%;
 
     min-width:0;
+    min-height:0;
 
     padding:20px;
 
@@ -186,31 +321,137 @@ body{
         );
 
     box-shadow:
-        inset 0 1px 0
+        inset
+        0
+        1px
+        0
         rgba(255,255,255,.018),
 
-        0 18px 48px
+        0
+        18px
+        48px
         rgba(0,0,0,.2);
+
+    backdrop-filter:blur(16px);
+    -webkit-backdrop-filter:blur(16px);
 }
 
 
 /* =========================================================
-   SCROLLABLE INTERNAL AREAS
+   SECTION INNER SAFETY
+========================================================= */
+
+.section > *{
+    min-width:0;
+}
+
+
+/* =========================================================
+   INTERNAL SCROLL ARCHITECTURE
 ========================================================= */
 
 .engine-scroll,
 .app-scroll,
 .panel-scroll{
+    position:relative;
+
+    width:100%;
+
+    min-width:0;
     min-height:0;
 
-    overflow-y:auto;
     overflow-x:hidden;
+    overflow-y:auto;
 
-    overscroll-behavior:contain;
+    overscroll-behavior-x:none;
+    overscroll-behavior-y:contain;
 
     -webkit-overflow-scrolling:touch;
 
     scrollbar-width:thin;
+
+    scrollbar-color:
+        rgba(255,255,255,.12)
+        transparent;
+}
+
+
+/* =========================================================
+   INTERNAL SCROLLBAR — WEBKIT
+========================================================= */
+
+.engine-scroll::-webkit-scrollbar,
+.app-scroll::-webkit-scrollbar,
+.panel-scroll::-webkit-scrollbar{
+    width:5px;
+    height:5px;
+}
+
+.engine-scroll::-webkit-scrollbar-track,
+.app-scroll::-webkit-scrollbar-track,
+.panel-scroll::-webkit-scrollbar-track{
+    background:transparent;
+}
+
+.engine-scroll::-webkit-scrollbar-thumb,
+.app-scroll::-webkit-scrollbar-thumb,
+.panel-scroll::-webkit-scrollbar-thumb{
+    border-radius:999px;
+
+    background:
+        rgba(255,255,255,.1);
+}
+
+.engine-scroll::-webkit-scrollbar-thumb:hover,
+.app-scroll::-webkit-scrollbar-thumb:hover,
+.panel-scroll::-webkit-scrollbar-thumb:hover{
+    background:
+        rgba(255,255,255,.16);
+}
+
+
+/* =========================================================
+   HIDDEN SCROLLBAR UTILITY
+========================================================= */
+
+.scroll-hidden{
+    scrollbar-width:none;
+}
+
+.scroll-hidden::-webkit-scrollbar{
+    display:none;
+}
+
+
+/* =========================================================
+   FLEX / GRID OVERFLOW SAFETY
+========================================================= */
+
+.vaero-shell,
+.engine-screen,
+.engine-page,
+.engine-scroll,
+.app-scroll,
+.panel-scroll,
+.section{
+    min-width:0;
+    min-height:0;
+}
+
+
+/* =========================================================
+   TEXT OVERFLOW SAFETY
+========================================================= */
+
+.engine-screen h1,
+.engine-screen h2,
+.engine-screen h3,
+.engine-screen h4,
+.engine-screen p,
+.engine-screen span,
+.engine-screen strong,
+.engine-screen small{
+    min-width:0;
 }
 
 
@@ -233,8 +474,53 @@ select{
     font-size:16px !important;
 }
 
+textarea{
+    resize:vertical;
+}
+
 button{
     -webkit-tap-highlight-color:transparent;
+}
+
+button,
+input,
+select,
+textarea{
+    outline-offset:2px;
+}
+
+
+/* =========================================================
+   BUTTON BASE SAFETY
+========================================================= */
+
+button{
+    max-width:100%;
+
+    border-radius:inherit;
+}
+
+
+/* =========================================================
+   LINKS
+========================================================= */
+
+a{
+    color:inherit;
+
+    -webkit-tap-highlight-color:transparent;
+}
+
+
+/* =========================================================
+   SELECTION
+========================================================= */
+
+::selection{
+    color:#f8f5ef;
+
+    background:
+        rgba(198,158,91,.25);
 }
 
 
@@ -265,8 +551,23 @@ button{
     #engine{
         max-width:1480px;
 
-        padding-left:24px;
-        padding-right:24px;
+        padding:
+            20px
+            24px
+            15px;
+    }
+
+}
+
+
+/* =========================================================
+   ULTRA WIDE
+========================================================= */
+
+@media (min-width:1800px){
+
+    #engine{
+        max-width:1540px;
     }
 
 }
@@ -304,24 +605,42 @@ button{
     body{
         width:100%;
         height:100%;
+
+        min-width:100%;
         min-height:100%;
+
+        overflow:hidden;
+    }
+
+    body{
+        position:fixed;
+
+        inset:0;
     }
 
     #engine{
         width:100%;
-        height:100dvh;
+        height:100%;
+
+        min-height:0;
 
         max-width:none;
 
         padding:
             max(
-                6px,
-                env(safe-area-inset-top)
+                5px,
+                env(
+                    safe-area-inset-top,
+                    0px
+                )
             )
             7px
             max(
-                6px,
-                env(safe-area-inset-bottom)
+                5px,
+                env(
+                    safe-area-inset-bottom,
+                    0px
+                )
             );
     }
 
@@ -334,15 +653,38 @@ button{
 
     .engine-screen{
         width:100%;
+        height:100%;
+
         min-height:0;
 
-        flex:1 1 auto;
+        flex:
+            1
+            1
+            auto;
+    }
+
+    .engine-page,
+    .vaero-engine-home,
+    .applications-app{
+        height:100%;
     }
 
     .section{
         padding:14px;
 
         border-radius:17px;
+    }
+
+    .engine-scroll,
+    .app-scroll,
+    .panel-scroll{
+        scrollbar-width:none;
+    }
+
+    .engine-scroll::-webkit-scrollbar,
+    .app-scroll::-webkit-scrollbar,
+    .panel-scroll::-webkit-scrollbar{
+        display:none;
     }
 
 }
@@ -369,6 +711,26 @@ button{
 
 
 /* =========================================================
+   EXTRA SMALL PHONES
+========================================================= */
+
+@media (max-width:350px){
+
+    #engine{
+        padding-left:4px;
+        padding-right:4px;
+    }
+
+    .section{
+        padding:10px;
+
+        border-radius:14px;
+    }
+
+}
+
+
+/* =========================================================
    SHORT VIEWPORTS
 ========================================================= */
 
@@ -388,24 +750,82 @@ button{
 
 
 /* =========================================================
+   VERY SHORT VIEWPORTS
+========================================================= */
+
+@media (max-height:620px){
+
+    #engine{
+        padding-top:4px;
+        padding-bottom:4px;
+    }
+
+    .section{
+        padding-top:10px;
+        padding-bottom:10px;
+    }
+
+}
+
+
+/* =========================================================
    LANDSCAPE MOBILE
 ========================================================= */
 
-@media (
+@media
+(
     max-height:520px
 )
-and (
+and
+(
     orientation:landscape
 ){
 
     #engine{
         padding:
             4px
-            8px;
+            max(
+                8px,
+                env(
+                    safe-area-inset-right,
+                    0px
+                )
+            )
+            4px
+            max(
+                8px,
+                env(
+                    safe-area-inset-left,
+                    0px
+                )
+            );
     }
 
     .section{
         padding:10px;
+
+        border-radius:15px;
+    }
+
+}
+
+
+/* =========================================================
+   TOUCH DEVICES
+========================================================= */
+
+@media (hover:none){
+
+    .engine-scroll,
+    .app-scroll,
+    .panel-scroll{
+        scrollbar-width:none;
+    }
+
+    .engine-scroll::-webkit-scrollbar,
+    .app-scroll::-webkit-scrollbar,
+    .panel-scroll::-webkit-scrollbar{
+        display:none;
     }
 
 }
@@ -421,4 +841,101 @@ and (
         scroll-behavior:auto;
     }
 
+    *,
+    *::before,
+    *::after{
+        scroll-behavior:auto !important;
+    }
+
 }
+
+
+/* =========================================================
+   HIGH CONTRAST SUPPORT
+========================================================= */
+
+@media (prefers-contrast:more){
+
+    .section{
+        border-color:
+            rgba(255,255,255,.13);
+    }
+
+}
+
+
+/* =========================================================
+   IOS / SAFARI VIEWPORT STABILITY
+========================================================= */
+
+@supports (-webkit-touch-callout:none){
+
+    html,
+    body,
+    #engine{
+        height:100%;
+    }
+
+    body{
+        min-height:
+            -webkit-fill-available;
+    }
+
+    #engine{
+        min-height:
+            -webkit-fill-available;
+    }
+
+}
+
+
+/* =========================================================
+   MODERN DYNAMIC VIEWPORT
+========================================================= */
+
+@supports (height:100dvh){
+
+    body{
+        height:100dvh;
+    }
+
+    #engine{
+        height:100dvh;
+    }
+
+}
+
+
+/* =========================================================
+   VIEWPORT FINAL SAFETY
+   ---------------------------------------------------------
+   Document itself never scrolls.
+   Screen always remains inside Engine.
+   Only designated inner areas may scroll.
+========================================================= */
+
+html,
+body,
+#engine,
+.vaero-shell,
+.engine-screen{
+    overflow:hidden;
+}
+
+#engine,
+.vaero-shell,
+.engine-screen,
+.engine-page{
+    min-height:0;
+}
+
+.engine-scroll,
+.app-scroll,
+.panel-scroll{
+    max-height:100%;
+}
+
+
+/* =========================================================
+   END — VAERO ENGINE GLOBAL LAYOUT
+========================================================= */
