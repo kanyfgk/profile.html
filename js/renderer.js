@@ -170,25 +170,47 @@ const Renderer = {
          */
 
         if(
-            currentEntityPage ===
-                "vaero"
-        ){
+    currentEntityPage ===
+        "vaero"
+){
 
-            if(
-                window.VaeroApp &&
-                typeof window.VaeroApp.render ===
-                    "function"
-            ){
+    if(
+        window.VaeroApp &&
+        typeof window.VaeroApp.render ===
+            "function"
+    ){
 
-                return window.VaeroApp.render();
+        return window.VaeroApp.render();
 
-            }
+    }
 
-            return components.errorState(
-                "VAERO sistem katmanı yüklenemedi."
-            );
+    return components.errorState(
+        "VAERO sistem katmanı yüklenemedi."
+    );
 
-        }
+}
+
+
+if(
+    currentEntityPage ===
+        "applications"
+){
+
+    if(
+        window.ApplicationsApp &&
+        typeof window.ApplicationsApp.render ===
+            "function"
+    ){
+
+        return window.ApplicationsApp.render();
+
+    }
+
+    return components.errorState(
+        "Applications katmanı yüklenemedi."
+    );
+
+}
 
         /*
          * =====================================================
