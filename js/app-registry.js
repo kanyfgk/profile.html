@@ -1222,6 +1222,42 @@ const OrganRegistry = {
 
     {
         id:
+            "applications",
+
+        icon:
+            "▦",
+
+        title:
+            "Applications",
+
+        subtitle:
+            "Engine'ini yeni uygulamalarla genişlet",
+
+        description:
+            "VAERO uygulamalarını keşfet, incele, yükle ve yönet.",
+
+        action:
+            "app:applications",
+
+        category:
+            "system",
+
+        distribution:
+            "built-in",
+
+        trusted:
+            true,
+
+        capabilities:[
+            "applications.catalog",
+            "applications.manage",
+            "permissions.request"
+        ]
+    },
+
+
+    {
+        id:
             "vaero",
 
         icon:
