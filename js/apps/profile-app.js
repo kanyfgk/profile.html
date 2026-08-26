@@ -18,14 +18,42 @@ const ProfileApp = {
 
     escapeHTML(value){
 
+        if(
+            window.UI &&
+            typeof UI.escapeHTML ===
+                "function"
+        ){
+
+            return UI.escapeHTML(
+                value
+            );
+
+        }
+
+
         return String(
             value ?? ""
         )
-            .replaceAll("&", "&amp;")
-            .replaceAll("<", "&lt;")
-            .replaceAll(">", "&gt;")
-            .replaceAll('"', "&quot;")
-            .replaceAll("'", "&#039;");
+            .replaceAll(
+                "&",
+                "&amp;"
+            )
+            .replaceAll(
+                "<",
+                "&lt;"
+            )
+            .replaceAll(
+                ">",
+                "&gt;"
+            )
+            .replaceAll(
+                '"',
+                "&quot;"
+            )
+            .replaceAll(
+                "'",
+                "&#039;"
+            );
 
     },
 
@@ -39,15 +67,19 @@ const ProfileApp = {
         try{
 
             if(
-                typeof VAERO !== "undefined" &&
+                typeof VAERO !==
+                    "undefined" &&
                 VAERO.engine
             ){
+
                 return VAERO.engine;
+
             }
 
         } catch(error){
 
             /* fallback */
+
         }
 
 
@@ -64,16 +96,21 @@ const ProfileApp = {
         try{
 
             if(
-                typeof VAERO === "undefined" ||
+                typeof VAERO ===
+                    "undefined" ||
                 typeof VAERO.get !==
                     "function"
             ){
+
                 return null;
+
             }
 
 
             return (
-                VAERO.get(name) ||
+                VAERO.get(
+                    name
+                ) ||
                 null
             );
 
@@ -113,12 +150,21 @@ const ProfileApp = {
             typeof engine.mount !==
                 "function"
         ){
+
             return false;
+
         }
 
 
+        const entity =
+            engine.currentOpenedEntity ||
+            engine.currentEntity ||
+            engine.rootEntity ||
+            null;
+
+
         return engine.mount(
-            engine.currentEntity
+            entity
         );
 
     },
@@ -128,7 +174,9 @@ const ProfileApp = {
        BRAIN AWARENESS
     ===================================================== */
 
-    enterBrainContext(entity = null){
+    enterBrainContext(
+        entity = null
+    ){
 
         try{
 
@@ -146,7 +194,11 @@ const ProfileApp = {
                         null,
 
                     section:
-                        this.activeSection
+                        this.activeSection,
+
+                    editorOpen:
+                        this.editorOpen ===
+                            true
                 }
             );
 
@@ -192,42 +244,116 @@ const ProfileApp = {
 
     normalizeList(value){
 
-        if(
+        const source =
             Array.isArray(
                 value
             )
-        ){
+                ? value
+                : String(
+                    value ||
+                    ""
+                ).split(",");
 
-            return [
-                ...new Set(
-                    value
-                        .map(
-                            item =>
-                                String(
-                                    item ?? ""
-                                ).trim()
-                        )
-                        .filter(Boolean)
-                )
-            ];
+
+        const seen =
+            new Set();
+
+
+        const result =
+            [];
+
+
+        source.forEach(
+            item => {
+
+                const normalized =
+                    String(
+                        item ?? ""
+                    )
+                        .trim()
+                        .replace(
+                            /\s+/g,
+                            " "
+                        );
+
+
+                if(!normalized){
+
+                    return;
+
+                }
+
+
+                const key =
+                    normalized
+                        .toLocaleLowerCase(
+                            "tr-TR"
+                        );
+
+
+                if(
+                    seen.has(
+                        key
+                    )
+                ){
+
+                    return;
+
+                }
+
+
+                seen.add(
+                    key
+                );
+
+
+                result.push(
+                    normalized
+                );
+
+            }
+        );
+
+
+        return result;
+
+    },
+
+
+    normalizeWebsite(value){
+
+        const website =
+            String(
+                value ||
+                ""
+            ).trim();
+
+
+        if(!website){
+
+            return "";
 
         }
 
 
-        return [
-            ...new Set(
-                String(
-                    value ||
-                    ""
-                )
-                    .split(",")
-                    .map(
-                        item =>
-                            item.trim()
-                    )
-                    .filter(Boolean)
+        /*
+         * Profil katmanı URL'yi doğrudan çalıştırmıyor.
+         * Yine de javascript:/data: benzeri şemaları
+         * kalıcı profile almıyoruz.
+         */
+
+        if(
+            /^(javascript|data|vbscript):/i.test(
+                website
             )
-        ];
+        ){
+
+            return "";
+
+        }
+
+
+        return website;
 
     },
 
@@ -248,32 +374,55 @@ const ProfileApp = {
                     profile.displayName ||
                     entity?.name ||
                     "İsimsiz Varlık"
-                ).trim(),
+                )
+                    .trim()
+                    .slice(
+                        0,
+                        100
+                    ),
 
             headline:
                 String(
                     profile.headline ||
                     ""
-                ).trim(),
+                )
+                    .trim()
+                    .slice(
+                        0,
+                        140
+                    ),
 
             bio:
                 String(
                     profile.bio ||
                     profile.about ||
                     ""
-                ).trim(),
+                )
+                    .trim()
+                    .slice(
+                        0,
+                        1200
+                    ),
 
             location:
                 String(
                     profile.location ||
                     ""
-                ).trim(),
+                )
+                    .trim()
+                    .slice(
+                        0,
+                        120
+                    ),
 
             website:
-                String(
-                    profile.website ||
-                    ""
-                ).trim(),
+                this.normalizeWebsite(
+                    profile.website
+                )
+                    .slice(
+                        0,
+                        300
+                    ),
 
             interests:
                 this.normalizeList(
@@ -330,7 +479,9 @@ const ProfileApp = {
     getProfile(entity){
 
         if(!entity){
+
             return null;
+
         }
 
 
@@ -341,6 +492,11 @@ const ProfileApp = {
                 entity
             );
 
+
+        /*
+         * Runtime'daki entity profile alanını normalize edilmiş
+         * tek şekle getiriyoruz.
+         */
 
         entity.profile =
             profile;
@@ -355,17 +511,21 @@ const ProfileApp = {
        DISCOVERY DATA
     ===================================================== */
 
-    getDiscoveryAnswers(entity = null){
-
-        /*
-         * Öncelik Evolution Core.
-         */
+    getDiscoveryAnswers(
+        entity = null
+    ){
 
         const evolution =
             this.getService(
                 "evolution"
             );
 
+
+        /*
+         * Öncelik Evolution kayıtları.
+         * Aynı entity için birden fazla discovery kaydı varsa
+         * en yeni kayıt kullanılmalı.
+         */
 
         if(
             evolution &&
@@ -377,27 +537,56 @@ const ProfileApp = {
 
                 const events =
                     evolution.all({
-                        includeArchived:true
+                        includeArchived:
+                            true
                     }) ||
                     [];
 
 
+                const matching =
+                    Array.isArray(
+                        events
+                    )
+                        ? events.filter(
+                            item =>
+                                item &&
+                                item.source ===
+                                    "discovery" &&
+                                item.payload &&
+                                item.payload
+                                    .discoveryAnswers &&
+                                (
+                                    !entity?.id ||
+                                    !item.relatedEntityId ||
+                                    item.relatedEntityId ===
+                                        entity.id
+                                )
+                        )
+                        : [];
+
+
+                matching.sort(
+                    (
+                        a,
+                        b
+                    ) =>
+                        Number(
+                            b.updatedAt ||
+                            b.createdAt ||
+                            b.time ||
+                            0
+                        ) -
+                        Number(
+                            a.updatedAt ||
+                            a.createdAt ||
+                            a.time ||
+                            0
+                        )
+                );
+
+
                 const discoveryEvent =
-                    events.find(
-                        item =>
-                            item &&
-                            item.source ===
-                                "discovery" &&
-                            item.payload &&
-                            item.payload
-                                .discoveryAnswers &&
-                            (
-                                !entity?.id ||
-                                !item.relatedEntityId ||
-                                item.relatedEntityId ===
-                                    entity.id
-                            )
-                    );
+                    matching[0];
 
 
                 if(discoveryEvent){
@@ -413,40 +602,66 @@ const ProfileApp = {
             } catch(error){
 
                 /* localStorage fallback */
+
             }
 
         }
 
 
+        /*
+         * Current Discovery Journey compatibility.
+         */
+
         try{
 
-            const saved =
-                localStorage.getItem(
-                    "vaero:discovery:answers"
-                );
+            const keys = [
+
+                "vaero:discovery:answers:v2",
+                "vaero:discovery:answers"
+
+            ];
 
 
-            if(!saved){
-                return {};
+            for(
+                const key of keys
+            ){
+
+                const saved =
+                    localStorage.getItem(
+                        key
+                    );
+
+
+                if(!saved){
+
+                    continue;
+
+                }
+
+
+                const parsed =
+                    JSON.parse(
+                        saved
+                    );
+
+
+                if(
+                    parsed &&
+                    typeof parsed ===
+                        "object" &&
+                    !Array.isArray(
+                        parsed
+                    )
+                ){
+
+                    return parsed;
+
+                }
+
             }
 
 
-            const parsed =
-                JSON.parse(
-                    saved
-                );
-
-
-            return (
-                parsed &&
-                typeof parsed ===
-                    "object" &&
-                !Array.isArray(
-                    parsed
-                )
-            )
-                ? parsed
-                : {};
+            return {};
 
         } catch(error){
 
@@ -472,15 +687,9 @@ const ProfileApp = {
         ){
 
             const values =
-                answer
-                    .map(
-                        item =>
-                            String(
-                                item ||
-                                ""
-                            ).trim()
-                    )
-                    .filter(Boolean);
+                this.normalizeList(
+                    answer
+                );
 
 
             return values.length
@@ -493,12 +702,48 @@ const ProfileApp = {
 
 
         if(
-            answer === null ||
-            answer === undefined ||
-            answer === ""
+            answer ===
+                null ||
+            answer ===
+                undefined ||
+            answer ===
+                ""
         ){
 
             return "Henüz belirlenmedi";
+
+        }
+
+
+        if(
+            typeof answer ===
+                "object"
+        ){
+
+            try{
+
+                return Object.values(
+                    answer
+                )
+                    .filter(
+                        value =>
+                            value !==
+                                null &&
+                            value !==
+                                undefined &&
+                            value !==
+                                ""
+                    )
+                    .join(
+                        " · "
+                    ) ||
+                    "Henüz belirlenmedi";
+
+            } catch(error){
+
+                return "Henüz belirlenmedi";
+
+            }
 
         }
 
@@ -541,23 +786,65 @@ const ProfileApp = {
             0;
 
 
+        /* =================================================
+           BRIDGE
+        ================================================= */
+
         try{
 
+            let links =
+                [];
+
+
             if(
+                bridge &&
+                typeof bridge.forEntity ===
+                    "function"
+            ){
+
+                const result =
+                    bridge.forEntity(
+                        entity.id
+                    );
+
+
+                links =
+                    Array.isArray(
+                        result
+                    )
+                        ? result
+                        : [];
+
+            }
+
+            else if(
                 bridge &&
                 typeof bridge.find ===
                     "function"
             ){
 
-                connections =
-                    (
-                        bridge.find(
-                            entity.id
-                        ) ||
-                        []
-                    ).length;
+                const result =
+                    bridge.find(
+                        entity.id
+                    );
+
+
+                links =
+                    Array.isArray(
+                        result
+                    )
+                        ? result
+                        : (
+                            result
+                                ? [result]
+                                : []
+                        );
 
             }
+
+
+            connections =
+                links.length;
 
         } catch(error){
 
@@ -567,6 +854,10 @@ const ProfileApp = {
         }
 
 
+        /* =================================================
+           EVOLUTION
+        ================================================= */
+
         try{
 
             if(
@@ -575,21 +866,31 @@ const ProfileApp = {
                     "function"
             ){
 
-                const events =
+                const result =
                     evolution.forEntity(
                         entity.id
-                    ) ||
-                    [];
+                    );
+
+
+                const events =
+                    Array.isArray(
+                        result
+                    )
+                        ? result
+                        : [];
 
 
                 xp =
                     events.reduce(
-                        (total,event) =>
+                        (
+                            total,
+                            event
+                        ) =>
                             total +
                             Math.max(
                                 0,
                                 Number(
-                                    event.xp
+                                    event?.xp
                                 ) ||
                                 0
                             ),
@@ -600,9 +901,9 @@ const ProfileApp = {
                 milestones =
                     events.filter(
                         event =>
-                            event.type ===
+                            event?.type ===
                                 "milestone" ||
-                            event.type ===
+                            event?.type ===
                                 "achievement"
                     ).length;
 
@@ -656,14 +957,26 @@ const ProfileApp = {
             !entity ||
             !entity.id
         ){
+
             return false;
+
         }
 
 
+        const normalized =
+            this.normalizeProfile(
+                {
+                    ...profile,
+
+                    updatedAt:
+                        Date.now()
+                },
+                entity
+            );
+
+
         entity.profile = {
-            ...profile,
-            updatedAt:
-                Date.now()
+            ...normalized
         };
 
 
@@ -673,24 +986,28 @@ const ProfileApp = {
             );
 
 
-        if(
-            manager &&
-            typeof manager.get ===
-                "function"
-        ){
+        /*
+         * EntityManager source-of-truth objesi mevcutsa
+         * aynı profile verisini oraya da geçiriyoruz.
+         */
+
+        if(manager){
 
             try{
 
                 const managed =
-                    manager.get(
-                        entity.id
-                    );
+                    typeof manager.get ===
+                        "function"
+                        ? manager.get(
+                            entity.id
+                        )
+                        : null;
 
 
                 if(managed){
 
                     managed.profile = {
-                        ...entity.profile
+                        ...normalized
                     };
 
 
@@ -701,10 +1018,42 @@ const ProfileApp = {
 
                         managed.touch();
 
-                    } else {
+                    }
+
+                    else {
 
                         managed.updatedAt =
                             Date.now();
+
+                    }
+
+                }
+
+
+                /*
+                 * Manager'ın özel update/persist API'si varsa
+                 * onu da kullan; yoksa mevcut mimari bozulmaz.
+                 */
+
+                if(
+                    typeof manager.update ===
+                        "function"
+                ){
+
+                    try{
+
+                        manager.update(
+                            entity.id,
+                            {
+                                profile:{
+                                    ...normalized
+                                }
+                            }
+                        );
+
+                    } catch(error){
+
+                        /* direct object sync already applied */
 
                     }
 
@@ -745,11 +1094,40 @@ const ProfileApp = {
                 );
 
 
-            if(index >= 0){
+            if(
+                index >=
+                    0
+            ){
 
-                world.entities[
-                    index
-                ] = entity;
+                const current =
+                    world.entities[
+                        index
+                    ];
+
+
+                if(
+                    current &&
+                    typeof current ===
+                        "object"
+                ){
+
+                    current.profile = {
+                        ...normalized
+                    };
+
+
+                    current.updatedAt =
+                        Date.now();
+
+                }
+
+                else {
+
+                    world.entities[
+                        index
+                    ] = entity;
+
+                }
 
             }
 
@@ -758,9 +1136,13 @@ const ProfileApp = {
 
         try{
 
-            this.getService(
-                "world"
-            )?.save?.();
+            const worldService =
+                this.getService(
+                    "world"
+                );
+
+
+            worldService?.save?.();
 
         } catch(error){
 
@@ -784,7 +1166,9 @@ const ProfileApp = {
     saveProfile(entity){
 
         if(!entity){
+
             return false;
+
         }
 
 
@@ -794,20 +1178,27 @@ const ProfileApp = {
             );
 
 
+        const displayNameInput =
+            document.getElementById(
+                "profileDisplayNameInput"
+            );
+
+
         const displayName =
             String(
-                document.getElementById(
-                    "profileDisplayNameInput"
-                )?.value ||
+                displayNameInput?.value ||
                 ""
-            ).trim();
+            )
+                .trim()
+                .slice(
+                    0,
+                    100
+                );
 
 
         if(!displayName){
 
-            document.getElementById(
-                "profileDisplayNameInput"
-            )?.focus();
+            displayNameInput?.focus();
 
 
             return false;
@@ -827,7 +1218,12 @@ const ProfileApp = {
                         "profileHeadlineInput"
                     )?.value ||
                     ""
-                ).trim(),
+                )
+                    .trim()
+                    .slice(
+                        0,
+                        140
+                    ),
 
             bio:
                 String(
@@ -835,7 +1231,12 @@ const ProfileApp = {
                         "profileBioInput"
                     )?.value ||
                     ""
-                ).trim(),
+                )
+                    .trim()
+                    .slice(
+                        0,
+                        1200
+                    ),
 
             location:
                 String(
@@ -843,15 +1244,23 @@ const ProfileApp = {
                         "profileLocationInput"
                     )?.value ||
                     ""
-                ).trim(),
+                )
+                    .trim()
+                    .slice(
+                        0,
+                        120
+                    ),
 
             website:
-                String(
+                this.normalizeWebsite(
                     document.getElementById(
                         "profileWebsiteInput"
-                    )?.value ||
-                    ""
-                ).trim(),
+                    )?.value
+                )
+                    .slice(
+                        0,
+                        300
+                    ),
 
             interests:
                 this.normalizeList(
@@ -909,9 +1318,12 @@ const ProfileApp = {
 
 
         /*
-         * Display name Profile katmanındadır.
-         * Entity'nin sistem kimliği/name alanını zorla
-         * değiştirmiyoruz.
+         * displayName Profile katmanına aittir.
+         *
+         * Entity.name = sistem kimliği.
+         * Profile.displayName = kullanıcının görünen adı.
+         *
+         * Birbirine zorla bağlanmaz.
          */
 
         if(
@@ -920,7 +1332,9 @@ const ProfileApp = {
                 profile
             )
         ){
+
             return false;
+
         }
 
 
@@ -955,7 +1369,9 @@ const ProfileApp = {
             typeof evolution.record !==
                 "function"
         ){
+
             return false;
+
         }
 
 
@@ -1080,11 +1496,13 @@ const ProfileApp = {
                         ENTITY PROFILE
                     </span>
 
+
                     <h2>
                         ${this.escapeHTML(
                             profile.displayName
                         )}
                     </h2>
+
 
                     <p class="profile-headline">
                         ${this.escapeHTML(
@@ -1141,7 +1559,10 @@ const ProfileApp = {
        STATS UI
     ===================================================== */
 
-    renderStats(entity){
+    renderStats(
+        entity,
+        profile
+    ){
 
         const stats =
             this.getStats(
@@ -1155,7 +1576,11 @@ const ProfileApp = {
                 <div>
 
                     <strong>
-                        ${stats.connections}
+                        ${
+                            profile.showConnections
+                                ? stats.connections
+                                : "—"
+                        }
                     </strong>
 
                     <span>
@@ -1168,7 +1593,11 @@ const ProfileApp = {
                 <div>
 
                     <strong>
-                        ${stats.milestones}
+                        ${
+                            profile.showEvolution
+                                ? stats.milestones
+                                : "—"
+                        }
                     </strong>
 
                     <span>
@@ -1181,7 +1610,11 @@ const ProfileApp = {
                 <div>
 
                     <strong>
-                        ${stats.level}
+                        ${
+                            profile.showEvolution
+                                ? stats.level
+                                : "—"
+                        }
                     </strong>
 
                     <span>
@@ -1194,7 +1627,11 @@ const ProfileApp = {
                 <div>
 
                     <strong>
-                        ${stats.xp}
+                        ${
+                            profile.showEvolution
+                                ? stats.xp
+                                : "—"
+                        }
                     </strong>
 
                     <span>
@@ -1226,6 +1663,7 @@ const ProfileApp = {
                     <span class="engine-section-label">
                         ABOUT
                     </span>
+
 
                     <h3>
                         Hakkında
@@ -1309,6 +1747,7 @@ const ProfileApp = {
                         SIGNALS
                     </span>
 
+
                     <h3>
                         İlgi ve yetenekler
                     </h3>
@@ -1344,6 +1783,14 @@ const ProfileApp = {
         values
     ){
 
+        const list =
+            Array.isArray(
+                values
+            )
+                ? values
+                : [];
+
+
         return `
             <div class="profile-tag-group">
 
@@ -1357,8 +1804,8 @@ const ProfileApp = {
                 <div>
 
                     ${
-                        values.length
-                            ? values
+                        list.length
+                            ? list
                                 .map(
                                     item => `
                                         <small>
@@ -1411,7 +1858,8 @@ const ProfileApp = {
                     "İlgi alanları",
 
                 value:
-                    answers.interest
+                    answers.interest ||
+                    answers.interests
             },
 
             {
@@ -1419,7 +1867,8 @@ const ProfileApp = {
                     "Güçlü yönler",
 
                 value:
-                    answers.strength
+                    answers.strength ||
+                    answers.strengths
             },
 
             {
@@ -1435,7 +1884,8 @@ const ProfileApp = {
                     "Aradığı bağlantılar",
 
                 value:
-                    answers.connection
+                    answers.connection ||
+                    answers.connections
             },
 
             {
@@ -1452,7 +1902,8 @@ const ProfileApp = {
         const hasAnswers =
             Object.keys(
                 answers
-            ).length > 0;
+            ).length >
+            0;
 
 
         return `
@@ -1464,9 +1915,11 @@ const ProfileApp = {
                         DISCOVERY PROFILE
                     </span>
 
+
                     <h3>
                         Keşif sinyalleri
                     </h3>
+
 
                     <p>
                         Discovery Journey sırasında oluşan yön, ilgi ve eşleşme bağlamı.
@@ -1539,6 +1992,7 @@ const ProfileApp = {
                 <span class="engine-section-label">
                     PROFILE POLICY
                 </span>
+
 
                 <h3>
                     Profil görünürlüğü
@@ -1623,6 +2077,67 @@ const ProfileApp = {
 
 
     /* =====================================================
+       APP HEADER FALLBACK
+    ===================================================== */
+
+    renderAppHeader(profile){
+
+        if(
+            window.UI &&
+            typeof UI.appHeader ===
+                "function"
+        ){
+
+            return UI.appHeader(
+                this.escapeHTML(
+                    profile.displayName
+                ),
+                "PROFILE",
+                "◉"
+            );
+
+        }
+
+
+        return `
+            <header class="engine-app-header">
+
+                <span class="engine-section-label">
+                    PROFILE
+                </span>
+
+                <h1>
+                    ${this.escapeHTML(
+                        profile.displayName
+                    )}
+                </h1>
+
+            </header>
+        `;
+
+    },
+
+
+    renderBrainPanel(){
+
+        try{
+
+            return (
+                window.UI
+                    ?.brainPanel?.() ||
+                ""
+            );
+
+        } catch(error){
+
+            return "";
+
+        }
+
+    },
+
+
+    /* =====================================================
        EDITOR
     ===================================================== */
 
@@ -1681,6 +2196,7 @@ const ProfileApp = {
                                 id="profileDisplayNameInput"
                                 type="text"
                                 maxlength="100"
+                                autocomplete="name"
                                 value="${this.escapeHTML(
                                     profile.displayName
                                 )}"
@@ -1700,6 +2216,7 @@ const ProfileApp = {
                                 id="profileHeadlineInput"
                                 type="text"
                                 maxlength="140"
+                                autocomplete="off"
                                 value="${this.escapeHTML(
                                     profile.headline
                                 )}"
@@ -1737,6 +2254,7 @@ const ProfileApp = {
                                 id="profileLocationInput"
                                 type="text"
                                 maxlength="120"
+                                autocomplete="off"
                                 value="${this.escapeHTML(
                                     profile.location
                                 )}"
@@ -1754,8 +2272,10 @@ const ProfileApp = {
 
                             <input
                                 id="profileWebsiteInput"
-                                type="text"
+                                type="url"
+                                inputmode="url"
                                 maxlength="300"
+                                autocomplete="url"
                                 value="${this.escapeHTML(
                                     profile.website
                                 )}"
@@ -1775,6 +2295,7 @@ const ProfileApp = {
                                 id="profileInterestsInput"
                                 type="text"
                                 maxlength="300"
+                                autocomplete="off"
                                 value="${this.escapeHTML(
                                     profile.interests.join(
                                         ", "
@@ -1796,6 +2317,7 @@ const ProfileApp = {
                                 id="profileSkillsInput"
                                 type="text"
                                 maxlength="300"
+                                autocomplete="off"
                                 value="${this.escapeHTML(
                                     profile.skills.join(
                                         ", "
@@ -1817,6 +2339,7 @@ const ProfileApp = {
                                 id="profileLanguagesInput"
                                 type="text"
                                 maxlength="200"
+                                autocomplete="off"
                                 value="${this.escapeHTML(
                                     profile.languages.join(
                                         ", "
@@ -1888,7 +2411,7 @@ const ProfileApp = {
                                 </strong>
 
                                 <small>
-                                    Search ve uygun Discovery yüzeylerinde profilin bulunabilmesine izin verir.
+                                    Uygun Discovery ve topluluk yüzeylerinde profilin bulunabilmesine izin verir.
                                 </small>
 
                             </span>
@@ -2051,12 +2574,8 @@ const ProfileApp = {
                     </div>
 
 
-                    ${UI.appHeader(
-                        this.escapeHTML(
-                            profile.displayName
-                        ),
-                        "PROFILE",
-                        "◉"
+                    ${this.renderAppHeader(
+                        profile
                     )}
 
 
@@ -2067,7 +2586,8 @@ const ProfileApp = {
 
 
                     ${this.renderStats(
-                        entity
+                        entity,
+                        profile
                     )}
 
 
@@ -2103,7 +2623,7 @@ const ProfileApp = {
                     </div>
 
 
-                    ${UI.brainPanel()}
+                    ${this.renderBrainPanel()}
 
                 </div>
 
@@ -2147,10 +2667,12 @@ const ProfileApp = {
 
                 return this.remount();
 
+
+            default:
+
+                return false;
+
         }
-
-
-        return false;
 
     }
 
@@ -2172,7 +2694,9 @@ document.addEventListener(
 
 
         if(!element){
+
             return;
+
         }
 
 
@@ -2203,7 +2727,9 @@ document.addEventListener(
 
 
         if(!form){
+
             return;
+
         }
 
 
@@ -2216,7 +2742,9 @@ document.addEventListener(
 
 
         if(!entity){
+
             return;
+
         }
 
 
@@ -2226,6 +2754,24 @@ document.addEventListener(
 
     }
 );
+
+
+/* =========================================================
+   REGISTER
+========================================================= */
+
+try{
+
+    VAERO?.register?.(
+        "profileApp",
+        ProfileApp
+    );
+
+} catch(error){
+
+    /* global remains available */
+
+}
 
 
 window.ProfileApp =
