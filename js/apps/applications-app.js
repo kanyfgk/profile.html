@@ -34,7 +34,9 @@ const ApplicationsApp = {
                 typeof VAERO.get !==
                     "function"
             ){
+
                 return null;
+
             }
 
 
@@ -140,6 +142,7 @@ const ApplicationsApp = {
             awareness?.enter?.(
                 "applications",
                 {
+
                     entityId:
                         this.getCurrentEntity()
                             ?.id ||
@@ -153,6 +156,7 @@ const ApplicationsApp = {
 
                     selectedAppId:
                         this.selectedAppId
+
                 }
             );
 
@@ -175,25 +179,35 @@ const ApplicationsApp = {
     getRegistry(){
 
         return (
+
             this.getService(
                 "appRegistry"
             ) ||
+
             this.getService(
                 "applicationRegistry"
             ) ||
+
             (
                 typeof AppRegistry !==
                     "undefined"
+
                     ? AppRegistry
+
                     : null
             ) ||
+
             (
                 typeof OrganRegistry !==
                     "undefined"
+
                     ? OrganRegistry
+
                     : null
             ) ||
+
             null
+
         );
 
     },
@@ -202,11 +216,15 @@ const ApplicationsApp = {
     getOrganSystem(){
 
         return (
+
             this.getService(
                 "organSystem"
             ) ||
+
             window.OrganSystem ||
+
             null
+
         );
 
     },
@@ -223,12 +241,16 @@ const ApplicationsApp = {
                 value
             )
         ){
+
             return [];
+
         }
 
 
         return [
+
             ...new Set(
+
                 value
                     .map(
                         item =>
@@ -237,7 +259,9 @@ const ApplicationsApp = {
                             ).trim()
                     )
                     .filter(Boolean)
+
             )
+
         ];
 
     },
@@ -246,10 +270,13 @@ const ApplicationsApp = {
     isBuiltIn(app){
 
         return Boolean(
+
             app?.system ===
                 true ||
+
             app?.distribution ===
                 "built-in"
+
         );
 
     },
@@ -267,7 +294,8 @@ const ApplicationsApp = {
 
 
         return (
-            model !== "free"
+            model !==
+            "free"
         );
 
     },
@@ -288,7 +316,9 @@ const ApplicationsApp = {
             typeof registry.all !==
                 "function"
         ){
+
             return [];
+
         }
 
 
@@ -296,7 +326,8 @@ const ApplicationsApp = {
 
             const apps =
                 registry.all({
-                    includeDisabled:true
+                    includeDisabled:
+                        true
                 });
 
 
@@ -341,7 +372,9 @@ const ApplicationsApp = {
 
 
         if(!id){
+
             return null;
+
         }
 
 
@@ -364,7 +397,9 @@ const ApplicationsApp = {
 
 
                 if(app){
+
                     return app;
+
                 }
 
             }
@@ -372,17 +407,21 @@ const ApplicationsApp = {
         } catch(error){
 
             /* catalog fallback */
+
         }
 
 
         return (
+
             this.getCatalogApps()
                 .find(
                     app =>
                         app?.id ===
                         id
                 ) ||
+
             null
+
         );
 
     },
@@ -395,7 +434,9 @@ const ApplicationsApp = {
     getInstalledOrgan(app){
 
         if(!app){
+
             return null;
+
         }
 
 
@@ -404,7 +445,9 @@ const ApplicationsApp = {
 
 
         if(!organSystem){
+
             return null;
+
         }
 
 
@@ -422,7 +465,9 @@ const ApplicationsApp = {
 
 
                 if(byId){
+
                     return byId;
+
                 }
 
             }
@@ -430,6 +475,7 @@ const ApplicationsApp = {
         } catch(error){
 
             /* slug fallback */
+
         }
 
 
@@ -482,10 +528,11 @@ const ApplicationsApp = {
                             Number(
                                 String(
                                     part
-                                ).replace(
-                                    /[^0-9]/g,
-                                    ""
                                 )
+                                    .replace(
+                                        /[^0-9]/g,
+                                        ""
+                                    )
                             ) ||
                             0
                     );
@@ -530,7 +577,9 @@ const ApplicationsApp = {
                 currentCatalog >
                 currentInstalled
             ){
+
                 return 1;
+
             }
 
 
@@ -538,7 +587,9 @@ const ApplicationsApp = {
                 currentCatalog <
                 currentInstalled
             ){
+
                 return -1;
+
             }
 
         }
@@ -571,15 +622,29 @@ const ApplicationsApp = {
 
         const updateAvailable =
             Boolean(
+
                 installed &&
+
                 organ &&
+
                 app.version &&
+
                 organ.version &&
+
                 this.compareVersions(
                     organ.version,
                     app.version
-                ) === 1
+                ) ===
+                    1
+
             );
+
+
+        const trusted =
+            builtIn
+                ? true
+                : organ?.trusted ===
+                    true;
 
 
         return {
@@ -598,11 +663,7 @@ const ApplicationsApp = {
                         : "not-installed"
                 ),
 
-            trusted:
-                builtIn
-                    ? true
-                    : organ?.trusted ===
-                        true,
+            trusted,
 
             organ
 
@@ -622,13 +683,13 @@ const ApplicationsApp = {
                 .filter(
                     app =>
                         app.enabled !==
-                            false
+                        false
                 );
 
 
         if(
             this.view ===
-                "installed"
+            "installed"
         ){
 
             apps =
@@ -644,7 +705,7 @@ const ApplicationsApp = {
 
         if(
             this.view ===
-                "updates"
+            "updates"
         ){
 
             apps =
@@ -661,7 +722,7 @@ const ApplicationsApp = {
 
         if(
             this.category !==
-                "all"
+            "all"
         ){
 
             apps =
@@ -691,13 +752,21 @@ const ApplicationsApp = {
                         const searchable = [
 
                             app.id,
+
                             app.title,
+
                             app.subtitle,
+
                             app.description,
+
                             app.developer,
+
                             app.category,
+
                             ...(app.tags || []),
+
                             ...(app.capabilities || []),
+
                             ...(app.requestedPermissions || [])
 
                         ]
@@ -757,24 +826,28 @@ const ApplicationsApp = {
             } catch(error){
 
                 /* derive below */
+
             }
 
         }
 
 
-        const ids =
-            [
-                ...new Set(
-                    this.getCatalogApps()
-                        .map(
-                            app =>
-                                String(
-                                    app?.category ||
-                                    "other"
-                                )
-                        )
-                )
-            ];
+        const ids = [
+
+            ...new Set(
+
+                this.getCatalogApps()
+                    .map(
+                        app =>
+                            String(
+                                app?.category ||
+                                "other"
+                            )
+                    )
+
+            )
+
+        ];
 
 
         return ids.map(
@@ -861,8 +934,12 @@ const ApplicationsApp = {
         };
 
 
-        if(!entity?.id){
+        if(
+            !entity?.id
+        ){
+
             return defaults;
+
         }
 
 
@@ -875,7 +952,9 @@ const ApplicationsApp = {
 
 
             if(!saved){
+
                 return defaults;
+
             }
 
 
@@ -886,12 +965,15 @@ const ApplicationsApp = {
 
 
             return {
+
                 ...defaults,
+
                 ...(
                     parsed
                         ?.applications ||
                     {}
                 )
+
             };
 
         } catch(error){
@@ -1007,7 +1089,9 @@ const ApplicationsApp = {
                 app
             )
         ){
+
             return true;
+
         }
 
 
@@ -1040,7 +1124,8 @@ const ApplicationsApp = {
                 paymentCore
                     .hasVerifiedEntitlement(
                         app.id
-                    ) === true
+                    ) ===
+                    true
             );
 
         } catch(error){
@@ -1072,7 +1157,9 @@ const ApplicationsApp = {
             typeof guardian.check !==
                 "function"
         ){
+
             return true;
+
         }
 
 
@@ -1083,6 +1170,7 @@ const ApplicationsApp = {
                     app,
                     "application-install",
                     {
+
                         operation,
 
                         appId:
@@ -1090,6 +1178,7 @@ const ApplicationsApp = {
 
                         distribution:
                             app.distribution
+
                     }
                 );
 
@@ -1112,6 +1201,63 @@ const ApplicationsApp = {
             return false;
 
         }
+
+    },
+
+
+    /* =====================================================
+       INSTALL RESULT NORMALIZATION
+    ===================================================== */
+
+    operationSucceeded(result){
+
+        if(
+            result ===
+            true
+        ){
+
+            return true;
+
+        }
+
+
+        if(
+            !result
+        ){
+
+            return false;
+
+        }
+
+
+        if(
+            typeof result ===
+                "object"
+        ){
+
+            if(
+                result.success ===
+                    false ||
+                result.valid ===
+                    false ||
+                result.error ===
+                    true
+            ){
+
+                return false;
+
+            }
+
+
+            return true;
+
+        }
+
+
+        return (
+            result !==
+            false
+        );
 
     },
 
@@ -1159,7 +1305,7 @@ const ApplicationsApp = {
 
         if(
             policy.allowInstall !==
-                true
+            true
         ){
 
             console.warn(
@@ -1174,7 +1320,7 @@ const ApplicationsApp = {
 
         if(
             policy.allowExternalApps !==
-                true
+            true
         ){
 
             console.warn(
@@ -1189,7 +1335,7 @@ const ApplicationsApp = {
 
         if(
             app.installable !==
-                true
+            true
         ){
 
             return false;
@@ -1216,7 +1362,9 @@ const ApplicationsApp = {
 
 
         if(!verification){
+
             return false;
+
         }
 
 
@@ -1241,7 +1389,7 @@ const ApplicationsApp = {
 
             if(
                 existing.installed ===
-                    true
+                true
             ){
 
                 return true;
@@ -1253,17 +1401,55 @@ const ApplicationsApp = {
                 typeof organSystem.install !==
                     "function"
             ){
+
                 return false;
+
             }
 
 
-            return (
+            const result =
                 organSystem.install(
                     existing.id
-                ) === true
+                );
+
+
+            if(
+                !this.operationSucceeded(
+                    result
+                )
+            ){
+
+                return false;
+
+            }
+
+
+            this.emitLifecycle(
+                "installed",
+                app,
+                existing
             );
 
+
+            return true;
+
         }
+
+
+        if(
+            typeof organSystem.create !==
+                "function"
+        ){
+
+            return false;
+
+        }
+
+
+        const requestedPermissions =
+            this.normalizeList(
+                app.requestedPermissions
+            );
 
 
         const organ =
@@ -1271,6 +1457,7 @@ const ApplicationsApp = {
                 app.title,
                 "inactive",
                 {
+
                     id:
                         app.id,
 
@@ -1337,16 +1524,22 @@ const ApplicationsApp = {
                         ),
 
                     metadata:{
+
                         applicationId:
                             app.id,
 
-                        requestedPermissions:
-                            this.normalizeList(
-                                app.requestedPermissions
+                        requestedPermissions,
+
+                        permissionReviewRequired:
+                            Boolean(
+                                policy.requirePermissionReview &&
+                                requestedPermissions.length
                             ),
 
                         verification:{
-                            verified:true,
+
+                            verified:
+                                true,
 
                             verifiedAt:
                                 Date.now(),
@@ -1362,14 +1555,19 @@ const ApplicationsApp = {
                             reference:
                                 verification.reference ||
                                 null
+
                         }
+
                     }
+
                 }
             );
 
 
         if(!organ){
+
             return false;
+
         }
 
 
@@ -1381,7 +1579,8 @@ const ApplicationsApp = {
             organSystem.remove?.(
                 organ.id,
                 {
-                    force:true
+                    force:
+                        true
                 }
             );
 
@@ -1396,22 +1595,27 @@ const ApplicationsApp = {
                 organ.id,
                 true,
                 {
-                    verified:true,
+
+                    verified:
+                        true,
 
                     verification
+
                 }
             );
 
 
         if(
-            trustResult !==
-                true
+            !this.operationSucceeded(
+                trustResult
+            )
         ){
 
             organSystem.remove?.(
                 organ.id,
                 {
-                    force:true
+                    force:
+                        true
                 }
             );
 
@@ -1419,12 +1623,6 @@ const ApplicationsApp = {
             return false;
 
         }
-
-
-        const requestedPermissions =
-            this.normalizeList(
-                app.requestedPermissions
-            );
 
 
         if(
@@ -1437,7 +1635,8 @@ const ApplicationsApp = {
                 "active"
             );
 
-        } else {
+        }
+        else {
 
             organSystem.setStatus?.(
                 organ.id,
@@ -1452,6 +1651,13 @@ const ApplicationsApp = {
             app,
             organ
         );
+
+
+        this.selectedAppId =
+            app.id;
+
+
+        this.remount();
 
 
         return true;
@@ -1475,7 +1681,9 @@ const ApplicationsApp = {
 
 
         if(!app){
+
             return false;
+
         }
 
 
@@ -1493,7 +1701,9 @@ const ApplicationsApp = {
             !organ ||
             !state.trusted
         ){
+
             return false;
+
         }
 
 
@@ -1537,7 +1747,9 @@ const ApplicationsApp = {
             typeof organSystem.grantPermission !==
                 "function"
         ){
+
             return false;
+
         }
 
 
@@ -1546,21 +1758,121 @@ const ApplicationsApp = {
                 organ.id,
                 normalized,
                 {
+
                     source:
                         "applications-consent",
 
                     confirmed:
                         true
+
                 }
             );
 
 
-        if(result !== true){
+        if(
+            !this.operationSucceeded(
+                result
+            )
+        ){
+
             return false;
+
         }
 
 
-        return this.remount();
+        this.activateWhenPermissionsReviewed(
+            app
+        );
+
+
+        this.emitLifecycle(
+            "permission-granted",
+            app,
+            organ,
+            {
+                permission:
+                    normalized
+            }
+        );
+
+
+        this.remount();
+
+
+        return true;
+
+    },
+
+
+    activateWhenPermissionsReviewed(app){
+
+        const state =
+            this.getAppState(
+                app
+            );
+
+
+        const organ =
+            state.organ;
+
+
+        if(!organ){
+
+            return false;
+
+        }
+
+
+        const requested =
+            this.normalizeList(
+                app.requestedPermissions
+            )
+                .map(
+                    item =>
+                        item.toLowerCase()
+                );
+
+
+        const granted =
+            this.normalizeList(
+                organ.permissions
+            )
+                .map(
+                    item =>
+                        item.toLowerCase()
+                );
+
+
+        const complete =
+            requested.every(
+                permission =>
+                    granted.includes(
+                        permission
+                    )
+            );
+
+
+        if(!complete){
+
+            return false;
+
+        }
+
+
+        const organSystem =
+            this.getOrganSystem();
+
+
+        const result =
+            organSystem?.setStatus?.(
+                organ.id,
+                "active"
+            );
+
+
+        return this.operationSucceeded(
+            result
+        );
 
     },
 
@@ -1594,27 +1906,106 @@ const ApplicationsApp = {
             typeof organSystem.revokePermission !==
                 "function"
         ){
+
             return false;
+
+        }
+
+
+        const normalized =
+            String(
+                permission ||
+                ""
+            )
+                .trim()
+                .toLowerCase();
+
+
+        if(!normalized){
+
+            return false;
+
         }
 
 
         const result =
             organSystem.revokePermission(
                 organ.id,
-                permission
+                normalized
             );
 
 
-        if(result !== true){
+        if(
+            !this.operationSucceeded(
+                result
+            )
+        ){
+
             return false;
+
         }
 
 
-        return this.remount();
+        const requested =
+            this.normalizeList(
+                app.requestedPermissions
+            )
+                .map(
+                    item =>
+                        item.toLowerCase()
+                );
+
+
+        if(
+            requested.includes(
+                normalized
+            )
+        ){
+
+            organSystem.setStatus?.(
+                organ.id,
+                "inactive"
+            );
+
+        }
+
+
+        this.emitLifecycle(
+            "permission-revoked",
+            app,
+            organ,
+            {
+                permission:
+                    normalized
+            }
+        );
+
+
+        this.remount();
+
+
+        return true;
 
     },
 
    /* =====================================================
+       BRAIN ACTION COMPATIBILITY
+    ===================================================== */
+
+    grantPermission(
+        appId,
+        permission
+    ){
+
+        return this.grantRequestedPermission(
+            appId,
+            permission
+        );
+
+    },
+
+
+    /* =====================================================
        UPDATE
     ===================================================== */
 
@@ -1627,7 +2018,9 @@ const ApplicationsApp = {
 
 
         if(!app){
+
             return false;
+
         }
 
 
@@ -1642,7 +2035,9 @@ const ApplicationsApp = {
             !state.organ ||
             !state.updateAvailable
         ){
+
             return false;
+
         }
 
 
@@ -1663,7 +2058,9 @@ const ApplicationsApp = {
                 "update"
             )
         ){
+
             return false;
+
         }
 
 
@@ -1674,7 +2071,9 @@ const ApplicationsApp = {
 
 
         if(!verification){
+
             return false;
+
         }
 
 
@@ -1687,7 +2086,9 @@ const ApplicationsApp = {
             typeof organSystem.update !==
                 "function"
         ){
+
             return false;
+
         }
 
 
@@ -1699,6 +2100,7 @@ const ApplicationsApp = {
             organSystem.update(
                 state.organ.id,
                 {
+
                     version:
                         app.version,
 
@@ -1727,6 +2129,7 @@ const ApplicationsApp = {
                         ),
 
                     metadata:{
+
                         ...(
                             state.organ.metadata ||
                             {}
@@ -1738,7 +2141,9 @@ const ApplicationsApp = {
                             ),
 
                         verification:{
-                            verified:true,
+
+                            verified:
+                                true,
 
                             verifiedAt:
                                 Date.now(),
@@ -1754,30 +2159,50 @@ const ApplicationsApp = {
                             reference:
                                 verification.reference ||
                                 null
+
                         }
+
                     }
+
                 }
             );
 
 
-        if(!updated){
+        if(
+            !this.operationSucceeded(
+                updated
+            )
+        ){
+
             return false;
+
         }
 
 
         this.emitLifecycle(
             "updated",
             app,
-            updated,
+            (
+                typeof updated ===
+                    "object"
+                    ? updated
+                    : state.organ
+            ),
             {
+
                 previousVersion,
+
                 version:
                     app.version
+
             }
         );
 
 
-        return this.remount();
+        this.remount();
+
+
+        return true;
 
     },
 
@@ -1795,7 +2220,9 @@ const ApplicationsApp = {
 
 
         if(!app){
+
             return false;
+
         }
 
 
@@ -1817,10 +2244,11 @@ const ApplicationsApp = {
 
         if(
             app.removable ===
-                false
+            false
         ){
 
             return false;
+
         }
 
 
@@ -1833,7 +2261,9 @@ const ApplicationsApp = {
             typeof organSystem.uninstall !==
                 "function"
         ){
+
             return false;
+
         }
 
 
@@ -1843,8 +2273,14 @@ const ApplicationsApp = {
             );
 
 
-        if(result !== true){
+        if(
+            !this.operationSucceeded(
+                result
+            )
+        ){
+
             return false;
+
         }
 
 
@@ -1859,7 +2295,19 @@ const ApplicationsApp = {
             null;
 
 
-        return this.remount();
+        this.remount();
+
+
+        return true;
+
+    },
+
+
+    removeApplication(appId){
+
+        return this.remove(
+            appId
+        );
 
     },
 
@@ -1905,6 +2353,7 @@ const ApplicationsApp = {
         } catch(error){
 
             /* non-fatal */
+
         }
 
 
@@ -1920,6 +2369,7 @@ const ApplicationsApp = {
         } catch(error){
 
             /* non-fatal */
+
         }
 
     },
@@ -1935,7 +2385,9 @@ const ApplicationsApp = {
             !app ||
             !app.action
         ){
+
             return false;
+
         }
 
 
@@ -1945,8 +2397,12 @@ const ApplicationsApp = {
             );
 
 
-        if(!state.installed){
+        if(
+            !state.installed
+        ){
+
             return false;
+
         }
 
 
@@ -1955,6 +2411,24 @@ const ApplicationsApp = {
             state.trusted !==
                 true
         ){
+
+            return false;
+
+        }
+
+
+        if(
+            !state.builtIn &&
+            state.status !==
+                "active"
+        ){
+
+            this.selectedAppId =
+                app.id;
+
+
+            this.remount();
+
 
             return false;
 
@@ -1972,8 +2446,10 @@ const ApplicationsApp = {
             button.type =
                 "button";
 
+
             button.dataset.action =
                 app.action;
+
 
             button.style.display =
                 "none";
@@ -1986,7 +2462,15 @@ const ApplicationsApp = {
 
             button.click();
 
+
             button.remove();
+
+
+            this.emitLifecycle(
+                "opened",
+                app,
+                state.organ
+            );
 
 
             return true;
@@ -2006,6 +2490,17 @@ const ApplicationsApp = {
     },
 
 
+    openApplication(appId){
+
+        return this.open(
+            this.findApp(
+                appId
+            )
+        );
+
+    },
+
+
     /* =====================================================
        APP CARD
     ===================================================== */
@@ -2018,9 +2513,24 @@ const ApplicationsApp = {
             );
 
 
+        if(
+            window.UI &&
+            typeof UI.applicationCard ===
+                "function"
+        ){
+
+            return UI.applicationCard(
+                app,
+                state
+            );
+
+        }
+
+
         const pricing =
             app.pricing || {
-                model:"free"
+                model:
+                    "free"
             };
 
 
@@ -2035,14 +2545,16 @@ const ApplicationsApp = {
             actionLabel =
                 "Güncelle";
 
-        } else if(
+        }
+        else if(
             state.installed
         ){
 
             actionLabel =
                 "Aç";
 
-        } else if(
+        }
+        else if(
             pricing.model ===
                 "free"
         ){
@@ -2050,7 +2562,8 @@ const ApplicationsApp = {
             actionLabel =
                 "Yükle";
 
-        } else {
+        }
+        else {
 
             actionLabel =
                 "Al";
@@ -2073,7 +2586,6 @@ const ApplicationsApp = {
                     )}
                 </div>
 
-
                 <div class="applications-card-copy">
 
                     <div class="applications-card-title-row">
@@ -2083,7 +2595,6 @@ const ApplicationsApp = {
                                 app.title
                             )}
                         </h3>
-
 
                         ${
                             state.trusted ||
@@ -2101,14 +2612,12 @@ const ApplicationsApp = {
 
                     </div>
 
-
                     <p>
                         ${this.escapeHTML(
                             app.subtitle ||
                             ""
                         )}
                     </p>
-
 
                     <div class="applications-card-meta">
 
@@ -2119,14 +2628,12 @@ const ApplicationsApp = {
                             )}
                         </span>
 
-
                         <span>
                             v${this.escapeHTML(
                                 app.version ||
                                 "1.0.0"
                             )}
                         </span>
-
 
                         ${
                             state.updateAvailable
@@ -2142,7 +2649,6 @@ const ApplicationsApp = {
 
                 </div>
 
-
                 <div class="applications-card-actions">
 
                     <button
@@ -2155,7 +2661,6 @@ const ApplicationsApp = {
                     >
                         Bilgi
                     </button>
-
 
                     <button
                         type="button"
@@ -2219,6 +2724,56 @@ const ApplicationsApp = {
                 );
 
 
+        if(
+            window.UI &&
+            typeof UI.permissionRow ===
+                "function"
+        ){
+
+            return `
+                <div class="applications-permission-list">
+
+                    ${requested
+                        .map(
+                            permission => {
+
+                                const isGranted =
+                                    granted.includes(
+                                        permission
+                                            .toLowerCase()
+                                    );
+
+
+                                return UI.permissionRow(
+                                    permission,
+                                    {
+
+                                        granted:
+                                            isGranted,
+
+                                        appId:
+                                            app.id,
+
+                                        editable:
+                                            Boolean(
+                                                state.installed &&
+                                                !state.builtIn &&
+                                                state.trusted
+                                            )
+
+                                    }
+                                );
+
+                            }
+                        )
+                        .join("")}
+
+                </div>
+            `;
+
+        }
+
+
         return `
             <div class="applications-permission-list">
 
@@ -2257,7 +2812,6 @@ const ApplicationsApp = {
                                         </small>
 
                                     </div>
-
 
                                     ${
                                         state.installed &&
@@ -2309,7 +2863,9 @@ const ApplicationsApp = {
     renderDetails(app){
 
         if(!app){
+
             return "";
+
         }
 
 
@@ -2327,8 +2883,37 @@ const ApplicationsApp = {
 
         const pricing =
             app.pricing || {
-                model:"free"
+                model:
+                    "free"
             };
+
+
+        const requested =
+            this.normalizeList(
+                app.requestedPermissions
+            );
+
+
+        const granted =
+            this.normalizeList(
+                state.organ?.permissions
+            );
+
+
+        const permissionComplete =
+            requested.length ===
+                0 ||
+            requested.every(
+                permission =>
+                    granted
+                        .map(
+                            item =>
+                                item.toLowerCase()
+                        )
+                        .includes(
+                            permission.toLowerCase()
+                        )
+            );
 
 
         return `
@@ -2338,7 +2923,6 @@ const ApplicationsApp = {
                     class="applications-detail-backdrop"
                     data-applications-command="close-details"
                 ></div>
-
 
                 <section
                     class="applications-detail"
@@ -2354,7 +2938,6 @@ const ApplicationsApp = {
                         ×
                     </button>
 
-
                     <div class="applications-detail-head">
 
                         <div class="applications-detail-icon">
@@ -2364,11 +2947,9 @@ const ApplicationsApp = {
                             )}
                         </div>
 
-
                         <div>
 
                             <div class="eyebrow">
-
                                 ${
                                     state.builtIn
                                         ? "VAERO SYSTEM APPLICATION"
@@ -2376,16 +2957,13 @@ const ApplicationsApp = {
                                             ? "DOĞRULANMIŞ UYGULAMA"
                                             : "UYGULAMA"
                                 }
-
                             </div>
-
 
                             <h2>
                                 ${this.escapeHTML(
                                     app.title
                                 )}
                             </h2>
-
 
                             <p>
                                 ${this.escapeHTML(
@@ -2398,7 +2976,6 @@ const ApplicationsApp = {
                         </div>
 
                     </div>
-
 
                     <div class="applications-detail-grid">
 
@@ -2417,7 +2994,6 @@ const ApplicationsApp = {
 
                         </div>
 
-
                         <div>
 
                             <span>
@@ -2433,7 +3009,6 @@ const ApplicationsApp = {
 
                         </div>
 
-
                         <div>
 
                             <span>
@@ -2445,13 +3020,15 @@ const ApplicationsApp = {
                                     state.installed
                                         ? state.updateAvailable
                                             ? "Güncelleme mevcut"
-                                            : "Yüklü"
+                                            : state.status ===
+                                                "active"
+                                                ? "Aktif"
+                                                : "İzin incelemesi gerekiyor"
                                         : "Yüklü değil"
                                 }
                             </strong>
 
                         </div>
-
 
                         <div>
 
@@ -2468,7 +3045,6 @@ const ApplicationsApp = {
 
                         </div>
 
-
                         <div>
 
                             <span>
@@ -2483,7 +3059,6 @@ const ApplicationsApp = {
                             </strong>
 
                         </div>
-
 
                         <div>
 
@@ -2501,13 +3076,11 @@ const ApplicationsApp = {
 
                     </div>
 
-
                     <div class="applications-detail-section">
 
                         <div class="eyebrow">
                             YETENEKLER
                         </div>
-
 
                         ${
                             capabilities.length
@@ -2537,13 +3110,11 @@ const ApplicationsApp = {
 
                     </div>
 
-
                     <div class="applications-detail-section">
 
                         <div class="eyebrow">
                             İZİNLER
                         </div>
-
 
                         ${this.renderPermissions(
                             app,
@@ -2552,6 +3123,25 @@ const ApplicationsApp = {
 
                     </div>
 
+                    ${
+                        state.installed &&
+                        requested.length &&
+                        !permissionComplete
+                            ? `
+                                <div class="applications-security-warning">
+
+                                    <strong>
+                                        İzin incelemesi tamamlanmadı
+                                    </strong>
+
+                                    <span>
+                                        Uygulama yalnızca onayladığın izinlerle çalışır ve gerekli izinler tamamlanana kadar aktif hale gelmez.
+                                    </span>
+
+                                </div>
+                              `
+                            : ""
+                    }
 
                     ${
                         !state.builtIn &&
@@ -2571,7 +3161,6 @@ const ApplicationsApp = {
                               `
                             : ""
                     }
-
 
                     <div class="applications-detail-actions">
 
@@ -2598,8 +3187,21 @@ const ApplicationsApp = {
                                             data-app-id="${this.escapeHTML(
                                                 app.id
                                             )}"
+                                            ${
+                                                !state.builtIn &&
+                                                state.status !==
+                                                    "active"
+                                                    ? "disabled"
+                                                    : ""
+                                            }
                                         >
-                                            Aç
+                                            ${
+                                                !state.builtIn &&
+                                                state.status !==
+                                                    "active"
+                                                    ? "İzinleri Tamamla"
+                                                    : "Aç"
+                                            }
                                         </button>
                                       `
                                     : `
@@ -2621,7 +3223,6 @@ const ApplicationsApp = {
                                         </button>
                                       `
                         }
-
 
                         ${
                             state.installed &&
@@ -2661,11 +3262,20 @@ const ApplicationsApp = {
 
         const views = [
 
-            ["discover","Keşfet"],
+            [
+                "discover",
+                "Keşfet"
+            ],
 
-            ["installed","Yüklü"],
+            [
+                "installed",
+                "Yüklü"
+            ],
 
-            ["updates","Güncellemeler"]
+            [
+                "updates",
+                "Güncellemeler"
+            ]
 
         ];
 
@@ -2680,7 +3290,7 @@ const ApplicationsApp = {
                                 type="button"
                                 class="${
                                     this.view ===
-                                        id
+                                    id
                                         ? "is-active"
                                         : ""
                                 }"
@@ -2756,13 +3366,12 @@ const ApplicationsApp = {
                         <button
                             type="button"
                             class="engine-back-btn"
-                            data-action="home"
+                            data-action="home:open"
                         >
                             ← Engine
                         </button>
 
                     </div>
-
 
                     <header class="applications-header">
 
@@ -2772,18 +3381,15 @@ const ApplicationsApp = {
                                 VAERO APPLICATIONS
                             </div>
 
-
                             <h1>
                                 Uygulamalar
                             </h1>
-
 
                             <p>
                                 Engine'ini yeni yeteneklerle genişlet. Uygulamaları keşfet, izinlerini incele ve kurulu uygulamalarını yönet.
                             </p>
 
                         </div>
-
 
                         <div class="applications-header-stats">
 
@@ -2799,7 +3405,6 @@ const ApplicationsApp = {
 
                             </div>
 
-
                             <div>
 
                                 <strong>
@@ -2811,7 +3416,6 @@ const ApplicationsApp = {
                                 </span>
 
                             </div>
-
 
                             <div>
 
@@ -2829,9 +3433,7 @@ const ApplicationsApp = {
 
                     </header>
 
-
                     ${this.renderViewNavigation()}
-
 
                     <div class="applications-toolbar">
 
@@ -2840,7 +3442,6 @@ const ApplicationsApp = {
                             <span>
                                 ⌕
                             </span>
-
 
                             <input
                                 type="search"
@@ -2854,14 +3455,13 @@ const ApplicationsApp = {
 
                         </label>
 
-
                         <div class="applications-categories">
 
                             <button
                                 type="button"
                                 class="${
                                     this.category ===
-                                        "all"
+                                    "all"
                                         ? "is-active"
                                         : ""
                                 }"
@@ -2870,7 +3470,6 @@ const ApplicationsApp = {
                             >
                                 Tümü
                             </button>
-
 
                             ${categories
                                 .map(
@@ -2888,7 +3487,7 @@ const ApplicationsApp = {
                                                 type="button"
                                                 class="${
                                                     this.category ===
-                                                        id
+                                                    id
                                                         ? "is-active"
                                                         : ""
                                                 }"
@@ -2912,7 +3511,6 @@ const ApplicationsApp = {
                         </div>
 
                     </div>
-
 
                     <div class="applications-scroll">
 
@@ -2970,11 +3568,13 @@ const ApplicationsApp = {
 
                     </div>
 
-
-                    ${UI.brainPanel()}
+                    ${
+                        window.UI
+                            ?.brainPanel?.() ||
+                        ""
+                    }
 
                 </div>
-
 
                 ${
                     selectedApp
@@ -3005,7 +3605,9 @@ const ApplicationsApp = {
             typeof engine.mount !==
                 "function"
         ){
+
             return false;
+
         }
 
 
@@ -3073,13 +3675,14 @@ const ApplicationsApp = {
                         "discover",
                         "installed",
                         "updates"
-                    ].includes(
-                        element.dataset
-                            .view
-                    )
-                        ? element.dataset
-                            .view
-                        : "discover";
+                    ]
+                        .includes(
+                            element.dataset
+                                .view
+                        )
+                            ? element.dataset
+                                .view
+                            : "discover";
 
 
                 this.selectedAppId =
@@ -3097,7 +3700,7 @@ const ApplicationsApp = {
                     );
 
 
-                if(installed){
+                if(!installed){
 
                     this.selectedAppId =
                         appId;
@@ -3108,7 +3711,7 @@ const ApplicationsApp = {
                 }
 
 
-                return false;
+                return true;
 
             }
 
@@ -3138,6 +3741,8 @@ const ApplicationsApp = {
 
             case "permission:grant":
 
+            case "permission-grant":
+
                 return this.grantRequestedPermission(
                     appId,
                     element.dataset
@@ -3146,6 +3751,8 @@ const ApplicationsApp = {
 
 
             case "permission:revoke":
+
+            case "permission-revoke":
 
                 return this.revokePermission(
                     appId,
@@ -3180,7 +3787,9 @@ document.addEventListener(
 
 
         if(!target){
+
             return;
+
         }
 
 
@@ -3207,9 +3816,11 @@ document.addEventListener(
 
         if(
             event.target.id !==
-                "applicationsSearch"
+            "applicationsSearch"
         ){
+
             return;
+
         }
 
 
@@ -3241,6 +3852,24 @@ document.addEventListener(
 
     }
 );
+
+
+/* =========================================================
+   REGISTER
+========================================================= */
+
+try{
+
+    VAERO?.register?.(
+        "applicationsApp",
+        ApplicationsApp
+    );
+
+} catch(error){
+
+    /* global remains available */
+
+}
 
 
 window.ApplicationsApp =
