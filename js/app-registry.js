@@ -3,1299 +3,1539 @@
    Application / Organ Catalog & Manifest Registry
 ========================================================= */
 
-const OrganRegistry = {
+const OrganRegistry = (() => {
 
-    apps: [],
+    /*
+     * Built-in yetkisi registry dışından erişilemeyen
+     * private token ile verilir.
+     *
+     * Böylece dış manifest:
+     *
+     * distribution: "built-in"
+     * system: true
+     * trusted: true
+     *
+     * yazsa bile kendisini VAERO sistem uygulaması
+     * olarak kaydedemez.
+     */
 
-    manifestVersion:
-        1,
-
-
-    /* =====================================================
-       NORMALIZATION
-    ===================================================== */
-
-    normalizeId(id){
-
-        return String(
-            id ?? ""
-        )
-            .trim()
-            .toLowerCase()
-            .replace(/\s+/g, "-");
-
-    },
+    const BUILT_IN_TOKEN =
+        Symbol(
+            "VAERO_INTERNAL_BUILT_IN"
+        );
 
 
-    normalizeText(
-        value,
-        fallback = ""
-    ){
+    const Registry = {
 
-        return String(
-            value ?? fallback
-        ).trim();
+        apps: [],
 
-    },
+        manifestVersion:
+            1,
 
 
-    normalizeArray(value){
+        /* =====================================================
+           NORMALIZATION
+        ===================================================== */
 
-        if(
-            !Array.isArray(
-                value
-            )
-        ){
-            return [];
-        }
+        normalizeId(id){
 
-
-        return [
-            ...new Set(
-                value
-                    .map(
-                        item =>
-                            String(
-                                item ?? ""
-                            )
-                                .trim()
-                                .toLowerCase()
-                    )
-                    .filter(Boolean)
-            )
-        ];
-
-    },
-
-
-    normalizeCategory(category){
-
-        const value =
-            String(
-                category ||
-                "system"
+            return String(
+                id ?? ""
             )
                 .trim()
-                .toLowerCase();
+                .toLowerCase()
+                .replace(
+                    /\s+/g,
+                    "-"
+                );
+
+        },
 
 
-        const allowed = [
-            "system",
-            "identity",
-            "productivity",
-            "knowledge",
-            "social",
-            "development",
-            "utility",
-            "service",
-            "other"
-        ];
-
-
-        return allowed.includes(
-            value
-        )
-            ? value
-            : "other";
-
-    },
-
-
-    normalizeDistribution(
-        distribution
-    ){
-
-        const value =
-            String(
-                distribution ||
-                "built-in"
-            )
-                .trim()
-                .toLowerCase();
-
-
-        const allowed = [
-            "built-in",
-            "first-party",
-            "third-party"
-        ];
-
-
-        return allowed.includes(
-            value
-        )
-            ? value
-            : "third-party";
-
-    },
-
-
-    normalizePricing(pricing){
-
-        if(
-            !pricing ||
-            typeof pricing !==
-                "object" ||
-            Array.isArray(pricing)
+        normalizeText(
+            value,
+            fallback = ""
         ){
 
-            return {
-                model:
-                    "free",
+            return String(
+                value ??
+                fallback
+            ).trim();
 
-                amount:
-                    0,
-
-                currency:
-                    null,
-
-                interval:
-                    null
-            };
-
-        }
+        },
 
 
-        const allowedModels = [
-            "free",
-            "paid",
-            "subscription"
-        ];
+        normalizeArray(value){
+
+            if(
+                !Array.isArray(
+                    value
+                )
+            ){
+                return [];
+            }
 
 
-        const model =
-            allowedModels.includes(
+            return [
+                ...new Set(
+                    value
+                        .map(
+                            item =>
+                                String(
+                                    item ??
+                                    ""
+                                )
+                                    .trim()
+                                    .toLowerCase()
+                        )
+                        .filter(Boolean)
+                )
+            ];
+
+        },
+
+
+        normalizeCategory(category){
+
+            const value =
+                String(
+                    category ||
+                    "system"
+                )
+                    .trim()
+                    .toLowerCase();
+
+
+            const allowed = [
+
+                "system",
+                "identity",
+                "productivity",
+                "knowledge",
+                "social",
+                "development",
+                "utility",
+                "service",
+                "other"
+
+            ];
+
+
+            return allowed.includes(
+                value
+            )
+                ? value
+                : "other";
+
+        },
+
+
+        normalizeDistribution(
+            distribution
+        ){
+
+            const value =
+                String(
+                    distribution ||
+                    "third-party"
+                )
+                    .trim()
+                    .toLowerCase();
+
+
+            const allowed = [
+
+                "first-party",
+                "third-party"
+
+            ];
+
+
+            return allowed.includes(
+                value
+            )
+                ? value
+                : "third-party";
+
+        },
+
+
+        normalizePricing(pricing){
+
+            if(
+                !pricing ||
+                typeof pricing !==
+                    "object" ||
+                Array.isArray(
+                    pricing
+                )
+            ){
+
+                return {
+
+                    model:
+                        "free",
+
+                    amount:
+                        0,
+
+                    currency:
+                        null,
+
+                    interval:
+                        null
+
+                };
+
+            }
+
+
+            const allowedModels = [
+
+                "free",
+                "paid",
+                "subscription"
+
+            ];
+
+
+            const requestedModel =
                 String(
                     pricing.model ||
                     ""
                 )
                     .trim()
-                    .toLowerCase()
-            )
-                ? String(
-                    pricing.model
+                    .toLowerCase();
+
+
+            const model =
+                allowedModels.includes(
+                    requestedModel
                 )
-                    .trim()
-                    .toLowerCase()
-                : "free";
+                    ? requestedModel
+                    : "free";
 
 
-        const amount =
-            Number(
-                pricing.amount
-            );
+            const amount =
+                Number(
+                    pricing.amount
+                );
 
 
-        return {
+            let interval =
+                null;
 
-            model,
 
-            amount:
-                Number.isFinite(
-                    amount
-                ) &&
-                amount >= 0
-                    ? amount
-                    : 0,
+            if(
+                model ===
+                "subscription"
+            ){
 
-            currency:
-                pricing.currency
-                    ? String(
-                        pricing.currency
+                const requestedInterval =
+                    String(
+                        pricing.interval ||
+                        ""
                     )
                         .trim()
-                        .toUpperCase()
-                    : null,
+                        .toLowerCase();
 
-            interval:
-                model ===
-                    "subscription"
-                    ? (
-                        pricing.interval ||
-                        null
+
+                const allowedIntervals = [
+
+                    "monthly",
+                    "yearly"
+
+                ];
+
+
+                interval =
+                    allowedIntervals.includes(
+                        requestedInterval
                     )
-                    : null
+                        ? requestedInterval
+                        : null;
 
-        };
+            }
 
-    },
-
-
-    /* =====================================================
-       MANIFEST VALIDATION
-    ===================================================== */
-
-    validateManifest(app){
-
-        if(
-            !app ||
-            typeof app !==
-                "object" ||
-            Array.isArray(app)
-        ){
 
             return {
-                valid:false,
-                reason:
-                    "App manifest geçerli bir object değil."
+
+                model,
+
+                amount:
+                    Number.isFinite(
+                        amount
+                    ) &&
+                    amount >= 0
+                        ? amount
+                        : 0,
+
+                currency:
+                    pricing.currency
+                        ? String(
+                            pricing.currency
+                        )
+                            .trim()
+                            .toUpperCase()
+                        : null,
+
+                interval
+
             };
 
-        }
+        },
 
 
-        const id =
-            this.normalizeId(
-                app.id
-            );
+        /* =====================================================
+           CLONE
+        ===================================================== */
 
+        cloneApp(app){
 
-        if(!id){
+            if(!app){
+                return null;
+            }
+
 
             return {
-                valid:false,
-                reason:
-                    "App id eksik."
+
+                ...app,
+
+                requestedPermissions:[
+                    ...(
+                        app.requestedPermissions ||
+                        []
+                    )
+                ],
+
+                capabilities:[
+                    ...(
+                        app.capabilities ||
+                        []
+                    )
+                ],
+
+                dependencies:[
+                    ...(
+                        app.dependencies ||
+                        []
+                    )
+                ],
+
+                tags:[
+                    ...(
+                        app.tags ||
+                        []
+                    )
+                ],
+
+                pricing:{
+                    ...(
+                        app.pricing ||
+                        {}
+                    )
+                }
+
             };
 
-        }
+        },
 
 
-        if(
-            !/^[a-z0-9][a-z0-9:_\-.]*$/.test(
-                id
-            )
-        ){
+        /* =====================================================
+           MANIFEST VALIDATION
+        ===================================================== */
 
-            return {
-                valid:false,
-                reason:
-                    "App id formatı geçersiz."
-            };
+        validateManifest(app){
 
-        }
+            if(
+                !app ||
+                typeof app !==
+                    "object" ||
+                Array.isArray(
+                    app
+                )
+            ){
 
+                return {
 
-        const title =
-            this.normalizeText(
-                app.title,
-                id
-            );
+                    valid:
+                        false,
 
+                    reason:
+                        "App manifest geçerli bir object değil."
 
-        if(!title){
+                };
 
-            return {
-                valid:false,
-                reason:
-                    "App title eksik."
-            };
-
-        }
+            }
 
 
-        if(
-            title.length >
-            120
-        ){
-
-            return {
-                valid:false,
-                reason:
-                    "App title çok uzun."
-            };
-
-        }
+            const id =
+                this.normalizeId(
+                    app.id
+                );
 
 
-        return {
-            valid:true,
-            id
-        };
+            if(!id){
 
-    },
+                return {
 
+                    valid:
+                        false,
 
-    /* =====================================================
-       REGISTER
-    ===================================================== */
+                    reason:
+                        "App id eksik."
 
-    register(app = {}){
+                };
 
-        const validation =
-            this.validateManifest(
-                app
-            );
+            }
 
 
-        if(!validation.valid){
+            if(
+                !/^[a-z0-9][a-z0-9:_\-.]*$/.test(
+                    id
+                )
+            ){
 
-            console.warn(
-                "Organ kaydedilemedi:",
-                validation.reason,
-                app
-            );
+                return {
 
-            return null;
+                    valid:
+                        false,
 
-        }
+                    reason:
+                        "App id formatı geçersiz."
 
+                };
 
-        const id =
-            validation.id;
-
-
-        const distribution =
-            this.normalizeDistribution(
-                app.distribution
-            );
+            }
 
 
-        const isBuiltIn =
-            distribution ===
-                "built-in";
+            if(
+                id.length >
+                100
+            ){
+
+                return {
+
+                    valid:
+                        false,
+
+                    reason:
+                        "App id çok uzun."
+
+                };
+
+            }
 
 
-        const normalizedApp = {
-
-            manifestVersion:
-                this.manifestVersion,
-
-            id,
-
-            icon:
-                this.normalizeText(
-                    app.icon,
-                    "◌"
-                ),
-
-            title:
+            const title =
                 this.normalizeText(
                     app.title,
                     id
-                ),
+                );
 
-            subtitle:
-                this.normalizeText(
-                    app.subtitle
-                ),
 
-            description:
-                this.normalizeText(
-                    app.description ||
-                    app.subtitle
-                ),
+            if(!title){
 
-            action:
+                return {
+
+                    valid:
+                        false,
+
+                    reason:
+                        "App title eksik."
+
+                };
+
+            }
+
+
+            if(
+                title.length >
+                120
+            ){
+
+                return {
+
+                    valid:
+                        false,
+
+                    reason:
+                        "App title çok uzun."
+
+                };
+
+            }
+
+
+            const action =
                 this.normalizeText(
                     app.action,
                     `entity:${id}`
-                ),
+                );
 
-            category:
-                this.normalizeCategory(
-                    app.category
-                ),
 
-            version:
-                this.normalizeText(
-                    app.version,
-                    "1.0.0"
-                ),
+            if(
+                !/^[a-z0-9:_\-.]+$/i.test(
+                    action
+                )
+            ){
 
-            developer:
-                this.normalizeText(
-                    app.developer,
-                    "VAERO"
-                ),
+                return {
 
-            distribution,
+                    valid:
+                        false,
 
-            enabled:
-                app.enabled !==
-                false,
+                    reason:
+                        "App action formatı geçersiz."
 
-            system:
-                app.system ===
-                    true ||
-                isBuiltIn,
+                };
 
-            removable:
-                app.removable ===
-                    true &&
-                !isBuiltIn,
+            }
 
-            installable:
-                app.installable ===
-                    true &&
-                !isBuiltIn,
 
-            updateable:
-                app.updateable !==
+            return {
+
+                valid:
+                    true,
+
+                id
+
+            };
+
+        },
+
+
+        /* =====================================================
+           REGISTER
+        ===================================================== */
+
+        register(
+            app = {},
+            internalToken = null
+        ){
+
+            const validation =
+                this.validateManifest(
+                    app
+                );
+
+
+            if(
+                !validation.valid
+            ){
+
+                console.warn(
+                    "Organ kaydedilemedi:",
+                    validation.reason,
+                    app
+                );
+
+                return null;
+
+            }
+
+
+            const id =
+                validation.id;
+
+
+            const isBuiltIn =
+                internalToken ===
+                    BUILT_IN_TOKEN;
+
+
+            /*
+             * Built-in dağıtım değeri yalnız private
+             * internal token ile atanabilir.
+             */
+
+            const distribution =
+                isBuiltIn
+                    ? "built-in"
+                    : this.normalizeDistribution(
+                        app.distribution
+                    );
+
+
+            const normalizedApp = {
+
+                manifestVersion:
+                    this.manifestVersion,
+
+                id,
+
+                icon:
+                    this.normalizeText(
+                        app.icon,
+                        "◌"
+                    ),
+
+                title:
+                    this.normalizeText(
+                        app.title,
+                        id
+                    ),
+
+                subtitle:
+                    this.normalizeText(
+                        app.subtitle
+                    ),
+
+                description:
+                    this.normalizeText(
+                        app.description ||
+                        app.subtitle
+                    ),
+
+                action:
+                    this.normalizeText(
+                        app.action,
+                        `entity:${id}`
+                    ),
+
+                category:
+                    this.normalizeCategory(
+                        app.category
+                    ),
+
+                version:
+                    this.normalizeText(
+                        app.version,
+                        "1.0.0"
+                    ),
+
+                developer:
+                    this.normalizeText(
+                        app.developer,
+                        isBuiltIn
+                            ? "VAERO"
+                            : "Unknown Developer"
+                    ),
+
+                distribution,
+
+                enabled:
+                    app.enabled !==
                     false,
 
-            trusted:
-                app.trusted ===
-                    true ||
-                isBuiltIn,
+                /*
+                 * system ve trusted dış manifestten
+                 * asla alınmaz.
+                 */
 
-            signature:
-                app.signature ||
-                null,
+                system:
+                    isBuiltIn,
 
-            requestedPermissions:
-                this.normalizeArray(
-                    app.requestedPermissions
-                ),
+                trusted:
+                    isBuiltIn,
 
-            capabilities:
-                this.normalizeArray(
-                    app.capabilities
-                ),
+                removable:
+                    !isBuiltIn &&
+                    app.removable ===
+                        true,
 
-            dependencies:
-                this.normalizeArray(
-                    app.dependencies
-                ),
+                installable:
+                    !isBuiltIn &&
+                    app.installable ===
+                        true,
 
-            pricing:
-                this.normalizePricing(
-                    app.pricing
-                ),
+                updateable:
+                    app.updateable !==
+                    false,
 
-            minEngineVersion:
-                app.minEngineVersion
-                    ? this.normalizeText(
-                        app.minEngineVersion
+                /*
+                 * Signature burada yalnız manifest
+                 * metadata'sıdır.
+                 *
+                 * "signature var" = "signature doğrulandı"
+                 * anlamına gelmez.
+                 */
+
+                signature:
+                    isBuiltIn
+                        ? null
+                        : (
+                            app.signature ||
+                            null
+                        ),
+
+                requestedPermissions:
+                    this.normalizeArray(
+                        app.requestedPermissions
+                    ),
+
+                capabilities:
+                    this.normalizeArray(
+                        app.capabilities
+                    ),
+
+                dependencies:
+                    this.normalizeArray(
+                        app.dependencies
+                    ),
+
+                pricing:
+                    this.normalizePricing(
+                        app.pricing
+                    ),
+
+                minEngineVersion:
+                    app.minEngineVersion
+                        ? this.normalizeText(
+                            app.minEngineVersion
+                        )
+                        : null,
+
+                tags:
+                    this.normalizeArray(
+                        app.tags
+                    ),
+
+                createdAt:
+                    Number.isFinite(
+                        Number(
+                            app.createdAt
+                        )
                     )
-                    : null,
+                        ? Number(
+                            app.createdAt
+                        )
+                        : Date.now(),
 
-            tags:
-                this.normalizeArray(
-                    app.tags
-                ),
+                updatedAt:
+                    Date.now()
 
-            createdAt:
-                Number(
-                    app.createdAt
-                ) ||
-                Date.now(),
-
-            updatedAt:
-                Date.now()
-
-        };
+            };
 
 
-        const existingIndex =
-            this.apps.findIndex(
-                item =>
-                    item.id === id
+            const existingIndex =
+                this.apps.findIndex(
+                    item =>
+                        item.id ===
+                        id
+                );
+
+
+            /* =================================================
+               EXISTING RECORD
+            ================================================= */
+
+            if(
+                existingIndex >= 0
+            ){
+
+                const existing =
+                    this.apps[
+                        existingIndex
+                    ];
+
+
+                /*
+                 * Mevcut built-in uygulama dış manifest
+                 * tarafından overwrite edilemez.
+                 */
+
+                if(
+                    existing.system ===
+                        true &&
+                    !isBuiltIn
+                ){
+
+                    console.warn(
+                        "Built-in application manifest cannot be overwritten:",
+                        id
+                    );
+
+
+                    return this.cloneApp(
+                        existing
+                    );
+
+                }
+
+
+                /*
+                 * Dış uygulama sonradan kendisini built-in
+                 * yapamaz.
+                 */
+
+                if(
+                    existing.system !==
+                        true &&
+                    isBuiltIn !==
+                        true
+                ){
+
+                    normalizedApp.system =
+                        false;
+
+                    normalizedApp.trusted =
+                        false;
+
+                }
+
+
+                if(isBuiltIn){
+
+                    normalizedApp.system =
+                        true;
+
+                    normalizedApp.trusted =
+                        true;
+
+                    normalizedApp.distribution =
+                        "built-in";
+
+                    normalizedApp.removable =
+                        false;
+
+                    normalizedApp.installable =
+                        false;
+
+                }
+
+
+                normalizedApp.createdAt =
+                    existing.createdAt ||
+                    normalizedApp.createdAt;
+
+
+                this.apps[
+                    existingIndex
+                ] = {
+
+                    ...existing,
+                    ...normalizedApp
+
+                };
+
+
+                return this.cloneApp(
+                    this.apps[
+                        existingIndex
+                    ]
+                );
+
+            }
+
+
+            /* =================================================
+               NEW RECORD
+            ================================================= */
+
+            this.apps.push(
+                normalizedApp
             );
 
 
-        if(
-            existingIndex >= 0
-        ){
+            return this.cloneApp(
+                normalizedApp
+            );
 
-            const existing =
+        },
+
+
+        /* =====================================================
+           REMOVE MANIFEST
+        ===================================================== */
+
+        unregister(id){
+
+            const normalizedId =
+                this.normalizeId(
+                    id
+                );
+
+
+            const index =
+                this.apps.findIndex(
+                    item =>
+                        item.id ===
+                        normalizedId
+                );
+
+
+            if(
+                index <
+                0
+            ){
+                return false;
+            }
+
+
+            const app =
                 this.apps[
-                    existingIndex
+                    index
                 ];
 
 
             /*
-             * İlk kayıt built-in/system ise
-             * sonradan sıradan manifest ile
-             * güven seviyesi düşürülemez.
+             * Built-in VAERO uygulamaları runtime
+             * sırasında registry'den kaldırılamaz.
              */
 
-            normalizedApp.system =
-                existing.system ||
-                normalizedApp.system;
+            if(
+                app.system ===
+                true
+            ){
 
-
-            normalizedApp.trusted =
-                existing.trusted ||
-                normalizedApp.trusted;
-
-
-            if(existing.system){
-
-                normalizedApp.removable =
-                    false;
-
-                normalizedApp.installable =
-                    false;
+                return false;
 
             }
 
 
-            normalizedApp.createdAt =
-                existing.createdAt ||
-                normalizedApp.createdAt;
-
-
-            this.apps[
-                existingIndex
-            ] = {
-                ...existing,
-                ...normalizedApp
-            };
-
-
-            return {
-                ...this.apps[
-                    existingIndex
-                ]
-            };
-
-        }
-
-
-        this.apps.push(
-            normalizedApp
-        );
-
-
-        return {
-            ...normalizedApp
-        };
-
-    },
-
-
-    /* =====================================================
-       REMOVE MANIFEST
-    ===================================================== */
-
-    unregister(id){
-
-        const app =
-            this.find(
-                id
+            this.apps.splice(
+                index,
+                1
             );
 
 
-        if(!app){
-            return false;
-        }
+            return true;
+
+        },
 
 
-        /*
-         * Built-in VAERO uygulamaları
-         * registry'den runtime sırasında kaldırılamaz.
-         */
+        /* =====================================================
+           LOOKUP
+        ===================================================== */
 
-        if(app.system){
+        find(id){
 
-            return false;
+            const normalizedId =
+                this.normalizeId(
+                    id
+                );
 
-        }
+
+            const app =
+                this.apps.find(
+                    item =>
+                        item.id ===
+                        normalizedId
+                );
 
 
-        const index =
-            this.apps.findIndex(
-                item =>
-                    item.id ===
-                    app.id
+            return this.cloneApp(
+                app ||
+                null
             );
 
-
-        if(index < 0){
-            return false;
-        }
+        },
 
 
-        this.apps.splice(
-            index,
-            1
-        );
+        has(id){
+
+            const normalizedId =
+                this.normalizeId(
+                    id
+                );
 
 
-        return true;
-
-    },
-
-
-    /* =====================================================
-       LOOKUP
-    ===================================================== */
-
-    find(id){
-
-        const normalizedId =
-            this.normalizeId(
-                id
-            );
-
-
-        const app =
-            this.apps.find(
-                item =>
-                    item.id ===
+            return this.apps.some(
+                app =>
+                    app.id ===
                     normalizedId
             );
 
+        },
 
-        return app
-            ? {
-                ...app,
-                requestedPermissions:[
-                    ...app.requestedPermissions
-                ],
-                capabilities:[
-                    ...app.capabilities
-                ],
-                dependencies:[
-                    ...app.dependencies
-                ],
-                tags:[
-                    ...app.tags
-                ],
-                pricing:{
-                    ...app.pricing
-                }
+
+        /* =====================================================
+           LIST
+        ===================================================== */
+
+        all(options = {}){
+
+            const includeDisabled =
+                options.includeDisabled ===
+                    true;
+
+
+            let apps =
+                includeDisabled
+                    ? [
+                        ...this.apps
+                    ]
+                    : this.apps.filter(
+                        app =>
+                            app.enabled
+                    );
+
+
+            if(
+                options.category
+            ){
+
+                const category =
+                    this.normalizeCategory(
+                        options.category
+                    );
+
+
+                apps =
+                    apps.filter(
+                        app =>
+                            app.category ===
+                            category
+                    );
+
             }
-            : null;
-
-    },
 
 
-    has(id){
+            if(
+                options.installable ===
+                true
+            ){
 
-        return Boolean(
-            this.find(
-                id
-            )
-        );
+                apps =
+                    apps.filter(
+                        app =>
+                            app.installable ===
+                            true
+                    );
 
-    },
-
-
-    /* =====================================================
-       LIST
-    ===================================================== */
-
-    all(options = {}){
-
-        const includeDisabled =
-            options.includeDisabled ===
-                true;
+            }
 
 
-        let apps =
-            includeDisabled
-                ? this.apps
-                : this.apps.filter(
-                    app =>
-                        app.enabled
-                );
+            if(
+                options.system ===
+                true
+            ){
+
+                apps =
+                    apps.filter(
+                        app =>
+                            app.system ===
+                            true
+                    );
+
+            }
 
 
-        if(options.category){
+            if(
+                options.trusted ===
+                true
+            ){
 
-            const category =
-                this.normalizeCategory(
-                    options.category
-                );
+                apps =
+                    apps.filter(
+                        app =>
+                            app.trusted ===
+                            true
+                    );
 
-
-            apps =
-                apps.filter(
-                    app =>
-                        app.category ===
-                        category
-                );
-
-        }
+            }
 
 
-        if(
-            options.installable ===
-            true
-        ){
+            return apps.map(
+                app =>
+                    this.cloneApp(
+                        app
+                    )
+            );
 
-            apps =
-                apps.filter(
-                    app =>
-                        app.installable
-                );
-
-        }
+        },
 
 
-        if(
-            options.system ===
-            true
-        ){
+        /* =====================================================
+           SEARCH
+        ===================================================== */
 
-            apps =
-                apps.filter(
-                    app =>
-                        app.system
-                );
+        search(query){
 
-        }
-
-
-        if(
-            options.trusted ===
-            true
-        ){
-
-            apps =
-                apps.filter(
-                    app =>
-                        app.trusted
-                );
-
-        }
-
-
-        return apps.map(
-            app => ({
-                ...app,
-
-                requestedPermissions:[
-                    ...app.requestedPermissions
-                ],
-
-                capabilities:[
-                    ...app.capabilities
-                ],
-
-                dependencies:[
-                    ...app.dependencies
-                ],
-
-                tags:[
-                    ...app.tags
-                ],
-
-                pricing:{
-                    ...app.pricing
-                }
-            })
-        );
-
-    },
-
-
-    /* =====================================================
-       SEARCH
-    ===================================================== */
-
-    search(query){
-
-        const text =
-            String(
-                query ?? ""
-            )
-                .trim()
-                .toLocaleLowerCase(
-                    "tr-TR"
-                );
-
-
-        if(!text){
-
-            return this.all();
-
-        }
-
-
-        return this.all().filter(
-            app => {
-
-                const haystack = [
-
-                    app.id,
-
-                    app.title,
-
-                    app.subtitle,
-
-                    app.description,
-
-                    app.developer,
-
-                    app.category,
-
-                    ...app.tags
-
-                ]
-                    .join(" ")
+            const text =
+                String(
+                    query ??
+                    ""
+                )
+                    .trim()
                     .toLocaleLowerCase(
                         "tr-TR"
                     );
 
 
-                return haystack.includes(
-                    text
-                );
+            if(!text){
+
+                return this.all();
 
             }
-        );
-
-    },
 
 
-    /* =====================================================
-       CATEGORIES
-    ===================================================== */
+            return this.all()
+                .filter(
+                    app => {
 
-    categories(){
+                        const haystack = [
 
-        const map =
-            new Map();
+                            app.id,
+
+                            app.title,
+
+                            app.subtitle,
+
+                            app.description,
+
+                            app.developer,
+
+                            app.category,
+
+                            ...(
+                                app.tags ||
+                                []
+                            )
+
+                        ]
+                            .join(" ")
+                            .toLocaleLowerCase(
+                                "tr-TR"
+                            );
 
 
-        this.all().forEach(
+                        return haystack.includes(
+                            text
+                        );
+
+                    }
+                );
+
+        },
+
+
+        /* =====================================================
+           CATEGORIES
+        ===================================================== */
+
+        categories(){
+
+            const map =
+                new Map();
+
+
+            this.all()
+                .forEach(
+                    app => {
+
+                        const current =
+                            map.get(
+                                app.category
+                            ) ||
+                            0;
+
+
+                        map.set(
+                            app.category,
+                            current + 1
+                        );
+
+                    }
+                );
+
+
+            return [
+                ...map.entries()
+            ]
+                .map(
+                    ([
+                        id,
+                        total
+                    ]) => ({
+
+                        id,
+                        total
+
+                    })
+                );
+
+        },
+
+
+        /* =====================================================
+           APPLICATIONS CATALOG SNAPSHOT
+        ===================================================== */
+
+        catalog(){
+
+            const apps =
+                this.all({
+                    includeDisabled:
+                        true
+                });
+
+
+            return {
+
+                total:
+                    apps.length,
+
+                enabled:
+                    apps.filter(
+                        app =>
+                            app.enabled ===
+                            true
+                    ).length,
+
+                builtIn:
+                    apps.filter(
+                        app =>
+                            app.distribution ===
+                            "built-in"
+                    ).length,
+
+                firstParty:
+                    apps.filter(
+                        app =>
+                            app.distribution ===
+                            "first-party"
+                    ).length,
+
+                thirdParty:
+                    apps.filter(
+                        app =>
+                            app.distribution ===
+                            "third-party"
+                    ).length,
+
+                installable:
+                    apps.filter(
+                        app =>
+                            app.installable ===
+                            true
+                    ).length,
+
+                trusted:
+                    apps.filter(
+                        app =>
+                            app.trusted ===
+                            true
+                    ).length,
+
+                paid:
+                    apps.filter(
+                        app =>
+                            app.pricing?.model !==
+                            "free"
+                    ).length,
+
+                categories:
+                    this.categories(),
+
+                apps
+
+            };
+
+        }
+
+    };
+
+
+    /* =========================================================
+       BUILT-IN VAERO APPLICATIONS
+    ========================================================= */
+
+    const builtInApplications = [
+
+        {
+            id:
+                "identity",
+
+            icon:
+                "🪪",
+
+            title:
+                "Kimlik",
+
+            subtitle:
+                "Dijital kimliğini yönet",
+
+            description:
+                "VAERO kimlik kaydını ve varlık kimliği bağlamını yönetir.",
+
+            action:
+                "entity:identity",
+
+            category:
+                "identity",
+
+            capabilities:[
+                "identity.read"
+            ]
+        },
+
+
+        {
+            id:
+                "profile",
+
+            icon:
+                "👤",
+
+            title:
+                "Profil",
+
+            subtitle:
+                "Profilini ve yönünü görüntüle",
+
+            description:
+                "Görünen profil bilgilerini ve kişisel yönünü yönetir.",
+
+            action:
+                "entity:profile",
+
+            category:
+                "identity",
+
+            capabilities:[
+                "profile.read",
+                "profile.manage"
+            ]
+        },
+
+
+        {
+            id:
+                "memory",
+
+            icon:
+                "◫",
+
+            title:
+                "Hafıza",
+
+            subtitle:
+                "Kalıcı kayıtlarını görüntüle",
+
+            description:
+                "VAERO içindeki kalıcı bağlamları ve önemli kayıtları yönetir.",
+
+            action:
+                "entity:memory",
+
+            category:
+                "knowledge",
+
+            capabilities:[
+                "memory.read"
+            ]
+        },
+
+
+        {
+            id:
+                "timeline",
+
+            icon:
+                "◷",
+
+            title:
+                "Zaman Çizelgesi",
+
+            subtitle:
+                "Geçmiş olaylarını görüntüle",
+
+            description:
+                "Olayları ve değişimleri kronolojik bir yaşam akışında gösterir.",
+
+            action:
+                "entity:timeline",
+
+            category:
+                "knowledge",
+
+            capabilities:[
+                "timeline.read"
+            ]
+        },
+
+
+        {
+            id:
+                "bridge",
+
+            icon:
+                "⌁",
+
+            title:
+                "Köprü",
+
+            subtitle:
+                "Bağlantılarını yönet",
+
+            description:
+                "VAERO varlıkları ve sistem bağlamları arasındaki ilişkileri temsil eder.",
+
+            action:
+                "entity:bridge",
+
+            category:
+                "social",
+
+            capabilities:[
+                "bridge.read"
+            ]
+        },
+
+
+        {
+            id:
+                "evolution",
+
+            icon:
+                "⌬",
+
+            title:
+                "Evrim",
+
+            subtitle:
+                "Gelişim olaylarını incele",
+
+            description:
+                "Kararların, başarıların ve yaşam olaylarının zaman içindeki etkisini gösterir.",
+
+            action:
+                "entity:evolution",
+
+            category:
+                "development",
+
+            capabilities:[
+                "evolution.read"
+            ]
+        },
+
+
+        {
+            id:
+                "settings",
+
+            icon:
+                "⚙️",
+
+            title:
+                "Ayarlar",
+
+            subtitle:
+                "Sistem tercihlerini yönet",
+
+            description:
+                "VAERO görünümünü, davranışlarını ve kullanıcı tercihlerini yönetir.",
+
+            action:
+                "entity:settings",
+
+            category:
+                "system",
+
+            capabilities:[
+                "settings.read"
+            ]
+        },
+
+
+        {
+            id:
+                "discovery",
+
+            icon:
+                "◇",
+
+            title:
+                "Discovery",
+
+            subtitle:
+                "Keşif cevaplarını yeniden değerlendir",
+
+            description:
+                "Hedefleri, ilgi alanlarını, güçlü yönleri ve kişisel yönü değerlendirir.",
+
+            action:
+                "entity:discovery",
+
+            category:
+                "development",
+
+            capabilities:[
+                "discovery.read"
+            ]
+        },
+
+
+        {
+            id:
+                "applications",
+
+            icon:
+                "▦",
+
+            title:
+                "Applications",
+
+            subtitle:
+                "Engine'ini yeni uygulamalarla genişlet",
+
+            description:
+                "VAERO uygulamalarını keşfet, incele, yükle ve yönet.",
+
+            action:
+                "app:applications",
+
+            category:
+                "system",
+
+            capabilities:[
+                "applications.catalog",
+                "applications.manage",
+                "permissions.request"
+            ]
+        },
+
+
+        {
+            id:
+                "vaero",
+
+            icon:
+                "◉",
+
+            title:
+                "VAERO",
+
+            subtitle:
+                "Engine hizmetlerini yönet",
+
+            description:
+                "Engine hizmetleri, abonelik ve merkezi ödeme altyapısına erişim sağlar.",
+
+            action:
+                "app:vaero",
+
+            category:
+                "system",
+
+            capabilities:[
+                "engine.services",
+                "payment.intent"
+            ]
+        }
+
+    ];
+
+
+    builtInApplications
+        .forEach(
             app => {
 
-                const current =
-                    map.get(
-                        app.category
-                    ) ||
-                    0;
-
-
-                map.set(
-                    app.category,
-                    current + 1
+                Registry.register(
+                    app,
+                    BUILT_IN_TOKEN
                 );
 
             }
         );
 
 
-        return [
-            ...map.entries()
-        ].map(
-            ([id, total]) => ({
-                id,
-                total
-            })
-        );
+    return Registry;
 
-    },
-
-
-    /* =====================================================
-       APPLICATIONS CATALOG SNAPSHOT
-    ===================================================== */
-
-    catalog(){
-
-        const apps =
-            this.all({
-                includeDisabled:true
-            });
-
-
-        return {
-
-            total:
-                apps.length,
-
-            enabled:
-                apps.filter(
-                    app =>
-                        app.enabled
-                ).length,
-
-            builtIn:
-                apps.filter(
-                    app =>
-                        app.distribution ===
-                        "built-in"
-                ).length,
-
-            installable:
-                apps.filter(
-                    app =>
-                        app.installable
-                ).length,
-
-            trusted:
-                apps.filter(
-                    app =>
-                        app.trusted
-                ).length,
-
-            paid:
-                apps.filter(
-                    app =>
-                        app.pricing.model !==
-                        "free"
-                ).length,
-
-            categories:
-                this.categories(),
-
-            apps
-
-        };
-
-    }
-
-};
-
-
-/* =========================================================
-   BUILT-IN VAERO APPLICATIONS
-========================================================= */
-
-[
-    {
-        id:
-            "identity",
-
-        icon:
-            "🪪",
-
-        title:
-            "Kimlik",
-
-        subtitle:
-            "Dijital kimliğini yönet",
-
-        description:
-            "VAERO kimlik kaydını ve varlık kimliği bağlamını yönetir.",
-
-        action:
-            "entity:identity",
-
-        category:
-            "identity",
-
-        distribution:
-            "built-in",
-
-        trusted:
-            true,
-
-        capabilities:[
-            "identity.read"
-        ]
-    },
-
-
-    {
-        id:
-            "profile",
-
-        icon:
-            "👤",
-
-        title:
-            "Profil",
-
-        subtitle:
-            "Profilini ve yönünü görüntüle",
-
-        description:
-            "Görünen profil bilgilerini ve kişisel yönünü yönetir.",
-
-        action:
-            "entity:profile",
-
-        category:
-            "identity",
-
-        distribution:
-            "built-in",
-
-        trusted:
-            true,
-
-        capabilities:[
-            "profile.read",
-            "profile.manage"
-        ]
-    },
-
-
-    {
-        id:
-            "memory",
-
-        icon:
-            "◫",
-
-        title:
-            "Hafıza",
-
-        subtitle:
-            "Kalıcı kayıtlarını görüntüle",
-
-        description:
-            "VAERO içindeki kalıcı bağlamları ve önemli kayıtları yönetir.",
-
-        action:
-            "entity:memory",
-
-        category:
-            "knowledge",
-
-        distribution:
-            "built-in",
-
-        trusted:
-            true,
-
-        capabilities:[
-            "memory.read"
-        ]
-    },
-
-
-    {
-        id:
-            "timeline",
-
-        icon:
-            "◷",
-
-        title:
-            "Zaman Çizelgesi",
-
-        subtitle:
-            "Geçmiş olaylarını görüntüle",
-
-        description:
-            "Olayları ve değişimleri kronolojik bir yaşam akışında gösterir.",
-
-        action:
-            "entity:timeline",
-
-        category:
-            "knowledge",
-
-        distribution:
-            "built-in",
-
-        trusted:
-            true,
-
-        capabilities:[
-            "timeline.read"
-        ]
-    },
-
-
-    {
-        id:
-            "bridge",
-
-        icon:
-            "⌁",
-
-        title:
-            "Köprü",
-
-        subtitle:
-            "Bağlantılarını yönet",
-
-        description:
-            "VAERO varlıkları ve sistem bağlamları arasındaki ilişkileri temsil eder.",
-
-        action:
-            "entity:bridge",
-
-        category:
-            "social",
-
-        distribution:
-            "built-in",
-
-        trusted:
-            true,
-
-        capabilities:[
-            "bridge.read"
-        ]
-    },
-
-
-    {
-        id:
-            "evolution",
-
-        icon:
-            "⌬",
-
-        title:
-            "Evrim",
-
-        subtitle:
-            "Gelişim olaylarını incele",
-
-        description:
-            "Kararların, başarıların ve yaşam olaylarının zaman içindeki etkisini gösterir.",
-
-        action:
-            "entity:evolution",
-
-        category:
-            "development",
-
-        distribution:
-            "built-in",
-
-        trusted:
-            true,
-
-        capabilities:[
-            "evolution.read"
-        ]
-    },
-
-
-    {
-        id:
-            "settings",
-
-        icon:
-            "⚙️",
-
-        title:
-            "Ayarlar",
-
-        subtitle:
-            "Sistem tercihlerini yönet",
-
-        description:
-            "VAERO görünümünü, davranışlarını ve kullanıcı tercihlerini yönetir.",
-
-        action:
-            "entity:settings",
-
-        category:
-            "system",
-
-        distribution:
-            "built-in",
-
-        trusted:
-            true,
-
-        capabilities:[
-            "settings.read"
-        ]
-    },
-
-
-    {
-        id:
-            "discovery",
-
-        icon:
-            "◇",
-
-        title:
-            "Discovery",
-
-        subtitle:
-            "Keşif cevaplarını yeniden değerlendir",
-
-        description:
-            "Hedefleri, ilgi alanlarını, güçlü yönleri ve kişisel yönü değerlendirir.",
-
-        action:
-            "entity:discovery",
-
-        category:
-            "development",
-
-        distribution:
-            "built-in",
-
-        trusted:
-            true,
-
-        capabilities:[
-            "discovery.read"
-        ]
-    },
-
-
-    {
-        id:
-            "applications",
-
-        icon:
-            "▦",
-
-        title:
-            "Applications",
-
-        subtitle:
-            "Engine'ini yeni uygulamalarla genişlet",
-
-        description:
-            "VAERO uygulamalarını keşfet, incele, yükle ve yönet.",
-
-        action:
-            "app:applications",
-
-        category:
-            "system",
-
-        distribution:
-            "built-in",
-
-        trusted:
-            true,
-
-        capabilities:[
-            "applications.catalog",
-            "applications.manage",
-            "permissions.request"
-        ]
-    },
-
-
-    {
-        id:
-            "vaero",
-
-        icon:
-            "◉",
-
-        title:
-            "VAERO",
-
-        subtitle:
-            "Engine hizmetlerini yönet",
-
-        description:
-            "Engine hizmetleri, abonelik ve merkezi ödeme altyapısına erişim sağlar.",
-
-        action:
-            "app:vaero",
-
-        category:
-            "system",
-
-        distribution:
-            "built-in",
-
-        trusted:
-            true,
-
-        capabilities:[
-            "engine.services",
-            "payment.intent"
-        ]
-    }
-
-].forEach(
-    app =>
-        OrganRegistry.register(
-            app
-        )
-);
+})();
 
 
 /* =========================================================
@@ -1305,7 +1545,8 @@ const OrganRegistry = {
 try{
 
     if(
-        typeof VAERO !== "undefined" &&
+        typeof VAERO !==
+            "undefined" &&
         typeof VAERO.register ===
             "function"
     ){
@@ -1326,6 +1567,10 @@ try{
 
 }
 
+
+/* =========================================================
+   GLOBAL
+========================================================= */
 
 window.OrganRegistry =
     OrganRegistry;
