@@ -32,6 +32,9 @@ const Runtime = {
     lastHealth:
         null,
 
+    lastOrganHealth:
+        null,
+
 
     /* =====================================================
        SAFE SERVICE ACCESS
@@ -45,11 +48,16 @@ const Runtime = {
                 typeof VAERO === "undefined" ||
                 typeof VAERO.get !== "function"
             ){
+
                 return null;
+
             }
 
+
             return (
-                VAERO.get(name) ||
+                VAERO.get(
+                    name
+                ) ||
                 null
             );
 
@@ -59,6 +67,7 @@ const Runtime = {
                 `Runtime servisi okunamadı: ${name}`,
                 error
             );
+
 
             return null;
 
@@ -76,6 +85,47 @@ const Runtime = {
         payload = {}
     ){
 
+        let emitted =
+            false;
+
+
+        try{
+
+            if(
+                typeof VAERO !==
+                    "undefined" &&
+                typeof VAERO.emit ===
+                    "function"
+            ){
+
+                VAERO.emit(
+                    eventName,
+                    payload
+                );
+
+
+                emitted =
+                    true;
+
+            }
+
+        } catch(error){
+
+            console.warn(
+                `Runtime event gönderilemedi: ${eventName}`,
+                error
+            );
+
+        }
+
+
+        if(emitted){
+
+            return true;
+
+        }
+
+
         const events =
             this.getService(
                 "events"
@@ -87,7 +137,9 @@ const Runtime = {
             typeof events.emit !==
                 "function"
         ){
+
             return false;
+
         }
 
 
@@ -98,14 +150,16 @@ const Runtime = {
                 payload
             );
 
+
             return true;
 
         } catch(error){
 
             console.warn(
-                `Runtime event gönderilemedi: ${eventName}`,
+                `Runtime event fallback gönderilemedi: ${eventName}`,
                 error
             );
+
 
             return false;
 
@@ -126,18 +180,55 @@ const Runtime = {
             );
 
 
-        /*
-         * Kernel henüz registry'ye bağlı değilse
-         * Runtime çökmemeli.
-         */
+        const organStatus =
+            this.getService(
+                "organStatus"
+            );
+
+
+        let kernelHealth =
+            null;
+
+
+        let organHealth =
+            null;
+
 
         if(
-            !kernel ||
-            typeof kernel.health !==
+            kernel &&
+            typeof kernel.health ===
                 "function"
         ){
 
-            const fallback = {
+            try{
+
+                kernelHealth =
+                    kernel.health();
+
+            } catch(error){
+
+                kernelHealth = {
+
+                    status:
+                        "error",
+
+                    securityReady:
+                        false,
+
+                    checkedAt:
+                        Date.now(),
+
+                    reason:
+                        error?.message ||
+                        "kernel-health-error"
+
+                };
+
+            }
+
+        } else {
+
+            kernelHealth = {
 
                 status:
                     "unknown",
@@ -153,55 +244,133 @@ const Runtime = {
 
             };
 
-
-            this.lastHealth =
-                fallback;
+        }
 
 
-            return fallback;
+        if(
+            organStatus &&
+            typeof organStatus.health ===
+                "function"
+        ){
+
+            try{
+
+                organHealth =
+                    organStatus.health();
+
+            } catch(error){
+
+                organHealth = {
+
+                    status:
+                        "error",
+
+                    averageHealth:
+                        0,
+
+                    reason:
+                        error?.message ||
+                        "organ-health-error",
+
+                    checkedAt:
+                        Date.now()
+
+                };
+
+            }
 
         }
 
 
-        try{
-
-            const health =
-                kernel.health();
-
-
-            this.lastHealth =
-                health;
+        const kernelStatus =
+            String(
+                kernelHealth?.status ||
+                "unknown"
+            ).toLowerCase();
 
 
-            return health;
-
-        } catch(error){
-
-            const failed = {
-
-                status:
-                    "error",
-
-                securityReady:
-                    false,
-
-                checkedAt:
-                    Date.now(),
-
-                reason:
-                    error?.message ||
-                    "kernel-health-error"
-
-            };
+        const organState =
+            String(
+                organHealth?.status ||
+                "unknown"
+            ).toLowerCase();
 
 
-            this.lastHealth =
-                failed;
+        const critical =
+            kernelStatus ===
+                "critical" ||
+            kernelStatus ===
+                "error" ||
+            organState ===
+                "critical" ||
+            organState ===
+                "error";
 
 
-            return failed;
+        const degraded =
+            !critical &&
+            (
+                kernelStatus ===
+                    "degraded" ||
+                organState ===
+                    "degraded"
+            );
 
-        }
+
+        const overallStatus =
+            critical
+                ? "critical"
+                : degraded
+                    ? "degraded"
+                    : kernelStatus ===
+                            "healthy" ||
+                        organState ===
+                            "healthy"
+                        ? "healthy"
+                        : "unknown";
+
+
+        const health = {
+
+            status:
+                overallStatus,
+
+            securityReady:
+                Boolean(
+                    kernelHealth?.securityReady
+                ),
+
+            kernel:
+                kernelHealth,
+
+            organs:
+                organHealth,
+
+            criticalMissing:
+                Array.isArray(
+                    kernelHealth?.criticalMissing
+                )
+                    ? [
+                        ...kernelHealth
+                            .criticalMissing
+                    ]
+                    : [],
+
+            checkedAt:
+                Date.now()
+
+        };
+
+
+        this.lastHealth =
+            health;
+
+
+        this.lastOrganHealth =
+            organHealth;
+
+
+        return health;
 
     },
 
@@ -213,7 +382,9 @@ const Runtime = {
     inspectSecurity(health){
 
         if(!health){
-            return;
+
+            return false;
+
         }
 
 
@@ -227,6 +398,7 @@ const Runtime = {
             this.emit(
                 "runtime.security.warning",
                 {
+
                     status:
                         health.status ||
                         "unknown",
@@ -240,15 +412,102 @@ const Runtime = {
                         Array.isArray(
                             health.criticalMissing
                         )
-                            ? health.criticalMissing
+                            ? [
+                                ...health
+                                    .criticalMissing
+                            ]
+                            : [],
+
+                    kernelStatus:
+                        health.kernel?.status ||
+                        null,
+
+                    organStatus:
+                        health.organs?.status ||
+                        null,
+
+                    time:
+                        Date.now()
+
+                }
+            );
+
+
+            return true;
+
+        }
+
+
+        return false;
+
+    },
+
+
+    /* =====================================================
+       HEALTH SIGNAL
+    ===================================================== */
+
+    inspectHealth(health){
+
+        if(!health){
+
+            return false;
+
+        }
+
+
+        if(
+            health.status ===
+                "degraded" ||
+            health.status ===
+                "critical"
+        ){
+
+            this.emit(
+                "runtime.health.warning",
+                {
+
+                    status:
+                        health.status,
+
+                    kernelStatus:
+                        health.kernel?.status ||
+                        null,
+
+                    organStatus:
+                        health.organs?.status ||
+                        null,
+
+                    averageOrganHealth:
+                        health.organs
+                            ?.averageHealth ??
+                        null,
+
+                    problematicOrgans:
+                        Array.isArray(
+                            health.organs
+                                ?.problematic
+                        )
+                            ? [
+                                ...health
+                                    .organs
+                                    .problematic
+                            ]
                             : [],
 
                     time:
                         Date.now()
+
                 }
             );
 
+
+            return true;
+
         }
+
+
+        return false;
 
     },
 
@@ -261,7 +520,7 @@ const Runtime = {
 
         if(
             this.status ===
-            "running"
+                "running"
         ){
 
             return this.report();
@@ -289,8 +548,12 @@ const Runtime = {
                 "running";
 
 
-            this.startedAt =
-                Date.now();
+            if(!this.startedAt){
+
+                this.startedAt =
+                    Date.now();
+
+            }
 
 
             this.stoppedAt =
@@ -301,10 +564,6 @@ const Runtime = {
                 null;
 
 
-            this.ticks =
-                0;
-
-
             const health =
                 this.checkHealth();
 
@@ -312,6 +571,7 @@ const Runtime = {
             this.emit(
                 "runtime.started",
                 {
+
                     status:
                         this.status,
 
@@ -324,33 +584,37 @@ const Runtime = {
 
                     securityReady:
                         Boolean(
-                            health?.securityReady
-                        )
+                            health
+                                ?.securityReady
+                        ),
+
+                    organHealth:
+                        health?.organs
+                            ?.status ||
+                        null
+
                 }
             );
 
 
-            /*
-             * İlk heartbeat anında çalışır.
-             */
-
             this.tick();
 
 
-            /*
-             * Sonraki heartbeat'ler kontrollü
-             * interval üzerinden devam eder.
-             */
+            this.startTimer();
 
-            this.timer =
-                setInterval(
-                    () => {
 
-                        this.tick();
+            return this.report();
 
-                    },
-                    this.heartbeatInterval
-                );
+        } catch(error){
+
+            this.status =
+                "error";
+
+
+            console.error(
+                "VAERO Runtime boot failed:",
+                error
+            );
 
 
             return this.report();
@@ -375,7 +639,9 @@ const Runtime = {
             this.status !==
             "running"
         ){
+
             return false;
+
         }
 
 
@@ -383,7 +649,8 @@ const Runtime = {
             Date.now();
 
 
-        this.ticks += 1;
+        this.ticks +=
+            1;
 
 
         this.lastTickAt =
@@ -399,9 +666,15 @@ const Runtime = {
         );
 
 
+        this.inspectHealth(
+            health
+        );
+
+
         this.emit(
             "runtime.tick",
             {
+
                 ticks:
                     this.ticks,
 
@@ -409,10 +682,7 @@ const Runtime = {
                     now,
 
                 uptime:
-                    this.startedAt
-                        ? now -
-                          this.startedAt
-                        : 0,
+                    this.uptime(),
 
                 health:
                     health?.status ||
@@ -420,8 +690,25 @@ const Runtime = {
 
                 securityReady:
                     Boolean(
-                        health?.securityReady
-                    )
+                        health
+                            ?.securityReady
+                    ),
+
+                kernelHealth:
+                    health?.kernel
+                        ?.status ||
+                    null,
+
+                organHealth:
+                    health?.organs
+                        ?.status ||
+                    null,
+
+                averageOrganHealth:
+                    health?.organs
+                        ?.averageHealth ??
+                    null
+
             }
         );
 
@@ -441,7 +728,9 @@ const Runtime = {
             this.status !==
             "running"
         ){
+
             return false;
+
         }
 
 
@@ -455,11 +744,16 @@ const Runtime = {
         this.emit(
             "runtime.paused",
             {
+
                 ticks:
                     this.ticks,
 
                 pausedAt:
-                    Date.now()
+                    Date.now(),
+
+                uptime:
+                    this.uptime()
+
             }
         );
 
@@ -475,7 +769,9 @@ const Runtime = {
             this.status !==
             "paused"
         ){
+
             return false;
+
         }
 
 
@@ -486,11 +782,16 @@ const Runtime = {
         this.emit(
             "runtime.resumed",
             {
+
                 resumedAt:
                     Date.now(),
 
                 ticks:
-                    this.ticks
+                    this.ticks,
+
+                uptime:
+                    this.uptime()
+
             }
         );
 
@@ -498,15 +799,7 @@ const Runtime = {
         this.tick();
 
 
-        this.timer =
-            setInterval(
-                () => {
-
-                    this.tick();
-
-                },
-                this.heartbeatInterval
-            );
+        this.startTimer();
 
 
         return true;
@@ -529,6 +822,7 @@ const Runtime = {
 
             this.clearTimer();
 
+
             return true;
 
         }
@@ -548,6 +842,7 @@ const Runtime = {
         this.emit(
             "runtime.stopped",
             {
+
                 stoppedAt:
                     this.stoppedAt,
 
@@ -558,10 +853,8 @@ const Runtime = {
                     this.ticks,
 
                 uptime:
-                    this.startedAt
-                        ? this.stoppedAt -
-                          this.startedAt
-                        : 0
+                    this.uptime()
+
             }
         );
 
@@ -575,6 +868,37 @@ const Runtime = {
        TIMER
     ===================================================== */
 
+    startTimer(){
+
+        this.clearTimer();
+
+
+        if(
+            this.status !==
+            "running"
+        ){
+
+            return false;
+
+        }
+
+
+        this.timer =
+            setInterval(
+                () => {
+
+                    this.tick();
+
+                },
+                this.heartbeatInterval
+            );
+
+
+        return true;
+
+    },
+
+
     clearTimer(){
 
         if(this.timer){
@@ -582,6 +906,7 @@ const Runtime = {
             clearInterval(
                 this.timer
             );
+
 
             this.timer =
                 null;
@@ -604,17 +929,14 @@ const Runtime = {
             );
 
 
-        /*
-         * Frontend runtime'ın aşırı sık tick
-         * üretmesini engelliyoruz.
-         */
-
         if(
             !Number.isFinite(
                 value
             ) ||
-            value < 5000 ||
-            value > 300000
+            value <
+                5000 ||
+            value >
+                300000
         ){
 
             return false;
@@ -630,23 +952,26 @@ const Runtime = {
 
         if(
             this.status ===
-            "running"
+                "running"
         ){
 
-            this.clearTimer();
-
-
-            this.timer =
-                setInterval(
-                    () => {
-
-                        this.tick();
-
-                    },
-                    this.heartbeatInterval
-                );
+            this.startTimer();
 
         }
+
+
+        this.emit(
+            "runtime.heartbeat.changed",
+            {
+
+                heartbeatInterval:
+                    this.heartbeatInterval,
+
+                time:
+                    Date.now()
+
+            }
+        );
 
 
         return true;
@@ -661,7 +986,9 @@ const Runtime = {
     uptime(){
 
         if(!this.startedAt){
+
             return 0;
+
         }
 
 
@@ -717,7 +1044,10 @@ const Runtime = {
                 ),
 
             health:
-                this.lastHealth
+                this.lastHealth,
+
+            organHealth:
+                this.lastOrganHealth
 
         };
 
@@ -736,20 +1066,30 @@ const Runtime = {
         this.status =
             "idle";
 
+
         this.startedAt =
             null;
+
 
         this.stoppedAt =
             null;
 
+
         this.lastTickAt =
             null;
+
 
         this.ticks =
             0;
 
+
         this.lastHealth =
             null;
+
+
+        this.lastOrganHealth =
+            null;
+
 
         this.booting =
             false;
@@ -762,10 +1102,34 @@ const Runtime = {
 };
 
 
-VAERO.register(
-    "runtime",
-    Runtime
-);
+/* =========================================================
+   REGISTER
+========================================================= */
+
+try{
+
+    if(
+        typeof VAERO !==
+            "undefined" &&
+        typeof VAERO.register ===
+            "function"
+    ){
+
+        VAERO.register(
+            "runtime",
+            Runtime
+        );
+
+    }
+
+} catch(error){
+
+    console.warn(
+        "Runtime VAERO register başarısız:",
+        error
+    );
+
+}
 
 
 window.Runtime =
