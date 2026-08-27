@@ -5,6 +5,9 @@
 
 const Runtime = {
 
+    id:
+        "vaero-runtime",
+
     status:
         "idle",
 
@@ -12,6 +15,9 @@ const Runtime = {
         null,
 
     stoppedAt:
+        null,
+
+    pausedAt:
         null,
 
     lastTickAt:
@@ -35,6 +41,15 @@ const Runtime = {
     lastOrganHealth:
         null,
 
+    lastSecurityWarningAt:
+        null,
+
+    lastHealthWarningAt:
+        null,
+
+    warningCooldown:
+        30000,
+
 
     /* =====================================================
        SAFE SERVICE ACCESS
@@ -42,11 +57,27 @@ const Runtime = {
 
     getService(name){
 
+        const serviceName =
+            String(
+                name ??
+                ""
+            ).trim();
+
+
+        if(!serviceName){
+
+            return null;
+
+        }
+
+
         try{
 
             if(
-                typeof VAERO === "undefined" ||
-                typeof VAERO.get !== "function"
+                typeof VAERO ===
+                    "undefined" ||
+                typeof VAERO.get !==
+                    "function"
             ){
 
                 return null;
@@ -56,7 +87,7 @@ const Runtime = {
 
             return (
                 VAERO.get(
-                    name
+                    serviceName
                 ) ||
                 null
             );
@@ -64,7 +95,7 @@ const Runtime = {
         } catch(error){
 
             console.warn(
-                `Runtime servisi okunamadı: ${name}`,
+                `Runtime servisi okunamadı: ${serviceName}`,
                 error
             );
 
@@ -85,8 +116,18 @@ const Runtime = {
         payload = {}
     ){
 
-        let emitted =
-            false;
+        const name =
+            String(
+                eventName ??
+                    ""
+            ).trim();
+
+
+        if(!name){
+
+            return false;
+
+        }
 
 
         try{
@@ -99,29 +140,21 @@ const Runtime = {
             ){
 
                 VAERO.emit(
-                    eventName,
+                    name,
                     payload
                 );
 
 
-                emitted =
-                    true;
+                return true;
 
             }
 
         } catch(error){
 
             console.warn(
-                `Runtime event gönderilemedi: ${eventName}`,
+                `Runtime event gönderilemedi: ${name}`,
                 error
             );
-
-        }
-
-
-        if(emitted){
-
-            return true;
 
         }
 
@@ -146,7 +179,7 @@ const Runtime = {
         try{
 
             events.emit(
-                eventName,
+                name,
                 payload
             );
 
@@ -156,7 +189,7 @@ const Runtime = {
         } catch(error){
 
             console.warn(
-                `Runtime event fallback gönderilemedi: ${eventName}`,
+                `Runtime event fallback gönderilemedi: ${name}`,
                 error
             );
 
@@ -168,11 +201,132 @@ const Runtime = {
     },
 
 
+    emitAliases(
+        names,
+        payload = {}
+    ){
+
+        if(
+            !Array.isArray(
+                names
+            )
+        ){
+
+            return false;
+
+        }
+
+
+        let emitted =
+            false;
+
+
+        const unique =
+            [
+                ...new Set(
+                    names
+                        .map(
+                            name =>
+                                String(
+                                    name ??
+                                        ""
+                                ).trim()
+                        )
+                        .filter(Boolean)
+                )
+            ];
+
+
+        unique.forEach(
+            name => {
+
+                if(
+                    this.emit(
+                        name,
+                        payload
+                    )
+                ){
+
+                    emitted =
+                        true;
+
+                }
+
+            }
+        );
+
+
+        return emitted;
+
+    },
+
+
     /* =====================================================
-       HEALTH SNAPSHOT
+       NORMALIZATION
     ===================================================== */
 
-    checkHealth(){
+    normalizeStatus(value){
+
+        const status =
+            String(
+                value ||
+                    "unknown"
+            )
+                .trim()
+                .toLowerCase();
+
+
+        if(
+            [
+                "healthy",
+                "degraded",
+                "critical",
+                "error",
+                "unknown"
+            ].includes(
+                status
+            )
+        ){
+
+            return status;
+
+        }
+
+
+        return "unknown";
+
+    },
+
+
+    normalizeTimestamp(
+        value,
+        fallback = null
+    ){
+
+        const timestamp =
+            Number(
+                value
+            );
+
+
+        return (
+            Number.isFinite(
+                timestamp
+            ) &&
+            timestamp >
+                0
+        )
+            ? timestamp
+            : fallback;
+
+    },
+
+
+    /* =====================================================
+       HEALTH SOURCE
+    ===================================================== */
+
+    readKernelHealth(){
 
         const kernel =
             this.getService(
@@ -180,61 +334,22 @@ const Runtime = {
             );
 
 
-        const organStatus =
-            this.getService(
-                "organStatus"
-            );
-
-
-        let kernelHealth =
-            null;
-
-
-        let organHealth =
-            null;
-
-
         if(
-            kernel &&
-            typeof kernel.health ===
+            !kernel ||
+            typeof kernel.health !==
                 "function"
         ){
 
-            try{
-
-                kernelHealth =
-                    kernel.health();
-
-            } catch(error){
-
-                kernelHealth = {
-
-                    status:
-                        "error",
-
-                    securityReady:
-                        false,
-
-                    checkedAt:
-                        Date.now(),
-
-                    reason:
-                        error?.message ||
-                        "kernel-health-error"
-
-                };
-
-            }
-
-        } else {
-
-            kernelHealth = {
+            return {
 
                 status:
                     "unknown",
 
                 securityReady:
                     false,
+
+                criticalMissing:
+                    [],
 
                 checkedAt:
                     Date.now(),
@@ -247,73 +362,302 @@ const Runtime = {
         }
 
 
-        if(
-            organStatus &&
-            typeof organStatus.health ===
-                "function"
-        ){
+        try{
 
-            try{
+            const health =
+                kernel.health();
 
-                organHealth =
-                    organStatus.health();
 
-            } catch(error){
+            if(
+                !health ||
+                typeof health !==
+                    "object"
+            ){
 
-                organHealth = {
+                return {
 
                     status:
-                        "error",
+                        "unknown",
 
-                    averageHealth:
-                        0,
+                    securityReady:
+                        false,
 
-                    reason:
-                        error?.message ||
-                        "organ-health-error",
+                    criticalMissing:
+                        [],
 
                     checkedAt:
-                        Date.now()
+                        Date.now(),
+
+                    reason:
+                        "kernel-health-invalid"
 
                 };
 
             }
 
+
+            return {
+
+                ...health,
+
+                status:
+                    this.normalizeStatus(
+                        health.status
+                    ),
+
+                securityReady:
+                    Boolean(
+                        health.securityReady
+                    ),
+
+                criticalMissing:
+                    Array.isArray(
+                        health.criticalMissing
+                    )
+                        ? [
+                            ...health.criticalMissing
+                        ]
+                        : [],
+
+                checkedAt:
+                    Number(
+                        health.checkedAt
+                    ) ||
+                    Date.now()
+
+            };
+
+        } catch(error){
+
+            return {
+
+                status:
+                    "error",
+
+                securityReady:
+                    false,
+
+                criticalMissing:
+                    [],
+
+                checkedAt:
+                    Date.now(),
+
+                reason:
+                    error?.message ||
+                    "kernel-health-error"
+
+            };
+
+        }
+
+    },
+
+
+    readOrganHealth(){
+
+        const organStatus =
+            this.getService(
+                "organStatus"
+            );
+
+
+        if(!organStatus){
+
+            return null;
+
         }
 
 
+        try{
+
+            if(
+                typeof organStatus.health ===
+                    "function"
+            ){
+
+                const health =
+                    organStatus.health();
+
+
+                if(
+                    health &&
+                    typeof health ===
+                        "object"
+                ){
+
+                    return {
+
+                        ...health,
+
+                        status:
+                            this.normalizeStatus(
+                                health.status
+                            ),
+
+                        checkedAt:
+                            Number(
+                                health.checkedAt
+                            ) ||
+                            Date.now()
+
+                    };
+
+                }
+
+            }
+
+
+            if(
+                typeof organStatus.report ===
+                    "function"
+            ){
+
+                const report =
+                    organStatus.report();
+
+
+                if(
+                    report &&
+                    typeof report ===
+                        "object"
+                ){
+
+                    const problematic =
+                        Array.isArray(
+                            report.problematic
+                        )
+                            ? [
+                                ...report.problematic
+                            ]
+                            : [];
+
+
+                    const status =
+                        report.critical >
+                            0
+                            ? "critical"
+                            : problematic.length >
+                                0
+                                ? "degraded"
+                                : report.total >
+                                    0
+                                    ? "healthy"
+                                    : "unknown";
+
+
+                    return {
+
+                        status,
+
+                        averageHealth:
+                            report.averageHealth ??
+                            null,
+
+                        problematic,
+
+                        report,
+
+                        checkedAt:
+                            Date.now()
+
+                    };
+
+                }
+
+            }
+
+        } catch(error){
+
+            return {
+
+                status:
+                    "error",
+
+                averageHealth:
+                    0,
+
+                problematic:
+                    [],
+
+                reason:
+                    error?.message ||
+                    "organ-health-error",
+
+                checkedAt:
+                    Date.now()
+
+            };
+
+        }
+
+
+        return null;
+
+    },
+
+
+    /* =====================================================
+       HEALTH SNAPSHOT
+    ===================================================== */
+
+    checkHealth(){
+
+        const kernelHealth =
+            this.readKernelHealth();
+
+
+        const organHealth =
+            this.readOrganHealth();
+
+
         const kernelStatus =
-            String(
-                kernelHealth?.status ||
-                "unknown"
-            ).toLowerCase();
+            this.normalizeStatus(
+                kernelHealth?.status
+            );
 
 
-        const organState =
-            String(
-                organHealth?.status ||
-                "unknown"
-            ).toLowerCase();
+        const organStatus =
+            organHealth
+                ? this.normalizeStatus(
+                    organHealth.status
+                )
+                : "unknown";
 
 
         const critical =
-            kernelStatus ===
-                "critical" ||
-            kernelStatus ===
-                "error" ||
-            organState ===
-                "critical" ||
-            organState ===
-                "error";
+            [
+                kernelStatus,
+                organStatus
+            ].some(
+                status =>
+                    status ===
+                        "critical" ||
+                    status ===
+                        "error"
+            );
 
 
         const degraded =
             !critical &&
+            [
+                kernelStatus,
+                organStatus
+            ].some(
+                status =>
+                    status ===
+                        "degraded"
+            );
+
+
+        const healthy =
+            !critical &&
+            !degraded &&
             (
                 kernelStatus ===
-                    "degraded" ||
-                organState ===
-                    "degraded"
+                    "healthy" ||
+                organStatus ===
+                    "healthy"
             );
 
 
@@ -322,10 +666,7 @@ const Runtime = {
                 ? "critical"
                 : degraded
                     ? "degraded"
-                    : kernelStatus ===
-                            "healthy" ||
-                        organState ===
-                            "healthy"
+                    : healthy
                         ? "healthy"
                         : "unknown";
 
@@ -337,7 +678,8 @@ const Runtime = {
 
             securityReady:
                 Boolean(
-                    kernelHealth?.securityReady
+                    kernelHealth
+                        ?.securityReady
                 ),
 
             kernel:
@@ -348,7 +690,8 @@ const Runtime = {
 
             criticalMissing:
                 Array.isArray(
-                    kernelHealth?.criticalMissing
+                    kernelHealth
+                        ?.criticalMissing
                 )
                     ? [
                         ...kernelHealth
@@ -376,6 +719,67 @@ const Runtime = {
 
 
     /* =====================================================
+       WARNING THROTTLE
+    ===================================================== */
+
+    canEmitWarning(
+        type,
+        now = Date.now()
+    ){
+
+        const last =
+            type ===
+                "security"
+                ? this.lastSecurityWarningAt
+                : this.lastHealthWarningAt;
+
+
+        if(
+            !last ||
+            now -
+                last >=
+                this.warningCooldown
+        ){
+
+            return true;
+
+        }
+
+
+        return false;
+
+    },
+
+
+    markWarning(
+        type,
+        now = Date.now()
+    ){
+
+        if(
+            type ===
+                "security"
+        ){
+
+            this.lastSecurityWarningAt =
+                now;
+
+        }
+
+        else {
+
+            this.lastHealthWarningAt =
+                now;
+
+        }
+
+
+        return true;
+
+    },
+
+
+    /* =====================================================
        SECURITY SIGNAL
     ===================================================== */
 
@@ -389,56 +793,86 @@ const Runtime = {
 
 
         if(
-            health.status ===
-                "critical" ||
-            health.securityReady ===
+            health.status !==
+                "critical" &&
+            health.securityReady !==
                 false
         ){
 
-            this.emit(
-                "runtime.security.warning",
-                {
-
-                    status:
-                        health.status ||
-                        "unknown",
-
-                    securityReady:
-                        Boolean(
-                            health.securityReady
-                        ),
-
-                    criticalMissing:
-                        Array.isArray(
-                            health.criticalMissing
-                        )
-                            ? [
-                                ...health
-                                    .criticalMissing
-                            ]
-                            : [],
-
-                    kernelStatus:
-                        health.kernel?.status ||
-                        null,
-
-                    organStatus:
-                        health.organs?.status ||
-                        null,
-
-                    time:
-                        Date.now()
-
-                }
-            );
-
-
-            return true;
+            return false;
 
         }
 
 
-        return false;
+        const now =
+            Date.now();
+
+
+        if(
+            !this.canEmitWarning(
+                "security",
+                now
+            )
+        ){
+
+            return false;
+
+        }
+
+
+        this.markWarning(
+            "security",
+            now
+        );
+
+
+        const payload = {
+
+            status:
+                health.status ||
+                "unknown",
+
+            securityReady:
+                Boolean(
+                    health.securityReady
+                ),
+
+            criticalMissing:
+                Array.isArray(
+                    health.criticalMissing
+                )
+                    ? [
+                        ...health
+                            .criticalMissing
+                    ]
+                    : [],
+
+            kernelStatus:
+                health.kernel
+                    ?.status ||
+                null,
+
+            organStatus:
+                health.organs
+                    ?.status ||
+                null,
+
+            time:
+                now
+
+        };
+
+
+        this.emitAliases(
+            [
+                "runtime.security.warning",
+                "runtime:security:warning"
+            ],
+            payload
+        );
+
+
+        return true;
 
     },
 
@@ -457,57 +891,87 @@ const Runtime = {
 
 
         if(
-            health.status ===
-                "degraded" ||
-            health.status ===
+            health.status !==
+                "degraded" &&
+            health.status !==
                 "critical"
         ){
 
-            this.emit(
-                "runtime.health.warning",
-                {
-
-                    status:
-                        health.status,
-
-                    kernelStatus:
-                        health.kernel?.status ||
-                        null,
-
-                    organStatus:
-                        health.organs?.status ||
-                        null,
-
-                    averageOrganHealth:
-                        health.organs
-                            ?.averageHealth ??
-                        null,
-
-                    problematicOrgans:
-                        Array.isArray(
-                            health.organs
-                                ?.problematic
-                        )
-                            ? [
-                                ...health
-                                    .organs
-                                    .problematic
-                            ]
-                            : [],
-
-                    time:
-                        Date.now()
-
-                }
-            );
-
-
-            return true;
+            return false;
 
         }
 
 
-        return false;
+        const now =
+            Date.now();
+
+
+        if(
+            !this.canEmitWarning(
+                "health",
+                now
+            )
+        ){
+
+            return false;
+
+        }
+
+
+        this.markWarning(
+            "health",
+            now
+        );
+
+
+        const payload = {
+
+            status:
+                health.status,
+
+            kernelStatus:
+                health.kernel
+                    ?.status ||
+                null,
+
+            organStatus:
+                health.organs
+                    ?.status ||
+                null,
+
+            averageOrganHealth:
+                health.organs
+                    ?.averageHealth ??
+                null,
+
+            problematicOrgans:
+                Array.isArray(
+                    health.organs
+                        ?.problematic
+                )
+                    ? [
+                        ...health
+                            .organs
+                            .problematic
+                    ]
+                    : [],
+
+            time:
+                now
+
+        };
+
+
+        this.emitAliases(
+            [
+                "runtime.health.warning",
+                "runtime:health:warning"
+            ],
+            payload
+        );
+
+
+        return true;
 
     },
 
@@ -544,19 +1008,29 @@ const Runtime = {
             this.clearTimer();
 
 
+            const now =
+                Date.now();
+
+
             this.status =
                 "running";
 
 
-            if(!this.startedAt){
+            if(
+                !this.startedAt
+            ){
 
                 this.startedAt =
-                    Date.now();
+                    now;
 
             }
 
 
             this.stoppedAt =
+                null;
+
+
+            this.pausedAt =
                 null;
 
 
@@ -568,34 +1042,56 @@ const Runtime = {
                 this.checkHealth();
 
 
-            this.emit(
-                "runtime.started",
-                {
+            const payload = {
 
-                    status:
-                        this.status,
+                id:
+                    this.id,
 
-                    startedAt:
-                        this.startedAt,
+                runtimeId:
+                    this.id,
 
-                    health:
-                        health?.status ||
-                        "unknown",
+                name:
+                    "VAERO Runtime",
 
-                    securityReady:
-                        Boolean(
-                            health
-                                ?.securityReady
-                        ),
+                status:
+                    this.status,
 
-                    organHealth:
-                        health?.organs
-                            ?.status ||
-                        null
+                startedAt:
+                    this.startedAt,
 
-                }
+                health:
+                    health?.status ||
+                    "unknown",
+
+                securityReady:
+                    Boolean(
+                        health
+                            ?.securityReady
+                    ),
+
+                organHealth:
+                    health?.organs
+                        ?.status ||
+                    null,
+
+                time:
+                    now
+
+            };
+
+
+            this.emitAliases(
+                [
+                    "runtime.started",
+                    "runtime:started"
+                ],
+                payload
             );
 
+
+            /*
+             * First health pass happens immediately.
+             */
 
             this.tick();
 
@@ -611,9 +1107,31 @@ const Runtime = {
                 "error";
 
 
+            this.clearTimer();
+
+
             console.error(
                 "VAERO Runtime boot failed:",
                 error
+            );
+
+
+            this.emitAliases(
+                [
+                    "runtime.error",
+                    "runtime:error"
+                ],
+                {
+                    id:
+                        this.id,
+
+                    reason:
+                        error?.message ||
+                        "runtime-boot-error",
+
+                    time:
+                        Date.now()
+                }
             );
 
 
@@ -637,7 +1155,7 @@ const Runtime = {
 
         if(
             this.status !==
-            "running"
+                "running"
         ){
 
             return false;
@@ -671,9 +1189,22 @@ const Runtime = {
         );
 
 
-        this.emit(
-            "runtime.tick",
+        /*
+         * Heartbeat is intentionally operational.
+         * Memory / Timeline should not record every tick.
+         */
+
+        this.emitAliases(
+            [
+                "runtime.tick",
+                "runtime:tick"
+            ],
             {
+                id:
+                    this.id,
+
+                runtimeId:
+                    this.id,
 
                 ticks:
                     this.ticks,
@@ -708,7 +1239,6 @@ const Runtime = {
                     health?.organs
                         ?.averageHealth ??
                     null
-
             }
         );
 
@@ -726,7 +1256,7 @@ const Runtime = {
 
         if(
             this.status !==
-            "running"
+                "running"
         ){
 
             return false;
@@ -738,22 +1268,36 @@ const Runtime = {
             "paused";
 
 
+        this.pausedAt =
+            Date.now();
+
+
         this.clearTimer();
 
 
-        this.emit(
-            "runtime.paused",
+        this.emitAliases(
+            [
+                "runtime.paused",
+                "runtime:paused"
+            ],
             {
+                id:
+                    this.id,
+
+                runtimeId:
+                    this.id,
 
                 ticks:
                     this.ticks,
 
                 pausedAt:
-                    Date.now(),
+                    this.pausedAt,
 
                 uptime:
-                    this.uptime()
+                    this.uptime(),
 
+                time:
+                    this.pausedAt
             }
         );
 
@@ -767,7 +1311,7 @@ const Runtime = {
 
         if(
             this.status !==
-            "paused"
+                "paused"
         ){
 
             return false;
@@ -775,23 +1319,41 @@ const Runtime = {
         }
 
 
+        const now =
+            Date.now();
+
+
         this.status =
             "running";
 
 
-        this.emit(
-            "runtime.resumed",
+        this.pausedAt =
+            null;
+
+
+        this.emitAliases(
+            [
+                "runtime.resumed",
+                "runtime:resumed"
+            ],
             {
+                id:
+                    this.id,
+
+                runtimeId:
+                    this.id,
 
                 resumedAt:
-                    Date.now(),
+                    now,
 
                 ticks:
                     this.ticks,
 
                 uptime:
-                    this.uptime()
+                    this.uptime(),
 
+                time:
+                    now
             }
         );
 
@@ -831,17 +1393,33 @@ const Runtime = {
         this.clearTimer();
 
 
+        const now =
+            Date.now();
+
+
         this.status =
             "stopped";
 
 
         this.stoppedAt =
-            Date.now();
+            now;
 
 
-        this.emit(
-            "runtime.stopped",
+        this.pausedAt =
+            null;
+
+
+        this.emitAliases(
+            [
+                "runtime.stopped",
+                "runtime:stopped"
+            ],
             {
+                id:
+                    this.id,
+
+                runtimeId:
+                    this.id,
 
                 stoppedAt:
                     this.stoppedAt,
@@ -853,8 +1431,10 @@ const Runtime = {
                     this.ticks,
 
                 uptime:
-                    this.uptime()
+                    this.uptime(),
 
+                time:
+                    now
             }
         );
 
@@ -875,7 +1455,17 @@ const Runtime = {
 
         if(
             this.status !==
-            "running"
+                "running"
+        ){
+
+            return false;
+
+        }
+
+
+        if(
+            typeof setInterval !==
+                "function"
         ){
 
             return false;
@@ -903,9 +1493,17 @@ const Runtime = {
 
         if(this.timer){
 
-            clearInterval(
-                this.timer
-            );
+            try{
+
+                clearInterval(
+                    this.timer
+                );
+
+            } catch(error){
+
+                /* timer already invalid */
+
+            }
 
 
             this.timer =
@@ -960,18 +1558,55 @@ const Runtime = {
         }
 
 
-        this.emit(
-            "runtime.heartbeat.changed",
+        this.emitAliases(
+            [
+                "runtime.heartbeat.changed",
+                "runtime:heartbeat:changed"
+            ],
             {
-
                 heartbeatInterval:
                     this.heartbeatInterval,
 
                 time:
                     Date.now()
-
             }
         );
+
+
+        return true;
+
+    },
+
+
+    setWarningCooldown(
+        milliseconds
+    ){
+
+        const value =
+            Number(
+                milliseconds
+            );
+
+
+        if(
+            !Number.isFinite(
+                value
+            ) ||
+            value <
+                5000 ||
+            value >
+                600000
+        ){
+
+            return false;
+
+        }
+
+
+        this.warningCooldown =
+            Math.round(
+                value
+            );
 
 
         return true;
@@ -985,7 +1620,9 @@ const Runtime = {
 
     uptime(){
 
-        if(!this.startedAt){
+        if(
+            !this.startedAt
+        ){
 
             return 0;
 
@@ -1010,12 +1647,54 @@ const Runtime = {
 
 
     /* =====================================================
+       HEALTH REFRESH
+    ===================================================== */
+
+    refreshHealth(){
+
+        const health =
+            this.checkHealth();
+
+
+        this.inspectSecurity(
+            health
+        );
+
+
+        this.inspectHealth(
+            health
+        );
+
+
+        this.emitAliases(
+            [
+                "runtime.health.checked",
+                "runtime:health:checked"
+            ],
+            {
+                health,
+
+                time:
+                    Date.now()
+            }
+        );
+
+
+        return health;
+
+    },
+
+
+    /* =====================================================
        REPORT
     ===================================================== */
 
     report(){
 
         return {
+
+            id:
+                this.id,
 
             status:
                 this.status,
@@ -1025,6 +1704,9 @@ const Runtime = {
 
             stoppedAt:
                 this.stoppedAt,
+
+            pausedAt:
+                this.pausedAt,
 
             lastTickAt:
                 this.lastTickAt,
@@ -1042,6 +1724,18 @@ const Runtime = {
                 Boolean(
                     this.timer
                 ),
+
+            booting:
+                this.booting,
+
+            warningCooldown:
+                this.warningCooldown,
+
+            lastSecurityWarningAt:
+                this.lastSecurityWarningAt,
+
+            lastHealthWarningAt:
+                this.lastHealthWarningAt,
 
             health:
                 this.lastHealth,
@@ -1075,6 +1769,10 @@ const Runtime = {
             null;
 
 
+        this.pausedAt =
+            null;
+
+
         this.lastTickAt =
             null;
 
@@ -1091,11 +1789,37 @@ const Runtime = {
             null;
 
 
+        this.lastSecurityWarningAt =
+            null;
+
+
+        this.lastHealthWarningAt =
+            null;
+
+
         this.booting =
             false;
 
 
-        return this.report();
+        const report =
+            this.report();
+
+
+        this.emitAliases(
+            [
+                "runtime.reset",
+                "runtime:reset"
+            ],
+            {
+                ...report,
+
+                time:
+                    Date.now()
+            }
+        );
+
+
+        return report;
 
     }
 
@@ -1132,5 +1856,12 @@ try{
 }
 
 
-window.Runtime =
-    Runtime;
+if(
+    typeof window !==
+        "undefined"
+){
+
+    window.Runtime =
+        Runtime;
+
+}
