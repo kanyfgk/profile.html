@@ -8,6 +8,9 @@ const MemoryApp = {
     searchQuery:
         "",
 
+    searchTimer:
+        null,
+
     activeCategory:
         "all",
 
@@ -27,26 +30,65 @@ const MemoryApp = {
 
     escapeHTML(value){
 
+        if(
+            window.UI &&
+            typeof UI.escapeHTML ===
+                "function"
+        ){
+
+            return UI.escapeHTML(
+                value
+            );
+
+        }
+
+
         return String(
             value ?? ""
         )
-            .replaceAll("&","&amp;")
-            .replaceAll("<","&lt;")
-            .replaceAll(">","&gt;")
-            .replaceAll('"',"&quot;")
-            .replaceAll("'","&#039;");
+            .replaceAll(
+                "&",
+                "&amp;"
+            )
+            .replaceAll(
+                "<",
+                "&lt;"
+            )
+            .replaceAll(
+                ">",
+                "&gt;"
+            )
+            .replaceAll(
+                '"',
+                "&quot;"
+            )
+            .replaceAll(
+                "'",
+                "&#039;"
+            );
 
     },
 
 
     createId(){
 
-        if(
-            typeof crypto !== "undefined" &&
-            typeof crypto.randomUUID ===
-                "function"
-        ){
-            return crypto.randomUUID();
+        try{
+
+            if(
+                typeof crypto !==
+                    "undefined" &&
+                typeof crypto.randomUUID ===
+                    "function"
+            ){
+
+                return crypto.randomUUID();
+
+            }
+
+        } catch(error){
+
+            /* fallback */
+
         }
 
 
@@ -57,24 +99,35 @@ const MemoryApp = {
     },
 
 
+    /* =====================================================
+       ENGINE / SERVICES
+    ===================================================== */
+
     getEngine(){
 
         try{
 
             if(
-                typeof VAERO !== "undefined" &&
+                typeof VAERO !==
+                    "undefined" &&
                 VAERO.engine
             ){
+
                 return VAERO.engine;
+
             }
 
         } catch(error){
 
             /* fallback */
+
         }
 
 
-        return window.Engine || null;
+        return (
+            window.Engine ||
+            null
+        );
 
     },
 
@@ -100,15 +153,23 @@ const MemoryApp = {
         try{
 
             if(
-                typeof VAERO === "undefined" ||
+                typeof VAERO ===
+                    "undefined" ||
                 typeof VAERO.get !==
                     "function"
             ){
+
                 return null;
+
             }
 
 
-            return VAERO.get(name) || null;
+            return (
+                VAERO.get(
+                    name
+                ) ||
+                null
+            );
 
         } catch(error){
 
@@ -130,12 +191,21 @@ const MemoryApp = {
             typeof engine.mount !==
                 "function"
         ){
+
             return false;
+
         }
 
 
+        const entity =
+            engine.currentOpenedEntity ||
+            engine.currentEntity ||
+            engine.rootEntity ||
+            null;
+
+
         return engine.mount(
-            engine.currentEntity
+            entity
         );
 
     },
@@ -145,7 +215,9 @@ const MemoryApp = {
        BRAIN CONTEXT
     ===================================================== */
 
-    enterBrainContext(entity = null){
+    enterBrainContext(
+        entity = null
+    ){
 
         try{
 
@@ -155,28 +227,23 @@ const MemoryApp = {
                 );
 
 
-            if(
-                awareness &&
-                typeof awareness.enter ===
-                    "function"
-            ){
+            awareness?.enter?.(
+                "memory",
+                {
+                    entityId:
+                        entity?.id ||
+                        null,
 
-                awareness.enter(
-                    "memory",
-                    {
-                        entityId:
-                            entity?.id ||
-                            null,
+                    category:
+                        this.activeCategory,
 
-                        category:
-                            this.activeCategory,
+                    selectedMemoryId:
+                        this.selectedMemoryId,
 
-                        selectedMemoryId:
-                            this.selectedMemoryId
-                    }
-                );
-
-            }
+                    editorMode:
+                        this.editorMode
+                }
+            );
 
         } catch(error){
 
@@ -192,8 +259,12 @@ const MemoryApp = {
 
     /* =====================================================
        STORAGE
-       Prototype persistence.
-       Memory Core authority is wired in memory.js next.
+       -----------------------------------------------------
+       Current Memory App persistence layer.
+
+       Memory Core authority lives in js/memory.js.
+       Its write contract will be connected only after
+       that file is reviewed; no guessed API calls here.
     ===================================================== */
 
     getStorageKey(entityId){
@@ -222,7 +293,9 @@ const MemoryApp = {
 
 
             if(!saved){
+
                 return [];
+
             }
 
 
@@ -237,24 +310,59 @@ const MemoryApp = {
                     parsed
                 )
             ){
+
                 return [];
+
             }
 
 
-            return parsed
-                .filter(
-                    item =>
-                        item &&
-                        typeof item ===
-                            "object"
-                )
-                .map(
-                    item =>
-                        this.normalizeMemory(
-                            item,
-                            entityId
+            const normalized =
+                parsed
+                    .filter(
+                        item =>
+                            item &&
+                            typeof item ===
+                                "object" &&
+                            !Array.isArray(
+                                item
+                            )
+                    )
+                    .map(
+                        item =>
+                            this.normalizeMemory(
+                                item,
+                                entityId
+                            )
+                    );
+
+
+            const seen =
+                new Set();
+
+
+            return normalized.filter(
+                memory => {
+
+                    if(
+                        seen.has(
+                            memory.id
                         )
-                );
+                    ){
+
+                        return false;
+
+                    }
+
+
+                    seen.add(
+                        memory.id
+                    );
+
+
+                    return true;
+
+                }
+            );
 
         } catch(error){
 
@@ -276,14 +384,42 @@ const MemoryApp = {
         memories
     ){
 
+        if(!entityId){
+
+            return false;
+
+        }
+
+
         try{
+
+            const safeMemories =
+                Array.isArray(
+                    memories
+                )
+                    ? memories
+                        .filter(
+                            item =>
+                                item &&
+                                typeof item ===
+                                    "object"
+                        )
+                        .map(
+                            item =>
+                                this.normalizeMemory(
+                                    item,
+                                    entityId
+                                )
+                        )
+                    : [];
+
 
             localStorage.setItem(
                 this.getStorageKey(
                     entityId
                 ),
                 JSON.stringify(
-                    memories
+                    safeMemories
                 )
             );
 
@@ -321,11 +457,13 @@ const MemoryApp = {
 
 
         const allowed = [
+
             "note",
             "decision",
             "idea",
             "event",
             "knowledge"
+
         ];
 
 
@@ -334,6 +472,90 @@ const MemoryApp = {
         )
             ? category
             : "note";
+
+    },
+
+
+    normalizeTags(value){
+
+        const source =
+            Array.isArray(
+                value
+            )
+                ? value
+                : String(
+                    value ||
+                    ""
+                ).split(",");
+
+
+        const seen =
+            new Set();
+
+
+        const result =
+            [];
+
+
+        source.forEach(
+            item => {
+
+                const tag =
+                    String(
+                        item ?? ""
+                    )
+                        .trim()
+                        .replace(
+                            /\s+/g,
+                            " "
+                        )
+                        .slice(
+                            0,
+                            50
+                        );
+
+
+                if(!tag){
+
+                    return;
+
+                }
+
+
+                const key =
+                    tag.toLocaleLowerCase(
+                        "tr-TR"
+                    );
+
+
+                if(
+                    seen.has(
+                        key
+                    )
+                ){
+
+                    return;
+
+                }
+
+
+                seen.add(
+                    key
+                );
+
+
+                result.push(
+                    tag
+                );
+
+            }
+        );
+
+
+        return result.slice(
+            0,
+            30
+        );
 
     },
 
@@ -347,32 +569,59 @@ const MemoryApp = {
             Date.now();
 
 
+        const createdAt =
+            Number(
+                memory.createdAt
+            ) ||
+            now;
+
+
         return {
 
             id:
                 String(
                     memory.id ||
                     this.createId()
-                ),
+                )
+                    .trim()
+                    .slice(
+                        0,
+                        160
+                    ),
 
             entityId:
                 String(
-                    memory.entityId ||
                     entityId ||
+                    memory.entityId ||
                     ""
-                ),
+                )
+                    .trim()
+                    .slice(
+                        0,
+                        160
+                    ),
 
             title:
                 String(
                     memory.title ||
                     "İsimsiz Hafıza"
-                ).trim(),
+                )
+                    .trim()
+                    .slice(
+                        0,
+                        90
+                    ),
 
             content:
                 String(
                     memory.content ||
                     ""
-                ).trim(),
+                )
+                    .trim()
+                    .slice(
+                        0,
+                        4000
+                    ),
 
             category:
                 this.normalizeCategory(
@@ -381,53 +630,39 @@ const MemoryApp = {
 
             important:
                 memory.important ===
-                true,
+                    true,
 
             pinned:
                 memory.pinned ===
-                true,
+                    true,
 
             archived:
                 memory.archived ===
-                true,
+                    true,
 
             source:
                 String(
                     memory.source ||
                     "manual"
-                ),
+                )
+                    .trim()
+                    .slice(
+                        0,
+                        80
+                    ),
 
             tags:
-                Array.isArray(
+                this.normalizeTags(
                     memory.tags
-                )
-                    ? [
-                        ...new Set(
-                            memory.tags
-                                .map(
-                                    tag =>
-                                        String(
-                                            tag
-                                        ).trim()
-                                )
-                                .filter(
-                                    Boolean
-                                )
-                        )
-                    ]
-                    : [],
+                ),
 
-            createdAt:
-                Number(
-                    memory.createdAt
-                ) ||
-                now,
+            createdAt,
 
             updatedAt:
                 Number(
                     memory.updatedAt
                 ) ||
-                now
+                createdAt
 
         };
 
@@ -436,20 +671,9 @@ const MemoryApp = {
 
     parseTags(value){
 
-        return [
-            ...new Set(
-                String(
-                    value ||
-                    ""
-                )
-                    .split(",")
-                    .map(
-                        item =>
-                            item.trim()
-                    )
-                    .filter(Boolean)
-            )
-        ];
+        return this.normalizeTags(
+            value
+        );
 
     },
 
@@ -467,7 +691,9 @@ const MemoryApp = {
             !entity ||
             !entity.id
         ){
+
             return [];
+
         }
 
 
@@ -486,7 +712,7 @@ const MemoryApp = {
                 memories.filter(
                     memory =>
                         memory.archived !==
-                        true
+                            true
                 );
 
         }
@@ -501,7 +727,7 @@ const MemoryApp = {
                 memories.filter(
                     memory =>
                         memory.category ===
-                        this.activeCategory
+                            this.activeCategory
                 );
 
         }
@@ -525,10 +751,17 @@ const MemoryApp = {
                     memory => {
 
                         const text = [
+
                             memory.title,
                             memory.content,
                             memory.category,
-                            ...(memory.tags || [])
+                            memory.source,
+
+                            ...(
+                                memory.tags ||
+                                []
+                            )
+
                         ]
                             .join(" ")
                             .toLocaleLowerCase(
@@ -547,11 +780,14 @@ const MemoryApp = {
 
 
         memories.sort(
-            (a,b) => {
+            (
+                a,
+                b
+            ) => {
 
                 if(
                     a.pinned !==
-                    b.pinned
+                        b.pinned
                 ){
 
                     return a.pinned
@@ -563,7 +799,7 @@ const MemoryApp = {
 
                 if(
                     a.important !==
-                    b.important
+                        b.important
                 ){
 
                     return a.important
@@ -574,8 +810,12 @@ const MemoryApp = {
 
 
                 return (
-                    b.updatedAt -
-                    a.updatedAt
+                    Number(
+                        b.updatedAt
+                    ) -
+                    Number(
+                        a.updatedAt
+                    )
                 );
 
             }
@@ -593,7 +833,9 @@ const MemoryApp = {
             !entity ||
             !entity.id
         ){
+
             return [];
+
         }
 
 
@@ -609,6 +851,20 @@ const MemoryApp = {
         memoryId
     ){
 
+        const id =
+            String(
+                memoryId ||
+                ""
+            );
+
+
+        if(!id){
+
+            return null;
+
+        }
+
+
         return (
             this
                 .getAllMemories(
@@ -617,7 +873,7 @@ const MemoryApp = {
                 .find(
                     memory =>
                         memory.id ===
-                        memoryId
+                            id
                 ) ||
             null
         );
@@ -635,7 +891,9 @@ const MemoryApp = {
             !entity ||
             !entity.id
         ){
+
             return false;
+
         }
 
 
@@ -673,19 +931,30 @@ const MemoryApp = {
             String(
                 titleInput?.value ||
                 ""
-            ).trim();
+            )
+                .trim()
+                .slice(
+                    0,
+                    90
+                );
 
 
         const content =
             String(
                 contentInput?.value ||
                 ""
-            ).trim();
+            )
+                .trim()
+                .slice(
+                    0,
+                    4000
+                );
 
 
         if(!title){
 
             titleInput?.focus();
+
 
             return false;
 
@@ -695,6 +964,7 @@ const MemoryApp = {
         if(!content){
 
             contentInput?.focus();
+
 
             return false;
 
@@ -768,12 +1038,15 @@ const MemoryApp = {
                 memories
             )
         ){
+
             return false;
+
         }
 
 
         this.editorMode =
             null;
+
 
         this.selectedMemoryId =
             memory.id;
@@ -799,9 +1072,12 @@ const MemoryApp = {
 
         if(
             !entity ||
+            !entity.id ||
             !this.selectedMemoryId
         ){
+
             return false;
+
         }
 
 
@@ -815,12 +1091,17 @@ const MemoryApp = {
             memories.findIndex(
                 memory =>
                     memory.id ===
-                    this.selectedMemoryId
+                        this.selectedMemoryId
             );
 
 
-        if(index < 0){
+        if(
+            index <
+                0
+        ){
+
             return false;
+
         }
 
 
@@ -858,19 +1139,30 @@ const MemoryApp = {
             String(
                 titleInput?.value ||
                 ""
-            ).trim();
+            )
+                .trim()
+                .slice(
+                    0,
+                    90
+                );
 
 
         const content =
             String(
                 contentInput?.value ||
                 ""
-            ).trim();
+            )
+                .trim()
+                .slice(
+                    0,
+                    4000
+                );
 
 
         if(!title){
 
             titleInput?.focus();
+
 
             return false;
 
@@ -881,36 +1173,41 @@ const MemoryApp = {
 
             contentInput?.focus();
 
+
             return false;
 
         }
 
 
-        memories[index] = {
-            ...memories[index],
+        memories[index] =
+            this.normalizeMemory(
+                {
+                    ...memories[index],
 
-            title,
+                    title,
 
-            content,
+                    content,
 
-            category:
-                this.normalizeCategory(
-                    categoryInput?.value
-                ),
+                    category:
+                        this.normalizeCategory(
+                            categoryInput?.value
+                        ),
 
-            tags:
-                this.parseTags(
-                    tagsInput?.value
-                ),
+                    tags:
+                        this.parseTags(
+                            tagsInput?.value
+                        ),
 
-            important:
-                Boolean(
-                    importantInput?.checked
-                ),
+                    important:
+                        Boolean(
+                            importantInput?.checked
+                        ),
 
-            updatedAt:
-                Date.now()
-        };
+                    updatedAt:
+                        Date.now()
+                },
+                entity.id
+            );
 
 
         if(
@@ -919,7 +1216,9 @@ const MemoryApp = {
                 memories
             )
         ){
+
             return false;
+
         }
 
 
@@ -940,22 +1239,26 @@ const MemoryApp = {
 
 
     /* =====================================================
-       PIN / IMPORTANT / ARCHIVE
+       MUTATION
     ===================================================== */
 
     mutateMemory(
         entity,
         memoryId,
-        mutator
+        mutator,
+        options = {}
     ){
 
         if(
             !entity ||
+            !entity.id ||
             !memoryId ||
             typeof mutator !==
                 "function"
         ){
+
             return false;
+
         }
 
 
@@ -969,24 +1272,42 @@ const MemoryApp = {
             memories.findIndex(
                 memory =>
                     memory.id ===
-                    memoryId
+                        memoryId
             );
 
 
-        if(index < 0){
+        if(
+            index <
+                0
+        ){
+
             return false;
+
         }
 
 
-        const next =
-            {
-                ...memories[index]
-            };
+        const next = {
+            ...memories[index]
+        };
 
 
-        mutator(
-            next
-        );
+        try{
+
+            mutator(
+                next
+            );
+
+        } catch(error){
+
+            console.warn(
+                "Memory mutation başarısız:",
+                error
+            );
+
+
+            return false;
+
+        }
 
 
         next.updatedAt =
@@ -1006,7 +1327,19 @@ const MemoryApp = {
                 memories
             )
         ){
+
             return false;
+
+        }
+
+
+        if(
+            options.remount ===
+                false
+        ){
+
+            return true;
+
         }
 
 
@@ -1014,6 +1347,10 @@ const MemoryApp = {
 
     },
 
+
+    /* =====================================================
+       PIN / IMPORTANT / ARCHIVE
+    ===================================================== */
 
     togglePin(
         entity,
@@ -1067,12 +1404,25 @@ const MemoryApp = {
                     memory.archived =
                         true;
 
+                    memory.pinned =
+                        false;
+
+                },
+                {
+                    remount:
+                        false
                 }
             );
 
 
+        if(!result){
+
+            return false;
+
+        }
+
+
         if(
-            result !== false &&
             this.selectedMemoryId ===
                 memoryId
         ){
@@ -1080,13 +1430,14 @@ const MemoryApp = {
             this.selectedMemoryId =
                 null;
 
-            this.editorMode =
-                null;
-
         }
 
 
-        return result;
+        this.editorMode =
+            null;
+
+
+        return this.remount();
 
     },
 
@@ -1112,7 +1463,9 @@ const MemoryApp = {
             typeof evolution.record !==
                 "function"
         ){
+
             return false;
+
         }
 
 
@@ -1150,13 +1503,27 @@ const MemoryApp = {
                     relatedEntityId:
                         entity.id,
 
+                    relatedWorldId:
+                        this.getEngine()
+                            ?.currentWorld
+                            ?.id ||
+                        null,
+
                     memoryId:
                         memory.id,
+
+                    organs:[
+                        "memory",
+                        "timeline"
+                    ],
 
                     tags:[
                         "memory",
                         memory.category,
-                        ...(memory.tags || [])
+                        ...(
+                            memory.tags ||
+                            []
+                        )
                     ]
                 }
             );
@@ -1194,9 +1561,13 @@ const MemoryApp = {
         if(
             !Number.isFinite(
                 value
-            )
+            ) ||
+            value <=
+                0
         ){
+
             return "";
+
         }
 
 
@@ -1295,6 +1666,68 @@ const MemoryApp = {
 
     },
 
+    /* =====================================================
+       UI FALLBACKS
+    ===================================================== */
+
+    renderAppHeader(entity){
+
+        if(
+            window.UI &&
+            typeof UI.appHeader ===
+                "function"
+        ){
+
+            return UI.appHeader(
+                this.escapeHTML(
+                    entity.name ||
+                    "İsimsiz Varlık"
+                ),
+                "MEMORY",
+                "◫"
+            );
+
+        }
+
+
+        return `
+            <header class="engine-app-header">
+
+                <span class="engine-section-label">
+                    MEMORY
+                </span>
+
+                <h1>
+                    ${this.escapeHTML(
+                        entity.name ||
+                        "İsimsiz Varlık"
+                    )}
+                </h1>
+
+            </header>
+        `;
+
+    },
+
+
+    renderBrainPanel(){
+
+        try{
+
+            return (
+                window.UI
+                    ?.brainPanel?.() ||
+                ""
+            );
+
+        } catch(error){
+
+            return "";
+
+        }
+
+    },
+
 
     /* =====================================================
        TOOLBAR
@@ -1303,12 +1736,14 @@ const MemoryApp = {
     renderToolbar(){
 
         const categories = [
+
             "all",
             "note",
             "decision",
             "idea",
             "event",
             "knowledge"
+
         ];
 
 
@@ -1320,6 +1755,7 @@ const MemoryApp = {
                     <span aria-hidden="true">
                         ⌕
                     </span>
+
 
                     <input
                         id="memorySearchInput"
@@ -1348,7 +1784,9 @@ const MemoryApp = {
                                             : ""
                                     }"
                                     data-memory-action="category"
-                                    data-memory-category="${this.escapeHTML(category)}"
+                                    data-memory-category="${this.escapeHTML(
+                                        category
+                                    )}"
                                 >
                                     ${this.escapeHTML(
                                         this.categoryLabel(
@@ -1386,11 +1824,12 @@ const MemoryApp = {
         const memories =
             this.getAllMemories(
                 entity
-            ).filter(
-                memory =>
-                    memory.archived !==
-                    true
-            );
+            )
+                .filter(
+                    memory =>
+                        memory.archived !==
+                            true
+                );
 
 
         const important =
@@ -1411,6 +1850,7 @@ const MemoryApp = {
             <div class="memory-stats">
 
                 <div class="memory-stat">
+
                     <strong>
                         ${memories.length}
                     </strong>
@@ -1418,10 +1858,12 @@ const MemoryApp = {
                     <span>
                         Hafıza
                     </span>
+
                 </div>
 
 
                 <div class="memory-stat">
+
                     <strong>
                         ${important}
                     </strong>
@@ -1429,10 +1871,12 @@ const MemoryApp = {
                     <span>
                         Önemli
                     </span>
+
                 </div>
 
 
                 <div class="memory-stat">
+
                     <strong>
                         ${pinned}
                     </strong>
@@ -1440,6 +1884,7 @@ const MemoryApp = {
                     <span>
                         Sabitlenmiş
                     </span>
+
                 </div>
 
             </div>
@@ -1454,15 +1899,23 @@ const MemoryApp = {
 
     renderMemoryCard(memory){
 
+        const content =
+            String(
+                memory.content ||
+                ""
+            );
+
+
         const preview =
-            memory.content.length > 130
-                ? `${memory.content
+            content.length >
+                130
+                ? `${content
                     .slice(
                         0,
                         130
                     )
                     .trim()}…`
-                : memory.content;
+                : content;
 
 
         return `
@@ -1478,15 +1931,19 @@ const MemoryApp = {
                         : ""
                 }"
                 data-memory-action="open"
-                data-memory-id="${this.escapeHTML(memory.id)}"
+                data-memory-id="${this.escapeHTML(
+                    memory.id
+                )}"
             >
 
                 <span class="memory-record-icon">
+
                     ${this.escapeHTML(
                         this.categoryIcon(
                             memory.category
                         )
                     )}
+
                 </span>
 
 
@@ -1502,6 +1959,7 @@ const MemoryApp = {
                             )}
                         </small>
 
+
                         ${
                             memory.pinned
                                 ? `
@@ -1511,6 +1969,7 @@ const MemoryApp = {
                                   `
                                 : ""
                         }
+
 
                         ${
                             memory.important
@@ -1552,7 +2011,9 @@ const MemoryApp = {
                                         .map(
                                             tag => `
                                                 <small>
-                                                    ${this.escapeHTML(tag)}
+                                                    ${this.escapeHTML(
+                                                        tag
+                                                    )}
                                                 </small>
                                             `
                                         )
@@ -1590,7 +2051,9 @@ const MemoryApp = {
     ){
 
         if(!memory){
+
             return "";
+
         }
 
 
@@ -1661,7 +2124,9 @@ const MemoryApp = {
                                             .map(
                                                 tag => `
                                                     <span>
-                                                        ${this.escapeHTML(tag)}
+                                                        ${this.escapeHTML(
+                                                            tag
+                                                        )}
                                                     </span>
                                                 `
                                             )
@@ -1676,6 +2141,7 @@ const MemoryApp = {
                         <div class="memory-detail-info">
 
                             <div>
+
                                 <span>
                                     Oluşturuldu
                                 </span>
@@ -1687,10 +2153,12 @@ const MemoryApp = {
                                         )
                                     )}
                                 </strong>
+
                             </div>
 
 
                             <div>
+
                                 <span>
                                     Güncellendi
                                 </span>
@@ -1702,6 +2170,23 @@ const MemoryApp = {
                                         )
                                     )}
                                 </strong>
+
+                            </div>
+
+
+                            <div>
+
+                                <span>
+                                    Kaynak
+                                </span>
+
+                                <strong>
+                                    ${this.escapeHTML(
+                                        memory.source ||
+                                        "manual"
+                                    )}
+                                </strong>
+
                             </div>
 
                         </div>
@@ -1715,7 +2200,9 @@ const MemoryApp = {
                             type="button"
                             class="secondary-btn"
                             data-memory-action="pin"
-                            data-memory-id="${this.escapeHTML(memory.id)}"
+                            data-memory-id="${this.escapeHTML(
+                                memory.id
+                            )}"
                         >
                             ${
                                 memory.pinned
@@ -1729,7 +2216,9 @@ const MemoryApp = {
                             type="button"
                             class="secondary-btn"
                             data-memory-action="important"
-                            data-memory-id="${this.escapeHTML(memory.id)}"
+                            data-memory-id="${this.escapeHTML(
+                                memory.id
+                            )}"
                         >
                             ${
                                 memory.important
@@ -1743,7 +2232,9 @@ const MemoryApp = {
                             type="button"
                             class="secondary-btn"
                             data-memory-action="edit"
-                            data-memory-id="${this.escapeHTML(memory.id)}"
+                            data-memory-id="${this.escapeHTML(
+                                memory.id
+                            )}"
                         >
                             Düzenle
                         </button>
@@ -1753,7 +2244,9 @@ const MemoryApp = {
                             type="button"
                             class="secondary-btn"
                             data-memory-action="archive"
-                            data-memory-id="${this.escapeHTML(memory.id)}"
+                            data-memory-id="${this.escapeHTML(
+                                memory.id
+                            )}"
                         >
                             Arşivle
                         </button>
@@ -1802,7 +2295,9 @@ const MemoryApp = {
             Array.isArray(
                 memory?.tags
             )
-                ? memory.tags.join(", ")
+                ? memory.tags.join(
+                    ", "
+                )
                 : "";
 
 
@@ -1868,7 +2363,10 @@ const MemoryApp = {
                                 name="memoryTitle"
                                 type="text"
                                 maxlength="90"
-                                value="${this.escapeHTML(title)}"
+                                autocomplete="off"
+                                value="${this.escapeHTML(
+                                    title
+                                )}"
                                 placeholder="Bu hafızayı tanımla"
                                 required
                             >
@@ -1889,7 +2387,9 @@ const MemoryApp = {
                                 rows="9"
                                 placeholder="Hatırlanması gereken şeyi yaz"
                                 required
-                            >${this.escapeHTML(content)}</textarea>
+                            >${this.escapeHTML(
+                                content
+                            )}</textarea>
 
                         </label>
 
@@ -1949,7 +2449,10 @@ const MemoryApp = {
                                 name="memoryTags"
                                 type="text"
                                 maxlength="240"
-                                value="${this.escapeHTML(tags)}"
+                                autocomplete="off"
+                                value="${this.escapeHTML(
+                                    tags
+                                )}"
                                 placeholder="iş, fikir, önemli"
                             >
 
@@ -2015,11 +2518,6 @@ const MemoryApp = {
 
     render(entity){
 
-        this.enterBrainContext(
-            entity
-        );
-
-
         if(!entity){
 
             return `
@@ -2043,6 +2541,11 @@ const MemoryApp = {
         }
 
 
+        this.enterBrainContext(
+            entity
+        );
+
+
         const memories =
             this.getMemories(
                 entity
@@ -2058,11 +2561,44 @@ const MemoryApp = {
                 : null;
 
 
+        if(
+            selected?.archived ===
+                true &&
+            !this.editorMode
+        ){
+
+            this.selectedMemoryId =
+                null;
+
+        }
+
+
+        const effectiveSelected =
+            this.selectedMemoryId
+                ? this.findMemory(
+                    entity,
+                    this.selectedMemoryId
+                )
+                : null;
+
+
         const editorMemory =
             this.editorMode ===
                 "edit"
-                ? selected
+                ? effectiveSelected
                 : null;
+
+
+        if(
+            this.editorMode ===
+                "edit" &&
+            !editorMemory
+        ){
+
+            this.editorMode =
+                null;
+
+        }
 
 
         return `
@@ -2070,13 +2606,8 @@ const MemoryApp = {
 
                 <div class="memory-app-shell">
 
-                    ${UI.appHeader(
-                        this.escapeHTML(
-                            entity.name ||
-                            "İsimsiz Varlık"
-                        ),
-                        "MEMORY",
-                        "◫"
+                    ${this.renderAppHeader(
+                        entity
                     )}
 
 
@@ -2134,6 +2665,7 @@ const MemoryApp = {
                                             ◫
                                         </span>
 
+
                                         <h3>
                                             ${
                                                 this.searchQuery ||
@@ -2144,6 +2676,7 @@ const MemoryApp = {
                                             }
                                         </h3>
 
+
                                         <p>
                                             ${
                                                 this.searchQuery ||
@@ -2153,6 +2686,7 @@ const MemoryApp = {
                                                     : "İlk önemli notunu, kararını veya fikrini kaydederek başlayabilirsin."
                                             }
                                         </p>
+
 
                                         ${
                                             !this.searchQuery &&
@@ -2177,7 +2711,7 @@ const MemoryApp = {
                     </div>
 
 
-                    ${UI.brainPanel()}
+                    ${this.renderBrainPanel()}
 
                 </div>
 
@@ -2186,13 +2720,16 @@ const MemoryApp = {
                     this.editorMode
                         ? this.renderEditor(
                             entity,
-                            editorMemory
+                            this.editorMode ===
+                                "edit"
+                                ? editorMemory
+                                : null
                         )
                         : (
-                            selected
+                            effectiveSelected
                                 ? this.renderDetail(
                                     entity,
-                                    selected
+                                    effectiveSelected
                                 )
                                 : ""
                         )
@@ -2218,7 +2755,9 @@ const MemoryApp = {
 
 
         if(!entity){
+
             return false;
+
         }
 
 
@@ -2229,23 +2768,45 @@ const MemoryApp = {
                 this.selectedMemoryId =
                     null;
 
+
                 this.editorMode =
                     "create";
 
+
                 return this.remount();
 
 
-            case "open":
+            case "open":{
+
+                const memoryId =
+                    button?.dataset
+                        ?.memoryId ||
+                    null;
+
+
+                if(
+                    !this.findMemory(
+                        entity,
+                        memoryId
+                    )
+                ){
+
+                    return false;
+
+                }
+
 
                 this.selectedMemoryId =
-                    button.dataset
-                        .memoryId ||
-                    null;
+                    memoryId;
+
 
                 this.editorMode =
                     null;
 
+
                 return this.remount();
+
+            }
 
 
             case "close":
@@ -2253,23 +2814,51 @@ const MemoryApp = {
                 this.selectedMemoryId =
                     null;
 
+
                 this.editorMode =
                     null;
+
 
                 return this.remount();
 
 
-            case "edit":
+            case "edit":{
+
+                const memoryId =
+                    button?.dataset
+                        ?.memoryId ||
+                    null;
+
+
+                const memory =
+                    this.findMemory(
+                        entity,
+                        memoryId
+                    );
+
+
+                if(
+                    !memory ||
+                    memory.archived ===
+                        true
+                ){
+
+                    return false;
+
+                }
+
 
                 this.selectedMemoryId =
-                    button.dataset
-                        .memoryId ||
-                    null;
+                    memoryId;
+
 
                 this.editorMode =
                     "edit";
 
+
                 return this.remount();
+
+            }
 
 
             case "editor:cancel":
@@ -2277,31 +2866,54 @@ const MemoryApp = {
                 this.editorMode =
                     null;
 
+
                 return this.remount();
 
 
-            case "category":
+            case "category":{
+
+                const category =
+                    String(
+                        button?.dataset
+                            ?.memoryCategory ||
+                        "all"
+                    );
+
 
                 this.activeCategory =
-                    button.dataset
-                        .memoryCategory ||
-                    "all";
+                    [
+                        "all",
+                        "note",
+                        "decision",
+                        "idea",
+                        "event",
+                        "knowledge"
+                    ].includes(
+                        category
+                    )
+                        ? category
+                        : "all";
+
 
                 this.selectedMemoryId =
                     null;
 
+
                 this.editorMode =
                     null;
 
+
                 return this.remount();
+
+            }
 
 
             case "pin":
 
                 return this.togglePin(
                     entity,
-                    button.dataset
-                        .memoryId
+                    button?.dataset
+                        ?.memoryId
                 );
 
 
@@ -2309,8 +2921,8 @@ const MemoryApp = {
 
                 return this.toggleImportant(
                     entity,
-                    button.dataset
-                        .memoryId
+                    button?.dataset
+                        ?.memoryId
                 );
 
 
@@ -2318,14 +2930,16 @@ const MemoryApp = {
 
                 return this.archiveMemory(
                     entity,
-                    button.dataset
-                        .memoryId
+                    button?.dataset
+                        ?.memoryId
                 );
 
+
+            default:
+
+                return false;
+
         }
-
-
-        return false;
 
     }
 
@@ -2347,7 +2961,9 @@ document.addEventListener(
 
 
         if(!button){
+
             return;
+
         }
 
 
@@ -2376,7 +2992,9 @@ document.addEventListener(
             event.target.id !==
                 "memorySearchInput"
         ){
+
             return;
+
         }
 
 
@@ -2387,19 +3005,14 @@ document.addEventListener(
             );
 
 
-        const entity =
-            MemoryApp.getCurrentEntity();
+        if(
+            !MemoryApp.getCurrentEntity()
+        ){
 
-
-        if(!entity){
             return;
+
         }
 
-
-        /*
-         * Search sırasında bütün Engine'i remount etmek yerine
-         * kısa debounce ile yeniden render ediyoruz.
-         */
 
         clearTimeout(
             MemoryApp.searchTimer
@@ -2413,8 +3026,10 @@ document.addEventListener(
                     MemoryApp.selectedMemoryId =
                         null;
 
+
                     MemoryApp.editorMode =
                         null;
+
 
                     MemoryApp.remount();
 
@@ -2441,7 +3056,9 @@ document.addEventListener(
 
 
         if(!form){
+
             return;
+
         }
 
 
@@ -2453,7 +3070,9 @@ document.addEventListener(
 
 
         if(!entity){
+
             return;
+
         }
 
 
@@ -2465,6 +3084,7 @@ document.addEventListener(
             MemoryApp.createMemory(
                 entity
             );
+
 
             return;
 
@@ -2484,6 +3104,24 @@ document.addEventListener(
 
     }
 );
+
+
+/* =========================================================
+   REGISTER
+========================================================= */
+
+try{
+
+    VAERO?.register?.(
+        "memoryApp",
+        MemoryApp
+    );
+
+} catch(error){
+
+    /* global remains available */
+
+}
 
 
 window.MemoryApp =
