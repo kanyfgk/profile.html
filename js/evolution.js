@@ -5,7 +5,8 @@
 
 const Evolution = {
 
-    history: [],
+    history:
+        [],
 
     booted:
         false,
@@ -68,23 +69,48 @@ const Evolution = {
 
     getService(name){
 
+        const serviceName =
+            String(
+                name ??
+                ""
+            ).trim();
+
+
+        if(!serviceName){
+
+            return null;
+
+        }
+
+
         try{
 
             if(
-                typeof VAERO === "undefined" ||
+                typeof VAERO ===
+                    "undefined" ||
                 typeof VAERO.get !==
                     "function"
             ){
+
                 return null;
+
             }
 
 
             return (
-                VAERO.get(name) ||
+                VAERO.get(
+                    serviceName
+                ) ||
                 null
             );
 
         } catch(error){
+
+            console.warn(
+                `Evolution service okunamadı: ${serviceName}`,
+                error
+            );
+
 
             return null;
 
@@ -98,18 +124,45 @@ const Evolution = {
         payload = {}
     ){
 
+        const name =
+            String(
+                eventName ??
+                ""
+            ).trim();
+
+
+        if(!name){
+
+            return false;
+
+        }
+
+
+        const safePayload =
+            payload &&
+            typeof payload ===
+                "object" &&
+            !Array.isArray(
+                payload
+            )
+                ? payload
+                : {};
+
+
         try{
 
             if(
-                typeof VAERO !== "undefined" &&
+                typeof VAERO !==
+                    "undefined" &&
                 typeof VAERO.emit ===
                     "function"
             ){
 
                 VAERO.emit(
-                    eventName,
-                    payload
+                    name,
+                    safePayload
                 );
+
 
                 return true;
 
@@ -118,7 +171,41 @@ const Evolution = {
         } catch(error){
 
             console.warn(
-                `Evolution event gönderilemedi: ${eventName}`,
+                `Evolution event gönderilemedi: ${name}`,
+                error
+            );
+
+        }
+
+
+        try{
+
+            const events =
+                this.getService(
+                    "events"
+                );
+
+
+            if(
+                events &&
+                typeof events.emit ===
+                    "function"
+            ){
+
+                events.emit(
+                    name,
+                    safePayload
+                );
+
+
+                return true;
+
+            }
+
+        } catch(error){
+
+            console.warn(
+                `Evolution event fallback gönderilemedi: ${name}`,
                 error
             );
 
@@ -135,6 +222,13 @@ const Evolution = {
         event
     ){
 
+        if(!event){
+
+            return false;
+
+        }
+
+
         const events =
             this.getService(
                 "events"
@@ -146,7 +240,17 @@ const Evolution = {
             typeof events.emit !==
                 "function"
         ){
-            return false;
+
+            /*
+             * VAERO emit fallback is useful when Events
+             * service is temporarily unavailable.
+             */
+
+            return this.emit(
+                eventName,
+                event
+            );
+
         }
 
 
@@ -181,13 +285,22 @@ const Evolution = {
 
     createId(){
 
-        if(
-            typeof crypto !== "undefined" &&
-            typeof crypto.randomUUID ===
-                "function"
-        ){
+        try{
 
-            return crypto.randomUUID();
+            if(
+                typeof crypto !==
+                    "undefined" &&
+                typeof crypto.randomUUID ===
+                    "function"
+            ){
+
+                return crypto.randomUUID();
+
+            }
+
+        } catch(error){
+
+            /* fallback below */
 
         }
 
@@ -206,19 +319,103 @@ const Evolution = {
     normalizeText(value){
 
         return String(
-            value ||
+            value ??
             ""
         )
             .toLowerCase()
             .trim()
-            .replaceAll("ı","i")
-            .replaceAll("ğ","g")
-            .replaceAll("ü","u")
-            .replaceAll("ş","s")
-            .replaceAll("ö","o")
-            .replaceAll("ç","c")
-            .replace(/[?.!,;:]/g," ")
-            .replace(/\s+/g," ");
+            .replaceAll(
+                "ı",
+                "i"
+            )
+            .replaceAll(
+                "ğ",
+                "g"
+            )
+            .replaceAll(
+                "ü",
+                "u"
+            )
+            .replaceAll(
+                "ş",
+                "s"
+            )
+            .replaceAll(
+                "ö",
+                "o"
+            )
+            .replaceAll(
+                "ç",
+                "c"
+            )
+            .replace(
+                /[?.!,;:]/g,
+                " "
+            )
+            .replace(
+                /\s+/g,
+                " "
+            );
+
+    },
+
+
+    normalizeDisplayText(
+        value,
+        maxLength = 30000
+    ){
+
+        return String(
+            value ??
+            ""
+        )
+            .trim()
+            .slice(
+                0,
+                maxLength
+            );
+
+    },
+
+
+    normalizeId(value){
+
+        const id =
+            String(
+                value ??
+                ""
+            )
+                .trim()
+                .slice(
+                    0,
+                    200
+                );
+
+
+        return (
+            id ||
+            null
+        );
+
+    },
+
+
+    normalizeTimestamp(
+        value,
+        fallback = Date.now()
+    ){
+
+        const timestamp =
+            Number(
+                value
+            );
+
+
+        return Number.isFinite(
+            timestamp
+        )
+            ? timestamp
+            : fallback;
 
     },
 
@@ -231,7 +428,7 @@ const Evolution = {
 
         const normalized =
             String(
-                type ||
+                type ??
                 ""
             )
                 .toLowerCase()
@@ -243,7 +440,9 @@ const Evolution = {
                 normalized
             )
         ){
+
             return normalized;
+
         }
 
 
@@ -256,7 +455,7 @@ const Evolution = {
 
         const normalized =
             String(
-                status ||
+                status ??
                 ""
             )
                 .toLowerCase()
@@ -264,15 +463,17 @@ const Evolution = {
 
 
         /*
-         * Eski "active" kayıtlarını yeni UI'daki
-         * "progress" statüsüne normalize ediyoruz.
+         * Legacy "active" events are represented as
+         * "progress" in the current Evolution model.
          */
 
         if(
             normalized ===
-            "active"
+                "active"
         ){
+
             return "progress";
+
         }
 
 
@@ -287,7 +488,9 @@ const Evolution = {
                 normalized
             )
         ){
+
             return normalized;
+
         }
 
 
@@ -302,7 +505,7 @@ const Evolution = {
 
         const normalized =
             String(
-                importance ||
+                importance ??
                 ""
             )
                 .toLowerCase()
@@ -314,7 +517,9 @@ const Evolution = {
                 normalized
             )
         ){
+
             return normalized;
+
         }
 
 
@@ -328,25 +533,82 @@ const Evolution = {
         if(
             !Array.isArray(
                 tags
-            )
+            ) &&
+            !(tags instanceof Set)
         ){
+
             return [];
+
         }
 
 
-        return [
-            ...new Set(
+        const source =
+            Array.isArray(
                 tags
-                    .map(
-                        tag =>
-                            String(
-                                tag ||
-                                ""
-                            ).trim()
-                    )
-                    .filter(Boolean)
             )
-        ];
+                ? tags
+                : [
+                    ...tags
+                ];
+
+
+        const seen =
+            new Set();
+
+
+        return source
+            .map(
+                tag =>
+                    String(
+                        tag ??
+                        ""
+                    )
+                        .trim()
+                        .slice(
+                            0,
+                            80
+                        )
+            )
+            .filter(
+                tag => {
+
+                    if(!tag){
+
+                        return false;
+
+                    }
+
+
+                    const key =
+                        tag.toLocaleLowerCase(
+                            "tr-TR"
+                        );
+
+
+                    if(
+                        seen.has(
+                            key
+                        )
+                    ){
+
+                        return false;
+
+                    }
+
+
+                    seen.add(
+                        key
+                    );
+
+
+                    return true;
+
+                }
+            )
+            .slice(
+                0,
+                40
+            );
 
     },
 
@@ -361,46 +623,61 @@ const Evolution = {
                 effects
             )
         ){
+
             return {};
+
         }
 
 
-        const normalized = {};
+        const normalized =
+            {};
 
 
         Object.entries(
             effects
-        ).forEach(
-            ([key,value]) => {
-
-                const effectName =
-                    String(
-                        key ||
-                        ""
-                    ).trim();
-
-
-                const effectValue =
-                    Number(
+        )
+            .forEach(
+                (
+                    [
+                        key,
                         value
-                    );
+                    ]
+                ) => {
+
+                    const effectName =
+                        String(
+                            key ??
+                            ""
+                        )
+                            .trim()
+                            .slice(
+                                0,
+                                120
+                            );
 
 
-                if(
-                    effectName &&
-                    Number.isFinite(
-                        effectValue
-                    )
-                ){
+                    const effectValue =
+                        Number(
+                            value
+                        );
 
-                    normalized[
-                        effectName
-                    ] = effectValue;
+
+                    if(
+                        effectName &&
+                        Number.isFinite(
+                            effectValue
+                        )
+                    ){
+
+                        normalized[
+                            effectName
+                        ] =
+                            effectValue;
+
+                    }
 
                 }
-
-            }
-        );
+            );
 
 
         return normalized;
@@ -416,40 +693,93 @@ const Evolution = {
         if(
             !Array.isArray(
                 value
-            )
+            ) &&
+            !(value instanceof Set)
         ){
+
             return [];
+
         }
 
 
-        return [
-            ...new Set(
+        const source =
+            Array.isArray(
                 value
-                    .map(
-                        item => {
-
-                            let result =
-                                String(
-                                    item ||
-                                    ""
-                                ).trim();
-
-
-                            if(lowerCase){
-
-                                result =
-                                    result.toLowerCase();
-
-                            }
-
-
-                            return result;
-
-                        }
-                    )
-                    .filter(Boolean)
             )
-        ];
+                ? value
+                : [
+                    ...value
+                ];
+
+
+        const seen =
+            new Set();
+
+
+        return source
+            .map(
+                item => {
+
+                    let result =
+                        String(
+                            item ??
+                            ""
+                        )
+                            .trim()
+                            .slice(
+                                0,
+                                160
+                            );
+
+
+                    if(lowerCase){
+
+                        result =
+                            result.toLowerCase();
+
+                    }
+
+
+                    return result;
+
+                }
+            )
+            .filter(
+                item => {
+
+                    if(!item){
+
+                        return false;
+
+                    }
+
+
+                    const key =
+                        item.toLocaleLowerCase(
+                            "tr-TR"
+                        );
+
+
+                    if(
+                        seen.has(
+                            key
+                        )
+                    ){
+
+                        return false;
+
+                    }
+
+
+                    seen.add(
+                        key
+                    );
+
+
+                    return true;
+
+                }
+            );
 
     },
 
@@ -467,7 +797,9 @@ const Evolution = {
                 number
             )
         ){
+
             return 0;
+
         }
 
 
@@ -494,7 +826,9 @@ const Evolution = {
                 value
             )
         ){
+
             return {};
+
         }
 
 
@@ -509,39 +843,53 @@ const Evolution = {
         event = {}
     ){
 
+        const sourceEvent =
+            event &&
+            typeof event ===
+                "object" &&
+            !Array.isArray(
+                event
+            )
+                ? event
+                : {};
+
+
         const now =
             Date.now();
 
 
         const payload =
             this.normalizePayload(
-                event.payload
+                sourceEvent.payload
             );
 
 
         const type =
             this.normalizeType(
-                event.type
+                sourceEvent.type ||
+                payload.type
             );
 
 
         const status =
             this.normalizeStatus(
-                event.status ||
+                sourceEvent.status ||
                 payload.status
             );
 
 
         let progress =
             this.normalizeProgress(
-                event.progress ??
+                sourceEvent.progress ??
                 payload.progress
             );
 
 
         if(
-            type === "goal" &&
-            status === "completed"
+            type ===
+                "goal" &&
+            status ===
+                "completed"
         ){
 
             progress =
@@ -550,69 +898,114 @@ const Evolution = {
         }
 
 
+        if(
+            type !==
+                "goal"
+        ){
+
+            progress =
+                0;
+
+        }
+
+
+        const createdAt =
+            this.normalizeTimestamp(
+                sourceEvent.createdAt,
+                now
+            );
+
+
+        const updatedAt =
+            this.normalizeTimestamp(
+                sourceEvent.updatedAt,
+                createdAt
+            );
+
+
+        const occurredAt =
+            this.normalizeTimestamp(
+                sourceEvent.occurredAt ??
+                payload.occurredAt,
+                createdAt
+            );
+
+
+        const archived =
+            sourceEvent.archived ===
+                true;
+
+
         return {
 
             id:
-                String(
-                    event.id ||
-                    this.createId()
-                ),
+                this.normalizeId(
+                    sourceEvent.id
+                ) ||
+                this.createId(),
 
             type,
 
             title:
-                String(
-                    event.title ||
+                this.normalizeDisplayText(
+                    sourceEvent.title ||
                     payload.title ||
-                    event.description ||
-                    "Yaşam olayı"
-                ).trim(),
+                    sourceEvent.description ||
+                    "Yaşam olayı",
+                    240
+                ) ||
+                "Yaşam olayı",
 
             description:
-                String(
-                    event.description ||
+                this.normalizeDisplayText(
+                    sourceEvent.description ||
                     payload.description ||
-                    ""
-                ).trim(),
+                    "",
+                    30000
+                ),
 
             status,
 
             importance:
                 this.normalizeImportance(
-                    event.importance ||
+                    sourceEvent.importance ||
                     payload.importance
                 ),
 
             source:
-                String(
-                    event.source ||
+                this.normalizeDisplayText(
+                    sourceEvent.source ||
                     payload.source ||
-                    "user"
-                ).trim(),
+                    "user",
+                    120
+                ) ||
+                "user",
 
             tags:
                 this.normalizeTags(
-                    event.tags ||
+                    sourceEvent.tags ||
                     payload.tags
                 ),
 
             relatedEntityId:
-                event.relatedEntityId ||
-                event.entityId ||
-                payload.relatedEntityId ||
-                payload.entityId ||
-                null,
+                this.normalizeId(
+                    sourceEvent.relatedEntityId ||
+                    sourceEvent.entityId ||
+                    payload.relatedEntityId ||
+                    payload.entityId
+                ),
 
             relatedWorldId:
-                event.relatedWorldId ||
-                event.worldId ||
-                payload.relatedWorldId ||
-                payload.worldId ||
-                null,
+                this.normalizeId(
+                    sourceEvent.relatedWorldId ||
+                    sourceEvent.worldId ||
+                    payload.relatedWorldId ||
+                    payload.worldId
+                ),
 
             effects:
                 this.normalizeEffects(
-                    event.effects ||
+                    sourceEvent.effects ||
                     payload.effects
                 ),
 
@@ -620,7 +1013,7 @@ const Evolution = {
                 Math.max(
                     0,
                     Number(
-                        event.xp ??
+                        sourceEvent.xp ??
                         payload.xp
                     ) ||
                     0
@@ -630,56 +1023,36 @@ const Evolution = {
 
             organs:
                 this.normalizeList(
-                    event.organs ||
+                    sourceEvent.organs ||
                     payload.organs,
                     true
                 ),
 
             identities:
                 this.normalizeList(
-                    event.identities ||
+                    sourceEvent.identities ||
                     payload.identities
                 ),
 
-            archived:
-                event.archived ===
-                true,
+            archived,
 
             archivedAt:
-                event.archived ===
-                    true
-                    ? (
-                        Number(
-                            event.archivedAt
-                        ) ||
-                        now
+                archived
+                    ? this.normalizeTimestamp(
+                        sourceEvent.archivedAt,
+                        updatedAt
                     )
                     : null,
 
-            occurredAt:
-                Number(
-                    event.occurredAt ||
-                    payload.occurredAt
-                ) ||
-                Number(
-                    event.createdAt
-                ) ||
-                now,
+            occurredAt,
 
-            createdAt:
-                Number(
-                    event.createdAt
-                ) ||
-                now,
+            createdAt,
 
             updatedAt:
-                Number(
-                    event.updatedAt
-                ) ||
-                Number(
-                    event.createdAt
-                ) ||
-                now,
+                Math.max(
+                    createdAt,
+                    updatedAt
+                ),
 
             payload
 
@@ -694,16 +1067,23 @@ const Evolution = {
 
     init(){
 
-        if(this.booted){
+        if(
+            this.booted
+        ){
+
             return this;
+
         }
 
 
         this.load();
 
+
         this.cleanupLegacyEngineStarts();
 
+
         this.migrateLegacyEvents();
+
 
         this.sort();
 
@@ -756,7 +1136,10 @@ const Evolution = {
             this.history.length;
 
 
-        if(removed > 0){
+        if(
+            removed >
+                0
+        ){
 
             this.save();
 
@@ -774,37 +1157,70 @@ const Evolution = {
             false;
 
 
-        this.history =
-            this.history
-                .filter(Boolean)
-                .map(
-                    event => {
-
-                        const normalized =
-                            this.normalizeEvent(
-                                event
-                            );
+        const byId =
+            new Map();
 
 
-                        if(
-                            JSON.stringify(
-                                normalized
-                            ) !==
-                            JSON.stringify(
-                                event
-                            )
-                        ){
+        this.history
+            .filter(Boolean)
+            .forEach(
+                event => {
 
-                            changed =
-                                true;
-
-                        }
+                    const normalized =
+                        this.normalizeEvent(
+                            event
+                        );
 
 
-                        return normalized;
+                    if(
+                        JSON.stringify(
+                            normalized
+                        ) !==
+                        JSON.stringify(
+                            event
+                        )
+                    ){
+
+                        changed =
+                            true;
 
                     }
-                );
+
+
+                    const existing =
+                        byId.get(
+                            normalized.id
+                        );
+
+
+                    if(
+                        !existing ||
+                        Number(
+                            normalized.updatedAt
+                        ) >
+                        Number(
+                            existing.updatedAt
+                        )
+                    ){
+
+                        byId.set(
+                            normalized.id,
+                            normalized
+                        );
+
+                    }
+
+                }
+            );
+
+
+        this.history =
+            [
+                ...byId.values()
+            ];
+
+
+        this.sort();
 
 
         if(changed){
@@ -836,12 +1252,17 @@ const Evolution = {
         let type =
             "general";
 
+
         let importance =
             "medium";
 
-        const tags = [];
 
-        let effects = {};
+        const tags =
+            [];
+
+
+        let effects =
+            {};
 
 
         if(
@@ -862,8 +1283,10 @@ const Evolution = {
             type =
                 "achievement";
 
+
             importance =
                 "high";
+
 
             tags.push(
                 "başarı"
@@ -883,7 +1306,9 @@ const Evolution = {
 
             };
 
-        } else if(
+        }
+
+        else if(
             text.includes(
                 "basarisiz"
             ) ||
@@ -901,8 +1326,10 @@ const Evolution = {
             type =
                 "failure";
 
+
             importance =
                 "high";
+
 
             tags.push(
                 "deneyim"
@@ -919,7 +1346,9 @@ const Evolution = {
 
             };
 
-        } else if(
+        }
+
+        else if(
             text.includes(
                 "karar verdi"
             ) ||
@@ -934,6 +1363,7 @@ const Evolution = {
             type =
                 "decision";
 
+
             tags.push(
                 "karar"
             );
@@ -946,7 +1376,9 @@ const Evolution = {
 
             };
 
-        } else if(
+        }
+
+        else if(
             text.includes(
                 "hedef"
             ) ||
@@ -961,6 +1393,7 @@ const Evolution = {
             type =
                 "goal";
 
+
             tags.push(
                 "hedef"
             );
@@ -973,7 +1406,9 @@ const Evolution = {
 
             };
 
-        } else if(
+        }
+
+        else if(
             text.includes(
                 "ise basladi"
             ) ||
@@ -988,8 +1423,10 @@ const Evolution = {
             type =
                 "work";
 
+
             importance =
                 "high";
+
 
             tags.push(
                 "iş"
@@ -1006,7 +1443,9 @@ const Evolution = {
 
             };
 
-        } else if(
+        }
+
+        else if(
             text.includes(
                 "para"
             ) ||
@@ -1023,6 +1462,7 @@ const Evolution = {
 
             type =
                 "finance";
+
 
             tags.push(
                 "finans"
@@ -1045,9 +1485,15 @@ const Evolution = {
 
             importance,
 
-            tags,
+            tags:
+                this.normalizeTags(
+                    tags
+                ),
 
-            effects
+            effects:
+                this.normalizeEffects(
+                    effects
+                )
 
         };
 
@@ -1102,9 +1548,15 @@ const Evolution = {
             );
 
 
+        /*
+         * Every Evolution event becomes part of living
+         * chronology and memory.
+         */
+
         organs.add(
             "timeline"
         );
+
 
         organs.add(
             "memory"
@@ -1201,17 +1653,17 @@ const Evolution = {
     ){
 
         const title =
-            String(
-                data.title ||
-                ""
-            ).trim();
+            this.normalizeDisplayText(
+                data.title,
+                240
+            );
 
 
         const description =
-            String(
-                data.description ||
-                ""
-            ).trim();
+            this.normalizeDisplayText(
+                data.description,
+                30000
+            );
 
 
         if(
@@ -1351,28 +1803,32 @@ const Evolution = {
                     normalizedType,
 
                 title:
-                    String(
+                    this.normalizeDisplayText(
                         safePayload.title ||
                         description ||
-                        "Yaşam olayı"
-                    ).trim(),
+                        "Yaşam olayı",
+                        240
+                    ),
 
                 description:
-                    String(
+                    this.normalizeDisplayText(
                         safePayload.description ||
                         description ||
-                        ""
-                    ).trim(),
+                        "",
+                        30000
+                    ),
 
                 status,
 
                 importance,
 
                 source:
-                    String(
+                    this.normalizeDisplayText(
                         safePayload.source ||
-                        "user"
-                    ).trim(),
+                        "user",
+                        120
+                    ) ||
+                    "user",
 
                 tags:
                     safePayload.tags,
@@ -1394,7 +1850,8 @@ const Evolution = {
                     Number.isFinite(
                         requestedXP
                     ) &&
-                    requestedXP > 0
+                    requestedXP >
+                        0
                         ? requestedXP
                         : this.calculateDefaultXP(
                             importance
@@ -1420,6 +1877,7 @@ const Evolution = {
 
                 payload:{
                     ...safePayload,
+
                     progress
                 }
 
@@ -1433,6 +1891,7 @@ const Evolution = {
 
         this.sort();
 
+
         this.save();
 
 
@@ -1443,9 +1902,8 @@ const Evolution = {
 
 
         /*
-         * Critical integration:
-         * record() artık gerçek Life Event oluşturur.
-         * Timeline + Memory bunu dinler.
+         * Canonical integration point:
+         * Timeline + Memory subscribe to this Life Event.
          */
 
         this.publishLifeEvent(
@@ -1467,9 +1925,20 @@ const Evolution = {
         data = {}
     ){
 
+        const safeData =
+            data &&
+            typeof data ===
+                "object" &&
+            !Array.isArray(
+                data
+            )
+                ? data
+                : {};
+
+
         const validation =
             this.validateLifeEvent(
-                data
+                safeData
             );
 
 
@@ -1486,9 +1955,14 @@ const Evolution = {
             this.emit(
                 "life-event:rejected",
                 {
-                    data,
+                    data:
+                        safeData,
+
                     reason:
-                        validation.reason
+                        validation.reason,
+
+                    time:
+                        Date.now()
                 }
             );
 
@@ -1500,25 +1974,27 @@ const Evolution = {
 
         const analysis =
             this.analyzeLifeEvent(
-                data
+                safeData
             );
 
 
         const type =
-            data.type ||
+            safeData.type ||
             analysis.type;
 
 
         const importance =
-            data.importance ||
+            safeData.importance ||
             analysis.importance;
 
 
         const organs =
             this.inferAffectedOrgans(
                 {
-                    ...data,
+                    ...safeData,
+
                     type,
+
                     importance
                 },
                 analysis
@@ -1527,73 +2003,82 @@ const Evolution = {
 
         return this.record(
             type,
-            data.description ||
-            data.title ||
+            safeData.description ||
+            safeData.title ||
             "",
             {
 
                 title:
-                    data.title ||
-                    data.description ||
+                    safeData.title ||
+                    safeData.description ||
                     "Yaşam olayı",
 
                 description:
-                    data.description ||
+                    safeData.description ||
                     "",
 
                 status:
-                    data.status ||
+                    safeData.status ||
                     "completed",
 
                 importance,
 
                 source:
-                    data.source ||
+                    safeData.source ||
                     "user",
 
-                tags:[
-                    ...analysis.tags,
-                    ...(
-                        Array.isArray(
-                            data.tags
+                tags:
+                    this.normalizeTags([
+                        ...analysis.tags,
+
+                        ...(
+                            Array.isArray(
+                                safeData.tags
+                            )
+                                ? safeData.tags
+                                : []
                         )
-                            ? data.tags
-                            : []
-                    )
-                ],
+                    ]),
 
                 relatedEntityId:
-                    data.relatedEntityId ||
-                    data.entityId ||
+                    safeData.relatedEntityId ||
+                    safeData.entityId ||
                     null,
 
                 relatedWorldId:
-                    data.relatedWorldId ||
-                    data.worldId ||
+                    safeData.relatedWorldId ||
+                    safeData.worldId ||
                     null,
 
                 occurredAt:
-                    data.occurredAt ||
+                    safeData.occurredAt ||
                     Date.now(),
 
                 effects:{
                     ...analysis.effects,
+
                     ...(
-                        data.effects ||
-                        {}
+                        safeData.effects &&
+                        typeof safeData.effects ===
+                            "object" &&
+                        !Array.isArray(
+                            safeData.effects
+                        )
+                            ? safeData.effects
+                            : {}
                     )
                 },
 
                 xp:
-                    data.xp,
+                    safeData.xp,
 
                 progress:
-                    data.progress,
+                    safeData.progress,
 
                 organs,
 
                 identities:
-                    data.identities
+                    safeData.identities
 
             }
         );
@@ -1608,7 +2093,9 @@ const Evolution = {
     publishLifeEvent(event){
 
         if(!event){
+
             return false;
+
         }
 
 
@@ -1665,14 +2152,15 @@ const Evolution = {
     ){
 
         const id =
-            String(
-                eventId ||
-                ""
-            ).trim();
+            this.normalizeId(
+                eventId
+            );
 
 
         if(!id){
+
             return null;
+
         }
 
 
@@ -1680,21 +2168,27 @@ const Evolution = {
             this.history.find(
                 item =>
                     item?.id ===
-                    id
+                        id
             ) ||
             null;
 
 
-        if(
-            !event ||
-            (
-                event.archived ===
-                    true &&
-                options.includeArchived !==
-                    true
-            )
-        ){
+        if(!event){
+
             return null;
+
+        }
+
+
+        if(
+            event.archived ===
+                true &&
+            options?.includeArchived !==
+                true
+        ){
+
+            return null;
+
         }
 
 
@@ -1731,7 +2225,9 @@ const Evolution = {
                 changes
             )
         ){
+
             return null;
+
         }
 
 
@@ -1781,10 +2277,10 @@ const Evolution = {
         ){
 
             const title =
-                String(
-                    changes.title ||
-                    ""
-                ).trim();
+                this.normalizeDisplayText(
+                    changes.title,
+                    240
+                );
 
 
             if(title){
@@ -1803,10 +2299,10 @@ const Evolution = {
         ){
 
             event.description =
-                String(
-                    changes.description ||
-                    ""
-                ).trim();
+                this.normalizeDisplayText(
+                    changes.description,
+                    30000
+                );
 
         }
 
@@ -1842,11 +2338,19 @@ const Evolution = {
                 undefined
         ){
 
-            event.source =
-                String(
-                    changes.source ||
-                    "user"
-                ).trim();
+            const source =
+                this.normalizeDisplayText(
+                    changes.source,
+                    120
+                );
+
+
+            if(source){
+
+                event.source =
+                    source;
+
+            }
 
         }
 
@@ -1927,8 +2431,9 @@ const Evolution = {
         ){
 
             event.relatedEntityId =
-                changes.relatedEntityId ||
-                null;
+                this.normalizeId(
+                    changes.relatedEntityId
+                );
 
         }
 
@@ -1939,8 +2444,9 @@ const Evolution = {
         ){
 
             event.relatedWorldId =
-                changes.relatedWorldId ||
-                null;
+                this.normalizeId(
+                    changes.relatedWorldId
+                );
 
         }
 
@@ -1950,23 +2456,11 @@ const Evolution = {
                 undefined
         ){
 
-            const occurredAt =
-                Number(
-                    changes.occurredAt
+            event.occurredAt =
+                this.normalizeTimestamp(
+                    changes.occurredAt,
+                    event.occurredAt
                 );
-
-
-            if(
-                Number.isFinite(
-                    occurredAt
-                ) &&
-                occurredAt > 0
-            ){
-
-                event.occurredAt =
-                    occurredAt;
-
-            }
 
         }
 
@@ -2001,7 +2495,9 @@ const Evolution = {
                 event.progress =
                     100;
 
-            } else if(
+            }
+
+            else if(
                 event.progress >=
                     100
             ){
@@ -2009,12 +2505,15 @@ const Evolution = {
                 event.progress =
                     100;
 
+
                 event.status =
                     "completed";
 
             }
 
-        } else {
+        }
+
+        else {
 
             event.progress =
                 0;
@@ -2032,8 +2531,11 @@ const Evolution = {
         ){
 
             event.payload = {
+
                 ...event.payload,
+
                 ...changes.payload
+
             };
 
         }
@@ -2077,6 +2579,7 @@ const Evolution = {
 
         this.sort();
 
+
         this.save();
 
 
@@ -2090,9 +2593,12 @@ const Evolution = {
             "evolution:updated",
             {
                 event,
+
                 before,
+
                 eventId:
                     event.id,
+
                 time:
                     Date.now()
             }
@@ -2103,8 +2609,7 @@ const Evolution = {
 
     },
 
-
-    /* =====================================================
+   /* =====================================================
        GOAL PROGRESS
     ===================================================== */
 
@@ -2124,7 +2629,9 @@ const Evolution = {
             event.type !==
                 "goal"
         ){
+
             return null;
+
         }
 
 
@@ -2141,10 +2648,12 @@ const Evolution = {
                     value,
 
                 status:
-                    value >= 100
+                    value >=
+                        100
                         ? "completed"
                         : (
-                            value > 0
+                            value >
+                                0
                                 ? "progress"
                                 : event.status
                         )
@@ -2170,16 +2679,27 @@ const Evolution = {
             event.type !==
                 "goal"
         ){
+
             return null;
+
         }
+
+
+        const increment =
+            Number(
+                amount
+            );
 
 
         return this.setProgress(
             event.id,
             event.progress +
-            Number(
-                amount ||
-                0
+            (
+                Number.isFinite(
+                    increment
+                )
+                    ? increment
+                    : 0
             )
         );
 
@@ -2199,7 +2719,9 @@ const Evolution = {
             event.type !==
                 "goal"
         ){
+
             return null;
+
         }
 
 
@@ -2234,20 +2756,26 @@ const Evolution = {
 
 
         if(!event){
+
             return false;
+
         }
 
 
         if(event.archived){
+
             return true;
+
         }
 
 
         event.archived =
             true;
 
+
         event.archivedAt =
             Date.now();
+
 
         event.updatedAt =
             Date.now();
@@ -2257,8 +2785,9 @@ const Evolution = {
 
 
         /*
-         * Timeline + Memory linked references should
-         * disappear from active flow.
+         * Archived Evolution events leave the active
+         * Life Event stream. Timeline / Memory listeners
+         * may choose how to represent that transition.
          */
 
         this.emitLifeEvent(
@@ -2271,8 +2800,10 @@ const Evolution = {
             "evolution:archived",
             {
                 event,
+
                 eventId:
                     event.id,
+
                 time:
                     Date.now()
             }
@@ -2297,20 +2828,26 @@ const Evolution = {
 
 
         if(!event){
+
             return false;
+
         }
 
 
         if(!event.archived){
+
             return true;
+
         }
 
 
         event.archived =
             false;
 
+
         event.archivedAt =
             null;
+
 
         event.updatedAt =
             Date.now();
@@ -2320,8 +2857,8 @@ const Evolution = {
 
 
         /*
-         * Linked Memory/Timeline references are recreated
-         * through the same created event channel.
+         * Re-publish restored Life Event so dependent
+         * systems can recreate or restore their links.
          */
 
         this.publishLifeEvent(
@@ -2333,8 +2870,10 @@ const Evolution = {
             "evolution:restored",
             {
                 event,
+
                 eventId:
                     event.id,
+
                 time:
                     Date.now()
             }
@@ -2363,20 +2902,27 @@ const Evolution = {
 
 
         if(!event){
+
             return false;
+
         }
 
 
         const index =
             this.history.findIndex(
                 item =>
-                    item.id ===
-                    event.id
+                    item?.id ===
+                        event.id
             );
 
 
-        if(index < 0){
+        if(
+            index <
+                0
+        ){
+
             return false;
+
         }
 
 
@@ -2428,14 +2974,15 @@ const Evolution = {
     ){
 
         const id =
-            String(
-                entityId ||
-                ""
-            ).trim();
+            this.normalizeId(
+                entityId
+            );
 
 
         if(!id){
+
             return [];
+
         }
 
 
@@ -2443,7 +2990,7 @@ const Evolution = {
             this.history.filter(
                 event =>
                     event.relatedEntityId ===
-                    id
+                        id
             );
 
 
@@ -2456,7 +3003,7 @@ const Evolution = {
                 events.filter(
                     event =>
                         event.archived !==
-                        true
+                            true
                 );
 
         }
@@ -2474,7 +3021,7 @@ const Evolution = {
                 events.filter(
                     event =>
                         event.type ===
-                        type
+                            type
                 );
 
         }
@@ -2492,7 +3039,7 @@ const Evolution = {
                 events.filter(
                     event =>
                         event.status ===
-                        status
+                            status
                 );
 
         }
@@ -2515,12 +3062,37 @@ const Evolution = {
         }
 
 
+        if(options.source){
+
+            const source =
+                String(
+                    options.source
+                ).trim();
+
+
+            events =
+                events.filter(
+                    event =>
+                        event.source ===
+                            source
+                );
+
+        }
+
+
         return [
             ...events
         ].sort(
-            (a,b) =>
-                this.getTimestamp(b) -
-                this.getTimestamp(a)
+            (
+                a,
+                b
+            ) =>
+                this.getTimestamp(
+                    b
+                ) -
+                this.getTimestamp(
+                    a
+                )
         );
 
     },
@@ -2545,14 +3117,15 @@ const Evolution = {
     ){
 
         const id =
-            String(
-                worldId ||
-                ""
-            ).trim();
+            this.normalizeId(
+                worldId
+            );
 
 
         if(!id){
+
             return [];
+
         }
 
 
@@ -2560,7 +3133,7 @@ const Evolution = {
             this.history.filter(
                 event =>
                     event.relatedWorldId ===
-                    id
+                        id
             );
 
 
@@ -2573,7 +3146,43 @@ const Evolution = {
                 events.filter(
                     event =>
                         event.archived !==
-                        true
+                            true
+                );
+
+        }
+
+
+        if(options.type){
+
+            const type =
+                this.normalizeType(
+                    options.type
+                );
+
+
+            events =
+                events.filter(
+                    event =>
+                        event.type ===
+                            type
+                );
+
+        }
+
+
+        if(options.status){
+
+            const status =
+                this.normalizeStatus(
+                    options.status
+                );
+
+
+            events =
+                events.filter(
+                    event =>
+                        event.status ===
+                            status
                 );
 
         }
@@ -2582,9 +3191,16 @@ const Evolution = {
         return [
             ...events
         ].sort(
-            (a,b) =>
-                this.getTimestamp(b) -
-                this.getTimestamp(a)
+            (
+                a,
+                b
+            ) =>
+                this.getTimestamp(
+                    b
+                ) -
+                this.getTimestamp(
+                    a
+                )
         );
 
     },
@@ -2611,7 +3227,7 @@ const Evolution = {
                 events.filter(
                     event =>
                         event.archived !==
-                        true
+                            true
                 );
 
         }
@@ -2619,13 +3235,17 @@ const Evolution = {
 
         if(options.entityId){
 
+            const entityId =
+                this.normalizeId(
+                    options.entityId
+                );
+
+
             events =
                 events.filter(
                     event =>
                         event.relatedEntityId ===
-                        String(
-                            options.entityId
-                        )
+                            entityId
                 );
 
         }
@@ -2633,13 +3253,17 @@ const Evolution = {
 
         if(options.worldId){
 
+            const worldId =
+                this.normalizeId(
+                    options.worldId
+                );
+
+
             events =
                 events.filter(
                     event =>
                         event.relatedWorldId ===
-                        String(
-                            options.worldId
-                        )
+                            worldId
                 );
 
         }
@@ -2657,7 +3281,7 @@ const Evolution = {
                 events.filter(
                     event =>
                         event.type ===
-                        type
+                            type
                 );
 
         }
@@ -2675,16 +3299,76 @@ const Evolution = {
                 events.filter(
                     event =>
                         event.status ===
-                        status
+                            status
+                );
+
+        }
+
+
+        if(options.importance){
+
+            const importance =
+                this.normalizeImportance(
+                    options.importance
+                );
+
+
+            events =
+                events.filter(
+                    event =>
+                        event.importance ===
+                            importance
+                );
+
+        }
+
+
+        if(options.source){
+
+            const source =
+                String(
+                    options.source
+                ).trim();
+
+
+            events =
+                events.filter(
+                    event =>
+                        event.source ===
+                            source
+                );
+
+        }
+
+
+        if(
+            options.important ===
+                true
+        ){
+
+            events =
+                events.filter(
+                    event =>
+                        event.importance ===
+                            "high" ||
+                        event.importance ===
+                            "critical"
                 );
 
         }
 
 
         return events.sort(
-            (a,b) =>
-                this.getTimestamp(b) -
-                this.getTimestamp(a)
+            (
+                a,
+                b
+            ) =>
+                this.getTimestamp(
+                    b
+                ) -
+                this.getTimestamp(
+                    a
+                )
         );
 
     },
@@ -2710,28 +3394,24 @@ const Evolution = {
 
     important(options = {}){
 
-        return this
-            .all(options)
-            .filter(
-                event =>
-                    event.importance ===
-                        "high" ||
-                    event.importance ===
-                        "critical"
-            );
+        return this.all({
+            ...options,
+
+            important:
+                true
+        });
 
     },
 
 
     goals(options = {}){
 
-        return this
-            .all(options)
-            .filter(
-                event =>
-                    event.type ===
-                    "goal"
-            );
+        return this.all({
+            ...options,
+
+            type:
+                "goal"
+        });
 
     },
 
@@ -2739,7 +3419,9 @@ const Evolution = {
     activeGoals(options = {}){
 
         return this
-            .goals(options)
+            .goals(
+                options
+            )
             .filter(
                 event =>
                     event.status !==
@@ -2762,7 +3444,7 @@ const Evolution = {
 
         const text =
             String(
-                query ||
+                query ??
                 ""
             )
                 .trim()
@@ -2771,53 +3453,56 @@ const Evolution = {
                 );
 
 
-        let events =
+        const events =
             this.all(
                 options
             );
 
 
         if(!text){
+
             return events;
+
         }
 
 
-        events =
-            events.filter(
-                event => {
+        return events.filter(
+            event => {
 
-                    const haystack = [
+                const haystack = [
 
-                        event.title,
+                    event.title,
 
-                        event.description,
+                    event.description,
 
-                        event.type,
+                    event.type,
 
-                        event.status,
+                    event.status,
 
-                        event.importance,
+                    event.importance,
 
-                        event.source,
+                    event.source,
 
-                        ...(event.tags || [])
+                    ...(event.tags || []),
 
-                    ]
-                        .join(" ")
-                        .toLocaleLowerCase(
-                            "tr-TR"
-                        );
+                    ...(event.organs || []),
 
+                    ...(event.identities || [])
 
-                    return haystack.includes(
-                        text
+                ]
+                    .filter(Boolean)
+                    .join(" ")
+                    .toLocaleLowerCase(
+                        "tr-TR"
                     );
 
-                }
-            );
 
+                return haystack.includes(
+                    text
+                );
 
-        return events;
+            }
+        );
 
     },
 
@@ -2845,9 +3530,16 @@ const Evolution = {
     sort(){
 
         this.history.sort(
-            (a,b) =>
-                this.getTimestamp(b) -
-                this.getTimestamp(a)
+            (
+                a,
+                b
+            ) =>
+                this.getTimestamp(
+                    b
+                ) -
+                this.getTimestamp(
+                    a
+                )
         );
 
 
@@ -2863,9 +3555,14 @@ const Evolution = {
     totalXP(options = {}){
 
         return this
-            .all(options)
+            .all(
+                options
+            )
             .reduce(
-                (total,event) =>
+                (
+                    total,
+                    event
+                ) =>
                     total +
                     Math.max(
                         0,
@@ -2890,12 +3587,15 @@ const Evolution = {
 
         const level =
             Math.floor(
-                xp / 100
-            ) + 1;
+                xp /
+                100
+            ) +
+            1;
 
 
         const currentLevelXP =
-            xp % 100;
+            xp %
+            100;
 
 
         return {
@@ -2932,6 +3632,24 @@ const Evolution = {
                 : this.all();
 
 
+        const xp =
+            events.reduce(
+                (
+                    total,
+                    event
+                ) =>
+                    total +
+                    Math.max(
+                        0,
+                        Number(
+                            event.xp
+                        ) ||
+                        0
+                    ),
+                0
+            );
+
+
         return {
 
             total:
@@ -2942,6 +3660,13 @@ const Evolution = {
                     event =>
                         event.importance ===
                             "high" ||
+                        event.importance ===
+                            "critical"
+                ).length,
+
+            critical:
+                events.filter(
+                    event =>
                         event.importance ===
                             "critical"
                 ).length,
@@ -2958,6 +3683,20 @@ const Evolution = {
                     event =>
                         event.type ===
                             "decision"
+                ).length,
+
+            failures:
+                events.filter(
+                    event =>
+                        event.type ===
+                            "failure"
+                ).length,
+
+            goals:
+                events.filter(
+                    event =>
+                        event.type ===
+                            "goal"
                 ).length,
 
             activeGoals:
@@ -2987,19 +3726,7 @@ const Evolution = {
                             "milestone"
                 ).length,
 
-            xp:
-                events.reduce(
-                    (total,event) =>
-                        total +
-                        Math.max(
-                            0,
-                            Number(
-                                event.xp
-                            ) ||
-                            0
-                        ),
-                    0
-                )
+            xp
 
         };
 
@@ -3018,7 +3745,9 @@ const Evolution = {
                 typeof localStorage ===
                     "undefined"
             ){
+
                 return false;
+
             }
 
 
@@ -3063,6 +3792,7 @@ const Evolution = {
                 this.history =
                     [];
 
+
                 return this.history;
 
             }
@@ -3074,11 +3804,21 @@ const Evolution = {
                 );
 
 
+            let migratedFromLegacy =
+                false;
+
+
             if(!saved){
 
                 saved =
                     localStorage.getItem(
                         this.legacyStorageKey
+                    );
+
+
+                migratedFromLegacy =
+                    Boolean(
+                        saved
                     );
 
             }
@@ -3088,6 +3828,7 @@ const Evolution = {
 
                 this.history =
                     [];
+
 
                 return this.history;
 
@@ -3100,34 +3841,112 @@ const Evolution = {
                 );
 
 
-            this.history =
-                Array.isArray(
+            if(
+                !Array.isArray(
                     parsed
                 )
-                    ? parsed
-                        .filter(
-                            event =>
-                                event &&
-                                typeof event ===
-                                    "object"
+            ){
+
+                this.history =
+                    [];
+
+
+                this.save();
+
+
+                return this.history;
+
+            }
+
+
+            const byId =
+                new Map();
+
+
+            parsed
+                .filter(
+                    event =>
+                        event &&
+                        typeof event ===
+                            "object" &&
+                        !Array.isArray(
+                            event
                         )
-                        .map(
-                            event =>
-                                this.normalizeEvent(
-                                    event
-                                )
-                        )
-                    : [];
+                )
+                .forEach(
+                    event => {
+
+                        const normalized =
+                            this.normalizeEvent(
+                                event
+                            );
+
+
+                        const existing =
+                            byId.get(
+                                normalized.id
+                            );
+
+
+                        if(
+                            !existing ||
+                            Number(
+                                normalized.updatedAt
+                            ) >=
+                            Number(
+                                existing.updatedAt
+                            )
+                        ){
+
+                            byId.set(
+                                normalized.id,
+                                normalized
+                            );
+
+                        }
+
+                    }
+                );
+
+
+            this.history =
+                [
+                    ...byId.values()
+                ];
 
 
             this.sort();
 
 
             /*
-             * Her zaman son formata yaz.
+             * Always persist the current canonical form.
              */
 
             this.save();
+
+
+            if(
+                migratedFromLegacy
+            ){
+
+                this.emit(
+                    "evolution:migrated",
+                    {
+                        count:
+                            this.history.length,
+
+                        from:
+                            this.legacyStorageKey,
+
+                        to:
+                            this.storageKey,
+
+                        time:
+                            Date.now()
+                    }
+                );
+
+            }
 
 
             return this.history;
@@ -3160,24 +3979,33 @@ const Evolution = {
         if(options.entityId){
 
             const entityId =
-                String(
+                this.normalizeId(
                     options.entityId
                 );
+
+
+            if(!entityId){
+
+                return false;
+
+            }
 
 
             const affected =
                 this.history.filter(
                     event =>
                         event.relatedEntityId ===
-                        entityId
+                            entityId
                 );
 
 
             if(
                 affected.length ===
-                0
+                    0
             ){
+
                 return false;
+
             }
 
 
@@ -3197,11 +4025,25 @@ const Evolution = {
                 this.history.filter(
                     event =>
                         event.relatedEntityId !==
-                        entityId
+                            entityId
                 );
 
 
             this.save();
+
+
+            this.emit(
+                "evolution:cleared",
+                {
+                    entityId,
+
+                    count:
+                        affected.length,
+
+                    time:
+                        Date.now()
+                }
+            );
 
 
             return true;
@@ -3209,9 +4051,10 @@ const Evolution = {
         }
 
 
-        const previous = [
-            ...this.history
-        ];
+        const previous =
+            [
+                ...this.history
+            ];
 
 
         this.history =
@@ -3260,6 +4103,14 @@ const Evolution = {
             this.all();
 
 
+        const archived =
+            this.history.filter(
+                event =>
+                    event.archived ===
+                        true
+            );
+
+
         const xp =
             this.totalXP();
 
@@ -3276,11 +4127,7 @@ const Evolution = {
                 active.length,
 
             archived:
-                this.history.filter(
-                    event =>
-                        event.archived ===
-                            true
-                ).length,
+                archived.length,
 
             achievements:
                 active.filter(
@@ -3294,6 +4141,13 @@ const Evolution = {
                     event =>
                         event.type ===
                             "decision"
+                ).length,
+
+            failures:
+                active.filter(
+                    event =>
+                        event.type ===
+                            "failure"
                 ).length,
 
             goals:
@@ -3314,6 +4168,15 @@ const Evolution = {
                             "cancelled"
                 ).length,
 
+            completedGoals:
+                active.filter(
+                    event =>
+                        event.type ===
+                            "goal" &&
+                        event.status ===
+                            "completed"
+                ).length,
+
             milestones:
                 active.filter(
                     event =>
@@ -3321,13 +4184,31 @@ const Evolution = {
                             "milestone"
                 ).length,
 
+            important:
+                active.filter(
+                    event =>
+                        event.importance ===
+                            "high" ||
+                        event.importance ===
+                            "critical"
+                ).length,
+
+            critical:
+                active.filter(
+                    event =>
+                        event.importance ===
+                            "critical"
+                ).length,
+
             totalXP:
                 xp,
 
             level:
                 Math.floor(
-                    xp / 100
-                ) + 1
+                    xp /
+                    100
+                ) +
+                1
 
         };
 
@@ -3336,14 +4217,49 @@ const Evolution = {
 };
 
 
-VAERO.register(
-    "evolution",
-    Evolution
-);
+/* =========================================================
+   REGISTER
+========================================================= */
+
+try{
+
+    if(
+        typeof VAERO !==
+            "undefined" &&
+        typeof VAERO.register ===
+            "function"
+    ){
+
+        VAERO.register(
+            "evolution",
+            Evolution
+        );
+
+    }
+
+} catch(error){
+
+    console.error(
+        "Evolution register edilemedi:",
+        error
+    );
+
+}
 
 
-window.Evolution =
-    Evolution;
+if(
+    typeof window !==
+        "undefined"
+){
 
+    window.Evolution =
+        Evolution;
+
+}
+
+
+/* =========================================================
+   INIT
+========================================================= */
 
 Evolution.init();
