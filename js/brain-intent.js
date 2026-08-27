@@ -5,6 +5,10 @@
 
 const BrainIntent = {
 
+    version:
+        "3.0.0",
+
+
     /* =====================================================
        NORMALIZE
     ===================================================== */
@@ -12,21 +16,49 @@ const BrainIntent = {
     normalize(message){
 
         return String(
-            message ?? ""
+            message ??
+                ""
         )
             .toLocaleLowerCase(
                 "tr-TR"
             )
             .trim()
-            .replaceAll("ı", "i")
-            .replaceAll("ğ", "g")
-            .replaceAll("ü", "u")
-            .replaceAll("ş", "s")
-            .replaceAll("ö", "o")
-            .replaceAll("ç", "c")
-            .replace(/[?.!,;:()[\]{}"'`]/g, " ")
-            .replace(/[-_/\\]+/g, " ")
-            .replace(/\s+/g, " ")
+            .replaceAll(
+                "ı",
+                "i"
+            )
+            .replaceAll(
+                "ğ",
+                "g"
+            )
+            .replaceAll(
+                "ü",
+                "u"
+            )
+            .replaceAll(
+                "ş",
+                "s"
+            )
+            .replaceAll(
+                "ö",
+                "o"
+            )
+            .replaceAll(
+                "ç",
+                "c"
+            )
+            .replace(
+                /[?.!,;:()[\]{}"'`]/g,
+                " "
+            )
+            .replace(
+                /[-_/\\]+/g,
+                " "
+            )
+            .replace(
+                /\s+/g,
+                " "
+            )
             .trim();
 
     },
@@ -45,7 +77,9 @@ const BrainIntent = {
 
 
         return normalized
-            ? normalized.split(" ")
+            ? normalized.split(
+                " "
+            )
             : [];
 
     },
@@ -63,7 +97,9 @@ const BrainIntent = {
 
 
         if(!normalizedText){
+
             return false;
+
         }
 
 
@@ -83,7 +119,9 @@ const BrainIntent = {
 
 
                 if(!normalizedPhrase){
+
                     return false;
+
                 }
 
 
@@ -93,8 +131,11 @@ const BrainIntent = {
                     )
                 ){
 
-                    return normalizedText.includes(
-                        normalizedPhrase
+                    return (
+                        ` ${normalizedText} `
+                            .includes(
+                                ` ${normalizedPhrase} `
+                            )
                     );
 
                 }
@@ -119,7 +160,9 @@ const BrainIntent = {
         return [
 
             {
-                target:"applications",
+                target:
+                    "applications",
+
                 names:[
                     "applications",
                     "uygulamalar",
@@ -130,7 +173,9 @@ const BrainIntent = {
             },
 
             {
-                target:"vaero",
+                target:
+                    "vaero",
+
                 names:[
                     "vaero",
                     "vaero engine",
@@ -140,7 +185,9 @@ const BrainIntent = {
             },
 
             {
-                target:"home",
+                target:
+                    "home",
+
                 names:[
                     "ana ekran",
                     "ana sayfa",
@@ -151,7 +198,9 @@ const BrainIntent = {
             },
 
             {
-                target:"worlds",
+                target:
+                    "worlds",
+
                 names:[
                     "dunyalar",
                     "dunyalarim",
@@ -161,7 +210,9 @@ const BrainIntent = {
             },
 
             {
-                target:"world",
+                target:
+                    "world",
+
                 names:[
                     "aktif dunya",
                     "bu dunya",
@@ -171,7 +222,9 @@ const BrainIntent = {
             },
 
             {
-                target:"create",
+                target:
+                    "create",
+
                 names:[
                     "olusturma ekrani",
                     "yarat"
@@ -179,7 +232,9 @@ const BrainIntent = {
             },
 
             {
-                target:"entities",
+                target:
+                    "entities",
+
                 names:[
                     "varliklar",
                     "varliklarim",
@@ -188,7 +243,9 @@ const BrainIntent = {
             },
 
             {
-                target:"entity",
+                target:
+                    "entity",
+
                 names:[
                     "bu varlik",
                     "aktif varlik",
@@ -198,7 +255,9 @@ const BrainIntent = {
             },
 
             {
-                target:"identity",
+                target:
+                    "identity",
+
                 names:[
                     "kimlik",
                     "kimligim",
@@ -210,7 +269,9 @@ const BrainIntent = {
             },
 
             {
-                target:"profile",
+                target:
+                    "profile",
+
                 names:[
                     "profil",
                     "profilim",
@@ -219,7 +280,9 @@ const BrainIntent = {
             },
 
             {
-                target:"discovery",
+                target:
+                    "discovery",
+
                 names:[
                     "discovery",
                     "kesif",
@@ -228,7 +291,9 @@ const BrainIntent = {
             },
 
             {
-                target:"memory",
+                target:
+                    "memory",
+
                 names:[
                     "hafiza",
                     "hafizam",
@@ -239,7 +304,9 @@ const BrainIntent = {
             },
 
             {
-                target:"timeline",
+                target:
+                    "timeline",
+
                 names:[
                     "timeline",
                     "zaman cizelgesi",
@@ -250,7 +317,9 @@ const BrainIntent = {
             },
 
             {
-                target:"bridge",
+                target:
+                    "bridge",
+
                 names:[
                     "bridge",
                     "baglanti",
@@ -260,7 +329,9 @@ const BrainIntent = {
             },
 
             {
-                target:"evolution",
+                target:
+                    "evolution",
+
                 names:[
                     "evolution",
                     "evrim",
@@ -270,7 +341,9 @@ const BrainIntent = {
             },
 
             {
-                target:"organs",
+                target:
+                    "organs",
+
                 names:[
                     "organ",
                     "organlar",
@@ -279,7 +352,9 @@ const BrainIntent = {
             },
 
             {
-                target:"settings",
+                target:
+                    "settings",
+
                 names:[
                     "ayar",
                     "ayarlar",
@@ -288,7 +363,9 @@ const BrainIntent = {
             },
 
             {
-                target:"notification",
+                target:
+                    "notification",
+
                 names:[
                     "bildirim",
                     "bildirimler",
@@ -298,7 +375,9 @@ const BrainIntent = {
             },
 
             {
-                target:"message",
+                target:
+                    "message",
+
                 names:[
                     "mesaj",
                     "mesajlar",
@@ -308,7 +387,9 @@ const BrainIntent = {
             },
 
             {
-                target:"call",
+                target:
+                    "call",
+
                 names:[
                     "arama",
                     "sesli arama",
@@ -319,7 +400,9 @@ const BrainIntent = {
             },
 
             {
-                target:"brain",
+                target:
+                    "brain",
+
                 names:[
                     "brain",
                     "beyin"
@@ -344,7 +427,9 @@ const BrainIntent = {
 
 
         if(!normalizedText){
+
             return null;
+
         }
 
 
@@ -354,7 +439,8 @@ const BrainIntent = {
             );
 
 
-        const matches = [];
+        const matches =
+            [];
 
 
         this
@@ -372,7 +458,9 @@ const BrainIntent = {
 
 
                             if(!normalizedName){
+
                                 return;
+
                             }
 
 
@@ -387,9 +475,10 @@ const BrainIntent = {
                             ){
 
                                 matched =
-                                    normalizedText.includes(
-                                        normalizedName
-                                    );
+                                    ` ${normalizedText} `
+                                        .includes(
+                                            ` ${normalizedName} `
+                                        );
 
                             } else {
 
@@ -402,7 +491,9 @@ const BrainIntent = {
 
 
                             if(!matched){
+
                                 return;
+
                             }
 
 
@@ -419,7 +510,9 @@ const BrainIntent = {
 
                                 tokenCount:
                                     normalizedName
-                                        .split(" ")
+                                        .split(
+                                            " "
+                                        )
                                         .length
 
                             });
@@ -432,11 +525,14 @@ const BrainIntent = {
 
 
         matches.sort(
-            (a,b) => {
+            (
+                a,
+                b
+            ) => {
 
                 if(
                     b.tokenCount !==
-                    a.tokenCount
+                        a.tokenCount
                 ){
 
                     return (
@@ -457,7 +553,9 @@ const BrainIntent = {
 
 
         return (
-            matches[0] ||
+            matches[
+                0
+            ] ||
             null
         );
 
@@ -465,15 +563,17 @@ const BrainIntent = {
 
 
     /* =====================================================
-       OPERATION DETECTION
+       OPERATION DEFINITIONS
     ===================================================== */
 
-    detectOperation(text){
+    getOperationDefinitions(){
 
-        const operationDefinitions = [
+        return [
 
             {
-                operation:"archive",
+                operation:
+                    "archive",
+
                 words:[
                     "arsivle",
                     "arsive al"
@@ -481,7 +581,9 @@ const BrainIntent = {
             },
 
             {
-                operation:"restore",
+                operation:
+                    "restore",
+
                 words:[
                     "geri getir",
                     "geri yukle",
@@ -496,47 +598,57 @@ const BrainIntent = {
             },
 
             {
-                operation:"delete",
+                operation:
+                    "delete",
+
                 words:[
-                    "sil",
-                    "yok et",
                     "kalici sil",
-                    "tamamen sil"
+                    "tamamen sil",
+                    "yok et",
+                    "sil"
                 ]
             },
 
             {
-                operation:"remove",
+                operation:
+                    "remove",
+
                 words:[
-                    "kaldir",
+                    "uygulamayi kaldir",
                     "uninstall",
-                    "uygulamayi kaldir"
+                    "kaldir"
                 ]
             },
 
             {
-                operation:"install",
-                words:[
-                    "yukle",
+                operation:
                     "install",
-                    "uygulamayi kur"
+
+                words:[
+                    "uygulamayi kur",
+                    "install",
+                    "yukle"
                 ]
             },
 
             {
-                operation:"save",
+                operation:
+                    "save",
+
                 words:[
-                    "kaydet",
+                    "kaldigimiz yeri kaydet",
                     "burada kaldik",
                     "burda kaldik",
-                    "kaldigimiz yeri kaydet",
                     "devam noktasi",
-                    "bunu hatirla"
+                    "bunu hatirla",
+                    "kaydet"
                 ]
             },
 
             {
-                operation:"create",
+                operation:
+                    "create",
+
                 words:[
                     "olustur",
                     "yarat",
@@ -547,7 +659,9 @@ const BrainIntent = {
             },
 
             {
-                operation:"update",
+                operation:
+                    "update",
+
                 words:[
                     "guncelle",
                     "update"
@@ -555,7 +669,9 @@ const BrainIntent = {
             },
 
             {
-                operation:"edit",
+                operation:
+                    "edit",
+
                 words:[
                     "duzenle",
                     "degistir",
@@ -565,80 +681,104 @@ const BrainIntent = {
             },
 
             {
-                operation:"search",
+                operation:
+                    "search",
+
                 words:[
-                    "ara",
-                    "bul",
-                    "listele",
                     "goster bana",
-                    "hangileri"
+                    "hangileri",
+                    "listele",
+                    "ara",
+                    "bul"
                 ]
             },
 
             {
-                operation:"open",
+                operation:
+                    "open",
+
                 words:[
-                    "ac",
-                    "acar misin",
                     "acabilir misin",
+                    "acar misin",
                     "acmani istiyorum",
-                    "goster",
                     "gosterir misin",
-                    "goruntule",
-                    "git",
-                    "gec",
                     "beni gotur",
-                    "buraya git"
+                    "buraya git",
+                    "goruntule",
+                    "goster",
+                    "ac",
+                    "git",
+                    "gec"
                 ]
             },
 
             {
-                operation:"send",
+                operation:
+                    "send",
+
                 words:[
+                    "mesaj at",
                     "gonder",
-                    "yolla",
-                    "mesaj at"
+                    "yolla"
                 ]
             },
 
             {
-                operation:"grant",
+                operation:
+                    "grant",
+
                 words:[
-                    "izin ver",
+                    "permission ver",
                     "yetki ver",
-                    "permission ver"
+                    "izin ver"
                 ]
             },
 
             {
-                operation:"revoke",
+                operation:
+                    "revoke",
+
                 words:[
-                    "izni kaldir",
+                    "permission kaldir",
                     "yetkiyi kaldir",
                     "izni geri al",
-                    "permission kaldir"
+                    "izni kaldir"
                 ]
             },
 
             {
-                operation:"explain",
+                operation:
+                    "explain",
+
                 words:[
-                    "nedir",
                     "ne ise yarar",
-                    "anlat",
-                    "acikla",
                     "bilgi ver",
+                    "ne demek",
                     "hakkinda",
-                    "ne demek"
+                    "acikla",
+                    "anlat",
+                    "nedir"
                 ]
             }
 
         ];
 
+    },
+
+
+    /* =====================================================
+       OPERATION DETECTION
+    ===================================================== */
+
+    detectOperation(text){
+
+        const definitions =
+            this.getOperationDefinitions();
+
 
         for(
             const definition of
-            operationDefinitions
+                definitions
         ){
 
             if(
@@ -672,21 +812,55 @@ const BrainIntent = {
             );
 
 
+        if(!normalized){
+
+            return false;
+
+        }
+
+
         return (
-            normalized.startsWith("ne ") ||
-            normalized === "ne" ||
-            normalized.startsWith("nasil ") ||
-            normalized.startsWith("neden ") ||
-            normalized.startsWith("niye ") ||
-            normalized.startsWith("hangi ") ||
-            normalized.startsWith("kim ") ||
-            normalized.startsWith("nerede ") ||
-            normalized.startsWith("ne zaman ") ||
-            normalized.includes("bilir miyim") ||
-            normalized.includes("bilir misin") ||
-            normalized.includes("mumkun mu") ||
-            normalized.includes("var mi") ||
-            normalized.includes("olur mu")
+            normalized.startsWith(
+                "ne "
+            ) ||
+            normalized ===
+                "ne" ||
+            normalized.startsWith(
+                "nasil "
+            ) ||
+            normalized.startsWith(
+                "neden "
+            ) ||
+            normalized.startsWith(
+                "niye "
+            ) ||
+            normalized.startsWith(
+                "hangi "
+            ) ||
+            normalized.startsWith(
+                "kim "
+            ) ||
+            normalized.startsWith(
+                "nerede "
+            ) ||
+            normalized.startsWith(
+                "ne zaman "
+            ) ||
+            normalized.includes(
+                "bilir miyim"
+            ) ||
+            normalized.includes(
+                "bilir misin"
+            ) ||
+            normalized.includes(
+                "mumkun mu"
+            ) ||
+            normalized.includes(
+                "var mi"
+            ) ||
+            normalized.includes(
+                "olur mu"
+            )
         );
 
     },
@@ -700,9 +874,15 @@ const BrainIntent = {
 
         if(
             !context ||
-            typeof context !== "object"
+            typeof context !==
+                "object" ||
+            Array.isArray(
+                context
+            )
         ){
+
             return null;
+
         }
 
 
@@ -713,7 +893,9 @@ const BrainIntent = {
             context.screen
 
         ]
-            .filter(Boolean)
+            .filter(
+                Boolean
+            )
             .map(
                 value =>
                     this.normalize(
@@ -774,6 +956,42 @@ const BrainIntent = {
 
 
     /* =====================================================
+       REGISTRY ACCESS
+    ===================================================== */
+
+    getRegistry(){
+
+        try{
+
+            if(
+                typeof VAERO !==
+                    "undefined" &&
+                typeof VAERO.get ===
+                    "function"
+            ){
+
+                return (
+                    VAERO.get(
+                        "appRegistry"
+                    ) ||
+                    null
+                );
+
+            }
+
+        } catch(error){
+
+            /* unavailable */
+
+        }
+
+
+        return null;
+
+    },
+
+
+    /* =====================================================
        APPLICATION ID EXTRACTION
     ===================================================== */
 
@@ -789,43 +1007,46 @@ const BrainIntent = {
 
 
         if(
-            typeof direct === "string" &&
+            typeof direct ===
+                "string" &&
             direct.trim()
         ){
 
-            return direct.trim();
+            return direct
+                .trim()
+                .slice(
+                    0,
+                    240
+                );
 
         }
 
 
         const registry =
-            (
-                typeof VAERO !== "undefined" &&
-                typeof VAERO.get === "function"
-            )
-                ? (
-                    VAERO.get("appRegistry") ||
-                    null
-                )
-                : null;
+            this.getRegistry();
 
 
         if(
             !registry ||
-            typeof registry.all !== "function"
+            typeof registry.all !==
+                "function"
         ){
+
             return null;
+
         }
 
 
-        let apps = [];
+        let apps =
+            [];
 
 
         try{
 
             apps =
                 registry.all({
-                    includeDisabled:true
+                    includeDisabled:
+                        true
                 });
 
         } catch(error){
@@ -837,7 +1058,8 @@ const BrainIntent = {
 
             } catch(secondError){
 
-                apps = [];
+                apps =
+                    [];
 
             }
 
@@ -845,9 +1067,13 @@ const BrainIntent = {
 
 
         if(
-            !Array.isArray(apps)
+            !Array.isArray(
+                apps
+            )
         ){
+
             return null;
+
         }
 
 
@@ -857,51 +1083,94 @@ const BrainIntent = {
             );
 
 
+        const tokens =
+            this.tokenize(
+                normalizedText
+            );
+
+
         const matches =
             apps
                 .map(
                     app => {
 
+                        if(
+                            !app ||
+                            !app.id
+                        ){
+
+                            return null;
+
+                        }
+
+
                         const candidates = [
 
                             app.id,
-                            app.title
+                            app.title,
+                            app.name
 
                         ]
-                            .filter(Boolean)
+                            .filter(
+                                Boolean
+                            )
                             .map(
                                 value =>
                                     this.normalize(
                                         value
                                     )
                             )
-                            .filter(Boolean);
+                            .filter(
+                                Boolean
+                            );
 
 
                         const matched =
                             candidates.find(
-                                candidate =>
-                                    candidate.includes(" ")
-                                        ? normalizedText.includes(
-                                            candidate
+                                candidate => {
+
+                                    if(
+                                        candidate.includes(
+                                            " "
                                         )
-                                        : this.tokenize(
-                                            normalizedText
-                                        ).includes(
-                                            candidate
-                                        )
+                                    ){
+
+                                        return (
+                                            ` ${normalizedText} `
+                                                .includes(
+                                                    ` ${candidate} `
+                                                )
+                                        );
+
+                                    }
+
+
+                                    return tokens.includes(
+                                        candidate
+                                    );
+
+                                }
                             );
 
 
                         if(!matched){
+
                             return null;
+
                         }
 
 
                         return {
 
                             id:
-                                app.id,
+                                String(
+                                    app.id
+                                )
+                                    .trim()
+                                    .slice(
+                                        0,
+                                        240
+                                    ),
 
                             score:
                                 matched.length
@@ -910,16 +1179,23 @@ const BrainIntent = {
 
                     }
                 )
-                .filter(Boolean)
+                .filter(
+                    Boolean
+                )
                 .sort(
-                    (a,b) =>
+                    (
+                        a,
+                        b
+                    ) =>
                         b.score -
                         a.score
                 );
 
 
         return (
-            matches[0]?.id ||
+            matches[
+                0
+            ]?.id ||
             null
         );
 
@@ -941,7 +1217,43 @@ const BrainIntent = {
             context.permission.trim()
         ){
 
-            return context.permission.trim();
+            return context.permission
+                .trim()
+                .slice(
+                    0,
+                    240
+                );
+
+        }
+
+
+        const raw =
+            String(
+                text ??
+                    ""
+            );
+
+
+        /*
+         * Preserve explicit permission identifiers such as:
+         * memory.read
+         * profile.write
+         */
+
+        const match =
+            raw.match(
+                /\b[a-z0-9_-]+\.[a-z0-9_.:-]+\b/i
+            );
+
+
+        if(match?.[0]){
+
+            return match[
+                0
+            ].slice(
+                0,
+                240
+            );
 
         }
 
@@ -950,24 +1262,6 @@ const BrainIntent = {
             this.normalize(
                 text
             );
-
-
-        /*
-         * permission.name gibi açık permission ID
-         * metin içinde bulunuyorsa koru.
-         */
-
-        const match =
-            String(
-                text ?? ""
-            ).match(
-                /\b[a-z0-9_-]+\.[a-z0-9_.:-]+\b/i
-            );
-
-
-        if(match?.[0]){
-            return match[0];
-        }
 
 
         const known = [
@@ -987,19 +1281,97 @@ const BrainIntent = {
 
         return (
             known.find(
-                permission =>
-                    normalizedText.includes(
+                permission => {
+
+                    const normalizedPermission =
                         this.normalize(
                             permission
-                        )
-                    )
+                        );
+
+
+                    return (
+                        normalizedText ===
+                            normalizedPermission ||
+                        ` ${normalizedText} `
+                            .includes(
+                                ` ${normalizedPermission} `
+                            )
+                    );
+
+                }
             ) ||
             null
         );
 
     },
 
-   /* =====================================================
+
+    /* =====================================================
+       BASE RESULT
+    ===================================================== */
+
+    buildResult(
+        data = {}
+    ){
+
+        return {
+
+            type:
+                data.type ||
+                "chat",
+
+            target:
+                data.target ??
+                null,
+
+            operation:
+                data.operation ??
+                "general",
+
+            confidence:
+                Math.max(
+                    0,
+                    Math.min(
+                        1,
+                        Number(
+                            data.confidence
+                        ) ||
+                        0
+                    )
+                ),
+
+            explicit:
+                data.explicit ===
+                    true,
+
+            raw:
+                data.raw ||
+                "",
+
+            normalizedText:
+                data.normalizedText ||
+                "",
+
+            detectedTarget:
+                data.detectedTarget ??
+                null,
+
+            contextTarget:
+                data.contextTarget ??
+                null,
+
+            contextual:
+                data.contextual ===
+                    true,
+
+            ...data
+
+        };
+
+    },
+
+
+    /* =====================================================
        DETECT
     ===================================================== */
 
@@ -1010,7 +1382,8 @@ const BrainIntent = {
 
         const raw =
             String(
-                message ?? ""
+                message ??
+                    ""
             ).trim();
 
 
@@ -1022,23 +1395,29 @@ const BrainIntent = {
 
         if(!text){
 
-            return {
+            return this.buildResult({
 
-                type:"empty",
+                type:
+                    "empty",
 
-                target:null,
+                target:
+                    null,
 
-                operation:null,
+                operation:
+                    null,
 
-                confidence:1,
+                confidence:
+                    1,
 
-                explicit:false,
+                explicit:
+                    false,
 
                 raw,
 
-                normalizedText:""
+                normalizedText:
+                    ""
 
-            };
+            });
 
         }
 
@@ -1050,7 +1429,8 @@ const BrainIntent = {
 
 
         const detectedTarget =
-            targetMatch?.target ||
+            targetMatch
+                ?.target ||
             null;
 
 
@@ -1098,7 +1478,8 @@ const BrainIntent = {
         ================================================= */
 
         if(
-            words.length <= 3 &&
+            words.length <=
+                3 &&
             [
                 "ne",
                 "anlamadim",
@@ -1110,26 +1491,31 @@ const BrainIntent = {
             )
         ){
 
-            return {
+            return this.buildResult({
 
-                type:"clarify",
+                type:
+                    "clarify",
 
                 target:
                     contextTarget,
 
-                operation:"clarify",
+                operation:
+                    "clarify",
 
-                confidence:.94,
+                confidence:
+                    0.94,
 
-                explicit:true,
+                explicit:
+                    true,
 
                 raw,
 
-                normalizedText:text,
+                normalizedText:
+                    text,
 
                 contextTarget
 
-            };
+            });
 
         }
 
@@ -1139,7 +1525,8 @@ const BrainIntent = {
         ================================================= */
 
         if(
-            operation === "save" &&
+            operation ===
+                "save" &&
             this.includesPhrase(
                 text,
                 [
@@ -1152,30 +1539,35 @@ const BrainIntent = {
             )
         ){
 
-            return {
+            return this.buildResult({
 
-                type:"resume:save",
+                type:
+                    "resume:save",
 
                 target:
                     target ||
                     contextTarget ||
                     null,
 
-                operation:"save",
+                operation:
+                    "save",
 
-                confidence:.98,
+                confidence:
+                    0.98,
 
-                explicit:true,
+                explicit:
+                    true,
 
                 raw,
 
-                normalizedText:text,
+                normalizedText:
+                    text,
 
                 detectedTarget,
 
                 contextTarget
 
-            };
+            });
 
         }
 
@@ -1185,7 +1577,8 @@ const BrainIntent = {
         ================================================= */
 
         if(
-            operation === "restore" &&
+            operation ===
+                "restore" &&
             this.includesPhrase(
                 text,
                 [
@@ -1199,40 +1592,47 @@ const BrainIntent = {
             )
         ){
 
-            return {
+            return this.buildResult({
 
-                type:"resume:restore",
+                type:
+                    "resume:restore",
 
                 target:
                     target ||
                     null,
 
-                operation:"restore",
+                operation:
+                    "restore",
 
-                confidence:.98,
+                confidence:
+                    0.98,
 
-                explicit:true,
+                explicit:
+                    true,
 
                 raw,
 
-                normalizedText:text,
+                normalizedText:
+                    text,
 
                 detectedTarget,
 
                 contextTarget
 
-            };
+            });
 
         }
 
 
         /* =================================================
-           APPLICATION LIFECYCLE
+           APPLICATION CONTEXT
         ================================================= */
 
         const applicationContext =
-            target === "applications" ||
-            contextTarget === "applications" ||
+            target ===
+                "applications" ||
+            contextTarget ===
+                "applications" ||
             this.includesPhrase(
                 text,
                 [
@@ -1245,7 +1645,13 @@ const BrainIntent = {
 
         if(
             applicationContext &&
-            operation === "install"
+            [
+                "install",
+                "update",
+                "remove"
+            ].includes(
+                operation
+            )
         ){
 
             const appId =
@@ -1255,58 +1661,15 @@ const BrainIntent = {
                 );
 
 
-            return {
+            return this.buildResult({
 
-                type:"application:install",
+                type:
+                    `application:${operation}`,
 
-                target:"application",
+                target:
+                    "application",
 
-                operation:"install",
-
-                appId,
-
-                applicationId:
-                    appId,
-
-                confidence:
-                    appId
-                        ? .98
-                        : .82,
-
-                explicit:true,
-
-                raw,
-
-                normalizedText:text,
-
-                detectedTarget,
-
-                contextTarget
-
-            };
-
-        }
-
-
-        if(
-            applicationContext &&
-            operation === "update"
-        ){
-
-            const appId =
-                this.extractApplicationId(
-                    raw,
-                    context
-                );
-
-
-            return {
-
-                type:"application:update",
-
-                target:"application",
-
-                operation:"update",
+                operation,
 
                 appId,
 
@@ -1315,65 +1678,22 @@ const BrainIntent = {
 
                 confidence:
                     appId
-                        ? .98
-                        : .82,
+                        ? 0.98
+                        : 0.82,
 
-                explicit:true,
+                explicit:
+                    true,
 
                 raw,
 
-                normalizedText:text,
+                normalizedText:
+                    text,
 
                 detectedTarget,
 
                 contextTarget
 
-            };
-
-        }
-
-
-        if(
-            applicationContext &&
-            operation === "remove"
-        ){
-
-            const appId =
-                this.extractApplicationId(
-                    raw,
-                    context
-                );
-
-
-            return {
-
-                type:"application:remove",
-
-                target:"application",
-
-                operation:"remove",
-
-                appId,
-
-                applicationId:
-                    appId,
-
-                confidence:
-                    appId
-                        ? .98
-                        : .82,
-
-                explicit:true,
-
-                raw,
-
-                normalizedText:text,
-
-                detectedTarget,
-
-                contextTarget
-
-            };
+            });
 
         }
 
@@ -1383,8 +1703,10 @@ const BrainIntent = {
         ================================================= */
 
         if(
-            operation === "grant" ||
-            operation === "revoke"
+            operation ===
+                "grant" ||
+            operation ===
+                "revoke"
         ){
 
             const appId =
@@ -1401,14 +1723,16 @@ const BrainIntent = {
                 );
 
 
-            return {
+            return this.buildResult({
 
                 type:
-                    operation === "grant"
+                    operation ===
+                        "grant"
                         ? "permission:grant"
                         : "permission:revoke",
 
-                target:"application",
+                target:
+                    "application",
 
                 operation,
 
@@ -1422,20 +1746,22 @@ const BrainIntent = {
                 confidence:
                     appId &&
                     permission
-                        ? .98
-                        : .76,
+                        ? 0.98
+                        : 0.76,
 
-                explicit:true,
+                explicit:
+                    true,
 
                 raw,
 
-                normalizedText:text,
+                normalizedText:
+                    text,
 
                 detectedTarget,
 
                 contextTarget
 
-            };
+            });
 
         }
 
@@ -1445,37 +1771,46 @@ const BrainIntent = {
         ================================================= */
 
         if(
-            target === "message" &&
-            operation === "send"
+            target ===
+                "message" &&
+            operation ===
+                "send"
         ){
 
-            return {
+            return this.buildResult({
 
-                type:"message:send",
+                type:
+                    "message:send",
 
-                target:"message",
+                target:
+                    "message",
 
-                operation:"send",
+                operation:
+                    "send",
 
-                confidence:.96,
+                confidence:
+                    0.96,
 
-                explicit:true,
+                explicit:
+                    true,
 
                 raw,
 
-                normalizedText:text,
+                normalizedText:
+                    text,
 
                 detectedTarget,
 
                 contextTarget
 
-            };
+            });
 
         }
 
 
         if(
-            target === "call" &&
+            target ===
+                "call" &&
             this.includesPhrase(
                 text,
                 [
@@ -1489,13 +1824,16 @@ const BrainIntent = {
             )
         ){
 
-            return {
+            return this.buildResult({
 
-                type:"call:start",
+                type:
+                    "call:start",
 
-                target:"call",
+                target:
+                    "call",
 
-                operation:"start",
+                operation:
+                    "start",
 
                 callType:
                     this.includesPhrase(
@@ -1508,19 +1846,22 @@ const BrainIntent = {
                         ? "video"
                         : "voice",
 
-                confidence:.96,
+                confidence:
+                    0.96,
 
-                explicit:true,
+                explicit:
+                    true,
 
                 raw,
 
-                normalizedText:text,
+                normalizedText:
+                    text,
 
                 detectedTarget,
 
                 contextTarget
 
-            };
+            });
 
         }
 
@@ -1537,27 +1878,33 @@ const BrainIntent = {
             )
         ){
 
-            return {
+            return this.buildResult({
 
-                type:"screen-share:start",
+                type:
+                    "screen-share:start",
 
-                target:"call",
+                target:
+                    "call",
 
-                operation:"start",
+                operation:
+                    "start",
 
-                confidence:.98,
+                confidence:
+                    0.98,
 
-                explicit:true,
+                explicit:
+                    true,
 
                 raw,
 
-                normalizedText:text,
+                normalizedText:
+                    text,
 
                 detectedTarget,
 
                 contextTarget
 
-            };
+            });
 
         }
 
@@ -1567,11 +1914,15 @@ const BrainIntent = {
         ================================================= */
 
         if(
-            operation === "create" &&
+            operation ===
+                "create" &&
             (
-                target === "world" ||
-                target === "worlds" ||
-                target === "create" ||
+                target ===
+                    "world" ||
+                target ===
+                    "worlds" ||
+                target ===
+                    "create" ||
                 this.includesPhrase(
                     text,
                     [
@@ -1583,27 +1934,33 @@ const BrainIntent = {
             )
         ){
 
-            return {
+            return this.buildResult({
 
-                type:"create",
+                type:
+                    "create",
 
-                target:"world",
+                target:
+                    "world",
 
-                operation:"create",
+                operation:
+                    "create",
 
-                confidence:.97,
+                confidence:
+                    0.97,
 
-                explicit:true,
+                explicit:
+                    true,
 
                 raw,
 
-                normalizedText:text,
+                normalizedText:
+                    text,
 
                 detectedTarget,
 
                 contextTarget
 
-            };
+            });
 
         }
 
@@ -1613,10 +1970,13 @@ const BrainIntent = {
         ================================================= */
 
         if(
-            operation === "create" &&
+            operation ===
+                "create" &&
             (
-                target === "entity" ||
-                target === "entities" ||
+                target ===
+                    "entity" ||
+                target ===
+                    "entities" ||
                 this.includesPhrase(
                     text,
                     [
@@ -1629,121 +1989,81 @@ const BrainIntent = {
             )
         ){
 
-            return {
+            return this.buildResult({
 
-                type:"create",
+                type:
+                    "create",
 
-                target:"entity",
+                target:
+                    "entity",
 
-                operation:"create",
+                operation:
+                    "create",
 
-                confidence:.97,
+                confidence:
+                    0.97,
 
-                explicit:true,
+                explicit:
+                    true,
 
                 raw,
 
-                normalizedText:text,
+                normalizedText:
+                    text,
 
                 detectedTarget,
 
                 contextTarget
 
-            };
+            });
 
         }
 
 
         /* =================================================
-           EXPLICIT ARCHIVE / RESTORE / DELETE
+           MUTATION REQUESTS
         ================================================= */
 
         if(
-            operation === "archive" &&
+            [
+                "archive",
+                "restore",
+                "delete",
+                "remove"
+            ].includes(
+                operation
+            ) &&
             target
         ){
 
-            return {
+            return this.buildResult({
 
-                type:"request",
+                type:
+                    "request",
 
                 target,
 
-                operation:"archive",
+                operation,
 
-                confidence:.94,
+                confidence:
+                    operation ===
+                        "delete"
+                        ? 0.95
+                        : 0.94,
 
-                explicit:true,
+                explicit:
+                    true,
 
                 raw,
 
-                normalizedText:text,
+                normalizedText:
+                    text,
 
                 detectedTarget,
 
                 contextTarget
 
-            };
-
-        }
-
-
-        if(
-            operation === "restore" &&
-            target
-        ){
-
-            return {
-
-                type:"request",
-
-                target,
-
-                operation:"restore",
-
-                confidence:.94,
-
-                explicit:true,
-
-                raw,
-
-                normalizedText:text,
-
-                detectedTarget,
-
-                contextTarget
-
-            };
-
-        }
-
-
-        if(
-            operation === "delete" &&
-            target
-        ){
-
-            return {
-
-                type:"request",
-
-                target,
-
-                operation:"delete",
-
-                confidence:.95,
-
-                explicit:true,
-
-                raw,
-
-                normalizedText:text,
-
-                detectedTarget,
-
-                contextTarget
-
-            };
+            });
 
         }
 
@@ -1753,28 +2073,33 @@ const BrainIntent = {
         ================================================= */
 
         if(
-            operation === "open" &&
+            operation ===
+                "open" &&
             target
         ){
 
-            return {
+            return this.buildResult({
 
-                type:"navigate",
+                type:
+                    "navigate",
 
                 target,
 
-                operation:"open",
+                operation:
+                    "open",
 
                 confidence:
                     detectedTarget
-                        ? .97
-                        : .88,
+                        ? 0.97
+                        : 0.88,
 
-                explicit:true,
+                explicit:
+                    true,
 
                 raw,
 
-                normalizedText:text,
+                normalizedText:
+                    text,
 
                 detectedTarget,
 
@@ -1786,7 +2111,7 @@ const BrainIntent = {
                         contextTarget
                     )
 
-            };
+            });
 
         }
 
@@ -1797,33 +2122,37 @@ const BrainIntent = {
 
         if(question){
 
-            return {
+            return this.buildResult({
 
-                type:"question",
+                type:
+                    "question",
 
                 target,
 
                 operation:
-                    operation === "general"
+                    operation ===
+                        "general"
                         ? "explain"
                         : operation,
 
                 confidence:
                     target
-                        ? .9
-                        : .64,
+                        ? 0.9
+                        : 0.64,
 
-                explicit:true,
+                explicit:
+                    true,
 
                 raw,
 
-                normalizedText:text,
+                normalizedText:
+                    text,
 
                 detectedTarget,
 
                 contextTarget
 
-            };
+            });
 
         }
 
@@ -1833,12 +2162,14 @@ const BrainIntent = {
         ================================================= */
 
         if(
-            operation !== "general"
+            operation !==
+                "general"
         ){
 
-            return {
+            return this.buildResult({
 
-                type:"request",
+                type:
+                    "request",
 
                 target:
                     target ||
@@ -1849,16 +2180,18 @@ const BrainIntent = {
 
                 confidence:
                     target
-                        ? .88
+                        ? 0.88
                         : contextTarget
-                            ? .72
-                            : .54,
+                            ? 0.72
+                            : 0.54,
 
-                explicit:true,
+                explicit:
+                    true,
 
                 raw,
 
-                normalizedText:text,
+                normalizedText:
+                    text,
 
                 detectedTarget,
 
@@ -1870,7 +2203,7 @@ const BrainIntent = {
                         contextTarget
                     )
 
-            };
+            });
 
         }
 
@@ -1879,9 +2212,10 @@ const BrainIntent = {
            CHAT
         ================================================= */
 
-        return {
+        return this.buildResult({
 
-            type:"chat",
+            type:
+                "chat",
 
             target:
                 detectedTarget ||
@@ -1891,20 +2225,23 @@ const BrainIntent = {
 
             contextTarget,
 
-            operation:"general",
+            operation:
+                "general",
 
             confidence:
                 detectedTarget
-                    ? .62
-                    : .38,
+                    ? 0.62
+                    : 0.38,
 
-            explicit:false,
+            explicit:
+                false,
 
             raw,
 
-            normalizedText:text
+            normalizedText:
+                text
 
-        };
+        });
 
     },
 
@@ -1916,6 +2253,9 @@ const BrainIntent = {
     report(){
 
         return {
+
+            version:
+                this.version,
 
             targets:
                 this.getTargetDefinitions()
@@ -1965,11 +2305,46 @@ const BrainIntent = {
 };
 
 
-VAERO.register(
-    "brainIntent",
-    BrainIntent
-);
+/* =========================================================
+   REGISTER
+========================================================= */
+
+try{
+
+    if(
+        typeof VAERO !==
+            "undefined" &&
+        typeof VAERO.register ===
+            "function"
+    ){
+
+        VAERO.register(
+            "brainIntent",
+            BrainIntent
+        );
+
+    }
+
+} catch(error){
+
+    console.error(
+        "BrainIntent register edilemedi:",
+        error
+    );
+
+}
 
 
-window.BrainIntent =
-    BrainIntent;
+/* =========================================================
+   GLOBAL
+========================================================= */
+
+if(
+    typeof window !==
+        "undefined"
+){
+
+    window.BrainIntent =
+        BrainIntent;
+
+}
