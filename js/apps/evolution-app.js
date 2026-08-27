@@ -5,6 +5,9 @@
 
 const EvolutionApp = {
 
+    version:
+        "3.0.0",
+
     activeFilter:
         "all",
 
@@ -27,21 +30,32 @@ const EvolutionApp = {
 
     escapeHTML(value){
 
-        if(
-            window.UI &&
-            typeof UI.escapeHTML ===
-                "function"
-        ){
+        try{
 
-            return UI.escapeHTML(
-                value
-            );
+            if(
+                typeof window !==
+                    "undefined" &&
+                window.UI &&
+                typeof window.UI.escapeHTML ===
+                    "function"
+            ){
+
+                return window.UI.escapeHTML(
+                    value
+                );
+
+            }
+
+        } catch(error){
+
+            /* local fallback */
 
         }
 
 
         return String(
-            value ?? ""
+            value ??
+                ""
         )
             .replaceAll(
                 "&",
@@ -92,15 +106,39 @@ const EvolutionApp = {
         }
 
 
-        return (
-            window.Engine ||
-            null
-        );
+        if(
+            typeof window !==
+                "undefined"
+        ){
+
+            return (
+                window.Engine ||
+                null
+            );
+
+        }
+
+
+        return null;
 
     },
 
 
     getService(name){
+
+        const serviceName =
+            String(
+                name ??
+                    ""
+            ).trim();
+
+
+        if(!serviceName){
+
+            return null;
+
+        }
+
 
         try{
 
@@ -118,12 +156,18 @@ const EvolutionApp = {
 
             return (
                 VAERO.get(
-                    name
+                    serviceName
                 ) ||
                 null
             );
 
         } catch(error){
+
+            console.warn(
+                `Evolution service okunamadı: ${serviceName}`,
+                error
+            );
+
 
             return null;
 
@@ -172,9 +216,33 @@ const EvolutionApp = {
             null;
 
 
-        return engine.mount(
-            entity
-        );
+        if(!entity){
+
+            return false;
+
+        }
+
+
+        try{
+
+            return (
+                engine.mount(
+                    entity
+                ) !==
+                false
+            );
+
+        } catch(error){
+
+            console.warn(
+                "Evolution remount başarısız:",
+                error
+            );
+
+
+            return false;
+
+        }
 
     },
 
@@ -195,9 +263,21 @@ const EvolutionApp = {
                 );
 
 
-            awareness?.enter?.(
+            if(
+                !awareness ||
+                typeof awareness.enter !==
+                    "function"
+            ){
+
+                return false;
+
+            }
+
+
+            awareness.enter(
                 "evolution",
                 {
+
                     entityId:
                         entity?.id ||
                         null,
@@ -209,9 +289,24 @@ const EvolutionApp = {
                         this.selectedEventId,
 
                     editorMode:
-                        this.editorMode
+                        this.editorMode,
+
+                    searchActive:
+                        Boolean(
+                            String(
+                                this.searchQuery ||
+                                    ""
+                            ).trim()
+                        ),
+
+                    source:
+                        "evolution-app"
+
                 }
             );
+
+
+            return true;
 
         } catch(error){
 
@@ -219,6 +314,9 @@ const EvolutionApp = {
                 "Evolution Brain context açılamadı:",
                 error
             );
+
+
+            return false;
 
         }
 
@@ -231,24 +329,32 @@ const EvolutionApp = {
 
     getEvolutionCore(){
 
-        return this.getService(
-            "evolution"
+        return (
+            this.getService(
+                "evolution"
+            ) ||
+            (
+                typeof window !==
+                    "undefined"
+                    ? window.Evolution ||
+                      null
+                    : null
+            )
         );
 
     },
 
 
     getEvents(
-        entity = null
+        entity = null,
+        options = {}
     ){
 
         const evolution =
             this.getEvolutionCore();
 
 
-        if(
-            !evolution
-        ){
+        if(!evolution){
 
             return [];
 
@@ -269,7 +375,12 @@ const EvolutionApp = {
 
                 const result =
                     evolution.forEntity(
-                        entity.id
+                        entity.id,
+                        {
+                            includeArchived:
+                                options.includeArchived ===
+                                true
+                        }
                     );
 
 
@@ -281,14 +392,17 @@ const EvolutionApp = {
                         : [];
 
             }
-
             else if(
                 typeof evolution.all ===
                     "function"
             ){
 
                 const result =
-                    evolution.all();
+                    evolution.all({
+                        includeArchived:
+                            options.includeArchived ===
+                            true
+                    });
 
 
                 events =
@@ -314,9 +428,13 @@ const EvolutionApp = {
 
 
         return events
-            .filter(Boolean)
+            .filter(
+                Boolean
+            )
             .filter(
                 event =>
+                    options.includeArchived ===
+                        true ||
                     event.archived !==
                         true
             )
@@ -431,7 +549,7 @@ const EvolutionApp = {
         const type =
             String(
                 value ||
-                "general"
+                    "general"
             )
                 .trim()
                 .toLowerCase();
@@ -461,7 +579,7 @@ const EvolutionApp = {
                 .find(
                     item =>
                         item.id ===
-                            type
+                        type
                 )
                 ?.label ||
             "Genel"
@@ -479,17 +597,19 @@ const EvolutionApp = {
         const importance =
             String(
                 value ||
-                "medium"
+                    "medium"
             )
                 .trim()
                 .toLowerCase();
 
 
         return [
+
             "low",
             "medium",
             "high",
             "critical"
+
         ].includes(
             importance
         )
@@ -539,18 +659,20 @@ const EvolutionApp = {
         const status =
             String(
                 value ||
-                "completed"
+                    "completed"
             )
                 .trim()
                 .toLowerCase();
 
 
         return [
+
             "planned",
             "progress",
             "completed",
             "paused",
             "cancelled"
+
         ].includes(
             status
         )
@@ -600,22 +722,44 @@ const EvolutionApp = {
 
     getTimestamp(event){
 
-        const value =
-            Number(
-                event?.occurredAt ||
-                event?.updatedAt ||
-                event?.createdAt ||
-                event?.timestamp ||
-                event?.time ||
-                0
-            );
+        const candidates = [
+
+            event?.occurredAt,
+            event?.updatedAt,
+            event?.createdAt,
+            event?.timestamp,
+            event?.time
+
+        ];
 
 
-        return Number.isFinite(
-            value
-        )
-            ? value
-            : 0;
+        for(
+            const candidate of
+                candidates
+        ){
+
+            const value =
+                Number(
+                    candidate
+                );
+
+
+            if(
+                Number.isFinite(
+                    value
+                ) &&
+                value >
+                    0
+            ){
+
+                return value;
+
+            }
+
+        }
+
+
+        return 0;
 
     },
 
@@ -646,6 +790,7 @@ const EvolutionApp = {
             return new Intl.DateTimeFormat(
                 "tr-TR",
                 {
+
                     day:
                         "2-digit",
 
@@ -660,6 +805,7 @@ const EvolutionApp = {
 
                     minute:
                         "2-digit"
+
                 }
             ).format(
                 new Date(
@@ -701,8 +847,10 @@ const EvolutionApp = {
                 ? value
                 : String(
                     value ||
-                    ""
-                ).split(",");
+                        ""
+                ).split(
+                    ","
+                );
 
 
         const seen =
@@ -718,7 +866,8 @@ const EvolutionApp = {
 
                 const tag =
                     String(
-                        item ?? ""
+                        item ??
+                            ""
                     )
                         .trim()
                         .replace(
@@ -976,12 +1125,14 @@ const EvolutionApp = {
     getAllowedFilters(){
 
         return [
+
             "all",
             "important",
             "achievement",
             "decision",
             "goal",
             "milestone"
+
         ];
 
     },
@@ -992,7 +1143,7 @@ const EvolutionApp = {
         const normalized =
             String(
                 filter ||
-                "all"
+                    "all"
             )
                 .trim()
                 .toLowerCase();
@@ -1003,8 +1154,8 @@ const EvolutionApp = {
                 .includes(
                     normalized
                 )
-                    ? normalized
-                    : "all";
+                ? normalized
+                : "all";
 
 
         this.selectedEventId =
@@ -1016,6 +1167,49 @@ const EvolutionApp = {
 
 
         return this.activeFilter;
+
+    },
+
+
+    setSearchQuery(value){
+
+        this.searchQuery =
+            String(
+                value ??
+                    ""
+            ).slice(
+                0,
+                500
+            );
+
+
+        this.selectedEventId =
+            null;
+
+
+        this.editorMode =
+            null;
+
+
+        return this.searchQuery;
+
+    },
+
+
+    normalizeSearch(value){
+
+        return String(
+            value ??
+                ""
+        )
+            .trim()
+            .toLocaleLowerCase(
+                "tr-TR"
+            )
+            .replace(
+                /\s+/g,
+                " "
+            );
 
     },
 
@@ -1054,7 +1248,6 @@ const EvolutionApp = {
                 );
 
         }
-
         else if(
             this.activeFilter !==
                 "all"
@@ -1066,21 +1259,16 @@ const EvolutionApp = {
                         this.normalizeType(
                             event.type
                         ) ===
-                            this.activeFilter
+                        this.activeFilter
                 );
 
         }
 
 
         const query =
-            String(
-                this.searchQuery ||
-                ""
-            )
-                .trim()
-                .toLocaleLowerCase(
-                    "tr-TR"
-                );
+            this.normalizeSearch(
+                this.searchQuery
+            );
 
 
         if(query){
@@ -1089,26 +1277,35 @@ const EvolutionApp = {
                 events.filter(
                     event => {
 
-                        const haystack = [
+                        const haystack =
+                            this.normalizeSearch(
+                                [
 
-                            event.title,
-                            event.description,
-                            event.type,
-                            event.status,
-                            event.source,
+                                    event.title,
+                                    event.description,
+                                    event.type,
+                                    event.status,
+                                    event.source,
 
-                            ...(
-                                Array.isArray(
-                                    event.tags
-                                )
-                                    ? event.tags
-                                    : []
-                            )
+                                    ...(
+                                        Array.isArray(
+                                            event.tags
+                                        )
+                                            ? event.tags
+                                            : []
+                                    )
 
-                        ]
-                            .join(" ")
-                            .toLocaleLowerCase(
-                                "tr-TR"
+                                ]
+                                    .filter(
+                                        value =>
+                                            value !==
+                                                null &&
+                                            value !==
+                                                undefined
+                                    )
+                                    .join(
+                                        " "
+                                    )
                             );
 
 
@@ -1136,7 +1333,7 @@ const EvolutionApp = {
         const id =
             String(
                 eventId ||
-                ""
+                    ""
             ).trim();
 
 
@@ -1181,16 +1378,19 @@ const EvolutionApp = {
 
 
         return (
-            this
-                .getEvents(
-                    this.getCurrentEntity()
-                )
+            this.getEvents(
+                this.getCurrentEntity(),
+                {
+                    includeArchived:
+                        true
+                }
+            )
                 .find(
                     event =>
                         String(
                             event.id
                         ) ===
-                            id
+                        id
                 ) ||
             null
         );
@@ -1203,7 +1403,7 @@ const EvolutionApp = {
         const id =
             String(
                 eventId ||
-                ""
+                    ""
             ).trim();
 
 
@@ -1241,6 +1441,16 @@ const EvolutionApp = {
     ===================================================== */
 
     readEditorValues(){
+
+        if(
+            typeof document ===
+                "undefined"
+        ){
+
+            return null;
+
+        }
+
 
         const titleInput =
             document.getElementById(
@@ -1287,7 +1497,7 @@ const EvolutionApp = {
         const title =
             String(
                 titleInput?.value ||
-                ""
+                    ""
             )
                 .trim()
                 .slice(
@@ -1299,7 +1509,7 @@ const EvolutionApp = {
         const description =
             String(
                 descriptionInput?.value ||
-                ""
+                    ""
             )
                 .trim()
                 .slice(
@@ -1335,7 +1545,7 @@ const EvolutionApp = {
                         0,
                         Number(
                             progressInput?.value ||
-                            0
+                                0
                         ) ||
                         0
                     )
@@ -1370,6 +1580,10 @@ const EvolutionApp = {
 
 
     /* =====================================================
+       CONTINUE IN PART 2
+    ===================================================== */
+
+   /* =====================================================
        CREATE
     ===================================================== */
 
@@ -1389,12 +1603,17 @@ const EvolutionApp = {
             this.readEditorValues();
 
 
-        if(
-            !values.title
-        ){
+        if(!values){
+
+            return false;
+
+        }
+
+
+        if(!values.title){
 
             values.titleInput
-                ?.focus();
+                ?.focus?.();
 
 
             return false;
@@ -1422,6 +1641,10 @@ const EvolutionApp = {
         }
 
 
+        const engine =
+            this.getEngine();
+
+
         const metadata = {
 
             title:
@@ -1434,9 +1657,7 @@ const EvolutionApp = {
                 entity.id,
 
             relatedWorldId:
-                this.getEngine()
-                    ?.currentWorld
-                    ?.id ||
+                engine?.currentWorld?.id ||
                 null,
 
             source:
@@ -1492,7 +1713,10 @@ const EvolutionApp = {
         }
 
 
-        if(!created){
+        if(
+            !created ||
+            !created.id
+        ){
 
             return false;
 
@@ -1500,12 +1724,16 @@ const EvolutionApp = {
 
 
         this.selectedEventId =
-            created.id ||
-            null;
+            created.id;
 
 
         this.editorMode =
             null;
+
+
+        this.enterBrainContext(
+            entity
+        );
 
 
         return this.remount();
@@ -1518,6 +1746,17 @@ const EvolutionApp = {
     ===================================================== */
 
     updateEvent(){
+
+        const entity =
+            this.getCurrentEntity();
+
+
+        if(!entity){
+
+            return false;
+
+        }
+
 
         const event =
             this.findEvent(
@@ -1556,12 +1795,17 @@ const EvolutionApp = {
             this.readEditorValues();
 
 
-        if(
-            !values.title
-        ){
+        if(!values){
+
+            return false;
+
+        }
+
+
+        if(!values.title){
 
             values.titleInput
-                ?.focus();
+                ?.focus?.();
 
 
             return false;
@@ -1644,6 +1888,11 @@ const EvolutionApp = {
             null;
 
 
+        this.enterBrainContext(
+            entity
+        );
+
+
         return this.remount();
 
     },
@@ -1654,6 +1903,10 @@ const EvolutionApp = {
     ===================================================== */
 
     archiveEvent(){
+
+        const entity =
+            this.getCurrentEntity();
+
 
         const event =
             this.findEvent(
@@ -1716,7 +1969,84 @@ const EvolutionApp = {
             null;
 
 
+        if(entity){
+
+            this.enterBrainContext(
+                entity
+            );
+
+        }
+
+
         return this.remount();
+
+    },
+
+
+    /* =====================================================
+       RESTORE
+    ===================================================== */
+
+    restoreEvent(eventId){
+
+        if(!eventId){
+
+            return false;
+
+        }
+
+
+        const evolution =
+            this.getEvolutionCore();
+
+
+        if(
+            !evolution ||
+            typeof evolution.restore !==
+                "function"
+        ){
+
+            return false;
+
+        }
+
+
+        try{
+
+            const result =
+                evolution.restore(
+                    eventId
+                );
+
+
+            if(!result){
+
+                return false;
+
+            }
+
+
+            this.selectedEventId =
+                eventId;
+
+
+            this.editorMode =
+                null;
+
+
+            return this.remount();
+
+        } catch(error){
+
+            console.warn(
+                "Evolution olayı geri yüklenemedi:",
+                error
+            );
+
+
+            return false;
+
+        }
 
     },
 
@@ -1724,6 +2054,36 @@ const EvolutionApp = {
     /* =====================================================
        LINKED RECORDS
     ===================================================== */
+
+    getTimelineCore(){
+
+        return this.getService(
+            "timeline"
+        );
+
+    },
+
+
+    getMemoryCore(){
+
+        return (
+            this.getService(
+                "memorySystem"
+            ) ||
+            this.getService(
+                "memory"
+            ) ||
+            (
+                typeof window !==
+                    "undefined"
+                    ? window.MemorySystem ||
+                      null
+                    : null
+            )
+        );
+
+    },
+
 
     getLinkedRecordCounts(event){
 
@@ -1742,10 +2102,14 @@ const EvolutionApp = {
         }
 
 
-        const timeline =
-            this.getService(
-                "timeline"
+        const eventId =
+            String(
+                event.id
             );
+
+
+        const timeline =
+            this.getTimelineCore();
 
 
         let timelineRecords =
@@ -1754,19 +2118,27 @@ const EvolutionApp = {
 
         try{
 
-            const result =
-                timeline?.all?.({
-                    includeArchived:
-                        true
-                });
+            if(
+                timeline &&
+                typeof timeline.all ===
+                    "function"
+            ){
+
+                const result =
+                    timeline.all({
+                        includeArchived:
+                            true
+                    });
 
 
-            timelineRecords =
-                Array.isArray(
-                    result
-                )
-                    ? result
-                    : [];
+                timelineRecords =
+                    Array.isArray(
+                        result
+                    )
+                        ? result
+                        : [];
+
+            }
 
         } catch(error){
 
@@ -1776,101 +2148,42 @@ const EvolutionApp = {
         }
 
 
+        const memory =
+            this.getMemoryCore();
+
+
         let memoryRecords =
             [];
 
 
-        const memoryServices = [
+        try{
 
-            this.getService(
-                "memorySystem"
-            ),
-
-            this.getService(
-                "memory"
-            )
-
-        ]
-            .filter(Boolean);
-
-
-        for(
-            const memory of memoryServices
-        ){
-
-            try{
+            if(
+                memory &&
+                typeof memory.all ===
+                    "function"
+            ){
 
                 const result =
-                    memory?.all?.({
+                    memory.all({
                         includeArchived:
                             true
                     });
 
 
-                if(
+                memoryRecords =
                     Array.isArray(
                         result
                     )
-                ){
-
-                    memoryRecords =
-                        result;
-
-
-                    break;
-
-                }
-
-            } catch(error){
-
-                /* MemoryApp fallback */
+                        ? result
+                        : [];
 
             }
 
-        }
+        } catch(error){
 
-
-        if(
-            memoryRecords.length ===
-                0
-        ){
-
-            try{
-
-                const entity =
-                    this.getCurrentEntity();
-
-
-                if(
-                    entity &&
-                    window.MemoryApp &&
-                    typeof window.MemoryApp
-                        .getAllMemories ===
-                        "function"
-                ){
-
-                    const result =
-                        window.MemoryApp
-                            .getAllMemories(
-                                entity
-                            );
-
-
-                    memoryRecords =
-                        Array.isArray(
-                            result
-                        )
-                            ? result
-                            : [];
-
-                }
-
-            } catch(error){
-
-                memoryRecords =
-                    [];
-
-            }
+            memoryRecords =
+                [];
 
         }
 
@@ -1878,25 +2191,42 @@ const EvolutionApp = {
         const matchesEvent =
             record => {
 
+                if(!record){
+
+                    return false;
+
+                }
+
+
                 const candidates = [
 
-                    record?.sourceEventId,
+                    record.sourceEventId,
+                    record.eventId,
+                    record.relatedEventId,
+                    record.sourceId,
 
-                    record?.eventId,
-
-                    record?.relatedEventId,
-
-                    record?.payload
+                    record.payload
                         ?.sourceEventId,
 
-                    record?.payload
+                    record.payload
                         ?.eventId,
 
-                    record?.context
+                    record.payload
+                        ?.relatedEventId,
+
+                    record.context
                         ?.sourceEventId
 
                 ]
-                    .filter(Boolean)
+                    .filter(
+                        value =>
+                            value !==
+                                null &&
+                            value !==
+                                undefined &&
+                            value !==
+                                ""
+                    )
                     .map(
                         value =>
                             String(
@@ -1906,9 +2236,7 @@ const EvolutionApp = {
 
 
                 return candidates.includes(
-                    String(
-                        event.id
-                    )
+                    eventId
                 );
 
             };
@@ -1931,6 +2259,185 @@ const EvolutionApp = {
                     .length
 
         };
+
+    },
+
+
+    /* =====================================================
+       LINKED RECORD NAVIGATION
+    ===================================================== */
+
+    getActions(){
+
+        if(
+            typeof window !==
+                "undefined" &&
+            window.Actions
+        ){
+
+            return window.Actions;
+
+        }
+
+
+        return (
+            this.getService(
+                "actions"
+            ) ||
+            this.getService(
+                "actionsV2"
+            ) ||
+            null
+        );
+
+    },
+
+
+    openEntityPage(page){
+
+        const actions =
+            this.getActions();
+
+
+        if(
+            actions &&
+            typeof actions.openEntityPage ===
+                "function"
+        ){
+
+            try{
+
+                return (
+                    actions.openEntityPage(
+                        page
+                    ) !==
+                    false
+                );
+
+            } catch(error){
+
+                console.warn(
+                    `Evolution bağlantılı sayfa açılamadı: ${page}`,
+                    error
+                );
+
+            }
+
+        }
+
+
+        return false;
+
+    },
+
+
+    openLinkedRecords(target){
+
+        const normalized =
+            String(
+                target ||
+                    ""
+            )
+                .trim()
+                .toLowerCase();
+
+
+        if(
+            ![
+                "timeline",
+                "memory"
+            ].includes(
+                normalized
+            )
+        ){
+
+            return false;
+
+        }
+
+
+        const event =
+            this.findEvent(
+                this.selectedEventId
+            );
+
+
+        if(!event){
+
+            return false;
+
+        }
+
+
+        if(
+            normalized ===
+                "timeline" &&
+            typeof window !==
+                "undefined" &&
+            window.TimelineApp
+        ){
+
+            try{
+
+                window.TimelineApp
+                    .selectedItemId =
+                    null;
+
+
+                window.TimelineApp
+                    .searchQuery =
+                    "";
+
+
+                window.TimelineApp
+                    .activeFilter =
+                    "all";
+
+            } catch(error){
+
+                /* navigation still allowed */
+
+            }
+
+        }
+
+
+        if(
+            normalized ===
+                "memory" &&
+            typeof window !==
+                "undefined" &&
+            window.MemoryApp
+        ){
+
+            try{
+
+                window.MemoryApp
+                    .selectedMemoryId =
+                    null;
+
+
+                window.MemoryApp
+                    .editorMode =
+                    null;
+
+
+                window.MemoryApp
+                    .searchQuery =
+                    "";
+
+            } catch(error){
+
+                /* navigation still allowed */
+
+            }
+
+        }
+
+
+        return this.openEntityPage(
+            normalized
+        );
 
     },
 
@@ -1970,11 +2477,14 @@ const EvolutionApp = {
                 analysis.summary =
                     "Bu olay tamamlanmış bir ilerleme veya başarı gösteriyor.";
 
+
                 analysis.impact =
                     "Yüksek";
 
+
                 analysis.suggestion =
                     "Bu başarıyı yeni bir hedef veya dönüm noktasıyla ilişkilendirebilirsin.";
+
 
                 break;
 
@@ -1984,8 +2494,10 @@ const EvolutionApp = {
                 analysis.summary =
                     "Bu kayıt geleceğe yönelik aktif bir gelişim yönü oluşturuyor.";
 
+
                 analysis.suggestion =
                     "Hedef ilerlemesini düzenli güncelleyerek değişimi ölçebilirsin.";
+
 
                 break;
 
@@ -1995,8 +2507,10 @@ const EvolutionApp = {
                 analysis.summary =
                     "Bu karar sonraki olayların yönünü değiştirebilir.";
 
+
                 analysis.suggestion =
                     "Kararın nedenini ve sonuçlarını Memory ile ilişkilendirmek faydalı olabilir.";
+
 
                 break;
 
@@ -2006,14 +2520,18 @@ const EvolutionApp = {
                 analysis.summary =
                     "Bu deneyim gelişim için öğrenme verisi oluşturuyor.";
 
+
                 analysis.impact =
                     "Yüksek";
+
 
                 analysis.risk =
                     "Orta";
 
+
                 analysis.suggestion =
                     "Çıkarılan dersleri Memory içinde kalıcı bir kayda dönüştürebilirsin.";
+
 
                 break;
 
@@ -2023,11 +2541,14 @@ const EvolutionApp = {
                 analysis.summary =
                     "Bu olay finansal durumu veya yükümlülükleri etkileyebilir.";
 
+
                 analysis.impact =
                     "Yüksek";
 
+
                 analysis.risk =
                     "Orta";
+
 
                 break;
 
@@ -2048,11 +2569,11 @@ const EvolutionApp = {
             analysis.impact =
                 "Kritik";
 
+
             analysis.risk =
                 "Yüksek";
 
         }
-
         else if(
             importance ===
                 "high"
@@ -2068,7 +2589,8 @@ const EvolutionApp = {
 
     },
 
-   /* =====================================================
+
+    /* =====================================================
        STATS
     ===================================================== */
 
@@ -2113,7 +2635,7 @@ const EvolutionApp = {
                         this.normalizeType(
                             event.type
                         ) ===
-                            "achievement"
+                        "achievement"
                 ).length,
 
             goals:
@@ -2122,15 +2644,15 @@ const EvolutionApp = {
                         this.normalizeType(
                             event.type
                         ) ===
-                            "goal" &&
+                        "goal" &&
                         this.normalizeStatus(
                             event.status
                         ) !==
-                            "completed" &&
+                        "completed" &&
                         this.normalizeStatus(
                             event.status
                         ) !==
-                            "cancelled"
+                        "cancelled"
                 ).length
 
         };
@@ -2139,6 +2661,10 @@ const EvolutionApp = {
 
 
     /* =====================================================
+       CONTINUE IN PART 3
+    ===================================================== */
+
+   /* =====================================================
        FILTER BAR
     ===================================================== */
 
@@ -2206,11 +2732,12 @@ const EvolutionApp = {
                         ⌕
                     </span>
 
-
                     <input
                         id="evolutionSearchInput"
                         type="search"
                         autocomplete="off"
+                        enterkeyhint="search"
+                        aria-label="Evolution içinde ara"
                         placeholder="Evolution içinde ara"
                         value="${this.escapeHTML(
                             this.searchQuery
@@ -2219,8 +2746,11 @@ const EvolutionApp = {
 
                 </label>
 
-
-                <div class="evolution-filter-row">
+                <div
+                    class="evolution-filter-row"
+                    role="group"
+                    aria-label="Evolution filtreleri"
+                >
 
                     ${filters
                         .map(
@@ -2237,6 +2767,12 @@ const EvolutionApp = {
                                     data-filter="${this.escapeHTML(
                                         filter.id
                                     )}"
+                                    aria-pressed="${
+                                        this.activeFilter ===
+                                            filter.id
+                                            ? "true"
+                                            : "false"
+                                    }"
                                 >
                                     ${this.escapeHTML(
                                         filter.label
@@ -2244,10 +2780,11 @@ const EvolutionApp = {
                                 </button>
                             `
                         )
-                        .join("")}
+                        .join(
+                            ""
+                        )}
 
                 </div>
-
 
                 <button
                     type="button"
@@ -2299,7 +2836,6 @@ const EvolutionApp = {
 
                 </div>
 
-
                 <div class="evolution-progress-value">
 
                     <strong>
@@ -2319,7 +2855,6 @@ const EvolutionApp = {
                     </small>
 
                 </div>
-
 
                 <div class="evolution-progress-track">
 
@@ -2387,6 +2922,13 @@ const EvolutionApp = {
 
     renderEvent(event){
 
+        if(!event){
+
+            return "";
+
+        }
+
+
         const type =
             this.normalizeType(
                 event.type
@@ -2417,7 +2959,7 @@ const EvolutionApp = {
         const description =
             String(
                 event.description ||
-                ""
+                    ""
             );
 
 
@@ -2433,6 +2975,17 @@ const EvolutionApp = {
                 : description;
 
 
+        const tags =
+            Array.isArray(
+                event.tags
+            )
+                ? event.tags.slice(
+                    0,
+                    3
+                )
+                : [];
+
+
         return `
             <button
                 type="button"
@@ -2446,16 +2999,21 @@ const EvolutionApp = {
                 data-event-id="${this.escapeHTML(
                     event.id
                 )}"
+                aria-label="${this.escapeHTML(
+                    `${event.title || "Yaşam olayı"} detayını aç`
+                )}"
             >
 
-                <span class="evolution-record-marker">
+                <span
+                    class="evolution-record-marker"
+                    aria-hidden="true"
+                >
                     ${this.escapeHTML(
                         this.getEventIcon(
                             type
                         )
                     )}
                 </span>
-
 
                 <span class="evolution-record-body">
 
@@ -2487,14 +3045,12 @@ const EvolutionApp = {
 
                     </span>
 
-
                     <strong>
                         ${this.escapeHTML(
                             event.title ||
                             "Yaşam olayı"
                         )}
                     </strong>
-
 
                     ${
                         preview
@@ -2504,10 +3060,9 @@ const EvolutionApp = {
                                         preview
                                     )}
                                 </span>
-                              `
+                            `
                             : ""
                     }
-
 
                     ${
                         progress !==
@@ -2516,11 +3071,9 @@ const EvolutionApp = {
                                 <span class="evolution-goal-progress">
 
                                     <span>
-
                                         <i
                                             style="width:${progress}%"
                                         ></i>
-
                                     </span>
 
                                     <small>
@@ -2528,24 +3081,16 @@ const EvolutionApp = {
                                     </small>
 
                                 </span>
-                              `
+                            `
                             : ""
                     }
 
-
                     ${
-                        Array.isArray(
-                            event.tags
-                        ) &&
-                        event.tags.length
+                        tags.length
                             ? `
                                 <span class="evolution-record-tags">
 
-                                    ${event.tags
-                                        .slice(
-                                            0,
-                                            3
-                                        )
+                                    ${tags
                                         .map(
                                             tag => `
                                                 <small>
@@ -2555,15 +3100,16 @@ const EvolutionApp = {
                                                 </small>
                                             `
                                         )
-                                        .join("")}
+                                        .join(
+                                            ""
+                                        )}
 
                                 </span>
-                              `
+                            `
                             : ""
                     }
 
                 </span>
-
 
                 <span class="evolution-record-side">
 
@@ -2576,7 +3122,6 @@ const EvolutionApp = {
                             )
                         )}
                     </small>
-
 
                     <strong>
                         +${this.getEventXP(
@@ -2609,21 +3154,21 @@ const EvolutionApp = {
         const type =
             this.normalizeType(
                 event?.type ||
-                "general"
+                    "general"
             );
 
 
         const status =
             this.normalizeStatus(
                 event?.status ||
-                "completed"
+                    "completed"
             );
 
 
         const importance =
             this.normalizeImportance(
                 event?.importance ||
-                "medium"
+                    "medium"
             );
 
 
@@ -2642,7 +3187,6 @@ const EvolutionApp = {
                     data-evolution-action="editor:cancel"
                 ></div>
 
-
                 <form
                     class="evolution-editor"
                     data-evolution-form="${
@@ -2660,7 +3204,6 @@ const EvolutionApp = {
                                 EVOLUTION EDITOR
                             </span>
 
-
                             <h2>
                                 ${
                                     editing
@@ -2670,7 +3213,6 @@ const EvolutionApp = {
                             </h2>
 
                         </div>
-
 
                         <button
                             type="button"
@@ -2683,7 +3225,6 @@ const EvolutionApp = {
 
                     </header>
 
-
                     <div class="evolution-editor-scroll">
 
                         <label class="engine-field">
@@ -2691,7 +3232,6 @@ const EvolutionApp = {
                             <span>
                                 Başlık
                             </span>
-
 
                             <input
                                 id="evolutionTitleInput"
@@ -2708,13 +3248,11 @@ const EvolutionApp = {
 
                         </label>
 
-
                         <label class="engine-field">
 
                             <span>
                                 Açıklama
                             </span>
-
 
                             <textarea
                                 id="evolutionDescriptionInput"
@@ -2728,13 +3266,11 @@ const EvolutionApp = {
 
                         </label>
 
-
                         <label class="engine-field">
 
                             <span>
                                 Tür
                             </span>
-
 
                             <select
                                 id="evolutionTypeInput"
@@ -2760,19 +3296,19 @@ const EvolutionApp = {
                                             </option>
                                         `
                                     )
-                                    .join("")}
+                                    .join(
+                                        ""
+                                    )}
 
                             </select>
 
                         </label>
-
 
                         <label class="engine-field">
 
                             <span>
                                 Durum
                             </span>
-
 
                             <select
                                 id="evolutionStatusInput"
@@ -2801,12 +3337,10 @@ const EvolutionApp = {
                                     ]
                                 ]
                                     .map(
-                                        (
-                                            [
-                                                value,
-                                                label
-                                            ]
-                                        ) => `
+                                        ([
+                                            value,
+                                            label
+                                        ]) => `
                                             <option
                                                 value="${value}"
                                                 ${
@@ -2820,19 +3354,19 @@ const EvolutionApp = {
                                             </option>
                                         `
                                     )
-                                    .join("")}
+                                    .join(
+                                        ""
+                                    )}
 
                             </select>
 
                         </label>
-
 
                         <label class="engine-field">
 
                             <span>
                                 Önem
                             </span>
-
 
                             <select
                                 id="evolutionImportanceInput"
@@ -2857,12 +3391,10 @@ const EvolutionApp = {
                                     ]
                                 ]
                                     .map(
-                                        (
-                                            [
-                                                value,
-                                                label
-                                            ]
-                                        ) => `
+                                        ([
+                                            value,
+                                            label
+                                        ]) => `
                                             <option
                                                 value="${value}"
                                                 ${
@@ -2876,19 +3408,19 @@ const EvolutionApp = {
                                             </option>
                                         `
                                     )
-                                    .join("")}
+                                    .join(
+                                        ""
+                                    )}
 
                             </select>
 
                         </label>
-
 
                         <label class="engine-field evolution-progress-field">
 
                             <span>
                                 Hedef ilerlemesi (%)
                             </span>
-
 
                             <input
                                 id="evolutionProgressInput"
@@ -2900,20 +3432,17 @@ const EvolutionApp = {
                                 value="${progress}"
                             >
 
-
                             <small>
                                 Yalnız Hedef türünde kullanılır.
                             </small>
 
                         </label>
 
-
                         <label class="engine-field">
 
                             <span>
                                 Etiketler
                             </span>
-
 
                             <input
                                 id="evolutionTagsInput"
@@ -2936,7 +3465,6 @@ const EvolutionApp = {
 
                     </div>
 
-
                     <footer class="evolution-detail-actions">
 
                         <button
@@ -2946,7 +3474,6 @@ const EvolutionApp = {
                         >
                             Vazgeç
                         </button>
-
 
                         <button
                             type="submit"
@@ -3017,12 +3544,11 @@ const EvolutionApp = {
                     data-action="evolution:event:close"
                 ></div>
 
-
                 <section
                     class="evolution-detail"
                     role="dialog"
                     aria-modal="true"
-                    aria-label="Evolution olayı"
+                    aria-labelledby="evolutionDetailTitle"
                 >
 
                     <header class="evolution-detail-header">
@@ -3037,8 +3563,7 @@ const EvolutionApp = {
                                 )}
                             </span>
 
-
-                            <h2>
+                            <h2 id="evolutionDetailTitle">
                                 ${this.escapeHTML(
                                     event.title ||
                                     "Yaşam olayı"
@@ -3046,7 +3571,6 @@ const EvolutionApp = {
                             </h2>
 
                         </div>
-
 
                         <button
                             type="button"
@@ -3059,7 +3583,6 @@ const EvolutionApp = {
 
                     </header>
 
-
                     <div class="evolution-detail-scroll">
 
                         ${
@@ -3070,10 +3593,9 @@ const EvolutionApp = {
                                             event.description
                                         )}
                                     </p>
-                                  `
+                                `
                                 : ""
                         }
-
 
                         ${
                             progress !==
@@ -3093,7 +3615,6 @@ const EvolutionApp = {
 
                                         </div>
 
-
                                         <div>
 
                                             <span
@@ -3103,10 +3624,9 @@ const EvolutionApp = {
                                         </div>
 
                                     </section>
-                                  `
+                                `
                                 : ""
                         }
-
 
                         <div class="evolution-detail-meta">
 
@@ -3126,7 +3646,6 @@ const EvolutionApp = {
 
                             </div>
 
-
                             <div>
 
                                 <span>
@@ -3143,7 +3662,6 @@ const EvolutionApp = {
 
                             </div>
 
-
                             <div>
 
                                 <span>
@@ -3157,7 +3675,6 @@ const EvolutionApp = {
                                 </strong>
 
                             </div>
-
 
                             <div>
 
@@ -3179,9 +3696,11 @@ const EvolutionApp = {
 
                         </div>
 
-
                         ${
-                            event.tags?.length
+                            Array.isArray(
+                                event.tags
+                            ) &&
+                            event.tags.length
                                 ? `
                                     <div class="evolution-detail-tags">
 
@@ -3195,13 +3714,14 @@ const EvolutionApp = {
                                                     </span>
                                                 `
                                             )
-                                            .join("")}
+                                            .join(
+                                                ""
+                                            )}
 
                                     </div>
-                                  `
+                                `
                                 : ""
                         }
-
 
                         <section class="evolution-analysis-card">
 
@@ -3209,13 +3729,11 @@ const EvolutionApp = {
                                 BRAIN CONTEXT
                             </span>
 
-
                             <p>
                                 ${this.escapeHTML(
                                     analysis.summary
                                 )}
                             </p>
-
 
                             <div>
 
@@ -3227,8 +3745,8 @@ const EvolutionApp = {
                                             analysis.impact
                                         )}
                                     </strong>
-                                </span>
 
+                                </span>
 
                                 <span>
                                     Risk
@@ -3238,10 +3756,10 @@ const EvolutionApp = {
                                             analysis.risk
                                         )}
                                     </strong>
+
                                 </span>
 
                             </div>
-
 
                             <small>
                                 ${this.escapeHTML(
@@ -3250,7 +3768,6 @@ const EvolutionApp = {
                             </small>
 
                         </section>
-
 
                         <div class="evolution-linked-records">
 
@@ -3269,7 +3786,6 @@ const EvolutionApp = {
                                 </strong>
 
                             </button>
-
 
                             <button
                                 type="button"
@@ -3291,7 +3807,6 @@ const EvolutionApp = {
 
                     </div>
 
-
                     <footer class="evolution-detail-actions">
 
                         <button
@@ -3302,7 +3817,6 @@ const EvolutionApp = {
                             Düzenle
                         </button>
 
-
                         <button
                             type="button"
                             class="secondary-btn"
@@ -3310,7 +3824,6 @@ const EvolutionApp = {
                         >
                             Arşivle
                         </button>
-
 
                         <button
                             type="button"
@@ -3336,6 +3849,14 @@ const EvolutionApp = {
 
     renderEmptyState(){
 
+        const filtered =
+            Boolean(
+                this.searchQuery
+            ) ||
+            this.activeFilter !==
+                "all";
+
+
         return `
             <div class="section evolution-empty">
 
@@ -3343,34 +3864,34 @@ const EvolutionApp = {
                     ⌬
                 </span>
 
-
                 <h3>
                     ${
-                        this.searchQuery ||
-                        this.activeFilter !==
-                            "all"
+                        filtered
                             ? "Eşleşen olay bulunamadı"
                             : "Evolution henüz sessiz"
                     }
                 </h3>
 
-
                 <p>
                     ${
-                        this.searchQuery ||
-                        this.activeFilter !==
-                            "all"
+                        filtered
                             ? "Arama veya filtreyi değiştirerek tekrar deneyebilirsin."
                             : "İlk kararını, hedefini, başarını veya dönüm noktanı kaydederek gelişim akışını başlat."
                     }
                 </p>
 
-
                 ${
-                    !this.searchQuery &&
-                    this.activeFilter ===
-                        "all"
+                    filtered
                         ? `
+                            <button
+                                type="button"
+                                class="secondary-btn"
+                                data-evolution-action="reset"
+                            >
+                                Filtreleri Temizle
+                            </button>
+                        `
+                        : `
                             <button
                                 type="button"
                                 class="primary-btn"
@@ -3378,8 +3899,7 @@ const EvolutionApp = {
                             >
                                 İlk Olayı Oluştur
                             </button>
-                          `
-                        : ""
+                        `
                 }
 
             </div>
@@ -3394,20 +3914,39 @@ const EvolutionApp = {
 
     renderAppHeader(entity){
 
-        if(
-            window.UI &&
-            typeof UI.appHeader ===
-                "function"
-        ){
+        try{
 
-            return UI.appHeader(
-                this.escapeHTML(
-                    entity.name ||
-                    "VAERO Varlığı"
-                ),
-                "EVOLUTION",
-                "⌬"
-            );
+            if(
+                typeof window !==
+                    "undefined" &&
+                window.UI &&
+                typeof window.UI.appHeader ===
+                    "function"
+            ){
+
+                const result =
+                    window.UI.appHeader(
+                        entity?.name ||
+                        "VAERO Varlığı",
+                        "EVOLUTION",
+                        "⌬"
+                    );
+
+
+                if(
+                    typeof result ===
+                        "string"
+                ){
+
+                    return result;
+
+                }
+
+            }
+
+        } catch(error){
+
+            /* fallback */
 
         }
 
@@ -3421,7 +3960,7 @@ const EvolutionApp = {
 
                 <h1>
                     ${this.escapeHTML(
-                        entity.name ||
+                        entity?.name ||
                         "VAERO Varlığı"
                     )}
                 </h1>
@@ -3436,17 +3975,33 @@ const EvolutionApp = {
 
         try{
 
-            return (
-                window.UI
-                    ?.brainPanel?.() ||
-                ""
-            );
+            if(
+                typeof window !==
+                    "undefined" &&
+                window.UI &&
+                typeof window.UI.brainPanel ===
+                    "function"
+            ){
+
+                const result =
+                    window.UI.brainPanel();
+
+
+                return typeof result ===
+                    "string"
+                    ? result
+                    : "";
+
+            }
 
         } catch(error){
 
-            return "";
+            /* optional */
 
         }
+
+
+        return "";
 
     },
 
@@ -3585,11 +4140,9 @@ const EvolutionApp = {
 
                     </div>
 
-
                     ${this.renderAppHeader(
                         entity
                     )}
-
 
                     <section class="evolution-app-intro">
 
@@ -3599,18 +4152,15 @@ const EvolutionApp = {
                                 LIVING EVOLUTION
                             </span>
 
-
                             <h2>
                                 Yaşam ve gelişim
                             </h2>
-
 
                             <p>
                                 Kararlar, hedefler, başarılar, deneyimler ve dönüm noktaları bu varlığın gelişim haritasını oluşturur.
                             </p>
 
                         </div>
-
 
                         <div class="evolution-stats">
 
@@ -3626,7 +4176,6 @@ const EvolutionApp = {
 
                             </div>
 
-
                             <div>
 
                                 <strong>
@@ -3639,7 +4188,6 @@ const EvolutionApp = {
 
                             </div>
 
-
                             <div>
 
                                 <strong>
@@ -3651,7 +4199,6 @@ const EvolutionApp = {
                                 </span>
 
                             </div>
-
 
                             <div>
 
@@ -3669,14 +4216,11 @@ const EvolutionApp = {
 
                     </section>
 
-
                     ${this.renderEvolutionProgress(
                         progress
                     )}
 
-
                     ${this.renderToolbar()}
-
 
                     <div class="evolution-records-scroll">
 
@@ -3692,20 +4236,20 @@ const EvolutionApp = {
                                                         event
                                                     )
                                             )
-                                            .join("")}
+                                            .join(
+                                                ""
+                                            )}
 
                                     </div>
-                                  `
+                                `
                                 : this.renderEmptyState()
                         }
 
                     </div>
 
-
                     ${this.renderBrainPanel()}
 
                 </div>
-
 
                 ${
                     this.editorMode
@@ -3731,11 +4275,24 @@ const EvolutionApp = {
        COMMANDS
     ===================================================== */
 
-    handleCommand(
-        action
-    ){
+    handleCommand(action){
 
-        switch(action){
+        const entity =
+            this.getCurrentEntity();
+
+
+        const normalizedAction =
+            String(
+                action ||
+                    ""
+            )
+                .trim()
+                .toLowerCase();
+
+
+        switch(
+            normalizedAction
+        ){
 
             case "create":
 
@@ -3745,6 +4302,15 @@ const EvolutionApp = {
 
                 this.editorMode =
                     "create";
+
+
+                if(entity){
+
+                    this.enterBrainContext(
+                        entity
+                    );
+
+                }
 
 
                 return this.remount();
@@ -3768,6 +4334,15 @@ const EvolutionApp = {
                     "edit";
 
 
+                if(entity){
+
+                    this.enterBrainContext(
+                        entity
+                    );
+
+                }
+
+
                 return this.remount();
 
 
@@ -3780,6 +4355,45 @@ const EvolutionApp = {
 
                 this.editorMode =
                     null;
+
+
+                if(entity){
+
+                    this.enterBrainContext(
+                        entity
+                    );
+
+                }
+
+
+                return this.remount();
+
+
+            case "reset":
+
+                this.activeFilter =
+                    "all";
+
+
+                this.searchQuery =
+                    "";
+
+
+                this.selectedEventId =
+                    null;
+
+
+                this.editorMode =
+                    null;
+
+
+                if(entity){
+
+                    this.enterBrainContext(
+                        entity
+                    );
+
+                }
 
 
                 return this.remount();
@@ -3803,6 +4417,10 @@ const EvolutionApp = {
         button
     ){
 
+        const entity =
+            this.getCurrentEntity();
+
+
         switch(action){
 
             case "evolution:filter":
@@ -3814,10 +4432,19 @@ const EvolutionApp = {
                 );
 
 
+                if(entity){
+
+                    this.enterBrainContext(
+                        entity
+                    );
+
+                }
+
+
                 return this.remount();
 
 
-            case "evolution:event:open":{
+            case "evolution:event:open": {
 
                 const eventId =
                     button?.dataset
@@ -3842,6 +4469,15 @@ const EvolutionApp = {
                 );
 
 
+                if(entity){
+
+                    this.enterBrainContext(
+                        entity
+                    );
+
+                }
+
+
                 return this.remount();
 
             }
@@ -3852,115 +4488,25 @@ const EvolutionApp = {
                 this.clearSelectedEvent();
 
 
+                if(entity){
+
+                    this.enterBrainContext(
+                        entity
+                    );
+
+                }
+
+
                 return this.remount();
 
 
-            case "evolution:linked:open":{
+            case "evolution:linked:open":
 
-                const target =
-                    String(
-                        button?.dataset
-                            ?.target ||
-                        ""
-                    );
-
-
-                if(
-                    ![
-                        "timeline",
-                        "memory"
-                    ].includes(
-                        target
-                    )
-                ){
-
-                    return false;
-
-                }
-
-
-                const eventId =
-                    this.selectedEventId;
-
-
-                this.editorMode =
-                    null;
-
-
-                if(
-                    target ===
-                        "timeline" &&
-                    window.TimelineApp &&
-                    eventId
-                ){
-
-                    try{
-
-                        const entity =
-                            this.getCurrentEntity();
-
-
-                        const timelineItems =
-                            window.TimelineApp
-                                .getAllUnifiedItems?.(
-                                    entity
-                                ) ||
-                            [];
-
-
-                        const matched =
-                            timelineItems.find(
-                                item =>
-                                    item.source ===
-                                        "evolution" &&
-                                    String(
-                                        item.sourceId ||
-                                        ""
-                                    ) ===
-                                        String(
-                                            eventId
-                                        )
-                            );
-
-
-                        if(matched){
-
-                            window.TimelineApp
-                                .selectedItemId =
-                                matched.id;
-
-                        }
-
-                    } catch(error){
-
-                        console.warn(
-                            "Timeline Evolution context aktarılamadı:",
-                            error
-                        );
-
-                    }
-
-                }
-
-
-                if(
-                    window.Actions &&
-                    typeof window.Actions
-                        .openEntityPage ===
-                        "function"
-                ){
-
-                    return window.Actions
-                        .openEntityPage(
-                            target
-                        );
-
-                }
-
-
-                return false;
-
-            }
+                return this.openLinkedRecords(
+                    button?.dataset
+                        ?.target ||
+                    ""
+                );
 
 
             default:
@@ -3968,6 +4514,119 @@ const EvolutionApp = {
                 return false;
 
         }
+
+    },
+
+
+    /* =====================================================
+       SEARCH
+    ===================================================== */
+
+    handleSearchInput(value){
+
+        this.setSearchQuery(
+            value
+        );
+
+
+        if(
+            this.searchTimer !==
+                null
+        ){
+
+            clearTimeout(
+                this.searchTimer
+            );
+
+        }
+
+
+        this.searchTimer =
+            setTimeout(
+                () => {
+
+                    this.searchTimer =
+                        null;
+
+
+                    const entity =
+                        this.getCurrentEntity();
+
+
+                    if(entity){
+
+                        this.enterBrainContext(
+                            entity
+                        );
+
+                    }
+
+
+                    this.remount();
+
+                },
+                120
+            );
+
+
+        return true;
+
+    },
+
+
+    /* =====================================================
+       REPORT
+    ===================================================== */
+
+    report(){
+
+        const entity =
+            this.getCurrentEntity();
+
+
+        const events =
+            entity
+                ? this.getEvents(
+                    entity
+                )
+                : [];
+
+
+        return {
+
+            version:
+                this.version,
+
+            entityId:
+                entity?.id ||
+                null,
+
+            activeFilter:
+                this.activeFilter,
+
+            searchQuery:
+                this.searchQuery,
+
+            selectedEventId:
+                this.selectedEventId,
+
+            editorMode:
+                this.editorMode,
+
+            eventCount:
+                events.length,
+
+            stats:
+                this.getStats(
+                    events
+                ),
+
+            progress:
+                this.getEvolutionProgress(
+                    events
+                )
+
+        };
 
     }
 
@@ -3978,190 +4637,201 @@ const EvolutionApp = {
    EVOLUTION COMMANDS
 ========================================================= */
 
-document.addEventListener(
-    "click",
-    event => {
+if(
+    typeof document !==
+        "undefined"
+){
 
-        const evolutionButton =
-            event.target.closest(
-                "[data-evolution-action]"
-            );
+    document.addEventListener(
+        "click",
+        event => {
+
+            const target =
+                event.target;
 
 
-        if(evolutionButton){
+            if(
+                !target ||
+                typeof target.closest !==
+                    "function"
+            ){
+
+                return;
+
+            }
+
+
+            const evolutionButton =
+                target.closest(
+                    "[data-evolution-action]"
+                );
+
+
+            if(evolutionButton){
+
+                event.preventDefault();
+
+
+                EvolutionApp.handleCommand(
+                    evolutionButton.dataset
+                        .evolutionAction
+                );
+
+
+                return;
+
+            }
+
+
+            const actionButton =
+                target.closest(
+                    "[data-action]"
+                );
+
+
+            if(!actionButton){
+
+                return;
+
+            }
+
+
+            const action =
+                actionButton.dataset
+                    .action;
+
+
+            if(
+                !action ||
+                !action.startsWith(
+                    "evolution:"
+                )
+            ){
+
+                return;
+
+            }
+
 
             event.preventDefault();
 
 
-            EvolutionApp.handleCommand(
-                evolutionButton.dataset
-                    .evolutionAction
+            EvolutionApp.handleGenericAction(
+                action,
+                actionButton
             );
 
-
-            return;
-
         }
+    );
 
 
-        const actionButton =
-            event.target.closest(
-                "[data-action]"
+    /* =====================================================
+       EVOLUTION SEARCH
+    ===================================================== */
+
+    document.addEventListener(
+        "input",
+        event => {
+
+            if(
+                event.target?.id !==
+                    "evolutionSearchInput"
+            ){
+
+                return;
+
+            }
+
+
+            EvolutionApp.handleSearchInput(
+                event.target.value
             );
 
+        }
+    );
 
-        if(!actionButton){
 
-            return;
+    /* =====================================================
+       EVOLUTION FORMS
+    ===================================================== */
+
+    document.addEventListener(
+        "submit",
+        event => {
+
+            const target =
+                event.target;
+
+
+            if(
+                !target ||
+                typeof target.closest !==
+                    "function"
+            ){
+
+                return;
+
+            }
+
+
+            const form =
+                target.closest(
+                    "[data-evolution-form]"
+                );
+
+
+            if(!form){
+
+                return;
+
+            }
+
+
+            event.preventDefault();
+
+
+            const entity =
+                EvolutionApp
+                    .getCurrentEntity();
+
+
+            if(!entity){
+
+                return;
+
+            }
+
+
+            if(
+                form.dataset
+                    .evolutionForm ===
+                    "create"
+            ){
+
+                EvolutionApp.createEvent(
+                    entity
+                );
+
+
+                return;
+
+            }
+
+
+            if(
+                form.dataset
+                    .evolutionForm ===
+                    "edit"
+            ){
+
+                EvolutionApp.updateEvent();
+
+            }
 
         }
+    );
 
-
-        const action =
-            actionButton.dataset
-                .action;
-
-
-        if(
-            !action ||
-            !action.startsWith(
-                "evolution:"
-            )
-        ){
-
-            return;
-
-        }
-
-
-        event.preventDefault();
-
-
-        EvolutionApp.handleGenericAction(
-            action,
-            actionButton
-        );
-
-    }
-);
-
-
-/* =========================================================
-   EVOLUTION SEARCH
-========================================================= */
-
-document.addEventListener(
-    "input",
-    event => {
-
-        if(
-            event.target.id !==
-                "evolutionSearchInput"
-        ){
-
-            return;
-
-        }
-
-
-        EvolutionApp.searchQuery =
-            String(
-                event.target.value ||
-                ""
-            );
-
-
-        clearTimeout(
-            EvolutionApp.searchTimer
-        );
-
-
-        EvolutionApp.searchTimer =
-            setTimeout(
-                () => {
-
-                    EvolutionApp.selectedEventId =
-                        null;
-
-
-                    EvolutionApp.editorMode =
-                        null;
-
-
-                    EvolutionApp.remount();
-
-                },
-                120
-            );
-
-    }
-);
-
-
-/* =========================================================
-   EVOLUTION FORMS
-========================================================= */
-
-document.addEventListener(
-    "submit",
-    event => {
-
-        const form =
-            event.target.closest(
-                "[data-evolution-form]"
-            );
-
-
-        if(!form){
-
-            return;
-
-        }
-
-
-        event.preventDefault();
-
-
-        const entity =
-            EvolutionApp
-                .getCurrentEntity();
-
-
-        if(!entity){
-
-            return;
-
-        }
-
-
-        if(
-            form.dataset
-                .evolutionForm ===
-                "create"
-        ){
-
-            EvolutionApp.createEvent(
-                entity
-            );
-
-
-            return;
-
-        }
-
-
-        if(
-            form.dataset
-                .evolutionForm ===
-                "edit"
-        ){
-
-            EvolutionApp.updateEvent();
-
-        }
-
-    }
-);
+}
 
 
 /* =========================================================
@@ -4170,17 +4840,40 @@ document.addEventListener(
 
 try{
 
-    VAERO?.register?.(
-        "evolutionApp",
-        EvolutionApp
-    );
+    if(
+        typeof VAERO !==
+            "undefined" &&
+        typeof VAERO.register ===
+            "function"
+    ){
+
+        VAERO.register(
+            "evolutionApp",
+            EvolutionApp
+        );
+
+    }
 
 } catch(error){
 
-    /* global remains available */
+    console.warn(
+        "EvolutionApp VAERO registration failed:",
+        error
+    );
 
 }
 
 
-window.EvolutionApp =
-    EvolutionApp;
+/* =========================================================
+   GLOBAL
+========================================================= */
+
+if(
+    typeof window !==
+        "undefined"
+){
+
+    window.EvolutionApp =
+        EvolutionApp;
+
+}
