@@ -5,7 +5,8 @@
 
 const Bridge = {
 
-    links: [],
+    links:
+        [],
 
     booted:
         false,
@@ -23,25 +24,45 @@ const Bridge = {
 
     getService(name){
 
+        const serviceName =
+            String(
+                name ??
+                ""
+            ).trim();
+
+
+        if(!serviceName){
+
+            return null;
+
+        }
+
+
         try{
 
             if(
-                typeof VAERO === "undefined" ||
-                typeof VAERO.get !== "function"
+                typeof VAERO ===
+                    "undefined" ||
+                typeof VAERO.get !==
+                    "function"
             ){
+
                 return null;
+
             }
 
 
             return (
-                VAERO.get(name) ||
+                VAERO.get(
+                    serviceName
+                ) ||
                 null
             );
 
         } catch(error){
 
             console.warn(
-                `Bridge service okunamadı: ${name}`,
+                `Bridge service okunamadı: ${serviceName}`,
                 error
             );
 
@@ -58,22 +79,50 @@ const Bridge = {
         payload = {}
     ){
 
+        const name =
+            String(
+                eventName ??
+                ""
+            ).trim();
+
+
+        if(!name){
+
+            return false;
+
+        }
+
+
         try{
 
             if(
-                typeof VAERO !== "undefined" &&
-                typeof VAERO.emit === "function"
+                typeof VAERO !==
+                    "undefined" &&
+                typeof VAERO.emit ===
+                    "function"
             ){
 
                 VAERO.emit(
-                    eventName,
+                    name,
                     payload
                 );
+
 
                 return true;
 
             }
 
+        } catch(error){
+
+            console.warn(
+                `Bridge event gönderilemedi: ${name}`,
+                error
+            );
+
+        }
+
+
+        try{
 
             const events =
                 this.getService(
@@ -83,13 +132,15 @@ const Bridge = {
 
             if(
                 events &&
-                typeof events.emit === "function"
+                typeof events.emit ===
+                    "function"
             ){
 
                 events.emit(
-                    eventName,
+                    name,
                     payload
                 );
+
 
                 return true;
 
@@ -98,7 +149,7 @@ const Bridge = {
         } catch(error){
 
             console.warn(
-                `Bridge event gönderilemedi: ${eventName}`,
+                `Bridge event fallback gönderilemedi: ${name}`,
                 error
             );
 
@@ -116,11 +167,23 @@ const Bridge = {
 
     createId(){
 
-        if(
-            typeof crypto !== "undefined" &&
-            typeof crypto.randomUUID === "function"
-        ){
-            return crypto.randomUUID();
+        try{
+
+            if(
+                typeof crypto !==
+                    "undefined" &&
+                typeof crypto.randomUUID ===
+                    "function"
+            ){
+
+                return crypto.randomUUID();
+
+            }
+
+        } catch(error){
+
+            /* fallback below */
+
         }
 
 
@@ -135,27 +198,147 @@ const Bridge = {
        NORMALIZATION
     ===================================================== */
 
+    normalizeId(value){
+
+        const id =
+            String(
+                value ??
+                ""
+            )
+                .trim()
+                .slice(
+                    0,
+                    200
+                );
+
+
+        return (
+            id ||
+            null
+        );
+
+    },
+
+
+    normalizeText(
+        value,
+        maxLength = 10000
+    ){
+
+        return String(
+            value ??
+                ""
+        )
+            .trim()
+            .slice(
+                0,
+                maxLength
+            );
+
+    },
+
+
+    normalizeTimestamp(
+        value,
+        fallback = Date.now()
+    ){
+
+        const timestamp =
+            Number(
+                value
+            );
+
+
+        return Number.isFinite(
+            timestamp
+        )
+            ? timestamp
+            : fallback;
+
+    },
+
+
     normalizeTags(value){
 
         if(
-            !Array.isArray(value)
+            !Array.isArray(
+                value
+            ) &&
+            !(value instanceof Set)
         ){
+
             return [];
+
         }
 
 
-        return [
-            ...new Set(
+        const source =
+            Array.isArray(
                 value
-                    .map(
-                        item =>
-                            String(
-                                item ?? ""
-                            ).trim()
-                    )
-                    .filter(Boolean)
             )
-        ];
+                ? value
+                : [
+                    ...value
+                ];
+
+
+        const seen =
+            new Set();
+
+
+        return source
+            .map(
+                item =>
+                    String(
+                        item ??
+                            ""
+                    )
+                        .trim()
+                        .slice(
+                            0,
+                            80
+                        )
+            )
+            .filter(
+                item => {
+
+                    if(!item){
+
+                        return false;
+
+                    }
+
+
+                    const key =
+                        item.toLocaleLowerCase(
+                            "tr-TR"
+                        );
+
+
+                    if(
+                        seen.has(
+                            key
+                        )
+                    ){
+
+                        return false;
+
+                    }
+
+
+                    seen.add(
+                        key
+                    );
+
+
+                    return true;
+
+                }
+            )
+            .slice(
+                0,
+                40
+            );
 
     },
 
@@ -165,13 +348,14 @@ const Bridge = {
         const type =
             String(
                 value ||
-                "connection"
+                    "connection"
             )
                 .trim()
                 .toLowerCase();
 
 
         const allowed = [
+
             "connection",
             "person",
             "company",
@@ -182,6 +366,7 @@ const Bridge = {
             "custom",
             "root-community",
             "default"
+
         ];
 
 
@@ -194,37 +379,130 @@ const Bridge = {
     },
 
 
+    normalizeStatus(value){
+
+        const status =
+            String(
+                value ||
+                    "active"
+            )
+                .trim()
+                .toLowerCase();
+
+
+        if(
+            [
+                "active",
+                "inactive",
+                "paused",
+                "blocked",
+                "archived"
+            ].includes(
+                status
+            )
+        ){
+
+            return status;
+
+        }
+
+
+        return "active";
+
+    },
+
+
+    normalizeMetadata(value){
+
+        if(
+            !value ||
+            typeof value !==
+                "object" ||
+            Array.isArray(
+                value
+            )
+        ){
+
+            return {};
+
+        }
+
+
+        return {
+            ...value
+        };
+
+    },
+
+
     normalizeLink(
         link = {}
     ){
+
+        const sourceLink =
+            link &&
+            typeof link ===
+                "object" &&
+            !Array.isArray(
+                link
+            )
+                ? link
+                : {};
+
 
         const now =
             Date.now();
 
 
         const from =
-            String(
-                link.from ||
-                link.sourceEntityId ||
-                ""
-            ).trim();
+            this.normalizeId(
+                sourceLink.from ||
+                sourceLink.sourceEntityId
+            ) ||
+            "";
 
 
         const to =
-            String(
-                link.to ||
-                link.targetEntityId ||
-                ""
-            ).trim();
+            this.normalizeId(
+                sourceLink.to ||
+                sourceLink.targetEntityId
+            ) ||
+            "";
+
+
+        const relationship =
+            this.normalizeRelationship(
+                sourceLink.relationship ||
+                sourceLink.type
+            );
+
+
+        const createdAt =
+            this.normalizeTimestamp(
+                sourceLink.createdAt,
+                now
+            );
+
+
+        const updatedAt =
+            this.normalizeTimestamp(
+                sourceLink.updatedAt,
+                createdAt
+            );
+
+
+        const archived =
+            sourceLink.archived ===
+                true;
 
 
         return {
 
             id:
-                String(
-                    link.id ||
-                    this.createId()
-                ),
+                this.normalizeId(
+                    sourceLink.id
+                ) ||
+                this.createId(),
 
             from,
 
@@ -237,96 +515,120 @@ const Bridge = {
                 to,
 
             type:
-                this.normalizeRelationship(
-                    link.type ||
-                    link.relationship
-                ),
+                relationship,
 
-            relationship:
-                this.normalizeRelationship(
-                    link.relationship ||
-                    link.type
-                ),
+            relationship,
 
             label:
-                String(
-                    link.label ||
-                    ""
-                ).trim(),
+                this.normalizeText(
+                    sourceLink.label,
+                    240
+                ),
 
             note:
-                String(
-                    link.note ||
-                    link.description ||
-                    ""
-                ).trim(),
+                this.normalizeText(
+                    sourceLink.note ||
+                    sourceLink.description,
+                    20000
+                ),
 
             tags:
                 this.normalizeTags(
-                    link.tags
+                    sourceLink.tags
                 ),
 
             favorite:
-                link.favorite ===
-                true,
+                sourceLink.favorite ===
+                    true,
 
             bidirectional:
-                link.bidirectional !==
-                false,
+                sourceLink.bidirectional !==
+                    false,
 
             status:
-                String(
-                    link.status ||
-                    "active"
-                )
-                    .trim()
-                    .toLowerCase(),
+                archived
+                    ? "archived"
+                    : this.normalizeStatus(
+                        sourceLink.status
+                    ),
 
-            archived:
-                link.archived ===
-                true,
+            archived,
 
             archivedAt:
-                link.archived ===
-                    true
-                    ? (
-                        Number(
-                            link.archivedAt
-                        ) ||
-                        now
+                archived
+                    ? this.normalizeTimestamp(
+                        sourceLink.archivedAt,
+                        updatedAt
                     )
                     : null,
 
             metadata:
-                (
-                    link.metadata &&
-                    typeof link.metadata ===
-                        "object" &&
-                    !Array.isArray(
-                        link.metadata
-                    )
-                )
-                    ? {
-                        ...link.metadata
-                    }
-                    : {},
+                this.normalizeMetadata(
+                    sourceLink.metadata
+                ),
 
-            createdAt:
-                Number(
-                    link.createdAt
-                ) ||
-                now,
+            createdAt,
 
             updatedAt:
-                Number(
-                    link.updatedAt
-                ) ||
-                Number(
-                    link.createdAt
-                ) ||
-                now
+                Math.max(
+                    createdAt,
+                    updatedAt
+                )
 
         };
+
+    },
+
+
+    /* =====================================================
+       INTERNAL HELPERS
+    ===================================================== */
+
+    getIndex(id){
+
+        const bridgeId =
+            this.normalizeId(
+                id
+            );
+
+
+        if(!bridgeId){
+
+            return -1;
+
+        }
+
+
+        return this.links.findIndex(
+            link =>
+                link?.id ===
+                    bridgeId
+        );
+
+    },
+
+
+    sort(){
+
+        this.links.sort(
+            (
+                a,
+                b
+            ) =>
+                Number(
+                    b?.updatedAt ||
+                    b?.createdAt ||
+                    0
+                ) -
+                Number(
+                    a?.updatedAt ||
+                    a?.createdAt ||
+                    0
+                )
+        );
+
+
+        return this.links;
 
     },
 
@@ -337,12 +639,17 @@ const Bridge = {
 
     boot(){
 
-        if(this.booted){
+        if(
+            this.booted
+        ){
+
             return true;
+
         }
 
 
         this.load();
+
 
         this.migrateLegacyEntityStorage();
 
@@ -355,23 +662,34 @@ const Bridge = {
 
         if(
             events &&
-            typeof events.on === "function"
+            typeof events.on ===
+                "function"
         ){
 
-            events.on(
-                "entity.mounted",
+            const handleEntityMounted =
                 data => {
 
-                    if(
-                        !data ||
-                        !data.entityId
-                    ){
+                    const entityId =
+                        this.normalizeId(
+                            data?.entityId ||
+                            data?.entity?.id
+                        );
+
+
+                    if(!entityId){
+
                         return;
+
                     }
 
 
+                    /*
+                     * Every mounted entity can belong to
+                     * the root VAERO community graph.
+                     */
+
                     this.connect(
-                        data.entityId,
+                        entityId,
                         "vaero-community",
                         "root-community",
                         {
@@ -388,48 +706,48 @@ const Bridge = {
                         }
                     );
 
-                }
-            );
+                };
 
 
-            events.on(
-                "entity:mounted",
-                data => {
+            try{
 
-                    if(
-                        !data ||
-                        !data.entityId
-                    ){
-                        return;
-                    }
+                events.on(
+                    "entity.mounted",
+                    handleEntityMounted
+                );
 
 
-                    this.connect(
-                        data.entityId,
-                        "vaero-community",
-                        "root-community",
-                        {
-                            label:
-                                "VAERO Community",
+                events.on(
+                    "entity:mounted",
+                    handleEntityMounted
+                );
 
-                            bidirectional:
-                                true,
+            } catch(error){
 
-                            metadata:{
-                                system:
-                                    true
-                            }
-                        }
-                    );
+                console.warn(
+                    "Bridge entity event listener kurulamadı.",
+                    error
+                );
 
-                }
-            );
+            }
 
         }
 
 
         this.booted =
             true;
+
+
+        this.emit(
+            "bridge:ready",
+            {
+                count:
+                    this.links.length,
+
+                time:
+                    Date.now()
+            }
+        );
 
 
         return true;
@@ -451,24 +769,38 @@ const Bridge = {
     ){
 
         const source =
-            String(
-                from ?? ""
-            ).trim();
+            this.normalizeId(
+                from
+            );
 
 
         const target =
-            String(
-                to ?? ""
-            ).trim();
+            this.normalizeId(
+                to
+            );
 
 
         if(
             !source ||
             !target ||
-            source === target
+            source ===
+                target
         ){
+
             return null;
+
         }
+
+
+        const safeOptions =
+            options &&
+            typeof options ===
+                "object" &&
+            !Array.isArray(
+                options
+            )
+                ? options
+                : {};
 
 
         const relationship =
@@ -491,7 +823,9 @@ const Bridge = {
 
         if(existing){
 
-            if(existing.archived){
+            if(
+                existing.archived
+            ){
 
                 this.restore(
                     existing.id
@@ -509,7 +843,7 @@ const Bridge = {
             this.normalizeLink({
 
                 id:
-                    options.id ||
+                    safeOptions.id ||
                     this.createId(),
 
                 from:
@@ -524,25 +858,26 @@ const Bridge = {
                 relationship,
 
                 label:
-                    options.label,
+                    safeOptions.label,
 
                 note:
-                    options.note,
+                    safeOptions.note,
 
                 tags:
-                    options.tags,
+                    safeOptions.tags,
 
                 favorite:
-                    options.favorite,
+                    safeOptions.favorite,
 
                 bidirectional:
-                    options.bidirectional !==
-                    false,
+                    safeOptions.bidirectional !==
+                        false,
 
                 metadata:
-                    options.metadata,
+                    safeOptions.metadata,
 
                 status:
+                    safeOptions.status ||
                     "active",
 
                 createdAt:
@@ -554,12 +889,33 @@ const Bridge = {
             });
 
 
+        /*
+         * Canonical endpoints must stay valid after
+         * normalization.
+         */
+
+        if(
+            !bridge.from ||
+            !bridge.to ||
+            bridge.from ===
+                bridge.to
+        ){
+
+            return null;
+
+        }
+
+
         this.links.push(
             bridge
         );
 
 
+        this.sort();
+
+
         this.save();
+
 
         this.syncEntitiesForLink(
             bridge
@@ -576,12 +932,16 @@ const Bridge = {
             "bridge:created",
             {
                 bridge,
+
                 bridgeId:
                     bridge.id,
+
                 from:
                     bridge.from,
+
                 to:
                     bridge.to,
+
                 time:
                     Date.now()
             }
@@ -601,10 +961,15 @@ const Bridge = {
 
         if(
             !data ||
-            typeof data !== "object" ||
-            Array.isArray(data)
+            typeof data !==
+                "object" ||
+            Array.isArray(
+                data
+            )
         ){
+
             return null;
+
         }
 
 
@@ -623,7 +988,7 @@ const Bridge = {
 
 
     /* =====================================================
-       FIND
+       GET
     ===================================================== */
 
     get(
@@ -632,13 +997,15 @@ const Bridge = {
     ){
 
         const bridgeId =
-            String(
-                id ?? ""
-            ).trim();
+            this.normalizeId(
+                id
+            );
 
 
         if(!bridgeId){
+
             return null;
+
         }
 
 
@@ -646,19 +1013,27 @@ const Bridge = {
             this.links.find(
                 item =>
                     item?.id ===
-                    bridgeId
+                        bridgeId
             ) ||
             null;
 
 
-        if(
-            !link ||
-            (
-                link.archived === true &&
-                options.includeArchived !== true
-            )
-        ){
+        if(!link){
+
             return null;
+
+        }
+
+
+        if(
+            link.archived ===
+                true &&
+            options.includeArchived !==
+                true
+        ){
+
+            return null;
+
         }
 
 
@@ -666,6 +1041,10 @@ const Bridge = {
 
     },
 
+
+    /* =====================================================
+       FIND CONNECTION
+    ===================================================== */
 
     findConnection(
         from,
@@ -675,22 +1054,24 @@ const Bridge = {
     ){
 
         const source =
-            String(
-                from ?? ""
-            ).trim();
+            this.normalizeId(
+                from
+            );
 
 
         const target =
-            String(
-                to ?? ""
-            ).trim();
+            this.normalizeId(
+                to
+            );
 
 
         if(
             !source ||
             !target
         ){
+
             return null;
+
         }
 
 
@@ -707,27 +1088,40 @@ const Bridge = {
                 link => {
 
                     if(
-                        link.archived === true &&
-                        options.includeArchived !== true
+                        link.archived ===
+                            true &&
+                        options.includeArchived !==
+                            true
                     ){
+
                         return false;
+
                     }
 
 
-                    const directionMatch =
-                        (
-                            link.from === source &&
-                            link.to === target
-                        ) ||
-                        (
-                            link.bidirectional === true &&
-                            link.from === target &&
-                            link.to === source
-                        );
+                    const forward =
+                        link.from ===
+                            source &&
+                        link.to ===
+                            target;
 
 
-                    if(!directionMatch){
+                    const reverse =
+                        link.bidirectional ===
+                            true &&
+                        link.from ===
+                            target &&
+                        link.to ===
+                            source;
+
+
+                    if(
+                        !forward &&
+                        !reverse
+                    ){
+
                         return false;
+
                     }
 
 
@@ -736,7 +1130,9 @@ const Bridge = {
                         link.relationship !==
                             normalizedType
                     ){
+
                         return false;
+
                     }
 
 
@@ -760,35 +1156,42 @@ const Bridge = {
     ){
 
         const id =
-            String(
-                entityId ?? ""
-            ).trim();
+            this.normalizeId(
+                entityId
+            );
 
 
         if(!id){
+
             return [];
+
         }
 
 
         let links =
             this.links.filter(
                 link =>
-                    link.from === id ||
+                    link.from ===
+                        id ||
                     (
-                        link.bidirectional === true &&
-                        link.to === id
+                        link.bidirectional ===
+                            true &&
+                        link.to ===
+                            id
                     )
             );
 
 
         if(
-            options.includeArchived !== true
+            options.includeArchived !==
+                true
         ){
 
             links =
                 links.filter(
                     link =>
-                        link.archived !== true
+                        link.archived !==
+                            true
                 );
 
         }
@@ -806,27 +1209,58 @@ const Bridge = {
                 links.filter(
                     link =>
                         link.relationship ===
-                        relationship
+                            relationship
                 );
 
         }
 
 
-        if(options.favorite === true){
+        if(
+            options.favorite ===
+                true
+        ){
 
             links =
                 links.filter(
                     link =>
-                        link.favorite === true
+                        link.favorite ===
+                            true
                 );
 
         }
 
 
-        return links.sort(
-            (a,b) =>
-                b.updatedAt -
-                a.updatedAt
+        if(options.status){
+
+            const status =
+                this.normalizeStatus(
+                    options.status
+                );
+
+
+            links =
+                links.filter(
+                    link =>
+                        link.status ===
+                            status
+                );
+
+        }
+
+
+        return [
+            ...links
+        ].sort(
+            (
+                a,
+                b
+            ) =>
+                Number(
+                    b.updatedAt
+                ) -
+                Number(
+                    a.updatedAt
+                )
         );
 
     },
@@ -852,48 +1286,93 @@ const Bridge = {
     ){
 
         const a =
-            String(
-                entityA ?? ""
-            ).trim();
+            this.normalizeId(
+                entityA
+            );
 
 
         const b =
-            String(
-                entityB ?? ""
-            ).trim();
+            this.normalizeId(
+                entityB
+            );
 
 
         if(
             !a ||
             !b
         ){
+
             return [];
+
         }
 
 
-        return this.links.filter(
-            link => {
+        let links =
+            this.links.filter(
+                link => {
 
-                if(
-                    link.archived === true &&
-                    options.includeArchived !== true
-                ){
-                    return false;
+                    if(
+                        link.archived ===
+                            true &&
+                        options.includeArchived !==
+                            true
+                    ){
+
+                        return false;
+
+                    }
+
+
+                    return (
+                        (
+                            link.from ===
+                                a &&
+                            link.to ===
+                                b
+                        ) ||
+                        (
+                            link.from ===
+                                b &&
+                            link.to ===
+                                a
+                        )
+                    );
+
                 }
+            );
 
 
-                return (
-                    (
-                        link.from === a &&
-                        link.to === b
-                    ) ||
-                    (
-                        link.from === b &&
-                        link.to === a
-                    )
+        if(options.relationship){
+
+            const relationship =
+                this.normalizeRelationship(
+                    options.relationship
                 );
 
-            }
+
+            links =
+                links.filter(
+                    link =>
+                        link.relationship ===
+                            relationship
+                );
+
+        }
+
+
+        return [
+            ...links
+        ].sort(
+            (
+                left,
+                right
+            ) =>
+                Number(
+                    right.updatedAt
+                ) -
+                Number(
+                    left.updatedAt
+                )
         );
 
     },
@@ -921,38 +1400,50 @@ const Bridge = {
         if(
             !link ||
             !changes ||
-            typeof changes !== "object" ||
-            Array.isArray(changes)
+            typeof changes !==
+                "object" ||
+            Array.isArray(
+                changes
+            )
         ){
+
             return null;
+
         }
 
 
         const before = {
+
             ...link,
+
             tags:[
-                ...link.tags
+                ...(link.tags || [])
             ],
+
             metadata:{
-                ...link.metadata
+                ...(link.metadata || {})
             }
+
         };
 
 
         if(
-            changes.relationship !== undefined ||
-            changes.type !== undefined
+            changes.relationship !==
+                undefined ||
+            changes.type !==
+                undefined
         ){
 
             const relationship =
                 this.normalizeRelationship(
-                    changes.relationship ||
+                    changes.relationship ??
                     changes.type
                 );
 
 
             link.relationship =
                 relationship;
+
 
             link.type =
                 relationship;
@@ -961,29 +1452,39 @@ const Bridge = {
 
 
         if(
-            typeof changes.label === "string"
+            changes.label !==
+                undefined
         ){
 
             link.label =
-                changes.label.trim();
+                this.normalizeText(
+                    changes.label,
+                    240
+                );
 
         }
 
 
         if(
-            typeof changes.note === "string"
+            changes.note !==
+                undefined ||
+            changes.description !==
+                undefined
         ){
 
             link.note =
-                changes.note.trim();
+                this.normalizeText(
+                    changes.note ??
+                    changes.description,
+                    20000
+                );
 
         }
 
 
         if(
-            Array.isArray(
-                changes.tags
-            )
+            changes.tags !==
+                undefined
         ){
 
             link.tags =
@@ -995,7 +1496,8 @@ const Bridge = {
 
 
         if(
-            typeof changes.favorite === "boolean"
+            typeof changes.favorite ===
+                "boolean"
         ){
 
             link.favorite =
@@ -1005,7 +1507,8 @@ const Bridge = {
 
 
         if(
-            typeof changes.bidirectional === "boolean"
+            typeof changes.bidirectional ===
+                "boolean"
         ){
 
             link.bidirectional =
@@ -1015,16 +1518,35 @@ const Bridge = {
 
 
         if(
+            changes.status !==
+                undefined &&
+            link.archived !==
+                true
+        ){
+
+            link.status =
+                this.normalizeStatus(
+                    changes.status
+                );
+
+        }
+
+
+        if(
             changes.metadata &&
-            typeof changes.metadata === "object" &&
+            typeof changes.metadata ===
+                "object" &&
             !Array.isArray(
                 changes.metadata
             )
         ){
 
             link.metadata = {
+
                 ...link.metadata,
+
                 ...changes.metadata
+
             };
 
         }
@@ -1034,11 +1556,32 @@ const Bridge = {
             Date.now();
 
 
+        this.sort();
+
+
         this.save();
 
-        this.syncEntitiesForLink(
-            link
+
+        /*
+         * Rebuild both endpoint snapshots because
+         * bidirectional/metadata/relationship may change.
+         */
+
+        this.removeEntitySnapshots(
+            before
         );
+
+
+        if(
+            link.archived !==
+                true
+        ){
+
+            this.syncEntitiesForLink(
+                link
+            );
+
+        }
 
 
         this.emit(
@@ -1046,9 +1589,12 @@ const Bridge = {
             {
                 bridge:
                     link,
+
                 before,
+
                 bridgeId:
                     link.id,
+
                 time:
                     Date.now()
             }
@@ -1077,7 +1623,9 @@ const Bridge = {
 
 
         if(!link){
+
             return false;
+
         }
 
 
@@ -1111,29 +1659,42 @@ const Bridge = {
 
 
         if(!link){
+
             return false;
+
         }
 
 
-        if(link.archived){
+        if(
+            link.archived
+        ){
+
             return true;
+
         }
 
 
         link.archived =
             true;
 
+
         link.archivedAt =
             Date.now();
 
+
         link.status =
             "archived";
+
 
         link.updatedAt =
             Date.now();
 
 
+        this.sort();
+
+
         this.save();
+
 
         this.removeEntitySnapshots(
             link
@@ -1145,8 +1706,10 @@ const Bridge = {
             {
                 bridge:
                     link,
+
                 bridgeId:
                     link.id,
+
                 time:
                     Date.now()
             }
@@ -1171,29 +1734,42 @@ const Bridge = {
 
 
         if(!link){
+
             return false;
+
         }
 
 
-        if(!link.archived){
+        if(
+            !link.archived
+        ){
+
             return true;
+
         }
 
 
         link.archived =
             false;
 
+
         link.archivedAt =
             null;
 
+
         link.status =
             "active";
+
 
         link.updatedAt =
             Date.now();
 
 
+        this.sort();
+
+
         this.save();
+
 
         this.syncEntitiesForLink(
             link
@@ -1205,8 +1781,10 @@ const Bridge = {
             {
                 bridge:
                     link,
+
                 bridgeId:
                     link.id,
+
                 time:
                     Date.now()
             }
@@ -1236,40 +1814,48 @@ const Bridge = {
 
 
         if(!link){
+
             return false;
+
         }
 
 
-        const before =
-            this.links.length;
-
-
-        this.links =
-            this.links.filter(
-                item =>
-                    item.id !==
-                    link.id
+        const index =
+            this.getIndex(
+                link.id
             );
 
 
         if(
-            this.links.length ===
-            before
+            index <
+                0
         ){
+
             return false;
+
         }
+
+
+        const [
+            removed
+        ] =
+            this.links.splice(
+                index,
+                1
+            );
 
 
         this.save();
 
+
         this.removeEntitySnapshots(
-            link
+            removed
         );
 
 
         this.emit(
             "bridge.removed",
-            link
+            removed
         );
 
 
@@ -1277,9 +1863,11 @@ const Bridge = {
             "bridge:removed",
             {
                 bridge:
-                    link,
+                    removed,
+
                 bridgeId:
-                    link.id,
+                    removed.id,
+
                 time:
                     Date.now()
             }
@@ -1302,7 +1890,8 @@ const Bridge = {
 
         const text =
             String(
-                query ?? ""
+                query ??
+                    ""
             )
                 .trim()
                 .toLocaleLowerCase(
@@ -1310,14 +1899,16 @@ const Bridge = {
                 );
 
 
-        let links =
+        const links =
             this.all(
                 options
             );
 
 
         if(!text){
+
             return links;
+
         }
 
 
@@ -1336,9 +1927,12 @@ const Bridge = {
 
                     link.note,
 
+                    link.status,
+
                     ...(link.tags || [])
 
                 ]
+                    .filter(Boolean)
                     .join(" ")
                     .toLocaleLowerCase(
                         "tr-TR"
@@ -1362,13 +1956,15 @@ const Bridge = {
     resolveEntity(entityId){
 
         const id =
-            String(
-                entityId ?? ""
-            ).trim();
+            this.normalizeId(
+                entityId
+            );
 
 
         if(!id){
+
             return null;
+
         }
 
 
@@ -1378,26 +1974,53 @@ const Bridge = {
             );
 
 
-        if(
-            manager &&
-            typeof manager.get === "function"
-        ){
+        if(manager){
 
-            try{
-
-                const entity =
-                    manager.get(
-                        id
-                    );
+            const methods = [
+                "get",
+                "find",
+                "getById"
+            ];
 
 
-                if(entity){
-                    return entity;
+            for(
+                const method of methods
+            ){
+
+                if(
+                    typeof manager[
+                        method
+                    ] !==
+                        "function"
+                ){
+
+                    continue;
+
                 }
 
-            } catch(error){
 
-                /* world fallback */
+                try{
+
+                    const entity =
+                        manager[
+                            method
+                        ](
+                            id
+                        );
+
+
+                    if(entity){
+
+                        return entity;
+
+                    }
+
+                } catch(error){
+
+                    /* next resolver */
+
+                }
+
             }
 
         }
@@ -1411,14 +2034,16 @@ const Bridge = {
 
         if(
             worldService &&
-            typeof worldService.all === "function"
+            typeof worldService.all ===
+                "function"
         ){
 
             try{
 
                 const worlds =
                     worldService.all({
-                        includeArchived:true
+                        includeArchived:
+                            true
                     }) ||
                     [];
 
@@ -1427,26 +2052,33 @@ const Bridge = {
                     const world of worlds
                 ){
 
-                    const entity =
+                    const entities =
                         Array.isArray(
                             world?.entities
                         )
-                            ? world.entities.find(
-                                item =>
-                                    item?.id === id
-                            )
-                            : null;
+                            ? world.entities
+                            : [];
+
+
+                    const entity =
+                        entities.find(
+                            item =>
+                                item?.id ===
+                                    id
+                        );
 
 
                     if(entity){
+
                         return entity;
+
                     }
 
                 }
 
             } catch(error){
 
-                return null;
+                /* unresolved */
 
             }
 
@@ -1466,9 +2098,12 @@ const Bridge = {
 
         if(
             !link ||
-            link.archived === true
+            link.archived ===
+                true
         ){
+
             return false;
+
         }
 
 
@@ -1484,10 +2119,23 @@ const Bridge = {
             );
 
 
-        const snapshot =
-            {
-                ...link
-            };
+        let changed =
+            false;
+
+
+        const snapshot = {
+
+            ...link,
+
+            tags:[
+                ...(link.tags || [])
+            ],
+
+            metadata:{
+                ...(link.metadata || {})
+            }
+
+        };
 
 
         if(
@@ -1498,17 +2146,33 @@ const Bridge = {
 
             try{
 
-                source.removeBridge?.(
-                    link.id
-                );
+                if(
+                    typeof source.removeBridge ===
+                        "function"
+                ){
+
+                    source.removeBridge(
+                        link.id
+                    );
+
+                }
+
 
                 source.addBridge(
                     snapshot
                 );
 
+
+                changed =
+                    true;
+
             } catch(error){
 
-                /* compatibility */
+                console.warn(
+                    `Bridge source snapshot yazılamadı: ${link.id}`,
+                    error
+                );
+
             }
 
         }
@@ -1516,18 +2180,28 @@ const Bridge = {
 
         if(
             target &&
-            link.bidirectional === true &&
+            link.bidirectional ===
+                true &&
             typeof target.addBridge ===
                 "function"
         ){
 
             try{
 
-                target.removeBridge?.(
-                    link.id
-                );
+                if(
+                    typeof target.removeBridge ===
+                        "function"
+                ){
+
+                    target.removeBridge(
+                        link.id
+                    );
+
+                }
+
 
                 target.addBridge({
+
                     ...snapshot,
 
                     from:
@@ -1541,22 +2215,57 @@ const Bridge = {
 
                     targetEntityId:
                         link.from
+
                 });
+
+
+                changed =
+                    true;
 
             } catch(error){
 
-                /* compatibility */
+                console.warn(
+                    `Bridge target snapshot yazılamadı: ${link.id}`,
+                    error
+                );
+
             }
 
         }
 
 
-        this.getService(
-            "world"
-        )?.save?.();
+        if(changed){
+
+            try{
+
+                const world =
+                    this.getService(
+                        "world"
+                    );
 
 
-        return true;
+                if(
+                    typeof world?.save ===
+                        "function"
+                ){
+
+                    world.save();
+
+                }
+
+            } catch(error){
+
+                console.warn(
+                    "Bridge world snapshot kaydedilemedi.",
+                    error
+                );
+
+            }
+
+        }
+
+
+        return changed;
 
     },
 
@@ -1564,7 +2273,9 @@ const Bridge = {
     removeEntitySnapshots(link){
 
         if(!link){
+
             return false;
+
         }
 
 
@@ -1580,36 +2291,96 @@ const Bridge = {
             );
 
 
+        let changed =
+            false;
+
+
         try{
 
-            source?.removeBridge?.(
-                link.id
-            );
+            if(
+                typeof source?.removeBridge ===
+                    "function"
+            ){
+
+                source.removeBridge(
+                    link.id
+                );
+
+
+                changed =
+                    true;
+
+            }
 
         } catch(error){
 
-            /* ignore */
+            console.warn(
+                `Bridge source snapshot silinemedi: ${link.id}`,
+                error
+            );
+
         }
 
 
         try{
 
-            target?.removeBridge?.(
-                link.id
-            );
+            if(
+                typeof target?.removeBridge ===
+                    "function"
+            ){
+
+                target.removeBridge(
+                    link.id
+                );
+
+
+                changed =
+                    true;
+
+            }
 
         } catch(error){
 
-            /* ignore */
+            console.warn(
+                `Bridge target snapshot silinemedi: ${link.id}`,
+                error
+            );
+
         }
 
 
-        this.getService(
-            "world"
-        )?.save?.();
+        if(changed){
+
+            try{
+
+                const world =
+                    this.getService(
+                        "world"
+                    );
 
 
-        return true;
+                if(
+                    typeof world?.save ===
+                        "function"
+                ){
+
+                    world.save();
+
+                }
+
+            } catch(error){
+
+                console.warn(
+                    "Bridge world snapshot kaydedilemedi.",
+                    error
+                );
+
+            }
+
+        }
+
+
+        return changed;
 
     },
 
@@ -1621,9 +2392,12 @@ const Bridge = {
     migrateLegacyEntityStorage(){
 
         if(
-            typeof localStorage === "undefined"
+            typeof localStorage ===
+                "undefined"
         ){
+
             return 0;
+
         }
 
 
@@ -1631,14 +2405,16 @@ const Bridge = {
             0;
 
 
-        const keys = [];
+        const keys =
+            [];
 
 
         try{
 
             for(
                 let index = 0;
-                index < localStorage.length;
+                index <
+                    localStorage.length;
                 index += 1
             ){
 
@@ -1697,7 +2473,8 @@ const Bridge = {
 
                 } catch(error){
 
-                    records = [];
+                    records =
+                        [];
 
                 }
 
@@ -1708,27 +2485,40 @@ const Bridge = {
                         if(
                             !legacy ||
                             typeof legacy !==
-                                "object"
+                                "object" ||
+                            Array.isArray(
+                                legacy
+                            )
                         ){
+
                             return;
+
                         }
 
 
                         const from =
-                            legacy.sourceEntityId ||
-                            legacy.from;
+                            this.normalizeId(
+                                legacy.sourceEntityId ||
+                                legacy.from
+                            );
 
 
                         const to =
-                            legacy.targetEntityId ||
-                            legacy.to;
+                            this.normalizeId(
+                                legacy.targetEntityId ||
+                                legacy.to
+                            );
 
 
                         if(
                             !from ||
-                            !to
+                            !to ||
+                            from ===
+                                to
                         ){
+
                             return;
+
                         }
 
 
@@ -1739,18 +2529,22 @@ const Bridge = {
                                 legacy.relationship ||
                                 legacy.type,
                                 {
-                                    includeArchived:true
+                                    includeArchived:
+                                        true
                                 }
                             );
 
 
                         if(exists){
+
                             return;
+
                         }
 
 
                         const link =
                             this.normalizeLink({
+
                                 ...legacy,
 
                                 from,
@@ -1762,6 +2556,7 @@ const Bridge = {
 
                                 targetEntityId:
                                     to
+
                             });
 
 
@@ -1770,7 +2565,8 @@ const Bridge = {
                         );
 
 
-                        migrated += 1;
+                        migrated +=
+                            1;
 
                     }
                 );
@@ -1779,9 +2575,27 @@ const Bridge = {
         );
 
 
-        if(migrated > 0){
+        if(
+            migrated >
+                0
+        ){
+
+            this.sort();
+
 
             this.save();
+
+
+            this.emit(
+                "bridge:migrated",
+                {
+                    count:
+                        migrated,
+
+                    time:
+                        Date.now()
+                }
+            );
 
         }
 
@@ -1804,13 +2618,15 @@ const Bridge = {
 
 
         if(
-            options.includeArchived !== true
+            options.includeArchived !==
+                true
         ){
 
             links =
                 links.filter(
                     link =>
-                        link.archived !== true
+                        link.archived !==
+                            true
                 );
 
         }
@@ -1828,7 +2644,7 @@ const Bridge = {
                 links.filter(
                     link =>
                         link.relationship ===
-                        relationship
+                            relationship
                 );
 
         }
@@ -1837,7 +2653,7 @@ const Bridge = {
         if(options.entityId){
 
             const entityId =
-                String(
+                this.normalizeId(
                     options.entityId
                 );
 
@@ -1845,17 +2661,59 @@ const Bridge = {
             links =
                 links.filter(
                     link =>
-                        link.from === entityId ||
-                        link.to === entityId
+                        link.from ===
+                            entityId ||
+                        link.to ===
+                            entityId
+                );
+
+        }
+
+
+        if(
+            options.favorite ===
+                true
+        ){
+
+            links =
+                links.filter(
+                    link =>
+                        link.favorite ===
+                            true
+                );
+
+        }
+
+
+        if(options.status){
+
+            const status =
+                this.normalizeStatus(
+                    options.status
+                );
+
+
+            links =
+                links.filter(
+                    link =>
+                        link.status ===
+                            status
                 );
 
         }
 
 
         return links.sort(
-            (a,b) =>
-                b.updatedAt -
-                a.updatedAt
+            (
+                a,
+                b
+            ) =>
+                Number(
+                    b.updatedAt
+                ) -
+                Number(
+                    a.updatedAt
+                )
         );
 
     },
@@ -1883,28 +2741,50 @@ const Bridge = {
             favorites:
                 links.filter(
                     link =>
-                        link.favorite === true
+                        link.favorite ===
+                            true
                 ).length,
 
             people:
                 links.filter(
                     link =>
                         link.relationship ===
-                        "person"
+                            "person"
                 ).length,
 
             companies:
                 links.filter(
                     link =>
                         link.relationship ===
-                        "company"
+                            "company"
+                ).length,
+
+            teams:
+                links.filter(
+                    link =>
+                        link.relationship ===
+                            "team"
+                ).length,
+
+            partners:
+                links.filter(
+                    link =>
+                        link.relationship ===
+                            "partner"
                 ).length,
 
             projects:
                 links.filter(
                     link =>
                         link.relationship ===
-                        "project"
+                            "project"
+                ).length,
+
+            resources:
+                links.filter(
+                    link =>
+                        link.relationship ===
+                            "resource"
                 ).length
 
         };
@@ -1924,7 +2804,9 @@ const Bridge = {
                 typeof localStorage ===
                     "undefined"
             ){
+
                 return false;
+
             }
 
 
@@ -1965,6 +2847,7 @@ const Bridge = {
                 this.links =
                     [];
 
+
                 return this.links;
 
             }
@@ -1981,6 +2864,7 @@ const Bridge = {
                 this.links =
                     [];
 
+
                 return this.links;
 
             }
@@ -1992,24 +2876,100 @@ const Bridge = {
                 );
 
 
-            this.links =
-                Array.isArray(
+            if(
+                !Array.isArray(
                     parsed
                 )
-                    ? parsed
-                        .filter(
-                            link =>
-                                link &&
-                                typeof link ===
-                                    "object"
+            ){
+
+                this.links =
+                    [];
+
+
+                this.save();
+
+
+                return this.links;
+
+            }
+
+
+            const byId =
+                new Map();
+
+
+            parsed
+                .filter(
+                    link =>
+                        link &&
+                        typeof link ===
+                            "object" &&
+                        !Array.isArray(
+                            link
                         )
-                        .map(
-                            link =>
-                                this.normalizeLink(
-                                    link
-                                )
-                        )
-                    : [];
+                )
+                .forEach(
+                    link => {
+
+                        const normalized =
+                            this.normalizeLink(
+                                link
+                            );
+
+
+                        if(
+                            !normalized.from ||
+                            !normalized.to ||
+                            normalized.from ===
+                                normalized.to
+                        ){
+
+                            return;
+
+                        }
+
+
+                        const existing =
+                            byId.get(
+                                normalized.id
+                            );
+
+
+                        if(
+                            !existing ||
+                            Number(
+                                normalized.updatedAt
+                            ) >=
+                            Number(
+                                existing.updatedAt
+                            )
+                        ){
+
+                            byId.set(
+                                normalized.id,
+                                normalized
+                            );
+
+                        }
+
+                    }
+                );
+
+
+            this.links =
+                [
+                    ...byId.values()
+                ];
+
+
+            this.sort();
+
+
+            /*
+             * Persist canonical representation.
+             */
+
+            this.save();
 
 
             return this.links;
@@ -2042,43 +3002,74 @@ const Bridge = {
         if(options.entityId){
 
             const entityId =
-                String(
+                this.normalizeId(
                     options.entityId
                 );
+
+
+            if(!entityId){
+
+                return false;
+
+            }
 
 
             const affected =
                 this.links.filter(
                     link =>
-                        link.from === entityId ||
-                        link.to === entityId
+                        link.from ===
+                            entityId ||
+                        link.to ===
+                            entityId
                 );
 
 
             if(
-                affected.length === 0
+                affected.length ===
+                    0
             ){
+
                 return false;
+
             }
 
 
             affected.forEach(
-                link =>
+                link => {
+
                     this.removeEntitySnapshots(
                         link
-                    )
+                    );
+
+                }
             );
 
 
             this.links =
                 this.links.filter(
                     link =>
-                        link.from !== entityId &&
-                        link.to !== entityId
+                        link.from !==
+                            entityId &&
+                        link.to !==
+                            entityId
                 );
 
 
             this.save();
+
+
+            this.emit(
+                "bridge:cleared",
+                {
+                    entityId,
+
+                    count:
+                        affected.length,
+
+                    time:
+                        Date.now()
+                }
+            );
 
 
             return true;
@@ -2086,11 +3077,20 @@ const Bridge = {
         }
 
 
-        this.links.forEach(
-            link =>
+        const previous =
+            [
+                ...this.links
+            ];
+
+
+        previous.forEach(
+            link => {
+
                 this.removeEntitySnapshots(
                     link
-                )
+                );
+
+            }
         );
 
 
@@ -2099,6 +3099,18 @@ const Bridge = {
 
 
         this.save();
+
+
+        this.emit(
+            "bridge:cleared",
+            {
+                count:
+                    previous.length,
+
+                time:
+                    Date.now()
+            }
+        );
 
 
         return true;
@@ -2112,6 +3124,22 @@ const Bridge = {
 
     report(){
 
+        const active =
+            this.links.filter(
+                link =>
+                    link.archived !==
+                        true
+            );
+
+
+        const archived =
+            this.links.filter(
+                link =>
+                    link.archived ===
+                        true
+            );
+
+
         return {
 
             booted:
@@ -2121,29 +3149,61 @@ const Bridge = {
                 this.links.length,
 
             active:
-                this.links.filter(
-                    link =>
-                        link.archived !== true
-                ).length,
+                active.length,
 
             archived:
-                this.links.filter(
-                    link =>
-                        link.archived === true
-                ).length,
+                archived.length,
 
             bidirectional:
-                this.links.filter(
+                active.filter(
                     link =>
-                        link.bidirectional === true
+                        link.bidirectional ===
+                            true
+                ).length,
+
+            directional:
+                active.filter(
+                    link =>
+                        link.bidirectional !==
+                            true
                 ).length,
 
             favorites:
-                this.links.filter(
+                active.filter(
                     link =>
-                        link.favorite === true &&
-                        link.archived !== true
-                ).length
+                        link.favorite ===
+                            true
+                ).length,
+
+            relationships:
+                active.reduce(
+                    (
+                        result,
+                        link
+                    ) => {
+
+                        const type =
+                            link.relationship ||
+                            "connection";
+
+
+                        result[
+                            type
+                        ] =
+                            (
+                                result[
+                                    type
+                                ] ||
+                                0
+                            ) +
+                            1;
+
+
+                        return result;
+
+                    },
+                    {}
+                )
 
         };
 
@@ -2152,11 +3212,42 @@ const Bridge = {
 };
 
 
-VAERO.register(
-    "bridge",
-    Bridge
-);
+/* =========================================================
+   REGISTER
+========================================================= */
+
+try{
+
+    if(
+        typeof VAERO !==
+            "undefined" &&
+        typeof VAERO.register ===
+            "function"
+    ){
+
+        VAERO.register(
+            "bridge",
+            Bridge
+        );
+
+    }
+
+} catch(error){
+
+    console.error(
+        "Bridge register edilemedi:",
+        error
+    );
+
+}
 
 
-window.Bridge =
-    Bridge;
+if(
+    typeof window !==
+        "undefined"
+){
+
+    window.Bridge =
+        Bridge;
+
+}
