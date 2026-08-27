@@ -27,14 +27,42 @@ const EvolutionApp = {
 
     escapeHTML(value){
 
+        if(
+            window.UI &&
+            typeof UI.escapeHTML ===
+                "function"
+        ){
+
+            return UI.escapeHTML(
+                value
+            );
+
+        }
+
+
         return String(
             value ?? ""
         )
-            .replaceAll("&", "&amp;")
-            .replaceAll("<", "&lt;")
-            .replaceAll(">", "&gt;")
-            .replaceAll('"', "&quot;")
-            .replaceAll("'", "&#039;");
+            .replaceAll(
+                "&",
+                "&amp;"
+            )
+            .replaceAll(
+                "<",
+                "&lt;"
+            )
+            .replaceAll(
+                ">",
+                "&gt;"
+            )
+            .replaceAll(
+                '"',
+                "&quot;"
+            )
+            .replaceAll(
+                "'",
+                "&#039;"
+            );
 
     },
 
@@ -48,15 +76,19 @@ const EvolutionApp = {
         try{
 
             if(
-                typeof VAERO !== "undefined" &&
+                typeof VAERO !==
+                    "undefined" &&
                 VAERO.engine
             ){
+
                 return VAERO.engine;
+
             }
 
         } catch(error){
 
             /* fallback */
+
         }
 
 
@@ -73,16 +105,21 @@ const EvolutionApp = {
         try{
 
             if(
-                typeof VAERO === "undefined" ||
+                typeof VAERO ===
+                    "undefined" ||
                 typeof VAERO.get !==
                     "function"
             ){
+
                 return null;
+
             }
 
 
             return (
-                VAERO.get(name) ||
+                VAERO.get(
+                    name
+                ) ||
                 null
             );
 
@@ -122,12 +159,21 @@ const EvolutionApp = {
             typeof engine.mount !==
                 "function"
         ){
+
             return false;
+
         }
 
 
+        const entity =
+            engine.currentOpenedEntity ||
+            engine.currentEntity ||
+            engine.rootEntity ||
+            null;
+
+
         return engine.mount(
-            engine.currentEntity
+            entity
         );
 
     },
@@ -137,7 +183,9 @@ const EvolutionApp = {
        BRAIN CONTEXT
     ===================================================== */
 
-    enterBrainContext(entity = null){
+    enterBrainContext(
+        entity = null
+    ){
 
         try{
 
@@ -158,7 +206,10 @@ const EvolutionApp = {
                         this.activeFilter,
 
                     selectedEventId:
-                        this.selectedEventId
+                        this.selectedEventId,
+
+                    editorMode:
+                        this.editorMode
                 }
             );
 
@@ -187,22 +238,25 @@ const EvolutionApp = {
     },
 
 
-    getEvents(entity = null){
+    getEvents(
+        entity = null
+    ){
 
         const evolution =
             this.getEvolutionCore();
 
 
         if(
-            !evolution ||
-            typeof evolution.all !==
-                "function"
+            !evolution
         ){
+
             return [];
+
         }
 
 
-        let events = [];
+        let events =
+            [];
 
 
         try{
@@ -213,17 +267,36 @@ const EvolutionApp = {
                     "function"
             ){
 
-                events =
+                const result =
                     evolution.forEntity(
                         entity.id
-                    ) ||
-                    [];
+                    );
 
-            } else {
 
                 events =
-                    evolution.all() ||
-                    [];
+                    Array.isArray(
+                        result
+                    )
+                        ? result
+                        : [];
+
+            }
+
+            else if(
+                typeof evolution.all ===
+                    "function"
+            ){
+
+                const result =
+                    evolution.all();
+
+
+                events =
+                    Array.isArray(
+                        result
+                    )
+                        ? result
+                        : [];
 
             }
 
@@ -240,13 +313,6 @@ const EvolutionApp = {
         }
 
 
-        if(
-            !Array.isArray(events)
-        ){
-            return [];
-        }
-
-
         return events
             .filter(Boolean)
             .filter(
@@ -260,9 +326,16 @@ const EvolutionApp = {
                         "runtime:tick"
             )
             .sort(
-                (a,b) =>
-                    this.getTimestamp(b) -
-                    this.getTimestamp(a)
+                (
+                    a,
+                    b
+                ) =>
+                    this.getTimestamp(
+                        b
+                    ) -
+                    this.getTimestamp(
+                        a
+                    )
             );
 
     },
@@ -279,6 +352,7 @@ const EvolutionApp = {
             {
                 id:
                     "achievement",
+
                 label:
                     "Başarı"
             },
@@ -286,6 +360,7 @@ const EvolutionApp = {
             {
                 id:
                     "decision",
+
                 label:
                     "Karar"
             },
@@ -293,6 +368,7 @@ const EvolutionApp = {
             {
                 id:
                     "goal",
+
                 label:
                     "Hedef"
             },
@@ -300,6 +376,7 @@ const EvolutionApp = {
             {
                 id:
                     "milestone",
+
                 label:
                     "Dönüm Noktası"
             },
@@ -307,6 +384,7 @@ const EvolutionApp = {
             {
                 id:
                     "work",
+
                 label:
                     "İş"
             },
@@ -314,6 +392,7 @@ const EvolutionApp = {
             {
                 id:
                     "relationship",
+
                 label:
                     "İlişki"
             },
@@ -321,6 +400,7 @@ const EvolutionApp = {
             {
                 id:
                     "finance",
+
                 label:
                     "Finans"
             },
@@ -328,6 +408,7 @@ const EvolutionApp = {
             {
                 id:
                     "failure",
+
                 label:
                     "Deneyim"
             },
@@ -335,6 +416,7 @@ const EvolutionApp = {
             {
                 id:
                     "general",
+
                 label:
                     "Genel"
             }
@@ -363,7 +445,9 @@ const EvolutionApp = {
                 );
 
 
-        return allowed.includes(type)
+        return allowed.includes(
+            type
+        )
             ? type
             : "general";
 
@@ -377,7 +461,7 @@ const EvolutionApp = {
                 .find(
                     item =>
                         item.id ===
-                        type
+                            type
                 )
                 ?.label ||
             "Genel"
@@ -389,33 +473,6 @@ const EvolutionApp = {
     /* =====================================================
        IMPORTANCE
     ===================================================== */
-
-    getImportanceLabel(value){
-
-        const labels = {
-
-            low:
-                "Düşük",
-
-            medium:
-                "Orta",
-
-            high:
-                "Yüksek",
-
-            critical:
-                "Kritik"
-
-        };
-
-
-        return (
-            labels[value] ||
-            "Orta"
-        );
-
-    },
-
 
     normalizeImportance(value){
 
@@ -438,6 +495,37 @@ const EvolutionApp = {
         )
             ? importance
             : "medium";
+
+    },
+
+
+    getImportanceLabel(value){
+
+        const labels = {
+
+            low:
+                "Düşük",
+
+            medium:
+                "Orta",
+
+            high:
+                "Yüksek",
+
+            critical:
+                "Kritik"
+
+        };
+
+
+        return (
+            labels[
+                this.normalizeImportance(
+                    value
+                )
+            ] ||
+            "Orta"
+        );
 
     },
 
@@ -495,8 +583,11 @@ const EvolutionApp = {
 
 
         return (
-            labels[value] ||
-            value ||
+            labels[
+                this.normalizeStatus(
+                    value
+                )
+            ] ||
             "Tamamlandı"
         );
 
@@ -509,12 +600,22 @@ const EvolutionApp = {
 
     getTimestamp(event){
 
-        return Number(
-            event?.occurredAt ||
-            event?.updatedAt ||
-            event?.createdAt ||
-            0
-        ) || 0;
+        const value =
+            Number(
+                event?.occurredAt ||
+                event?.updatedAt ||
+                event?.createdAt ||
+                event?.timestamp ||
+                event?.time ||
+                0
+            );
+
+
+        return Number.isFinite(
+            value
+        )
+            ? value
+            : 0;
 
     },
 
@@ -528,10 +629,15 @@ const EvolutionApp = {
 
 
         if(
-            !Number.isFinite(value) ||
-            value <= 0
+            !Number.isFinite(
+                value
+            ) ||
+            value <=
+                0
         ){
+
             return "Tarih bilinmiyor";
+
         }
 
 
@@ -556,16 +662,26 @@ const EvolutionApp = {
                         "2-digit"
                 }
             ).format(
-                new Date(value)
+                new Date(
+                    value
+                )
             );
 
         } catch(error){
 
-            return new Date(
-                value
-            ).toLocaleString(
-                "tr-TR"
-            );
+            try{
+
+                return new Date(
+                    value
+                ).toLocaleString(
+                    "tr-TR"
+                );
+
+            } catch(secondError){
+
+                return "Tarih bilinmiyor";
+
+            }
 
         }
 
@@ -578,20 +694,84 @@ const EvolutionApp = {
 
     parseTags(value){
 
-        return [
-            ...new Set(
-                String(
+        const source =
+            Array.isArray(
+                value
+            )
+                ? value
+                : String(
                     value ||
                     ""
-                )
-                    .split(",")
-                    .map(
-                        item =>
-                            item.trim()
+                ).split(",");
+
+
+        const seen =
+            new Set();
+
+
+        const tags =
+            [];
+
+
+        source.forEach(
+            item => {
+
+                const tag =
+                    String(
+                        item ?? ""
                     )
-                    .filter(Boolean)
-            )
-        ];
+                        .trim()
+                        .replace(
+                            /\s+/g,
+                            " "
+                        )
+                        .slice(
+                            0,
+                            60
+                        );
+
+
+                if(!tag){
+
+                    return;
+
+                }
+
+
+                const key =
+                    tag.toLocaleLowerCase(
+                        "tr-TR"
+                    );
+
+
+                if(
+                    seen.has(
+                        key
+                    )
+                ){
+
+                    return;
+
+                }
+
+
+                seen.add(
+                    key
+                );
+
+
+                tags.push(
+                    tag
+                );
+
+            }
+        );
+
+
+        return tags.slice(
+            0,
+            30
+        );
 
     },
 
@@ -600,7 +780,9 @@ const EvolutionApp = {
        XP / PROGRESS
     ===================================================== */
 
-    getEventXP(event = {}){
+    getEventXP(
+        event = {}
+    ){
 
         const direct =
             Number(
@@ -609,10 +791,15 @@ const EvolutionApp = {
 
 
         if(
-            Number.isFinite(direct) &&
-            direct >= 0
+            Number.isFinite(
+                direct
+            ) &&
+            direct >=
+                0
         ){
+
             return direct;
+
         }
 
 
@@ -623,10 +810,15 @@ const EvolutionApp = {
 
 
         if(
-            Number.isFinite(payloadXP) &&
-            payloadXP >= 0
+            Number.isFinite(
+                payloadXP
+            ) &&
+            payloadXP >=
+                0
         ){
+
             return payloadXP;
+
         }
 
 
@@ -649,7 +841,9 @@ const EvolutionApp = {
 
         return (
             defaults[
-                event.importance
+                this.normalizeImportance(
+                    event.importance
+                )
             ] ||
             10
         );
@@ -659,9 +853,20 @@ const EvolutionApp = {
 
     getEvolutionProgress(events){
 
+        const safeEvents =
+            Array.isArray(
+                events
+            )
+                ? events
+                : [];
+
+
         const totalXP =
-            events.reduce(
-                (total,event) =>
+            safeEvents.reduce(
+                (
+                    total,
+                    event
+                ) =>
                     total +
                     this.getEventXP(
                         event
@@ -672,12 +877,15 @@ const EvolutionApp = {
 
         const level =
             Math.floor(
-                totalXP / 100
-            ) + 1;
+                totalXP /
+                100
+            ) +
+            1;
 
 
         const currentLevelXP =
-            totalXP % 100;
+            totalXP %
+            100;
 
 
         return {
@@ -699,7 +907,9 @@ const EvolutionApp = {
     },
 
 
-    getGoalProgress(event){
+    getGoalProgress(
+        event = {}
+    ){
 
         const direct =
             Number(
@@ -708,7 +918,9 @@ const EvolutionApp = {
 
 
         if(
-            Number.isFinite(direct)
+            Number.isFinite(
+                direct
+            )
         ){
 
             return Math.min(
@@ -729,7 +941,9 @@ const EvolutionApp = {
 
 
         if(
-            Number.isFinite(payload)
+            Number.isFinite(
+                payload
+            )
         ){
 
             return Math.min(
@@ -744,7 +958,9 @@ const EvolutionApp = {
 
 
         return (
-            event.status ===
+            this.normalizeStatus(
+                event.status
+            ) ===
                 "completed"
                 ? 100
                 : 0
@@ -757,9 +973,9 @@ const EvolutionApp = {
        FILTER / SEARCH
     ===================================================== */
 
-    setFilter(filter){
+    getAllowedFilters(){
 
-        const allowed = [
+        return [
             "all",
             "important",
             "achievement",
@@ -768,16 +984,34 @@ const EvolutionApp = {
             "milestone"
         ];
 
+    },
+
+
+    setFilter(filter){
+
+        const normalized =
+            String(
+                filter ||
+                "all"
+            )
+                .trim()
+                .toLowerCase();
+
 
         this.activeFilter =
-            allowed.includes(
-                filter
-            )
-                ? filter
-                : "all";
+            this.getAllowedFilters()
+                .includes(
+                    normalized
+                )
+                    ? normalized
+                    : "all";
 
 
         this.selectedEventId =
+            null;
+
+
+        this.editorMode =
             null;
 
 
@@ -801,14 +1035,27 @@ const EvolutionApp = {
 
             events =
                 events.filter(
-                    event =>
-                        event.importance ===
-                            "high" ||
-                        event.importance ===
-                            "critical"
+                    event => {
+
+                        const importance =
+                            this.normalizeImportance(
+                                event.importance
+                            );
+
+
+                        return (
+                            importance ===
+                                "high" ||
+                            importance ===
+                                "critical"
+                        );
+
+                    }
                 );
 
-        } else if(
+        }
+
+        else if(
             this.activeFilter !==
                 "all"
         ){
@@ -816,8 +1063,10 @@ const EvolutionApp = {
             events =
                 events.filter(
                     event =>
-                        event.type ===
-                        this.activeFilter
+                        this.normalizeType(
+                            event.type
+                        ) ===
+                            this.activeFilter
                 );
 
         }
@@ -843,16 +1092,18 @@ const EvolutionApp = {
                         const haystack = [
 
                             event.title,
-
                             event.description,
-
                             event.type,
-
                             event.status,
-
                             event.source,
 
-                            ...(event.tags || [])
+                            ...(
+                                Array.isArray(
+                                    event.tags
+                                )
+                                    ? event.tags
+                                    : []
+                            )
 
                         ]
                             .join(" ")
@@ -882,8 +1133,17 @@ const EvolutionApp = {
 
     findEvent(eventId){
 
-        if(!eventId){
+        const id =
+            String(
+                eventId ||
+                ""
+            ).trim();
+
+
+        if(!id){
+
             return null;
+
         }
 
 
@@ -899,16 +1159,22 @@ const EvolutionApp = {
 
             try{
 
-                return (
+                const result =
                     evolution.find(
-                        eventId
-                    ) ||
-                    null
-                );
+                        id
+                    );
+
+
+                if(result){
+
+                    return result;
+
+                }
 
             } catch(error){
 
-                /* fallback */
+                /* list fallback */
+
             }
 
         }
@@ -921,8 +1187,10 @@ const EvolutionApp = {
                 )
                 .find(
                     event =>
-                        event.id ===
-                        eventId
+                        String(
+                            event.id
+                        ) ===
+                            id
                 ) ||
             null
         );
@@ -932,11 +1200,15 @@ const EvolutionApp = {
 
     selectEvent(eventId){
 
-        this.selectedEventId =
+        const id =
             String(
                 eventId ||
                 ""
-            ).trim() ||
+            ).trim();
+
+
+        this.selectedEventId =
+            id ||
             null;
 
 
@@ -954,6 +1226,7 @@ const EvolutionApp = {
         this.selectedEventId =
             null;
 
+
         this.editorMode =
             null;
 
@@ -964,18 +1237,10 @@ const EvolutionApp = {
 
 
     /* =====================================================
-       CREATE
+       FORM VALUES
     ===================================================== */
 
-    createEvent(entity){
-
-        if(
-            !entity ||
-            !entity.id
-        ){
-            return false;
-        }
-
+    readEditorValues(){
 
         const titleInput =
             document.getElementById(
@@ -1023,16 +1288,24 @@ const EvolutionApp = {
             String(
                 titleInput?.value ||
                 ""
-            ).trim();
+            )
+                .trim()
+                .slice(
+                    0,
+                    100
+                );
 
 
-        if(!title){
-
-            titleInput?.focus();
-
-            return false;
-
-        }
+        const description =
+            String(
+                descriptionInput?.value ||
+                ""
+            )
+                .trim()
+                .slice(
+                    0,
+                    1500
+                );
 
 
         const type =
@@ -1054,7 +1327,8 @@ const EvolutionApp = {
 
 
         const progress =
-            type === "goal"
+            type ===
+                "goal"
                 ? Math.min(
                     100,
                     Math.max(
@@ -1062,10 +1336,70 @@ const EvolutionApp = {
                         Number(
                             progressInput?.value ||
                             0
-                        )
+                        ) ||
+                        0
                     )
                 )
                 : undefined;
+
+
+        return {
+
+            titleInput,
+
+            title,
+
+            description,
+
+            type,
+
+            status,
+
+            importance,
+
+            tags:
+                this.parseTags(
+                    tagsInput?.value
+                ),
+
+            progress
+
+        };
+
+    },
+
+
+    /* =====================================================
+       CREATE
+    ===================================================== */
+
+    createEvent(entity){
+
+        if(
+            !entity ||
+            !entity.id
+        ){
+
+            return false;
+
+        }
+
+
+        const values =
+            this.readEditorValues();
+
+
+        if(
+            !values.title
+        ){
+
+            values.titleInput
+                ?.focus();
+
+
+            return false;
+
+        }
 
 
         const evolution =
@@ -1077,23 +1411,24 @@ const EvolutionApp = {
             typeof evolution.record !==
                 "function"
         ){
+
+            console.warn(
+                "Evolution Core record API kullanılamıyor."
+            );
+
+
             return false;
+
         }
-
-
-        let created =
-            null;
 
 
         const metadata = {
 
-            title,
+            title:
+                values.title,
 
             description:
-                String(
-                    descriptionInput?.value ||
-                    ""
-                ).trim(),
+                values.description,
 
             relatedEntityId:
                 entity.id,
@@ -1107,34 +1442,40 @@ const EvolutionApp = {
             source:
                 "evolution-app",
 
-            status,
+            status:
+                values.status,
 
-            importance,
+            importance:
+                values.importance,
 
             tags:
-                this.parseTags(
-                    tagsInput?.value
-                )
+                values.tags
+
         };
 
 
         if(
-            progress !== undefined
+            values.progress !==
+                undefined
         ){
 
             metadata.progress =
-                progress;
+                values.progress;
 
         }
+
+
+        let created =
+            null;
 
 
         try{
 
             created =
                 evolution.record(
-                    type,
-                    metadata.description ||
-                    title,
+                    values.type,
+                    values.description ||
+                    values.title,
                     metadata
                 );
 
@@ -1152,13 +1493,16 @@ const EvolutionApp = {
 
 
         if(!created){
+
             return false;
+
         }
 
 
         this.selectedEventId =
             created.id ||
             null;
+
 
         this.editorMode =
             null;
@@ -1182,7 +1526,9 @@ const EvolutionApp = {
 
 
         if(!event){
+
             return false;
+
         }
 
 
@@ -1197,7 +1543,7 @@ const EvolutionApp = {
         ){
 
             console.warn(
-                "Evolution Core update API henüz kullanılamıyor."
+                "Evolution Core update API kullanılamıyor."
             );
 
 
@@ -1206,81 +1552,53 @@ const EvolutionApp = {
         }
 
 
-        const title =
-            String(
-                document.getElementById(
-                    "evolutionTitleInput"
-                )?.value ||
-                ""
-            ).trim();
+        const values =
+            this.readEditorValues();
 
 
-        if(!title){
+        if(
+            !values.title
+        ){
+
+            values.titleInput
+                ?.focus();
+
+
             return false;
+
         }
-
-
-        const type =
-            this.normalizeType(
-                document.getElementById(
-                    "evolutionTypeInput"
-                )?.value
-            );
 
 
         const changes = {
 
-            title,
+            title:
+                values.title,
 
             description:
-                String(
-                    document.getElementById(
-                        "evolutionDescriptionInput"
-                    )?.value ||
-                    ""
-                ).trim(),
+                values.description,
 
-            type,
+            type:
+                values.type,
 
             importance:
-                this.normalizeImportance(
-                    document.getElementById(
-                        "evolutionImportanceInput"
-                    )?.value
-                ),
+                values.importance,
 
             status:
-                this.normalizeStatus(
-                    document.getElementById(
-                        "evolutionStatusInput"
-                    )?.value
-                ),
+                values.status,
 
             tags:
-                this.parseTags(
-                    document.getElementById(
-                        "evolutionTagsInput"
-                    )?.value
-                )
+                values.tags
 
         };
 
 
-        if(type === "goal"){
+        if(
+            values.type ===
+                "goal"
+        ){
 
             changes.progress =
-                Math.min(
-                    100,
-                    Math.max(
-                        0,
-                        Number(
-                            document.getElementById(
-                                "evolutionProgressInput"
-                            )?.value ||
-                            0
-                        )
-                    )
-                );
+                values.progress;
 
         }
 
@@ -1311,12 +1629,16 @@ const EvolutionApp = {
 
 
         if(!updated){
+
             return false;
+
         }
 
 
         this.selectedEventId =
-            updated.id;
+            updated.id ||
+            event.id;
+
 
         this.editorMode =
             null;
@@ -1349,7 +1671,9 @@ const EvolutionApp = {
             typeof evolution.archive !==
                 "function"
         ){
+
             return false;
+
         }
 
 
@@ -1378,12 +1702,15 @@ const EvolutionApp = {
 
 
         if(!result){
+
             return false;
+
         }
 
 
         this.selectedEventId =
             null;
+
 
         this.editorMode =
             null;
@@ -1403,8 +1730,13 @@ const EvolutionApp = {
         if(!event?.id){
 
             return {
-                timeline:0,
-                memory:0
+
+                timeline:
+                    0,
+
+                memory:
+                    0
+
             };
 
         }
@@ -1416,64 +1748,187 @@ const EvolutionApp = {
             );
 
 
-        const memory =
-            this.getService(
-                "memorySystem"
-            );
-
-
-        let timelineRecords = [];
-
-        let memoryRecords = [];
+        let timelineRecords =
+            [];
 
 
         try{
+
+            const result =
+                timeline?.all?.({
+                    includeArchived:
+                        true
+                });
+
 
             timelineRecords =
-                timeline?.all?.({
-                    includeArchived:true
-                }) ||
-                [];
+                Array.isArray(
+                    result
+                )
+                    ? result
+                    : [];
 
         } catch(error){
 
-            timelineRecords = [];
+            timelineRecords =
+                [];
 
         }
 
 
-        try{
+        let memoryRecords =
+            [];
 
-            memoryRecords =
-                memory?.all?.({
-                    includeArchived:true
-                }) ||
-                [];
 
-        } catch(error){
+        const memoryServices = [
 
-            memoryRecords = [];
+            this.getService(
+                "memorySystem"
+            ),
+
+            this.getService(
+                "memory"
+            )
+
+        ]
+            .filter(Boolean);
+
+
+        for(
+            const memory of memoryServices
+        ){
+
+            try{
+
+                const result =
+                    memory?.all?.({
+                        includeArchived:
+                            true
+                    });
+
+
+                if(
+                    Array.isArray(
+                        result
+                    )
+                ){
+
+                    memoryRecords =
+                        result;
+
+
+                    break;
+
+                }
+
+            } catch(error){
+
+                /* MemoryApp fallback */
+
+            }
 
         }
+
+
+        if(
+            memoryRecords.length ===
+                0
+        ){
+
+            try{
+
+                const entity =
+                    this.getCurrentEntity();
+
+
+                if(
+                    entity &&
+                    window.MemoryApp &&
+                    typeof window.MemoryApp
+                        .getAllMemories ===
+                        "function"
+                ){
+
+                    const result =
+                        window.MemoryApp
+                            .getAllMemories(
+                                entity
+                            );
+
+
+                    memoryRecords =
+                        Array.isArray(
+                            result
+                        )
+                            ? result
+                            : [];
+
+                }
+
+            } catch(error){
+
+                memoryRecords =
+                    [];
+
+            }
+
+        }
+
+
+        const matchesEvent =
+            record => {
+
+                const candidates = [
+
+                    record?.sourceEventId,
+
+                    record?.eventId,
+
+                    record?.relatedEventId,
+
+                    record?.payload
+                        ?.sourceEventId,
+
+                    record?.payload
+                        ?.eventId,
+
+                    record?.context
+                        ?.sourceEventId
+
+                ]
+                    .filter(Boolean)
+                    .map(
+                        value =>
+                            String(
+                                value
+                            )
+                    );
+
+
+                return candidates.includes(
+                    String(
+                        event.id
+                    )
+                );
+
+            };
 
 
         return {
 
             timeline:
-                timelineRecords.filter(
-                    record =>
-                        record?.payload
-                            ?.sourceEventId ===
-                        event.id
-                ).length,
+                timelineRecords
+                    .filter(
+                        matchesEvent
+                    )
+                    .length,
 
             memory:
-                memoryRecords.filter(
-                    record =>
-                        record?.payload
-                            ?.sourceEventId ===
-                        event.id
-                ).length
+                memoryRecords
+                    .filter(
+                        matchesEvent
+                    )
+                    .length
 
         };
 
@@ -1482,7 +1937,7 @@ const EvolutionApp = {
 
     /* =====================================================
        BRAIN ANALYSIS
-       Local deterministic interpretation.
+       Local deterministic interpretation only.
     ===================================================== */
 
     getBrainAnalysis(event){
@@ -1505,7 +1960,9 @@ const EvolutionApp = {
 
 
         switch(
-            event?.type
+            this.normalizeType(
+                event?.type
+            )
         ){
 
             case "achievement":
@@ -1539,7 +1996,7 @@ const EvolutionApp = {
                     "Bu karar sonraki olayların yönünü değiştirebilir.";
 
                 analysis.suggestion =
-                    "Kararın nedenini ve sonuçlarını Memory ile ilişkilendirmek faydalı olur.";
+                    "Kararın nedenini ve sonuçlarını Memory ile ilişkilendirmek faydalı olabilir.";
 
                 break;
 
@@ -1577,8 +2034,14 @@ const EvolutionApp = {
         }
 
 
+        const importance =
+            this.normalizeImportance(
+                event?.importance
+            );
+
+
         if(
-            event?.importance ===
+            importance ===
                 "critical"
         ){
 
@@ -1588,8 +2051,10 @@ const EvolutionApp = {
             analysis.risk =
                 "Yüksek";
 
-        } else if(
-            event?.importance ===
+        }
+
+        else if(
+            importance ===
                 "high"
         ){
 
@@ -1603,41 +2068,69 @@ const EvolutionApp = {
 
     },
 
-
-    /* =====================================================
+   /* =====================================================
        STATS
     ===================================================== */
 
     getStats(events){
 
+        const safeEvents =
+            Array.isArray(
+                events
+            )
+                ? events
+                : [];
+
+
         return {
 
             total:
-                events.length,
+                safeEvents.length,
 
             important:
-                events.filter(
-                    event =>
-                        event.importance ===
-                            "high" ||
-                        event.importance ===
-                            "critical"
+                safeEvents.filter(
+                    event => {
+
+                        const importance =
+                            this.normalizeImportance(
+                                event.importance
+                            );
+
+
+                        return (
+                            importance ===
+                                "high" ||
+                            importance ===
+                                "critical"
+                        );
+
+                    }
                 ).length,
 
             achievements:
-                events.filter(
+                safeEvents.filter(
                     event =>
-                        event.type ===
+                        this.normalizeType(
+                            event.type
+                        ) ===
                             "achievement"
                 ).length,
 
             goals:
-                events.filter(
+                safeEvents.filter(
                     event =>
-                        event.type ===
+                        this.normalizeType(
+                            event.type
+                        ) ===
                             "goal" &&
-                        event.status !==
-                            "completed"
+                        this.normalizeStatus(
+                            event.status
+                        ) !==
+                            "completed" &&
+                        this.normalizeStatus(
+                            event.status
+                        ) !==
+                            "cancelled"
                 ).length
 
         };
@@ -1654,33 +2147,51 @@ const EvolutionApp = {
         const filters = [
 
             {
-                id:"all",
-                label:"Tümü"
+                id:
+                    "all",
+
+                label:
+                    "Tümü"
             },
 
             {
-                id:"important",
-                label:"Önemli"
+                id:
+                    "important",
+
+                label:
+                    "Önemli"
             },
 
             {
-                id:"achievement",
-                label:"Başarı"
+                id:
+                    "achievement",
+
+                label:
+                    "Başarı"
             },
 
             {
-                id:"decision",
-                label:"Karar"
+                id:
+                    "decision",
+
+                label:
+                    "Karar"
             },
 
             {
-                id:"goal",
-                label:"Hedef"
+                id:
+                    "goal",
+
+                label:
+                    "Hedef"
             },
 
             {
-                id:"milestone",
-                label:"Dönüm Noktası"
+                id:
+                    "milestone",
+
+                label:
+                    "Dönüm Noktası"
             }
 
         ];
@@ -1694,6 +2205,7 @@ const EvolutionApp = {
                     <span aria-hidden="true">
                         ⌕
                     </span>
+
 
                     <input
                         id="evolutionSearchInput"
@@ -1757,6 +2269,19 @@ const EvolutionApp = {
 
     renderEvolutionProgress(progress){
 
+        const percent =
+            Math.min(
+                100,
+                Math.max(
+                    0,
+                    Number(
+                        progress?.progressPercent
+                    ) ||
+                    0
+                )
+            );
+
+
         return `
             <section class="evolution-progress-card">
 
@@ -1767,7 +2292,9 @@ const EvolutionApp = {
                     </span>
 
                     <strong>
-                        Seviye ${progress.level}
+                        Seviye ${Number(
+                            progress?.level
+                        ) || 1}
                     </strong>
 
                 </div>
@@ -1776,12 +2303,19 @@ const EvolutionApp = {
                 <div class="evolution-progress-value">
 
                     <strong>
-                        ${progress.totalXP} XP
+                        ${Number(
+                            progress?.totalXP
+                        ) || 0} XP
                     </strong>
 
                     <small>
-                        ${progress.currentLevelXP}
-                        / 100
+                        ${Number(
+                            progress?.currentLevelXP
+                        ) || 0}
+                        /
+                        ${Number(
+                            progress?.nextLevelXP
+                        ) || 100}
                     </small>
 
                 </div>
@@ -1790,9 +2324,7 @@ const EvolutionApp = {
                 <div class="evolution-progress-track">
 
                     <span
-                        style="
-                            width:${progress.progressPercent}%;
-                        "
+                        style="width:${percent}%"
                     ></span>
 
                 </div>
@@ -1807,15 +2339,98 @@ const EvolutionApp = {
        EVENT CARD
     ===================================================== */
 
+    getEventIcon(type){
+
+        const icons = {
+
+            achievement:
+                "★",
+
+            goal:
+                "◎",
+
+            decision:
+                "◇",
+
+            milestone:
+                "◆",
+
+            work:
+                "◫",
+
+            relationship:
+                "∞",
+
+            finance:
+                "◈",
+
+            failure:
+                "△",
+
+            general:
+                "⌬"
+
+        };
+
+
+        return (
+            icons[
+                this.normalizeType(
+                    type
+                )
+            ] ||
+            "⌬"
+        );
+
+    },
+
+
     renderEvent(event){
 
+        const type =
+            this.normalizeType(
+                event.type
+            );
+
+
+        const importance =
+            this.normalizeImportance(
+                event.importance
+            );
+
+
+        const status =
+            this.normalizeStatus(
+                event.status
+            );
+
+
         const progress =
-            event.type ===
+            type ===
                 "goal"
                 ? this.getGoalProgress(
                     event
                 )
                 : null;
+
+
+        const description =
+            String(
+                event.description ||
+                ""
+            );
+
+
+        const preview =
+            description.length >
+                150
+                ? `${description
+                    .slice(
+                        0,
+                        150
+                    )
+                    .trim()}…`
+                : description;
 
 
         return `
@@ -1824,8 +2439,7 @@ const EvolutionApp = {
                 class="
                     evolution-record
                     evolution-importance-${this.escapeHTML(
-                        event.importance ||
-                        "medium"
+                        importance
                     )}
                 "
                 data-action="evolution:event:open"
@@ -1835,21 +2449,11 @@ const EvolutionApp = {
             >
 
                 <span class="evolution-record-marker">
-                    ${
-                        event.type ===
-                            "achievement"
-                            ? "★"
-                            : event.type ===
-                                "goal"
-                                ? "◎"
-                                : event.type ===
-                                    "decision"
-                                    ? "◇"
-                                    : event.type ===
-                                        "milestone"
-                                        ? "◆"
-                                        : "⌬"
-                    }
+                    ${this.escapeHTML(
+                        this.getEventIcon(
+                            type
+                        )
+                    )}
                 </span>
 
 
@@ -1860,7 +2464,7 @@ const EvolutionApp = {
                         <small>
                             ${this.escapeHTML(
                                 this.getTypeLabel(
-                                    event.type
+                                    type
                                 )
                             )}
                         </small>
@@ -1868,7 +2472,7 @@ const EvolutionApp = {
                         <small>
                             ${this.escapeHTML(
                                 this.getImportanceLabel(
-                                    event.importance
+                                    importance
                                 )
                             )}
                         </small>
@@ -1876,7 +2480,7 @@ const EvolutionApp = {
                         <small>
                             ${this.escapeHTML(
                                 this.getStatusLabel(
-                                    event.status
+                                    status
                                 )
                             )}
                         </small>
@@ -1893,18 +2497,11 @@ const EvolutionApp = {
 
 
                     ${
-                        event.description
+                        preview
                             ? `
                                 <span class="evolution-record-description">
                                     ${this.escapeHTML(
-                                        event.description.length > 150
-                                            ? `${event.description
-                                                .slice(
-                                                    0,
-                                                    150
-                                                )
-                                                .trim()}…`
-                                            : event.description
+                                        preview
                                     )}
                                 </span>
                               `
@@ -1913,16 +2510,17 @@ const EvolutionApp = {
 
 
                     ${
-                        progress !== null
+                        progress !==
+                            null
                             ? `
                                 <span class="evolution-goal-progress">
 
                                     <span>
+
                                         <i
-                                            style="
-                                                width:${progress}%;
-                                            "
+                                            style="width:${progress}%"
                                         ></i>
+
                                     </span>
 
                                     <small>
@@ -1944,7 +2542,10 @@ const EvolutionApp = {
                                 <span class="evolution-record-tags">
 
                                     ${event.tags
-                                        .slice(0,3)
+                                        .slice(
+                                            0,
+                                            3
+                                        )
                                         .map(
                                             tag => `
                                                 <small>
@@ -1976,6 +2577,7 @@ const EvolutionApp = {
                         )}
                     </small>
 
+
                     <strong>
                         +${this.getEventXP(
                             event
@@ -1989,11 +2591,14 @@ const EvolutionApp = {
 
     },
 
-   /* =====================================================
+
+    /* =====================================================
        EDITOR
     ===================================================== */
 
-    renderEditor(event = null){
+    renderEditor(
+        event = null
+    ){
 
         const editing =
             Boolean(
@@ -2002,8 +2607,24 @@ const EvolutionApp = {
 
 
         const type =
-            event?.type ||
-            "general";
+            this.normalizeType(
+                event?.type ||
+                "general"
+            );
+
+
+        const status =
+            this.normalizeStatus(
+                event?.status ||
+                "completed"
+            );
+
+
+        const importance =
+            this.normalizeImportance(
+                event?.importance ||
+                "medium"
+            );
 
 
         const progress =
@@ -2039,6 +2660,7 @@ const EvolutionApp = {
                                 EVOLUTION EDITOR
                             </span>
 
+
                             <h2>
                                 ${
                                     editing
@@ -2070,10 +2692,12 @@ const EvolutionApp = {
                                 Başlık
                             </span>
 
+
                             <input
                                 id="evolutionTitleInput"
                                 type="text"
                                 maxlength="100"
+                                autocomplete="off"
                                 value="${this.escapeHTML(
                                     event?.title ||
                                     ""
@@ -2090,6 +2714,7 @@ const EvolutionApp = {
                             <span>
                                 Açıklama
                             </span>
+
 
                             <textarea
                                 id="evolutionDescriptionInput"
@@ -2109,6 +2734,7 @@ const EvolutionApp = {
                             <span>
                                 Tür
                             </span>
+
 
                             <select
                                 id="evolutionTypeInput"
@@ -2147,27 +2773,45 @@ const EvolutionApp = {
                                 Durum
                             </span>
 
+
                             <select
                                 id="evolutionStatusInput"
                             >
 
                                 ${[
-                                    ["planned","Planlandı"],
-                                    ["progress","Devam Ediyor"],
-                                    ["completed","Tamamlandı"],
-                                    ["paused","Duraklatıldı"],
-                                    ["cancelled","İptal Edildi"]
+                                    [
+                                        "planned",
+                                        "Planlandı"
+                                    ],
+                                    [
+                                        "progress",
+                                        "Devam Ediyor"
+                                    ],
+                                    [
+                                        "completed",
+                                        "Tamamlandı"
+                                    ],
+                                    [
+                                        "paused",
+                                        "Duraklatıldı"
+                                    ],
+                                    [
+                                        "cancelled",
+                                        "İptal Edildi"
+                                    ]
                                 ]
                                     .map(
-                                        ([value,label]) => `
+                                        (
+                                            [
+                                                value,
+                                                label
+                                            ]
+                                        ) => `
                                             <option
                                                 value="${value}"
                                                 ${
-                                                    (
-                                                        event?.status ||
-                                                        "completed"
-                                                    ) ===
-                                                    value
+                                                    status ===
+                                                        value
                                                         ? "selected"
                                                         : ""
                                                 }
@@ -2189,26 +2833,41 @@ const EvolutionApp = {
                                 Önem
                             </span>
 
+
                             <select
                                 id="evolutionImportanceInput"
                             >
 
                                 ${[
-                                    ["low","Düşük"],
-                                    ["medium","Orta"],
-                                    ["high","Yüksek"],
-                                    ["critical","Kritik"]
+                                    [
+                                        "low",
+                                        "Düşük"
+                                    ],
+                                    [
+                                        "medium",
+                                        "Orta"
+                                    ],
+                                    [
+                                        "high",
+                                        "Yüksek"
+                                    ],
+                                    [
+                                        "critical",
+                                        "Kritik"
+                                    ]
                                 ]
                                     .map(
-                                        ([value,label]) => `
+                                        (
+                                            [
+                                                value,
+                                                label
+                                            ]
+                                        ) => `
                                             <option
                                                 value="${value}"
                                                 ${
-                                                    (
-                                                        event?.importance ||
-                                                        "medium"
-                                                    ) ===
-                                                    value
+                                                    importance ===
+                                                        value
                                                         ? "selected"
                                                         : ""
                                                 }
@@ -2230,14 +2889,17 @@ const EvolutionApp = {
                                 Hedef ilerlemesi (%)
                             </span>
 
+
                             <input
                                 id="evolutionProgressInput"
                                 type="number"
                                 min="0"
                                 max="100"
                                 step="1"
+                                inputmode="numeric"
                                 value="${progress}"
                             >
+
 
                             <small>
                                 Yalnız Hedef türünde kullanılır.
@@ -2252,10 +2914,12 @@ const EvolutionApp = {
                                 Etiketler
                             </span>
 
+
                             <input
                                 id="evolutionTagsInput"
                                 type="text"
                                 maxlength="220"
+                                autocomplete="off"
                                 value="${this.escapeHTML(
                                     Array.isArray(
                                         event?.tags
@@ -2312,7 +2976,9 @@ const EvolutionApp = {
     renderSelectedEvent(event){
 
         if(!event){
+
             return "";
+
         }
 
 
@@ -2328,8 +2994,14 @@ const EvolutionApp = {
             );
 
 
+        const type =
+            this.normalizeType(
+                event.type
+            );
+
+
         const progress =
-            event.type ===
+            type ===
                 "goal"
                 ? this.getGoalProgress(
                     event
@@ -2350,6 +3022,7 @@ const EvolutionApp = {
                     class="evolution-detail"
                     role="dialog"
                     aria-modal="true"
+                    aria-label="Evolution olayı"
                 >
 
                     <header class="evolution-detail-header">
@@ -2359,14 +3032,16 @@ const EvolutionApp = {
                             <span class="engine-section-label">
                                 ${this.escapeHTML(
                                     this.getTypeLabel(
-                                        event.type
+                                        type
                                     )
                                 )}
                             </span>
 
+
                             <h2>
                                 ${this.escapeHTML(
-                                    event.title
+                                    event.title ||
+                                    "Yaşam olayı"
                                 )}
                             </h2>
 
@@ -2377,6 +3052,7 @@ const EvolutionApp = {
                             type="button"
                             class="engine-icon-btn"
                             data-action="evolution:event:close"
+                            aria-label="Kapat"
                         >
                             ×
                         </button>
@@ -2400,7 +3076,8 @@ const EvolutionApp = {
 
 
                         ${
-                            progress !== null
+                            progress !==
+                                null
                                 ? `
                                     <section class="evolution-detail-progress">
 
@@ -2416,12 +3093,13 @@ const EvolutionApp = {
 
                                         </div>
 
+
                                         <div>
+
                                             <span
-                                                style="
-                                                    width:${progress}%;
-                                                "
+                                                style="width:${progress}%"
                                             ></span>
+
                                         </div>
 
                                     </section>
@@ -2531,6 +3209,7 @@ const EvolutionApp = {
                                 BRAIN CONTEXT
                             </span>
 
+
                             <p>
                                 ${this.escapeHTML(
                                     analysis.summary
@@ -2542,6 +3221,7 @@ const EvolutionApp = {
 
                                 <span>
                                     Etki
+
                                     <strong>
                                         ${this.escapeHTML(
                                             analysis.impact
@@ -2549,8 +3229,10 @@ const EvolutionApp = {
                                     </strong>
                                 </span>
 
+
                                 <span>
                                     Risk
+
                                     <strong>
                                         ${this.escapeHTML(
                                             analysis.risk
@@ -2577,6 +3259,7 @@ const EvolutionApp = {
                                 data-action="evolution:linked:open"
                                 data-target="timeline"
                             >
+
                                 <span>
                                     Timeline
                                 </span>
@@ -2584,6 +3267,7 @@ const EvolutionApp = {
                                 <strong>
                                     ${linked.timeline}
                                 </strong>
+
                             </button>
 
 
@@ -2592,6 +3276,7 @@ const EvolutionApp = {
                                 data-action="evolution:linked:open"
                                 data-target="memory"
                             >
+
                                 <span>
                                     Memory
                                 </span>
@@ -2599,6 +3284,7 @@ const EvolutionApp = {
                                 <strong>
                                     ${linked.memory}
                                 </strong>
+
                             </button>
 
                         </div>
@@ -2657,6 +3343,7 @@ const EvolutionApp = {
                     ⌬
                 </span>
 
+
                 <h3>
                     ${
                         this.searchQuery ||
@@ -2666,6 +3353,7 @@ const EvolutionApp = {
                             : "Evolution henüz sessiz"
                     }
                 </h3>
+
 
                 <p>
                     ${
@@ -2701,15 +3389,73 @@ const EvolutionApp = {
 
 
     /* =====================================================
+       UI FALLBACKS
+    ===================================================== */
+
+    renderAppHeader(entity){
+
+        if(
+            window.UI &&
+            typeof UI.appHeader ===
+                "function"
+        ){
+
+            return UI.appHeader(
+                this.escapeHTML(
+                    entity.name ||
+                    "VAERO Varlığı"
+                ),
+                "EVOLUTION",
+                "⌬"
+            );
+
+        }
+
+
+        return `
+            <header class="engine-app-header">
+
+                <span class="engine-section-label">
+                    EVOLUTION
+                </span>
+
+                <h1>
+                    ${this.escapeHTML(
+                        entity.name ||
+                        "VAERO Varlığı"
+                    )}
+                </h1>
+
+            </header>
+        `;
+
+    },
+
+
+    renderBrainPanel(){
+
+        try{
+
+            return (
+                window.UI
+                    ?.brainPanel?.() ||
+                ""
+            );
+
+        } catch(error){
+
+            return "";
+
+        }
+
+    },
+
+
+    /* =====================================================
        RENDER
     ===================================================== */
 
     render(entity){
-
-        this.enterBrainContext(
-            entity
-        );
-
 
         if(!entity){
 
@@ -2732,6 +3478,24 @@ const EvolutionApp = {
             `;
 
         }
+
+
+        if(
+            !this.getAllowedFilters()
+                .includes(
+                    this.activeFilter
+                )
+        ){
+
+            this.activeFilter =
+                "all";
+
+        }
+
+
+        this.enterBrainContext(
+            entity
+        );
 
 
         const allEvents =
@@ -2762,6 +3526,11 @@ const EvolutionApp = {
             this.selectedEventId =
                 null;
 
+
+            this.editorMode =
+                null;
+
+
             selected =
                 null;
 
@@ -2787,6 +3556,18 @@ const EvolutionApp = {
                 : null;
 
 
+        if(
+            this.editorMode ===
+                "edit" &&
+            !editorEvent
+        ){
+
+            this.editorMode =
+                null;
+
+        }
+
+
         return `
             <section class="engine-page evolution-app-page">
 
@@ -2805,13 +3586,8 @@ const EvolutionApp = {
                     </div>
 
 
-                    ${UI.appHeader(
-                        this.escapeHTML(
-                            entity.name ||
-                            "VAERO Varlığı"
-                        ),
-                        "EVOLUTION",
-                        "⌬"
+                    ${this.renderAppHeader(
+                        entity
                     )}
 
 
@@ -2823,9 +3599,11 @@ const EvolutionApp = {
                                 LIVING EVOLUTION
                             </span>
 
+
                             <h2>
                                 Yaşam ve gelişim
                             </h2>
+
 
                             <p>
                                 Kararlar, hedefler, başarılar, deneyimler ve dönüm noktaları bu varlığın gelişim haritasını oluşturur.
@@ -2924,7 +3702,7 @@ const EvolutionApp = {
                     </div>
 
 
-                    ${UI.brainPanel()}
+                    ${this.renderBrainPanel()}
 
                 </div>
 
@@ -2964,6 +3742,7 @@ const EvolutionApp = {
                 this.selectedEventId =
                     null;
 
+
                 this.editorMode =
                     "create";
 
@@ -2974,9 +3753,14 @@ const EvolutionApp = {
             case "edit":
 
                 if(
-                    !this.selectedEventId
+                    !this.selectedEventId ||
+                    !this.findEvent(
+                        this.selectedEventId
+                    )
                 ){
+
                     return false;
+
                 }
 
 
@@ -3000,10 +3784,190 @@ const EvolutionApp = {
 
                 return this.remount();
 
+
+            default:
+
+                return false;
+
         }
 
+    },
 
-        return false;
+
+    /* =====================================================
+       GENERIC ACTIONS
+    ===================================================== */
+
+    handleGenericAction(
+        action,
+        button
+    ){
+
+        switch(action){
+
+            case "evolution:filter":
+
+                this.setFilter(
+                    button?.dataset
+                        ?.filter ||
+                    "all"
+                );
+
+
+                return this.remount();
+
+
+            case "evolution:event:open":{
+
+                const eventId =
+                    button?.dataset
+                        ?.eventId ||
+                    null;
+
+
+                if(
+                    !eventId ||
+                    !this.findEvent(
+                        eventId
+                    )
+                ){
+
+                    return false;
+
+                }
+
+
+                this.selectEvent(
+                    eventId
+                );
+
+
+                return this.remount();
+
+            }
+
+
+            case "evolution:event:close":
+
+                this.clearSelectedEvent();
+
+
+                return this.remount();
+
+
+            case "evolution:linked:open":{
+
+                const target =
+                    String(
+                        button?.dataset
+                            ?.target ||
+                        ""
+                    );
+
+
+                if(
+                    ![
+                        "timeline",
+                        "memory"
+                    ].includes(
+                        target
+                    )
+                ){
+
+                    return false;
+
+                }
+
+
+                const eventId =
+                    this.selectedEventId;
+
+
+                this.editorMode =
+                    null;
+
+
+                if(
+                    target ===
+                        "timeline" &&
+                    window.TimelineApp &&
+                    eventId
+                ){
+
+                    try{
+
+                        const entity =
+                            this.getCurrentEntity();
+
+
+                        const timelineItems =
+                            window.TimelineApp
+                                .getAllUnifiedItems?.(
+                                    entity
+                                ) ||
+                            [];
+
+
+                        const matched =
+                            timelineItems.find(
+                                item =>
+                                    item.source ===
+                                        "evolution" &&
+                                    String(
+                                        item.sourceId ||
+                                        ""
+                                    ) ===
+                                        String(
+                                            eventId
+                                        )
+                            );
+
+
+                        if(matched){
+
+                            window.TimelineApp
+                                .selectedItemId =
+                                matched.id;
+
+                        }
+
+                    } catch(error){
+
+                        console.warn(
+                            "Timeline Evolution context aktarılamadı:",
+                            error
+                        );
+
+                    }
+
+                }
+
+
+                if(
+                    window.Actions &&
+                    typeof window.Actions
+                        .openEntityPage ===
+                        "function"
+                ){
+
+                    return window.Actions
+                        .openEntityPage(
+                            target
+                        );
+
+                }
+
+
+                return false;
+
+            }
+
+
+            default:
+
+                return false;
+
+        }
 
     }
 
@@ -3018,23 +3982,64 @@ document.addEventListener(
     "click",
     event => {
 
-        const button =
+        const evolutionButton =
             event.target.closest(
                 "[data-evolution-action]"
             );
 
 
-        if(!button){
+        if(evolutionButton){
+
+            event.preventDefault();
+
+
+            EvolutionApp.handleCommand(
+                evolutionButton.dataset
+                    .evolutionAction
+            );
+
+
             return;
+
+        }
+
+
+        const actionButton =
+            event.target.closest(
+                "[data-action]"
+            );
+
+
+        if(!actionButton){
+
+            return;
+
+        }
+
+
+        const action =
+            actionButton.dataset
+                .action;
+
+
+        if(
+            !action ||
+            !action.startsWith(
+                "evolution:"
+            )
+        ){
+
+            return;
+
         }
 
 
         event.preventDefault();
 
 
-        EvolutionApp.handleCommand(
-            button.dataset
-                .evolutionAction
+        EvolutionApp.handleGenericAction(
+            action,
+            actionButton
         );
 
     }
@@ -3053,7 +4058,9 @@ document.addEventListener(
             event.target.id !==
                 "evolutionSearchInput"
         ){
+
             return;
+
         }
 
 
@@ -3076,8 +4083,10 @@ document.addEventListener(
                     EvolutionApp.selectedEventId =
                         null;
 
+
                     EvolutionApp.editorMode =
                         null;
+
 
                     EvolutionApp.remount();
 
@@ -3104,7 +4113,9 @@ document.addEventListener(
 
 
         if(!form){
+
             return;
+
         }
 
 
@@ -3112,16 +4123,20 @@ document.addEventListener(
 
 
         const entity =
-            EvolutionApp.getCurrentEntity();
+            EvolutionApp
+                .getCurrentEntity();
 
 
         if(!entity){
+
             return;
+
         }
 
 
         if(
-            form.dataset.evolutionForm ===
+            form.dataset
+                .evolutionForm ===
                 "create"
         ){
 
@@ -3136,7 +4151,8 @@ document.addEventListener(
 
 
         if(
-            form.dataset.evolutionForm ===
+            form.dataset
+                .evolutionForm ===
                 "edit"
         ){
 
@@ -3146,6 +4162,24 @@ document.addEventListener(
 
     }
 );
+
+
+/* =========================================================
+   REGISTER
+========================================================= */
+
+try{
+
+    VAERO?.register?.(
+        "evolutionApp",
+        EvolutionApp
+    );
+
+} catch(error){
+
+    /* global remains available */
+
+}
 
 
 window.EvolutionApp =
