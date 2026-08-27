@@ -5,11 +5,20 @@
 
 const BrainContext = {
 
+    version:
+        3,
+
     maxMetadataDepth:
         3,
 
     maxMetadataArray:
         30,
+
+    maxObjectKeys:
+        80,
+
+    maxStringLength:
+        2000,
 
 
     /* =====================================================
@@ -18,26 +27,45 @@ const BrainContext = {
 
     getService(name){
 
+        const serviceName =
+            String(
+                name ??
+                ""
+            ).trim();
+
+
+        if(!serviceName){
+
+            return null;
+
+        }
+
+
         try{
 
             if(
-                typeof VAERO === "undefined" ||
+                typeof VAERO ===
+                    "undefined" ||
                 typeof VAERO.get !==
                     "function"
             ){
+
                 return null;
+
             }
 
 
             return (
-                VAERO.get(name) ||
+                VAERO.get(
+                    serviceName
+                ) ||
                 null
             );
 
         } catch(error){
 
             console.warn(
-                `Brain Context servisi okunamadı: ${name}`,
+                `Brain Context servisi okunamadı: ${serviceName}`,
                 error
             );
 
@@ -58,7 +86,8 @@ const BrainContext = {
         try{
 
             if(
-                typeof VAERO !== "undefined" &&
+                typeof VAERO !==
+                    "undefined" &&
                 VAERO.engine
             ){
 
@@ -68,14 +97,23 @@ const BrainContext = {
 
         } catch(error){
 
-            /* fallback */
+            /* fallback below */
+
         }
 
 
-        return (
-            window.Engine ||
-            null
-        );
+        if(
+            typeof window !==
+                "undefined" &&
+            window.Engine
+        ){
+
+            return window.Engine;
+
+        }
+
+
+        return null;
 
     },
 
@@ -87,10 +125,14 @@ const BrainContext = {
     clone(value){
 
         if(
-            value === null ||
-            value === undefined
+            value ===
+                null ||
+            value ===
+                undefined
         ){
+
             return value;
+
         }
 
 
@@ -109,7 +151,8 @@ const BrainContext = {
 
         } catch(error){
 
-            /* JSON fallback */
+            /* JSON fallback below */
+
         }
 
 
@@ -141,16 +184,20 @@ const BrainContext = {
     ){
 
         if(
-            value === null ||
-            value === undefined
+            value ===
+                null ||
+            value ===
+                undefined
         ){
+
             return value;
+
         }
 
 
         if(
             depth >
-            this.maxMetadataDepth
+                this.maxMetadataDepth
         ){
 
             return "[depth-limit]";
@@ -165,7 +212,7 @@ const BrainContext = {
 
             return value.slice(
                 0,
-                2000
+                this.maxStringLength
             );
 
         }
@@ -173,7 +220,19 @@ const BrainContext = {
 
         if(
             typeof value ===
-                "number" ||
+                "number"
+        ){
+
+            return Number.isFinite(
+                value
+            )
+                ? value
+                : null;
+
+        }
+
+
+        if(
             typeof value ===
                 "boolean"
         ){
@@ -185,7 +244,21 @@ const BrainContext = {
 
         if(
             typeof value ===
-                "function"
+                "bigint"
+        ){
+
+            return String(
+                value
+            );
+
+        }
+
+
+        if(
+            typeof value ===
+                "function" ||
+            typeof value ===
+                "symbol"
         ){
 
             return undefined;
@@ -211,7 +284,29 @@ const BrainContext = {
                             depth + 1,
                             seen
                         )
+                )
+                .filter(
+                    item =>
+                        item !==
+                            undefined
                 );
+
+        }
+
+
+        if(
+            value instanceof Date
+        ){
+
+            const timestamp =
+                value.getTime();
+
+
+            return Number.isFinite(
+                timestamp
+            )
+                ? value.toISOString()
+                : null;
 
         }
 
@@ -247,23 +342,35 @@ const BrainContext = {
 
             const blockedKeys =
                 new Set([
+
                     "password",
                     "passphrase",
                     "secret",
+                    "clientsecret",
+                    "client_secret",
                     "token",
+                    "idtoken",
+                    "id_token",
                     "accesstoken",
+                    "access_token",
                     "refreshtoken",
+                    "refresh_token",
                     "authorization",
                     "apikey",
                     "api_key",
                     "privatekey",
                     "private_key",
                     "cardnumber",
-                    "cvv"
+                    "card_number",
+                    "cvv",
+                    "cvc",
+                    "pin"
+
                 ]);
 
 
-            const result = {};
+            const result =
+                {};
 
 
             Object.entries(
@@ -271,17 +378,26 @@ const BrainContext = {
             )
                 .slice(
                     0,
-                    80
+                    this.maxObjectKeys
                 )
                 .forEach(
-                    ([key,item]) => {
+                    (
+                        [
+                            key,
+                            item
+                        ]
+                    ) => {
 
                         const normalizedKey =
                             String(
                                 key
                             )
                                 .trim()
-                                .toLowerCase();
+                                .toLowerCase()
+                                .replace(
+                                    /[\s-]/g,
+                                    ""
+                                );
 
 
                         if(
@@ -290,8 +406,11 @@ const BrainContext = {
                             )
                         ){
 
-                            result[key] =
+                            result[
+                                key
+                            ] =
                                 "[redacted]";
+
 
                             return;
 
@@ -311,7 +430,9 @@ const BrainContext = {
                                 undefined
                         ){
 
-                            result[key] =
+                            result[
+                                key
+                            ] =
                                 sanitized;
 
                         }
@@ -327,6 +448,9 @@ const BrainContext = {
 
         return String(
             value
+        ).slice(
+            0,
+            this.maxStringLength
         );
 
     },
@@ -388,15 +512,26 @@ const BrainContext = {
             }
 
 
+            const enteredAt =
+                Number(
+                    snapshot.enteredAt
+                );
+
+
             return {
 
                 app:
-                    snapshot.app ||
-                    fallback.app,
+                    String(
+                        snapshot.app ||
+                        fallback.app
+                    ),
 
                 previousApp:
-                    snapshot.previousApp ||
-                    null,
+                    snapshot.previousApp
+                        ? String(
+                            snapshot.previousApp
+                        )
+                        : null,
 
                 metadata:
                     snapshot.metadata &&
@@ -412,13 +547,11 @@ const BrainContext = {
 
                 enteredAt:
                     Number.isFinite(
-                        Number(
-                            snapshot.enteredAt
-                        )
-                    )
-                        ? Number(
-                            snapshot.enteredAt
-                        )
+                        enteredAt
+                    ) &&
+                    enteredAt >
+                        0
+                        ? enteredAt
                         : null
 
             };
@@ -444,8 +577,14 @@ const BrainContext = {
 
     compactEntity(entity){
 
-        if(!entity){
+        if(
+            !entity ||
+            typeof entity !==
+                "object"
+        ){
+
             return null;
+
         }
 
 
@@ -464,8 +603,13 @@ const BrainContext = {
                 null,
 
             description:
-                entity.description ||
-                null,
+                typeof entity.description ===
+                    "string"
+                    ? entity.description.slice(
+                        0,
+                        1000
+                    )
+                    : null,
 
             status:
                 entity.status ||
@@ -473,37 +617,62 @@ const BrainContext = {
 
             archived:
                 entity.archived ===
-                true,
+                    true,
 
             tags:
                 Array.isArray(
                     entity.tags
                 )
-                    ? entity.tags.slice(
-                        0,
-                        20
-                    )
+                    ? entity.tags
+                        .slice(
+                            0,
+                            20
+                        )
                     : [],
 
             permissions:
                 Array.isArray(
                     entity.permissions
                 )
-                    ? entity.permissions.slice(
-                        0,
-                        30
-                    )
+                    ? entity.permissions
+                        .slice(
+                            0,
+                            30
+                        )
                     : [],
 
             capabilities:
                 Array.isArray(
                     entity.capabilities
                 )
-                    ? entity.capabilities.slice(
-                        0,
-                        30
-                    )
-                    : []
+                    ? entity.capabilities
+                        .slice(
+                            0,
+                            30
+                        )
+                    : [],
+
+            organCount:
+                Array.isArray(
+                    entity.organs
+                )
+                    ? entity.organs.length
+                    : 0,
+
+            bridgeCount:
+                Array.isArray(
+                    entity.bridges
+                )
+                    ? entity.bridges.length
+                    : 0,
+
+            createdAt:
+                entity.createdAt ||
+                null,
+
+            updatedAt:
+                entity.updatedAt ||
+                null
 
         };
 
@@ -516,8 +685,14 @@ const BrainContext = {
 
     compactWorld(world){
 
-        if(!world){
+        if(
+            !world ||
+            typeof world !==
+                "object"
+        ){
+
             return null;
+
         }
 
 
@@ -532,8 +707,13 @@ const BrainContext = {
                 null,
 
             description:
-                world.description ||
-                null,
+                typeof world.description ===
+                    "string"
+                    ? world.description.slice(
+                        0,
+                        1000
+                    )
+                    : null,
 
             type:
                 world.type ||
@@ -545,7 +725,7 @@ const BrainContext = {
 
             archived:
                 world.archived ===
-                true,
+                    true,
 
             owner:
                 world.owner ||
@@ -566,7 +746,15 @@ const BrainContext = {
                         0,
                         20
                     )
-                    : []
+                    : [],
+
+            createdAt:
+                world.createdAt ||
+                null,
+
+            updatedAt:
+                world.updatedAt ||
+                null
 
         };
 
@@ -586,21 +774,41 @@ const BrainContext = {
             this.getService(
                 "applicationRegistry"
             ) ||
-            window.AppRegistry ||
-            null;
+            (
+                typeof window !==
+                    "undefined"
+                    ? (
+                        window.AppRegistry ||
+                        null
+                    )
+                    : null
+            );
 
 
         if(!registry){
 
             return {
 
-                available:false,
+                available:
+                    false,
 
-                total:0,
+                total:
+                    0,
 
-                installed:0,
+                installed:
+                    0,
 
-                catalog:null
+                builtIn:
+                    0,
+
+                installable:
+                    0,
+
+                paid:
+                    0,
+
+                manifestVersion:
+                    null
 
             };
 
@@ -644,7 +852,8 @@ const BrainContext = {
 
                 apps =
                     registry.all({
-                        includeDisabled:true
+                        includeDisabled:
+                            true
                     });
 
             }
@@ -658,7 +867,8 @@ const BrainContext = {
 
             } catch(secondError){
 
-                apps = [];
+                apps =
+                    [];
 
             }
 
@@ -671,7 +881,8 @@ const BrainContext = {
             )
         ){
 
-            apps = [];
+            apps =
+                [];
 
         }
 
@@ -686,17 +897,49 @@ const BrainContext = {
             0;
 
 
+        let builtIn =
+            0;
+
+
         apps.forEach(
             app => {
 
                 if(
-                    app?.system ===
-                        true ||
-                    app?.distribution ===
-                        "built-in"
+                    !app ||
+                    typeof app !==
+                        "object"
                 ){
 
-                    installed += 1;
+                    return;
+
+                }
+
+
+                const isBuiltIn =
+                    app.system ===
+                        true ||
+                    app.distribution ===
+                        "built-in" ||
+                    app.builtIn ===
+                        true;
+
+
+                if(isBuiltIn){
+
+                    builtIn +=
+                        1;
+
+
+                    installed +=
+                        1;
+
+
+                    return;
+
+                }
+
+
+                if(!organSystem){
 
                     return;
 
@@ -706,37 +949,84 @@ const BrainContext = {
                 try{
 
                     const organ =
-                        organSystem?.get?.(
-                            app.id
+
+                        (
+                            typeof organSystem.get ===
+                                "function"
+                                ? organSystem.get(
+                                    app.id
+                                )
+                                : null
                         ) ||
-                        organSystem
-                            ?.findBySlug?.(
-                                app.id
-                            ) ||
+
+                        (
+                            typeof organSystem.findBySlug ===
+                                "function"
+                                ? organSystem.findBySlug(
+                                    app.id
+                                )
+                                : null
+                        ) ||
+
                         null;
 
 
                     if(
                         organ?.installed ===
-                            true
+                            true ||
+                        organ?.status ===
+                            "active" ||
+                        organ?.status ===
+                            "inactive" ||
+                        organ?.status ===
+                            "paused" ||
+                        organ?.status ===
+                            "disabled"
                     ){
 
-                        installed += 1;
+                        installed +=
+                            1;
 
                     }
 
                 } catch(error){
 
-                    /* ignore */
+                    /* ignore individual app */
+
                 }
 
             }
         );
 
 
+        const catalogBuiltIn =
+            Number(
+                catalog?.builtIn
+            );
+
+
+        const catalogInstallable =
+            Number(
+                catalog?.installable
+            );
+
+
+        const catalogPaid =
+            Number(
+                catalog?.paid
+            );
+
+
+        const catalogSubscriptions =
+            Number(
+                catalog?.subscriptions
+            );
+
+
         return {
 
-            available:true,
+            available:
+                true,
 
             total:
                 apps.length,
@@ -744,45 +1034,42 @@ const BrainContext = {
             installed,
 
             builtIn:
-                Number(
-                    catalog?.builtIn
-                ) ||
-                apps.filter(
-                    app =>
-                        app.system ===
-                            true
-                ).length,
+                Number.isFinite(
+                    catalogBuiltIn
+                )
+                    ? catalogBuiltIn
+                    : builtIn,
 
             installable:
-                Number(
-                    catalog?.installable
-                ) ||
-                apps.filter(
-                    app =>
-                        app.installable ===
-                            true
-                ).length,
+                Number.isFinite(
+                    catalogInstallable
+                )
+                    ? catalogInstallable
+                    : apps.filter(
+                        app =>
+                            app?.installable ===
+                                true
+                    ).length,
 
             paid:
                 (
-                    Number(
-                        catalog?.paid
-                    ) ||
-                    0
+                    Number.isFinite(
+                        catalogPaid
+                    )
+                        ? catalogPaid
+                        : 0
                 ) +
                 (
-                    Number(
-                        catalog
-                            ?.subscriptions
-                    ) ||
-                    0
+                    Number.isFinite(
+                        catalogSubscriptions
+                    )
+                        ? catalogSubscriptions
+                        : 0
                 ),
 
             manifestVersion:
-                catalog
-                    ?.manifestVersion ||
-                registry
-                    ?.manifestVersion ||
+                catalog?.manifestVersion ||
+                registry?.manifestVersion ||
                 null
 
         };
@@ -806,18 +1093,23 @@ const BrainContext = {
 
             return {
 
-                available:false,
+                available:
+                    false,
 
                 status:
                     "unknown",
 
-                total:0,
+                total:
+                    0,
 
-                active:0,
+                active:
+                    0,
 
-                problematic:0,
+                problematic:
+                    0,
 
-                averageHealth:null
+                averageHealth:
+                    null
 
             };
 
@@ -830,9 +1122,25 @@ const BrainContext = {
 
         try{
 
-            health =
-                organStatus.health?.() ||
-                null;
+            if(
+                typeof organStatus.health ===
+                    "function"
+            ){
+
+                health =
+                    organStatus.health();
+
+            }
+
+            else if(
+                typeof organStatus.report ===
+                    "function"
+            ){
+
+                health =
+                    organStatus.report();
+
+            }
 
         } catch(error){
 
@@ -842,22 +1150,31 @@ const BrainContext = {
         }
 
 
-        if(!health){
+        if(
+            !health ||
+            typeof health !==
+                "object"
+        ){
 
             return {
 
-                available:true,
+                available:
+                    true,
 
                 status:
                     "unknown",
 
-                total:0,
+                total:
+                    0,
 
-                active:0,
+                active:
+                    0,
 
-                problematic:0,
+                problematic:
+                    0,
 
-                averageHealth:null
+                averageHealth:
+                    null
 
             };
 
@@ -878,53 +1195,51 @@ const BrainContext = {
             0;
 
 
-        const problematicRaw =
-            health.problematic;
-
-
         const problematic =
             Array.isArray(
-                problematicRaw
+                health.problematic
             )
-                ? problematicRaw.length
+                ? health.problematic.length
                 : (
                     Number(
-                        problematicRaw
+                        health.problematic
                     ) ||
                     0
                 );
 
 
+        const averageHealthRaw =
+            health.averageHealth ??
+            health.average;
+
+
+        const averageHealthNumber =
+            Number(
+                averageHealthRaw
+            );
+
+
         const averageHealth =
             Number.isFinite(
-                Number(
-                    health.averageHealth
-                )
+                averageHealthNumber
             )
-                ? Number(
-                    health.averageHealth
-                )
-                : Number.isFinite(
-                    Number(
-                        health.average
-                    )
-                )
-                    ? Number(
-                        health.average
-                    )
-                    : null;
+                ? averageHealthNumber
+                : null;
 
 
         return {
 
-            available:true,
+            available:
+                true,
 
             status:
                 health.status ||
                 (
-                    problematic > 0
+                    problematic >
+                        0
                         ? "degraded"
-                        : total > 0
+                        : total >
+                            0
                             ? "healthy"
                             : "unknown"
                 ),
@@ -982,9 +1297,17 @@ const BrainContext = {
 
             return {
 
-                available:false,
+                available:
+                    false,
 
-                running:false
+                running:
+                    false,
+
+                paused:
+                    false,
+
+                status:
+                    null
 
             };
 
@@ -1006,15 +1329,6 @@ const BrainContext = {
                     runtime.report();
 
             }
-            else if(
-                typeof runtime.health ===
-                    "function"
-            ){
-
-                report =
-                    runtime.health();
-
-            }
 
         } catch(error){
 
@@ -1024,36 +1338,71 @@ const BrainContext = {
         }
 
 
+        const status =
+            report?.status ||
+            runtime.status ||
+            null;
+
+
         return {
 
-            available:true,
+            available:
+                true,
 
             running:
-                report?.running ===
-                    true ||
-                report?.started ===
-                    true ||
-                runtime.running ===
-                    true,
+                status ===
+                    "running",
 
             paused:
-                report?.paused ===
-                    true ||
-                runtime.paused ===
-                    true,
+                status ===
+                    "paused",
 
-            status:
-                report?.status ||
-                null,
+            status,
 
             startedAt:
                 report?.startedAt ||
                 runtime.startedAt ||
                 null,
 
-            heartbeat:
-                report?.heartbeat ||
-                report?.lastHeartbeat ||
+            stoppedAt:
+                report?.stoppedAt ||
+                runtime.stoppedAt ||
+                null,
+
+            lastTickAt:
+                report?.lastTickAt ||
+                runtime.lastTickAt ||
+                null,
+
+            ticks:
+                Number(
+                    report?.ticks ??
+                    runtime.ticks
+                ) ||
+                0,
+
+            uptime:
+                Number(
+                    report?.uptime
+                ) ||
+                0,
+
+            heartbeatInterval:
+                Number(
+                    report
+                        ?.heartbeatInterval ??
+                    runtime
+                        .heartbeatInterval
+                ) ||
+                null,
+
+            heartbeatActive:
+                report?.heartbeatActive ===
+                    true,
+
+            health:
+                report?.health?.status ||
+                report?.health ||
                 null
 
         };
@@ -1074,6 +1423,8 @@ const BrainContext = {
         try{
 
             if(
+                typeof window !==
+                    "undefined" &&
                 window.DiscoveryApp &&
                 typeof window.DiscoveryApp
                     .getResult ===
@@ -1094,22 +1445,36 @@ const BrainContext = {
         }
 
 
+        /*
+         * Legacy/local Discovery fallback.
+         *
+         * This is only contextual reading.
+         * BrainContext never becomes Discovery authority.
+         */
+
         if(!result){
 
             try{
 
-                const raw =
-                    localStorage.getItem(
-                        "vaero:discovery:result:v2"
-                    );
+                if(
+                    typeof localStorage !==
+                        "undefined"
+                ){
+
+                    const raw =
+                        localStorage.getItem(
+                            "vaero:discovery:result:v2"
+                        );
 
 
-                result =
-                    raw
-                        ? JSON.parse(
-                            raw
-                        )
-                        : null;
+                    result =
+                        raw
+                            ? JSON.parse(
+                                raw
+                            )
+                            : null;
+
+                }
 
             } catch(error){
 
@@ -1125,15 +1490,23 @@ const BrainContext = {
 
             return {
 
-                completed:false,
+                completed:
+                    false,
 
-                direction:null,
+                direction:
+                    null,
 
-                directionId:null,
+                directionId:
+                    null,
 
-                brainMode:null,
+                brainMode:
+                    null,
 
-                recommendedApps:[]
+                recommendedApps:
+                    [],
+
+                generatedAt:
+                    null
 
             };
 
@@ -1142,7 +1515,8 @@ const BrainContext = {
 
         return {
 
-            completed:true,
+            completed:
+                true,
 
             direction:
                 result
@@ -1178,6 +1552,110 @@ const BrainContext = {
 
             generatedAt:
                 result.generatedAt ||
+                null
+
+        };
+
+    },
+
+
+    /* =====================================================
+       KERNEL SNAPSHOT
+    ===================================================== */
+
+    getKernelSnapshot(){
+
+        const kernel =
+            this.getService(
+                "kernel"
+            );
+
+
+        if(!kernel){
+
+            return {
+
+                available:
+                    false,
+
+                status:
+                    "unknown",
+
+                securityReady:
+                    false
+
+            };
+
+        }
+
+
+        let health =
+            null;
+
+
+        try{
+
+            if(
+                typeof kernel.health ===
+                    "function"
+            ){
+
+                health =
+                    kernel.health();
+
+            }
+
+        } catch(error){
+
+            health =
+                null;
+
+        }
+
+
+        return {
+
+            available:
+                true,
+
+            status:
+                health?.status ||
+                "unknown",
+
+            booted:
+                health?.booted ===
+                    true ||
+                kernel.booted ===
+                    true,
+
+            securityReady:
+                health?.securityReady ===
+                    true,
+
+            criticalMissing:
+                Array.isArray(
+                    health?.criticalMissing
+                )
+                    ? health.criticalMissing
+                        .slice(
+                            0,
+                            30
+                        )
+                    : [],
+
+            missing:
+                Array.isArray(
+                    health?.missing
+                )
+                    ? health.missing
+                        .slice(
+                            0,
+                            50
+                        )
+                    : [],
+
+            checkedAt:
+                health?.checkedAt ||
                 null
 
         };
@@ -1222,7 +1700,9 @@ const BrainContext = {
             ) => {
 
                 if(!service){
+
                     return [];
+
                 }
 
 
@@ -1257,7 +1737,8 @@ const BrainContext = {
 
                     } catch(error){
 
-                        /* all fallback */
+                        /* all fallback below */
+
                     }
 
                 }
@@ -1265,21 +1746,31 @@ const BrainContext = {
 
                 try{
 
-                    const records =
-                        service.all?.();
+                    if(
+                        typeof service.all ===
+                            "function"
+                    ){
+
+                        const records =
+                            service.all();
 
 
-                    return Array.isArray(
-                        records
-                    )
-                        ? records
-                        : [];
+                        return Array.isArray(
+                            records
+                        )
+                            ? records
+                            : [];
+
+                    }
 
                 } catch(error){
 
                     return [];
 
                 }
+
+
+                return [];
 
             };
 
@@ -1348,6 +1839,7 @@ const BrainContext = {
         return {
 
             memory:{
+
                 total:
                     memories.length,
 
@@ -1356,21 +1848,27 @@ const BrainContext = {
 
                 pinned:
                     pinnedMemories
+
             },
 
             timeline:{
+
                 total:
                     timelineEvents.length
+
             },
 
             evolution:{
+
                 total:
                     evolutionEvents.length,
 
                 xp
+
             },
 
             bridge:{
+
                 total:
                     bridgeLinks.length,
 
@@ -1380,9 +1878,215 @@ const BrainContext = {
                             link?.favorite ===
                                 true
                     ).length
+
             }
 
         };
+
+    },
+
+
+    /* =====================================================
+       WORLD RESOLUTION
+    ===================================================== */
+
+    resolveWorld(engine){
+
+        if(!engine){
+
+            return null;
+
+        }
+
+
+        if(
+            engine.currentWorld &&
+            typeof engine.currentWorld ===
+                "object"
+        ){
+
+            return engine.currentWorld;
+
+        }
+
+
+        const worldService =
+            this.getService(
+                "world"
+            );
+
+
+        const candidateId =
+            engine.currentWorldId ||
+            engine.worldId ||
+            null;
+
+
+        if(
+            candidateId &&
+            worldService
+        ){
+
+            const methods = [
+
+                "get",
+                "find",
+                "getById"
+
+            ];
+
+
+            for(
+                const method of methods
+            ){
+
+                if(
+                    typeof worldService[
+                        method
+                    ] !==
+                        "function"
+                ){
+
+                    continue;
+
+                }
+
+
+                try{
+
+                    const world =
+                        worldService[
+                            method
+                        ](
+                            candidateId
+                        );
+
+
+                    if(world){
+
+                        return world;
+
+                    }
+
+                } catch(error){
+
+                    /* next resolver */
+
+                }
+
+            }
+
+        }
+
+
+        return null;
+
+    },
+
+
+    /* =====================================================
+       ENTITY RESOLUTION
+    ===================================================== */
+
+    resolveEntity(engine){
+
+        if(!engine){
+
+            return null;
+
+        }
+
+
+        const direct =
+
+            engine.currentOpenedEntity ||
+            engine.currentEntity ||
+            engine.rootEntity ||
+            null;
+
+
+        if(
+            direct &&
+            typeof direct ===
+                "object"
+        ){
+
+            return direct;
+
+        }
+
+
+        const entityManager =
+            this.getService(
+                "entityManager"
+            );
+
+
+        const candidateId =
+            engine.currentOpenedEntityId ||
+            engine.currentEntityId ||
+            engine.rootEntityId ||
+            null;
+
+
+        if(
+            candidateId &&
+            entityManager
+        ){
+
+            const methods = [
+
+                "get",
+                "find",
+                "getById"
+
+            ];
+
+
+            for(
+                const method of methods
+            ){
+
+                if(
+                    typeof entityManager[
+                        method
+                    ] !==
+                        "function"
+                ){
+
+                    continue;
+
+                }
+
+
+                try{
+
+                    const entity =
+                        entityManager[
+                            method
+                        ](
+                            candidateId
+                        );
+
+
+                    if(entity){
+
+                        return entity;
+
+                    }
+
+                } catch(error){
+
+                    /* next resolver */
+
+                }
+
+            }
+
+        }
+
+
+        return null;
 
     },
 
@@ -1417,6 +2121,26 @@ const BrainContext = {
                 : {};
 
 
+        const applications =
+            this.getApplicationsSnapshot();
+
+
+        const organs =
+            this.getOrganSnapshot();
+
+
+        const runtime =
+            this.getRuntimeSnapshot();
+
+
+        const kernel =
+            this.getKernelSnapshot();
+
+
+        const discovery =
+            this.getDiscoverySnapshot();
+
+
         /* =================================================
            ENGINE NOT READY
         ================================================= */
@@ -1426,7 +2150,7 @@ const BrainContext = {
             return {
 
                 version:
-                    2,
+                    this.version,
 
                 app:
                     awarenessState.app,
@@ -1450,7 +2174,13 @@ const BrainContext = {
                 entity:
                     null,
 
+                entityId:
+                    null,
+
                 world:
+                    null,
+
+                worldId:
                     null,
 
                 user:
@@ -1459,45 +2189,57 @@ const BrainContext = {
                 rootEntity:
                     null,
 
-                applications:
-                    this.getApplicationsSnapshot(),
+                applications,
 
-                organs:
-                    this.getOrganSnapshot(),
+                organs,
 
-                runtime:
-                    this.getRuntimeSnapshot(),
+                runtime,
 
-                discovery:
-                    this.getDiscoverySnapshot(),
+                kernel,
+
+                discovery,
 
                 data:{
+
                     memory:{
-                        total:0,
-                        important:0,
-                        pinned:0
+                        total:
+                            0,
+
+                        important:
+                            0,
+
+                        pinned:
+                            0
                     },
 
                     timeline:{
-                        total:0
+                        total:
+                            0
                     },
 
                     evolution:{
-                        total:0,
-                        xp:0
+                        total:
+                            0,
+
+                        xp:
+                            0
                     },
 
                     bridge:{
-                        total:0,
-                        favorites:0
+                        total:
+                            0,
+
+                        favorites:
+                            0
                     }
+
                 },
 
                 engineReady:
                     false,
 
                 contextSource:
-                    "awareness",
+                    "awareness+services",
 
                 enteredAt:
                     awarenessState
@@ -1519,20 +2261,21 @@ const BrainContext = {
 
         const rootEntity =
             engine.rootEntity ||
-            engine.currentEntity ||
             null;
 
 
         const entity =
-            engine.currentOpenedEntity ||
-            engine.currentEntity ||
+            this.resolveEntity(
+                engine
+            ) ||
             rootEntity ||
             null;
 
 
         const world =
-            engine.currentWorld ||
-            null;
+            this.resolveWorld(
+                engine
+            );
 
 
         const user =
@@ -1556,9 +2299,11 @@ const BrainContext = {
             awarenessState.app !==
                 "home"
                 ? awarenessState.app
-                : currentPage ||
-                  currentView ||
-                  "home";
+                : (
+                    currentPage ||
+                    currentView ||
+                    "home"
+                );
 
 
         const entitySnapshot =
@@ -1595,7 +2340,7 @@ const BrainContext = {
         return {
 
             version:
-                2,
+                this.version,
 
             app,
 
@@ -1634,17 +2379,15 @@ const BrainContext = {
             rootEntity:
                 rootSnapshot,
 
-            applications:
-                this.getApplicationsSnapshot(),
+            applications,
 
-            organs:
-                this.getOrganSnapshot(),
+            organs,
 
-            runtime:
-                this.getRuntimeSnapshot(),
+            runtime,
 
-            discovery:
-                this.getDiscoverySnapshot(),
+            kernel,
+
+            discovery,
 
             data,
 
@@ -1670,9 +2413,6 @@ const BrainContext = {
 
     /* =====================================================
        COMPACT SNAPSHOT
-
-       Provider, routing ve history için daha küçük context.
-       Tam entity/world nesneleri provider'a aktarılmaz.
     ===================================================== */
 
     compact(extra = {}){
@@ -1703,6 +2443,7 @@ const BrainContext = {
             entity:
                 context.entity
                     ? {
+
                         id:
                             context.entity.id,
 
@@ -1714,6 +2455,7 @@ const BrainContext = {
 
                         status:
                             context.entity.status
+
                     }
                     : null,
 
@@ -1724,6 +2466,7 @@ const BrainContext = {
             world:
                 context.world
                     ? {
+
                         id:
                             context.world.id,
 
@@ -1739,6 +2482,7 @@ const BrainContext = {
                         entityCount:
                             context.world
                                 .entityCount
+
                     }
                     : null,
 
@@ -1749,6 +2493,7 @@ const BrainContext = {
             user:
                 context.user
                     ? {
+
                         id:
                             context.user.id,
 
@@ -1757,10 +2502,12 @@ const BrainContext = {
 
                         type:
                             context.user.type
+
                     }
                     : null,
 
             applications:{
+
                 total:
                     context.applications
                         ?.total ||
@@ -1780,9 +2527,11 @@ const BrainContext = {
                     context.applications
                         ?.manifestVersion ||
                     null
+
             },
 
             organs:{
+
                 status:
                     context.organs
                         ?.status ||
@@ -1807,9 +2556,11 @@ const BrainContext = {
                     context.organs
                         ?.averageHealth ??
                     null
+
             },
 
             runtime:{
+
                 available:
                     context.runtime
                         ?.available ===
@@ -1828,10 +2579,41 @@ const BrainContext = {
                 status:
                     context.runtime
                         ?.status ||
+                    null,
+
+                lastTickAt:
+                    context.runtime
+                        ?.lastTickAt ||
                     null
+
+            },
+
+            kernel:{
+
+                available:
+                    context.kernel
+                        ?.available ===
+                    true,
+
+                status:
+                    context.kernel
+                        ?.status ||
+                    "unknown",
+
+                booted:
+                    context.kernel
+                        ?.booted ===
+                    true,
+
+                securityReady:
+                    context.kernel
+                        ?.securityReady ===
+                    true
+
             },
 
             discovery:{
+
                 completed:
                     context.discovery
                         ?.completed ===
@@ -1862,9 +2644,11 @@ const BrainContext = {
                                 .recommendedApps
                         ]
                         : []
+
             },
 
             data:{
+
                 memory:{
                     ...(
                         context.data
@@ -1896,6 +2680,7 @@ const BrainContext = {
                         {}
                     )
                 }
+
             },
 
             metadata:
@@ -1930,6 +2715,9 @@ const BrainContext = {
 
         return {
 
+            version:
+                this.version,
+
             engineReady:
                 context.engineReady,
 
@@ -1960,6 +2748,18 @@ const BrainContext = {
                 context.organs
                     .status,
 
+            runtimeStatus:
+                context.runtime
+                    .status,
+
+            kernelStatus:
+                context.kernel
+                    .status,
+
+            securityReady:
+                context.kernel
+                    .securityReady,
+
             discoveryCompleted:
                 context.discovery
                     .completed,
@@ -1967,6 +2767,12 @@ const BrainContext = {
             memoryRecords:
                 context.data
                     .memory
+                    .total ||
+                0,
+
+            timelineEvents:
+                context.data
+                    .timeline
                     .total ||
                 0,
 
@@ -1992,11 +2798,42 @@ const BrainContext = {
 };
 
 
-VAERO.register(
-    "brainContext",
-    BrainContext
-);
+/* =========================================================
+   REGISTER
+========================================================= */
+
+try{
+
+    if(
+        typeof VAERO !==
+            "undefined" &&
+        typeof VAERO.register ===
+            "function"
+    ){
+
+        VAERO.register(
+            "brainContext",
+            BrainContext
+        );
+
+    }
+
+} catch(error){
+
+    console.error(
+        "BrainContext register edilemedi:",
+        error
+    );
+
+}
 
 
-window.BrainContext =
-    BrainContext;
+if(
+    typeof window !==
+        "undefined"
+){
+
+    window.BrainContext =
+        BrainContext;
+
+}
