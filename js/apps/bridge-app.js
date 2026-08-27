@@ -30,32 +30,74 @@ const BridgeApp = {
 
     escapeHTML(value){
 
+        if(
+            window.UI &&
+            typeof UI.escapeHTML ===
+                "function"
+        ){
+
+            return UI.escapeHTML(
+                value
+            );
+
+        }
+
+
         return String(
             value ?? ""
         )
-            .replaceAll("&", "&amp;")
-            .replaceAll("<", "&lt;")
-            .replaceAll(">", "&gt;")
-            .replaceAll('"', "&quot;")
-            .replaceAll("'", "&#039;");
+            .replaceAll(
+                "&",
+                "&amp;"
+            )
+            .replaceAll(
+                "<",
+                "&lt;"
+            )
+            .replaceAll(
+                ">",
+                "&gt;"
+            )
+            .replaceAll(
+                '"',
+                "&quot;"
+            )
+            .replaceAll(
+                "'",
+                "&#039;"
+            );
 
     },
 
 
     createId(){
 
-        if(
-            typeof crypto !== "undefined" &&
-            typeof crypto.randomUUID ===
-                "function"
-        ){
-            return crypto.randomUUID();
+        try{
+
+            if(
+                typeof crypto !==
+                    "undefined" &&
+                typeof crypto.randomUUID ===
+                    "function"
+            ){
+
+                return crypto.randomUUID();
+
+            }
+
+        } catch(error){
+
+            /* fallback */
+
         }
 
 
         return `bridge_${Date.now()}_${Math.random()
             .toString(36)
-            .slice(2,10)}`;
+            .slice(
+                2,
+                10
+            )}`;
 
     },
 
@@ -69,15 +111,19 @@ const BridgeApp = {
         try{
 
             if(
-                typeof VAERO !== "undefined" &&
+                typeof VAERO !==
+                    "undefined" &&
                 VAERO.engine
             ){
+
                 return VAERO.engine;
+
             }
 
         } catch(error){
 
             /* fallback */
+
         }
 
 
@@ -94,16 +140,21 @@ const BridgeApp = {
         try{
 
             if(
-                typeof VAERO === "undefined" ||
+                typeof VAERO ===
+                    "undefined" ||
                 typeof VAERO.get !==
                     "function"
             ){
+
                 return null;
+
             }
 
 
             return (
-                VAERO.get(name) ||
+                VAERO.get(
+                    name
+                ) ||
                 null
             );
 
@@ -143,12 +194,21 @@ const BridgeApp = {
             typeof engine.mount !==
                 "function"
         ){
+
             return false;
+
         }
 
 
+        const entity =
+            engine.currentOpenedEntity ||
+            engine.currentEntity ||
+            engine.rootEntity ||
+            null;
+
+
         return engine.mount(
-            engine.currentEntity
+            entity
         );
 
     },
@@ -158,7 +218,9 @@ const BridgeApp = {
        BRAIN CONTEXT
     ===================================================== */
 
-    enterBrainContext(entity = null){
+    enterBrainContext(
+        entity = null
+    ){
 
         try{
 
@@ -168,28 +230,23 @@ const BridgeApp = {
                 );
 
 
-            if(
-                awareness &&
-                typeof awareness.enter ===
-                    "function"
-            ){
+            awareness?.enter?.(
+                "bridge",
+                {
+                    entityId:
+                        entity?.id ||
+                        null,
 
-                awareness.enter(
-                    "bridge",
-                    {
-                        entityId:
-                            entity?.id ||
-                            null,
+                    filter:
+                        this.activeFilter,
 
-                        filter:
-                            this.activeFilter,
+                    selectedBridgeId:
+                        this.selectedBridgeId,
 
-                        selectedBridgeId:
-                            this.selectedBridgeId
-                    }
-                );
-
-            }
+                    editorMode:
+                        this.editorMode
+                }
+            );
 
         } catch(error){
 
@@ -316,7 +373,8 @@ const BridgeApp = {
 
 
         const allowed =
-            this.getRelationshipTypes()
+            this
+                .getRelationshipTypes()
                 .map(
                     item =>
                         item.id
@@ -335,11 +393,12 @@ const BridgeApp = {
     relationshipLabel(value){
 
         const type =
-            this.getRelationshipTypes()
+            this
+                .getRelationshipTypes()
                 .find(
                     item =>
                         item.id ===
-                        value
+                            value
                 );
 
 
@@ -354,11 +413,12 @@ const BridgeApp = {
     relationshipIcon(value){
 
         const type =
-            this.getRelationshipTypes()
+            this
+                .getRelationshipTypes()
                 .find(
                     item =>
                         item.id ===
-                        value
+                            value
                 );
 
 
@@ -372,8 +432,11 @@ const BridgeApp = {
 
     /* =====================================================
        STORAGE
-       Temporary compatibility surface.
-       Central Bridge Core follows in bridge.js.
+       -----------------------------------------------------
+       Compatibility surface only.
+
+       Bridge Core authority remains in js/bridge.js.
+       No guessed Bridge Core write API is used here.
     ===================================================== */
 
     getStorageKey(entityId){
@@ -391,6 +454,13 @@ const BridgeApp = {
 
     load(entityId){
 
+        if(!entityId){
+
+            return [];
+
+        }
+
+
         try{
 
             const saved =
@@ -402,7 +472,9 @@ const BridgeApp = {
 
 
             if(!saved){
+
                 return [];
+
             }
 
 
@@ -417,8 +489,14 @@ const BridgeApp = {
                     parsed
                 )
             ){
+
                 return [];
+
             }
+
+
+            const seen =
+                new Set();
 
 
             return parsed
@@ -426,7 +504,10 @@ const BridgeApp = {
                     bridge =>
                         bridge &&
                         typeof bridge ===
-                            "object"
+                            "object" &&
+                        !Array.isArray(
+                            bridge
+                        )
                 )
                 .map(
                     bridge =>
@@ -434,6 +515,29 @@ const BridgeApp = {
                             bridge,
                             entityId
                         )
+                )
+                .filter(
+                    bridge => {
+
+                        if(
+                            seen.has(
+                                bridge.id
+                            )
+                        ){
+
+                            return false;
+
+                        }
+
+
+                        seen.add(
+                            bridge.id
+                        );
+
+
+                        return true;
+
+                    }
                 );
 
         } catch(error){
@@ -456,14 +560,42 @@ const BridgeApp = {
         bridges
     ){
 
+        if(!entityId){
+
+            return false;
+
+        }
+
+
         try{
+
+            const safeBridges =
+                Array.isArray(
+                    bridges
+                )
+                    ? bridges
+                        .filter(
+                            bridge =>
+                                bridge &&
+                                typeof bridge ===
+                                    "object"
+                        )
+                        .map(
+                            bridge =>
+                                this.normalizeBridge(
+                                    bridge,
+                                    entityId
+                                )
+                        )
+                    : [];
+
 
             localStorage.setItem(
                 this.getStorageKey(
                     entityId
                 ),
                 JSON.stringify(
-                    bridges
+                    safeBridges
                 )
             );
 
@@ -491,47 +623,116 @@ const BridgeApp = {
 
     normalizeTags(value){
 
-        if(
-            !Array.isArray(
+        const source =
+            Array.isArray(
                 value
             )
-        ){
-            return [];
-        }
+                ? value
+                : [];
 
 
-        return [
-            ...new Set(
-                value
-                    .map(
-                        tag =>
-                            String(
-                                tag ?? ""
-                            ).trim()
+        const seen =
+            new Set();
+
+
+        const tags =
+            [];
+
+
+        source.forEach(
+            item => {
+
+                const tag =
+                    String(
+                        item ?? ""
                     )
-                    .filter(Boolean)
-            )
-        ];
+                        .trim()
+                        .replace(
+                            /\s+/g,
+                            " "
+                        )
+                        .slice(
+                            0,
+                            60
+                        );
+
+
+                if(!tag){
+
+                    return;
+
+                }
+
+
+                const key =
+                    tag.toLocaleLowerCase(
+                        "tr-TR"
+                    );
+
+
+                if(
+                    seen.has(
+                        key
+                    )
+                ){
+
+                    return;
+
+                }
+
+
+                seen.add(
+                    key
+                );
+
+
+                tags.push(
+                    tag
+                );
+
+            }
+        );
+
+
+        return tags.slice(
+            0,
+            30
+        );
 
     },
 
 
     parseTags(value){
 
-        return [
-            ...new Set(
-                String(
-                    value ||
-                    ""
-                )
-                    .split(",")
-                    .map(
-                        item =>
-                            item.trim()
-                    )
-                    .filter(Boolean)
+        return this.normalizeTags(
+            String(
+                value ||
+                ""
+            ).split(",")
+        );
+
+    },
+
+
+    normalizeStatus(value){
+
+        const status =
+            String(
+                value ||
+                "active"
             )
-        ];
+                .trim()
+                .toLowerCase();
+
+
+        return [
+            "active",
+            "archived"
+        ].includes(
+            status
+        )
+            ? status
+            : "active";
 
     },
 
@@ -545,39 +746,76 @@ const BridgeApp = {
             Date.now();
 
 
+        const createdAt =
+            Number(
+                bridge.createdAt
+            ) ||
+            now;
+
+
+        const archived =
+            bridge.archived ===
+                true;
+
+
         return {
 
             id:
                 String(
                     bridge.id ||
                     this.createId()
-                ),
+                )
+                    .trim()
+                    .slice(
+                        0,
+                        160
+                    ),
 
             sourceEntityId:
                 String(
                     bridge.sourceEntityId ||
                     entityId ||
                     ""
-                ),
+                )
+                    .trim()
+                    .slice(
+                        0,
+                        160
+                    ),
 
             targetEntityId:
                 String(
                     bridge.targetEntityId ||
                     bridge.entityId ||
                     ""
-                ),
+                )
+                    .trim()
+                    .slice(
+                        0,
+                        160
+                    ),
 
             targetName:
                 String(
                     bridge.targetName ||
                     "İsimsiz Varlık"
-                ).trim(),
+                )
+                    .trim()
+                    .slice(
+                        0,
+                        120
+                    ),
 
             targetType:
                 String(
                     bridge.targetType ||
                     "entity"
-                ).trim(),
+                )
+                    .trim()
+                    .slice(
+                        0,
+                        80
+                    ),
 
             relationship:
                 this.normalizeRelationshipType(
@@ -589,14 +827,24 @@ const BridgeApp = {
                 String(
                     bridge.label ||
                     ""
-                ).trim(),
+                )
+                    .trim()
+                    .slice(
+                        0,
+                        80
+                    ),
 
             note:
                 String(
                     bridge.note ||
                     bridge.description ||
                     ""
-                ).trim(),
+                )
+                    .trim()
+                    .slice(
+                        0,
+                        1000
+                    ),
 
             tags:
                 this.normalizeTags(
@@ -605,15 +853,12 @@ const BridgeApp = {
 
             favorite:
                 bridge.favorite ===
-                true,
+                    true,
 
-            archived:
-                bridge.archived ===
-                true,
+            archived,
 
             archivedAt:
-                bridge.archived ===
-                    true
+                archived
                     ? (
                         Number(
                             bridge.archivedAt
@@ -623,27 +868,19 @@ const BridgeApp = {
                     : null,
 
             status:
-                String(
-                    bridge.status ||
-                    "active"
-                )
-                    .trim()
-                    .toLowerCase(),
+                archived
+                    ? "archived"
+                    : this.normalizeStatus(
+                        bridge.status
+                    ),
 
-            createdAt:
-                Number(
-                    bridge.createdAt
-                ) ||
-                now,
+            createdAt,
 
             updatedAt:
                 Number(
                     bridge.updatedAt
                 ) ||
-                Number(
-                    bridge.createdAt
-                ) ||
-                now
+                createdAt
 
         };
 
@@ -662,7 +899,51 @@ const BridgeApp = {
             );
 
 
-        let entities = [];
+        const entities =
+            [];
+
+
+        const addEntity =
+            entity => {
+
+                if(
+                    !entity ||
+                    !entity.id ||
+                    entity.archived ===
+                        true
+                ){
+
+                    return;
+
+                }
+
+
+                const id =
+                    String(
+                        entity.id
+                    );
+
+
+                if(
+                    entities.some(
+                        item =>
+                            String(
+                                item?.id
+                            ) ===
+                                id
+                    )
+                ){
+
+                    return;
+
+                }
+
+
+                entities.push(
+                    entity
+                );
+
+            };
 
 
         if(
@@ -673,16 +954,28 @@ const BridgeApp = {
 
             try{
 
-                entities =
+                const result =
                     manager.all({
                         includeArchived:
                             false
-                    }) ||
-                    [];
+                    });
+
+
+                if(
+                    Array.isArray(
+                        result
+                    )
+                ){
+
+                    result.forEach(
+                        addEntity
+                    );
+
+                }
 
             } catch(error){
 
-                entities = [];
+                /* world fallback */
 
             }
 
@@ -704,73 +997,61 @@ const BridgeApp = {
             try{
 
                 const worlds =
-                    worldService.all() ||
-                    [];
+                    worldService.all();
 
 
-                worlds.forEach(
-                    world => {
+                if(
+                    Array.isArray(
+                        worlds
+                    )
+                ){
 
-                        if(
-                            !Array.isArray(
-                                world?.entities
-                            )
-                        ){
-                            return;
-                        }
+                    worlds.forEach(
+                        world => {
 
+                            if(
+                                !Array.isArray(
+                                    world?.entities
+                                )
+                            ){
 
-                        world.entities.forEach(
-                            entity => {
-
-                                if(
-                                    !entity ||
-                                    !entity.id ||
-                                    entity.archived ===
-                                        true
-                                ){
-                                    return;
-                                }
-
-
-                                if(
-                                    !entities.some(
-                                        item =>
-                                            item?.id ===
-                                            entity.id
-                                    )
-                                ){
-
-                                    entities.push(
-                                        entity
-                                    );
-
-                                }
+                                return;
 
                             }
-                        );
 
-                    }
-                );
+
+                            world.entities.forEach(
+                                addEntity
+                            );
+
+                        }
+                    );
+
+                }
 
             } catch(error){
 
-                /* keep manager results */
+                /* manager results remain */
+
             }
 
         }
 
 
-        return entities
-            .filter(Boolean);
+        return entities;
 
     },
 
 
     getAvailableTargets(entity){
 
-        if(!entity){
+        if(
+            !entity ||
+            !entity.id
+        ){
+
             return [];
+
         }
 
 
@@ -778,13 +1059,20 @@ const BridgeApp = {
             .getAllEntities()
             .filter(
                 candidate =>
-                    candidate.id !==
-                    entity.id &&
+                    String(
+                        candidate.id
+                    ) !==
+                        String(
+                            entity.id
+                        ) &&
                     candidate.archived !==
                         true
             )
             .sort(
-                (a,b) =>
+                (
+                    a,
+                    b
+                ) =>
                     String(
                         a.name ||
                         ""
@@ -804,8 +1092,17 @@ const BridgeApp = {
         targetEntityId
     ){
 
-        if(!targetEntityId){
+        const id =
+            String(
+                targetEntityId ||
+                ""
+            ).trim();
+
+
+        if(!id){
+
             return null;
+
         }
 
 
@@ -825,17 +1122,20 @@ const BridgeApp = {
 
                 const entity =
                     manager.get(
-                        targetEntityId
+                        id
                     );
 
 
                 if(entity){
+
                     return entity;
+
                 }
 
             } catch(error){
 
-                /* world fallback */
+                /* fallback */
+
             }
 
         }
@@ -846,8 +1146,10 @@ const BridgeApp = {
                 .getAllEntities()
                 .find(
                     entity =>
-                        entity.id ===
-                        targetEntityId
+                        String(
+                            entity.id
+                        ) ===
+                            id
                 ) ||
             null
         );
@@ -865,7 +1167,9 @@ const BridgeApp = {
             !entity ||
             !entity.id
         ){
+
             return [];
+
         }
 
 
@@ -886,8 +1190,34 @@ const BridgeApp = {
                 .filter(
                     bridge =>
                         bridge.archived !==
-                        true
+                            true
                 );
+
+
+        const allowedFilters = [
+
+            "all",
+
+            ...this
+                .getRelationshipTypes()
+                .map(
+                    type =>
+                        type.id
+                )
+
+        ];
+
+
+        if(
+            !allowedFilters.includes(
+                this.activeFilter
+            )
+        ){
+
+            this.activeFilter =
+                "all";
+
+        }
 
 
         if(
@@ -899,7 +1229,7 @@ const BridgeApp = {
                 bridges.filter(
                     bridge =>
                         bridge.relationship ===
-                        this.activeFilter
+                            this.activeFilter
                 );
 
         }
@@ -925,16 +1255,15 @@ const BridgeApp = {
                         const haystack = [
 
                             bridge.targetName,
-
                             bridge.targetType,
-
                             bridge.relationship,
-
                             bridge.label,
-
                             bridge.note,
 
-                            ...(bridge.tags || [])
+                            ...(
+                                bridge.tags ||
+                                []
+                            )
 
                         ]
                             .join(" ")
@@ -954,11 +1283,14 @@ const BridgeApp = {
 
 
         return bridges.sort(
-            (a,b) => {
+            (
+                a,
+                b
+            ) => {
 
                 if(
                     a.favorite !==
-                    b.favorite
+                        b.favorite
                 ){
 
                     return a.favorite
@@ -969,8 +1301,12 @@ const BridgeApp = {
 
 
                 return (
-                    b.updatedAt -
-                    a.updatedAt
+                    Number(
+                        b.updatedAt
+                    ) -
+                    Number(
+                        a.updatedAt
+                    )
                 );
 
             }
@@ -984,6 +1320,20 @@ const BridgeApp = {
         bridgeId
     ){
 
+        const id =
+            String(
+                bridgeId ||
+                ""
+            ).trim();
+
+
+        if(!id){
+
+            return null;
+
+        }
+
+
         return (
             this
                 .getAllBridges(
@@ -992,7 +1342,7 @@ const BridgeApp = {
                 .find(
                     bridge =>
                         bridge.id ===
-                        bridgeId
+                            id
                 ) ||
             null
         );
@@ -1001,18 +1351,10 @@ const BridgeApp = {
 
 
     /* =====================================================
-       CREATE BRIDGE
+       EDITOR VALUES
     ===================================================== */
 
-    createBridge(entity){
-
-        if(
-            !entity ||
-            !entity.id
-        ){
-            return false;
-        }
-
+    readEditorValues(){
 
         const targetInput =
             document.getElementById(
@@ -1044,16 +1386,85 @@ const BridgeApp = {
             );
 
 
-        const targetId =
-            String(
-                targetInput?.value ||
-                ""
-            ).trim();
+        return {
+
+            targetInput,
+
+            targetId:
+                String(
+                    targetInput?.value ||
+                    ""
+                )
+                    .trim()
+                    .slice(
+                        0,
+                        160
+                    ),
+
+            relationship:
+                this.normalizeRelationshipType(
+                    relationshipInput?.value
+                ),
+
+            label:
+                String(
+                    labelInput?.value ||
+                    ""
+                )
+                    .trim()
+                    .slice(
+                        0,
+                        80
+                    ),
+
+            note:
+                String(
+                    noteInput?.value ||
+                    ""
+                )
+                    .trim()
+                    .slice(
+                        0,
+                        1000
+                    ),
+
+            tags:
+                this.parseTags(
+                    tagsInput?.value
+                )
+
+        };
+
+    },
 
 
-        if(!targetId){
+    /* =====================================================
+       CREATE BRIDGE
+    ===================================================== */
 
-            targetInput?.focus();
+    createBridge(entity){
+
+        if(
+            !entity ||
+            !entity.id
+        ){
+
+            return false;
+
+        }
+
+
+        const values =
+            this.readEditorValues();
+
+
+        if(
+            !values.targetId
+        ){
+
+            values.targetInput
+                ?.focus();
+
 
             return false;
 
@@ -1062,7 +1473,7 @@ const BridgeApp = {
 
         const target =
             this.resolveTargetEntity(
-                targetId
+                values.targetId
             );
 
 
@@ -1074,10 +1485,16 @@ const BridgeApp = {
 
 
         if(
-            target.id ===
-            entity.id
+            String(
+                target.id
+            ) ===
+                String(
+                    entity.id
+                )
         ){
+
             return false;
+
         }
 
 
@@ -1087,19 +1504,15 @@ const BridgeApp = {
             );
 
 
-        const relationship =
-            this.normalizeRelationshipType(
-                relationshipInput?.value
-            );
-
-
         const existing =
             bridges.find(
                 bridge =>
                     bridge.targetEntityId ===
-                        target.id &&
+                        String(
+                            target.id
+                        ) &&
                     bridge.relationship ===
-                        relationship &&
+                        values.relationship &&
                     bridge.archived !==
                         true
             );
@@ -1109,6 +1522,7 @@ const BridgeApp = {
 
             this.selectedBridgeId =
                 existing.id;
+
 
             this.editorMode =
                 null;
@@ -1141,24 +1555,17 @@ const BridgeApp = {
                     targetType:
                         target.type,
 
-                    relationship,
+                    relationship:
+                        values.relationship,
 
                     label:
-                        String(
-                            labelInput?.value ||
-                            ""
-                        ).trim(),
+                        values.label,
 
                     note:
-                        String(
-                            noteInput?.value ||
-                            ""
-                        ).trim(),
+                        values.note,
 
                     tags:
-                        this.parseTags(
-                            tagsInput?.value
-                        ),
+                        values.tags,
 
                     favorite:
                         false,
@@ -1190,9 +1597,17 @@ const BridgeApp = {
                 bridges
             )
         ){
+
             return false;
+
         }
 
+
+        /*
+         * Entity'nin mevcut addBridge uyumluluk kontratı
+         * varsa referans güncellenir. Bridge Core API'si
+         * olmadığı varsayılmaz.
+         */
 
         if(
             typeof entity.addBridge ===
@@ -1217,9 +1632,17 @@ const BridgeApp = {
         }
 
 
-        this.getService(
-            "world"
-        )?.save?.();
+        try{
+
+            this.getService(
+                "world"
+            )?.save?.();
+
+        } catch(error){
+
+            /* compatibility */
+
+        }
 
 
         this.recordEvolution(
@@ -1231,6 +1654,7 @@ const BridgeApp = {
 
         this.selectedBridgeId =
             bridge.id;
+
 
         this.editorMode =
             null;
@@ -1249,9 +1673,12 @@ const BridgeApp = {
 
         if(
             !entity ||
+            !entity.id ||
             !this.selectedBridgeId
         ){
+
             return false;
+
         }
 
 
@@ -1265,67 +1692,46 @@ const BridgeApp = {
             bridges.findIndex(
                 bridge =>
                     bridge.id ===
-                    this.selectedBridgeId
+                        this.selectedBridgeId
             );
 
 
-        if(index < 0){
+        if(
+            index <
+                0
+        ){
+
             return false;
+
         }
 
 
-        const relationshipInput =
-            document.getElementById(
-                "bridgeRelationshipInput"
+        const values =
+            this.readEditorValues();
+
+
+        bridges[index] =
+            this.normalizeBridge(
+                {
+                    ...bridges[index],
+
+                    relationship:
+                        values.relationship,
+
+                    label:
+                        values.label,
+
+                    note:
+                        values.note,
+
+                    tags:
+                        values.tags,
+
+                    updatedAt:
+                        Date.now()
+                },
+                entity.id
             );
-
-
-        const labelInput =
-            document.getElementById(
-                "bridgeLabelInput"
-            );
-
-
-        const noteInput =
-            document.getElementById(
-                "bridgeNoteInput"
-            );
-
-
-        const tagsInput =
-            document.getElementById(
-                "bridgeTagsInput"
-            );
-
-
-        bridges[index] = {
-            ...bridges[index],
-
-            relationship:
-                this.normalizeRelationshipType(
-                    relationshipInput?.value
-                ),
-
-            label:
-                String(
-                    labelInput?.value ||
-                    ""
-                ).trim(),
-
-            note:
-                String(
-                    noteInput?.value ||
-                    ""
-                ).trim(),
-
-            tags:
-                this.parseTags(
-                    tagsInput?.value
-                ),
-
-            updatedAt:
-                Date.now()
-        };
 
 
         if(
@@ -1334,7 +1740,9 @@ const BridgeApp = {
                 bridges
             )
         ){
+
             return false;
+
         }
 
 
@@ -1352,12 +1760,13 @@ const BridgeApp = {
                 entity.bridges.findIndex(
                     bridge =>
                         bridge?.id ===
-                        updated.id
+                            updated.id
                 );
 
 
             if(
-                entityBridgeIndex >= 0
+                entityBridgeIndex >=
+                    0
             ){
 
                 entity.bridges[
@@ -1371,9 +1780,17 @@ const BridgeApp = {
         }
 
 
-        this.getService(
-            "world"
-        )?.save?.();
+        try{
+
+            this.getService(
+                "world"
+            )?.save?.();
+
+        } catch(error){
+
+            /* compatibility */
+
+        }
 
 
         this.recordEvolution(
@@ -1399,16 +1816,20 @@ const BridgeApp = {
     mutateBridge(
         entity,
         bridgeId,
-        mutator
+        mutator,
+        options = {}
     ){
 
         if(
             !entity ||
+            !entity.id ||
             !bridgeId ||
             typeof mutator !==
                 "function"
         ){
+
             return false;
+
         }
 
 
@@ -1422,12 +1843,17 @@ const BridgeApp = {
             bridges.findIndex(
                 bridge =>
                     bridge.id ===
-                    bridgeId
+                        bridgeId
             );
 
 
-        if(index < 0){
+        if(
+            index <
+                0
+        ){
+
             return false;
+
         }
 
 
@@ -1436,9 +1862,23 @@ const BridgeApp = {
         };
 
 
-        mutator(
-            next
-        );
+        try{
+
+            mutator(
+                next
+            );
+
+        } catch(error){
+
+            console.warn(
+                "Bridge mutation başarısız:",
+                error
+            );
+
+
+            return false;
+
+        }
 
 
         next.updatedAt =
@@ -1458,7 +1898,19 @@ const BridgeApp = {
                 bridges
             )
         ){
+
             return false;
+
+        }
+
+
+        if(
+            options.remount ===
+                false
+        ){
+
+            return bridges[index];
+
         }
 
 
@@ -1498,54 +1950,47 @@ const BridgeApp = {
             );
 
 
-        if(!bridge){
-            return false;
-        }
-
-
-        const bridges =
-            this.getAllBridges(
-                entity
-            );
-
-
-        const index =
-            bridges.findIndex(
-                item =>
-                    item.id ===
-                    bridgeId
-            );
-
-
-        if(index < 0){
-            return false;
-        }
-
-
-        bridges[index] = {
-            ...bridges[index],
-
-            archived:
-                true,
-
-            archivedAt:
-                Date.now(),
-
-            status:
-                "archived",
-
-            updatedAt:
-                Date.now()
-        };
-
-
         if(
-            !this.save(
-                entity.id,
-                bridges
-            )
+            !bridge ||
+            bridge.archived ===
+                true
         ){
+
             return false;
+
+        }
+
+
+        const updated =
+            this.mutateBridge(
+                entity,
+                bridgeId,
+                target => {
+
+                    target.archived =
+                        true;
+
+                    target.archivedAt =
+                        Date.now();
+
+                    target.status =
+                        "archived";
+
+                    target.favorite =
+                        false;
+
+                },
+                {
+                    remount:
+                        false
+                }
+            );
+
+
+        if(!updated){
+
+            return false;
+
         }
 
 
@@ -1563,35 +2008,45 @@ const BridgeApp = {
             } catch(error){
 
                 /* compatibility */
+
             }
 
         }
 
 
-        this.getService(
-            "world"
-        )?.save?.();
+        try{
+
+            this.getService(
+                "world"
+            )?.save?.();
+
+        } catch(error){
+
+            /* compatibility */
+
+        }
 
 
         this.recordEvolution(
             entity,
-            bridges[index],
+            updated,
             "archived"
         );
 
 
         if(
             this.selectedBridgeId ===
-            bridgeId
+                bridgeId
         ){
 
             this.selectedBridgeId =
                 null;
 
-            this.editorMode =
-                null;
-
         }
+
+
+        this.editorMode =
+            null;
 
 
         return this.remount();
@@ -1620,7 +2075,9 @@ const BridgeApp = {
             typeof evolution.record !==
                 "function"
         ){
+
             return false;
+
         }
 
 
@@ -1638,16 +2095,19 @@ const BridgeApp = {
         };
 
 
+        const message =
+            messages[action] ||
+            "Bridge güncellendi";
+
+
         try{
 
             evolution.record(
                 "life-event",
-                messages[action] ||
-                "Bridge güncellendi",
+                message,
                 {
                     title:
-                        messages[action] ||
-                        "Bridge güncellendi",
+                        message,
 
                     source:
                         "bridge",
@@ -1672,7 +2132,10 @@ const BridgeApp = {
                     tags:[
                         "bridge",
                         bridge.relationship,
-                        ...(bridge.tags || [])
+                        ...(
+                            bridge.tags ||
+                            []
+                        )
                     ]
                 }
             );
@@ -1694,8 +2157,7 @@ const BridgeApp = {
 
     },
 
-
-    /* =====================================================
+   /* =====================================================
        STATS
     ===================================================== */
 
@@ -1709,7 +2171,7 @@ const BridgeApp = {
                 .filter(
                     bridge =>
                         bridge.archived !==
-                        true
+                            true
                 );
 
 
@@ -1735,7 +2197,8 @@ const BridgeApp = {
             favorites:
                 bridges.filter(
                     bridge =>
-                        bridge.favorite
+                        bridge.favorite ===
+                            true
                 ).length
 
         };
@@ -1758,9 +2221,13 @@ const BridgeApp = {
         if(
             !Number.isFinite(
                 value
-            )
+            ) ||
+            value <=
+                0
         ){
+
             return "";
+
         }
 
 
@@ -1792,18 +2259,25 @@ const BridgeApp = {
 
     },
 
-   /* =====================================================
+
+    /* =====================================================
        TOOLBAR
     ===================================================== */
 
     renderToolbar(){
 
         const filters = [
+
             {
-                id:"all",
-                label:"Tümü"
+                id:
+                    "all",
+
+                label:
+                    "Tümü"
             },
+
             ...this.getRelationshipTypes()
+
         ];
 
 
@@ -1815,6 +2289,7 @@ const BridgeApp = {
                     <span aria-hidden="true">
                         ⌕
                     </span>
+
 
                     <input
                         id="bridgeSearchInput"
@@ -1883,7 +2358,9 @@ const BridgeApp = {
                 bridge.targetName ||
                 "V"
             )
-                .charAt(0)
+                .charAt(
+                    0
+                )
                 .toUpperCase();
 
 
@@ -1919,6 +2396,7 @@ const BridgeApp = {
                                 )
                             )}
                         </small>
+
 
                         ${
                             bridge.favorite
@@ -1966,7 +2444,10 @@ const BridgeApp = {
                                 <span class="bridge-record-tags">
 
                                     ${bridge.tags
-                                        .slice(0,3)
+                                        .slice(
+                                            0,
+                                            3
+                                        )
                                         .map(
                                             tag => `
                                                 <small>
@@ -1996,6 +2477,7 @@ const BridgeApp = {
                         )}
                     </small>
 
+
                     <span aria-hidden="true">
                         →
                     </span>
@@ -2018,7 +2500,9 @@ const BridgeApp = {
     ){
 
         if(!bridge){
+
             return "";
+
         }
 
 
@@ -2056,6 +2540,7 @@ const BridgeApp = {
                                 )}
                             </span>
 
+
                             <h2>
                                 ${this.escapeHTML(
                                     bridge.targetName
@@ -2085,13 +2570,15 @@ const BridgeApp = {
 
                                 <strong>
                                     ${this.escapeHTML(
-                                        entity.name
+                                        entity.name ||
+                                        "İsimsiz Varlık"
                                     )}
                                 </strong>
 
                                 <small>
                                     ${this.escapeHTML(
-                                        entity.type
+                                        entity.type ||
+                                        "entity"
                                     )}
                                 </small>
 
@@ -2239,7 +2726,11 @@ const BridgeApp = {
                                 </span>
 
                                 <strong>
-                                    Aktif
+                                    ${
+                                        bridge.archived
+                                            ? "Arşivlendi"
+                                            : "Aktif"
+                                    }
                                 </strong>
 
                             </div>
@@ -2340,8 +2831,10 @@ const BridgeApp = {
 
 
         const relationship =
-            bridge?.relationship ||
-            "connection";
+            this.normalizeRelationshipType(
+                bridge?.relationship ||
+                "connection"
+            );
 
 
         return `
@@ -2369,6 +2862,7 @@ const BridgeApp = {
                             <span class="engine-section-label">
                                 BRIDGE EDITOR
                             </span>
+
 
                             <h2>
                                 ${
@@ -2404,6 +2898,7 @@ const BridgeApp = {
                                             Hedef varlık
                                         </span>
 
+
                                         <select
                                             id="bridgeTargetInput"
                                             name="bridgeTarget"
@@ -2414,6 +2909,7 @@ const BridgeApp = {
                                                 Varlık seç
                                             </option>
 
+
                                             ${targets
                                                 .map(
                                                     target => `
@@ -2423,11 +2919,13 @@ const BridgeApp = {
                                                             )}"
                                                         >
                                                             ${this.escapeHTML(
-                                                                target.name
+                                                                target.name ||
+                                                                "İsimsiz Varlık"
                                                             )}
                                                             ·
                                                             ${this.escapeHTML(
-                                                                target.type
+                                                                target.type ||
+                                                                "entity"
                                                             )}
                                                         </option>
                                                     `
@@ -2461,6 +2959,7 @@ const BridgeApp = {
                             <span>
                                 İlişki türü
                             </span>
+
 
                             <select
                                 id="bridgeRelationshipInput"
@@ -2501,11 +3000,13 @@ const BridgeApp = {
                                 İlişki etiketi
                             </span>
 
+
                             <input
                                 id="bridgeLabelInput"
                                 name="bridgeLabel"
                                 type="text"
                                 maxlength="80"
+                                autocomplete="off"
                                 value="${this.escapeHTML(
                                     bridge?.label ||
                                     ""
@@ -2521,6 +3022,7 @@ const BridgeApp = {
                             <span>
                                 Not
                             </span>
+
 
                             <textarea
                                 id="bridgeNoteInput"
@@ -2542,11 +3044,13 @@ const BridgeApp = {
                                 Etiketler
                             </span>
 
+
                             <input
                                 id="bridgeTagsInput"
                                 name="bridgeTags"
                                 type="text"
                                 maxlength="200"
+                                autocomplete="off"
                                 value="${this.escapeHTML(
                                     Array.isArray(
                                         bridge?.tags
@@ -2618,6 +3122,7 @@ const BridgeApp = {
                     ⌁
                 </span>
 
+
                 <h3>
                     ${
                         this.searchQuery ||
@@ -2628,15 +3133,19 @@ const BridgeApp = {
                     }
                 </h3>
 
+
                 <p>
                     ${
                         this.searchQuery ||
                         this.activeFilter !==
                             "all"
                             ? "Arama veya filtreyi değiştirerek tekrar deneyebilirsin."
-                            : targetCount > 0
-                                ? "Bu varlığı Engine içindeki diğer varlıklarla bağlayarak ilişki ağını oluşturmaya başla."
-                                : "Bağlantı kurmak için önce Engine içinde başka bir varlık oluştur."
+                            : (
+                                targetCount >
+                                    0
+                                    ? "Bu varlığı Engine içindeki diğer varlıklarla bağlayarak ilişki ağını oluşturmaya başla."
+                                    : "Bağlantı kurmak için önce Engine içinde başka bir varlık oluştur."
+                            )
                     }
                 </p>
 
@@ -2645,7 +3154,8 @@ const BridgeApp = {
                     !this.searchQuery &&
                     this.activeFilter ===
                         "all" &&
-                    targetCount > 0
+                    targetCount >
+                        0
                         ? `
                             <button
                                 type="button"
@@ -2665,15 +3175,73 @@ const BridgeApp = {
 
 
     /* =====================================================
+       UI FALLBACKS
+    ===================================================== */
+
+    renderAppHeader(entity){
+
+        if(
+            window.UI &&
+            typeof UI.appHeader ===
+                "function"
+        ){
+
+            return UI.appHeader(
+                this.escapeHTML(
+                    entity.name ||
+                    "İsimsiz Varlık"
+                ),
+                "BRIDGE",
+                "⌁"
+            );
+
+        }
+
+
+        return `
+            <header class="engine-app-header">
+
+                <span class="engine-section-label">
+                    BRIDGE
+                </span>
+
+                <h1>
+                    ${this.escapeHTML(
+                        entity.name ||
+                        "İsimsiz Varlık"
+                    )}
+                </h1>
+
+            </header>
+        `;
+
+    },
+
+
+    renderBrainPanel(){
+
+        try{
+
+            return (
+                window.UI
+                    ?.brainPanel?.() ||
+                ""
+            );
+
+        } catch(error){
+
+            return "";
+
+        }
+
+    },
+
+
+    /* =====================================================
        RENDER
     ===================================================== */
 
     render(entity){
-
-        this.enterBrainContext(
-            entity
-        );
-
 
         if(!entity){
 
@@ -2698,6 +3266,11 @@ const BridgeApp = {
         }
 
 
+        this.enterBrainContext(
+            entity
+        );
+
+
         const bridges =
             this.getBridges(
                 entity
@@ -2710,7 +3283,7 @@ const BridgeApp = {
             );
 
 
-        const selected =
+        let selected =
             this.selectedBridgeId
                 ? this.findBridge(
                     entity,
@@ -2719,11 +3292,46 @@ const BridgeApp = {
                 : null;
 
 
+        if(
+            this.selectedBridgeId &&
+            (
+                !selected ||
+                selected.archived ===
+                    true
+            )
+        ){
+
+            this.selectedBridgeId =
+                null;
+
+
+            this.editorMode =
+                null;
+
+
+            selected =
+                null;
+
+        }
+
+
         const editorBridge =
             this.editorMode ===
                 "edit"
                 ? selected
                 : null;
+
+
+        if(
+            this.editorMode ===
+                "edit" &&
+            !editorBridge
+        ){
+
+            this.editorMode =
+                null;
+
+        }
 
 
         return `
@@ -2744,13 +3352,8 @@ const BridgeApp = {
                     </div>
 
 
-                    ${UI.appHeader(
-                        this.escapeHTML(
-                            entity.name ||
-                            "İsimsiz Varlık"
-                        ),
-                        "BRIDGE",
-                        "⌁"
+                    ${this.renderAppHeader(
+                        entity
                     )}
 
 
@@ -2762,9 +3365,11 @@ const BridgeApp = {
                                 RELATIONSHIP NETWORK
                             </span>
 
+
                             <h2>
                                 Bağlantı ağı
                             </h2>
+
 
                             <p>
                                 Bu varlığın kişiler, şirketler, projeler ve diğer VAERO varlıklarıyla kurduğu yaşayan ilişkiler.
@@ -2866,6 +3471,7 @@ const BridgeApp = {
                             ◇
                         </span>
 
+
                         <div>
 
                             <strong>
@@ -2873,7 +3479,7 @@ const BridgeApp = {
                             </strong>
 
                             <small>
-                                Mesaj, sesli arama ve görüntülü arama daha sonra bu Bridge ilişkileri üzerinden çalışacak.
+                                Mesaj, sesli arama ve görüntülü arama için Bridge ilişkileri bağlantı altyapısı olarak kullanılabilir.
                             </small>
 
                         </div>
@@ -2881,7 +3487,7 @@ const BridgeApp = {
                     </div>
 
 
-                    ${UI.brainPanel()}
+                    ${this.renderBrainPanel()}
 
                 </div>
 
@@ -2909,6 +3515,224 @@ const BridgeApp = {
 
 
     /* =====================================================
+       TARGET NAVIGATION
+    ===================================================== */
+
+    openTargetEntity(
+        targetId
+    ){
+
+        const id =
+            String(
+                targetId ||
+                ""
+            ).trim();
+
+
+        if(!id){
+
+            return false;
+
+        }
+
+
+        const actions =
+            window.Actions ||
+            null;
+
+
+        if(
+            !actions ||
+            typeof actions.openEntity !==
+                "function"
+        ){
+
+            return false;
+
+        }
+
+
+        const engine =
+            this.getEngine();
+
+
+        const currentWorld =
+            engine?.currentWorld ||
+            null;
+
+
+        try{
+
+            if(
+                currentWorld &&
+                Array.isArray(
+                    currentWorld.entities
+                ) &&
+                currentWorld.entities.some(
+                    item =>
+                        String(
+                            item?.id
+                        ) ===
+                            id
+                )
+            ){
+
+                this.selectedBridgeId =
+                    null;
+
+
+                this.editorMode =
+                    null;
+
+
+                return actions.openEntity(
+                    id
+                );
+
+            }
+
+        } catch(error){
+
+            /* world search fallback */
+
+        }
+
+
+        const worldService =
+            this.getService(
+                "world"
+            );
+
+
+        if(
+            worldService &&
+            typeof worldService.all ===
+                "function"
+        ){
+
+            try{
+
+                const worlds =
+                    worldService.all();
+
+
+                if(
+                    Array.isArray(
+                        worlds
+                    )
+                ){
+
+                    const targetWorld =
+                        worlds.find(
+                            world =>
+                                Array.isArray(
+                                    world?.entities
+                                ) &&
+                                world.entities.some(
+                                    item =>
+                                        String(
+                                            item?.id
+                                        ) ===
+                                            id
+                                )
+                        );
+
+
+                    if(targetWorld){
+
+                        if(
+                            typeof actions.openWorld ===
+                                "function"
+                        ){
+
+                            const opened =
+                                actions.openWorld(
+                                    targetWorld.id
+                                );
+
+
+                            if(
+                                opened ===
+                                    false
+                            ){
+
+                                return false;
+
+                            }
+
+                        }
+
+
+                        this.selectedBridgeId =
+                            null;
+
+
+                        this.editorMode =
+                            null;
+
+
+                        return actions.openEntity(
+                            id
+                        );
+
+                    }
+
+                }
+
+            } catch(error){
+
+                console.warn(
+                    "Bridge hedef varlığı açılamadı:",
+                    error
+                );
+
+            }
+
+        }
+
+
+        /*
+         * EntityManager hedefi biliyorsa Actions karar versin.
+         */
+
+        if(
+            this.resolveTargetEntity(
+                id
+            )
+        ){
+
+            this.selectedBridgeId =
+                null;
+
+
+            this.editorMode =
+                null;
+
+
+            try{
+
+                return actions.openEntity(
+                    id
+                );
+
+            } catch(error){
+
+                console.warn(
+                    "Bridge hedef varlığı açılamadı:",
+                    error
+                );
+
+            }
+
+        }
+
+
+        return false;
+
+    },
+
+
+    /* =====================================================
        COMMANDS
     ===================================================== */
 
@@ -2922,7 +3746,9 @@ const BridgeApp = {
 
 
         if(!entity){
+
             return false;
+
         }
 
 
@@ -2933,6 +3759,7 @@ const BridgeApp = {
                 this.selectedBridgeId =
                     null;
 
+
                 this.editorMode =
                     "create";
 
@@ -2940,18 +3767,43 @@ const BridgeApp = {
                 return this.remount();
 
 
-            case "open":
+            case "open":{
+
+                const bridgeId =
+                    button?.dataset
+                        ?.bridgeId ||
+                    null;
+
+
+                const bridge =
+                    this.findBridge(
+                        entity,
+                        bridgeId
+                    );
+
+
+                if(
+                    !bridge ||
+                    bridge.archived ===
+                        true
+                ){
+
+                    return false;
+
+                }
+
 
                 this.selectedBridgeId =
-                    button.dataset
-                        .bridgeId ||
-                    null;
+                    bridgeId;
+
 
                 this.editorMode =
                     null;
 
 
                 return this.remount();
+
+            }
 
 
             case "close":
@@ -2959,6 +3811,7 @@ const BridgeApp = {
                 this.selectedBridgeId =
                     null;
 
+
                 this.editorMode =
                     null;
 
@@ -2966,18 +3819,44 @@ const BridgeApp = {
                 return this.remount();
 
 
-            case "edit":
+            case "edit":{
+
+                const bridgeId =
+                    button?.dataset
+                        ?.bridgeId ||
+                    this.selectedBridgeId ||
+                    null;
+
+
+                const bridge =
+                    this.findBridge(
+                        entity,
+                        bridgeId
+                    );
+
+
+                if(
+                    !bridge ||
+                    bridge.archived ===
+                        true
+                ){
+
+                    return false;
+
+                }
+
 
                 this.selectedBridgeId =
-                    button.dataset
-                        .bridgeId ||
-                    null;
+                    bridgeId;
+
 
                 this.editorMode =
                     "edit";
 
 
                 return this.remount();
+
+            }
 
 
             case "editor:cancel":
@@ -2989,15 +3868,41 @@ const BridgeApp = {
                 return this.remount();
 
 
-            case "filter":
+            case "filter":{
+
+                const filter =
+                    String(
+                        button?.dataset
+                            ?.bridgeFilter ||
+                        "all"
+                    );
+
+
+                const allowed = [
+
+                    "all",
+
+                    ...this
+                        .getRelationshipTypes()
+                        .map(
+                            type =>
+                                type.id
+                        )
+
+                ];
+
 
                 this.activeFilter =
-                    button.dataset
-                        .bridgeFilter ||
-                    "all";
+                    allowed.includes(
+                        filter
+                    )
+                        ? filter
+                        : "all";
+
 
                 this.selectedBridgeId =
                     null;
+
 
                 this.editorMode =
                     null;
@@ -3005,13 +3910,15 @@ const BridgeApp = {
 
                 return this.remount();
 
+            }
+
 
             case "favorite":
 
                 return this.toggleFavorite(
                     entity,
-                    button.dataset
-                        .bridgeId
+                    button?.dataset
+                        ?.bridgeId
                 );
 
 
@@ -3019,145 +3926,24 @@ const BridgeApp = {
 
                 return this.archiveBridge(
                     entity,
-                    button.dataset
-                        .bridgeId
+                    button?.dataset
+                        ?.bridgeId
                 );
 
 
-            case "target:open":{
+            case "target:open":
 
-                const targetId =
-                    button.dataset
-                        .targetEntityId ||
-                    null;
-
-
-                if(!targetId){
-                    return false;
-                }
+                return this.openTargetEntity(
+                    button?.dataset
+                        ?.targetEntityId
+                );
 
 
-                if(
-                    window.Actions &&
-                    typeof window.Actions
-                        .openEntity ===
-                        "function"
-                ){
-
-                    const engine =
-                        this.getEngine();
-
-
-                    const currentWorld =
-                        engine?.currentWorld;
-
-
-                    if(
-                        currentWorld &&
-                        Array.isArray(
-                            currentWorld.entities
-                        ) &&
-                        currentWorld.entities.some(
-                            item =>
-                                item?.id ===
-                                targetId
-                        )
-                    ){
-
-                        this.selectedBridgeId =
-                            null;
-
-
-                        return window.Actions
-                            .openEntity(
-                                targetId
-                            );
-
-                    }
-
-                }
-
-
-                const worldService =
-                    this.getService(
-                        "world"
-                    );
-
-
-                if(
-                    worldService &&
-                    typeof worldService.all ===
-                        "function"
-                ){
-
-                    try{
-
-                        const worlds =
-                            worldService.all() ||
-                            [];
-
-
-                        const targetWorld =
-                            worlds.find(
-                                world =>
-                                    Array.isArray(
-                                        world?.entities
-                                    ) &&
-                                    world.entities.some(
-                                        item =>
-                                            item?.id ===
-                                            targetId
-                                    )
-                            );
-
-
-                        if(
-                            targetWorld &&
-                            window.Actions
-                        ){
-
-                            const opened =
-                                window.Actions
-                                    .openWorld(
-                                        targetWorld.id
-                                    );
-
-
-                            if(opened){
-
-                                this.selectedBridgeId =
-                                    null;
-
-
-                                return window.Actions
-                                    .openEntity(
-                                        targetId
-                                    );
-
-                            }
-
-                        }
-
-                    } catch(error){
-
-                        console.warn(
-                            "Bridge hedef varlığı açılamadı:",
-                            error
-                        );
-
-                    }
-
-                }
-
+            default:
 
                 return false;
 
-            }
-
         }
-
-
-        return false;
 
     }
 
@@ -3179,7 +3965,9 @@ document.addEventListener(
 
 
         if(!button){
+
             return;
+
         }
 
 
@@ -3208,7 +3996,9 @@ document.addEventListener(
             event.target.id !==
                 "bridgeSearchInput"
         ){
+
             return;
+
         }
 
 
@@ -3231,8 +4021,10 @@ document.addEventListener(
                     BridgeApp.selectedBridgeId =
                         null;
 
+
                     BridgeApp.editorMode =
                         null;
+
 
                     BridgeApp.remount();
 
@@ -3259,7 +4051,9 @@ document.addEventListener(
 
 
         if(!form){
+
             return;
+
         }
 
 
@@ -3271,12 +4065,15 @@ document.addEventListener(
 
 
         if(!entity){
+
             return;
+
         }
 
 
         if(
-            form.dataset.bridgeForm ===
+            form.dataset
+                .bridgeForm ===
                 "create"
         ){
 
@@ -3291,7 +4088,8 @@ document.addEventListener(
 
 
         if(
-            form.dataset.bridgeForm ===
+            form.dataset
+                .bridgeForm ===
                 "edit"
         ){
 
@@ -3303,6 +4101,24 @@ document.addEventListener(
 
     }
 );
+
+
+/* =========================================================
+   REGISTER
+========================================================= */
+
+try{
+
+    VAERO?.register?.(
+        "bridgeApp",
+        BridgeApp
+    );
+
+} catch(error){
+
+    /* global remains available */
+
+}
 
 
 window.BridgeApp =
