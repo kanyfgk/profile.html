@@ -2,27 +2,26 @@
    VAERO APP
    Official VAERO Brand Application
 
-   Product / Atmosphere / Vision / Care / Payment Core
+   Product / Atmosphere / Vision / Care / Payment Intent
 
    IMPORTANT
    ---------------------------------------------------------
-   VAERO App is NOT the Engine system dashboard.
+   VAERO App is NOT VAERO Engine.
 
-   It is the official VAERO brand application living
-   inside VAERO Engine.
+   VAERO App is an official first-party application
+   running inside VAERO Engine.
 
-   Archive inspiration:
-   • VAERO Device
-   • Atmospheres
-   • Verified experience
-   • VAERO Care
-   • "Vizyonunu yarat, dünyaya göster."
+   Product availability, stock, price and checkout
+   information must come from verified runtime sources.
 ========================================================= */
 
 const VaeroApp = {
 
     id:
         "vaero",
+
+    version:
+        "3.0.0",
 
     title:
         "VAERO",
@@ -46,7 +45,7 @@ const VaeroApp = {
        PRODUCT CATALOG
     ===================================================== */
 
-    products:[
+    products: [
 
         {
             id:
@@ -70,19 +69,28 @@ const VaeroApp = {
             featured:
                 true,
 
-            purchasable:
-                true,
+            commerce: {
 
-            amount:
-                2490,
+                purchasable:
+                    null,
 
-            currency:
-                "TRY",
+                amount:
+                    null,
+
+                currency:
+                    null,
+
+                availability:
+                    "unknown",
+
+                stock:
+                    null
+            },
 
             atmosphere:
                 null,
 
-            tags:[
+            tags: [
                 "device",
                 "atmosphere",
                 "vaero"
@@ -112,19 +120,28 @@ const VaeroApp = {
             featured:
                 true,
 
-            purchasable:
-                false,
+            commerce: {
 
-            amount:
-                null,
+                purchasable:
+                    null,
 
-            currency:
-                null,
+                amount:
+                    null,
+
+                currency:
+                    null,
+
+                availability:
+                    "unknown",
+
+                stock:
+                    null
+            },
 
             atmosphere:
                 "clean",
 
-            tags:[
+            tags: [
                 "white-tea",
                 "clean",
                 "balanced"
@@ -154,19 +171,28 @@ const VaeroApp = {
             featured:
                 false,
 
-            purchasable:
-                false,
+            commerce: {
 
-            amount:
-                null,
+                purchasable:
+                    null,
 
-            currency:
-                null,
+                amount:
+                    null,
+
+                currency:
+                    null,
+
+                availability:
+                    "unknown",
+
+                stock:
+                    null
+            },
 
             atmosphere:
                 "fresh",
 
-            tags:[
+            tags: [
                 "ocean",
                 "fresh",
                 "open"
@@ -177,10 +203,10 @@ const VaeroApp = {
 
 
     /* =====================================================
-       ARCHIVE-INSPIRED EXPERIENCE LAYER
+       EXPERIENCE LAYER
     ===================================================== */
 
-    experiences:[
+    experiences: [
 
         {
             id:
@@ -263,7 +289,8 @@ const VaeroApp = {
     escapeHTML(value){
 
         return String(
-            value ?? ""
+            value ??
+            ""
         )
             .replaceAll(
                 "&",
@@ -314,15 +341,39 @@ const VaeroApp = {
         }
 
 
-        return (
-            window.Engine ||
-            null
-        );
+        if(
+            typeof window !==
+                "undefined"
+        ){
+
+            return (
+                window.Engine ||
+                null
+            );
+
+        }
+
+
+        return null;
 
     },
 
 
     getService(name){
+
+        const serviceName =
+            String(
+                name ??
+                ""
+            ).trim();
+
+
+        if(!serviceName){
+
+            return null;
+
+        }
+
 
         try{
 
@@ -340,7 +391,7 @@ const VaeroApp = {
 
             return (
                 VAERO.get(
-                    name
+                    serviceName
                 ) ||
                 null
             );
@@ -354,20 +405,50 @@ const VaeroApp = {
     },
 
 
+    getCurrentEntity(){
+
+        const engine =
+            this.getEngine();
+
+
+        return (
+            engine?.currentOpenedEntity ||
+            engine?.currentEntity ||
+            engine?.rootEntity ||
+            null
+        );
+
+    },
+
+
+    getCurrentWorld(){
+
+        const engine =
+            this.getEngine();
+
+
+        return (
+            engine?.currentWorld ||
+            null
+        );
+
+    },
+
+
     /* =====================================================
        STORAGE
     ===================================================== */
 
-    storageKeys:{
+    storageKeys: {
 
         vision:
-            "vaero:brand:vision:draft:v1",
+            "vaero:brand:vision:draft:v2",
 
         payment:
-            "vaero:payment:intents:v1",
+            "vaero:payment:intents:v2",
 
         entitlements:
-            "vaero:payment:entitlements:v1"
+            "vaero:payment:entitlements:v2"
 
     },
 
@@ -376,6 +457,16 @@ const VaeroApp = {
         key,
         fallback
     ){
+
+        if(
+            typeof localStorage ===
+                "undefined"
+        ){
+
+            return fallback;
+
+        }
+
 
         try{
 
@@ -409,6 +500,16 @@ const VaeroApp = {
         key,
         value
     ){
+
+        if(
+            typeof localStorage ===
+                "undefined"
+        ){
+
+            return false;
+
+        }
+
 
         try{
 
@@ -472,11 +573,25 @@ const VaeroApp = {
 
     getProduct(id){
 
+        const productId =
+            String(
+                id ||
+                ""
+            ).trim();
+
+
+        if(!productId){
+
+            return null;
+
+        }
+
+
         return (
             this.products.find(
                 product =>
                     product.id ===
-                    id
+                    productId
             ) ||
             null
         );
@@ -510,6 +625,198 @@ const VaeroApp = {
     },
 
 
+    /* =====================================================
+       COMMERCE SOURCE
+    ===================================================== */
+
+    getCommerceService(){
+
+        return (
+            this.getService(
+                "commerce"
+            ) ||
+            this.getService(
+                "commerceCore"
+            ) ||
+            this.getService(
+                "productCatalog"
+            ) ||
+            null
+        );
+
+    },
+
+
+    getRuntimeCommerce(
+        product
+    ){
+
+        if(!product){
+
+            return null;
+
+        }
+
+
+        const commerce =
+            this.getCommerceService();
+
+
+        if(!commerce){
+
+            return null;
+
+        }
+
+
+        try{
+
+            if(
+                typeof commerce.getProduct ===
+                    "function"
+            ){
+
+                const result =
+                    commerce.getProduct(
+                        product.id
+                    );
+
+
+                if(
+                    result &&
+                    typeof result ===
+                        "object" &&
+                    !Array.isArray(
+                        result
+                    )
+                ){
+
+                    return result;
+
+                }
+
+            }
+
+        } catch(error){
+
+            /* no verified runtime data */
+
+        }
+
+
+        return null;
+
+    },
+
+
+    getProductCommerce(product){
+
+        if(!product){
+
+            return {
+
+                purchasable:
+                    false,
+
+                known:
+                    false,
+
+                amount:
+                    null,
+
+                currency:
+                    null,
+
+                availability:
+                    "unknown",
+
+                stock:
+                    null
+
+            };
+
+        }
+
+
+        const runtime =
+            this.getRuntimeCommerce(
+                product
+            );
+
+
+        const amountValue =
+            Number(
+                runtime?.amount
+            );
+
+
+        const amount =
+            Number.isFinite(
+                amountValue
+            ) &&
+            amountValue >=
+                0
+                ? amountValue
+                : null;
+
+
+        const currency =
+            runtime?.currency
+                ? String(
+                    runtime.currency
+                )
+                    .trim()
+                    .toUpperCase()
+                : null;
+
+
+        const purchasable =
+            Boolean(
+                runtime &&
+                runtime.purchasable ===
+                    true &&
+                amount !==
+                    null &&
+                currency
+            );
+
+
+        return {
+
+            purchasable,
+
+            known:
+                Boolean(
+                    runtime
+                ),
+
+            amount,
+
+            currency,
+
+            availability:
+                runtime?.availability
+                    ? String(
+                        runtime.availability
+                    )
+                    : "unknown",
+
+            stock:
+                Number.isFinite(
+                    Number(
+                        runtime?.stock
+                    )
+                )
+                    ? Number(
+                        runtime.stock
+                    )
+                    : null
+
+        };
+
+    },
+
+
     formatMoney(
         amount,
         currency
@@ -524,10 +831,11 @@ const VaeroApp = {
         if(
             !Number.isFinite(
                 numeric
-            )
+            ) ||
+            !currency
         ){
 
-            return "Yakında";
+            return "Fiyat bilgisi bekleniyor";
 
         }
 
@@ -537,15 +845,20 @@ const VaeroApp = {
             return new Intl.NumberFormat(
                 "tr-TR",
                 {
+
                     style:
                         "currency",
 
                     currency:
-                        currency ||
-                        "TRY",
+                        String(
+                            currency
+                        )
+                            .trim()
+                            .toUpperCase(),
 
                     maximumFractionDigits:
-                        0
+                        2
+
                 }
             ).format(
                 numeric
@@ -553,9 +866,66 @@ const VaeroApp = {
 
         } catch(error){
 
-            return `${numeric} ${currency || "TRY"}`;
+            return `${numeric} ${currency}`;
 
         }
+
+    },
+
+
+    getAvailabilityLabel(
+        commerce
+    ){
+
+        if(
+            !commerce ||
+            commerce.known !==
+                true
+        ){
+
+            return "Bilgi bekleniyor";
+
+        }
+
+
+        const status =
+            String(
+                commerce.availability ||
+                "unknown"
+            )
+                .trim()
+                .toLowerCase();
+
+
+        const labels = {
+
+            available:
+                "Satışta",
+
+            preorder:
+                "Ön sipariş",
+
+            unavailable:
+                "Şu anda satışta değil",
+
+            soldout:
+                "Stokta yok",
+
+            "sold-out":
+                "Stokta yok",
+
+            unknown:
+                "Bilgi bekleniyor"
+
+        };
+
+
+        return (
+            labels[
+                status
+            ] ||
+            "Bilgi bekleniyor"
+        );
 
     },
 
@@ -570,8 +940,12 @@ const VaeroApp = {
 
         try{
 
-            const engine =
-                this.getEngine();
+            const entity =
+                this.getCurrentEntity();
+
+
+            const world =
+                this.getCurrentWorld();
 
 
             const awareness =
@@ -580,19 +954,27 @@ const VaeroApp = {
                 );
 
 
-            awareness?.enter?.(
+            if(
+                !awareness ||
+                typeof awareness.enter !==
+                    "function"
+            ){
+
+                return false;
+
+            }
+
+
+            awareness.enter(
                 "vaero",
                 {
+
                     entityId:
-                        engine
-                            ?.currentEntity
-                            ?.id ||
+                        entity?.id ||
                         null,
 
                     worldId:
-                        engine
-                            ?.currentWorld
-                            ?.id ||
+                        world?.id ||
                         null,
 
                     brand:
@@ -608,9 +990,25 @@ const VaeroApp = {
                         this.activeProductId ||
                         null,
 
-                    ...extra
+                    source:
+                        "vaero-app",
+
+                    ...(
+                        extra &&
+                        typeof extra ===
+                            "object" &&
+                        !Array.isArray(
+                            extra
+                        )
+                            ? extra
+                            : {}
+                    )
+
                 }
             );
+
+
+            return true;
 
         } catch(error){
 
@@ -618,6 +1016,9 @@ const VaeroApp = {
                 "VAERO Brain context açılamadı:",
                 error
             );
+
+
+            return false;
 
         }
 
@@ -628,7 +1029,16 @@ const VaeroApp = {
        VIEW NAVIGATION
     ===================================================== */
 
-    openView(view){
+    normalizeView(view){
+
+        const normalized =
+            String(
+                view ||
+                "discover"
+            )
+                .trim()
+                .toLowerCase();
+
 
         const allowed = [
 
@@ -641,19 +1051,25 @@ const VaeroApp = {
         ];
 
 
-        if(
-            !allowed.includes(
+        return allowed.includes(
+            normalized
+        )
+            ? normalized
+            : "discover";
+
+    },
+
+
+    openView(view){
+
+        const normalized =
+            this.normalizeView(
                 view
-            )
-        ){
-
-            return false;
-
-        }
+            );
 
 
         this.activeView =
-            view;
+            normalized;
 
 
         this.enterBrainContext();
@@ -682,13 +1098,16 @@ const VaeroApp = {
         this.activeProductId =
             product.id;
 
+
         this.activeView =
             "product";
 
 
         this.enterBrainContext({
+
             productId:
                 product.id
+
         });
 
 
@@ -701,6 +1120,9 @@ const VaeroApp = {
 
         this.activeView =
             "discover";
+
+
+        this.enterBrainContext();
 
 
         return this.refresh();
@@ -719,36 +1141,88 @@ const VaeroApp = {
 
 
         if(
-            engine &&
-            typeof engine.mount ===
+            !engine ||
+            typeof engine.mount !==
                 "function"
         ){
 
-            engine.mount(
-                engine.currentEntity
-            );
-
-
-            return true;
+            return false;
 
         }
 
 
-        return false;
+        const entity =
+            engine.currentOpenedEntity ||
+            engine.currentEntity ||
+            engine.rootEntity ||
+            null;
+
+
+        if(!entity){
+
+            return false;
+
+        }
+
+
+        try{
+
+            return (
+                engine.mount(
+                    entity
+                ) !==
+                false
+            );
+
+        } catch(error){
+
+            console.warn(
+                "VAERO App refresh failed:",
+                error
+            );
+
+
+            return false;
+
+        }
 
     },
 
 
     /* =====================================================
-       PAYMENT CORE
+       CONTINUE IN PART 2
     ===================================================== */
 
-    paymentCore:{
+   /* =====================================================
+       PAYMENT INTENT CORE
+    ===================================================== */
 
-        intents:[],
+    paymentCore: {
 
+        version:
+            "3.0.0",
+
+        intents: [],
+
+        loaded:
+            false,
+
+
+        /* =================================================
+           HOST
+        ================================================= */
 
         getHost(){
+
+            if(
+                typeof window ===
+                    "undefined"
+            ){
+
+                return null;
+
+            }
+
 
             return (
                 window.VaeroApp ||
@@ -758,7 +1232,158 @@ const VaeroApp = {
         },
 
 
+        getService(name){
+
+            const host =
+                this.getHost();
+
+
+            if(
+                !host ||
+                typeof host.getService !==
+                    "function"
+            ){
+
+                return null;
+
+            }
+
+
+            return host.getService(
+                name
+            );
+
+        },
+
+
+        /* =================================================
+           NORMALIZATION
+        ================================================= */
+
+        normalizeStatus(status){
+
+            const value =
+                String(
+                    status ||
+                    "draft"
+                )
+                    .trim()
+                    .toLowerCase();
+
+
+            const allowed = [
+
+                "draft",
+                "requires-selection",
+                "ready",
+                "awaiting-provider",
+                "provider-unavailable",
+                "cancelled",
+                "completed",
+                "failed",
+                "refund-requested",
+                "refunded"
+
+            ];
+
+
+            return allowed.includes(
+                value
+            )
+                ? value
+                : "draft";
+
+        },
+
+
+        normalizeMethod(method){
+
+            const value =
+                String(
+                    method ||
+                    ""
+                )
+                    .trim()
+                    .toLowerCase();
+
+
+            return value ||
+                null;
+
+        },
+
+
+        normalizeProvider(provider){
+
+            const value =
+                String(
+                    provider ||
+                    ""
+                )
+                    .trim()
+                    .toLowerCase();
+
+
+            return value ||
+                null;
+
+        },
+
+
+        cloneIntent(intent){
+
+            if(!intent){
+
+                return null;
+
+            }
+
+
+            return {
+
+                ...intent,
+
+                metadata: {
+                    ...(
+                        intent.metadata ||
+                        {}
+                    )
+                },
+
+                commerceSnapshot: {
+                    ...(
+                        intent.commerceSnapshot ||
+                        {}
+                    )
+                },
+
+                providerState: {
+                    ...(
+                        intent.providerState ||
+                        {}
+                    )
+                }
+
+            };
+
+        },
+
+
+        /* =================================================
+           LOAD / SAVE
+        ================================================= */
+
         load(){
+
+            if(
+                this.loaded ===
+                    true
+            ){
+
+                return this.all();
+
+            }
+
 
             const host =
                 this.getHost();
@@ -769,7 +1394,13 @@ const VaeroApp = {
                 this.intents =
                     [];
 
-                return;
+
+                this.loaded =
+                    true;
+
+
+                return [];
+
             }
 
 
@@ -780,12 +1411,155 @@ const VaeroApp = {
                 );
 
 
-            this.intents =
-                Array.isArray(
+            if(
+                !Array.isArray(
                     saved
                 )
-                    ? saved
-                    : [];
+            ){
+
+                this.intents =
+                    [];
+
+
+                this.loaded =
+                    true;
+
+
+                return [];
+
+            }
+
+
+            this.intents =
+                saved
+                    .filter(
+                        intent =>
+                            intent &&
+                            typeof intent ===
+                                "object" &&
+                            !Array.isArray(
+                                intent
+                            ) &&
+                            intent.id
+                    )
+                    .map(
+                        intent => ({
+
+                            ...intent,
+
+                            id:
+                                String(
+                                    intent.id
+                                ),
+
+                            source:
+                                String(
+                                    intent.source ||
+                                    "vaero"
+                                ),
+
+                            productId:
+                                intent.productId ||
+                                null,
+
+                            title:
+                                String(
+                                    intent.title ||
+                                    "VAERO Purchase"
+                                ),
+
+                            amount:
+                                Number.isFinite(
+                                    Number(
+                                        intent.amount
+                                    )
+                                )
+                                    ? Number(
+                                        intent.amount
+                                    )
+                                    : null,
+
+                            currency:
+                                intent.currency
+                                    ? String(
+                                        intent.currency
+                                    )
+                                        .trim()
+                                        .toUpperCase()
+                                    : null,
+
+                            quantity:
+                                Math.max(
+                                    1,
+                                    Number(
+                                        intent.quantity
+                                    ) ||
+                                    1
+                                ),
+
+                            method:
+                                this.normalizeMethod(
+                                    intent.method
+                                ),
+
+                            provider:
+                                this.normalizeProvider(
+                                    intent.provider
+                                ),
+
+                            status:
+                                this.normalizeStatus(
+                                    intent.status
+                                ),
+
+                            verified:
+                                false,
+
+                            transactionId:
+                                null,
+
+                            commerceSnapshot: {
+                                ...(
+                                    intent.commerceSnapshot ||
+                                    {}
+                                )
+                            },
+
+                            providerState: {
+                                ...(
+                                    intent.providerState ||
+                                    {}
+                                )
+                            },
+
+                            metadata: {
+                                ...(
+                                    intent.metadata ||
+                                    {}
+                                )
+                            },
+
+                            createdAt:
+                                Number(
+                                    intent.createdAt
+                                ) ||
+                                Date.now(),
+
+                            updatedAt:
+                                Number(
+                                    intent.updatedAt
+                                ) ||
+                                Date.now()
+
+                        })
+                    );
+
+
+            this.loaded =
+                true;
+
+
+            return this.all();
 
         },
 
@@ -803,20 +1577,113 @@ const VaeroApp = {
             }
 
 
+            const safeIntents =
+                this.intents.map(
+                    intent => ({
+
+                        id:
+                            intent.id,
+
+                        source:
+                            intent.source,
+
+                        productId:
+                            intent.productId,
+
+                        title:
+                            intent.title,
+
+                        amount:
+                            intent.amount,
+
+                        currency:
+                            intent.currency,
+
+                        quantity:
+                            intent.quantity,
+
+                        method:
+                            intent.method,
+
+                        provider:
+                            intent.provider,
+
+                        status:
+                            (
+                                intent.status ===
+                                    "completed" ||
+                                intent.status ===
+                                    "refunded"
+                            )
+                                ? "awaiting-provider"
+                                : intent.status,
+
+                        verified:
+                            false,
+
+                        transactionId:
+                            null,
+
+                        commerceSnapshot: {
+                            ...(
+                                intent.commerceSnapshot ||
+                                {}
+                            )
+                        },
+
+                        providerState: {
+                            ...(
+                                intent.providerState ||
+                                {}
+                            )
+                        },
+
+                        metadata: {
+                            ...(
+                                intent.metadata ||
+                                {}
+                            )
+                        },
+
+                        createdAt:
+                            intent.createdAt,
+
+                        updatedAt:
+                            intent.updatedAt
+
+                    })
+                );
+
+
             return host.writeJSON(
                 host.storageKeys.payment,
-                this.intents
+                safeIntents
             );
 
         },
 
 
+        /* =================================================
+           READ
+        ================================================= */
+
         all(){
 
+            if(
+                this.loaded !==
+                    true
+            ){
+
+                this.load();
+
+            }
+
+
             return this.intents.map(
-                intent => ({
-                    ...intent
-                })
+                intent =>
+                    this.cloneIntent(
+                        intent
+                    )
             );
 
         },
@@ -824,22 +1691,86 @@ const VaeroApp = {
 
         get(intentId){
 
+            if(
+                this.loaded !==
+                    true
+            ){
+
+                this.load();
+
+            }
+
+
+            const id =
+                String(
+                    intentId ||
+                    ""
+                ).trim();
+
+
+            if(!id){
+
+                return null;
+
+            }
+
+
             const intent =
                 this.intents.find(
                     item =>
                         item.id ===
-                        intentId
+                        id
                 );
 
 
-            return intent
-                ? {
-                    ...intent
-                }
-                : null;
+            return this.cloneIntent(
+                intent
+            );
 
         },
 
+
+        getMutable(intentId){
+
+            if(
+                this.loaded !==
+                    true
+            ){
+
+                this.load();
+
+            }
+
+
+            const id =
+                String(
+                    intentId ||
+                    ""
+                ).trim();
+
+
+            if(!id){
+
+                return null;
+
+            }
+
+
+            return (
+                this.intents.find(
+                    item =>
+                        item.id ===
+                        id
+                ) ||
+                null
+            );
+
+        },
+
+
+        /* =================================================
+           CREATE
+        ================================================= */
 
         createIntent(
             payload = {}
@@ -866,9 +1797,43 @@ const VaeroApp = {
                 Number.isFinite(
                     amountValue
                 ) &&
-                amountValue >= 0
+                amountValue >=
+                    0
                     ? amountValue
                     : null;
+
+
+            const currency =
+                payload.currency
+                    ? String(
+                        payload.currency
+                    )
+                        .trim()
+                        .toUpperCase()
+                    : null;
+
+
+            if(
+                amount ===
+                    null ||
+                !currency
+            ){
+
+                return null;
+
+            }
+
+
+            const quantity =
+                Math.max(
+                    1,
+                    Math.floor(
+                        Number(
+                            payload.quantity
+                        ) ||
+                        1
+                    )
+                );
 
 
             const intent = {
@@ -882,7 +1847,9 @@ const VaeroApp = {
                     String(
                         payload.source ||
                         "vaero"
-                    ),
+                    )
+                        .trim()
+                        .toLowerCase(),
 
                 productId:
                     payload.productId ||
@@ -891,28 +1858,14 @@ const VaeroApp = {
                 title:
                     String(
                         payload.title ||
-                        "VAERO Payment"
-                    ),
+                        "VAERO Purchase"
+                    ).trim(),
 
                 amount,
 
-                currency:
-                    payload.currency
-                        ? String(
-                            payload.currency
-                        )
-                            .trim()
-                            .toUpperCase()
-                        : null,
+                currency,
 
-                quantity:
-                    Math.max(
-                        1,
-                        Number(
-                            payload.quantity
-                        ) ||
-                        1
-                    ),
+                quantity,
 
                 method:
                     null,
@@ -921,24 +1874,63 @@ const VaeroApp = {
                     null,
 
                 status:
-                    "draft",
+                    "requires-selection",
 
-                createdAt:
-                    Date.now(),
+                verified:
+                    false,
 
-                updatedAt:
-                    Date.now(),
+                transactionId:
+                    null,
+
+                commerceSnapshot: {
+
+                    amount,
+
+                    currency,
+
+                    availability:
+                        payload
+                            ?.commerceSnapshot
+                            ?.availability ||
+                        null,
+
+                    capturedAt:
+                        Date.now()
+
+                },
+
+                providerState: {
+
+                    connected:
+                        false,
+
+                    reference:
+                        null,
+
+                    lastAttemptAt:
+                        null
+
+                },
 
                 metadata:
                     (
                         payload.metadata &&
                         typeof payload.metadata ===
-                            "object"
+                            "object" &&
+                        !Array.isArray(
+                            payload.metadata
+                        )
                     )
                         ? {
                             ...payload.metadata
                         }
-                        : {}
+                        : {},
+
+                createdAt:
+                    Date.now(),
+
+                updatedAt:
+                    Date.now()
 
             };
 
@@ -951,12 +1943,16 @@ const VaeroApp = {
             this.save();
 
 
-            return {
-                ...intent
-            };
+            return this.cloneIntent(
+                intent
+            );
 
         },
 
+
+        /* =================================================
+           PAYMENT METHOD
+        ================================================= */
 
         setMethod(
             intentId,
@@ -964,16 +1960,35 @@ const VaeroApp = {
         ){
 
             const intent =
-                this.intents.find(
-                    item =>
-                        item.id ===
-                        intentId
+                this.getMutable(
+                    intentId
+                );
+
+
+            const normalizedMethod =
+                this.normalizeMethod(
+                    method
                 );
 
 
             if(
                 !intent ||
-                !method
+                !normalizedMethod
+            ){
+
+                return false;
+
+            }
+
+
+            if(
+                [
+                    "cancelled",
+                    "completed",
+                    "refunded"
+                ].includes(
+                    intent.status
+                )
             ){
 
                 return false;
@@ -982,17 +1997,13 @@ const VaeroApp = {
 
 
             intent.method =
-                String(
-                    method
-                )
-                    .trim()
-                    .toLowerCase();
+                normalizedMethod;
 
 
             intent.status =
                 intent.provider
                     ? "ready"
-                    : "draft";
+                    : "requires-selection";
 
 
             intent.updatedAt =
@@ -1002,9 +2013,9 @@ const VaeroApp = {
             this.save();
 
 
-            return {
-                ...intent
-            };
+            return this.cloneIntent(
+                intent
+            );
 
         },
 
@@ -1022,22 +2033,169 @@ const VaeroApp = {
         },
 
 
+        /* =================================================
+           PROVIDER REGISTRY
+        ================================================= */
+
+        getProviderRegistry(){
+
+            return (
+                this.getService(
+                    "paymentProviderRegistry"
+                ) ||
+                this.getService(
+                    "checkoutProviderRegistry"
+                ) ||
+                null
+            );
+
+        },
+
+
+        getProvider(providerId){
+
+            const id =
+                this.normalizeProvider(
+                    providerId
+                );
+
+
+            if(!id){
+
+                return null;
+
+            }
+
+
+            const registry =
+                this.getProviderRegistry();
+
+
+            if(!registry){
+
+                return null;
+
+            }
+
+
+            try{
+
+                if(
+                    typeof registry.get ===
+                        "function"
+                ){
+
+                    return (
+                        registry.get(
+                            id
+                        ) ||
+                        null
+                    );
+
+                }
+
+
+                if(
+                    typeof registry.find ===
+                        "function"
+                ){
+
+                    return (
+                        registry.find(
+                            id
+                        ) ||
+                        null
+                    );
+
+                }
+
+            } catch(error){
+
+                return null;
+
+            }
+
+
+            return null;
+
+        },
+
+
+        getAvailableProviders(){
+
+            const registry =
+                this.getProviderRegistry();
+
+
+            if(!registry){
+
+                return [];
+
+            }
+
+
+            try{
+
+                if(
+                    typeof registry.all ===
+                        "function"
+                ){
+
+                    const providers =
+                        registry.all();
+
+
+                    return Array.isArray(
+                        providers
+                    )
+                        ? providers
+                            .filter(
+                                provider =>
+                                    provider &&
+                                    provider.enabled !==
+                                        false
+                            )
+                            .map(
+                                provider => ({
+                                    ...provider
+                                })
+                            )
+                        : [];
+
+                }
+
+            } catch(error){
+
+                return [];
+
+            }
+
+
+            return [];
+
+        },
+
+
         setProvider(
             intentId,
-            provider
+            providerId
         ){
 
             const intent =
-                this.intents.find(
-                    item =>
-                        item.id ===
-                        intentId
+                this.getMutable(
+                    intentId
+                );
+
+
+            const normalizedProvider =
+                this.normalizeProvider(
+                    providerId
                 );
 
 
             if(
                 !intent ||
-                !provider
+                !normalizedProvider
             ){
 
                 return false;
@@ -1045,18 +2203,86 @@ const VaeroApp = {
             }
 
 
-            intent.provider =
-                String(
-                    provider
+            if(
+                [
+                    "cancelled",
+                    "completed",
+                    "refunded"
+                ].includes(
+                    intent.status
                 )
-                    .trim()
-                    .toLowerCase();
+            ){
+
+                return false;
+
+            }
+
+
+            const provider =
+                this.getProvider(
+                    normalizedProvider
+                );
+
+
+            if(!provider){
+
+                intent.provider =
+                    null;
+
+
+                intent.providerState = {
+
+                    connected:
+                        false,
+
+                    reference:
+                        null,
+
+                    lastAttemptAt:
+                        Date.now()
+
+                };
+
+
+                intent.status =
+                    "provider-unavailable";
+
+
+                intent.updatedAt =
+                    Date.now();
+
+
+                this.save();
+
+
+                return false;
+
+            }
+
+
+            intent.provider =
+                normalizedProvider;
+
+
+            intent.providerState = {
+
+                connected:
+                    true,
+
+                reference:
+                    provider.id ||
+                    normalizedProvider,
+
+                lastAttemptAt:
+                    null
+
+            };
 
 
             intent.status =
                 intent.method
                     ? "ready"
-                    : "draft";
+                    : "requires-selection";
 
 
             intent.updatedAt =
@@ -1066,33 +2292,35 @@ const VaeroApp = {
             this.save();
 
 
-            return {
-                ...intent
-            };
+            return this.cloneIntent(
+                intent
+            );
 
         },
 
 
         selectProvider(
             intentId,
-            provider
+            providerId
         ){
 
             return this.setProvider(
                 intentId,
-                provider
+                providerId
             );
 
         },
 
 
+        /* =================================================
+           PROVIDER EXECUTION
+        ================================================= */
+
         start(intentId){
 
             const intent =
-                this.intents.find(
-                    item =>
-                        item.id ===
-                        intentId
+                this.getMutable(
+                    intentId
                 );
 
 
@@ -1103,21 +2331,28 @@ const VaeroApp = {
             }
 
 
-            /*
-             * Gerçek provider henüz bu dosyada
-             * taklit edilmez.
-             *
-             * Kullanıcıdan ödeme alınmış gibi
-             * sahte "completed" üretmiyoruz.
-             */
+            if(
+                [
+                    "cancelled",
+                    "completed",
+                    "refunded"
+                ].includes(
+                    intent.status
+                )
+            ){
+
+                return false;
+
+            }
+
 
             if(
-                !intent.method ||
-                !intent.provider
+                !intent.method
             ){
 
                 intent.status =
                     "requires-selection";
+
 
                 intent.updatedAt =
                     Date.now();
@@ -1126,15 +2361,285 @@ const VaeroApp = {
                 this.save();
 
 
-                return {
-                    ...intent
+                return this.cloneIntent(
+                    intent
+                );
+
+            }
+
+
+            if(
+                !intent.provider
+            ){
+
+                intent.status =
+                    "provider-unavailable";
+
+
+                intent.updatedAt =
+                    Date.now();
+
+
+                this.save();
+
+
+                return this.cloneIntent(
+                    intent
+                );
+
+            }
+
+
+            const provider =
+                this.getProvider(
+                    intent.provider
+                );
+
+
+            if(!provider){
+
+                intent.status =
+                    "provider-unavailable";
+
+
+                intent.providerState = {
+
+                    connected:
+                        false,
+
+                    reference:
+                        intent.provider,
+
+                    lastAttemptAt:
+                        Date.now()
+
                 };
+
+
+                intent.updatedAt =
+                    Date.now();
+
+
+                this.save();
+
+
+                return this.cloneIntent(
+                    intent
+                );
+
+            }
+
+
+            const startCheckout =
+                typeof provider.startCheckout ===
+                    "function"
+                    ? provider.startCheckout
+                    : (
+                        typeof provider.start ===
+                            "function"
+                            ? provider.start
+                            : null
+                    );
+
+
+            if(!startCheckout){
+
+                intent.status =
+                    "provider-unavailable";
+
+
+                intent.providerState = {
+
+                    connected:
+                        true,
+
+                    reference:
+                        provider.id ||
+                        intent.provider,
+
+                    lastAttemptAt:
+                        Date.now()
+
+                };
+
+
+                intent.updatedAt =
+                    Date.now();
+
+
+                this.save();
+
+
+                return this.cloneIntent(
+                    intent
+                );
+
+            }
+
+
+            let result =
+                null;
+
+
+            try{
+
+                result =
+                    startCheckout.call(
+                        provider,
+                        {
+
+                            intentId:
+                                intent.id,
+
+                            productId:
+                                intent.productId,
+
+                            title:
+                                intent.title,
+
+                            amount:
+                                intent.amount,
+
+                            currency:
+                                intent.currency,
+
+                            quantity:
+                                intent.quantity,
+
+                            method:
+                                intent.method,
+
+                            source:
+                                intent.source
+
+                        }
+                    );
+
+            } catch(error){
+
+                console.error(
+                    "VAERO payment provider start failed:",
+                    error
+                );
+
+
+                intent.status =
+                    "failed";
+
+
+                intent.providerState = {
+
+                    connected:
+                        true,
+
+                    reference:
+                        provider.id ||
+                        intent.provider,
+
+                    lastAttemptAt:
+                        Date.now()
+
+                };
+
+
+                intent.updatedAt =
+                    Date.now();
+
+
+                this.save();
+
+
+                return this.cloneIntent(
+                    intent
+                );
+
+            }
+
+
+            if(
+                result &&
+                typeof result.then ===
+                    "function"
+            ){
+
+                intent.status =
+                    "awaiting-provider";
+
+
+                intent.providerState = {
+
+                    connected:
+                        true,
+
+                    reference:
+                        provider.id ||
+                        intent.provider,
+
+                    lastAttemptAt:
+                        Date.now()
+
+                };
+
+
+                intent.updatedAt =
+                    Date.now();
+
+
+                this.save();
+
+
+                return this.cloneIntent(
+                    intent
+                );
+
+            }
+
+
+            if(
+                result ===
+                    false ||
+                result?.success ===
+                    false
+            ){
+
+                intent.status =
+                    "failed";
+
+
+                intent.updatedAt =
+                    Date.now();
+
+
+                this.save();
+
+
+                return this.cloneIntent(
+                    intent
+                );
 
             }
 
 
             intent.status =
                 "awaiting-provider";
+
+
+            intent.providerState = {
+
+                connected:
+                    true,
+
+                reference:
+                    result?.reference ||
+                    result?.checkoutId ||
+                    provider.id ||
+                    intent.provider,
+
+                lastAttemptAt:
+                    Date.now()
+
+            };
+
 
             intent.updatedAt =
                 Date.now();
@@ -1143,9 +2648,9 @@ const VaeroApp = {
             this.save();
 
 
-            return {
-                ...intent
-            };
+            return this.cloneIntent(
+                intent
+            );
 
         },
 
@@ -1159,13 +2664,15 @@ const VaeroApp = {
         },
 
 
+        /* =================================================
+           CANCEL
+        ================================================= */
+
         cancel(intentId){
 
             const intent =
-                this.intents.find(
-                    item =>
-                        item.id ===
-                        intentId
+                this.getMutable(
+                    intentId
                 );
 
 
@@ -1177,10 +2684,12 @@ const VaeroApp = {
 
 
             if(
-                intent.status ===
-                    "completed" ||
-                intent.status ===
+                [
+                    "completed",
                     "refunded"
+                ].includes(
+                    intent.status
+                )
             ){
 
                 return false;
@@ -1191,6 +2700,7 @@ const VaeroApp = {
             intent.status =
                 "cancelled";
 
+
             intent.updatedAt =
                 Date.now();
 
@@ -1198,9 +2708,9 @@ const VaeroApp = {
             this.save();
 
 
-            return {
-                ...intent
-            };
+            return this.cloneIntent(
+                intent
+            );
 
         },
 
@@ -1214,25 +2724,26 @@ const VaeroApp = {
         },
 
 
+        /* =================================================
+           REFUND REQUEST
+        ================================================= */
+
         refund(transactionId){
 
-            const intent =
-                this.intents.find(
-                    item =>
-                        item.id ===
-                        transactionId
+            const transactionService =
+                this.getService(
+                    "paymentTransactions"
+                ) ||
+                this.getService(
+                    "paymentService"
                 );
 
 
-            /*
-             * Yalnız doğrulanmış tamamlanmış işlem
-             * refund akışına alınabilir.
-             */
-
             if(
-                !intent ||
-                intent.status !==
-                    "completed"
+                !transactionService ||
+                typeof transactionService
+                    .requestRefund !==
+                    "function"
             ){
 
                 return false;
@@ -1240,50 +2751,78 @@ const VaeroApp = {
             }
 
 
-            intent.status =
-                "refund-requested";
-
-            intent.updatedAt =
-                Date.now();
-
-
-            this.save();
+            const id =
+                String(
+                    transactionId ||
+                    ""
+                ).trim();
 
 
-            return {
-                ...intent
-            };
+            if(!id){
+
+                return false;
+
+            }
+
+
+            try{
+
+                const result =
+                    transactionService
+                        .requestRefund(
+                            id
+                        );
+
+
+                return result ||
+                    false;
+
+            } catch(error){
+
+                return false;
+
+            }
 
         },
 
+
+        /* =================================================
+           VERIFIED ENTITLEMENT
+        ================================================= */
 
         hasVerifiedEntitlement(
             applicationId
         ){
 
-            const host =
-                this.getHost();
+            const appId =
+                String(
+                    applicationId ||
+                    ""
+                ).trim();
 
 
-            if(!host){
+            if(!appId){
 
                 return false;
 
             }
 
 
-            const entitlements =
-                host.readJSON(
-                    host.storageKeys
-                        .entitlements,
-                    []
-                );
+            const entitlementService =
+                this.getService(
+                    "entitlementService"
+                ) ||
+                this.getService(
+                    "entitlements"
+                ) ||
+                null;
 
 
             if(
-                !Array.isArray(
-                    entitlements
-                )
+                !entitlementService ||
+                typeof entitlementService
+                    .hasVerifiedEntitlement !==
+                    "function"
             ){
 
                 return false;
@@ -1291,18 +2830,90 @@ const VaeroApp = {
             }
 
 
-            return entitlements.some(
-                entitlement =>
-                    entitlement
-                        ?.applicationId ===
-                        applicationId &&
-                    entitlement
-                        ?.verified ===
-                        true &&
-                    entitlement
-                        ?.revoked !==
-                        true
-            );
+            try{
+
+                const result =
+                    entitlementService
+                        .hasVerifiedEntitlement(
+                            appId
+                        );
+
+
+                if(
+                    result &&
+                    typeof result.then ===
+                        "function"
+                ){
+
+                    return false;
+
+                }
+
+
+                return result ===
+                    true;
+
+            } catch(error){
+
+                return false;
+
+            }
+
+        },
+
+
+        /* =================================================
+           REPORT
+        ================================================= */
+
+        report(){
+
+            const intents =
+                this.all();
+
+
+            return {
+
+                version:
+                    this.version,
+
+                total:
+                    intents.length,
+
+                draft:
+                    intents.filter(
+                        intent =>
+                            intent.status ===
+                                "draft"
+                    ).length,
+
+                ready:
+                    intents.filter(
+                        intent =>
+                            intent.status ===
+                                "ready"
+                    ).length,
+
+                awaitingProvider:
+                    intents.filter(
+                        intent =>
+                            intent.status ===
+                                "awaiting-provider"
+                    ).length,
+
+                cancelled:
+                    intents.filter(
+                        intent =>
+                            intent.status ===
+                                "cancelled"
+                    ).length,
+
+                providerRegistryAvailable:
+                    Boolean(
+                        this.getProviderRegistry()
+                    )
+
+            };
 
         }
 
@@ -1330,13 +2941,49 @@ const VaeroApp = {
             );
 
 
-        if(
-            !product ||
-            product.purchasable !==
-                true
-        ){
+        if(!product){
 
             return false;
+
+        }
+
+
+        const commerce =
+            this.getProductCommerce(
+                product
+            );
+
+
+        if(
+            commerce.known !==
+                true ||
+            commerce.purchasable !==
+                true ||
+            commerce.amount ===
+                null ||
+            !commerce.currency
+        ){
+
+            this.activeProductId =
+                product.id;
+
+
+            this.activeView =
+                "product";
+
+
+            this.enterBrainContext({
+
+                productId:
+                    product.id,
+
+                commerceAvailable:
+                    false
+
+            });
+
+
+            return this.refresh();
 
         }
 
@@ -1355,20 +3002,32 @@ const VaeroApp = {
                         product.name,
 
                     amount:
-                        product.amount,
+                        commerce.amount,
 
                     currency:
-                        product.currency,
+                        commerce.currency,
 
                     quantity:
                         1,
 
-                    metadata:{
+                    commerceSnapshot: {
+
+                        availability:
+                            commerce.availability
+
+                    },
+
+                    metadata: {
+
                         productType:
                             product.type,
 
                         atmosphere:
-                            product.atmosphere
+                            product.atmosphere,
+
+                        runtimeCommerce:
+                            true
+
                     }
 
                 });
@@ -1396,13 +3055,19 @@ const VaeroApp = {
         this.activeProductId =
             product.id;
 
+
         this.activeView =
             "payment";
 
 
         this.enterBrainContext({
+
+            productId:
+                product.id,
+
             paymentIntentId:
                 intent.id
+
         });
 
 
@@ -1410,6 +3075,10 @@ const VaeroApp = {
 
     },
 
+
+    /* =====================================================
+       CURRENT PAYMENT INTENT
+    ===================================================== */
 
     getCurrentPaymentIntent(){
 
@@ -1422,7 +3091,10 @@ const VaeroApp = {
                 ?.currentVaeroPaymentIntent;
 
 
-        if(current?.id){
+        if(
+            current &&
+            current.id
+        ){
 
             const stored =
                 this.paymentCore.get(
@@ -1432,8 +3104,12 @@ const VaeroApp = {
 
             if(stored){
 
-                engine.currentVaeroPaymentIntent =
-                    stored;
+                if(engine){
+
+                    engine.currentVaeroPaymentIntent =
+                        stored;
+
+                }
 
 
                 return stored;
@@ -1444,6 +3120,34 @@ const VaeroApp = {
 
 
         return null;
+
+    },
+
+
+    syncCurrentPaymentIntent(
+        updated
+    ){
+
+        if(!updated){
+
+            return false;
+
+        }
+
+
+        const engine =
+            this.getEngine();
+
+
+        if(engine){
+
+            engine.currentVaeroPaymentIntent =
+                updated;
+
+        }
+
+
+        return true;
 
     },
 
@@ -1469,19 +3173,27 @@ const VaeroApp = {
                 );
 
 
-        const engine =
-            this.getEngine();
+        if(!updated){
 
-
-        if(
-            engine &&
-            updated
-        ){
-
-            engine.currentVaeroPaymentIntent =
-                updated;
+            return false;
 
         }
+
+
+        this.syncCurrentPaymentIntent(
+            updated
+        );
+
+
+        this.enterBrainContext({
+
+            paymentIntentId:
+                intent.id,
+
+            paymentMethod:
+                updated.method
+
+        });
 
 
         return this.refresh();
@@ -1512,19 +3224,42 @@ const VaeroApp = {
                 );
 
 
-        const engine =
-            this.getEngine();
+        if(!updated){
+
+            const latest =
+                this.paymentCore.get(
+                    intent.id
+                );
 
 
-        if(
-            engine &&
-            updated
-        ){
+            if(latest){
 
-            engine.currentVaeroPaymentIntent =
-                updated;
+                this.syncCurrentPaymentIntent(
+                    latest
+                );
+
+            }
+
+
+            return this.refresh();
 
         }
+
+
+        this.syncCurrentPaymentIntent(
+            updated
+        );
+
+
+        this.enterBrainContext({
+
+            paymentIntentId:
+                intent.id,
+
+            paymentProvider:
+                updated.provider
+
+        });
 
 
         return this.refresh();
@@ -1551,19 +3286,27 @@ const VaeroApp = {
             );
 
 
-        const engine =
-            this.getEngine();
+        if(!updated){
 
-
-        if(
-            engine &&
-            updated
-        ){
-
-            engine.currentVaeroPaymentIntent =
-                updated;
+            return false;
 
         }
+
+
+        this.syncCurrentPaymentIntent(
+            updated
+        );
+
+
+        this.enterBrainContext({
+
+            paymentIntentId:
+                intent.id,
+
+            paymentStatus:
+                updated.status
+
+        });
 
 
         return this.refresh();
@@ -1594,17 +3337,11 @@ const VaeroApp = {
             );
 
 
-        const engine =
-            this.getEngine();
+        if(updated){
 
-
-        if(
-            engine &&
-            updated
-        ){
-
-            engine.currentVaeroPaymentIntent =
-                updated;
+            this.syncCurrentPaymentIntent(
+                updated
+            );
 
         }
 
@@ -1613,12 +3350,31 @@ const VaeroApp = {
             "product";
 
 
+        this.enterBrainContext({
+
+            productId:
+                this.activeProductId,
+
+            paymentIntentId:
+                intent.id,
+
+            paymentStatus:
+                updated?.status ||
+                "cancelled"
+
+        });
+
+
         return this.refresh();
 
     },
 
 
     /* =====================================================
+       CONTINUE IN PART 3
+    ===================================================== */
+
+   /* =====================================================
        VISION STUDIO
     ===================================================== */
 
@@ -1640,7 +3396,9 @@ const VaeroApp = {
                     saved
                 )
             )
-                ? saved
+                ? {
+                    ...saved
+                }
                 : null;
 
 
@@ -1650,6 +3408,16 @@ const VaeroApp = {
 
 
     saveVision(){
+
+        if(
+            typeof document ===
+                "undefined"
+        ){
+
+            return false;
+
+        }
+
 
         const titleInput =
             document.getElementById(
@@ -1673,30 +3441,50 @@ const VaeroApp = {
             String(
                 titleInput?.value ||
                 ""
-            ).trim();
+            )
+                .trim()
+                .slice(
+                    0,
+                    80
+                );
 
 
         const direction =
             String(
                 directionInput?.value ||
                 ""
-            ).trim();
+            )
+                .trim()
+                .slice(
+                    0,
+                    100
+                );
 
 
         const description =
             String(
                 descriptionInput?.value ||
                 ""
-            ).trim();
+            )
+                .trim()
+                .slice(
+                    0,
+                    700
+                );
 
 
         if(!title){
 
-            titleInput?.focus();
+            titleInput?.focus?.();
+
 
             return false;
 
         }
+
+
+        const now =
+            Date.now();
 
 
         const draft = {
@@ -1716,13 +3504,16 @@ const VaeroApp = {
             status:
                 "draft",
 
+            source:
+                "vaero-vision-studio",
+
             createdAt:
                 this.visionDraft
                     ?.createdAt ||
-                Date.now(),
+                now,
 
             updatedAt:
-                Date.now()
+                now
 
         };
 
@@ -1738,8 +3529,13 @@ const VaeroApp = {
 
 
         this.enterBrainContext({
+
             visionId:
-                draft.id
+                draft.id,
+
+            visionStatus:
+                "draft"
+
         });
 
 
@@ -1747,7 +3543,8 @@ const VaeroApp = {
 
     },
 
-   /* =====================================================
+
+    /* =====================================================
        VIEW LABELS
     ===================================================== */
 
@@ -1767,11 +3564,17 @@ const VaeroApp = {
             "awaiting-provider":
                 "Ödeme sağlayıcısı bekleniyor",
 
+            "provider-unavailable":
+                "Ödeme sağlayıcısı bağlı değil",
+
             cancelled:
                 "İptal edildi",
 
             completed:
                 "Tamamlandı",
+
+            failed:
+                "İşlem başlatılamadı",
 
             "refund-requested":
                 "İade talebi alındı",
@@ -1817,15 +3620,15 @@ const VaeroApp = {
 
                 </div>
 
-
                 <button
                     type="button"
                     class="vaero-commerce-id-btn"
                     onclick="VaeroApp.openView('care')"
+                    aria-label="VAERO Care"
                 >
                     VAERO
 
-                    <span>
+                    <span aria-hidden="true">
                         V
                     </span>
                 </button>
@@ -1843,7 +3646,11 @@ const VaeroApp = {
     renderNavigation(){
 
         return `
-            <div class="vaero-commerce-actions">
+            <div
+                class="vaero-commerce-actions"
+                role="group"
+                aria-label="VAERO uygulama bölümleri"
+            >
 
                 <button
                     type="button"
@@ -1856,6 +3663,14 @@ const VaeroApp = {
                             : ""
                     }"
                     onclick="VaeroApp.openView('discover')"
+                    aria-pressed="${
+                        this.activeView ===
+                            "discover" ||
+                        this.activeView ===
+                            "product"
+                            ? "true"
+                            : "false"
+                    }"
                 >
                     Keşfet
                 </button>
@@ -1870,6 +3685,12 @@ const VaeroApp = {
                             : ""
                     }"
                     onclick="VaeroApp.openView('vision')"
+                    aria-pressed="${
+                        this.activeView ===
+                            "vision"
+                            ? "true"
+                            : "false"
+                    }"
                 >
                     Vizyon
                 </button>
@@ -1884,6 +3705,12 @@ const VaeroApp = {
                             : ""
                     }"
                     onclick="VaeroApp.openView('care')"
+                    aria-pressed="${
+                        this.activeView ===
+                            "care"
+                            ? "true"
+                            : "false"
+                    }"
                 >
                     Care
                 </button>
@@ -1937,65 +3764,91 @@ const VaeroApp = {
 
                 ${this.products
                     .map(
-                        product => `
-                            <button
-                                type="button"
-                                class="vaero-cart-item"
-                                onclick="VaeroApp.openProduct('${this.escapeHTML(
-                                    product.id
-                                )}')"
-                            >
+                        product => {
 
-                                <div class="vaero-cart-item-copy">
-
-                                    <span class="vaero-product-type">
-                                        ${this.escapeHTML(
-                                            product.eyebrow
-                                        )}
-                                    </span>
-
-                                    <strong>
-                                        ${this.escapeHTML(
-                                            product.name
-                                        )}
-                                    </strong>
-
-                                    <small>
-                                        ${this.escapeHTML(
-                                            product.subtitle
-                                        )}
-                                    </small>
-
-                                </div>
+                            const commerce =
+                                this.getProductCommerce(
+                                    product
+                                );
 
 
-                                <div>
+                            const priceLabel =
+                                commerce.known ===
+                                    true &&
+                                commerce.amount !==
+                                    null &&
+                                commerce.currency
+                                    ? this.formatMoney(
+                                        commerce.amount,
+                                        commerce.currency
+                                    )
+                                    : null;
 
-                                    ${
-                                        product.purchasable
-                                            ? `
-                                                <strong>
-                                                    ${this.escapeHTML(
-                                                        this.formatMoney(
-                                                            product.amount,
-                                                            product.currency
-                                                        )
-                                                    )}
-                                                </strong>
-                                              `
-                                            : `
-                                                <small>
-                                                    Keşfet
-                                                </small>
-                                              `
-                                    }
 
-                                </div>
+                            return `
+                                <button
+                                    type="button"
+                                    class="vaero-cart-item"
+                                    onclick="VaeroApp.openProduct('${this.escapeHTML(
+                                        product.id
+                                    )}')"
+                                >
 
-                            </button>
-                        `
+                                    <div class="vaero-cart-item-copy">
+
+                                        <span class="vaero-product-type">
+                                            ${this.escapeHTML(
+                                                product.eyebrow
+                                            )}
+                                        </span>
+
+                                        <strong>
+                                            ${this.escapeHTML(
+                                                product.name
+                                            )}
+                                        </strong>
+
+                                        <small>
+                                            ${this.escapeHTML(
+                                                product.subtitle
+                                            )}
+                                        </small>
+
+                                    </div>
+
+
+                                    <div>
+
+                                        ${
+                                            priceLabel
+                                                ? `
+                                                    <strong>
+                                                        ${this.escapeHTML(
+                                                            priceLabel
+                                                        )}
+                                                    </strong>
+                                                  `
+                                                : `
+                                                    <small>
+                                                        ${this.escapeHTML(
+                                                            this.getAvailabilityLabel(
+                                                                commerce
+                                                            )
+                                                        )}
+                                                    </small>
+                                                  `
+                                        }
+
+                                    </div>
+
+                                </button>
+                            `;
+
+                        }
                     )
-                    .join("")}
+                    .join(
+                        ""
+                    )}
 
             </div>
         `;
@@ -2039,7 +3892,7 @@ const VaeroApp = {
                 </strong>
 
                 <small>
-                    Bir atmosfer, ürün veya yaşam fikri oluştur. VAERO bunu zamanla Brain, topluluk ve yaratıcı araçlarla geliştirecek.
+                    Bir atmosfer, ürün veya yaşam fikri oluştur. VAERO Vision Studio bu fikri sana ait bir taslak olarak saklar.
                 </small>
 
 
@@ -2080,6 +3933,31 @@ const VaeroApp = {
         const experiences =
             this.getProductExperiences(
                 product.id
+            );
+
+
+        const commerce =
+            this.getProductCommerce(
+                product
+            );
+
+
+        const priceLabel =
+            commerce.known ===
+                true &&
+            commerce.amount !==
+                null &&
+            commerce.currency
+                ? this.formatMoney(
+                    commerce.amount,
+                    commerce.currency
+                )
+                : "—";
+
+
+        const availabilityLabel =
+            this.getAvailabilityLabel(
+                commerce
             );
 
 
@@ -2144,11 +4022,9 @@ const VaeroApp = {
                         </span>
 
                         <strong>
-                            ${
-                                product.purchasable
-                                    ? "Satışta"
-                                    : "Koleksiyon"
-                            }
+                            ${this.escapeHTML(
+                                availabilityLabel
+                            )}
                         </strong>
 
                     </div>
@@ -2174,17 +4050,9 @@ const VaeroApp = {
                         </span>
 
                         <strong>
-                            ${
-                                product.amount !==
-                                    null
-                                    ? this.escapeHTML(
-                                        this.formatMoney(
-                                            product.amount,
-                                            product.currency
-                                        )
-                                    )
-                                    : "—"
-                            }
+                            ${this.escapeHTML(
+                                priceLabel
+                            )}
                         </strong>
 
                     </div>
@@ -2229,7 +4097,9 @@ const VaeroApp = {
                                         </div>
                                     `
                                 )
-                                .join("")}
+                                .join(
+                                    ""
+                                )}
 
                         </div>
                       `
@@ -2240,7 +4110,7 @@ const VaeroApp = {
             <div class="vaero-commerce-actions">
 
                 ${
-                    product.purchasable
+                    commerce.purchasable
                         ? `
                             <button
                                 type="button"
@@ -2254,9 +4124,12 @@ const VaeroApp = {
                         : `
                             <button
                                 type="button"
-                                onclick="VaeroApp.openView('vision')"
+                                disabled
+                                aria-disabled="true"
                             >
-                                Atmosferden İlham Al
+                                ${this.escapeHTML(
+                                    availabilityLabel
+                                )}
                             </button>
                           `
                 }
@@ -2310,13 +4183,13 @@ const VaeroApp = {
                 </strong>
 
                 <small>
-                    Eski VAERO vizyonunun yeni Engine karşılığı. Burada fikir önce sana ait bir taslak olarak doğar; ileride Brain ve topluluk katmanlarıyla gelişebilir.
+                    Fikrini önce sana ait bir taslak olarak oluştur. Bu alan yayınlama, topluluk paylaşımı veya satış işlemi yapmaz.
                 </small>
 
             </div>
 
 
-            <div class="engine-field">
+            <label class="engine-field">
 
                 <span>
                     Vizyon adı
@@ -2334,10 +4207,10 @@ const VaeroApp = {
                     )}"
                 >
 
-            </div>
+            </label>
 
 
-            <div class="engine-field">
+            <label class="engine-field">
 
                 <span>
                     Yön
@@ -2355,10 +4228,10 @@ const VaeroApp = {
                     )}"
                 >
 
-            </div>
+            </label>
 
 
-            <div class="engine-field">
+            <label class="engine-field">
 
                 <span>
                     Vizyon
@@ -2374,7 +4247,7 @@ const VaeroApp = {
                     ""
                 )}</textarea>
 
-            </div>
+            </label>
 
 
             <div class="vaero-commerce-actions">
@@ -2524,6 +4397,10 @@ const VaeroApp = {
 
 
     /* =====================================================
+       CONTINUE IN PART 4
+    ===================================================== */
+
+   /* =====================================================
        PAYMENT
     ===================================================== */
 
@@ -2550,7 +4427,7 @@ const VaeroApp = {
                     </strong>
 
                     <span>
-                        Önce bir VAERO ürünü seç.
+                        Önce satın alınabilir bir VAERO ürünü seç.
                     </span>
 
                     <div class="vaero-commerce-actions">
@@ -2568,6 +4445,11 @@ const VaeroApp = {
             `;
 
         }
+
+
+        const providers =
+            this.paymentCore
+                .getAvailableProviders();
 
 
         return `
@@ -2596,7 +4478,7 @@ const VaeroApp = {
                 </strong>
 
                 <small>
-                    VAERO Engine ödeme niyeti oluşturuldu.
+                    Satın alma niyeti oluşturuldu. Ödeme yalnız bağlı ve doğrulanmış bir sağlayıcı üzerinden devam edebilir.
                 </small>
 
 
@@ -2627,7 +4509,9 @@ const VaeroApp = {
                         </span>
 
                         <strong>
-                            ${intent.quantity}
+                            ${this.escapeHTML(
+                                intent.quantity
+                            )}
                         </strong>
 
                     </div>
@@ -2677,7 +4561,7 @@ const VaeroApp = {
                 </strong>
 
                 <small>
-                    Kullanacağın yöntemi seç.
+                    Kullanacağın ödeme yöntemini seç.
                 </small>
 
 
@@ -2692,6 +4576,12 @@ const VaeroApp = {
                                 : ""
                         }"
                         onclick="VaeroApp.selectPaymentMethod('card')"
+                        aria-pressed="${
+                            intent.method ===
+                                "card"
+                                ? "true"
+                                : "false"
+                        }"
                     >
                         Kart
                     </button>
@@ -2706,6 +4596,12 @@ const VaeroApp = {
                                 : ""
                         }"
                         onclick="VaeroApp.selectPaymentMethod('bank')"
+                        aria-pressed="${
+                            intent.method ===
+                                "bank"
+                                ? "true"
+                                : "false"
+                        }"
                     >
                         Banka
                     </button>
@@ -2718,30 +4614,81 @@ const VaeroApp = {
             <div class="vaero-payment-methods">
 
                 <strong>
-                    Sağlayıcı
+                    Ödeme sağlayıcısı
                 </strong>
 
-                <small>
-                    Gerçek ödeme sağlayıcısı bağlandığında işlem bu katmandan devredilecek.
-                </small>
+                ${
+                    providers.length
+                        ? `
+                            <small>
+                                Kullanılabilir doğrulanmış sağlayıcılardan birini seç.
+                            </small>
+
+                            <div class="vaero-commerce-actions">
+
+                                ${providers
+                                    .map(
+                                        provider => {
+
+                                            const providerId =
+                                                String(
+                                                    provider.id ||
+                                                    ""
+                                                ).trim();
 
 
-                <div class="vaero-commerce-actions">
+                                            if(!providerId){
 
-                    <button
-                        type="button"
-                        class="${
-                            intent.provider ===
-                                "vaero-checkout"
-                                ? "is-active"
-                                : ""
-                        }"
-                        onclick="VaeroApp.selectPaymentProvider('vaero-checkout')"
-                    >
-                        VAERO Checkout
-                    </button>
+                                                return "";
 
-                </div>
+                                            }
+
+
+                                            const providerName =
+                                                provider.title ||
+                                                provider.name ||
+                                                providerId;
+
+
+                                            return `
+                                                <button
+                                                    type="button"
+                                                    class="${
+                                                        intent.provider ===
+                                                            providerId
+                                                            ? "is-active"
+                                                            : ""
+                                                    }"
+                                                    onclick="VaeroApp.selectPaymentProvider('${this.escapeHTML(
+                                                        providerId
+                                                    )}')"
+                                                    aria-pressed="${
+                                                        intent.provider ===
+                                                            providerId
+                                                            ? "true"
+                                                            : "false"
+                                                    }"
+                                                >
+                                                    ${this.escapeHTML(
+                                                        providerName
+                                                    )}
+                                                </button>
+                                            `;
+
+                                        }
+                                    )
+                                    .join(
+                                        ""
+                                    )}
+
+                            </div>
+                        `
+                        : `
+                            <small>
+                                Henüz VAERO Engine'e bağlı bir ödeme sağlayıcısı bulunmuyor.
+                            </small>
+                        `
+                }
 
             </div>
 
@@ -2757,7 +4704,7 @@ const VaeroApp = {
                 </strong>
 
                 <small>
-                    Ödeme sağlayıcısı entegrasyonu tamamlanmadan VAERO bu işlemi başarılı ödeme olarak işaretlemez.
+                    Tarayıcıdaki ödeme niyeti bir ödeme kanıtı değildir. İşlem ancak gerçek ödeme altyapısı tarafından doğrulanabilir.
                 </small>
 
             </div>
@@ -2768,6 +4715,12 @@ const VaeroApp = {
                 <button
                     type="button"
                     onclick="VaeroApp.beginPayment()"
+                    ${
+                        !intent.method ||
+                        !intent.provider
+                            ? "disabled aria-disabled=\"true\""
+                            : ""
+                    }
                 >
                     Ödemeye Devam Et
                 </button>
@@ -2827,14 +4780,146 @@ const VaeroApp = {
 
 
     /* =====================================================
+       BRAIN PANEL
+    ===================================================== */
+
+    renderBrainPanel(){
+
+        try{
+
+            if(
+                typeof window !==
+                    "undefined" &&
+                window.UI &&
+                typeof window.UI.brainPanel ===
+                    "function"
+            ){
+
+                const result =
+                    window.UI.brainPanel();
+
+
+                return typeof result ===
+                    "string"
+                    ? result
+                    : "";
+
+            }
+
+        } catch(error){
+
+            /* optional UI */
+
+        }
+
+
+        return "";
+
+    },
+
+
+    /* =====================================================
+       REPORT
+    ===================================================== */
+
+    report(){
+
+        const product =
+            this.getActiveProduct();
+
+
+        const commerce =
+            product
+                ? this.getProductCommerce(
+                    product
+                )
+                : null;
+
+
+        const intent =
+            this.getCurrentPaymentIntent();
+
+
+        return {
+
+            id:
+                this.id,
+
+            version:
+                this.version,
+
+            title:
+                this.title,
+
+            activeView:
+                this.activeView,
+
+            activeProductId:
+                product?.id ||
+                null,
+
+            productCount:
+                this.products.length,
+
+            visionDraft:
+                Boolean(
+                    this.visionDraft
+                ),
+
+            commerce: {
+
+                known:
+                    commerce?.known ===
+                    true,
+
+                purchasable:
+                    commerce?.purchasable ===
+                    true,
+
+                availability:
+                    commerce?.availability ||
+                    "unknown"
+
+            },
+
+            payment: {
+
+                activeIntentId:
+                    intent?.id ||
+                    null,
+
+                status:
+                    intent?.status ||
+                    null,
+
+                provider:
+                    intent?.provider ||
+                    null
+
+            }
+
+        };
+
+    },
+
+
+    /* =====================================================
        RENDER
     ===================================================== */
 
     render(){
 
+        this.activeView =
+            this.normalizeView(
+                this.activeView
+            );
+
+
         this.paymentCore.load();
 
+
         this.loadVisionDraft();
+
 
         this.enterBrainContext();
 
@@ -2855,7 +4940,7 @@ const VaeroApp = {
                 </section>
 
 
-                ${UI.brainPanel()}
+                ${this.renderBrainPanel()}
 
             </section>
         `;
@@ -2863,6 +4948,36 @@ const VaeroApp = {
     }
 
 };
+
+
+/* =========================================================
+   REGISTER VAERO APP
+========================================================= */
+
+try{
+
+    if(
+        typeof VAERO !==
+            "undefined" &&
+        typeof VAERO.register ===
+            "function"
+    ){
+
+        VAERO.register(
+            "vaeroApp",
+            VaeroApp
+        );
+
+    }
+
+} catch(error){
+
+    console.warn(
+        "VAERO App kaydedilemedi:",
+        error
+    );
+
+}
 
 
 /* =========================================================
@@ -2899,5 +5014,12 @@ try{
    GLOBAL
 ========================================================= */
 
-window.VaeroApp =
-    VaeroApp;
+if(
+    typeof window !==
+        "undefined"
+){
+
+    window.VaeroApp =
+        VaeroApp;
+
+} 
