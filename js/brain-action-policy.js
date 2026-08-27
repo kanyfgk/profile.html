@@ -5,6 +5,10 @@
 
 const BrainActionPolicy = {
 
+    version:
+        "3.0.0",
+
+
     /* =====================================================
        LEVELS
     ===================================================== */
@@ -18,7 +22,10 @@ const BrainActionPolicy = {
             "confirm",
 
         BLOCKED:
-            "blocked"
+            "blocked",
+
+        UNKNOWN:
+            "unknown"
 
     },
 
@@ -31,7 +38,7 @@ const BrainActionPolicy = {
 
         /* -------------------------------------------------
            SAFE
-           Okuma / gezinme / lokal ve geri alınabilir durum
+           Read / navigation / local non-destructive state
         ------------------------------------------------- */
 
         "app:open":
@@ -76,7 +83,7 @@ const BrainActionPolicy = {
 
         /* -------------------------------------------------
            CONFIRM
-           Kalıcı veya kullanıcı durumunu değiştiren işlemler
+           Persistent or user-state mutation
         ------------------------------------------------- */
 
         "world:create":
@@ -214,7 +221,7 @@ const BrainActionPolicy = {
 
         /* -------------------------------------------------
            BLOCKED
-           Brain hiçbir şekilde doğrudan otorite olamaz
+           Brain cannot become direct authority
         ------------------------------------------------- */
 
         "payment:execute":
@@ -272,7 +279,8 @@ const BrainActionPolicy = {
     normalizeActionType(actionType){
 
         return String(
-            actionType ?? ""
+            actionType ??
+                ""
         )
             .trim()
             .toLowerCase();
@@ -283,7 +291,8 @@ const BrainActionPolicy = {
     normalizeValue(value){
 
         return String(
-            value ?? ""
+            value ??
+                ""
         )
             .trim()
             .toLowerCase();
@@ -295,6 +304,30 @@ const BrainActionPolicy = {
        RULE LOOKUP
     ===================================================== */
 
+    hasRule(actionType){
+
+        const normalizedType =
+            this.normalizeActionType(
+                actionType
+            );
+
+
+        if(!normalizedType){
+
+            return false;
+
+        }
+
+
+        return Object.prototype
+            .hasOwnProperty.call(
+                this.rules,
+                normalizedType
+            );
+
+    },
+
+
     check(actionType){
 
         const normalizedType =
@@ -304,25 +337,28 @@ const BrainActionPolicy = {
 
 
         /*
-         * Bilinmeyen mutation güvenli kabul edilmez.
+         * Unknown actions are not silently promoted into a
+         * confirmable execution path.
          *
-         * Default CONFIRM.
+         * A mutation must first exist explicitly in Policy.
          */
 
-        if(!normalizedType){
+        if(
+            !normalizedType ||
+            !this.hasRule(
+                normalizedType
+            )
+        ){
 
             return this.levels
-                .CONFIRM;
+                .UNKNOWN;
 
         }
 
 
-        return (
-            this.rules[
-                normalizedType
-            ] ||
-            this.levels.CONFIRM
-        );
+        return this.rules[
+            normalizedType
+        ];
 
     },
 
@@ -358,6 +394,15 @@ const BrainActionPolicy = {
                 actionType
             ) ===
             this.levels.BLOCKED
+        );
+
+    },
+
+
+    isKnown(actionType){
+
+        return this.hasRule(
+            actionType
         );
 
     },
@@ -468,7 +513,9 @@ const BrainActionPolicy = {
 
 
         return (
-            aliases[value] ||
+            aliases[
+                value
+            ] ||
             value ||
             null
         );
@@ -501,12 +548,15 @@ const BrainActionPolicy = {
             !normalizedTarget ||
             !normalizedOperation
         ){
+
             return null;
+
         }
 
 
         const supportedTargets =
             new Set([
+
                 "world",
                 "entity",
                 "profile",
@@ -517,6 +567,7 @@ const BrainActionPolicy = {
                 "settings",
                 "application",
                 "notification"
+
             ]);
 
 
@@ -525,12 +576,19 @@ const BrainActionPolicy = {
                 normalizedTarget
             )
         ){
+
             return null;
+
         }
 
 
+        let actionType =
+            null;
+
+
         if(
-            normalizedOperation === "create"
+            normalizedOperation ===
+                "create"
         ){
 
             if(
@@ -544,86 +602,102 @@ const BrainActionPolicy = {
                     "notification"
             ){
 
-                return `${normalizedTarget}:update`;
+                actionType =
+                    `${normalizedTarget}:update`;
 
             }
-
-
-            if(
+            else if(
                 normalizedTarget ===
                     "application"
             ){
 
-                return "application:install";
+                actionType =
+                    "application:install";
+
+            }
+            else {
+
+                actionType =
+                    `${normalizedTarget}:create`;
 
             }
 
-
-            return `${normalizedTarget}:create`;
-
         }
-
-
-        if(
-            normalizedOperation === "edit" ||
-            normalizedOperation === "update"
+        else if(
+            normalizedOperation ===
+                "edit" ||
+            normalizedOperation ===
+                "update"
         ){
 
-            return `${normalizedTarget}:update`;
+            actionType =
+                `${normalizedTarget}:update`;
 
         }
-
-
-        if(
-            normalizedOperation === "archive"
+        else if(
+            normalizedOperation ===
+                "archive"
         ){
 
-            return `${normalizedTarget}:archive`;
+            actionType =
+                `${normalizedTarget}:archive`;
 
         }
-
-
-        if(
-            normalizedOperation === "restore"
+        else if(
+            normalizedOperation ===
+                "restore"
         ){
 
-            return `${normalizedTarget}:restore`;
+            actionType =
+                `${normalizedTarget}:restore`;
 
         }
-
-
-        if(
-            normalizedOperation === "delete" ||
-            normalizedOperation === "remove"
+        else if(
+            normalizedOperation ===
+                "delete" ||
+            normalizedOperation ===
+                "remove"
         ){
 
-            if(
+            actionType =
                 normalizedTarget ===
                     "application"
-            ){
-
-                return "application:remove";
-
-            }
-
-
-            return `${normalizedTarget}:delete`;
+                    ? "application:remove"
+                    : `${normalizedTarget}:delete`;
 
         }
-
-
-        if(
-            normalizedOperation === "install" &&
+        else if(
+            normalizedOperation ===
+                "install" &&
             normalizedTarget ===
                 "application"
         ){
 
-            return "application:install";
+            actionType =
+                "application:install";
 
         }
 
 
-        return null;
+        /*
+         * Important:
+         * resolveCrudAction never creates an executable
+         * action that Policy does not explicitly know.
+         */
+
+        if(
+            !actionType ||
+            !this.hasRule(
+                actionType
+            )
+        ){
+
+            return null;
+
+        }
+
+
+        return actionType;
 
     },
 
@@ -637,9 +711,14 @@ const BrainActionPolicy = {
         if(
             !intent ||
             typeof intent !==
-                "object"
+                "object" ||
+            Array.isArray(
+                intent
+            )
         ){
+
             return null;
+
         }
 
 
@@ -666,7 +745,8 @@ const BrainActionPolicy = {
         ------------------------------------------------- */
 
         if(
-            type === "navigate"
+            type ===
+                "navigate"
         ){
 
             return "app:open";
@@ -679,7 +759,8 @@ const BrainActionPolicy = {
         ------------------------------------------------- */
 
         if(
-            type === "resume:save"
+            type ===
+                "resume:save"
         ){
 
             return "resume:save";
@@ -688,7 +769,8 @@ const BrainActionPolicy = {
 
 
         if(
-            type === "resume:restore"
+            type ===
+                "resume:restore"
         ){
 
             return "resume:restore";
@@ -697,21 +779,22 @@ const BrainActionPolicy = {
 
 
         /* -------------------------------------------------
-           CREATE
+           CREATE SURFACE
 
-           BrainActions şu an create intentinde gerçek kaydı
-           doğrudan oluşturmuyor; create yüzeyini açıyor.
-           Bu davranış değişirse BrainActions actionType
-           bildirmelidir.
+           BrainActions currently opens the creation surface.
+           It does not directly persist World/Entity here.
         ------------------------------------------------- */
 
         if(
-            type === "create"
+            type ===
+                "create"
         ){
 
             if(
-                target === "world" ||
-                target === "entity"
+                target ===
+                    "world" ||
+                target ===
+                    "entity"
             ){
 
                 return "app:open";
@@ -732,7 +815,8 @@ const BrainActionPolicy = {
         ------------------------------------------------- */
 
         if(
-            type === "application:install"
+            type ===
+                "application:install"
         ){
 
             return "application:install";
@@ -741,7 +825,8 @@ const BrainActionPolicy = {
 
 
         if(
-            type === "application:update"
+            type ===
+                "application:update"
         ){
 
             return "application:update";
@@ -750,7 +835,8 @@ const BrainActionPolicy = {
 
 
         if(
-            type === "application:remove"
+            type ===
+                "application:remove"
         ){
 
             return "application:remove";
@@ -763,7 +849,8 @@ const BrainActionPolicy = {
         ------------------------------------------------- */
 
         if(
-            type === "permission:grant"
+            type ===
+                "permission:grant"
         ){
 
             return "permission:grant";
@@ -772,7 +859,8 @@ const BrainActionPolicy = {
 
 
         if(
-            type === "permission:revoke"
+            type ===
+                "permission:revoke"
         ){
 
             return "permission:revoke";
@@ -781,11 +869,12 @@ const BrainActionPolicy = {
 
 
         /* -------------------------------------------------
-           MESSAGING / CALLS
+           COMMUNICATION
         ------------------------------------------------- */
 
         if(
-            type === "message:send"
+            type ===
+                "message:send"
         ){
 
             return "message:send";
@@ -794,7 +883,8 @@ const BrainActionPolicy = {
 
 
         if(
-            type === "call:start"
+            type ===
+                "call:start"
         ){
 
             return "call:start";
@@ -803,7 +893,8 @@ const BrainActionPolicy = {
 
 
         if(
-            type === "screen-share:start"
+            type ===
+                "screen-share:start"
         ){
 
             return "screen-share:start";
@@ -816,11 +907,13 @@ const BrainActionPolicy = {
         ------------------------------------------------- */
 
         if(
-            type === "request"
+            type ===
+                "request"
         ){
 
             if(
-                operation === "search"
+                operation ===
+                    "search"
             ){
 
                 return "search:run";
@@ -829,9 +922,12 @@ const BrainActionPolicy = {
 
 
             if(
-                operation === "open" ||
-                operation === "view" ||
-                operation === "read"
+                operation ===
+                    "open" ||
+                operation ===
+                    "view" ||
+                operation ===
+                    "read"
             ){
 
                 return target
@@ -842,15 +938,14 @@ const BrainActionPolicy = {
 
 
             /*
-             * EDIT şu an BrainActions tarafından sadece
-             * edit yüzeyine yönlendirilirse safe olabilir.
-             *
-             * Intent açık şekilde "field:update" üretirse
-             * aşağıdaki CONFIRM katmanına geçer.
+             * BrainActions edit path opens an editor surface.
+             * Actual mutation requires its own mutation
+             * intent/action.
              */
 
             if(
-                operation === "edit"
+                operation ===
+                    "edit"
             ){
 
                 return target
@@ -875,7 +970,8 @@ const BrainActionPolicy = {
 
 
             if(
-                operation === "publish"
+                operation ===
+                    "publish"
             ){
 
                 return "content:publish";
@@ -884,68 +980,165 @@ const BrainActionPolicy = {
 
 
             if(
-                operation === "submit"
+                operation ===
+                    "submit"
             ){
 
                 return "form:submit";
 
             }
 
+
+            return null;
+
         }
 
 
         /* -------------------------------------------------
-           EXPLICIT MUTATION INTENT
+           EXPLICIT MUTATION INTENTS
         ------------------------------------------------- */
 
+        const explicitActions = {
+
+            "field:update":
+                "field:update",
+
+            "profile:update":
+                "profile:update",
+
+            "identity:update":
+                "identity:update",
+
+            "identity:verification:request":
+                "identity:verification:request",
+
+            "settings:update":
+                "settings:update",
+
+            "memory:create":
+                "memory:create",
+
+            "memory:update":
+                "memory:update",
+
+            "memory:archive":
+                "memory:archive",
+
+            "memory:restore":
+                "memory:restore",
+
+            "memory:delete":
+                "memory:delete",
+
+            "bridge:create":
+                "bridge:create",
+
+            "bridge:update":
+                "bridge:update",
+
+            "bridge:archive":
+                "bridge:archive",
+
+            "bridge:restore":
+                "bridge:restore",
+
+            "bridge:delete":
+                "bridge:delete",
+
+            "evolution:create":
+                "evolution:create",
+
+            "evolution:update":
+                "evolution:update",
+
+            "evolution:archive":
+                "evolution:archive",
+
+            "evolution:restore":
+                "evolution:restore",
+
+            "evolution:delete":
+                "evolution:delete",
+
+            "content:publish":
+                "content:publish",
+
+            "form:submit":
+                "form:submit",
+
+            "purchase:intent":
+                "purchase:intent",
+
+            "payment:execute":
+                "payment:execute",
+
+            "purchase:complete":
+                "purchase:complete",
+
+            "refund:execute":
+                "refund:execute",
+
+            "settlement:execute":
+                "settlement:execute",
+
+            "identity:verify":
+                "identity:verify",
+
+            "identity:transfer":
+                "identity:transfer",
+
+            "ownership:change":
+                "ownership:change",
+
+            "credential:export":
+                "credential:export",
+
+            "credential:read":
+                "credential:read",
+
+            "security:disable":
+                "security:disable",
+
+            "security:bypass":
+                "security:bypass",
+
+            "guardian:disable":
+                "guardian:disable",
+
+            "permission:force":
+                "permission:force",
+
+            "trust:force":
+                "trust:force",
+
+            "application:trust":
+                "application:trust"
+
+        };
+
+
+        const explicitAction =
+            explicitActions[
+                type
+            ] ||
+            null;
+
+
         if(
-            type === "field:update"
+            explicitAction &&
+            this.hasRule(
+                explicitAction
+            )
         ){
 
-            return "field:update";
-
-        }
-
-
-        if(
-            type === "profile:update"
-        ){
-
-            return "profile:update";
-
-        }
-
-
-        if(
-            type === "settings:update"
-        ){
-
-            return "settings:update";
-
-        }
-
-
-        if(
-            type === "memory:create"
-        ){
-
-            return "memory:create";
-
-        }
-
-
-        if(
-            type === "evolution:create"
-        ){
-
-            return "evolution:create";
+            return explicitAction;
 
         }
 
 
         /*
-         * chat / question / clarify gibi tipler
-         * sistem aksiyonu değildir.
+         * chat / question / clarify / unknown types are not
+         * Engine execution requests.
          */
 
         return null;
@@ -959,32 +1152,59 @@ const BrainActionPolicy = {
     evaluateContextBoundary(
         actionType,
         intent,
-        context
+        context = {}
     ){
 
-        const engine =
-            (
-                typeof VAERO !==
-                    "undefined"
-                    ? VAERO.engine
-                    : null
-            ) ||
-            window.Engine ||
+        let engine =
             null;
+
+
+        try{
+
+            engine =
+                (
+                    typeof VAERO !==
+                        "undefined"
+                        ? VAERO.engine
+                        : null
+                ) ||
+                (
+                    typeof window !==
+                        "undefined"
+                        ? window.Engine
+                        : null
+                ) ||
+                null;
+
+        } catch(error){
+
+            engine =
+                (
+                    typeof window !==
+                        "undefined"
+                        ? window.Engine ||
+                          null
+                        : null
+                );
+
+        }
 
 
         const currentEntityId =
             context?.entity?.id ||
             context?.entityId ||
-            engine?.currentOpenedEntity?.id ||
-            engine?.currentEntity?.id ||
+            engine?.currentOpenedEntity
+                ?.id ||
+            engine?.currentEntity
+                ?.id ||
             null;
 
 
         const currentWorldId =
             context?.world?.id ||
             context?.worldId ||
-            engine?.currentWorld?.id ||
+            engine?.currentWorld
+                ?.id ||
             null;
 
 
@@ -1000,13 +1220,9 @@ const BrainActionPolicy = {
             null;
 
 
-        /*
-         * Intent açıkça başka bir Entity/World üzerinde
-         * mutation istiyorsa, Brain bunu sessizce yapmaz.
-         */
+        const safeActions =
+            new Set([
 
-        const mutation =
-            ![
                 "app:open",
                 "view:change",
                 "filter:apply",
@@ -1014,14 +1230,26 @@ const BrainActionPolicy = {
                 "record:read",
                 "catalog:read",
                 "status:read",
+                "draft:create",
+                "draft:update",
                 "session:save",
                 "resume:save",
                 "resume:restore",
                 "brain:context"
-            ].includes(
+
+            ]);
+
+
+        const mutation =
+            !safeActions.has(
                 actionType
             );
 
+
+        /*
+         * Explicit cross-Entity mutation cannot silently use
+         * the currently opened Entity authority.
+         */
 
         if(
             mutation &&
@@ -1030,22 +1258,31 @@ const BrainActionPolicy = {
             String(
                 targetEntityId
             ) !==
-            String(
-                currentEntityId
-            )
+                String(
+                    currentEntityId
+                )
         ){
 
             return {
 
-                valid:false,
+                valid:
+                    false,
 
                 reason:
-                    "İşlem farklı bir Entity bağlamını hedefliyor."
+                    "İşlem farklı bir Entity bağlamını hedefliyor.",
+
+                code:
+                    "entity-context-mismatch"
 
             };
 
         }
 
+
+        /*
+         * Explicit cross-World mutation cannot silently use
+         * the currently active World authority.
+         */
 
         if(
             mutation &&
@@ -1054,17 +1291,21 @@ const BrainActionPolicy = {
             String(
                 targetWorldId
             ) !==
-            String(
-                currentWorldId
-            )
+                String(
+                    currentWorldId
+                )
         ){
 
             return {
 
-                valid:false,
+                valid:
+                    false,
 
                 reason:
-                    "İşlem farklı bir World bağlamını hedefliyor."
+                    "İşlem farklı bir World bağlamını hedefliyor.",
+
+                code:
+                    "world-context-mismatch"
 
             };
 
@@ -1073,9 +1314,14 @@ const BrainActionPolicy = {
 
         return {
 
-            valid:true,
+            valid:
+                true,
 
-            reason:null
+            reason:
+                null,
+
+            code:
+                null
 
         };
 
@@ -1090,7 +1336,11 @@ const BrainActionPolicy = {
 
         const safeAction =
             action &&
-            typeof action === "object"
+            typeof action ===
+                "object" &&
+            !Array.isArray(
+                action
+            )
                 ? action
                 : {};
 
@@ -1107,24 +1357,34 @@ const BrainActionPolicy = {
             );
 
 
+        const known =
+            permission !==
+                this.levels.UNKNOWN;
+
+
         const blocked =
             permission ===
-            this.levels.BLOCKED;
+                this.levels.BLOCKED ||
+            permission ===
+                this.levels.UNKNOWN;
 
 
         const requiresConfirmation =
             permission ===
-            this.levels.CONFIRM;
+                this.levels.CONFIRM;
 
 
         return {
 
             allowed:
+                known &&
                 !blocked,
 
             requiresConfirmation,
 
             blocked,
+
+            known,
 
             permission,
 
@@ -1159,21 +1419,30 @@ const BrainActionPolicy = {
 
             return {
 
-                allowed:false,
+                allowed:
+                    false,
 
-                requiresConfirmation:false,
+                requiresConfirmation:
+                    false,
 
-                blocked:false,
+                blocked:
+                    false,
 
-                permission:null,
+                known:
+                    false,
 
-                actionType:null,
+                permission:
+                    null,
+
+                actionType:
+                    null,
 
                 intent,
 
                 context,
 
-                executable:false,
+                executable:
+                    false,
 
                 reason:
                     "Bu intent için sistem işlemi tanımlı değil."
@@ -1196,6 +1465,45 @@ const BrainActionPolicy = {
             });
 
 
+        /*
+         * Fail closed for unknown action types.
+         */
+
+        if(
+            result.known !==
+                true
+        ){
+
+            return {
+
+                ...result,
+
+                allowed:
+                    false,
+
+                blocked:
+                    true,
+
+                requiresConfirmation:
+                    false,
+
+                actionType,
+
+                intent,
+
+                context,
+
+                executable:
+                    false,
+
+                reason:
+                    "Bu action type Brain Action Policy içinde tanımlı değil."
+
+            };
+
+        }
+
+
         const boundary =
             this.evaluateContextBoundary(
                 actionType,
@@ -1213,11 +1521,14 @@ const BrainActionPolicy = {
 
                 ...result,
 
-                allowed:false,
+                allowed:
+                    false,
 
-                blocked:false,
+                blocked:
+                    false,
 
-                requiresConfirmation:false,
+                requiresConfirmation:
+                    false,
 
                 actionType,
 
@@ -1225,11 +1536,16 @@ const BrainActionPolicy = {
 
                 context,
 
-                executable:false,
+                executable:
+                    false,
 
                 reason:
                     boundary.reason ||
-                    "İşlem mevcut Engine bağlamı dışında."
+                    "İşlem mevcut Engine bağlamı dışında.",
+
+                boundaryCode:
+                    boundary.code ||
+                    null
 
             };
 
@@ -1241,7 +1557,8 @@ const BrainActionPolicy = {
 
 
         if(
-            result.blocked
+            result.blocked ===
+                true
         ){
 
             reason =
@@ -1251,7 +1568,8 @@ const BrainActionPolicy = {
 
         }
         else if(
-            result.requiresConfirmation
+            result.requiresConfirmation ===
+                true
         ){
 
             reason =
@@ -1273,7 +1591,8 @@ const BrainActionPolicy = {
             context,
 
             executable:
-                true,
+                result.blocked !==
+                    true,
 
             reason
 
@@ -1322,6 +1641,9 @@ const BrainActionPolicy = {
             "entity:delete":
                 "Entity silme işlemi kalıcı veri etkisi oluşturabilir.",
 
+            "field:update":
+                "Bir kayıt alanı değiştirilecek.",
+
             "profile:update":
                 "Profil bilgilerin değiştirilecek.",
 
@@ -1337,6 +1659,12 @@ const BrainActionPolicy = {
             "bridge:update":
                 "Bağlantı bilgileri değiştirilecek.",
 
+            "bridge:archive":
+                "Bağlantı arşivlenecek.",
+
+            "bridge:restore":
+                "Arşivlenmiş bağlantı geri getirilecek.",
+
             "bridge:delete":
                 "Bağlantı kaydı silinecek.",
 
@@ -1346,6 +1674,12 @@ const BrainActionPolicy = {
             "memory:update":
                 "Hafıza kaydı değiştirilecek.",
 
+            "memory:archive":
+                "Hafıza kaydı arşivlenecek.",
+
+            "memory:restore":
+                "Arşivlenmiş hafıza kaydı geri getirilecek.",
+
             "memory:delete":
                 "Hafıza kaydı silinecek.",
 
@@ -1354,6 +1688,12 @@ const BrainActionPolicy = {
 
             "evolution:update":
                 "Evolution kaydı değiştirilecek.",
+
+            "evolution:archive":
+                "Evolution kaydı arşivlenecek.",
+
+            "evolution:restore":
+                "Arşivlenmiş Evolution kaydı geri getirilecek.",
 
             "evolution:delete":
                 "Evolution kaydı silinecek.",
@@ -1376,6 +1716,9 @@ const BrainActionPolicy = {
             "permission:revoke":
                 "Mevcut sistem izni kaldırılacak.",
 
+            "notification:update":
+                "Bildirim tercihleri değiştirilecek.",
+
             "message:send":
                 "Mesaj dış kullanıcıya gönderilecek.",
 
@@ -1387,6 +1730,12 @@ const BrainActionPolicy = {
 
             "content:publish":
                 "İçerik yayınlanacak.",
+
+            "record:restore":
+                "Arşivlenmiş kayıt geri getirilecek.",
+
+            "record:delete":
+                "Kayıt silinecek.",
 
             "form:submit":
                 "Form verileri gönderilecek.",
@@ -1477,64 +1826,87 @@ const BrainActionPolicy = {
 
     canExecuteEvaluation(
         evaluation,
-        confirmation = false
+        confirmation = null
     ){
 
         if(
             !evaluation ||
-            evaluation.executable ===
-                false
+            typeof evaluation !==
+                "object"
         ){
+
             return false;
+
         }
 
 
         if(
-            evaluation.blocked ||
-            !evaluation.allowed
+            evaluation.executable !==
+                true
         ){
+
             return false;
+
         }
 
 
         if(
-            !evaluation
-                .requiresConfirmation
+            evaluation.blocked ===
+                true ||
+            evaluation.allowed !==
+                true
+        ){
+
+            return false;
+
+        }
+
+
+        if(
+            evaluation.requiresConfirmation !==
+                true
         ){
 
             return true;
+
         }
 
 
         /*
-         * BrainCore yeni akışta confirmationId'yi intent
-         * fingerprint'e bağlayarak tüketiyor.
+         * Boolean confirmation is intentionally rejected.
          *
-         * Policy burada confirmation'ın authority'si değil,
-         * yalnız sonucunu değerlendirir.
-         *
-         * Boolean geriye uyumluluk için kabul edilir.
+         * Confirmation must come from BrainCore's bound
+         * confirmation flow.
          */
 
         if(
-            confirmation === true
+            !confirmation ||
+            typeof confirmation !==
+                "object" ||
+            Array.isArray(
+                confirmation
+            )
         ){
-            return true;
+
+            return false;
+
         }
 
 
-        if(
-            confirmation &&
-            typeof confirmation ===
-                "object" &&
+        return Boolean(
+
             confirmation.approved ===
-                true
-        ){
-            return true;
-        }
+                true &&
 
+            confirmation.mode ===
+                "bound-confirmation" &&
 
-        return false;
+            String(
+                confirmation.confirmationId ||
+                    ""
+            ).trim()
+
+        );
 
     },
 
@@ -1557,14 +1929,51 @@ const BrainActionPolicy = {
             );
 
 
+        const known =
+            permission !==
+                this.levels.UNKNOWN;
+
+
         const blocked =
             permission ===
-            this.levels.BLOCKED;
+                this.levels.BLOCKED ||
+            permission ===
+                this.levels.UNKNOWN;
 
 
         const requiresConfirmation =
             permission ===
-            this.levels.CONFIRM;
+                this.levels.CONFIRM;
+
+
+        let reason =
+            null;
+
+
+        if(!known){
+
+            reason =
+                "Bu action type Brain Action Policy içinde tanımlı değil.";
+
+        }
+        else if(blocked){
+
+            reason =
+                this.getBlockedReason(
+                    normalized
+                );
+
+        }
+        else if(
+            requiresConfirmation
+        ){
+
+            reason =
+                this.getConfirmationReason(
+                    normalized
+                );
+
+        }
 
 
         return {
@@ -1573,28 +1982,23 @@ const BrainActionPolicy = {
                 normalized ||
                 null,
 
+            known,
+
             permission,
 
             allowed:
+                known &&
                 !blocked,
 
             executable:
+                known &&
                 !blocked,
 
             requiresConfirmation,
 
             blocked,
 
-            reason:
-                blocked
-                    ? this.getBlockedReason(
-                        normalized
-                    )
-                    : requiresConfirmation
-                        ? this.getConfirmationReason(
-                            normalized
-                        )
-                        : null
+            reason
 
         };
 
@@ -1615,32 +2019,59 @@ const BrainActionPolicy = {
 
         return {
 
+            version:
+                this.version,
+
             totalRules:
                 entries.length,
 
             safe:
                 entries.filter(
-                    ([,level]) =>
+                    (
+                        [
+                            ,
+                            level
+                        ]
+                    ) =>
                         level ===
-                        this.levels.SAFE
+                            this.levels.SAFE
                 ).length,
 
             confirm:
                 entries.filter(
-                    ([,level]) =>
+                    (
+                        [
+                            ,
+                            level
+                        ]
+                    ) =>
                         level ===
-                        this.levels.CONFIRM
+                            this.levels.CONFIRM
                 ).length,
 
             blocked:
                 entries.filter(
-                    ([,level]) =>
+                    (
+                        [
+                            ,
+                            level
+                        ]
+                    ) =>
                         level ===
-                        this.levels.BLOCKED
+                            this.levels.BLOCKED
                 ).length,
 
+            unknown:
+                0,
+
             defaultPolicy:
-                this.levels.CONFIRM
+                this.levels.UNKNOWN,
+
+            failClosed:
+                true,
+
+            confirmationMode:
+                "bound-confirmation"
 
         };
 
@@ -1649,11 +2080,46 @@ const BrainActionPolicy = {
 };
 
 
-VAERO.register(
-    "brainActionPolicy",
-    BrainActionPolicy
-);
+/* =========================================================
+   REGISTER
+========================================================= */
+
+try{
+
+    if(
+        typeof VAERO !==
+            "undefined" &&
+        typeof VAERO.register ===
+            "function"
+    ){
+
+        VAERO.register(
+            "brainActionPolicy",
+            BrainActionPolicy
+        );
+
+    }
+
+} catch(error){
+
+    console.error(
+        "BrainActionPolicy register edilemedi:",
+        error
+    );
+
+}
 
 
-window.BrainActionPolicy =
-    BrainActionPolicy;
+/* =========================================================
+   GLOBAL
+========================================================= */
+
+if(
+    typeof window !==
+        "undefined"
+){
+
+    window.BrainActionPolicy =
+        BrainActionPolicy;
+
+}
