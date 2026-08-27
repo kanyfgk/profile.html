@@ -11,7 +11,6 @@ const OrganSystem = {
     booted:
         false,
 
-
     allowedStatuses:
         new Set([
             "active",
@@ -30,6 +29,20 @@ const OrganSystem = {
 
     getService(name){
 
+        const serviceName =
+            String(
+                name ??
+                ""
+            ).trim();
+
+
+        if(!serviceName){
+
+            return null;
+
+        }
+
+
         try{
 
             if(
@@ -46,7 +59,7 @@ const OrganSystem = {
 
             return (
                 VAERO.get(
-                    name
+                    serviceName
                 ) ||
                 null
             );
@@ -54,7 +67,7 @@ const OrganSystem = {
         } catch(error){
 
             console.warn(
-                `OrganSystem service lookup failed: ${name}`,
+                `OrganSystem service lookup failed: ${serviceName}`,
                 error
             );
 
@@ -75,6 +88,31 @@ const OrganSystem = {
         payload = {}
     ){
 
+        const name =
+            String(
+                eventName ??
+                ""
+            ).trim();
+
+
+        if(!name){
+
+            return false;
+
+        }
+
+
+        const safePayload =
+            payload &&
+            typeof payload ===
+                "object" &&
+            !Array.isArray(
+                payload
+            )
+                ? payload
+                : {};
+
+
         let emitted =
             false;
 
@@ -89,8 +127,8 @@ const OrganSystem = {
             ){
 
                 VAERO.emit(
-                    eventName,
-                    payload
+                    name,
+                    safePayload
                 );
 
 
@@ -102,7 +140,7 @@ const OrganSystem = {
         } catch(error){
 
             console.warn(
-                `Organ event gönderilemedi: ${eventName}`,
+                `Organ event gönderilemedi: ${name}`,
                 error
             );
 
@@ -131,8 +169,8 @@ const OrganSystem = {
             ){
 
                 events.emit(
-                    eventName,
-                    payload
+                    name,
+                    safePayload
                 );
 
 
@@ -143,7 +181,7 @@ const OrganSystem = {
         } catch(error){
 
             console.warn(
-                `Organ event fallback gönderilemedi: ${eventName}`,
+                `Organ event fallback gönderilemedi: ${name}`,
                 error
             );
 
@@ -163,19 +201,44 @@ const OrganSystem = {
         prefix = "organ"
     ){
 
-        if(
-            typeof crypto !==
-                "undefined" &&
-            typeof crypto.randomUUID ===
-                "function"
-        ){
+        try{
 
-            return crypto.randomUUID();
+            if(
+                typeof crypto !==
+                    "undefined" &&
+                typeof crypto.randomUUID ===
+                    "function"
+            ){
+
+                return crypto.randomUUID();
+
+            }
+
+        } catch(error){
+
+            /* fallback below */
 
         }
 
 
-        return `${prefix}_${Date.now()}_${Math.random()
+        const safePrefix =
+            String(
+                prefix ||
+                "organ"
+            )
+                .trim()
+                .replace(
+                    /[^a-zA-Z0-9_-]/g,
+                    "-"
+                )
+                .slice(
+                    0,
+                    40
+                ) ||
+            "organ";
+
+
+        return `${safePrefix}_${Date.now()}_${Math.random()
             .toString(36)
             .slice(2,10)}`;
 
@@ -191,7 +254,12 @@ const OrganSystem = {
         return String(
             name ??
             ""
-        ).trim();
+        )
+            .trim()
+            .slice(
+                0,
+                160
+            );
 
     },
 
@@ -219,6 +287,10 @@ const OrganSystem = {
             .replace(
                 /^-|-$/g,
                 ""
+            )
+            .slice(
+                0,
+                180
             );
 
     },
@@ -265,46 +337,84 @@ const OrganSystem = {
 
     normalizeList(value){
 
+        let source =
+            [];
+
+
         if(
             Array.isArray(
                 value
             )
         ){
 
-            return [
-                ...new Set(
-                    value
-                        .map(
-                            item =>
-                                String(
-                                    item ??
-                                    ""
-                                )
-                                    .trim()
-                                    .toLowerCase()
-                        )
-                        .filter(Boolean)
-                )
-            ];
+            source =
+                value;
 
         }
 
-
-        if(
+        else if(
             value instanceof
                 Set
         ){
 
-            return this.normalizeList(
+            source =
                 [
                     ...value
-                ]
-            );
+                ];
+
+        }
+
+        else {
+
+            return [];
 
         }
 
 
-        return [];
+        const seen =
+            new Set();
+
+
+        return source
+            .map(
+                item =>
+                    String(
+                        item ??
+                        ""
+                    )
+                        .trim()
+                        .toLowerCase()
+            )
+            .filter(
+                item => {
+
+                    if(!item){
+
+                        return false;
+
+                    }
+
+
+                    if(
+                        seen.has(
+                            item
+                        )
+                    ){
+
+                        return false;
+
+                    }
+
+
+                    seen.add(
+                        item
+                    );
+
+
+                    return true;
+
+                }
+            );
 
     },
 
@@ -543,7 +653,7 @@ const OrganSystem = {
 
         if(
             organ.installed !==
-            true
+                true
         ){
 
             return false;
@@ -562,9 +672,15 @@ const OrganSystem = {
         }
 
 
-        return this.checkDependencies(
-            organ.id
-        ).valid;
+        const dependencyState =
+            this.checkDependencies(
+                organ.id
+            );
+
+
+        return Boolean(
+            dependencyState?.valid
+        );
 
     },
 
@@ -582,170 +698,167 @@ const OrganSystem = {
         }
 
 
-        Object.defineProperties(
-            organ,
-            {
+        try{
 
-                hasPermission:{
+            Object.defineProperties(
+                organ,
+                {
 
-                    enumerable:
-                        false,
+                    hasPermission:{
+                        enumerable:
+                            false,
 
-                    configurable:
-                        true,
+                        configurable:
+                            true,
 
-                    value:
-                        permission =>
-                            this.hasPermission(
-                                organ.id,
-                                permission
-                            )
+                        value:
+                            permission =>
+                                this.hasPermission(
+                                    organ.id,
+                                    permission
+                                )
+                    },
 
-                },
 
+                    grantPermission:{
+                        enumerable:
+                            false,
 
-                grantPermission:{
+                        configurable:
+                            true,
 
-                    enumerable:
-                        false,
-
-                    configurable:
-                        true,
-
-                    value:
-                        (
-                            permission,
-                            context = {}
-                        ) =>
-                            this.grantPermission(
-                                organ.id,
+                        value:
+                            (
                                 permission,
-                                context
-                            )
+                                context = {}
+                            ) =>
+                                this.grantPermission(
+                                    organ.id,
+                                    permission,
+                                    context
+                                )
+                    },
 
-                },
+
+                    setPermission:{
+                        enumerable:
+                            false,
+
+                        configurable:
+                            true,
+
+                        value:
+                            (
+                                permission,
+                                enabled = true,
+                                context = {}
+                            ) => {
+
+                                if(
+                                    enabled ===
+                                        false
+                                ){
+
+                                    return this.revokePermission(
+                                        organ.id,
+                                        permission,
+                                        context
+                                    );
+
+                                }
 
 
-                setPermission:{
-
-                    enumerable:
-                        false,
-
-                    configurable:
-                        true,
-
-                    value:
-                        (
-                            permission,
-                            enabled = true,
-                            context = {}
-                        ) => {
-
-                            if(
-                                enabled ===
-                                false
-                            ){
-
-                                return this.revokePermission(
+                                return this.grantPermission(
                                     organ.id,
                                     permission,
                                     context
                                 );
 
                             }
+                    },
 
 
-                            return this.grantPermission(
-                                organ.id,
+                    revokePermission:{
+                        enumerable:
+                            false,
+
+                        configurable:
+                            true,
+
+                        value:
+                            (
                                 permission,
-                                context
-                            );
-
-                        }
-
-                },
-
-
-                revokePermission:{
-
-                    enumerable:
-                        false,
-
-                    configurable:
-                        true,
-
-                    value:
-                        (
-                            permission,
-                            context = {}
-                        ) =>
-                            this.revokePermission(
-                                organ.id,
-                                permission,
-                                context
-                            )
-
-                },
+                                context = {}
+                            ) =>
+                                this.revokePermission(
+                                    organ.id,
+                                    permission,
+                                    context
+                                )
+                    },
 
 
-                hasCapability:{
+                    hasCapability:{
+                        enumerable:
+                            false,
 
-                    enumerable:
-                        false,
+                        configurable:
+                            true,
 
-                    configurable:
-                        true,
-
-                    value:
-                        capability =>
-                            this.hasCapability(
-                                organ.id,
-                                capability
-                            )
-
-                },
+                        value:
+                            capability =>
+                                this.hasCapability(
+                                    organ.id,
+                                    capability
+                                )
+                    },
 
 
-                setStatus:{
+                    setStatus:{
+                        enumerable:
+                            false,
 
-                    enumerable:
-                        false,
+                        configurable:
+                            true,
 
-                    configurable:
-                        true,
-
-                    value:
-                        (
-                            status,
-                            context = {}
-                        ) =>
-                            this.setStatus(
-                                organ.id,
+                        value:
+                            (
                                 status,
-                                context
-                            )
+                                context = {}
+                            ) =>
+                                this.setStatus(
+                                    organ.id,
+                                    status,
+                                    context
+                                )
+                    },
 
-                },
 
+                    report:{
+                        enumerable:
+                            false,
 
-                report:{
+                        configurable:
+                            true,
 
-                    enumerable:
-                        false,
-
-                    configurable:
-                        true,
-
-                    value:
-                        () =>
-                            this.organReport(
-                                organ.id
-                            )
+                        value:
+                            () =>
+                                this.organReport(
+                                    organ.id
+                                )
+                    }
 
                 }
+            );
 
-            }
-        );
+        } catch(error){
+
+            console.warn(
+                "Organ runtime API bağlanamadı:",
+                error
+            );
+
+        }
 
 
         return organ;
@@ -762,6 +875,13 @@ const OrganSystem = {
         operation,
         context = {}
     ){
+
+        if(!organ){
+
+            return false;
+
+        }
+
 
         const guardian =
             this.getService(
@@ -780,6 +900,17 @@ const OrganSystem = {
         }
 
 
+        const safeContext =
+            context &&
+            typeof context ===
+                "object" &&
+            !Array.isArray(
+                context
+            )
+                ? context
+                : {};
+
+
         try{
 
             const validation =
@@ -788,7 +919,8 @@ const OrganSystem = {
                     "organ",
                     {
                         operation,
-                        ...context
+
+                        ...safeContext
                     }
                 );
 
@@ -815,6 +947,11 @@ const OrganSystem = {
             return true;
 
         } catch(error){
+
+            /*
+             * Existing architecture treats Guardian
+             * availability failures as non-blocking.
+             */
 
             console.warn(
                 "Guardian organ kontrolü başarısız:",
@@ -867,7 +1004,12 @@ const OrganSystem = {
             String(
                 safeMeta.id ||
                 this.createId()
-            ).trim();
+            )
+                .trim()
+                .slice(
+                    0,
+                    180
+                );
 
 
         if(!id){
@@ -961,6 +1103,11 @@ const OrganSystem = {
             );
 
 
+        /*
+         * Built-in/system organs are trusted by origin.
+         * External organs are not promoted to trusted here.
+         */
+
         const trusted =
             systemSource
                 ? true
@@ -987,6 +1134,14 @@ const OrganSystem = {
         }
 
 
+        const health =
+            this.normalizeHealth(
+                safeMeta.health ??
+                safeMeta.healthScore ??
+                100
+            );
+
+
         const organ = {
 
             id,
@@ -998,14 +1153,24 @@ const OrganSystem = {
                 String(
                     safeMeta.title ||
                     organName
-                ).trim(),
+                )
+                    .trim()
+                    .slice(
+                        0,
+                        180
+                    ),
 
             description:
                 String(
                     safeMeta.description ||
                     safeMeta.subtitle ||
                     ""
-                ).trim(),
+                )
+                    .trim()
+                    .slice(
+                        0,
+                        2000
+                    ),
 
             icon:
                 String(
@@ -1017,7 +1182,12 @@ const OrganSystem = {
                 String(
                     safeMeta.action ||
                     ""
-                ).trim(),
+                )
+                    .trim()
+                    .slice(
+                        0,
+                        180
+                    ),
 
             slug,
 
@@ -1028,7 +1198,12 @@ const OrganSystem = {
                 String(
                     safeMeta.version ||
                     "1.0.0"
-                ).trim(),
+                )
+                    .trim()
+                    .slice(
+                        0,
+                        80
+                    ),
 
             type:
                 String(
@@ -1036,7 +1211,11 @@ const OrganSystem = {
                     "organ"
                 )
                     .trim()
-                    .toLowerCase(),
+                    .toLowerCase()
+                    .slice(
+                        0,
+                        80
+                    ),
 
             source,
 
@@ -1073,24 +1252,16 @@ const OrganSystem = {
 
             trusted,
 
-            health:
-                this.normalizeHealth(
-                    safeMeta.health ??
-                    safeMeta.healthScore ??
-                    100
-                ),
+            health,
 
             healthScore:
-                this.normalizeHealth(
-                    safeMeta.healthScore ??
-                    safeMeta.health ??
-                    100
-                ),
+                health,
 
             metadata,
 
             meta:{
                 ...safeMeta,
+
                 ...metadata
             },
 
@@ -1129,6 +1300,11 @@ const OrganSystem = {
         );
 
 
+        /*
+         * An application cannot remain active if
+         * required permissions are incomplete.
+         */
+
         if(
             organ.status ===
                 "active" &&
@@ -1143,12 +1319,45 @@ const OrganSystem = {
         }
 
 
+        /*
+         * Dependencies also participate in activation.
+         * This check is safe after registration because
+         * dependency lookup can now resolve this registry.
+         */
+
+        if(
+            organ.status ===
+                "active"
+        ){
+
+            const dependencyState =
+                this.checkDependencies(
+                    organ.id
+                );
+
+
+            if(
+                dependencyState &&
+                dependencyState.valid ===
+                    false
+            ){
+
+                organ.status =
+                    "inactive";
+
+            }
+
+        }
+
+
         this.emit(
             "organ:created",
             {
                 organ,
+
                 organId:
                     organ.id,
+
                 time:
                     Date.now()
             }
@@ -1185,8 +1394,10 @@ const OrganSystem = {
             data.title ||
             data.slug ||
             "Organ",
+
             data.status ||
             "active",
+
             data
         );
 
@@ -1199,12 +1410,23 @@ const OrganSystem = {
 
     get(id){
 
+        const targetId =
+            String(
+                id ??
+                ""
+            ).trim();
+
+
+        if(!targetId){
+
+            return null;
+
+        }
+
+
         const organ =
             this.organs.get(
-                String(
-                    id ??
-                    ""
-                )
+                targetId
             ) ||
             null;
 
@@ -1247,34 +1469,67 @@ const OrganSystem = {
         }
 
 
-        return (
+        const organ =
             [
                 ...this.organs.values()
             ]
                 .find(
-                    organ =>
-                        organ.slug ===
-                        target
+                    item =>
+                        item?.slug ===
+                            target
                 ) ||
-            null
-        );
+            null;
+
+
+        if(organ){
+
+            this.attachRuntimeAPI(
+                organ
+            );
+
+        }
+
+
+        return organ;
 
     },
 
 
     has(id){
 
-        return this.organs.has(
+        const targetId =
             String(
                 id ??
                 ""
-            )
+            ).trim();
+
+
+        if(!targetId){
+
+            return false;
+
+        }
+
+
+        return this.organs.has(
+            targetId
         );
 
     },
 
 
     all(options = {}){
+
+        const safeOptions =
+            options &&
+            typeof options ===
+                "object" &&
+            !Array.isArray(
+                options
+            )
+                ? options
+                : {};
+
 
         let organs =
             [
@@ -1283,7 +1538,7 @@ const OrganSystem = {
 
 
         if(
-            options.installed ===
+            safeOptions.installed ===
                 true
         ){
 
@@ -1298,7 +1553,7 @@ const OrganSystem = {
 
 
         if(
-            options.installed ===
+            safeOptions.installed ===
                 false
         ){
 
@@ -1312,11 +1567,19 @@ const OrganSystem = {
         }
 
 
-        if(options.status){
+        if(
+            safeOptions.status !==
+                undefined &&
+            safeOptions.status !==
+                null &&
+            String(
+                safeOptions.status
+            ).trim()
+        ){
 
             const status =
                 this.normalizeStatus(
-                    options.status
+                    safeOptions.status
                 );
 
 
@@ -1324,14 +1587,14 @@ const OrganSystem = {
                 organs.filter(
                     organ =>
                         organ.status ===
-                        status
+                            status
                 );
 
         }
 
 
         if(
-            options.trusted ===
+            safeOptions.trusted ===
                 true
         ){
 
@@ -1346,7 +1609,7 @@ const OrganSystem = {
 
 
         if(
-            options.trusted ===
+            safeOptions.trusted ===
                 false
         ){
 
@@ -1360,11 +1623,13 @@ const OrganSystem = {
         }
 
 
-        if(options.type){
+        if(
+            safeOptions.type
+        ){
 
             const type =
                 String(
-                    options.type
+                    safeOptions.type
                 )
                     .trim()
                     .toLowerCase();
@@ -1374,7 +1639,7 @@ const OrganSystem = {
                 organs.filter(
                     organ =>
                         organ.type ===
-                        type
+                            type
                 );
 
         }
@@ -1433,13 +1698,33 @@ const OrganSystem = {
         }
 
 
-        return (
+        const direct =
             this.get(
                 dependency
-            ) ||
+            );
+
+
+        if(direct){
+
+            return direct;
+
+        }
+
+
+        const bySlug =
             this.findBySlug(
                 dependency
-            ) ||
+            );
+
+
+        if(bySlug){
+
+            return bySlug;
+
+        }
+
+
+        return (
             this.all()
                 .find(
                     organ =>
@@ -1449,15 +1734,14 @@ const OrganSystem = {
                         )
                             .trim()
                             .toLowerCase() ===
-                        target
+                            target
                 ) ||
             null
         );
 
     },
 
-
-    checkDependencies(id){
+   checkDependencies(id){
 
         const organ =
             this.get(
@@ -1470,10 +1754,13 @@ const OrganSystem = {
             return {
                 valid:
                     false,
+
                 missing:
                     [],
+
                 inactive:
                     [],
+
                 dependencies:
                     []
             };
@@ -1481,14 +1768,21 @@ const OrganSystem = {
         }
 
 
+        const dependencies =
+            this.normalizeList(
+                organ.dependencies
+            );
+
+
         const missing =
             [];
+
 
         const inactive =
             [];
 
 
-        organ.dependencies.forEach(
+        dependencies.forEach(
             dependency => {
 
                 const resolved =
@@ -1510,7 +1804,8 @@ const OrganSystem = {
 
 
                 if(
-                    !resolved.installed ||
+                    resolved.installed !==
+                        true ||
                     resolved.status !==
                         "active"
                 ){
@@ -1526,7 +1821,6 @@ const OrganSystem = {
 
 
         return {
-
             valid:
                 missing.length ===
                     0 &&
@@ -1538,9 +1832,8 @@ const OrganSystem = {
             inactive,
 
             dependencies:[
-                ...organ.dependencies
+                ...dependencies
             ]
-
         };
 
     },
@@ -1590,9 +1883,15 @@ const OrganSystem = {
         );
 
 
+        const dependencies =
+            this.normalizeList(
+                source.dependencies
+            );
+
+
         for(
             const dependency of
-            source.dependencies
+            dependencies
         ){
 
             const resolved =
@@ -1610,7 +1909,7 @@ const OrganSystem = {
 
             if(
                 resolved.id ===
-                target.id
+                    target.id
             ){
 
                 return true;
@@ -1667,7 +1966,7 @@ const OrganSystem = {
 
         if(
             organ.id ===
-            dependency.id
+                dependency.id
         ){
 
             return true;
@@ -1685,7 +1984,8 @@ const OrganSystem = {
 
     addDependency(
         id,
-        dependency
+        dependency,
+        context = {}
     ){
 
         const organ =
@@ -1704,7 +2004,9 @@ const OrganSystem = {
             !organ ||
             !target ||
             target ===
-                organ.id.toLowerCase() ||
+                String(
+                    organ.id
+                ).toLowerCase() ||
             target ===
                 organ.slug
         ){
@@ -1746,7 +2048,18 @@ const OrganSystem = {
                 "dependency-add",
                 {
                     dependency:
-                        target
+                        target,
+
+                    ...(
+                        context &&
+                        typeof context ===
+                            "object" &&
+                        !Array.isArray(
+                            context
+                        )
+                            ? context
+                            : {}
+                    )
                 }
             )
         ){
@@ -1801,7 +2114,8 @@ const OrganSystem = {
 
     removeDependency(
         id,
-        dependency
+        dependency,
+        context = {}
     ){
 
         const organ =
@@ -1832,7 +2146,18 @@ const OrganSystem = {
                 "dependency-remove",
                 {
                     dependency:
-                        target
+                        target,
+
+                    ...(
+                        context &&
+                        typeof context ===
+                            "object" &&
+                        !Array.isArray(
+                            context
+                        )
+                            ? context
+                            : {}
+                    )
                 }
             )
         ){
@@ -1850,13 +2175,13 @@ const OrganSystem = {
             organ.dependencies.filter(
                 item =>
                     item !==
-                    target
+                        target
             );
 
 
         if(
             before ===
-            organ.dependencies.length
+                organ.dependencies.length
         ){
 
             return false;
@@ -1887,7 +2212,8 @@ const OrganSystem = {
 
     },
 
-   /* =====================================================
+
+    /* =====================================================
        STATUS
     ===================================================== */
 
@@ -1923,7 +2249,7 @@ const OrganSystem = {
 
             if(
                 organ.installed !==
-                true
+                    true
             ){
 
                 console.warn(
@@ -1977,6 +2303,17 @@ const OrganSystem = {
         }
 
 
+        const safeContext =
+            context &&
+            typeof context ===
+                "object" &&
+            !Array.isArray(
+                context
+            )
+                ? context
+                : {};
+
+
         if(
             !this.guardianCheck(
                 organ,
@@ -1984,7 +2321,8 @@ const OrganSystem = {
                 {
                     status:
                         nextStatus,
-                    ...context
+
+                    ...safeContext
                 }
             )
         ){
@@ -2000,7 +2338,7 @@ const OrganSystem = {
 
         if(
             previousStatus ===
-            nextStatus
+                nextStatus
         ){
 
             return true;
@@ -2115,6 +2453,11 @@ const OrganSystem = {
             Date.now();
 
 
+        /*
+         * Kaynak davranışı korunur:
+         * kritik health değeri aktif organı error'a geçirir.
+         */
+
         if(
             score <=
                 20 &&
@@ -2148,7 +2491,7 @@ const OrganSystem = {
 
         if(
             previousStatus !==
-            organ.status
+                organ.status
         ){
 
             this.emit(
@@ -2205,7 +2548,7 @@ const OrganSystem = {
 
         if(
             organ.installed ===
-            true
+                true
         ){
 
             return true;
@@ -2218,6 +2561,12 @@ const OrganSystem = {
                 organ.id
             );
 
+
+        /*
+         * Eksik dependency ile kurulum yapılmaz.
+         * Var fakat inactive dependency mevcutsa organ
+         * kurulabilir ancak active olmaz.
+         */
 
         if(
             dependencies.missing.length
@@ -2302,10 +2651,13 @@ const OrganSystem = {
             "organ:installed",
             {
                 organ,
+
                 organId:
                     organ.id,
+
                 status:
                     organ.status,
+
                 time:
                     Date.now()
             }
@@ -2341,7 +2693,7 @@ const OrganSystem = {
 
         if(
             organ.installed !==
-            true
+                true
         ){
 
             return true;
@@ -2372,7 +2724,8 @@ const OrganSystem = {
                     candidate =>
                         candidate.id !==
                             organ.id &&
-                        candidate.installed &&
+                        candidate.installed ===
+                            true &&
                         candidate.dependencies.some(
                             dependency => {
 
@@ -2384,7 +2737,7 @@ const OrganSystem = {
 
                                 return (
                                     resolved?.id ===
-                                    organ.id
+                                        organ.id
                                 );
 
                             }
@@ -2392,7 +2745,9 @@ const OrganSystem = {
                 );
 
 
-        if(dependents.length){
+        if(
+            dependents.length
+        ){
 
             console.warn(
                 "Organ kaldırılamaz: başka organlar buna bağlı.",
@@ -2441,9 +2796,12 @@ const OrganSystem = {
             "organ:uninstalled",
             {
                 organ,
+
                 organId:
                     organ.id,
+
                 previousStatus,
+
                 time:
                     Date.now()
             }
@@ -2525,6 +2883,11 @@ const OrganSystem = {
         }
 
 
+        /*
+         * External Application organs may only receive
+         * permissions declared in their manifest.
+         */
+
         if(
             this.isApplicationOrgan(
                 organ
@@ -2562,6 +2925,17 @@ const OrganSystem = {
         }
 
 
+        const safeContext =
+            context &&
+            typeof context ===
+                "object" &&
+            !Array.isArray(
+                context
+            )
+                ? context
+                : {};
+
+
         if(
             !this.guardianCheck(
                 organ,
@@ -2569,7 +2943,8 @@ const OrganSystem = {
                 {
                     permission:
                         target,
-                    ...context
+
+                    ...safeContext
                 }
             )
         ){
@@ -2620,8 +2995,15 @@ const OrganSystem = {
         );
 
 
+        /*
+         * Required permissions tamamlandığında ve
+         * dependencies hazır olduğunda kurulu organ
+         * tekrar active olabilir.
+         */
+
         if(
-            organ.installed &&
+            organ.installed ===
+                true &&
             organ.status ===
                 "inactive" &&
             this.permissionsComplete(
@@ -2688,6 +3070,17 @@ const OrganSystem = {
         }
 
 
+        const safeContext =
+            context &&
+            typeof context ===
+                "object" &&
+            !Array.isArray(
+                context
+            )
+                ? context
+                : {};
+
+
         if(
             !this.guardianCheck(
                 organ,
@@ -2695,7 +3088,8 @@ const OrganSystem = {
                 {
                     permission:
                         target,
-                    ...context
+
+                    ...safeContext
                 }
             )
         ){
@@ -2709,7 +3103,7 @@ const OrganSystem = {
             organ.permissions.filter(
                 item =>
                     item !==
-                    target
+                        target
             );
 
 
@@ -2800,8 +3194,7 @@ const OrganSystem = {
 
     },
 
-
-    addCapability(
+   addCapability(
         id,
         capability,
         context = {}
@@ -2829,6 +3222,17 @@ const OrganSystem = {
         }
 
 
+        const safeContext =
+            context &&
+            typeof context ===
+                "object" &&
+            !Array.isArray(
+                context
+            )
+                ? context
+                : {};
+
+
         if(
             !this.guardianCheck(
                 organ,
@@ -2836,7 +3240,8 @@ const OrganSystem = {
                 {
                     capability:
                         target,
-                    ...context
+
+                    ...safeContext
                 }
             )
         ){
@@ -2928,6 +3333,17 @@ const OrganSystem = {
         }
 
 
+        const safeContext =
+            context &&
+            typeof context ===
+                "object" &&
+            !Array.isArray(
+                context
+            )
+                ? context
+                : {};
+
+
         if(
             !this.guardianCheck(
                 organ,
@@ -2935,7 +3351,8 @@ const OrganSystem = {
                 {
                     capability:
                         target,
-                    ...context
+
+                    ...safeContext
                 }
             )
         ){
@@ -2949,7 +3366,7 @@ const OrganSystem = {
             organ.capabilities.filter(
                 item =>
                     item !==
-                    target
+                        target
             );
 
 
@@ -3006,6 +3423,23 @@ const OrganSystem = {
             );
 
 
+        const safeContext =
+            context &&
+            typeof context ===
+                "object" &&
+            !Array.isArray(
+                context
+            )
+                ? context
+                : {};
+
+
+        /*
+         * System/Built-in organs may be trusted by origin.
+         * External organs require an explicit verification
+         * result supplied by the verifier layer.
+         */
+
         if(
             nextTrusted &&
             !this.isSystemSource(
@@ -3014,7 +3448,7 @@ const OrganSystem = {
         ){
 
             if(
-                context.verified !==
+                safeContext.verified !==
                     true
             ){
 
@@ -3029,7 +3463,7 @@ const OrganSystem = {
 
 
             const verification =
-                context.verification;
+                safeContext.verification;
 
 
             if(
@@ -3058,8 +3492,9 @@ const OrganSystem = {
                 {
                     trusted:
                         nextTrusted,
+
                     verified:
-                        context.verified ===
+                        safeContext.verified ===
                             true
                 }
             )
@@ -3072,7 +3507,7 @@ const OrganSystem = {
 
         if(
             organ.trusted ===
-            nextTrusted
+                nextTrusted
         ){
 
             return true;
@@ -3139,11 +3574,22 @@ const OrganSystem = {
         }
 
 
+        const safeContext =
+            context &&
+            typeof context ===
+                "object" &&
+            !Array.isArray(
+                context
+            )
+                ? context
+                : {};
+
+
         if(
             !this.guardianCheck(
                 organ,
                 "update",
-                context
+                safeContext
             )
         ){
 
@@ -3214,7 +3660,12 @@ const OrganSystem = {
                 String(
                     patch.title ||
                     organ.name
-                ).trim();
+                )
+                    .trim()
+                    .slice(
+                        0,
+                        180
+                    );
 
         }
 
@@ -3228,7 +3679,12 @@ const OrganSystem = {
                 String(
                     patch.description ||
                     ""
-                ).trim();
+                )
+                    .trim()
+                    .slice(
+                        0,
+                        2000
+                    );
 
         }
 
@@ -3256,7 +3712,12 @@ const OrganSystem = {
                 String(
                     patch.action ||
                     ""
-                ).trim();
+                )
+                    .trim()
+                    .slice(
+                        0,
+                        180
+                    );
 
         }
 
@@ -3270,7 +3731,12 @@ const OrganSystem = {
                 String(
                     patch.version ||
                     organ.version
-                ).trim();
+                )
+                    .trim()
+                    .slice(
+                        0,
+                        80
+                    );
 
         }
 
@@ -3298,6 +3764,12 @@ const OrganSystem = {
 
         }
 
+
+        /*
+         * Application organs do not accept bulk permission
+         * mutation through update(). Permissions must pass
+         * through grant/revoke validation.
+         */
 
         if(
             patch.permissions !==
@@ -3388,6 +3860,7 @@ const OrganSystem = {
 
             organ.metadata = {
                 ...organ.metadata,
+
                 ...patch.metadata
             };
 
@@ -3405,16 +3878,35 @@ const OrganSystem = {
 
             organ.meta = {
                 ...organ.meta,
+
                 ...patch.meta
             };
 
 
             organ.metadata = {
                 ...organ.metadata,
+
                 ...patch.meta
             };
 
         }
+
+
+        /*
+         * Preserve immutable registry identity fields.
+         */
+
+        organ.id =
+            before.id ||
+            organ.id;
+
+
+        organ.slug =
+            organ.slug;
+
+
+        organ.source =
+            organ.source;
 
 
         if(
@@ -3426,7 +3918,7 @@ const OrganSystem = {
                 this.setStatus(
                     organ.id,
                     patch.status,
-                    context
+                    safeContext
                 );
 
 
@@ -3441,6 +3933,12 @@ const OrganSystem = {
 
         }
 
+
+        /*
+         * If an application's manifest permissions changed,
+         * an active application cannot remain active while
+         * required permissions are incomplete.
+         */
 
         if(
             this.isApplicationOrgan(
@@ -3465,6 +3963,41 @@ const OrganSystem = {
         }
 
 
+        /*
+         * Dependency updates can also invalidate an active
+         * organ. Keep registry state internally consistent.
+         */
+
+        if(
+            organ.status ===
+                "active"
+        ){
+
+            const dependencyState =
+                this.checkDependencies(
+                    organ.id
+                );
+
+
+            if(
+                dependencyState.valid ===
+                    false
+            ){
+
+                this.setStatus(
+                    organ.id,
+                    "inactive",
+                    {
+                        source:
+                            "dependency-change"
+                    }
+                );
+
+            }
+
+        }
+
+
         organ.updatedAt =
             Date.now();
 
@@ -3473,9 +4006,12 @@ const OrganSystem = {
             "organ:updated",
             {
                 organ,
+
                 before,
+
                 organId:
                     organ.id,
+
                 time:
                     Date.now()
             }
@@ -3509,11 +4045,22 @@ const OrganSystem = {
         }
 
 
+        const safeOptions =
+            options &&
+            typeof options ===
+                "object" &&
+            !Array.isArray(
+                options
+            )
+                ? options
+                : {};
+
+
         if(
             this.isProtectedOrgan(
                 organ
             ) &&
-            options.force !==
+            safeOptions.force !==
                 true
         ){
 
@@ -3539,14 +4086,14 @@ const OrganSystem = {
                                 this.resolveDependency(
                                     dependency
                                 )?.id ===
-                                organ.id
+                                    organ.id
                         )
                 );
 
 
         if(
             dependents.length &&
-            options.force !==
+            safeOptions.force !==
                 true
         ){
 
@@ -3565,12 +4112,12 @@ const OrganSystem = {
 
 
         if(
-            options.force !==
+            safeOptions.force !==
                 true &&
             !this.guardianCheck(
                 organ,
                 "remove",
-                options
+                safeOptions
             )
         ){
 
@@ -3588,11 +4135,14 @@ const OrganSystem = {
             "organ:removed",
             {
                 organ,
+
                 organId:
                     organ.id,
+
                 forced:
-                    options.force ===
+                    safeOptions.force ===
                         true,
+
                 time:
                     Date.now()
             }
@@ -3603,8 +4153,7 @@ const OrganSystem = {
 
     },
 
-
-    /* =====================================================
+   /* =====================================================
        SINGLE ORGAN REPORT
     ===================================================== */
 
@@ -3740,7 +4289,8 @@ const OrganSystem = {
         const installed =
             organs.filter(
                 organ =>
-                    organ.installed
+                    organ.installed ===
+                        true
             );
 
 
@@ -3773,12 +4323,61 @@ const OrganSystem = {
                             organ
                         ) =>
                             total +
-                            organ.health,
+                            this.normalizeHealth(
+                                organ.health
+                            ),
                         0
                     ) /
                     organs.length
                 )
                 : 0;
+
+
+        const errorCount =
+            organs.filter(
+                organ =>
+                    organ.status ===
+                        "error"
+            ).length;
+
+
+        const criticalHealthCount =
+            organs.filter(
+                organ =>
+                    this.normalizeHealth(
+                        organ.health
+                    ) <
+                        40
+            ).length;
+
+
+        let status =
+            "healthy";
+
+
+        if(
+            errorCount >
+                0 ||
+            criticalHealthCount >
+                0
+        ){
+
+            status =
+                "critical";
+
+        }
+
+        else if(
+            dependencyProblems.length >
+                0 ||
+            permissionProblems.length >
+                0
+        ){
+
+            status =
+                "degraded";
+
+        }
 
 
         return {
@@ -3796,67 +4395,66 @@ const OrganSystem = {
                 installed.filter(
                     organ =>
                         organ.status ===
-                        "active"
+                            "active"
                 ).length,
 
             inactive:
                 installed.filter(
                     organ =>
                         organ.status ===
-                        "inactive"
+                            "inactive"
                 ).length,
 
             paused:
                 organs.filter(
                     organ =>
                         organ.status ===
-                        "paused"
+                            "paused"
                 ).length,
 
             disabled:
                 organs.filter(
                     organ =>
                         organ.status ===
-                        "disabled"
+                            "disabled"
                 ).length,
 
             installing:
                 organs.filter(
                     organ =>
                         organ.status ===
-                        "installing"
+                            "installing"
                 ).length,
 
             updating:
                 organs.filter(
                     organ =>
                         organ.status ===
-                        "updating"
+                            "updating"
                 ).length,
 
             errors:
-                organs.filter(
-                    organ =>
-                        organ.status ===
-                        "error"
-                ).length,
+                errorCount,
 
             trusted:
                 organs.filter(
                     organ =>
-                        organ.trusted
+                        organ.trusted ===
+                            true
                 ).length,
 
             untrusted:
                 organs.filter(
                     organ =>
-                        !organ.trusted
+                        organ.trusted !==
+                            true
                 ).length,
 
             protected:
                 organs.filter(
                     organ =>
-                        organ.protected
+                        organ.protected ===
+                            true
                 ).length,
 
             dependencyProblems:
@@ -3873,23 +4471,7 @@ const OrganSystem = {
 
             health,
 
-            status:
-                organs.some(
-                    organ =>
-                        organ.status ===
-                            "error" ||
-                        organ.health <
-                            40
-                )
-                    ? "critical"
-
-                    : (
-                        dependencyProblems.length ||
-                        permissionProblems.length
-                    )
-                        ? "degraded"
-
-                        : "healthy"
+            status
 
         };
 
@@ -3912,10 +4494,43 @@ const OrganSystem = {
 
 
         this.organs.forEach(
-            organ =>
+            organ => {
+
                 this.attachRuntimeAPI(
                     organ
-                )
+                );
+
+
+                /*
+                 * Registry boot sırasında geçersiz active
+                 * durumları sessizce normalize edilir.
+                 */
+
+                if(
+                    organ.status ===
+                        "active" &&
+                    (
+                        organ.installed !==
+                            true ||
+                        !this.permissionsComplete(
+                            organ
+                        ) ||
+                        !this.checkDependencies(
+                            organ.id
+                        ).valid
+                    )
+                ){
+
+                    organ.status =
+                        "inactive";
+
+
+                    organ.updatedAt =
+                        Date.now();
+
+                }
+
+            }
         );
 
 
@@ -3971,6 +4586,10 @@ try{
 
 }
 
+
+/* =========================================================
+   GLOBAL
+========================================================= */
 
 window.OrganSystem =
     OrganSystem;
