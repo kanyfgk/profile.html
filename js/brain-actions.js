@@ -5,8 +5,14 @@
 
 const BrainActions = {
 
+    version:
+        "3.0.0",
+
     lastResult:
         null,
+
+    executionSequence:
+        0,
 
 
     /* =====================================================
@@ -15,25 +21,45 @@ const BrainActions = {
 
     getService(name){
 
+        const serviceName =
+            String(
+                name ??
+                ""
+            ).trim();
+
+
+        if(!serviceName){
+
+            return null;
+
+        }
+
+
         try{
 
             if(
-                typeof VAERO === "undefined" ||
-                typeof VAERO.get !== "function"
+                typeof VAERO ===
+                    "undefined" ||
+                typeof VAERO.get !==
+                    "function"
             ){
+
                 return null;
+
             }
 
 
             return (
-                VAERO.get(name) ||
+                VAERO.get(
+                    serviceName
+                ) ||
                 null
             );
 
         } catch(error){
 
             console.warn(
-                `Brain Actions servisi okunamadı: ${name}`,
+                `Brain Actions servisi okunamadı: ${serviceName}`,
                 error
             );
 
@@ -54,15 +80,38 @@ const BrainActions = {
 
 
         if(registeredActions){
+
             return registeredActions;
+
+        }
+
+
+        try{
+
+            if(
+                typeof Actions !==
+                    "undefined"
+            ){
+
+                return Actions;
+
+            }
+
+        } catch(error){
+
+            /* global fallback unavailable */
+
         }
 
 
         if(
-            typeof Actions !==
-                "undefined"
+            typeof window !==
+                "undefined" &&
+            window.Actions
         ){
-            return Actions;
+
+            return window.Actions;
+
         }
 
 
@@ -76,22 +125,34 @@ const BrainActions = {
         try{
 
             if(
-                typeof VAERO !== "undefined" &&
+                typeof VAERO !==
+                    "undefined" &&
                 VAERO.engine
             ){
+
                 return VAERO.engine;
+
             }
 
         } catch(error){
 
-            /* fallback */
+            /* fallback below */
+
         }
 
 
-        return (
-            window.Engine ||
-            null
-        );
+        if(
+            typeof window !==
+                "undefined" &&
+            window.Engine
+        ){
+
+            return window.Engine;
+
+        }
+
+
+        return null;
 
     },
 
@@ -102,7 +163,34 @@ const BrainActions = {
             this.getService(
                 "brainActionPolicy"
             ) ||
-            window.BrainActionPolicy ||
+            (
+                typeof window !==
+                    "undefined"
+                    ? (
+                        window.BrainActionPolicy ||
+                        null
+                    )
+                    : null
+            )
+        );
+
+    },
+
+
+    getApplicationsApp(){
+
+        if(
+            typeof window ===
+                "undefined"
+        ){
+
+            return null;
+
+        }
+
+
+        return (
+            window.ApplicationsApp ||
             null
         );
 
@@ -116,7 +204,8 @@ const BrainActions = {
     normalizeValue(value){
 
         return String(
-            value ?? ""
+            value ??
+                ""
         )
             .trim()
             .toLowerCase();
@@ -124,13 +213,39 @@ const BrainActions = {
     },
 
 
+    normalizeIdentifier(value){
+
+        const id =
+            String(
+                value ??
+                    ""
+            )
+                .trim()
+                .slice(
+                    0,
+                    240
+                );
+
+
+        return (
+            id ||
+            null
+        );
+
+    },
+
+
     clone(value){
 
         if(
-            value === null ||
-            value === undefined
+            value ===
+                null ||
+            value ===
+                undefined
         ){
+
             return value;
+
         }
 
 
@@ -149,7 +264,8 @@ const BrainActions = {
 
         } catch(error){
 
-            /* fallback */
+            /* JSON fallback */
+
         }
 
 
@@ -176,26 +292,52 @@ const BrainActions = {
 
     setResult({
         success,
+        executed = null,
+        blocked = false,
         intent,
         action,
         reason = null,
         message = null,
-        data = null
+        data = null,
+        error = null
     }){
+
+        const succeeded =
+            success ===
+                true;
+
+
+        const wasExecuted =
+            executed ===
+                null
+                ? succeeded
+                : executed ===
+                    true;
+
+
+        const now =
+            Date.now();
+
 
         this.lastResult = {
 
+            id:
+                `brain_action_${now}_${++this.executionSequence}`,
+
             success:
-                Boolean(
-                    success
-                ),
+                succeeded,
 
             executed:
-                Boolean(
-                    success
-                ),
+                wasExecuted,
+
+            blocked:
+                blocked ===
+                    true,
 
             intent:
+                this.clone(
+                    intent
+                ) ||
                 intent ||
                 null,
 
@@ -210,7 +352,7 @@ const BrainActions = {
             message:
                 message ||
                 (
-                    success
+                    succeeded
                         ? "İşlem tamamlandı."
                         : reason ||
                           "İşlem gerçekleştirilemedi."
@@ -224,20 +366,23 @@ const BrainActions = {
                     )
                     : null,
 
+            error:
+                error
+                    ? (
+                        error?.message ||
+                        String(
+                            error
+                        )
+                    )
+                    : null,
+
             executedAt:
-                Date.now()
+                now
 
         };
 
 
-        /*
-         * BrainCore eski boolean sözleşmesini koruyor.
-         * Ayrıntılı sonuç lastResult üzerinden okunur.
-         */
-
-        return Boolean(
-            success
-        );
+        return this.lastResult;
 
     },
 
@@ -254,14 +399,29 @@ const BrainActions = {
 
         if(
             !actions ||
-            typeof actions[method] !==
+            typeof actions[
+                method
+            ] !==
                 "function"
         ){
 
             return {
-                success:false,
-                value:null,
-                missing:true
+
+                success:
+                    false,
+
+                value:
+                    null,
+
+                missing:
+                    true,
+
+                asyncUnsupported:
+                    false,
+
+                error:
+                    null
+
             };
 
         }
@@ -270,14 +430,19 @@ const BrainActions = {
         try{
 
             const value =
-                actions[method](
+                actions[
+                    method
+                ](
                     ...args
                 );
 
 
             /*
-             * Promise yaşam döngüsü bu katmanda henüz
-             * yürütülmüyor.
+             * BrainCore → BrainActions execution chain is
+             * currently synchronous.
+             *
+             * A Promise is never interpreted as a successful
+             * mutation.
              */
 
             if(
@@ -287,22 +452,44 @@ const BrainActions = {
             ){
 
                 return {
-                    success:false,
-                    value:null,
-                    missing:false,
-                    asyncUnsupported:true
+
+                    success:
+                        false,
+
+                    value:
+                        null,
+
+                    missing:
+                        false,
+
+                    asyncUnsupported:
+                        true,
+
+                    error:
+                        null
+
                 };
 
             }
 
 
             return {
+
                 success:
-                    value !== false,
+                    value !==
+                        false,
 
                 value,
 
-                missing:false
+                missing:
+                    false,
+
+                asyncUnsupported:
+                    false,
+
+                error:
+                    null
+
             };
 
         } catch(error){
@@ -314,10 +501,21 @@ const BrainActions = {
 
 
             return {
-                success:false,
-                value:null,
-                missing:false,
+
+                success:
+                    false,
+
+                value:
+                    null,
+
+                missing:
+                    false,
+
+                asyncUnsupported:
+                    false,
+
                 error
+
             };
 
         }
@@ -326,13 +524,115 @@ const BrainActions = {
 
 
     /* =====================================================
+       ACTION RESULT
+    ===================================================== */
+
+    resultFromActionCall({
+        result,
+        intent,
+        action,
+        successMessage,
+        failureMessage,
+        missingMessage = null,
+        asyncMessage = null,
+        data = null
+    }){
+
+        const success =
+            result?.success ===
+                true;
+
+
+        let reason =
+            null;
+
+
+        if(!success){
+
+            if(
+                result?.missing ===
+                    true
+            ){
+
+                reason =
+                    missingMessage ||
+                    "Gerekli Actions metodu bağlı değil.";
+
+            }
+            else if(
+                result?.asyncUnsupported ===
+                    true
+            ){
+
+                reason =
+                    asyncMessage ||
+                    "Bu Actions metodu async çalışıyor ve synchronous Brain Actions zincirinde yürütülemiyor.";
+
+            }
+            else {
+
+                reason =
+                    result?.error
+                        ?.message ||
+                    failureMessage ||
+                    "İşlem tamamlanamadı.";
+
+            }
+
+        }
+
+
+        return this.setResult({
+
+            success,
+
+            executed:
+                success,
+
+            intent,
+
+            action,
+
+            reason,
+
+            message:
+                success
+                    ? successMessage ||
+                      "İşlem tamamlandı."
+                    : null,
+
+            data:
+                data !==
+                    null
+                    ? data
+                    : (
+                        result?.value &&
+                        typeof result.value ===
+                            "object"
+                            ? result.value
+                            : null
+                    ),
+
+            error:
+                result?.error ||
+                null
+
+        });
+
+    },
+
+
+    /* =====================================================
        POLICY AUTHORIZATION
 
-       BrainActions ikinci güvenlik sınırıdır.
-       BrainCore policy kontrol etmiş olsa bile bu katman
-       tekrar doğrular.
+       BrainActions is the second local safety boundary.
 
-       Backend authority değildir.
+       BrainCore evaluates policy before calling this layer,
+       but BrainActions never trusts that first evaluation
+       blindly.
+
+       This remains a client/runtime boundary, not backend
+       authorization.
     ===================================================== */
 
     authorize(
@@ -351,10 +651,16 @@ const BrainActions = {
         ){
 
             return {
-                allowed:false,
+
+                allowed:
+                    false,
+
                 reason:
                     "Brain Action Policy bulunamadı.",
-                evaluation:null
+
+                evaluation:
+                    null
+
             };
 
         }
@@ -375,10 +681,16 @@ const BrainActions = {
         } catch(error){
 
             return {
-                allowed:false,
+
+                allowed:
+                    false,
+
                 reason:
                     "Brain Action Policy değerlendirilemedi.",
-                evaluation:null
+
+                evaluation:
+                    null
+
             };
 
         }
@@ -391,11 +703,16 @@ const BrainActions = {
         ){
 
             return {
-                allowed:false,
+
+                allowed:
+                    false,
+
                 reason:
                     evaluation?.reason ||
                     "Intent yürütülebilir değil.",
+
                 evaluation
+
             };
 
         }
@@ -409,18 +726,31 @@ const BrainActions = {
         ){
 
             return {
-                allowed:false,
+
+                allowed:
+                    false,
+
                 reason:
                     evaluation.reason ||
                     "İşlem policy tarafından engellendi.",
+
                 evaluation
+
             };
 
         }
 
 
+        /*
+         * Confirmation is accepted only from BrainCore's
+         * bound-confirmation path.
+         *
+         * confirmed:true by itself is not authority.
+         */
+
         if(
-            evaluation.requiresConfirmation
+            evaluation.requiresConfirmation ===
+                true
         ){
 
             if(
@@ -429,41 +759,55 @@ const BrainActions = {
             ){
 
                 return {
-                    allowed:false,
+
+                    allowed:
+                        false,
+
                     reason:
                         evaluation.reason ||
                         "Kullanıcı onayı gerekiyor.",
+
                     evaluation
+
                 };
 
             }
 
 
-            /*
-             * BrainCore confirmationId yolunda
-             * confirmationMode = bound-confirmation gönderir.
-             *
-             * legacy-boolean geçici uyumluluk olarak
-             * BrainCore tarafından hâlâ üretilebilir.
-             */
-
-            const confirmationMode =
-                context.confirmationMode ||
-                null;
-
-
             if(
-                confirmationMode !==
-                    "bound-confirmation" &&
-                confirmationMode !==
-                    "legacy-boolean"
+                context.confirmationMode !==
+                    "bound-confirmation"
             ){
 
                 return {
-                    allowed:false,
+
+                    allowed:
+                        false,
+
                     reason:
                         "Onay kaynağı doğrulanamadı.",
+
                     evaluation
+
+                };
+
+            }
+
+
+            if(
+                !context.confirmationId
+            ){
+
+                return {
+
+                    allowed:
+                        false,
+
+                    reason:
+                        "Bağlı confirmation kimliği bulunamadı.",
+
+                    evaluation
+
                 };
 
             }
@@ -472,9 +816,15 @@ const BrainActions = {
 
 
         return {
-            allowed:true,
-            reason:null,
+
+            allowed:
+                true,
+
+            reason:
+                null,
+
             evaluation
+
         };
 
     },
@@ -492,16 +842,24 @@ const BrainActions = {
         if(
             !intent ||
             typeof intent !==
-                "object"
+                "object" ||
+            Array.isArray(
+                intent
+            )
         ){
 
             return this.setResult({
 
-                success:false,
+                success:
+                    false,
+
+                executed:
+                    false,
 
                 intent,
 
-                action:null,
+                action:
+                    null,
 
                 reason:
                     "Geçerli intent bulunamadı."
@@ -525,7 +883,14 @@ const BrainActions = {
 
             return this.setResult({
 
-                success:false,
+                success:
+                    false,
+
+                executed:
+                    false,
+
+                blocked:
+                    true,
 
                 intent,
 
@@ -552,7 +917,11 @@ const BrainActions = {
 
             return this.setResult({
 
-                success:false,
+                success:
+                    false,
+
+                executed:
+                    false,
 
                 intent,
 
@@ -654,9 +1023,7 @@ const BrainActions = {
 
 
             case "message:send":
-
             case "call:start":
-
             case "screen-share:start":
 
                 return this.executeCommunicationIntent(
@@ -669,7 +1036,11 @@ const BrainActions = {
 
                 return this.setResult({
 
-                    success:false,
+                    success:
+                        false,
+
+                    executed:
+                        false,
 
                     intent,
 
@@ -722,6 +1093,7 @@ const BrainActions = {
                         "openHome"
                     );
 
+
                 action =
                     "home:open";
 
@@ -735,6 +1107,7 @@ const BrainActions = {
                         actions,
                         "openWorlds"
                     );
+
 
                 action =
                     "worlds:open";
@@ -753,9 +1126,7 @@ const BrainActions = {
                     null;
 
 
-                if(
-                    currentWorld?.id
-                ){
+                if(currentWorld?.id){
 
                     result =
                         this.callAction(
@@ -766,16 +1137,19 @@ const BrainActions = {
                             ]
                         );
 
+
                     action =
                         "world:open";
 
-                } else {
+                }
+                else {
 
                     result =
                         this.callAction(
                             actions,
                             "openWorlds"
                         );
+
 
                     action =
                         "worlds:open";
@@ -796,6 +1170,7 @@ const BrainActions = {
                         "openCreate"
                     );
 
+
                 action =
                     "create:open";
 
@@ -809,6 +1184,7 @@ const BrainActions = {
                         actions,
                         "openEntities"
                     );
+
 
                 action =
                     "entities:open";
@@ -835,15 +1211,10 @@ const BrainActions = {
 
 
             case "memory":
-
             case "timeline":
-
             case "bridge":
-
             case "evolution":
-
             case "organs":
-
             case "settings":
 
                 result =
@@ -854,6 +1225,7 @@ const BrainActions = {
                             target
                         ]
                     );
+
 
                 action =
                     `entity:${target}`;
@@ -869,6 +1241,7 @@ const BrainActions = {
                         "openApplicationsApp"
                     );
 
+
                 action =
                     "app:applications";
 
@@ -883,6 +1256,7 @@ const BrainActions = {
                         "openVaeroApp"
                     );
 
+
                 action =
                     "app:vaero";
 
@@ -896,6 +1270,7 @@ const BrainActions = {
                         actions,
                         "openBrain"
                     );
+
 
                 action =
                     "brain:open";
@@ -915,11 +1290,16 @@ const BrainActions = {
 
                 return this.setResult({
 
-                    success:false,
+                    success:
+                        false,
+
+                    executed:
+                        false,
 
                     intent,
 
-                    action:null,
+                    action:
+                        null,
 
                     reason:
                         `Bilinmeyen navigasyon hedefi: ${target || "boş"}`
@@ -929,30 +1309,25 @@ const BrainActions = {
         }
 
 
-        return this.setResult({
+        return this.resultFromActionCall({
 
-            success:
-                Boolean(
-                    result?.success
-                ),
+            result,
 
             intent,
 
             action,
 
-            reason:
-                result?.success
-                    ? null
-                    : result?.missing
-                        ? "Bu ekran için gerekli Actions metodu bağlı değil."
-                        : result?.asyncUnsupported
-                            ? "Bu Actions metodu async çalışıyor ve Brain Actions henüz async yürütme kullanmıyor."
-                            : "Hedef ekran açılamadı.",
+            successMessage:
+                "İlgili ekran açıldı.",
 
-            message:
-                result?.success
-                    ? "İlgili ekran açıldı."
-                    : null
+            failureMessage:
+                "Hedef ekran açılamadı.",
+
+            missingMessage:
+                "Bu ekran için gerekli Actions metodu bağlı değil.",
+
+            asyncMessage:
+                "Bu Actions metodu async çalışıyor ve Brain Actions synchronous zincirinde yürütülemiyor."
 
         });
 
@@ -968,72 +1343,70 @@ const BrainActions = {
         actions
     ){
 
-        /*
-         * Önce Actions üzerinden varsa gerçek route.
-         */
-
         const directMethods = [
+
             "openDiscovery",
             "openDiscoveryApp",
             "restartDiscovery"
+
         ];
 
 
         for(
-            const method of
-            directMethods
+            const method of directMethods
         ){
 
             if(
-                typeof actions?.[method] ===
+                typeof actions?.[
+                    method
+                ] !==
                     "function"
             ){
 
-                const result =
-                    this.callAction(
-                        actions,
-                        method
-                    );
-
-
-                return this.setResult({
-
-                    success:
-                        result.success,
-
-                    intent,
-
-                    action:
-                        `discovery:${method}`,
-
-                    reason:
-                        result.success
-                            ? null
-                            : "Discovery açılamadı.",
-
-                    message:
-                        result.success
-                            ? "Discovery açıldı."
-                            : null
-
-                });
+                continue;
 
             }
+
+
+            const result =
+                this.callAction(
+                    actions,
+                    method
+                );
+
+
+            return this.resultFromActionCall({
+
+                result,
+
+                intent,
+
+                action:
+                    `discovery:${method}`,
+
+                successMessage:
+                    "Discovery açıldı.",
+
+                failureMessage:
+                    "Discovery açılamadı."
+
+            });
 
         }
 
 
-        /*
-         * Uydurma route yok.
-         */
-
         return this.setResult({
 
-            success:false,
+            success:
+                false,
+
+            executed:
+                false,
 
             intent,
 
-            action:null,
+            action:
+                null,
 
             reason:
                 "Discovery için bağlı Actions route'u bulunamadı."
@@ -1053,7 +1426,7 @@ const BrainActions = {
         actions
     ){
 
-        const success =
+        const result =
             this.openEntityAwarePage(
                 page,
                 actions
@@ -1062,7 +1435,11 @@ const BrainActions = {
 
         return this.setResult({
 
-            success,
+            success:
+                result.success,
+
+            executed:
+                result.success,
 
             intent,
 
@@ -1070,18 +1447,24 @@ const BrainActions = {
                 `${page}:open`,
 
             reason:
-                success
+                result.success
                     ? null
-                    : `${page} ekranı açılamadı.`,
+                    : result.reason ||
+                      `${page} ekranı açılamadı.`,
 
             message:
-                success
+                result.success
                     ? (
-                        page === "identity"
+                        page ===
+                            "identity"
                             ? "Kimlik ekranı açıldı."
                             : "Profil ekranı açıldı."
                     )
-                    : null
+                    : null,
+
+            error:
+                result.error ||
+                null
 
         });
 
@@ -1126,15 +1509,30 @@ const BrainActions = {
                 );
 
 
-            return Boolean(
-                result.success
-            );
+            return {
+
+                success:
+                    result.success,
+
+                reason:
+                    result.missing
+                        ? "Entity page route'u bağlı değil."
+                        : result.asyncUnsupported
+                            ? "Entity page route'u async çalışıyor."
+                            : null,
+
+                error:
+                    result.error ||
+                    null
+
+            };
 
         }
 
 
         const method =
-            page === "identity"
+            page ===
+                "identity"
                 ? "openIdentity"
                 : "openProfile";
 
@@ -1146,9 +1544,23 @@ const BrainActions = {
             );
 
 
-        return Boolean(
-            result.success
-        );
+        return {
+
+            success:
+                result.success,
+
+            reason:
+                result.missing
+                    ? `${method} Actions metodu bağlı değil.`
+                    : result.asyncUnsupported
+                        ? `${method} async çalışıyor.`
+                        : null,
+
+            error:
+                result.error ||
+                null
+
+        };
 
     },
 
@@ -1169,15 +1581,14 @@ const BrainActions = {
 
 
         /*
-         * Policy tarafında world/entity create intenti
-         * gerçek mutation değil app:open kabul ediliyor.
-         *
-         * Burada yalnız editor surface açılır.
+         * Creation intents currently open verified creation
+         * surfaces. BrainActions does not invent a direct
+         * persistence path.
          */
 
-
         if(
-            target === "world"
+            target ===
+                "world"
         ){
 
             const result =
@@ -1187,25 +1598,20 @@ const BrainActions = {
                 );
 
 
-            return this.setResult({
+            return this.resultFromActionCall({
 
-                success:
-                    result.success,
+                result,
 
                 intent,
 
                 action:
                     "create:open",
 
-                reason:
-                    result.success
-                        ? null
-                        : "World oluşturma ekranı açılamadı.",
+                successMessage:
+                    "World oluşturma ekranı açıldı.",
 
-                message:
-                    result.success
-                        ? "World oluşturma ekranı açıldı."
-                        : null
+                failureMessage:
+                    "World oluşturma ekranı açılamadı."
 
             });
 
@@ -1213,7 +1619,8 @@ const BrainActions = {
 
 
         if(
-            target === "entity"
+            target ===
+                "entity"
         ){
 
             const engine =
@@ -1237,6 +1644,9 @@ const BrainActions = {
                 return this.setResult({
 
                     success:
+                        false,
+
+                    executed:
                         result.success,
 
                     intent,
@@ -1250,7 +1660,11 @@ const BrainActions = {
                     message:
                         result.success
                             ? "Önce Entity'nin ekleneceği World'ü seç."
-                            : null
+                            : null,
+
+                    error:
+                        result.error ||
+                        null
 
                 });
 
@@ -1264,25 +1678,23 @@ const BrainActions = {
                 );
 
 
-            return this.setResult({
+            return this.resultFromActionCall({
 
-                success:
-                    result.success,
+                result,
 
                 intent,
 
                 action:
                     "entity:create:surface",
 
-                reason:
-                    result.success
-                        ? null
-                        : "Entity oluşturma akışı başlatılamadı.",
+                successMessage:
+                    "Entity oluşturma ekranı açıldı.",
 
-                message:
-                    result.success
-                        ? "Entity oluşturma ekranı açıldı."
-                        : null
+                failureMessage:
+                    "Entity oluşturma akışı başlatılamadı.",
+
+                missingMessage:
+                    "Entity oluşturma surface'i bağlı değil."
 
             });
 
@@ -1291,11 +1703,16 @@ const BrainActions = {
 
         return this.setResult({
 
-            success:false,
+            success:
+                false,
+
+            executed:
+                false,
 
             intent,
 
-            action:null,
+            action:
+                null,
 
             reason:
                 "Oluşturulacak yapı anlaşılamadı."
@@ -1316,9 +1733,16 @@ const BrainActions = {
     ){
 
         const label =
-            intent.raw ||
-            context.message ||
-            "Devam noktası";
+            String(
+                intent.raw ||
+                context.message ||
+                "Devam noktası"
+            )
+                .trim()
+                .slice(
+                    0,
+                    1000
+                );
 
 
         const result =
@@ -1331,27 +1755,23 @@ const BrainActions = {
             );
 
 
-        return this.setResult({
+        return this.resultFromActionCall({
 
-            success:
-                result.success,
+            result,
 
             intent,
 
             action:
                 "resume:save",
 
-            reason:
-                result.success
-                    ? null
-                    : result.missing
-                        ? "Resume kayıt sistemi bağlı değil."
-                        : "Devam noktası kaydedilemedi.",
+            successMessage:
+                "Devam noktası kaydedildi.",
 
-            message:
-                result.success
-                    ? "Devam noktası kaydedildi."
-                    : null
+            failureMessage:
+                "Devam noktası kaydedilemedi.",
+
+            missingMessage:
+                "Resume kayıt sistemi bağlı değil."
 
         });
 
@@ -1370,33 +1790,30 @@ const BrainActions = {
             );
 
 
-        return this.setResult({
+        return this.resultFromActionCall({
 
-            success:
-                result.success,
+            result,
 
             intent,
 
             action:
                 "resume:restore",
 
-            reason:
-                result.success
-                    ? null
-                    : result.missing
-                        ? "Resume geri yükleme sistemi bağlı değil."
-                        : "Devam noktası geri yüklenemedi.",
+            successMessage:
+                "Kaydedilen devam noktasına dönüldü.",
 
-            message:
-                result.success
-                    ? "Kaydedilen devam noktasına dönüldü."
-                    : null
+            failureMessage:
+                "Devam noktası geri yüklenemedi.",
+
+            missingMessage:
+                "Resume geri yükleme sistemi bağlı değil."
 
         });
 
     },
 
-   /* =====================================================
+
+    /* =====================================================
        REQUEST
     ===================================================== */
 
@@ -1419,19 +1836,25 @@ const BrainActions = {
 
 
         /* -------------------------------------------------
-           OPEN / VIEW
+           OPEN / VIEW / READ
         ------------------------------------------------- */
 
         if(
-            operation === "open" ||
-            operation === "view" ||
-            operation === "read"
+            operation ===
+                "open" ||
+            operation ===
+                "view" ||
+            operation ===
+                "read"
         ){
 
             return this.executeNavigation(
                 {
                     ...intent,
-                    type:"navigate",
+
+                    type:
+                        "navigate",
+
                     target
                 },
                 actions
@@ -1442,13 +1865,11 @@ const BrainActions = {
 
         /* -------------------------------------------------
            EDIT
-
-           Şu aşamada doğrudan veri değiştirmez.
-           Yalnız edit surface açar.
         ------------------------------------------------- */
 
         if(
-            operation === "edit"
+            operation ===
+                "edit"
         ){
 
             return this.executeEditSurface(
@@ -1464,7 +1885,8 @@ const BrainActions = {
         ------------------------------------------------- */
 
         if(
-            operation === "search"
+            operation ===
+                "search"
         ){
 
             return this.executeSearchSurface(
@@ -1476,12 +1898,14 @@ const BrainActions = {
 
 
         /* -------------------------------------------------
-           DELETE
+           DELETE / REMOVE
         ------------------------------------------------- */
 
         if(
-            operation === "delete" ||
-            operation === "remove"
+            operation ===
+                "delete" ||
+            operation ===
+                "remove"
         ){
 
             return this.executeConfirmedDelete(
@@ -1498,7 +1922,8 @@ const BrainActions = {
         ------------------------------------------------- */
 
         if(
-            operation === "archive"
+            operation ===
+                "archive"
         ){
 
             return this.executeConfirmedArchive(
@@ -1515,7 +1940,8 @@ const BrainActions = {
         ------------------------------------------------- */
 
         if(
-            operation === "restore"
+            operation ===
+                "restore"
         ){
 
             return this.executeConfirmedRestore(
@@ -1532,13 +1958,17 @@ const BrainActions = {
         ------------------------------------------------- */
 
         if(
-            target === "application" ||
-            target === "applications" ||
-            target === "app"
+            target ===
+                "application" ||
+            target ===
+                "applications" ||
+            target ===
+                "app"
         ){
 
             if(
-                operation === "install"
+                operation ===
+                    "install"
             ){
 
                 return this.executeApplicationInstall(
@@ -1549,10 +1979,25 @@ const BrainActions = {
 
 
             if(
-                operation === "update"
+                operation ===
+                    "update"
             ){
 
                 return this.executeApplicationUpdate(
+                    intent
+                );
+
+            }
+
+
+            if(
+                operation ===
+                    "remove" ||
+                operation ===
+                    "uninstall"
+            ){
+
+                return this.executeApplicationRemove(
                     intent
                 );
 
@@ -1563,11 +2008,16 @@ const BrainActions = {
 
         return this.setResult({
 
-            success:false,
+            success:
+                false,
+
+            executed:
+                false,
 
             intent,
 
-            action:null,
+            action:
+                null,
 
             reason:
                 "İstek anlaşıldı fakat bağlı bir sistem işlemi bulunmuyor."
@@ -1593,7 +2043,8 @@ const BrainActions = {
 
 
         if(
-            target === "profile"
+            target ===
+                "profile"
         ){
 
             return this.executeEntityAwareNavigation(
@@ -1606,7 +2057,8 @@ const BrainActions = {
 
 
         if(
-            target === "identity"
+            target ===
+                "identity"
         ){
 
             return this.executeEntityAwareNavigation(
@@ -1619,7 +2071,8 @@ const BrainActions = {
 
 
         if(
-            target === "settings"
+            target ===
+                "settings"
         ){
 
             const result =
@@ -1632,25 +2085,20 @@ const BrainActions = {
                 );
 
 
-            return this.setResult({
+            return this.resultFromActionCall({
 
-                success:
-                    result.success,
+                result,
 
                 intent,
 
                 action:
                     "entity:settings",
 
-                reason:
-                    result.success
-                        ? null
-                        : "Settings açılamadı.",
+                successMessage:
+                    "Ayarlar ekranı açıldı.",
 
-                message:
-                    result.success
-                        ? "Ayarlar ekranı açıldı."
-                        : null
+                failureMessage:
+                    "Settings açılamadı."
 
             });
 
@@ -1658,60 +2106,57 @@ const BrainActions = {
 
 
         if(
-            target === "world"
+            target ===
+                "world"
         ){
 
-            /*
-             * Actions-v2 içindeki gerçek editor surface
-             * varsa kullanılır.
-             */
-
             const methods = [
+
                 "openWorldEdit",
                 "startWorldEdit"
+
             ];
 
 
             for(
-                const method of
-                methods
+                const method of methods
             ){
 
                 if(
-                    typeof actions?.[method] ===
+                    typeof actions?.[
+                        method
+                    ] !==
                         "function"
                 ){
 
-                    const result =
-                        this.callAction(
-                            actions,
-                            method
-                        );
-
-
-                    return this.setResult({
-
-                        success:
-                            result.success,
-
-                        intent,
-
-                        action:
-                            "world:edit:surface",
-
-                        reason:
-                            result.success
-                                ? null
-                                : "World editor açılamadı.",
-
-                        message:
-                            result.success
-                                ? "World düzenleme ekranı açıldı."
-                                : null
-
-                    });
+                    continue;
 
                 }
+
+
+                const result =
+                    this.callAction(
+                        actions,
+                        method
+                    );
+
+
+                return this.resultFromActionCall({
+
+                    result,
+
+                    intent,
+
+                    action:
+                        "world:edit:surface",
+
+                    successMessage:
+                        "World düzenleme ekranı açıldı.",
+
+                    failureMessage:
+                        "World editor açılamadı."
+
+                });
 
             }
 
@@ -1719,55 +2164,57 @@ const BrainActions = {
 
 
         if(
-            target === "entity"
+            target ===
+                "entity"
         ){
 
             const methods = [
+
                 "openEntityEdit",
                 "startEntityEdit"
+
             ];
 
 
             for(
-                const method of
-                methods
+                const method of methods
             ){
 
                 if(
-                    typeof actions?.[method] ===
+                    typeof actions?.[
+                        method
+                    ] !==
                         "function"
                 ){
 
-                    const result =
-                        this.callAction(
-                            actions,
-                            method
-                        );
-
-
-                    return this.setResult({
-
-                        success:
-                            result.success,
-
-                        intent,
-
-                        action:
-                            "entity:edit:surface",
-
-                        reason:
-                            result.success
-                                ? null
-                                : "Entity editor açılamadı.",
-
-                        message:
-                            result.success
-                                ? "Entity düzenleme ekranı açıldı."
-                                : null
-
-                    });
+                    continue;
 
                 }
+
+
+                const result =
+                    this.callAction(
+                        actions,
+                        method
+                    );
+
+
+                return this.resultFromActionCall({
+
+                    result,
+
+                    intent,
+
+                    action:
+                        "entity:edit:surface",
+
+                    successMessage:
+                        "Entity düzenleme ekranı açıldı.",
+
+                    failureMessage:
+                        "Entity editor açılamadı."
+
+                });
 
             }
 
@@ -1776,11 +2223,13 @@ const BrainActions = {
 
         const entityPages =
             new Set([
+
                 "memory",
                 "timeline",
                 "bridge",
                 "evolution",
                 "organs"
+
             ]);
 
 
@@ -1800,25 +2249,20 @@ const BrainActions = {
                 );
 
 
-            return this.setResult({
+            return this.resultFromActionCall({
 
-                success:
-                    result.success,
+                result,
 
                 intent,
 
                 action:
                     `entity:${target}`,
 
-                reason:
-                    result.success
-                        ? null
-                        : "İlgili yönetim yüzeyi açılamadı.",
+                successMessage:
+                    "İlgili yönetim yüzeyi açıldı.",
 
-                message:
-                    result.success
-                        ? "İlgili yönetim yüzeyi açıldı."
-                        : null
+                failureMessage:
+                    "İlgili yönetim yüzeyi açılamadı."
 
             });
 
@@ -1827,11 +2271,16 @@ const BrainActions = {
 
         return this.setResult({
 
-            success:false,
+            success:
+                false,
+
+            executed:
+                false,
 
             intent,
 
-            action:null,
+            action:
+                null,
 
             reason:
                 "Bu hedef için bağlı bir düzenleme yüzeyi bulunmuyor."
@@ -1857,8 +2306,10 @@ const BrainActions = {
 
 
         if(
-            target === "world" ||
-            target === "worlds"
+            target ===
+                "world" ||
+            target ===
+                "worlds"
         ){
 
             const result =
@@ -1868,25 +2319,20 @@ const BrainActions = {
                 );
 
 
-            return this.setResult({
+            return this.resultFromActionCall({
 
-                success:
-                    result.success,
+                result,
 
                 intent,
 
                 action:
                     "worlds:open",
 
-                reason:
-                    result.success
-                        ? null
-                        : "Worlds açılamadı.",
+                successMessage:
+                    "Worlds listesi açıldı.",
 
-                message:
-                    result.success
-                        ? "Worlds listesi açıldı."
-                        : null
+                failureMessage:
+                    "Worlds açılamadı."
 
             });
 
@@ -1894,8 +2340,10 @@ const BrainActions = {
 
 
         if(
-            target === "entity" ||
-            target === "entities"
+            target ===
+                "entity" ||
+            target ===
+                "entities"
         ){
 
             const result =
@@ -1905,25 +2353,20 @@ const BrainActions = {
                 );
 
 
-            return this.setResult({
+            return this.resultFromActionCall({
 
-                success:
-                    result.success,
+                result,
 
                 intent,
 
                 action:
                     "entities:open",
 
-                reason:
-                    result.success
-                        ? null
-                        : "Entities açılamadı.",
+                successMessage:
+                    "Entities listesi açıldı.",
 
-                message:
-                    result.success
-                        ? "Entities listesi açıldı."
-                        : null
+                failureMessage:
+                    "Entities açılamadı."
 
             });
 
@@ -1931,9 +2374,12 @@ const BrainActions = {
 
 
         if(
-            target === "application" ||
-            target === "applications" ||
-            target === "app"
+            target ===
+                "application" ||
+            target ===
+                "applications" ||
+            target ===
+                "app"
         ){
 
             const result =
@@ -1943,25 +2389,20 @@ const BrainActions = {
                 );
 
 
-            return this.setResult({
+            return this.resultFromActionCall({
 
-                success:
-                    result.success,
+                result,
 
                 intent,
 
                 action:
                     "app:applications",
 
-                reason:
-                    result.success
-                        ? null
-                        : "Applications açılamadı.",
+                successMessage:
+                    "Applications açıldı.",
 
-                message:
-                    result.success
-                        ? "Applications açıldı."
-                        : null
+                failureMessage:
+                    "Applications açılamadı."
 
             });
 
@@ -1969,17 +2410,21 @@ const BrainActions = {
 
 
         /*
-         * Global Search uygulaması henüz bağlanmadı.
-         * Sahte arama sonucu üretilmez.
+         * No fake global search.
          */
 
         return this.setResult({
 
-            success:false,
+            success:
+                false,
+
+            executed:
+                false,
 
             intent,
 
-            action:null,
+            action:
+                null,
 
             reason:
                 "Bu hedef için gerçek Search uygulaması henüz Brain Actions'a bağlı değil."
@@ -1998,13 +2443,9 @@ const BrainActions = {
         const candidates = [
 
             intent?.appId,
-
             intent?.applicationId,
-
             intent?.id,
-
             intent?.subjectId,
-
             intent?.value
 
         ];
@@ -2020,7 +2461,9 @@ const BrainActions = {
 
 
         return id
-            ? id.trim()
+            ? this.normalizeIdentifier(
+                id
+            )
             : null;
 
     },
@@ -2030,9 +2473,7 @@ const BrainActions = {
        APPLICATION INSTALL
     ===================================================== */
 
-    executeApplicationInstall(
-        intent
-    ){
+    executeApplicationInstall(intent){
 
         const appId =
             this.resolveApplicationId(
@@ -2044,7 +2485,11 @@ const BrainActions = {
 
             return this.setResult({
 
-                success:false,
+                success:
+                    false,
+
+                executed:
+                    false,
 
                 intent,
 
@@ -2060,8 +2505,7 @@ const BrainActions = {
 
 
         const app =
-            window.ApplicationsApp ||
-            null;
+            this.getApplicationsApp();
 
 
         if(
@@ -2072,7 +2516,11 @@ const BrainActions = {
 
             return this.setResult({
 
-                success:false,
+                success:
+                    false,
+
+                executed:
+                    false,
 
                 intent,
 
@@ -2089,15 +2537,57 @@ const BrainActions = {
 
         try{
 
-            const success =
+            const result =
                 app.install(
                     appId
-                ) === true;
+                );
+
+
+            if(
+                result &&
+                typeof result.then ===
+                    "function"
+            ){
+
+                return this.setResult({
+
+                    success:
+                        false,
+
+                    executed:
+                        false,
+
+                    intent,
+
+                    action:
+                        "application:install",
+
+                    reason:
+                        "Application install motoru async çalışıyor ve Brain Actions synchronous zincirine bağlı değil."
+
+                });
+
+            }
+
+
+            const success =
+                result ===
+                    true ||
+                (
+                    result &&
+                    typeof result ===
+                        "object" &&
+                    result.success ===
+                        true
+                );
 
 
             return this.setResult({
 
                 success,
+
+                executed:
+                    success,
 
                 intent,
 
@@ -2107,15 +2597,28 @@ const BrainActions = {
                 reason:
                     success
                         ? null
-                        : "Application kurulamadı veya güvenlik doğrulaması tamamlanmadı.",
+                        : (
+                            result?.reason ||
+                            result?.message ||
+                            "Application kurulamadı veya güvenlik doğrulaması tamamlanmadı."
+                        ),
 
                 message:
                     success
-                        ? "Application kuruldu."
+                        ? (
+                            result?.message ||
+                            "Application kuruldu."
+                        )
                         : null,
 
                 data:{
-                    appId
+                    appId,
+                    result:
+                        result &&
+                        typeof result ===
+                            "object"
+                            ? result
+                            : null
                 }
 
             });
@@ -2124,7 +2627,11 @@ const BrainActions = {
 
             return this.setResult({
 
-                success:false,
+                success:
+                    false,
+
+                executed:
+                    false,
 
                 intent,
 
@@ -2132,7 +2639,9 @@ const BrainActions = {
                     "application:install",
 
                 reason:
-                    "Application kurulumu sırasında hata oluştu."
+                    "Application kurulumu sırasında hata oluştu.",
+
+                error
 
             });
 
@@ -2145,9 +2654,7 @@ const BrainActions = {
        APPLICATION UPDATE
     ===================================================== */
 
-    executeApplicationUpdate(
-        intent
-    ){
+    executeApplicationUpdate(intent){
 
         const appId =
             this.resolveApplicationId(
@@ -2159,7 +2666,11 @@ const BrainActions = {
 
             return this.setResult({
 
-                success:false,
+                success:
+                    false,
+
+                executed:
+                    false,
 
                 intent,
 
@@ -2175,8 +2686,7 @@ const BrainActions = {
 
 
         const app =
-            window.ApplicationsApp ||
-            null;
+            this.getApplicationsApp();
 
 
         if(
@@ -2187,7 +2697,11 @@ const BrainActions = {
 
             return this.setResult({
 
-                success:false,
+                success:
+                    false,
+
+                executed:
+                    false,
 
                 intent,
 
@@ -2204,15 +2718,58 @@ const BrainActions = {
 
         try{
 
-            const success =
+            const result =
                 app.updateApplication(
                     appId
-                ) !== false;
+                );
+
+
+            if(
+                result &&
+                typeof result.then ===
+                    "function"
+            ){
+
+                return this.setResult({
+
+                    success:
+                        false,
+
+                    executed:
+                        false,
+
+                    intent,
+
+                    action:
+                        "application:update",
+
+                    reason:
+                        "Application update motoru async çalışıyor ve Brain Actions synchronous zincirine bağlı değil."
+
+                });
+
+            }
+
+
+            const success =
+                result !==
+                    false &&
+                (
+                    typeof result !==
+                        "object" ||
+                    result ===
+                        null ||
+                    result.success !==
+                        false
+                );
 
 
             return this.setResult({
 
                 success,
+
+                executed:
+                    success,
 
                 intent,
 
@@ -2222,15 +2779,28 @@ const BrainActions = {
                 reason:
                     success
                         ? null
-                        : "Application güncellenemedi.",
+                        : (
+                            result?.reason ||
+                            result?.message ||
+                            "Application güncellenemedi."
+                        ),
 
                 message:
                     success
-                        ? "Application güncellendi."
+                        ? (
+                            result?.message ||
+                            "Application güncellendi."
+                        )
                         : null,
 
                 data:{
-                    appId
+                    appId,
+                    result:
+                        result &&
+                        typeof result ===
+                            "object"
+                            ? result
+                            : null
                 }
 
             });
@@ -2239,7 +2809,11 @@ const BrainActions = {
 
             return this.setResult({
 
-                success:false,
+                success:
+                    false,
+
+                executed:
+                    false,
 
                 intent,
 
@@ -2247,7 +2821,9 @@ const BrainActions = {
                     "application:update",
 
                 reason:
-                    "Application güncellemesi sırasında hata oluştu."
+                    "Application güncellemesi sırasında hata oluştu.",
+
+                error
 
             });
 
@@ -2255,14 +2831,11 @@ const BrainActions = {
 
     },
 
-
-    /* =====================================================
+   /* =====================================================
        APPLICATION REMOVE
     ===================================================== */
 
-    executeApplicationRemove(
-        intent
-    ){
+    executeApplicationRemove(intent){
 
         const appId =
             this.resolveApplicationId(
@@ -2274,7 +2847,11 @@ const BrainActions = {
 
             return this.setResult({
 
-                success:false,
+                success:
+                    false,
+
+                executed:
+                    false,
 
                 intent,
 
@@ -2290,8 +2867,7 @@ const BrainActions = {
 
 
         const app =
-            window.ApplicationsApp ||
-            null;
+            this.getApplicationsApp();
 
 
         if(
@@ -2302,7 +2878,11 @@ const BrainActions = {
 
             return this.setResult({
 
-                success:false,
+                success:
+                    false,
+
+                executed:
+                    false,
 
                 intent,
 
@@ -2319,15 +2899,58 @@ const BrainActions = {
 
         try{
 
-            const success =
+            const result =
                 app.remove(
                     appId
-                ) !== false;
+                );
+
+
+            if(
+                result &&
+                typeof result.then ===
+                    "function"
+            ){
+
+                return this.setResult({
+
+                    success:
+                        false,
+
+                    executed:
+                        false,
+
+                    intent,
+
+                    action:
+                        "application:remove",
+
+                    reason:
+                        "Application remove motoru async çalışıyor ve Brain Actions synchronous zincirine bağlı değil."
+
+                });
+
+            }
+
+
+            const success =
+                result !==
+                    false &&
+                (
+                    typeof result !==
+                        "object" ||
+                    result ===
+                        null ||
+                    result.success !==
+                        false
+                );
 
 
             return this.setResult({
 
                 success,
+
+                executed:
+                    success,
 
                 intent,
 
@@ -2337,15 +2960,28 @@ const BrainActions = {
                 reason:
                     success
                         ? null
-                        : "Application kaldırılamadı.",
+                        : (
+                            result?.reason ||
+                            result?.message ||
+                            "Application kaldırılamadı."
+                        ),
 
                 message:
                     success
-                        ? "Application kaldırıldı."
+                        ? (
+                            result?.message ||
+                            "Application kaldırıldı."
+                        )
                         : null,
 
                 data:{
-                    appId
+                    appId,
+                    result:
+                        result &&
+                        typeof result ===
+                            "object"
+                            ? result
+                            : null
                 }
 
             });
@@ -2354,7 +2990,11 @@ const BrainActions = {
 
             return this.setResult({
 
-                success:false,
+                success:
+                    false,
+
+                executed:
+                    false,
 
                 intent,
 
@@ -2362,7 +3002,9 @@ const BrainActions = {
                     "application:remove",
 
                 reason:
-                    "Application kaldırma sırasında hata oluştu."
+                    "Application kaldırma sırasında hata oluştu.",
+
+                error
 
             });
 
@@ -2375,20 +3017,22 @@ const BrainActions = {
        PERMISSION IDENTIFIERS
     ===================================================== */
 
-    resolvePermission(
-        intent
-    ){
+    resolvePermission(intent){
 
         const value =
+
             intent?.permission ||
+
             intent?.permissionId ||
+
+            intent?.value ||
+
             null;
 
 
-        return typeof value ===
-            "string"
-            ? value.trim()
-            : null;
+        return this.normalizeIdentifier(
+            value
+        );
 
     },
 
@@ -2397,9 +3041,7 @@ const BrainActions = {
        PERMISSION GRANT
     ===================================================== */
 
-    executePermissionGrant(
-        intent
-    ){
+    executePermissionGrant(intent){
 
         const appId =
             this.resolveApplicationId(
@@ -2420,7 +3062,11 @@ const BrainActions = {
 
             return this.setResult({
 
-                success:false,
+                success:
+                    false,
+
+                executed:
+                    false,
 
                 intent,
 
@@ -2436,8 +3082,7 @@ const BrainActions = {
 
 
         const app =
-            window.ApplicationsApp ||
-            null;
+            this.getApplicationsApp();
 
 
         if(
@@ -2448,7 +3093,11 @@ const BrainActions = {
 
             return this.setResult({
 
-                success:false,
+                success:
+                    false,
+
+                executed:
+                    false,
 
                 intent,
 
@@ -2472,13 +3121,52 @@ const BrainActions = {
                 );
 
 
+            if(
+                result &&
+                typeof result.then ===
+                    "function"
+            ){
+
+                return this.setResult({
+
+                    success:
+                        false,
+
+                    executed:
+                        false,
+
+                    intent,
+
+                    action:
+                        "permission:grant",
+
+                    reason:
+                        "Permission grant motoru async çalışıyor ve Brain Actions synchronous zincirine bağlı değil."
+
+                });
+
+            }
+
+
             const success =
-                result !== false;
+                result !==
+                    false &&
+                (
+                    typeof result !==
+                        "object" ||
+                    result ===
+                        null ||
+                    result.success !==
+                        false
+                );
 
 
             return this.setResult({
 
                 success,
+
+                executed:
+                    success,
 
                 intent,
 
@@ -2488,16 +3176,29 @@ const BrainActions = {
                 reason:
                     success
                         ? null
-                        : "Permission verilemedi.",
+                        : (
+                            result?.reason ||
+                            result?.message ||
+                            "Permission verilemedi."
+                        ),
 
                 message:
                     success
-                        ? "Permission verildi."
+                        ? (
+                            result?.message ||
+                            "Permission verildi."
+                        )
                         : null,
 
                 data:{
                     appId,
-                    permission
+                    permission,
+                    result:
+                        result &&
+                        typeof result ===
+                            "object"
+                            ? result
+                            : null
                 }
 
             });
@@ -2506,7 +3207,11 @@ const BrainActions = {
 
             return this.setResult({
 
-                success:false,
+                success:
+                    false,
+
+                executed:
+                    false,
 
                 intent,
 
@@ -2514,7 +3219,9 @@ const BrainActions = {
                     "permission:grant",
 
                 reason:
-                    "Permission verme işlemi başarısız."
+                    "Permission verme işlemi başarısız.",
+
+                error
 
             });
 
@@ -2527,9 +3234,7 @@ const BrainActions = {
        PERMISSION REVOKE
     ===================================================== */
 
-    executePermissionRevoke(
-        intent
-    ){
+    executePermissionRevoke(intent){
 
         const appId =
             this.resolveApplicationId(
@@ -2550,7 +3255,11 @@ const BrainActions = {
 
             return this.setResult({
 
-                success:false,
+                success:
+                    false,
+
+                executed:
+                    false,
 
                 intent,
 
@@ -2566,8 +3275,7 @@ const BrainActions = {
 
 
         const app =
-            window.ApplicationsApp ||
-            null;
+            this.getApplicationsApp();
 
 
         if(
@@ -2578,7 +3286,11 @@ const BrainActions = {
 
             return this.setResult({
 
-                success:false,
+                success:
+                    false,
+
+                executed:
+                    false,
 
                 intent,
 
@@ -2602,13 +3314,52 @@ const BrainActions = {
                 );
 
 
+            if(
+                result &&
+                typeof result.then ===
+                    "function"
+            ){
+
+                return this.setResult({
+
+                    success:
+                        false,
+
+                    executed:
+                        false,
+
+                    intent,
+
+                    action:
+                        "permission:revoke",
+
+                    reason:
+                        "Permission revoke motoru async çalışıyor ve Brain Actions synchronous zincirine bağlı değil."
+
+                });
+
+            }
+
+
             const success =
-                result !== false;
+                result !==
+                    false &&
+                (
+                    typeof result !==
+                        "object" ||
+                    result ===
+                        null ||
+                    result.success !==
+                        false
+                );
 
 
             return this.setResult({
 
                 success,
+
+                executed:
+                    success,
 
                 intent,
 
@@ -2618,16 +3369,29 @@ const BrainActions = {
                 reason:
                     success
                         ? null
-                        : "Permission kaldırılamadı.",
+                        : (
+                            result?.reason ||
+                            result?.message ||
+                            "Permission kaldırılamadı."
+                        ),
 
                 message:
                     success
-                        ? "Permission kaldırıldı."
+                        ? (
+                            result?.message ||
+                            "Permission kaldırıldı."
+                        )
                         : null,
 
                 data:{
                     appId,
-                    permission
+                    permission,
+                    result:
+                        result &&
+                        typeof result ===
+                            "object"
+                            ? result
+                            : null
                 }
 
             });
@@ -2636,7 +3400,11 @@ const BrainActions = {
 
             return this.setResult({
 
-                success:false,
+                success:
+                    false,
+
+                executed:
+                    false,
 
                 intent,
 
@@ -2644,11 +3412,39 @@ const BrainActions = {
                     "permission:revoke",
 
                 reason:
-                    "Permission kaldırma işlemi başarısız."
+                    "Permission kaldırma işlemi başarısız.",
+
+                error
 
             });
 
         }
+
+    },
+
+
+    /* =====================================================
+       BOUND CONFIRMATION CHECK
+    ===================================================== */
+
+    hasBoundConfirmation(context = {}){
+
+        return Boolean(
+
+            context &&
+
+            context.confirmed ===
+                true &&
+
+            context.confirmationMode ===
+                "bound-confirmation" &&
+
+            String(
+                context.confirmationId ||
+                    ""
+            ).trim()
+
+        );
 
     },
 
@@ -2664,20 +3460,29 @@ const BrainActions = {
     ){
 
         if(
-            context.confirmed !==
-                true
+            !this.hasBoundConfirmation(
+                context
+            )
         ){
 
             return this.setResult({
 
-                success:false,
+                success:
+                    false,
+
+                executed:
+                    false,
+
+                blocked:
+                    true,
 
                 intent,
 
-                action:null,
+                action:
+                    null,
 
                 reason:
-                    "Arşivleme işlemi kullanıcı onayı gerektiriyor."
+                    "Arşivleme işlemi bağlı kullanıcı onayı gerektiriyor."
 
             });
 
@@ -2691,8 +3496,10 @@ const BrainActions = {
 
 
         if(
-            target === "world" ||
-            target === "worlds"
+            target ===
+                "world" ||
+            target ===
+                "worlds"
         ){
 
             const method =
@@ -2714,25 +3521,23 @@ const BrainActions = {
                     );
 
 
-                return this.setResult({
+                return this.resultFromActionCall({
 
-                    success:
-                        result.success,
+                    result,
 
                     intent,
 
                     action:
                         "world:archive",
 
-                    reason:
-                        result.success
-                            ? null
-                            : "World arşivlenemedi.",
+                    successMessage:
+                        "World arşivlendi.",
 
-                    message:
-                        result.success
-                            ? "World arşivlendi."
-                            : null
+                    failureMessage:
+                        "World arşivlenemedi.",
+
+                    missingMessage:
+                        "World archive motoru bağlı değil."
 
                 });
 
@@ -2742,8 +3547,10 @@ const BrainActions = {
 
 
         if(
-            target === "entity" ||
-            target === "entities"
+            target ===
+                "entity" ||
+            target ===
+                "entities"
         ){
 
             const method =
@@ -2765,25 +3572,23 @@ const BrainActions = {
                     );
 
 
-                return this.setResult({
+                return this.resultFromActionCall({
 
-                    success:
-                        result.success,
+                    result,
 
                     intent,
 
                     action:
                         "entity:archive",
 
-                    reason:
-                        result.success
-                            ? null
-                            : "Entity arşivlenemedi.",
+                    successMessage:
+                        "Entity arşivlendi.",
 
-                    message:
-                        result.success
-                            ? "Entity arşivlendi."
-                            : null
+                    failureMessage:
+                        "Entity arşivlenemedi.",
+
+                    missingMessage:
+                        "Entity archive motoru bağlı değil."
 
                 });
 
@@ -2794,11 +3599,16 @@ const BrainActions = {
 
         return this.setResult({
 
-            success:false,
+            success:
+                false,
+
+            executed:
+                false,
 
             intent,
 
-            action:null,
+            action:
+                null,
 
             reason:
                 "Bu hedef için doğrulanmış archive bağlantısı bulunmuyor."
@@ -2819,20 +3629,29 @@ const BrainActions = {
     ){
 
         if(
-            context.confirmed !==
-                true
+            !this.hasBoundConfirmation(
+                context
+            )
         ){
 
             return this.setResult({
 
-                success:false,
+                success:
+                    false,
+
+                executed:
+                    false,
+
+                blocked:
+                    true,
 
                 intent,
 
-                action:null,
+                action:
+                    null,
 
                 reason:
-                    "Silme işlemi kullanıcı onayı gerektiriyor."
+                    "Silme işlemi bağlı kullanıcı onayı gerektiriyor."
 
             });
 
@@ -2846,62 +3665,64 @@ const BrainActions = {
 
 
         /*
-         * Hard delete metodunu ancak gerçekten mevcutsa
-         * kullanıyoruz.
+         * Hard delete is never simulated.
+         * Only an existing Actions method can perform it.
          */
 
-
         if(
-            target === "world" ||
-            target === "worlds"
+            target ===
+                "world" ||
+            target ===
+                "worlds"
         ){
 
             const methods = [
+
                 "deleteWorld",
                 "removeWorld"
+
             ];
 
 
             for(
-                const method of
-                methods
+                const method of methods
             ){
 
                 if(
-                    typeof actions?.[method] ===
+                    typeof actions?.[
+                        method
+                    ] !==
                         "function"
                 ){
 
-                    const result =
-                        this.callAction(
-                            actions,
-                            method
-                        );
-
-
-                    return this.setResult({
-
-                        success:
-                            result.success,
-
-                        intent,
-
-                        action:
-                            "world:delete",
-
-                        reason:
-                            result.success
-                                ? null
-                                : "World silinemedi.",
-
-                        message:
-                            result.success
-                                ? "World silindi."
-                                : null
-
-                    });
+                    continue;
 
                 }
+
+
+                const result =
+                    this.callAction(
+                        actions,
+                        method
+                    );
+
+
+                return this.resultFromActionCall({
+
+                    result,
+
+                    intent,
+
+                    action:
+                        "world:delete",
+
+                    successMessage:
+                        "World silindi.",
+
+                    failureMessage:
+                        "World silinemedi."
+
+                });
 
             }
 
@@ -2909,56 +3730,59 @@ const BrainActions = {
 
 
         if(
-            target === "entity" ||
-            target === "entities"
+            target ===
+                "entity" ||
+            target ===
+                "entities"
         ){
 
             const methods = [
+
                 "deleteEntity",
                 "removeEntity"
+
             ];
 
 
             for(
-                const method of
-                methods
+                const method of methods
             ){
 
                 if(
-                    typeof actions?.[method] ===
+                    typeof actions?.[
+                        method
+                    ] !==
                         "function"
                 ){
 
-                    const result =
-                        this.callAction(
-                            actions,
-                            method
-                        );
-
-
-                    return this.setResult({
-
-                        success:
-                            result.success,
-
-                        intent,
-
-                        action:
-                            "entity:delete",
-
-                        reason:
-                            result.success
-                                ? null
-                                : "Entity silinemedi.",
-
-                        message:
-                            result.success
-                                ? "Entity silindi."
-                                : null
-
-                    });
+                    continue;
 
                 }
+
+
+                const result =
+                    this.callAction(
+                        actions,
+                        method
+                    );
+
+
+                return this.resultFromActionCall({
+
+                    result,
+
+                    intent,
+
+                    action:
+                        "entity:delete",
+
+                    successMessage:
+                        "Entity silindi.",
+
+                    failureMessage:
+                        "Entity silinemedi."
+
+                });
 
             }
 
@@ -2967,11 +3791,16 @@ const BrainActions = {
 
         return this.setResult({
 
-            success:false,
+            success:
+                false,
+
+            executed:
+                false,
 
             intent,
 
-            action:null,
+            action:
+                null,
 
             reason:
                 "Onay alındı ancak bu hedef için doğrulanmış hard-delete motoru bağlı değil.",
@@ -2995,20 +3824,29 @@ const BrainActions = {
     ){
 
         if(
-            context.confirmed !==
-                true
+            !this.hasBoundConfirmation(
+                context
+            )
         ){
 
             return this.setResult({
 
-                success:false,
+                success:
+                    false,
+
+                executed:
+                    false,
+
+                blocked:
+                    true,
 
                 intent,
 
-                action:null,
+                action:
+                    null,
 
                 reason:
-                    "Geri yükleme işlemi kullanıcı onayı gerektiriyor."
+                    "Geri yükleme işlemi bağlı kullanıcı onayı gerektiriyor."
 
             });
 
@@ -3022,45 +3860,38 @@ const BrainActions = {
 
 
         if(
-            target === "world" ||
-            target === "worlds"
+            target ===
+                "world" ||
+            target ===
+                "worlds"
         ){
 
-            const method =
+            if(
                 typeof actions.restoreWorld ===
                     "function"
-                    ? "restoreWorld"
-                    : null;
-
-
-            if(method){
+            ){
 
                 const result =
                     this.callAction(
                         actions,
-                        method
+                        "restoreWorld"
                     );
 
 
-                return this.setResult({
+                return this.resultFromActionCall({
 
-                    success:
-                        result.success,
+                    result,
 
                     intent,
 
                     action:
                         "world:restore",
 
-                    reason:
-                        result.success
-                            ? null
-                            : "World geri yüklenemedi.",
+                    successMessage:
+                        "World geri yüklendi.",
 
-                    message:
-                        result.success
-                            ? "World geri yüklendi."
-                            : null
+                    failureMessage:
+                        "World geri yüklenemedi."
 
                 });
 
@@ -3070,45 +3901,38 @@ const BrainActions = {
 
 
         if(
-            target === "entity" ||
-            target === "entities"
+            target ===
+                "entity" ||
+            target ===
+                "entities"
         ){
 
-            const method =
+            if(
                 typeof actions.restoreEntity ===
                     "function"
-                    ? "restoreEntity"
-                    : null;
-
-
-            if(method){
+            ){
 
                 const result =
                     this.callAction(
                         actions,
-                        method
+                        "restoreEntity"
                     );
 
 
-                return this.setResult({
+                return this.resultFromActionCall({
 
-                    success:
-                        result.success,
+                    result,
 
                     intent,
 
                     action:
                         "entity:restore",
 
-                    reason:
-                        result.success
-                            ? null
-                            : "Entity geri yüklenemedi.",
+                    successMessage:
+                        "Entity geri yüklendi.",
 
-                    message:
-                        result.success
-                            ? "Entity geri yüklendi."
-                            : null
+                    failureMessage:
+                        "Entity geri yüklenemedi."
 
                 });
 
@@ -3119,11 +3943,16 @@ const BrainActions = {
 
         return this.setResult({
 
-            success:false,
+            success:
+                false,
+
+            executed:
+                false,
 
             intent,
 
-            action:null,
+            action:
+                null,
 
             reason:
                 "Onay alındı ancak bu hedef için doğrulanmış restore motoru bağlı değil.",
@@ -3139,8 +3968,10 @@ const BrainActions = {
     /* =====================================================
        COMMUNICATION
 
-       UI ve gerçek communication service henüz kurulmadığı
-       için gönderim / arama / ekran paylaşımı taklit edilmez.
+       BrainActions does not simulate messaging, calls or
+       screen sharing.
+
+       A real communication runtime must be registered.
     ===================================================== */
 
     executeCommunicationIntent(
@@ -3164,7 +3995,11 @@ const BrainActions = {
 
             return this.setResult({
 
-                success:false,
+                success:
+                    false,
+
+                executed:
+                    false,
 
                 intent,
 
@@ -3204,13 +4039,19 @@ const BrainActions = {
 
         if(
             !method ||
-            typeof service[method] !==
+            typeof service[
+                method
+            ] !==
                 "function"
         ){
 
             return this.setResult({
 
-                success:false,
+                success:
+                    false,
+
+                executed:
+                    false,
 
                 intent,
 
@@ -3228,7 +4069,9 @@ const BrainActions = {
         try{
 
             const result =
-                service[method](
+                service[
+                    method
+                ](
                     intent,
                     context
                 );
@@ -3242,7 +4085,11 @@ const BrainActions = {
 
                 return this.setResult({
 
-                    success:false,
+                    success:
+                        false,
+
+                    executed:
+                        false,
 
                     intent,
 
@@ -3258,12 +4105,24 @@ const BrainActions = {
 
 
             const success =
-                result !== false;
+                result !==
+                    false &&
+                (
+                    typeof result !==
+                        "object" ||
+                    result ===
+                        null ||
+                    result.success !==
+                        false
+                );
 
 
             return this.setResult({
 
                 success,
+
+                executed:
+                    success,
 
                 intent,
 
@@ -3273,11 +4132,18 @@ const BrainActions = {
                 reason:
                     success
                         ? null
-                        : "Communication işlemi başlatılamadı.",
+                        : (
+                            result?.reason ||
+                            result?.message ||
+                            "Communication işlemi başlatılamadı."
+                        ),
 
                 message:
                     success
-                        ? "Communication işlemi başlatıldı."
+                        ? (
+                            result?.message ||
+                            "Communication işlemi başlatıldı."
+                        )
                         : null,
 
                 data:
@@ -3293,7 +4159,11 @@ const BrainActions = {
 
             return this.setResult({
 
-                success:false,
+                success:
+                    false,
+
+                executed:
+                    false,
 
                 intent,
 
@@ -3301,7 +4171,9 @@ const BrainActions = {
                     type,
 
                 reason:
-                    "Communication işlemi sırasında hata oluştu."
+                    "Communication işlemi sırasında hata oluştu.",
+
+                error
 
             });
 
@@ -3324,7 +4196,14 @@ const BrainActions = {
             this.getPolicy();
 
 
+        const applications =
+            this.getApplicationsApp();
+
+
         return {
+
+            version:
+                this.version,
 
             available:
                 Boolean(
@@ -3343,7 +4222,7 @@ const BrainActions = {
 
             applicationsAvailable:
                 Boolean(
-                    window.ApplicationsApp
+                    applications
                 ),
 
             communicationAvailable:
@@ -3352,6 +4231,9 @@ const BrainActions = {
                         "communication"
                     )
                 ),
+
+            executionSequence:
+                this.executionSequence,
 
             hasLastResult:
                 Boolean(
@@ -3382,7 +4264,29 @@ const BrainActions = {
 
         return {
 
-            ...status,
+            version:
+                this.version,
+
+            available:
+                status.available,
+
+            engineAvailable:
+                status.engineAvailable,
+
+            policyAvailable:
+                status.policyAvailable,
+
+            applicationsAvailable:
+                status.applicationsAvailable,
+
+            communicationAvailable:
+                status.communicationAvailable,
+
+            executionSequence:
+                status.executionSequence,
+
+            hasLastResult:
+                status.hasLastResult,
 
             layers:{
 
@@ -3407,16 +4311,70 @@ const BrainActions = {
 
         };
 
+    },
+
+
+    /* =====================================================
+       RESET RUNTIME
+    ===================================================== */
+
+    resetRuntime(){
+
+        this.lastResult =
+            null;
+
+
+        this.executionSequence =
+            0;
+
+
+        return true;
+
     }
 
 };
 
 
-VAERO.register(
-    "brainActions",
-    BrainActions
-);
+/* =========================================================
+   REGISTER
+========================================================= */
+
+try{
+
+    if(
+        typeof VAERO !==
+            "undefined" &&
+        typeof VAERO.register ===
+            "function"
+    ){
+
+        VAERO.register(
+            "brainActions",
+            BrainActions
+        );
+
+    }
+
+} catch(error){
+
+    console.error(
+        "BrainActions register edilemedi:",
+        error
+    );
+
+}
 
 
-window.BrainActions =
-    BrainActions;
+/* =========================================================
+   GLOBAL
+========================================================= */
+
+if(
+    typeof window !==
+        "undefined"
+){
+
+    window.BrainActions =
+        BrainActions;
+
+}
