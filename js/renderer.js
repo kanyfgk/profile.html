@@ -5,8 +5,20 @@
 
 const Renderer = {
 
+    version:
+        "3.0.0",
+
     mountId:
         "engine",
+
+    renderCount:
+        0,
+
+    lastRenderAt:
+        null,
+
+    lastRenderState:
+        null,
 
 
     /* =====================================================
@@ -38,6 +50,20 @@ const Renderer = {
 
     getService(name){
 
+        const serviceName =
+            String(
+                name ??
+                ""
+            ).trim();
+
+
+        if(!serviceName){
+
+            return null;
+
+        }
+
+
         try{
 
             if(
@@ -54,7 +80,7 @@ const Renderer = {
 
             return (
                 VAERO.get(
-                    name
+                    serviceName
                 ) ||
                 null
             );
@@ -62,7 +88,7 @@ const Renderer = {
         } catch(error){
 
             console.warn(
-                `Renderer service lookup failed: ${name}`,
+                `Renderer service lookup failed: ${serviceName}`,
                 error
             );
 
@@ -75,19 +101,69 @@ const Renderer = {
 
 
     /* =====================================================
+       ENGINE ACCESS
+    ===================================================== */
+
+    getEngine(){
+
+        try{
+
+            if(
+                typeof VAERO !==
+                    "undefined" &&
+                VAERO.engine
+            ){
+
+                return VAERO.engine;
+
+            }
+
+        } catch(error){
+
+            /* service fallback */
+
+        }
+
+
+        const service =
+            this.getService(
+                "engine"
+            );
+
+
+        if(service){
+
+            return service;
+
+        }
+
+
+        if(
+            typeof window !==
+                "undefined" &&
+            window.Engine
+        ){
+
+            return window.Engine;
+
+        }
+
+
+        return null;
+
+    },
+
+
+    /* =====================================================
        SAFE ESCAPE
     ===================================================== */
 
     escapeHTML(value){
 
-        const text =
-            String(
-                value ??
+        return String(
+            value ??
                 ""
-            );
-
-
-        return text
+        )
             .replace(
                 /&/g,
                 "&amp;"
@@ -121,6 +197,13 @@ const Renderer = {
         message
     ){
 
+        const safeMessage =
+            String(
+                message ||
+                    "Bu ekran şu anda açılamıyor."
+            );
+
+
         if(
             components &&
             typeof components.errorState ===
@@ -129,35 +212,44 @@ const Renderer = {
 
             try{
 
-                return components.errorState(
-                    message
-                );
+                const result =
+                    components.errorState(
+                        safeMessage
+                    );
+
+
+                if(
+                    typeof result ===
+                        "string"
+                ){
+
+                    return result;
+
+                }
 
             } catch(error){
 
-                /* fallback */
+                /* local fallback */
 
             }
 
         }
 
 
-        const safeMessage =
-            this.escapeHTML(
-                message ||
-                "Bu ekran şu anda açılamıyor."
-            );
-
-
         return `
-            <section class="section renderer-error-state">
+            <section
+                class="section renderer-error-state"
+                role="alert"
+            >
 
                 <div class="eyebrow">
                     EKRAN HATASI
                 </div>
 
                 <h1>
-                    ${safeMessage}
+                    ${this.escapeHTML(
+                        safeMessage
+                    )}
                 </h1>
 
             </section>
@@ -184,14 +276,25 @@ const Renderer = {
 
             try{
 
-                return components.emptyState({
-                    title,
-                    description
-                });
+                const result =
+                    components.emptyState({
+                        title,
+                        description
+                    });
+
+
+                if(
+                    typeof result ===
+                        "string"
+                ){
+
+                    return result;
+
+                }
 
             } catch(error){
 
-                /* fallback */
+                /* local fallback */
 
             }
 
@@ -199,7 +302,10 @@ const Renderer = {
 
 
         return `
-            <section class="section renderer-empty-state">
+            <section
+                class="section renderer-empty-state"
+                aria-live="polite"
+            >
 
                 <div class="eyebrow">
                     VAERO
@@ -250,40 +356,50 @@ const Renderer = {
         }
 
 
-        document.body.dataset.page =
-            view ||
-            "home";
+        const body =
+            document.body;
+
+
+        body.dataset.page =
+            String(
+                view ||
+                    "home"
+            );
 
 
         if(page){
 
-            document.body.dataset.enginePage =
-                page;
+            body.dataset.enginePage =
+                String(
+                    page
+                );
 
         } else {
 
-            delete document
-                .body
+            delete body
                 .dataset
                 .enginePage;
 
         }
 
 
-        document.body.dataset.worldEdit =
-            engine?.worldEditMode
+        body.dataset.worldEdit =
+            engine?.worldEditMode ===
+                true
                 ? "true"
                 : "false";
 
 
-        document.body.dataset.entityEdit =
-            engine?.entityEditMode
+        body.dataset.entityEdit =
+            engine?.entityEditMode ===
+                true
                 ? "true"
                 : "false";
 
 
-        document.body.dataset.entityCreate =
-            engine?.entityCreateMode
+        body.dataset.entityCreate =
+            engine?.entityCreateMode ===
+                true
                 ? "true"
                 : "false";
 
@@ -292,38 +408,40 @@ const Renderer = {
             engine?.currentWorld?.id
         ){
 
-            document.body.dataset.worldId =
+            body.dataset.worldId =
                 String(
                     engine.currentWorld.id
                 );
 
         } else {
 
-            delete document
-                .body
+            delete body
                 .dataset
                 .worldId;
 
         }
 
 
-        if(
+        const entityId =
             engine
                 ?.currentOpenedEntity
-                ?.id
-        ){
+                ?.id ||
+            engine
+                ?.currentEntity
+                ?.id ||
+            null;
 
-            document.body.dataset.entityId =
+
+        if(entityId){
+
+            body.dataset.entityId =
                 String(
-                    engine
-                        .currentOpenedEntity
-                        .id
+                    entityId
                 );
 
         } else {
 
-            delete document
-                .body
+            delete body
                 .dataset
                 .entityId;
 
@@ -344,31 +462,66 @@ const Renderer = {
         const normalized =
             String(
                 page ||
-                ""
+                    ""
             )
                 .trim()
                 .toLowerCase();
 
 
-        const apps = {
+        if(!normalized){
 
-            vaero: () =>
-                window.VaeroApp ||
-                this.getService(
-                    "vaeroApp"
-                ),
+            return null;
 
-            applications: () =>
-                window.ApplicationsApp ||
-                this.getService(
-                    "applicationsApp"
-                )
+        }
+
+
+        const getters = {
+
+            vaero:
+                () => {
+
+                    if(
+                        typeof window !==
+                            "undefined" &&
+                        window.VaeroApp
+                    ){
+
+                        return window.VaeroApp;
+
+                    }
+
+
+                    return this.getService(
+                        "vaeroApp"
+                    );
+
+                },
+
+            applications:
+                () => {
+
+                    if(
+                        typeof window !==
+                            "undefined" &&
+                        window.ApplicationsApp
+                    ){
+
+                        return window.ApplicationsApp;
+
+                    }
+
+
+                    return this.getService(
+                        "applicationsApp"
+                    );
+
+                }
 
         };
 
 
         const getter =
-            apps[
+            getters[
                 normalized
             ];
 
@@ -389,6 +542,12 @@ const Renderer = {
 
         } catch(error){
 
+            console.warn(
+                `System application lookup failed: ${normalized}`,
+                error
+            );
+
+
             return null;
 
         }
@@ -408,7 +567,7 @@ const Renderer = {
         const normalized =
             String(
                 page ||
-                ""
+                    ""
             )
                 .trim()
                 .toLowerCase();
@@ -444,6 +603,20 @@ const Renderer = {
 
             const result =
                 application.render();
+
+
+            if(
+                result &&
+                typeof result.then ===
+                    "function"
+            ){
+
+                return this.renderError(
+                    components,
+                    `${normalized} uygulaması async render döndürdü.`
+                );
+
+            }
 
 
             if(
@@ -518,6 +691,20 @@ const Renderer = {
 
 
             if(
+                result &&
+                typeof result.then ===
+                    "function"
+            ){
+
+                return this.renderError(
+                    components,
+                    `${fallbackMessage} Async render desteklenmiyor.`
+                );
+
+            }
+
+
+            if(
                 typeof result !==
                     "string"
             ){
@@ -544,6 +731,56 @@ const Renderer = {
                 components,
                 fallbackMessage
             );
+
+        }
+
+    },
+
+
+    /* =====================================================
+       SAFE WORLD LIST
+    ===================================================== */
+
+    getWorlds(){
+
+        const worldService =
+            this.getService(
+                "world"
+            );
+
+
+        if(
+            !worldService ||
+            typeof worldService.all !==
+                "function"
+        ){
+
+            return [];
+
+        }
+
+
+        try{
+
+            const worlds =
+                worldService.all();
+
+
+            return Array.isArray(
+                worlds
+            )
+                ? worlds
+                : [];
+
+        } catch(error){
+
+            console.warn(
+                "Renderer world list could not be read:",
+                error
+            );
+
+
+            return [];
 
         }
 
@@ -591,19 +828,7 @@ const Renderer = {
 
 
         const engine =
-            (
-                typeof VAERO !==
-                    "undefined"
-
-                    ? VAERO.engine
-
-                    : null
-            ) ||
-            this.getService(
-                "engine"
-            ) ||
-            window.Engine ||
-            null;
+            this.getEngine();
 
 
         if(!engine){
@@ -621,6 +846,7 @@ const Renderer = {
         const rootEntity =
             engine.rootEntity ||
             entity ||
+            engine.currentEntity ||
             null;
 
 
@@ -638,11 +864,26 @@ const Renderer = {
         }
 
 
-        const view =
+        const requestedView =
             String(
                 engine.currentView ||
-                "home"
-            );
+                    "home"
+            )
+                .trim()
+                .toLowerCase();
+
+
+        const view =
+            typeof engine.isValidView ===
+                "function" &&
+            engine.isValidView(
+                requestedView
+            )
+                ? requestedView
+                : (
+                    requestedView ||
+                    "home"
+                );
 
 
         const currentEntityPage =
@@ -650,6 +891,8 @@ const Renderer = {
                 ? String(
                     engine.currentEntityPage
                 )
+                    .trim()
+                    .toLowerCase()
                 : null;
 
 
@@ -668,10 +911,15 @@ const Renderer = {
 
             screenHTML =
                 this.renderScreen({
+
                     view,
+
                     engine,
+
                     components,
+
                     rootEntity
+
                 });
 
         } catch(error){
@@ -718,7 +966,9 @@ const Renderer = {
 
                 const navigation =
                     components.navigation({
+
                         view,
+
                         page:
                             currentEntityPage,
 
@@ -729,6 +979,7 @@ const Renderer = {
                         entity:
                             engine.currentOpenedEntity ||
                             null
+
                     });
 
 
@@ -758,20 +1009,23 @@ const Renderer = {
                 )}"
                 data-engine-page="${this.escapeHTML(
                     currentEntityPage ||
-                    ""
+                        ""
                 )}"
                 data-world-edit="${
-                    engine.worldEditMode
+                    engine.worldEditMode ===
+                        true
                         ? "true"
                         : "false"
                 }"
                 data-entity-edit="${
-                    engine.entityEditMode
+                    engine.entityEditMode ===
+                        true
                         ? "true"
                         : "false"
                 }"
                 data-entity-create="${
-                    engine.entityCreateMode
+                    engine.entityCreateMode ===
+                        true
                         ? "true"
                         : "false"
                 }"
@@ -781,7 +1035,7 @@ const Renderer = {
                     class="engine-screen"
                     data-engine-screen="${this.escapeHTML(
                         currentEntityPage ||
-                        view
+                            view
                     )}"
                 >
                     ${screenHTML}
@@ -793,12 +1047,51 @@ const Renderer = {
         `;
 
 
-        this.afterRender({
-            root,
-            engine,
+        this.renderCount +=
+            1;
+
+
+        this.lastRenderAt =
+            Date.now();
+
+
+        this.lastRenderState = {
+
             view,
+
+            page:
+                currentEntityPage,
+
+            worldId:
+                engine.currentWorld?.id ||
+                null,
+
+            entityId:
+                engine
+                    .currentOpenedEntity
+                    ?.id ||
+                engine
+                    .currentEntity
+                    ?.id ||
+                null,
+
+            time:
+                this.lastRenderAt
+
+        };
+
+
+        this.afterRender({
+
+            root,
+
+            engine,
+
+            view,
+
             page:
                 currentEntityPage
+
         });
 
 
@@ -806,8 +1099,7 @@ const Renderer = {
 
     },
 
-
-    /* =====================================================
+   /* =====================================================
        SCREEN ROUTER
     ===================================================== */
 
@@ -908,49 +1200,16 @@ const Renderer = {
                WORLDS
             ------------------------------------------------- */
 
-            case "worlds": {
-
-                const worldService =
-                    this.getService(
-                        "world"
-                    );
-
-
-                let worlds =
-                    [];
-
-
-                try{
-
-                    worlds =
-                        worldService &&
-                        typeof worldService.all ===
-                            "function"
-                            ? worldService.all()
-                            : [];
-
-                } catch(error){
-
-                    worlds =
-                        [];
-
-                }
-
+            case "worlds":
 
                 return this.callComponent(
                     components,
                     "worldsView",
                     [
-                        Array.isArray(
-                            worlds
-                        )
-                            ? worlds
-                            : []
+                        this.getWorlds()
                     ],
                     "Dünyalar görünümü açılamadı."
                 );
-
-            }
 
 
             /* -------------------------------------------------
@@ -973,42 +1232,11 @@ const Renderer = {
                     );
 
 
-                    const worldService =
-                        this.getService(
-                            "world"
-                        );
-
-
-                    let worlds =
-                        [];
-
-
-                    try{
-
-                        worlds =
-                            worldService &&
-                            typeof worldService.all ===
-                                "function"
-                                ? worldService.all()
-                                : [];
-
-                    } catch(error){
-
-                        worlds =
-                            [];
-
-                    }
-
-
                     return this.callComponent(
                         components,
                         "worldsView",
                         [
-                            Array.isArray(
-                                worlds
-                            )
-                                ? worlds
-                                : []
+                            this.getWorlds()
                         ],
                         "Dünya bulunamadı."
                     );
@@ -1017,7 +1245,8 @@ const Renderer = {
 
 
                 if(
-                    engine.worldEditMode &&
+                    engine.worldEditMode ===
+                        true &&
                     typeof components.worldEditor ===
                         "function"
                 ){
@@ -1067,7 +1296,8 @@ const Renderer = {
 
 
                 if(
-                    engine.entityEditMode &&
+                    engine.entityEditMode ===
+                        true &&
                     typeof components.entityEditor ===
                         "function"
                 ){
@@ -1112,6 +1342,10 @@ const Renderer = {
                 );
 
 
+            /* -------------------------------------------------
+               FALLBACK
+            ------------------------------------------------- */
+
             default:
 
                 console.warn(
@@ -1145,13 +1379,33 @@ const Renderer = {
         page
     }){
 
+        /* -------------------------------------------------
+           APPLICATIONS HOOK
+        ------------------------------------------------- */
+
         try{
 
-            const applications =
-                window.ApplicationsApp ||
-                this.getService(
-                    "applicationsApp"
-                );
+            let applications =
+                null;
+
+
+            if(
+                typeof window !==
+                    "undefined" &&
+                window.ApplicationsApp
+            ){
+
+                applications =
+                    window.ApplicationsApp;
+
+            } else {
+
+                applications =
+                    this.getService(
+                        "applicationsApp"
+                    );
+
+            }
 
 
             if(
@@ -1178,13 +1432,86 @@ const Renderer = {
         }
 
 
+        /* -------------------------------------------------
+           VAERO APP HOOK
+        ------------------------------------------------- */
+
         try{
 
-            const brainApp =
-                window.BrainApp ||
-                this.getService(
-                    "brainApp"
+            let vaeroApp =
+                null;
+
+
+            if(
+                typeof window !==
+                    "undefined" &&
+                window.VaeroApp
+            ){
+
+                vaeroApp =
+                    window.VaeroApp;
+
+            } else {
+
+                vaeroApp =
+                    this.getService(
+                        "vaeroApp"
+                    );
+
+            }
+
+
+            if(
+                page ===
+                    "vaero" &&
+                vaeroApp &&
+                typeof vaeroApp.afterRender ===
+                    "function"
+            ){
+
+                vaeroApp.afterRender(
+                    root
                 );
+
+            }
+
+        } catch(error){
+
+            console.warn(
+                "VAERO App post-render failed:",
+                error
+            );
+
+        }
+
+
+        /* -------------------------------------------------
+           BRAIN APP REFRESH
+        ------------------------------------------------- */
+
+        try{
+
+            let brainApp =
+                null;
+
+
+            if(
+                typeof window !==
+                    "undefined" &&
+                window.BrainApp
+            ){
+
+                brainApp =
+                    window.BrainApp;
+
+            } else {
+
+                brainApp =
+                    this.getService(
+                        "brainApp"
+                    );
+
+            }
 
 
             if(
@@ -1204,54 +1531,252 @@ const Renderer = {
         }
 
 
+        /* -------------------------------------------------
+           FOCUS MANAGEMENT
+        ------------------------------------------------- */
+
         try{
 
-            const events =
-                this.getService(
-                    "events"
-                );
-
-
             if(
-                events &&
-                typeof events.emit ===
+                root &&
+                typeof root.querySelector ===
                     "function"
             ){
 
-                events.emit(
-                    "renderer.rendered",
-                    {
+                const autofocusTarget =
+                    root.querySelector(
+                        "[data-engine-autofocus]"
+                    );
 
-                        view,
 
-                        page:
-                            page ||
-                            null,
+                if(
+                    autofocusTarget &&
+                    typeof autofocusTarget.focus ===
+                        "function"
+                ){
 
-                        worldId:
-                            engine.currentWorld?.id ||
-                            null,
+                    autofocusTarget.focus({
+                        preventScroll:
+                            true
+                    });
 
-                        entityId:
-                            engine
-                                .currentOpenedEntity
-                                ?.id ||
-                            engine
-                                .currentEntity
-                                ?.id ||
-                            null,
-
-                        time:
-                            Date.now()
-
-                    }
-                );
+                }
 
             }
 
         } catch(error){
 
-            /* non-fatal */
+            /* optional accessibility enhancement */
+
+        }
+
+
+        /* -------------------------------------------------
+           RENDER EVENT
+        ------------------------------------------------- */
+
+        this.emitRendered(
+            {
+                view,
+
+                page:
+                    page ||
+                    null,
+
+                worldId:
+                    engine.currentWorld?.id ||
+                    null,
+
+                entityId:
+                    engine
+                        .currentOpenedEntity
+                        ?.id ||
+                    engine
+                        .currentEntity
+                        ?.id ||
+                    null,
+
+                renderCount:
+                    this.renderCount,
+
+                time:
+                    this.lastRenderAt ||
+                    Date.now()
+            }
+        );
+
+
+        return true;
+
+    },
+
+
+    /* =====================================================
+       RENDER EVENT
+    ===================================================== */
+
+    emitRendered(payload){
+
+        try{
+
+            if(
+                typeof VAERO !==
+                    "undefined" &&
+                typeof VAERO.emit ===
+                    "function"
+            ){
+
+                VAERO.emit(
+                    "renderer.rendered",
+                    payload
+                );
+
+
+                return true;
+
+            }
+
+        } catch(error){
+
+            /* events fallback */
+
+        }
+
+
+        const events =
+            this.getService(
+                "events"
+            );
+
+
+        if(
+            !events ||
+            typeof events.emit !==
+                "function"
+        ){
+
+            return false;
+
+        }
+
+
+        try{
+
+            events.emit(
+                "renderer.rendered",
+                payload
+            );
+
+
+            return true;
+
+        } catch(error){
+
+            console.warn(
+                "Renderer event emit failed:",
+                error
+            );
+
+
+            return false;
+
+        }
+
+    },
+
+
+    /* =====================================================
+       REPORT
+    ===================================================== */
+
+    report(){
+
+        const root =
+            this.getRoot();
+
+
+        const engine =
+            this.getEngine();
+
+
+        return {
+
+            version:
+                this.version,
+
+            mountId:
+                this.mountId,
+
+            mounted:
+                Boolean(
+                    root
+                ),
+
+            renderCount:
+                this.renderCount,
+
+            lastRenderAt:
+                this.lastRenderAt,
+
+            lastRenderState:
+                this.lastRenderState
+                    ? {
+                        ...this.lastRenderState
+                    }
+                    : null,
+
+            engineAvailable:
+                Boolean(
+                    engine
+                ),
+
+            componentsAvailable:
+                Boolean(
+                    this.getService(
+                        "components"
+                    )
+                )
+
+        };
+
+    },
+
+
+    /* =====================================================
+       RESET RUNTIME
+    ===================================================== */
+
+    resetRuntime(
+        options = {}
+    ){
+
+        this.renderCount =
+            0;
+
+
+        this.lastRenderAt =
+            null;
+
+
+        this.lastRenderState =
+            null;
+
+
+        if(
+            options.clearRoot ===
+                true
+        ){
+
+            const root =
+                this.getRoot();
+
+
+            if(root){
+
+                root.innerHTML =
+                    "";
+
+            }
 
         }
 
@@ -1274,8 +1799,21 @@ try{
             "undefined"
     ){
 
-        VAERO.renderer =
-            Renderer;
+        if(
+            typeof VAERO.setRenderer ===
+                "function"
+        ){
+
+            VAERO.setRenderer(
+                Renderer
+            );
+
+        } else {
+
+            VAERO.renderer =
+                Renderer;
+
+        }
 
 
         if(
@@ -1302,5 +1840,16 @@ try{
 }
 
 
-window.Renderer =
-    Renderer;
+/* =========================================================
+   GLOBAL
+========================================================= */
+
+if(
+    typeof window !==
+        "undefined"
+){
+
+    window.Renderer =
+        Renderer;
+
+}
