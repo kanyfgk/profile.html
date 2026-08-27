@@ -5,6 +5,9 @@
 
 const BrainService = {
 
+    version:
+        "3.0.0",
+
     lastRequest:
         null,
 
@@ -33,26 +36,45 @@ const BrainService = {
 
     getService(name){
 
+        const serviceName =
+            String(
+                name ??
+                    ""
+            ).trim();
+
+
+        if(!serviceName){
+
+            return null;
+
+        }
+
+
         try{
 
             if(
-                typeof VAERO === "undefined" ||
+                typeof VAERO ===
+                    "undefined" ||
                 typeof VAERO.get !==
                     "function"
             ){
+
                 return null;
+
             }
 
 
             return (
-                VAERO.get(name) ||
+                VAERO.get(
+                    serviceName
+                ) ||
                 null
             );
 
         } catch(error){
 
             console.warn(
-                `Brain Service bağı okunamadı: ${name}`,
+                `Brain Service bağı okunamadı: ${serviceName}`,
                 error
             );
 
@@ -71,7 +93,8 @@ const BrainService = {
     normalizePrompt(prompt){
 
         return String(
-            prompt ?? ""
+            prompt ??
+                ""
         )
             .trim()
             .slice(
@@ -105,6 +128,28 @@ const BrainService = {
     },
 
 
+    normalizeConfirmationId(value){
+
+        const id =
+            String(
+                value ??
+                    ""
+            )
+                .trim()
+                .slice(
+                    0,
+                    240
+                );
+
+
+        return (
+            id ||
+            null
+        );
+
+    },
+
+
     /* =====================================================
        SAFE CLONE
     ===================================================== */
@@ -112,10 +157,14 @@ const BrainService = {
     clone(value){
 
         if(
-            value === null ||
-            value === undefined
+            value ===
+                null ||
+            value ===
+                undefined
         ){
+
             return value;
+
         }
 
 
@@ -135,6 +184,7 @@ const BrainService = {
         } catch(error){
 
             /* JSON fallback */
+
         }
 
 
@@ -164,6 +214,20 @@ const BrainService = {
         payload = {}
     ){
 
+        const name =
+            String(
+                eventName ??
+                    ""
+            ).trim();
+
+
+        if(!name){
+
+            return false;
+
+        }
+
+
         try{
 
             if(
@@ -174,7 +238,7 @@ const BrainService = {
             ){
 
                 VAERO.emit(
-                    eventName,
+                    name,
                     payload
                 );
 
@@ -183,6 +247,17 @@ const BrainService = {
 
             }
 
+        } catch(error){
+
+            console.warn(
+                `BrainService event gönderilemedi: ${name}`,
+                error
+            );
+
+        }
+
+
+        try{
 
             const events =
                 this.getService(
@@ -197,7 +272,7 @@ const BrainService = {
             ){
 
                 events.emit(
-                    eventName,
+                    name,
                     payload
                 );
 
@@ -209,7 +284,7 @@ const BrainService = {
         } catch(error){
 
             console.warn(
-                `BrainService event gönderilemedi: ${eventName}`,
+                `BrainService event fallback gönderilemedi: ${name}`,
                 error
             );
 
@@ -258,8 +333,7 @@ const BrainService = {
 
                 if(
                     compact &&
-                    typeof contextService
-                        .compact ===
+                    typeof contextService.compact ===
                         "function"
                 ){
 
@@ -271,8 +345,7 @@ const BrainService = {
 
 
                 if(
-                    typeof contextService
-                        .build ===
+                    typeof contextService.build ===
                         "function"
                 ){
 
@@ -323,17 +396,27 @@ const BrainService = {
         options = {}
     }){
 
+        const now =
+            Date.now();
+
+
         const request = {
 
             id:
-                `brain_service_${Date.now()}_${++this.requestSequence}`,
+                `brain_service_${now}_${++this.requestSequence}`,
+
+            sequence:
+                this.requestSequence,
 
             type:
-                type ||
-                "ask",
+                String(
+                    type ||
+                    "ask"
+                ),
 
             prompt:
-                prompt !== null
+                prompt !==
+                    null
                     ? this.normalizePrompt(
                         prompt
                     )
@@ -350,7 +433,7 @@ const BrainService = {
                 ),
 
             requestedAt:
-                Date.now()
+                now
 
         };
 
@@ -360,6 +443,45 @@ const BrainService = {
 
 
         return request;
+
+    },
+
+
+    /* =====================================================
+       RESPONSE NORMALIZATION
+    ===================================================== */
+
+    normalizeResponse(
+        response,
+        fallbackReply =
+            "Brain yanıt üretemedi."
+    ){
+
+        if(
+            response &&
+            typeof response ===
+                "object" &&
+            !Array.isArray(
+                response
+            )
+        ){
+
+            return {
+                ...response
+            };
+
+        }
+
+
+        return {
+
+            reply:
+                String(
+                    response ??
+                    fallbackReply
+                )
+
+        };
 
     },
 
@@ -467,16 +589,17 @@ const BrainService = {
         this.emit(
             "brain:service:request",
             {
-
                 requestId:
                     request.id,
+
+                sequence:
+                    request.sequence,
 
                 type:
                     "ask",
 
                 time:
                     request.requestedAt
-
             }
         );
 
@@ -492,19 +615,13 @@ const BrainService = {
 
 
             const normalizedResponse =
-                response &&
-                typeof response ===
-                    "object"
-                    ? response
-                    : {
+                this.normalizeResponse(
+                    response
+                );
 
-                        reply:
-                            String(
-                                response ??
-                                "Brain yanıt üretemedi."
-                            )
 
-                    };
+            const respondedAt =
+                Date.now();
 
 
             const result = {
@@ -514,8 +631,18 @@ const BrainService = {
                 serviceRequestId:
                     request.id,
 
+                serviceSequence:
+                    request.sequence,
+
                 serviceRespondedAt:
-                    Date.now()
+                    respondedAt,
+
+                serviceDuration:
+                    Math.max(
+                        0,
+                        respondedAt -
+                        request.requestedAt
+                    )
 
             };
 
@@ -525,7 +652,9 @@ const BrainService = {
 
 
             if(
-                result.confirmation
+                result.confirmation &&
+                typeof result.confirmation ===
+                    "object"
             ){
 
                 this.lastConfirmation =
@@ -539,35 +668,35 @@ const BrainService = {
             this.emit(
                 "brain:service:response",
                 {
-
                     requestId:
                         request.id,
 
+                    sequence:
+                        request.sequence,
+
                     executed:
-                        Boolean(
-                            result.executed
-                        ),
+                        result.executed ===
+                            true,
 
                     blocked:
-                        Boolean(
-                            result.blocked
-                        ),
+                        result.blocked ===
+                            true,
 
                     requiresConfirmation:
-                        Boolean(
-                            result
-                                .requiresConfirmation
-                        ),
+                        result.requiresConfirmation ===
+                            true,
 
                     error:
-                        Boolean(
-                            result.error
-                        ),
+                        result.error ===
+                            true,
+
+                    provider:
+                        result.provider ||
+                        result.providerId ||
+                        null,
 
                     time:
-                        result
-                            .serviceRespondedAt
-
+                        respondedAt
                 }
             );
 
@@ -580,6 +709,10 @@ const BrainService = {
                 "Brain Service ask error:",
                 error
             );
+
+
+            const respondedAt =
+                Date.now();
 
 
             const result = {
@@ -599,8 +732,17 @@ const BrainService = {
                 serviceRequestId:
                     request.id,
 
-                respondedAt:
-                    Date.now()
+                serviceSequence:
+                    request.sequence,
+
+                respondedAt,
+
+                serviceDuration:
+                    Math.max(
+                        0,
+                        respondedAt -
+                        request.requestedAt
+                    )
 
             };
 
@@ -612,16 +754,17 @@ const BrainService = {
             this.emit(
                 "brain:service:error",
                 {
-
                     requestId:
                         request.id,
+
+                    sequence:
+                        request.sequence,
 
                     error:
                         result.serviceError,
 
                     time:
-                        result.respondedAt
-
+                        respondedAt
                 }
             );
 
@@ -703,9 +846,11 @@ const BrainService = {
             this.emit(
                 "brain:service:analyzed",
                 {
-
                     requestId:
                         request.id,
+
+                    sequence:
+                        request.sequence,
 
                     intent:
                         result?.intent ||
@@ -716,9 +861,16 @@ const BrainService = {
                             ?.actionType ||
                         null,
 
+                    blocked:
+                        result?.blocked ===
+                            true,
+
+                    requiresConfirmation:
+                        result?.requiresConfirmation ===
+                            true,
+
                     time:
                         Date.now()
-
                 }
             );
 
@@ -834,7 +986,9 @@ const BrainService = {
 
 
             if(
-                result?.confirmation
+                result?.confirmation &&
+                typeof result.confirmation ===
+                    "object"
             ){
 
                 this.lastConfirmation =
@@ -848,25 +1002,23 @@ const BrainService = {
             this.emit(
                 "brain:service:routed",
                 {
-
                     requestId:
                         request.id,
 
+                    sequence:
+                        request.sequence,
+
                     executed:
-                        Boolean(
-                            result?.executed
-                        ),
+                        result?.executed ===
+                            true,
 
                     blocked:
-                        Boolean(
-                            result?.blocked
-                        ),
+                        result?.blocked ===
+                            true,
 
                     requiresConfirmation:
-                        Boolean(
-                            result
-                                ?.requiresConfirmation
-                        ),
+                        result?.requiresConfirmation ===
+                            true,
 
                     actionType:
                         result?.policy
@@ -875,7 +1027,6 @@ const BrainService = {
 
                     time:
                         Date.now()
-
                 }
             );
 
@@ -903,7 +1054,7 @@ const BrainService = {
 
     confirm(
         confirmationId,
-        prompt,
+        prompt = "",
         options = {}
     ){
 
@@ -939,10 +1090,9 @@ const BrainService = {
 
 
         const id =
-            String(
-                confirmationId ||
-                ""
-            ).trim();
+            this.normalizeConfirmationId(
+                confirmationId
+            );
 
 
         if(!id){
@@ -1032,11 +1182,20 @@ const BrainService = {
 
             if(
                 result?.confirmationApproved ===
+                    true ||
+                result?.executed ===
                     true
             ){
 
-                this.lastConfirmation =
-                    null;
+                if(
+                    this.lastConfirmation?.id ===
+                        id
+                ){
+
+                    this.lastConfirmation =
+                        null;
+
+                }
 
             }
 
@@ -1044,27 +1203,29 @@ const BrainService = {
             this.emit(
                 "brain:service:confirmed",
                 {
-
                     requestId:
                         request.id,
+
+                    sequence:
+                        request.sequence,
 
                     confirmationId:
                         id,
 
                     approved:
-                        Boolean(
-                            result
-                                ?.confirmationApproved
-                        ),
+                        result?.confirmationApproved ===
+                            true,
 
                     executed:
-                        Boolean(
-                            result?.executed
-                        ),
+                        result?.executed ===
+                            true,
+
+                    blocked:
+                        result?.blocked ===
+                            true,
 
                     time:
                         Date.now()
-
                 }
             );
 
@@ -1092,7 +1253,10 @@ const BrainService = {
 
                 message:
                     error?.message ||
-                    "Confirmation işlemi tamamlanamadı."
+                    "Confirmation işlemi tamamlanamadı.",
+
+                serviceRequestId:
+                    request.id
 
             };
 
@@ -1117,8 +1281,7 @@ const BrainService = {
 
         if(
             !brain ||
-            typeof brain
-                .cancelConfirmation !==
+            typeof brain.cancelConfirmation !==
                 "function"
         ){
 
@@ -1128,14 +1291,15 @@ const BrainService = {
 
 
         const id =
-            String(
-                confirmationId ||
-                ""
-            ).trim();
+            this.normalizeConfirmationId(
+                confirmationId
+            );
 
 
         if(!id){
+
             return false;
+
         }
 
 
@@ -1148,7 +1312,8 @@ const BrainService = {
 
 
             if(
-                result === true &&
+                result ===
+                    true &&
                 this.lastConfirmation
                     ?.id ===
                     id
@@ -1156,6 +1321,25 @@ const BrainService = {
 
                 this.lastConfirmation =
                     null;
+
+            }
+
+
+            if(
+                result ===
+                    true
+            ){
+
+                this.emit(
+                    "brain:service:confirmation-cancelled",
+                    {
+                        confirmationId:
+                            id,
+
+                        time:
+                            Date.now()
+                    }
+                );
 
             }
 
@@ -1187,14 +1371,18 @@ const BrainService = {
 
 
         const id =
-            confirmationId ||
-            this.lastConfirmation
-                ?.id ||
-            null;
+            this.normalizeConfirmationId(
+                confirmationId ||
+                this.lastConfirmation
+                    ?.id ||
+                null
+            );
 
 
         if(!id){
+
             return null;
+
         }
 
 
@@ -1206,13 +1394,21 @@ const BrainService = {
 
             try{
 
-                return brain.getConfirmation(
-                    id
-                );
+                const confirmation =
+                    brain.getConfirmation(
+                        id
+                    );
+
+
+                if(confirmation){
+
+                    return confirmation;
+
+                }
 
             } catch(error){
 
-                return null;
+                /* local fallback */
 
             }
 
@@ -1255,15 +1451,45 @@ const BrainService = {
 
             return {
 
-                success:false,
+                success:
+                    false,
 
-                executed:false,
+                executed:
+                    false,
 
                 error:
                     "brain-skills-unavailable",
 
                 message:
                     "Brain Skills sistemi kullanılamıyor."
+
+            };
+
+        }
+
+
+        const skillName =
+            String(
+                name ??
+                    ""
+            ).trim();
+
+
+        if(!skillName){
+
+            return {
+
+                success:
+                    false,
+
+                executed:
+                    false,
+
+                error:
+                    "brain-skill-name-required",
+
+                message:
+                    "Skill adı gerekli."
 
             };
 
@@ -1281,7 +1507,10 @@ const BrainService = {
             context:
                 contextOverride = {},
 
-            ...skillContext
+            compactContext =
+                false,
+
+            ...skillOptions
 
         } = safeOptions;
 
@@ -1290,7 +1519,13 @@ const BrainService = {
             this.buildContext(
                 {
                     ...contextOverride,
-                    ...skillContext
+                    skill:
+                        skillName
+                },
+                {
+                    compact:
+                        compactContext ===
+                        true
                 }
             );
 
@@ -1308,7 +1543,9 @@ const BrainService = {
 
                 options:{
                     skill:
-                        name
+                        skillName,
+
+                    ...skillOptions
                 }
 
             });
@@ -1316,25 +1553,59 @@ const BrainService = {
 
         try{
 
-            const result =
+            const response =
                 await skills.run(
-                    name,
+                    skillName,
                     payload,
                     context
                 );
 
 
+            const normalized =
+                this.normalizeResponse(
+                    response,
+                    "Skill yanıt üretemedi."
+                );
+
+
             this.lastResponse = {
 
-                ...result,
+                ...normalized,
 
                 serviceRequestId:
                     request.id,
+
+                serviceSequence:
+                    request.sequence,
 
                 serviceRespondedAt:
                     Date.now()
 
             };
+
+
+            this.emit(
+                "brain:service:skill",
+                {
+                    requestId:
+                        request.id,
+
+                    skill:
+                        skillName,
+
+                    success:
+                        this.lastResponse.success !==
+                            false,
+
+                    executed:
+                        this.lastResponse.executed ===
+                            true,
+
+                    time:
+                        this.lastResponse
+                            .serviceRespondedAt
+                }
+            );
 
 
             return this.lastResponse;
@@ -1349,9 +1620,11 @@ const BrainService = {
 
             const result = {
 
-                success:false,
+                success:
+                    false,
 
-                executed:false,
+                executed:
+                    false,
 
                 error:
                     "brain-skill-error",
@@ -1362,6 +1635,9 @@ const BrainService = {
 
                 serviceRequestId:
                     request.id,
+
+                serviceSequence:
+                    request.sequence,
 
                 serviceRespondedAt:
                     Date.now()
@@ -1404,7 +1680,8 @@ const BrainService = {
         return this.buildContext(
             extra,
             {
-                compact:true
+                compact:
+                    true
             }
         );
 
@@ -1423,11 +1700,7 @@ const BrainService = {
             );
 
 
-        if(
-            !mode ||
-            typeof mode.snapshot !==
-                "function"
-        ){
+        if(!mode){
 
             return null;
 
@@ -1436,13 +1709,33 @@ const BrainService = {
 
         try{
 
-            return mode.snapshot();
+            if(
+                typeof mode.snapshot ===
+                    "function"
+            ){
+
+                return mode.snapshot();
+
+            }
+
+
+            if(
+                typeof mode.report ===
+                    "function"
+            ){
+
+                return mode.report();
+
+            }
 
         } catch(error){
 
             return null;
 
         }
+
+
+        return null;
 
     },
 
@@ -1497,18 +1790,48 @@ const BrainService = {
             );
 
 
+        if(!brain){
+
+            return null;
+
+        }
+
+
         try{
 
-            return (
-                brain?.getProviderInfo?.() ||
-                null
-            );
+            if(
+                typeof brain.getProviderInfo ===
+                    "function"
+            ){
+
+                return (
+                    brain.getProviderInfo() ||
+                    null
+                );
+
+            }
+
+
+            if(
+                typeof brain.provider ===
+                    "function"
+            ){
+
+                return (
+                    brain.provider() ||
+                    null
+                );
+
+            }
 
         } catch(error){
 
             return null;
 
         }
+
+
+        return null;
 
     },
 
@@ -1543,6 +1866,10 @@ const BrainService = {
             );
 
 
+        let brainStatus =
+            null;
+
+
         let contextStatus =
             null;
 
@@ -1553,6 +1880,22 @@ const BrainService = {
 
         let modeStatus =
             null;
+
+
+        try{
+
+            brainStatus =
+                typeof brain?.status ===
+                    "function"
+                    ? brain.status()
+                    : null;
+
+        } catch(error){
+
+            brainStatus =
+                null;
+
+        }
 
 
         try{
@@ -1601,17 +1944,16 @@ const BrainService = {
 
         return {
 
+            version:
+                this.version,
+
             available:
                 Boolean(
                     brain
                 ),
 
             brain:
-                brain &&
-                typeof brain.status ===
-                    "function"
-                    ? brain.status()
-                    : null,
+                brainStatus,
 
             provider:
                 this.provider(),
@@ -1668,6 +2010,9 @@ const BrainService = {
 
         return {
 
+            version:
+                this.version,
+
             available:
                 status.available,
 
@@ -1683,10 +2028,13 @@ const BrainService = {
 
             mode:
                 status.mode?.mode ||
+                status.mode?.current ||
                 null,
 
             skills:
-                status.skills?.total ||
+                Number(
+                    status.skills?.total
+                ) ||
                 0,
 
             contextReady:
@@ -1698,7 +2046,13 @@ const BrainService = {
                 status.requestSequence,
 
             hasLastResponse:
-                status.hasLastResponse
+                status.hasLastResponse,
+
+            hasLastAnalysis:
+                status.hasLastAnalysis,
+
+            hasLastRoute:
+                status.hasLastRoute
 
         };
 
@@ -1714,17 +2068,22 @@ const BrainService = {
         this.lastRequest =
             null;
 
+
         this.lastResponse =
             null;
+
 
         this.lastAnalysis =
             null;
 
+
         this.lastRoute =
             null;
 
+
         this.lastConfirmation =
             null;
+
 
         this.requestSequence =
             0;
@@ -1787,14 +2146,35 @@ const BrainService = {
 
             try{
 
-                skills?.resetRuntime?.();
+                if(
+                    typeof skills?.resetRuntime ===
+                        "function"
+                ){
+
+                    skills.resetRuntime();
+
+                }
 
             } catch(error){
 
                 /* optional */
+
             }
 
         }
+
+
+        this.emit(
+            "brain:service:reset",
+            {
+                skills:
+                    options.skills ===
+                    true,
+
+                time:
+                    Date.now()
+            }
+        );
 
 
         return true;
@@ -1804,11 +2184,46 @@ const BrainService = {
 };
 
 
-VAERO.register(
-    "brainService",
-    BrainService
-);
+/* =========================================================
+   REGISTER
+========================================================= */
+
+try{
+
+    if(
+        typeof VAERO !==
+            "undefined" &&
+        typeof VAERO.register ===
+            "function"
+    ){
+
+        VAERO.register(
+            "brainService",
+            BrainService
+        );
+
+    }
+
+} catch(error){
+
+    console.error(
+        "BrainService register edilemedi:",
+        error
+    );
+
+}
 
 
-window.BrainService =
-    BrainService;
+/* =========================================================
+   GLOBAL
+========================================================= */
+
+if(
+    typeof window !==
+        "undefined"
+){
+
+    window.BrainService =
+        BrainService;
+
+}
