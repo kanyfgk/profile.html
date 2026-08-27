@@ -4919,12 +4919,17 @@ const Actions = {
 
         if(
             !core ||
+            !engine ||
             !intent?.id
         ){
 
             return false;
 
         }
+
+
+        let result =
+            false;
 
 
         try{
@@ -4934,21 +4939,33 @@ const Actions = {
                     "function"
             ){
 
-                return core.start(
-                    intent.id
-                );
+                result =
+                    core.start(
+                        intent.id
+                    );
 
             }
 
-
-            if(
+            else if(
                 typeof core.startIntent ===
                     "function"
             ){
 
-                return core.startIntent(
-                    intent.id
+                result =
+                    core.startIntent(
+                        intent.id
+                    );
+
+            }
+
+            else {
+
+                console.warn(
+                    "Payment start API bulunamadı."
                 );
+
+
+                return false;
 
             }
 
@@ -4965,14 +4982,34 @@ const Actions = {
         }
 
 
-        console.warn(
-            "Payment start API bulunamadı."
-        );
+        if(
+            result &&
+            typeof result ===
+                "object" &&
+            typeof result.then !==
+                "function"
+        ){
+
+            engine.currentVaeroPaymentIntent =
+                result;
+
+        }
 
 
-        return false;
+        if(
+            result !==
+                false
+        ){
 
-    },
+            this.refreshVaeroPaymentView();
+
+        }
+
+
+        return result !==
+            false;
+
+    }, 
 
 
     cancelVaeroPayment(){
