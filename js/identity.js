@@ -8,7 +8,8 @@ const Identity = {
     booted:
         false,
 
-    identities:{},
+    identities:
+        {},
 
 
     /* =====================================================
@@ -17,18 +18,38 @@ const Identity = {
 
     getService(name){
 
+        const serviceName =
+            String(
+                name ??
+                ""
+            ).trim();
+
+
+        if(!serviceName){
+
+            return null;
+
+        }
+
+
         try{
 
             if(
-                typeof VAERO === "undefined" ||
-                typeof VAERO.get !== "function"
+                typeof VAERO ===
+                    "undefined" ||
+                typeof VAERO.get !==
+                    "function"
             ){
+
                 return null;
+
             }
 
 
             return (
-                VAERO.get(name) ||
+                VAERO.get(
+                    serviceName
+                ) ||
                 null
             );
 
@@ -46,23 +67,50 @@ const Identity = {
         payload = {}
     ){
 
+        const name =
+            String(
+                eventName ??
+                ""
+            ).trim();
+
+
+        if(!name){
+
+            return false;
+
+        }
+
+
         try{
 
             if(
-                typeof VAERO !== "undefined" &&
+                typeof VAERO !==
+                    "undefined" &&
                 typeof VAERO.emit ===
                     "function"
             ){
 
                 VAERO.emit(
-                    eventName,
+                    name,
                     payload
                 );
+
 
                 return true;
 
             }
 
+        } catch(error){
+
+            console.warn(
+                `Identity event gönderilemedi: ${name}`,
+                error
+            );
+
+        }
+
+
+        try{
 
             const events =
                 this.getService(
@@ -70,25 +118,33 @@ const Identity = {
                 );
 
 
-            events?.emit?.(
-                eventName,
-                payload
-            );
+            if(
+                events &&
+                typeof events.emit ===
+                    "function"
+            ){
+
+                events.emit(
+                    name,
+                    payload
+                );
 
 
-            return true;
+                return true;
+
+            }
 
         } catch(error){
 
             console.warn(
-                `Identity event gönderilemedi: ${eventName}`,
+                `Identity event fallback gönderilemedi: ${name}`,
                 error
             );
 
-
-            return false;
-
         }
+
+
+        return false;
 
     },
 
@@ -102,34 +158,52 @@ const Identity = {
         const normalizedPrefix =
             String(
                 prefix ||
-                "VA"
+                    "VA"
             )
                 .trim()
-                .toUpperCase();
+                .toUpperCase()
+                .replace(
+                    /[^A-Z0-9]/g,
+                    ""
+                )
+                .slice(
+                    0,
+                    12
+                ) ||
+            "VA";
 
 
         let randomPart =
             "";
 
 
-        if(
-            typeof crypto !== "undefined" &&
-            typeof crypto.randomUUID ===
-                "function"
-        ){
+        try{
 
-            randomPart =
-                crypto
-                    .randomUUID()
-                    .replaceAll(
-                        "-",
-                        ""
-                    )
-                    .slice(
-                        0,
-                        12
-                    )
-                    .toUpperCase();
+            if(
+                typeof crypto !==
+                    "undefined" &&
+                typeof crypto.randomUUID ===
+                    "function"
+            ){
+
+                randomPart =
+                    crypto
+                        .randomUUID()
+                        .replaceAll(
+                            "-",
+                            ""
+                        )
+                        .slice(
+                            0,
+                            12
+                        )
+                        .toUpperCase();
+
+            }
+
+        } catch(error){
+
+            /* fallback below */
 
         }
 
@@ -154,12 +228,74 @@ const Identity = {
        NORMALIZATION
     ===================================================== */
 
+    normalizeId(value){
+
+        const id =
+            String(
+                value ??
+                    ""
+            )
+                .trim()
+                .slice(
+                    0,
+                    200
+                );
+
+
+        return (
+            id ||
+            null
+        );
+
+    },
+
+
+    normalizeText(
+        value,
+        maxLength = 1000
+    ){
+
+        return String(
+            value ??
+                ""
+        )
+            .trim()
+            .slice(
+                0,
+                maxLength
+            );
+
+    },
+
+
+    normalizeTimestamp(
+        value,
+        fallback = null
+    ){
+
+        const timestamp =
+            Number(
+                value
+            );
+
+
+        return Number.isFinite(
+            timestamp
+        ) &&
+        timestamp >
+            0
+            ? timestamp
+            : fallback;
+
+    },
+
+
     normalizeVisibility(value){
 
         const visibility =
             String(
                 value ||
-                "private"
+                    "private"
             )
                 .trim()
                 .toLowerCase();
@@ -183,7 +319,7 @@ const Identity = {
         const status =
             String(
                 value ||
-                "unverified"
+                    "unverified"
             )
                 .trim()
                 .toLowerCase();
@@ -203,30 +339,106 @@ const Identity = {
     },
 
 
+    normalizeStatus(value){
+
+        const status =
+            String(
+                value ||
+                    "active"
+            )
+                .trim()
+                .toLowerCase();
+
+
+        return [
+            "active",
+            "inactive",
+            "suspended",
+            "archived"
+        ].includes(
+            status
+        )
+            ? status
+            : "active";
+
+    },
+
+
     normalizePermissions(value){
 
         if(
             !Array.isArray(
                 value
-            )
+            ) &&
+            !(value instanceof Set)
         ){
+
             return [];
+
         }
 
 
-        return [
-            ...new Set(
+        const source =
+            Array.isArray(
                 value
-                    .map(
-                        permission =>
-                            String(
-                                permission ||
-                                ""
-                            ).trim()
-                    )
-                    .filter(Boolean)
             )
-        ];
+                ? value
+                : [
+                    ...value
+                ];
+
+
+        const seen =
+            new Set();
+
+
+        return source
+            .map(
+                permission =>
+                    String(
+                        permission ??
+                            ""
+                    )
+                        .trim()
+                        .slice(
+                            0,
+                            160
+                        )
+            )
+            .filter(
+                permission => {
+
+                    if(!permission){
+
+                        return false;
+
+                    }
+
+
+                    const key =
+                        permission.toLowerCase();
+
+
+                    if(
+                        seen.has(
+                            key
+                        )
+                    ){
+
+                        return false;
+
+                    }
+
+
+                    seen.add(
+                        key
+                    );
+
+
+                    return true;
+
+                }
+            );
 
     },
 
@@ -241,7 +453,9 @@ const Identity = {
                 value
             )
         ){
+
             return {};
+
         }
 
 
@@ -257,22 +471,33 @@ const Identity = {
         entity = null
     ){
 
+        const source =
+            identity &&
+            typeof identity ===
+                "object" &&
+            !Array.isArray(
+                identity
+            )
+                ? identity
+                : {};
+
+
         const now =
             Date.now();
 
 
-        /*
-         * Legacy compatibility:
-         * verified:true -> verificationStatus:"verified"
-         */
-
         let verificationStatus =
-            identity.verificationStatus;
+            source.verificationStatus;
 
+
+        /*
+         * Legacy compatibility only.
+         */
 
         if(
             !verificationStatus &&
-            identity.verified === true
+            source.verified ===
+                true
         ){
 
             verificationStatus =
@@ -287,173 +512,196 @@ const Identity = {
             );
 
 
-        const vaId =
-            String(
-                identity.vaId ||
-                identity.vaID ||
+        const entityId =
+            this.normalizeId(
+                source.entityId ||
+                entity?.id ||
+                source.id
+            );
+
+
+        const identityId =
+            this.normalizeId(
+                source.id ||
+                entityId
+            );
+
+
+        const existingVAID =
+            this.normalizeText(
+                source.vaId ||
+                source.vaID ||
                 (
                     String(
-                        identity.id ||
-                        ""
+                        source.id ||
+                            ""
                     ).startsWith(
                         "VA-"
                     )
-                        ? identity.id
+                        ? source.id
                         : ""
-                ) ||
-                ""
-            ).trim();
+                ),
+                200
+            );
+
+
+        const createdAt =
+            this.normalizeTimestamp(
+                source.createdAt ||
+                entity?.createdAt,
+                now
+            );
+
+
+        const updatedAt =
+            this.normalizeTimestamp(
+                source.updatedAt,
+                createdAt
+            );
+
+
+        const verifiedAt =
+            verificationStatus ===
+                "verified"
+                ? this.normalizeTimestamp(
+                    source.verifiedAt,
+                    updatedAt
+                )
+                : null;
+
+
+        const rejectedAt =
+            verificationStatus ===
+                "rejected"
+                ? this.normalizeTimestamp(
+                    source.rejectedAt,
+                    updatedAt
+                )
+                : null;
 
 
         return {
 
             id:
-                String(
-                    identity.id ||
-                    entity?.id ||
-                    ""
-                ).trim(),
+                identityId ||
+                entityId ||
+                "",
 
             entityId:
-                String(
-                    identity.entityId ||
-                    entity?.id ||
-                    identity.id ||
-                    ""
-                ).trim(),
+                entityId ||
+                identityId ||
+                "",
 
             type:
-                String(
-                    identity.type ||
+                this.normalizeText(
+                    source.type ||
                     entity?.type ||
-                    "entity"
-                ).trim(),
+                    "entity",
+                    120
+                ) ||
+                "entity",
 
             name:
-                String(
-                    identity.name ||
+                this.normalizeText(
+                    source.name ||
                     entity?.name ||
-                    "İsimsiz Varlık"
-                ).trim(),
+                    "İsimsiz Varlık",
+                    240
+                ) ||
+                "İsimsiz Varlık",
 
             vaId:
-                vaId ||
+                existingVAID ||
                 this.createIdentifier(
                     "VA"
                 ),
 
             aeId:
-                String(
-                    identity.aeId ||
-                    identity.aeID ||
-                    ""
-                ).trim(),
+                this.normalizeText(
+                    source.aeId ||
+                    source.aeID,
+                    200
+                ),
 
             eaId:
-                String(
-                    identity.eaId ||
-                    identity.eaID ||
-                    ""
-                ).trim(),
+                this.normalizeText(
+                    source.eaId ||
+                    source.eaID,
+                    200
+                ),
 
             alias:
-                String(
-                    identity.alias ||
-                    ""
-                ).trim(),
+                this.normalizeText(
+                    source.alias,
+                    240
+                ),
 
             visibility:
                 this.normalizeVisibility(
-                    identity.visibility
+                    source.visibility
                 ),
 
             verificationStatus,
 
             /*
-             * Legacy read compatibility.
-             * Authoritative field verificationStatus'tur.
+             * Compatibility mirror only.
+             * verificationStatus is authoritative.
              */
 
             verified:
                 verificationStatus ===
-                "verified",
+                    "verified",
 
             verificationRequestedAt:
-                Number(
-                    identity.verificationRequestedAt
-                ) ||
-                null,
+                this.normalizeTimestamp(
+                    source.verificationRequestedAt,
+                    null
+                ),
 
-            verifiedAt:
-                verificationStatus ===
-                    "verified"
-                    ? (
-                        Number(
-                            identity.verifiedAt
-                        ) ||
-                        now
-                    )
-                    : null,
+            verifiedAt,
 
-            rejectedAt:
-                verificationStatus ===
-                    "rejected"
-                    ? (
-                        Number(
-                            identity.rejectedAt
-                        ) ||
-                        null
-                    )
-                    : null,
+            rejectedAt,
 
             issuer:
-                String(
-                    identity.issuer ||
-                    ""
-                ).trim(),
+                this.normalizeText(
+                    source.issuer,
+                    240
+                ),
 
             verificationMethod:
-                String(
-                    identity.verificationMethod ||
-                    ""
-                ).trim(),
+                this.normalizeText(
+                    source.verificationMethod,
+                    240
+                ),
 
             verificationReference:
-                String(
-                    identity.verificationReference ||
-                    ""
-                ).trim(),
+                this.normalizeText(
+                    source.verificationReference,
+                    500
+                ),
 
             status:
-                String(
-                    identity.status ||
-                    "active"
-                )
-                    .trim()
-                    .toLowerCase(),
+                this.normalizeStatus(
+                    source.status
+                ),
 
             permissions:
                 this.normalizePermissions(
-                    identity.permissions
+                    source.permissions
                 ),
 
             metadata:
                 this.normalizeMetadata(
-                    identity.metadata
+                    source.metadata
                 ),
 
-            createdAt:
-                Number(
-                    identity.createdAt ||
-                    entity?.createdAt
-                ) ||
-                now,
+            createdAt,
 
             updatedAt:
-                Number(
-                    identity.updatedAt
-                ) ||
-                now
+                Math.max(
+                    createdAt,
+                    updatedAt
+                )
 
         };
 
@@ -466,8 +714,12 @@ const Identity = {
 
     boot(){
 
-        if(this.booted){
+        if(
+            this.booted
+        ){
+
             return true;
+
         }
 
 
@@ -477,41 +729,77 @@ const Identity = {
             );
 
 
-        if(
-            manager &&
-            typeof manager.all ===
-                "function"
-        ){
+        if(manager){
 
-            try{
-
-                const entities =
-                    manager.all({
-                        includeArchived:true
-                    }) ||
-                    [];
+            const methods = [
+                "all",
+                "getAll"
+            ];
 
 
-                entities.forEach(
-                    entity => {
+            for(
+                const method of methods
+            ){
 
-                        if(entity){
+                if(
+                    typeof manager[
+                        method
+                    ] !==
+                        "function"
+                ){
 
-                            this.create(
-                                entity
-                            );
+                    continue;
 
-                        }
+                }
+
+
+                try{
+
+                    const entities =
+                        manager[
+                            method
+                        ]({
+                            includeArchived:
+                                true
+                        }) ||
+                        [];
+
+
+                    if(
+                        Array.isArray(
+                            entities
+                        )
+                    ){
+
+                        entities.forEach(
+                            entity => {
+
+                                if(
+                                    entity?.id
+                                ){
+
+                                    this.create(
+                                        entity
+                                    );
+
+                                }
+
+                            }
+                        );
 
                     }
-                );
 
-            } catch(error){
 
-                console.warn(
-                    "Identity boot Entity taraması başarısız:",
-                    error
-                );
+                    break;
+
+                } catch(error){
+
+                    console.warn(
+                        "Identity boot Entity taraması başarısız:",
+                        error
+                    );
+
+                }
 
             }
 
@@ -549,16 +837,29 @@ const Identity = {
 
         if(
             !entity ||
+            typeof entity !==
+                "object" ||
             !entity.id
         ){
+
             return null;
+
         }
+
+
+        const existing =
+            this.identities[
+                entity.id
+            ] ||
+            null;
 
 
         const identity =
             this.normalizeIdentity(
-                entity.identity ||
-                {},
+                {
+                    ...(existing || {}),
+                    ...(entity.identity || {})
+                },
                 entity
             );
 
@@ -569,7 +870,8 @@ const Identity = {
 
         this.identities[
             entity.id
-        ] = identity;
+        ] =
+            identity;
 
 
         return identity;
@@ -584,17 +886,54 @@ const Identity = {
 
         if(
             !entity ||
+            typeof entity !==
+                "object" ||
             !entity.id
         ){
+
             return null;
+
         }
+
+
+        const existing =
+            this.identities[
+                entity.id
+            ] ||
+            {};
 
 
         const identity =
             this.normalizeIdentity(
-                data,
+                {
+                    ...existing,
+                    ...(
+                        data &&
+                        typeof data ===
+                            "object" &&
+                        !Array.isArray(
+                            data
+                        )
+                            ? data
+                            : {}
+                    )
+                },
                 entity
             );
+
+
+        /*
+         * VA ID remains stable once assigned.
+         */
+
+        if(
+            existing.vaId
+        ){
+
+            identity.vaId =
+                existing.vaId;
+
+        }
 
 
         entity.identity =
@@ -603,7 +942,8 @@ const Identity = {
 
         this.identities[
             entity.id
-        ] = identity;
+        ] =
+            identity;
 
 
         return identity;
@@ -612,13 +952,97 @@ const Identity = {
 
 
     /* =====================================================
-       RESOLVE
+       RESOLVE ENTITY
+    ===================================================== */
+
+    resolveEntity(entityId){
+
+        const id =
+            this.normalizeId(
+                entityId
+            );
+
+
+        if(!id){
+
+            return null;
+
+        }
+
+
+        const manager =
+            this.getService(
+                "entityManager"
+            );
+
+
+        if(manager){
+
+            const methods = [
+                "get",
+                "find",
+                "getById"
+            ];
+
+
+            for(
+                const method of methods
+            ){
+
+                if(
+                    typeof manager[
+                        method
+                    ] !==
+                        "function"
+                ){
+
+                    continue;
+
+                }
+
+
+                try{
+
+                    const entity =
+                        manager[
+                            method
+                        ](
+                            id
+                        );
+
+
+                    if(entity){
+
+                        return entity;
+
+                    }
+
+                } catch(error){
+
+                    /* next resolver */
+
+                }
+
+            }
+
+        }
+
+
+        return null;
+
+    },
+
+
+    /* =====================================================
+       GET
     ===================================================== */
 
     get(entityOrId){
 
         if(!entityOrId){
+
             return null;
+
         }
 
 
@@ -631,22 +1055,46 @@ const Identity = {
                 entityOrId.identity
             ){
 
+                const existing =
+                    entityOrId.id
+                        ? this.identities[
+                            entityOrId.id
+                        ]
+                        : null;
+
+
                 const identity =
                     this.normalizeIdentity(
-                        entityOrId.identity,
+                        {
+                            ...(existing || {}),
+                            ...entityOrId.identity
+                        },
                         entityOrId
                     );
+
+
+                if(
+                    existing?.vaId
+                ){
+
+                    identity.vaId =
+                        existing.vaId;
+
+                }
 
 
                 entityOrId.identity =
                     identity;
 
 
-                if(entityOrId.id){
+                if(
+                    entityOrId.id
+                ){
 
                     this.identities[
                         entityOrId.id
-                    ] = identity;
+                    ] =
+                        identity;
 
                 }
 
@@ -656,7 +1104,9 @@ const Identity = {
             }
 
 
-            if(entityOrId.id){
+            if(
+                entityOrId.id
+            ){
 
                 return this.create(
                     entityOrId
@@ -671,18 +1121,22 @@ const Identity = {
 
 
         const id =
-            String(
+            this.normalizeId(
                 entityOrId
-            ).trim();
+            );
 
 
         if(!id){
+
             return null;
+
         }
 
 
         if(
-            this.identities[id]
+            this.identities[
+                id
+            ]
         ){
 
             return this.identities[
@@ -692,31 +1146,18 @@ const Identity = {
         }
 
 
-        const manager =
-            this.getService(
-                "entityManager"
+        const entity =
+            this.resolveEntity(
+                id
             );
 
 
-        try{
+        if(entity){
 
-            const entity =
-                manager?.get?.(
-                    id
-                );
+            return this.create(
+                entity
+            );
 
-
-            if(entity){
-
-                return this.create(
-                    entity
-                );
-
-            }
-
-        } catch(error){
-
-            /* fallback */
         }
 
 
@@ -728,16 +1169,17 @@ const Identity = {
     findByVAID(vaId){
 
         const id =
-            String(
-                vaId ||
-                ""
+            this.normalizeText(
+                vaId,
+                200
             )
-                .trim()
                 .toUpperCase();
 
 
         if(!id){
+
             return null;
+
         }
 
 
@@ -748,7 +1190,7 @@ const Identity = {
                 identity =>
                     String(
                         identity?.vaId ||
-                        ""
+                            ""
                     )
                         .toUpperCase() ===
                     id
@@ -783,13 +1225,22 @@ const Identity = {
                 changes
             )
         ){
+
             return null;
+
         }
 
 
         /*
-         * vaId / verificationStatus / verified fields
-         * generic update üzerinden değiştirilemez.
+         * Protected fields cannot be changed through
+         * generic update:
+         *
+         * vaId
+         * verificationStatus
+         * verified
+         * verifiedAt
+         * issuer
+         * verificationReference
          */
 
         if(
@@ -798,10 +1249,10 @@ const Identity = {
         ){
 
             identity.alias =
-                String(
-                    changes.alias ||
-                    ""
-                ).trim();
+                this.normalizeText(
+                    changes.alias,
+                    240
+                );
 
         }
 
@@ -825,10 +1276,10 @@ const Identity = {
         ){
 
             identity.aeId =
-                String(
-                    changes.aeId ||
-                    ""
-                ).trim();
+                this.normalizeText(
+                    changes.aeId,
+                    200
+                );
 
         }
 
@@ -839,10 +1290,10 @@ const Identity = {
         ){
 
             identity.eaId =
-                String(
-                    changes.eaId ||
-                    ""
-                ).trim();
+                this.normalizeText(
+                    changes.eaId,
+                    200
+                );
 
         }
 
@@ -853,12 +1304,9 @@ const Identity = {
         ){
 
             identity.status =
-                String(
-                    changes.status ||
-                    "active"
-                )
-                    .trim()
-                    .toLowerCase();
+                this.normalizeStatus(
+                    changes.status
+                );
 
         }
 
@@ -873,8 +1321,11 @@ const Identity = {
         ){
 
             identity.metadata = {
+
                 ...identity.metadata,
+
                 ...changes.metadata
+
             };
 
         }
@@ -893,8 +1344,10 @@ const Identity = {
             "identity:updated",
             {
                 identity,
+
                 entityId:
                     identity.entityId,
+
                 time:
                     Date.now()
             }
@@ -922,55 +1375,80 @@ const Identity = {
 
 
         if(!identity){
+
             return null;
+
         }
 
 
         if(
             identity.verificationStatus ===
-                "verified"
-        ){
-            return identity;
-        }
-
-
-        if(
+                "verified" ||
             identity.verificationStatus ===
                 "pending"
         ){
+
             return identity;
+
         }
+
+
+        const safeContext =
+            context &&
+            typeof context ===
+                "object" &&
+            !Array.isArray(
+                context
+            )
+                ? context
+                : {};
+
+
+        const requestedAt =
+            Date.now();
 
 
         identity.verificationStatus =
             "pending";
 
+
         identity.verified =
             false;
 
+
         identity.verificationRequestedAt =
-            Date.now();
+            requestedAt;
+
+
+        identity.verifiedAt =
+            null;
+
 
         identity.rejectedAt =
             null;
 
+
         identity.updatedAt =
-            Date.now();
+            requestedAt;
 
 
         identity.metadata = {
+
             ...identity.metadata,
 
             verificationRequest:{
+
                 source:
-                    String(
-                        context.source ||
-                        "identity"
+                    this.normalizeText(
+                        safeContext.source ||
+                        "identity",
+                        240
                     ),
 
-                requestedAt:
-                    identity.verificationRequestedAt
+                requestedAt
+
             }
+
         };
 
 
@@ -983,10 +1461,12 @@ const Identity = {
             "identity:verification-requested",
             {
                 identity,
+
                 entityId:
                     identity.entityId,
+
                 time:
-                    Date.now()
+                    requestedAt
             }
         );
 
@@ -997,12 +1477,10 @@ const Identity = {
 
 
     /* =====================================================
-       VERIFIER
-       Production authority boundary.
+       VERIFICATION AUTHORITY BOUNDARY
 
-       Direct frontend call:
-       Identity.verify(identity)
-       NO LONGER self-verifies.
+       This method accepts a verifier RESULT.
+       It does not itself prove identity authenticity.
     ===================================================== */
 
     verify(
@@ -1017,16 +1495,11 @@ const Identity = {
 
 
         if(!identity){
+
             return null;
+
         }
 
-
-        /*
-         * Verification must contain a result produced by
-         * Identity Verifier / backend adapter.
-         *
-         * Frontend boolean alone is deliberately rejected.
-         */
 
         if(
             !verification ||
@@ -1034,22 +1507,45 @@ const Identity = {
                 "object" ||
             Array.isArray(
                 verification
-            ) ||
-            verification.valid !==
-                true ||
-            !verification.issuer ||
-            !verification.reference
+            )
         ){
 
-            console.warn(
-                "Identity doğrulanmadı: güvenilir verifier sonucu gerekli."
+            return null;
+
+        }
+
+
+        const issuer =
+            this.normalizeText(
+                verification.issuer,
+                240
             );
 
 
-            /*
-             * Legacy callers do not gain verification.
-             * If appropriate, create pending state instead.
-             */
+        const reference =
+            this.normalizeText(
+                verification.reference,
+                500
+            );
+
+
+        /*
+         * A plain frontend call cannot self-verify.
+         * A trusted verifier/backend adapter must eventually
+         * produce this result contract.
+         */
+
+        if(
+            verification.valid !==
+                true ||
+            !issuer ||
+            !reference
+        ){
+
+            console.warn(
+                "Identity doğrulanmadı: geçerli verifier sonucu gerekli."
+            );
+
 
             if(
                 identity.verificationStatus ===
@@ -1060,7 +1556,7 @@ const Identity = {
                     identity,
                     {
                         source:
-                            "legacy-verify-call"
+                            "verification-attempt"
                     }
                 );
 
@@ -1072,43 +1568,64 @@ const Identity = {
         }
 
 
-        /*
-         * applicationVerifier gibi gerçek cryptographic /
-         * backend verification daha sonra burada enforce
-         * edilecek. Şimdilik explicit verifier-result
-         * contract kullanıyoruz.
-         */
+        const now =
+            Date.now();
+
 
         identity.verificationStatus =
             "verified";
 
+
         identity.verified =
             true;
 
+
         identity.verifiedAt =
-            Date.now();
+            now;
+
 
         identity.rejectedAt =
             null;
 
+
         identity.issuer =
-            String(
-                verification.issuer
-            ).trim();
+            issuer;
+
 
         identity.verificationMethod =
-            String(
+            this.normalizeText(
                 verification.method ||
-                "external-verifier"
-            ).trim();
+                "external-verifier",
+                240
+            ) ||
+            "external-verifier";
+
 
         identity.verificationReference =
-            String(
-                verification.reference
-            ).trim();
+            reference;
+
 
         identity.updatedAt =
-            Date.now();
+            now;
+
+
+        identity.metadata = {
+
+            ...identity.metadata,
+
+            verificationResult:{
+                issuer,
+
+                reference,
+
+                method:
+                    identity.verificationMethod,
+
+                verifiedAt:
+                    now
+            }
+
+        };
 
 
         this.syncEntity(
@@ -1118,7 +1635,19 @@ const Identity = {
 
         this.emit(
             "identity:verified",
-            identity
+            {
+                identity,
+
+                entityId:
+                    identity.entityId,
+
+                issuer,
+
+                reference,
+
+                time:
+                    now
+            }
         );
 
 
@@ -1139,7 +1668,9 @@ const Identity = {
 
 
         if(!identity){
+
             return null;
+
         }
 
 
@@ -1147,7 +1678,9 @@ const Identity = {
             !result ||
             typeof result !==
                 "object" ||
-            !result.issuer
+            Array.isArray(
+                result
+            )
         ){
 
             return null;
@@ -1155,31 +1688,86 @@ const Identity = {
         }
 
 
+        const issuer =
+            this.normalizeText(
+                result.issuer,
+                240
+            );
+
+
+        if(!issuer){
+
+            return null;
+
+        }
+
+
+        const now =
+            Date.now();
+
+
         identity.verificationStatus =
             "rejected";
+
 
         identity.verified =
             false;
 
+
         identity.verifiedAt =
             null;
 
+
         identity.rejectedAt =
-            Date.now();
+            now;
+
 
         identity.issuer =
-            String(
-                result.issuer
-            ).trim();
+            issuer;
+
+
+        identity.verificationMethod =
+            this.normalizeText(
+                result.method ||
+                identity.verificationMethod,
+                240
+            );
+
 
         identity.verificationReference =
-            String(
-                result.reference ||
-                ""
-            ).trim();
+            this.normalizeText(
+                result.reference,
+                500
+            );
+
 
         identity.updatedAt =
-            Date.now();
+            now;
+
+
+        identity.metadata = {
+
+            ...identity.metadata,
+
+            verificationRejection:{
+
+                issuer,
+
+                reference:
+                    identity.verificationReference,
+
+                reason:
+                    this.normalizeText(
+                        result.reason,
+                        1000
+                    ) ||
+                    null,
+
+                rejectedAt:
+                    now
+            }
+
+        };
 
 
         this.syncEntity(
@@ -1191,13 +1779,125 @@ const Identity = {
             "identity:verification-rejected",
             {
                 identity,
+
                 entityId:
                     identity.entityId,
+
                 reason:
                     result.reason ||
                     null,
+
+                issuer,
+
                 time:
-                    Date.now()
+                    now
+            }
+        );
+
+
+        return identity;
+
+    },
+
+
+    resetVerification(
+        entityOrIdentity,
+        context = {}
+    ){
+
+        const identity =
+            this.get(
+                entityOrIdentity
+            );
+
+
+        if(!identity){
+
+            return null;
+
+        }
+
+
+        const safeContext =
+            context &&
+            typeof context ===
+                "object" &&
+            !Array.isArray(
+                context
+            )
+                ? context
+                : {};
+
+
+        /*
+         * Reset is deliberately gated.
+         */
+
+        if(
+            safeContext.authorized !==
+                true
+        ){
+
+            return null;
+
+        }
+
+
+        const now =
+            Date.now();
+
+
+        identity.verificationStatus =
+            "unverified";
+
+
+        identity.verified =
+            false;
+
+
+        identity.verificationRequestedAt =
+            null;
+
+
+        identity.verifiedAt =
+            null;
+
+
+        identity.rejectedAt =
+            null;
+
+
+        identity.issuer =
+            "";
+
+
+        identity.verificationMethod =
+            "";
+
+
+        identity.verificationReference =
+            "";
+
+
+        identity.updatedAt =
+            now;
+
+
+        this.syncEntity(
+            identity
+        );
+
+
+        this.emit(
+            "identity:verification-reset",
+            {
+                identity,
+
+                entityId:
+                    identity.entityId,
+
+                time:
+                    now
             }
         );
 
@@ -1217,7 +1917,7 @@ const Identity = {
             this.get(
                 entityOrIdentity
             )?.verificationStatus ===
-            "verified"
+                "verified"
         );
 
     },
@@ -1229,7 +1929,7 @@ const Identity = {
             this.get(
                 entityOrIdentity
             )?.verificationStatus ===
-            "pending"
+                "pending"
         );
 
     },
@@ -1251,59 +1951,64 @@ const Identity = {
 
 
         const normalized =
-            String(
-                permission ||
-                ""
-            ).trim();
+            this.normalizeText(
+                permission,
+                160
+            );
 
 
         if(
             !identity ||
             !normalized
         ){
+
             return false;
+
         }
 
 
         if(
-            !identity.permissions.includes(
+            identity.permissions.includes(
                 normalized
             )
         ){
 
-            identity.permissions.push(
-                normalized
-            );
-
-            identity.permissions =
-                this.normalizePermissions(
-                    identity.permissions
-                );
-
-
-            identity.updatedAt =
-                Date.now();
-
-
-            this.syncEntity(
-                identity
-            );
-
-
-            this.emit(
-                "identity:permission-granted",
-                {
-                    identity,
-                    permission:
-                        normalized,
-                    entityId:
-                        identity.entityId,
-                    time:
-                        Date.now()
-                }
-            );
+            return true;
 
         }
+
+
+        identity.permissions =
+            this.normalizePermissions([
+                ...identity.permissions,
+                normalized
+            ]);
+
+
+        identity.updatedAt =
+            Date.now();
+
+
+        this.syncEntity(
+            identity
+        );
+
+
+        this.emit(
+            "identity:permission-granted",
+            {
+                identity,
+
+                permission:
+                    normalized,
+
+                entityId:
+                    identity.entityId,
+
+                time:
+                    Date.now()
+            }
+        );
 
 
         return true;
@@ -1323,17 +2028,19 @@ const Identity = {
 
 
         const normalized =
-            String(
-                permission ||
-                ""
-            ).trim();
+            this.normalizeText(
+                permission,
+                160
+            );
 
 
         if(
             !identity ||
             !normalized
         ){
+
             return false;
+
         }
 
 
@@ -1345,15 +2052,17 @@ const Identity = {
             identity.permissions.filter(
                 item =>
                     item !==
-                    normalized
+                        normalized
             );
 
 
         if(
             identity.permissions.length ===
-            before
+                before
         ){
+
             return false;
+
         }
 
 
@@ -1370,10 +2079,13 @@ const Identity = {
             "identity:permission-revoked",
             {
                 identity,
+
                 permission:
                     normalized,
+
                 entityId:
                     identity.entityId,
+
                 time:
                     Date.now()
             }
@@ -1397,17 +2109,19 @@ const Identity = {
 
 
         const normalized =
-            String(
-                permission ||
-                ""
-            ).trim();
+            this.normalizeText(
+                permission,
+                160
+            );
 
 
         if(
             !identity ||
             !normalized
         ){
+
             return false;
+
         }
 
 
@@ -1428,34 +2142,16 @@ const Identity = {
             !identity ||
             !identity.entityId
         ){
+
             return false;
+
         }
 
 
-        const manager =
-            this.getService(
-                "entityManager"
+        const entity =
+            this.resolveEntity(
+                identity.entityId
             );
-
-
-        let entity =
-            null;
-
-
-        try{
-
-            entity =
-                manager?.get?.(
-                    identity.entityId
-                ) ||
-                null;
-
-        } catch(error){
-
-            entity =
-                null;
-
-        }
 
 
         if(entity){
@@ -1469,9 +2165,20 @@ const Identity = {
                     "function"
             ){
 
-                entity.touch();
+                try{
 
-            } else {
+                    entity.touch();
+
+                } catch(error){
+
+                    entity.updatedAt =
+                        Date.now();
+
+                }
+
+            }
+
+            else {
 
                 entity.updatedAt =
                     Date.now();
@@ -1483,81 +2190,180 @@ const Identity = {
 
         this.identities[
             identity.entityId
-        ] = identity;
+        ] =
+            identity;
 
 
-        const engine =
-            (
-                typeof VAERO !==
-                    "undefined"
-                    ? VAERO.engine
-                    : null
-            ) ||
-            window.Engine ||
-            null;
+        /*
+         * Current world compatibility sync.
+         */
+
+        try{
+
+            const engine =
+                (
+                    typeof VAERO !==
+                        "undefined"
+                        ? VAERO.engine
+                        : null
+                ) ||
+                (
+                    typeof window !==
+                        "undefined"
+                        ? window.Engine
+                        : null
+                ) ||
+                null;
 
 
-        const world =
-            engine?.currentWorld;
+            const world =
+                engine?.currentWorld;
 
 
-        if(
-            world &&
-            Array.isArray(
-                world.entities
-            )
-        ){
+            if(
+                world &&
+                Array.isArray(
+                    world.entities
+                )
+            ){
 
-            const index =
-                world.entities.findIndex(
-                    item =>
-                        item?.id ===
-                        identity.entityId
-                );
+                const index =
+                    world.entities.findIndex(
+                        item =>
+                            item?.id ===
+                                identity.entityId
+                    );
 
 
-            if(index >= 0){
+                if(
+                    index >=
+                        0
+                ){
 
-                if(entity){
+                    if(entity){
 
-                    world.entities[
-                        index
-                    ] = entity;
-
-                } else {
-
-                    world.entities[
-                        index
-                    ] = {
-                        ...world.entities[
+                        world.entities[
                             index
-                        ],
+                        ] =
+                            entity;
 
-                        identity:{
-                            ...identity
-                        },
+                    }
 
-                        updatedAt:
-                            Date.now()
-                    };
+                    else {
+
+                        world.entities[
+                            index
+                        ] = {
+
+                            ...world.entities[
+                                index
+                            ],
+
+                            identity:{
+                                ...identity
+                            },
+
+                            updatedAt:
+                                Date.now()
+
+                        };
+
+                    }
 
                 }
 
             }
+
+        } catch(error){
+
+            /* compatibility only */
 
         }
 
 
         try{
 
-            this.getService(
-                "world"
-            )?.save?.();
+            const worldService =
+                this.getService(
+                    "world"
+                );
+
+
+            if(
+                typeof worldService?.save ===
+                    "function"
+            ){
+
+                worldService.save();
+
+            }
 
         } catch(error){
 
-            /* persistence layer may not be ready */
+            /* persistence may not be ready */
+
         }
+
+
+        return true;
+
+    },
+
+
+    /* =====================================================
+       REMOVE CACHE
+    ===================================================== */
+
+    remove(entityOrId){
+
+        const identity =
+            this.get(
+                entityOrId
+            );
+
+
+        if(
+            !identity ||
+            !identity.entityId
+        ){
+
+            return false;
+
+        }
+
+
+        const entityId =
+            identity.entityId;
+
+
+        if(
+            !Object.prototype.hasOwnProperty.call(
+                this.identities,
+                entityId
+            )
+        ){
+
+            return false;
+
+        }
+
+
+        delete this.identities[
+            entityId
+        ];
+
+
+        this.emit(
+            "identity:removed",
+            {
+                identity,
+
+                entityId,
+
+                time:
+                    Date.now()
+            }
+        );
 
 
         return true;
@@ -1589,7 +2395,25 @@ const Identity = {
                 identities.filter(
                     identity =>
                         identity.visibility ===
-                        visibility
+                            visibility
+                );
+
+        }
+
+
+        if(options.status){
+
+            const status =
+                this.normalizeStatus(
+                    options.status
+                );
+
+
+            identities =
+                identities.filter(
+                    identity =>
+                        identity.status ===
+                            status
                 );
 
         }
@@ -1604,7 +2428,7 @@ const Identity = {
                 identities.filter(
                     identity =>
                         identity.verificationStatus ===
-                        "verified"
+                            "verified"
                 );
 
         }
@@ -1619,7 +2443,22 @@ const Identity = {
                 identities.filter(
                     identity =>
                         identity.verificationStatus ===
-                        "pending"
+                            "pending"
+                );
+
+        }
+
+
+        if(
+            options.rejected ===
+                true
+        ){
+
+            identities =
+                identities.filter(
+                    identity =>
+                        identity.verificationStatus ===
+                            "rejected"
                 );
 
         }
@@ -1627,7 +2466,18 @@ const Identity = {
 
         return [
             ...identities
-        ];
+        ].sort(
+            (
+                a,
+                b
+            ) =>
+                Number(
+                    b.updatedAt
+                ) -
+                Number(
+                    a.updatedAt
+                )
+        );
 
     },
 
@@ -1636,8 +2486,8 @@ const Identity = {
 
         const text =
             String(
-                query ||
-                ""
+                query ??
+                    ""
             )
                 .trim()
                 .toLocaleLowerCase(
@@ -1671,11 +2521,14 @@ const Identity = {
 
                         identity.eaId,
 
+                        identity.status,
+
                         identity.verificationStatus,
 
                         ...(identity.permissions || [])
 
                     ]
+                        .filter(Boolean)
                         .join(" ")
                         .toLocaleLowerCase(
                             "tr-TR"
@@ -1710,32 +2563,60 @@ const Identity = {
             total:
                 identities.length,
 
+            active:
+                identities.filter(
+                    identity =>
+                        identity.status ===
+                            "active"
+                ).length,
+
             verified:
                 identities.filter(
                     identity =>
                         identity.verificationStatus ===
-                        "verified"
+                            "verified"
                 ).length,
 
             pending:
                 identities.filter(
                     identity =>
                         identity.verificationStatus ===
-                        "pending"
+                            "pending"
                 ).length,
 
             unverified:
                 identities.filter(
                     identity =>
                         identity.verificationStatus ===
-                        "unverified"
+                            "unverified"
                 ).length,
 
             rejected:
                 identities.filter(
                     identity =>
                         identity.verificationStatus ===
-                        "rejected"
+                            "rejected"
+                ).length,
+
+            private:
+                identities.filter(
+                    identity =>
+                        identity.visibility ===
+                            "private"
+                ).length,
+
+            connections:
+                identities.filter(
+                    identity =>
+                        identity.visibility ===
+                            "connections"
+                ).length,
+
+            engineVisible:
+                identities.filter(
+                    identity =>
+                        identity.visibility ===
+                            "engine"
                 ).length
 
         };
@@ -1745,11 +2626,42 @@ const Identity = {
 };
 
 
-VAERO.register(
-    "identity",
-    Identity
-);
+/* =========================================================
+   REGISTER
+========================================================= */
+
+try{
+
+    if(
+        typeof VAERO !==
+            "undefined" &&
+        typeof VAERO.register ===
+            "function"
+    ){
+
+        VAERO.register(
+            "identity",
+            Identity
+        );
+
+    }
+
+} catch(error){
+
+    console.error(
+        "Identity register edilemedi:",
+        error
+    );
+
+}
 
 
-window.Identity =
-    Identity;
+if(
+    typeof window !==
+        "undefined"
+){
+
+    window.Identity =
+        Identity;
+
+}
