@@ -5,6 +5,10 @@
 
 const BrainMode = {
 
+    version:
+        "3.0.0",
+
+
     /* =====================================================
        MODES
     ===================================================== */
@@ -44,6 +48,9 @@ const BrainMode = {
     storageKey:
         "vaero:brain:mode:v2",
 
+    subscriptions:
+        [],
+
 
     /* =====================================================
        SERVICE ACCESS
@@ -51,19 +58,38 @@ const BrainMode = {
 
     getService(name){
 
+        const serviceName =
+            String(
+                name ??
+                ""
+            ).trim();
+
+
+        if(!serviceName){
+
+            return null;
+
+        }
+
+
         try{
 
             if(
-                typeof VAERO === "undefined" ||
+                typeof VAERO ===
+                    "undefined" ||
                 typeof VAERO.get !==
                     "function"
             ){
+
                 return null;
+
             }
 
 
             return (
-                VAERO.get(name) ||
+                VAERO.get(
+                    serviceName
+                ) ||
                 null
             );
 
@@ -84,7 +110,8 @@ const BrainMode = {
 
         const value =
             String(
-                mode ?? ""
+                mode ??
+                    ""
             )
                 .trim()
                 .toLowerCase();
@@ -135,6 +162,91 @@ const BrainMode = {
         )
             ? normalized
             : null;
+
+    },
+
+
+    normalizeSource(
+        value,
+        fallback = "system"
+    ){
+
+        const source =
+            String(
+                value ??
+                    fallback
+            )
+                .trim()
+                .toLowerCase()
+                .slice(
+                    0,
+                    120
+                );
+
+
+        return (
+            source ||
+            fallback
+        );
+
+    },
+
+
+    normalizeSeverity(value){
+
+        const severity =
+            String(
+                value ??
+                    ""
+            )
+                .trim()
+                .toLowerCase();
+
+
+        const aliases = {
+
+            info:
+                "info",
+
+            informational:
+                "info",
+
+            notice:
+                "info",
+
+            low:
+                "info",
+
+            warn:
+                "warning",
+
+            warning:
+                "warning",
+
+            medium:
+                "warning",
+
+            high:
+                "warning",
+
+            critical:
+                "critical",
+
+            fatal:
+                "critical",
+
+            emergency:
+                "critical"
+
+        };
+
+
+        return (
+            aliases[
+                severity
+            ] ||
+            null
+        );
 
     },
 
@@ -236,13 +348,17 @@ const BrainMode = {
                     true,
 
                 /*
-                 * ACTIVE bile keyfi interrupt yetkisi almaz.
-                 * Yalnız önemli sistem olayları için
-                 * interrupt düşünülebilir.
+                 * Generic interruption is intentionally false.
+                 *
+                 * ACTIVE gives Brain more proactivity,
+                 * not unrestricted interruption authority.
+                 *
+                 * Critical/warning interruption is resolved
+                 * by allows() using severity.
                  */
 
                 canInterrupt:
-                    true,
+                    false,
 
                 canSurfaceWarnings:
                     true,
@@ -276,16 +392,31 @@ const BrainMode = {
         payload = {}
     ){
 
+        const name =
+            String(
+                eventName ??
+                    ""
+            ).trim();
+
+
+        if(!name){
+
+            return false;
+
+        }
+
+
         try{
 
             if(
-                typeof VAERO !== "undefined" &&
+                typeof VAERO !==
+                    "undefined" &&
                 typeof VAERO.emit ===
                     "function"
             ){
 
                 VAERO.emit(
-                    eventName,
+                    name,
                     payload
                 );
 
@@ -294,6 +425,17 @@ const BrainMode = {
 
             }
 
+        } catch(error){
+
+            console.warn(
+                `BrainMode event gönderilemedi: ${name}`,
+                error
+            );
+
+        }
+
+
+        try{
 
             const events =
                 this.getService(
@@ -308,7 +450,7 @@ const BrainMode = {
             ){
 
                 events.emit(
-                    eventName,
+                    name,
                     payload
                 );
 
@@ -320,7 +462,7 @@ const BrainMode = {
         } catch(error){
 
             console.warn(
-                `BrainMode event gönderilemedi: ${eventName}`,
+                `BrainMode event fallback gönderilemedi: ${name}`,
                 error
             );
 
@@ -344,7 +486,9 @@ const BrainMode = {
                 typeof localStorage ===
                     "undefined"
             ){
+
                 return false;
+
             }
 
 
@@ -352,8 +496,11 @@ const BrainMode = {
                 this.storageKey,
                 JSON.stringify({
 
+                    version:
+                        this.version,
+
                     mode:
-                        this.mode,
+                        this.get(),
 
                     changedAt:
                         this.changedAt,
@@ -384,7 +531,9 @@ const BrainMode = {
                 typeof localStorage ===
                     "undefined"
             ){
+
                 return false;
+
             }
 
 
@@ -395,7 +544,9 @@ const BrainMode = {
 
 
             if(!raw){
+
                 return false;
+
             }
 
 
@@ -405,14 +556,27 @@ const BrainMode = {
                 );
 
 
+            if(
+                !parsed ||
+                typeof parsed !==
+                    "object"
+            ){
+
+                return false;
+
+            }
+
+
             const mode =
                 this.normalize(
-                    parsed?.mode
+                    parsed.mode
                 );
 
 
             if(!mode){
+
                 return false;
+
             }
 
 
@@ -420,16 +584,25 @@ const BrainMode = {
                 mode;
 
 
-            this.changedAt =
+            const changedAt =
                 Number(
-                    parsed?.changedAt
-                ) ||
-                Date.now();
+                    parsed.changedAt
+                );
+
+
+            this.changedAt =
+                Number.isFinite(
+                    changedAt
+                ) &&
+                changedAt >
+                    0
+                    ? changedAt
+                    : Date.now();
 
 
             this.changedBy =
-                String(
-                    parsed?.changedBy ||
+                this.normalizeSource(
+                    parsed.changedBy,
                     "storage"
                 );
 
@@ -473,21 +646,27 @@ const BrainMode = {
 
 
         const source =
-            String(
+            this.normalizeSource(
                 options.source ||
                 options.changedBy ||
+                "user",
                 "user"
             );
 
 
         const previous =
-            this.mode;
+            this.get();
 
 
         if(
             previous ===
-            nextMode
+                nextMode
         ){
+
+            /*
+             * Same mode does not rewrite changedAt.
+             * Behaviour duration therefore remains truthful.
+             */
 
             return this.snapshot();
 
@@ -581,7 +760,9 @@ const BrainMode = {
 
 
         if(!normalized){
+
             return false;
+
         }
 
 
@@ -626,72 +807,96 @@ const BrainMode = {
 
     canSpeak(){
 
-        return this
-            .getCapabilities()
-            .canSpeak;
+        return (
+            this
+                .getCapabilities()
+                .canSpeak ===
+            true
+        );
 
     },
 
 
     canSuggest(){
 
-        return this
-            .getCapabilities()
-            .canSuggest;
+        return (
+            this
+                .getCapabilities()
+                .canSuggest ===
+            true
+        );
 
     },
 
 
     canInitiate(){
 
-        return this
-            .getCapabilities()
-            .canInitiate;
+        return (
+            this
+                .getCapabilities()
+                .canInitiate ===
+            true
+        );
 
     },
 
 
     canReadContext(){
 
-        return this
-            .getCapabilities()
-            .canReadContext;
+        return (
+            this
+                .getCapabilities()
+                .canReadContext ===
+            true
+        );
 
     },
 
 
     canObserve(){
 
-        return this
-            .getCapabilities()
-            .canObserve;
+        return (
+            this
+                .getCapabilities()
+                .canObserve ===
+            true
+        );
 
     },
 
 
-    canInterrupt(){
+    canInterrupt(
+        context = {}
+    ){
 
-        return this
-            .getCapabilities()
-            .canInterrupt;
+        return this.allows(
+            "interrupt",
+            context
+        );
 
     },
 
 
     canSurfaceWarnings(){
 
-        return this
-            .getCapabilities()
-            .canSurfaceWarnings;
+        return (
+            this
+                .getCapabilities()
+                .canSurfaceWarnings ===
+            true
+        );
 
     },
 
 
     canSurfaceCritical(){
 
-        return this
-            .getCapabilities()
-            .canSurfaceCritical;
+        return (
+            this
+                .getCapabilities()
+                .canSurfaceCritical ===
+            true
+        );
 
     },
 
@@ -708,7 +913,7 @@ const BrainMode = {
         const key =
             String(
                 behaviour ||
-                ""
+                    ""
             )
                 .trim()
                 .toLowerCase();
@@ -716,6 +921,110 @@ const BrainMode = {
 
         const capabilities =
             this.getCapabilities();
+
+
+        const severity =
+            this.normalizeSeverity(
+                context?.severity
+            );
+
+
+        /*
+         * Critical system information is never fully hidden
+         * by conversation proactivity mode.
+         */
+
+        if(
+            key ===
+                "critical"
+        ){
+
+            return (
+                capabilities
+                    .canSurfaceCritical ===
+                true
+            );
+
+        }
+
+
+        /*
+         * Warnings can be surfaced in every mode because
+         * they represent system/user protection information.
+         */
+
+        if(
+            key ===
+                "warning"
+        ){
+
+            if(
+                severity ===
+                    "critical"
+            ){
+
+                return (
+                    capabilities
+                        .canSurfaceCritical ===
+                    true
+                );
+
+            }
+
+
+            return (
+                capabilities
+                    .canSurfaceWarnings ===
+                true
+            );
+
+        }
+
+
+        /*
+         * Interruption is much stricter than speaking.
+         *
+         * Normal suggestions never gain interruption rights.
+         * Only warning/critical context may interrupt.
+         */
+
+        if(
+            key ===
+                "interrupt"
+        ){
+
+            if(
+                severity ===
+                    "critical"
+            ){
+
+                return (
+                    capabilities
+                        .canSurfaceCritical ===
+                    true
+                );
+
+            }
+
+
+            if(
+                severity ===
+                    "warning"
+            ){
+
+                return (
+                    capabilities
+                        .canSurfaceWarnings ===
+                    true &&
+                    this.isActive()
+                );
+
+            }
+
+
+            return false;
+
+        }
 
 
         const map = {
@@ -733,49 +1042,9 @@ const BrainMode = {
                 capabilities.canObserve,
 
             context:
-                capabilities.canReadContext,
-
-            interrupt:
-                capabilities.canInterrupt,
-
-            warning:
-                capabilities.canSurfaceWarnings,
-
-            critical:
-                capabilities.canSurfaceCritical
+                capabilities.canReadContext
 
         };
-
-
-        /*
-         * Güvenlik / kritik sistem uyarıları Silent modda da
-         * tamamen bastırılmaz.
-         */
-
-        if(
-            key === "critical"
-        ){
-
-            return (
-                capabilities
-                    .canSurfaceCritical
-            );
-
-        }
-
-
-        if(
-            key === "warning" &&
-            context.severity ===
-                "critical"
-        ){
-
-            return (
-                capabilities
-                    .canSurfaceCritical
-            );
-
-        }
 
 
         return (
@@ -800,7 +1069,9 @@ const BrainMode = {
             typeof discoveryResult !==
                 "object"
         ){
+
             return false;
+
         }
 
 
@@ -823,13 +1094,15 @@ const BrainMode = {
 
 
         if(!normalized){
+
             return false;
+
         }
 
 
         /*
-         * Kullanıcı modu daha önce manuel değiştirdiyse
-         * Discovery sessizce üzerine yazmaz.
+         * Once the user has manually selected a mode,
+         * Discovery does not silently overwrite it.
          */
 
         if(
@@ -847,14 +1120,12 @@ const BrainMode = {
         return this.set(
             normalized,
             {
-
                 source:
                     "discovery",
 
                 persist:
                     options.persist !==
                     false
-
             }
         );
 
@@ -875,7 +1146,9 @@ const BrainMode = {
             typeof settings !==
                 "object"
         ){
+
             return false;
+
         }
 
 
@@ -897,14 +1170,15 @@ const BrainMode = {
 
 
         if(!normalized){
+
             return false;
+
         }
 
 
         return this.set(
             normalized,
             {
-
                 source:
                     options.source ||
                     "settings",
@@ -912,7 +1186,6 @@ const BrainMode = {
                 persist:
                     options.persist !==
                     false
-
             }
         );
 
@@ -936,6 +1209,9 @@ const BrainMode = {
 
 
         return {
+
+            version:
+                this.version,
 
             mode,
 
@@ -965,8 +1241,22 @@ const BrainMode = {
             canObserve:
                 capabilities.canObserve,
 
+            /*
+             * Base capability.
+             * Contextual interruption must use canInterrupt()
+             * or allows("interrupt", context).
+             */
+
             canInterrupt:
                 capabilities.canInterrupt,
+
+            canSurfaceWarnings:
+                capabilities
+                    .canSurfaceWarnings,
+
+            canSurfaceCritical:
+                capabilities
+                    .canSurfaceCritical,
 
             suggestionLevel:
                 capabilities
@@ -984,14 +1274,105 @@ const BrainMode = {
 
 
     /* =====================================================
+       SUBSCRIPTIONS
+    ===================================================== */
+
+    subscribe(
+        events,
+        eventName,
+        callback
+    ){
+
+        if(
+            !events ||
+            typeof events.on !==
+                "function" ||
+            typeof callback !==
+                "function"
+        ){
+
+            return false;
+
+        }
+
+
+        try{
+
+            const unsubscribe =
+                events.on(
+                    eventName,
+                    callback
+                );
+
+
+            if(
+                typeof unsubscribe ===
+                    "function"
+            ){
+
+                this.subscriptions.push(
+                    unsubscribe
+                );
+
+            }
+
+
+            return true;
+
+        } catch(error){
+
+            return false;
+
+        }
+
+    },
+
+
+    clearSubscriptions(){
+
+        this.subscriptions.forEach(
+            unsubscribe => {
+
+                if(
+                    typeof unsubscribe !==
+                        "function"
+                ){
+
+                    return;
+
+                }
+
+
+                try{
+
+                    unsubscribe();
+
+                } catch(error){
+
+                    /* ignore */
+
+                }
+
+            }
+        );
+
+
+        this.subscriptions =
+            [];
+
+
+        return true;
+
+    },
+
+
+    /* =====================================================
        BOOT
     ===================================================== */
 
     boot(){
 
-        if(
-            this.booted
-        ){
+        if(this.booted){
 
             return this.snapshot();
 
@@ -1021,58 +1402,46 @@ const BrainMode = {
                 "function"
         ){
 
-            try{
+            this.subscribe(
+                events,
+                "discovery:completed",
+                payload => {
 
-                events.on(
-                    "discovery:completed",
-                    payload => {
-
-                        const result =
-                            payload?.result ||
-                            payload ||
-                            null;
-
-
-                        this.applyDiscoveryMode(
-                            result
-                        );
-
-                    }
-                );
-
-            } catch(error){
-
-                /* optional */
-            }
+                    const result =
+                        payload?.result ||
+                        payload ||
+                        null;
 
 
-            try{
+                    this.applyDiscoveryMode(
+                        result
+                    );
 
-                events.on(
-                    "settings:changed",
-                    payload => {
-
-                        const settings =
-                            payload?.settings ||
-                            payload ||
-                            null;
+                }
+            );
 
 
-                        this.applySettings(
-                            settings,
-                            {
-                                source:
-                                    "settings"
-                            }
-                        );
+            this.subscribe(
+                events,
+                "settings:changed",
+                payload => {
 
-                    }
-                );
+                    const settings =
+                        payload?.settings ||
+                        payload ||
+                        null;
 
-            } catch(error){
 
-                /* optional */
-            }
+                    this.applySettings(
+                        settings,
+                        {
+                            source:
+                                "settings"
+                        }
+                    );
+
+                }
+            );
 
         }
 
@@ -1096,8 +1465,12 @@ const BrainMode = {
         options = {}
     ){
 
+        const previous =
+            this.get();
+
+
         this.previousMode =
-            this.mode;
+            previous;
 
 
         this.mode =
@@ -1109,8 +1482,11 @@ const BrainMode = {
 
 
         this.changedBy =
-            options.source ||
-            "reset";
+            this.normalizeSource(
+                options.source ||
+                "reset",
+                "reset"
+            );
 
 
         if(
@@ -1123,12 +1499,16 @@ const BrainMode = {
         }
 
 
+        const snapshot =
+            this.snapshot();
+
+
         this.emit(
             "brain:mode:changed",
             {
 
                 previousMode:
-                    this.previousMode,
+                    previous,
 
                 mode:
                     this.mode,
@@ -1140,13 +1520,13 @@ const BrainMode = {
                     this.changedBy,
 
                 capabilities:
-                    this.getCapabilities()
+                    snapshot.capabilities
 
             }
         );
 
 
-        return this.snapshot();
+        return snapshot;
 
     },
 
@@ -1163,6 +1543,9 @@ const BrainMode = {
 
         return {
 
+            version:
+                this.version,
+
             mode:
                 snapshot.mode,
 
@@ -1178,6 +1561,9 @@ const BrainMode = {
             booted:
                 snapshot.booted,
 
+            bootedAt:
+                snapshot.bootedAt,
+
             canSpeak:
                 snapshot.canSpeak,
 
@@ -1190,8 +1576,19 @@ const BrainMode = {
             canInterrupt:
                 snapshot.canInterrupt,
 
+            canSurfaceWarnings:
+                snapshot
+                    .canSurfaceWarnings,
+
+            canSurfaceCritical:
+                snapshot
+                    .canSurfaceCritical,
+
             suggestionLevel:
-                snapshot.suggestionLevel
+                snapshot.suggestionLevel,
+
+            subscriptions:
+                this.subscriptions.length
 
         };
 
@@ -1200,14 +1597,49 @@ const BrainMode = {
 };
 
 
-VAERO.register(
-    "brainMode",
-    BrainMode
-);
+/* =========================================================
+   REGISTER
+========================================================= */
+
+try{
+
+    if(
+        typeof VAERO !==
+            "undefined" &&
+        typeof VAERO.register ===
+            "function"
+    ){
+
+        VAERO.register(
+            "brainMode",
+            BrainMode
+        );
+
+    }
+
+} catch(error){
+
+    console.error(
+        "BrainMode register edilemedi:",
+        error
+    );
+
+}
 
 
-window.BrainMode =
-    BrainMode;
+/* =========================================================
+   GLOBAL
+========================================================= */
+
+if(
+    typeof window !==
+        "undefined"
+){
+
+    window.BrainMode =
+        BrainMode;
+
+}
 
 
 /* =========================================================
