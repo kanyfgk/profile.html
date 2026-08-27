@@ -5,6 +5,9 @@
 
 const BrainSkills = {
 
+    version:
+        "3.0.0",
+
     skills:
         new Map(),
 
@@ -20,6 +23,18 @@ const BrainSkills = {
     maxTimeout:
         60000,
 
+    maxPayloadDepth:
+        4,
+
+    maxPayloadArray:
+        100,
+
+    maxPayloadKeys:
+        120,
+
+    maxStringLength:
+        8000,
+
 
     /* =====================================================
        SERVICE ACCESS
@@ -27,25 +42,45 @@ const BrainSkills = {
 
     getService(name){
 
+        const serviceName =
+            String(
+                name ??
+                ""
+            ).trim();
+
+
+        if(!serviceName){
+
+            return null;
+
+        }
+
+
         try{
 
             if(
-                typeof VAERO === "undefined" ||
-                typeof VAERO.get !== "function"
+                typeof VAERO ===
+                    "undefined" ||
+                typeof VAERO.get !==
+                    "function"
             ){
+
                 return null;
+
             }
 
 
             return (
-                VAERO.get(name) ||
+                VAERO.get(
+                    serviceName
+                ) ||
                 null
             );
 
         } catch(error){
 
             console.warn(
-                `Brain Skills servisi okunamadı: ${name}`,
+                `Brain Skills servisi okunamadı: ${serviceName}`,
                 error
             );
 
@@ -64,23 +99,49 @@ const BrainSkills = {
     normalizeName(name){
 
         return String(
-            name ?? ""
+            name ??
+                ""
         )
             .trim()
-            .toLowerCase();
+            .toLowerCase()
+            .slice(
+                0,
+                200
+            );
 
     },
 
 
     normalizeText(
         value,
-        fallback = ""
+        fallback = "",
+        maxLength = 1000
     ){
 
-        return String(
-            value ??
-            fallback
-        ).trim();
+        const text =
+            String(
+                value ??
+                    fallback
+            )
+                .trim()
+                .slice(
+                    0,
+                    maxLength
+                );
+
+
+        return (
+            text ||
+            String(
+                fallback ??
+                    ""
+            )
+                .trim()
+                .slice(
+                    0,
+                    maxLength
+                )
+        );
 
     },
 
@@ -90,27 +151,67 @@ const BrainSkills = {
         if(
             !Array.isArray(
                 value
-            )
+            ) &&
+            !(value instanceof Set)
         ){
+
             return [];
+
         }
 
 
-        return [
-            ...new Set(
+        const source =
+            Array.isArray(
                 value
-                    .map(
-                        item =>
-                            String(
-                                item ??
-                                ""
-                            )
-                                .trim()
-                                .toLowerCase()
-                    )
-                    .filter(Boolean)
             )
-        ];
+                ? value
+                : [
+                    ...value
+                ];
+
+
+        const seen =
+            new Set();
+
+
+        return source
+            .map(
+                item =>
+                    String(
+                        item ??
+                            ""
+                    )
+                        .trim()
+                        .toLowerCase()
+                        .slice(
+                            0,
+                            200
+                        )
+            )
+            .filter(
+                item => {
+
+                    if(
+                        !item ||
+                        seen.has(
+                            item
+                        )
+                    ){
+
+                        return false;
+
+                    }
+
+
+                    seen.add(
+                        item
+                    );
+
+
+                    return true;
+
+                }
+            );
 
     },
 
@@ -120,21 +221,51 @@ const BrainSkills = {
         const value =
             String(
                 mode ||
-                "read"
+                    "read"
             )
                 .trim()
                 .toLowerCase();
 
 
-        return (
-            [
-                "read",
-                "action"
-            ].includes(
+        return [
+            "read",
+            "action"
+        ].includes(
+            value
+        )
+            ? value
+            : "read";
+
+    },
+
+
+    normalizeTimeout(value){
+
+        const timeout =
+            Number(
                 value
+            );
+
+
+        if(
+            !Number.isFinite(
+                timeout
             )
-                ? value
-                : "read"
+        ){
+
+            return this.defaultTimeout;
+
+        }
+
+
+        return Math.max(
+            1000,
+            Math.min(
+                this.maxTimeout,
+                Math.round(
+                    timeout
+                )
+            )
         );
 
     },
@@ -146,7 +277,8 @@ const BrainSkills = {
 
         const safe =
             metadata &&
-            typeof metadata === "object" &&
+            typeof metadata ===
+                "object" &&
             !Array.isArray(
                 metadata
             )
@@ -160,35 +292,27 @@ const BrainSkills = {
             );
 
 
-        const timeout =
-            Math.max(
-                1000,
-                Math.min(
-                    this.maxTimeout,
-                    Number(
-                        safe.timeout
-                    ) ||
-                    this.defaultTimeout
-                )
-            );
-
-
         return {
 
             title:
                 this.normalizeText(
-                    safe.title
+                    safe.title,
+                    "",
+                    240
                 ),
 
             description:
                 this.normalizeText(
-                    safe.description
+                    safe.description,
+                    "",
+                    2000
                 ),
 
             version:
                 this.normalizeText(
                     safe.version,
-                    "1.0.0"
+                    "1.0.0",
+                    80
                 ),
 
             sourceAppId:
@@ -222,7 +346,10 @@ const BrainSkills = {
                     safe.tags
                 ),
 
-            timeout,
+            timeout:
+                this.normalizeTimeout(
+                    safe.timeout
+                ),
 
             internal:
                 safe.internal ===
@@ -244,10 +371,14 @@ const BrainSkills = {
     clone(value){
 
         if(
-            value === null ||
-            value === undefined
+            value ===
+                null ||
+            value ===
+                undefined
         ){
+
             return value;
+
         }
 
 
@@ -267,6 +398,7 @@ const BrainSkills = {
         } catch(error){
 
             /* JSON fallback */
+
         }
 
 
@@ -298,35 +430,57 @@ const BrainSkills = {
     ){
 
         if(
-            value === null ||
-            value === undefined
+            value ===
+                null ||
+            value ===
+                undefined
         ){
+
             return value;
+
         }
 
 
         if(
-            depth > 4
+            depth >
+                this.maxPayloadDepth
         ){
+
             return "[depth-limit]";
+
         }
 
 
         if(
-            typeof value === "string"
+            typeof value ===
+                "string"
         ){
 
             return value.slice(
                 0,
-                8000
+                this.maxStringLength
             );
 
         }
 
 
         if(
-            typeof value === "number" ||
-            typeof value === "boolean"
+            typeof value ===
+                "number"
+        ){
+
+            return Number.isFinite(
+                value
+            )
+                ? value
+                : null;
+
+        }
+
+
+        if(
+            typeof value ===
+                "boolean"
         ){
 
             return value;
@@ -335,9 +489,43 @@ const BrainSkills = {
 
 
         if(
-            typeof value === "function"
+            typeof value ===
+                "bigint"
         ){
+
+            return String(
+                value
+            );
+
+        }
+
+
+        if(
+            typeof value ===
+                "function" ||
+            typeof value ===
+                "symbol"
+        ){
+
             return undefined;
+
+        }
+
+
+        if(
+            value instanceof Date
+        ){
+
+            const timestamp =
+                value.getTime();
+
+
+            return Number.isFinite(
+                timestamp
+            )
+                ? value.toISOString()
+                : null;
+
         }
 
 
@@ -350,7 +538,7 @@ const BrainSkills = {
             return value
                 .slice(
                     0,
-                    100
+                    this.maxPayloadArray
                 )
                 .map(
                     item =>
@@ -359,13 +547,19 @@ const BrainSkills = {
                             depth + 1,
                             seen
                         )
+                )
+                .filter(
+                    item =>
+                        item !==
+                            undefined
                 );
 
         }
 
 
         if(
-            typeof value === "object"
+            typeof value ===
+                "object"
         ){
 
             try{
@@ -394,23 +588,35 @@ const BrainSkills = {
 
             const blockedKeys =
                 new Set([
+
                     "password",
                     "passphrase",
                     "secret",
+                    "clientsecret",
+                    "client_secret",
                     "token",
+                    "idtoken",
+                    "id_token",
                     "accesstoken",
+                    "access_token",
                     "refreshtoken",
+                    "refresh_token",
                     "authorization",
                     "apikey",
                     "api_key",
                     "privatekey",
                     "private_key",
                     "cardnumber",
-                    "cvv"
+                    "card_number",
+                    "cvv",
+                    "cvc",
+                    "pin"
+
                 ]);
 
 
-            const result = {};
+            const result =
+                {};
 
 
             Object.entries(
@@ -418,17 +624,26 @@ const BrainSkills = {
             )
                 .slice(
                     0,
-                    120
+                    this.maxPayloadKeys
                 )
                 .forEach(
-                    ([key,item]) => {
+                    (
+                        [
+                            key,
+                            item
+                        ]
+                    ) => {
 
                         const normalizedKey =
                             String(
                                 key
                             )
                                 .trim()
-                                .toLowerCase();
+                                .toLowerCase()
+                                .replace(
+                                    /[\s-]/g,
+                                    ""
+                                );
 
 
                         if(
@@ -437,8 +652,11 @@ const BrainSkills = {
                             )
                         ){
 
-                            result[key] =
+                            result[
+                                key
+                            ] =
                                 "[redacted]";
+
 
                             return;
 
@@ -458,7 +676,9 @@ const BrainSkills = {
                                 undefined
                         ){
 
-                            result[key] =
+                            result[
+                                key
+                            ] =
                                 sanitized;
 
                         }
@@ -474,6 +694,9 @@ const BrainSkills = {
 
         return String(
             value
+        ).slice(
+            0,
+            this.maxStringLength
         );
 
     },
@@ -488,6 +711,20 @@ const BrainSkills = {
         payload = {}
     ){
 
+        const name =
+            String(
+                eventName ??
+                    ""
+            ).trim();
+
+
+        if(!name){
+
+            return false;
+
+        }
+
+
         try{
 
             if(
@@ -498,7 +735,7 @@ const BrainSkills = {
             ){
 
                 VAERO.emit(
-                    eventName,
+                    name,
                     payload
                 );
 
@@ -507,6 +744,17 @@ const BrainSkills = {
 
             }
 
+        } catch(error){
+
+            console.warn(
+                `BrainSkills event gönderilemedi: ${name}`,
+                error
+            );
+
+        }
+
+
+        try{
 
             const events =
                 this.getService(
@@ -521,7 +769,7 @@ const BrainSkills = {
             ){
 
                 events.emit(
-                    eventName,
+                    name,
                     payload
                 );
 
@@ -533,7 +781,7 @@ const BrainSkills = {
         } catch(error){
 
             console.warn(
-                `BrainSkills event gönderilemedi: ${eventName}`,
+                `BrainSkills event fallback gönderilemedi: ${name}`,
                 error
             );
 
@@ -617,11 +865,6 @@ const BrainSkills = {
             );
 
 
-        /*
-         * Action-mode skill açık bir actionType
-         * olmadan kaydedilmez.
-         */
-
         if(
             safeMetadata.mode ===
                 "action" &&
@@ -701,7 +944,6 @@ const BrainSkills = {
         this.emit(
             "brain:skill:registered",
             {
-
                 skill:
                     skillName,
 
@@ -712,7 +954,6 @@ const BrainSkills = {
 
                 time:
                     now
-
             }
         );
 
@@ -726,7 +967,10 @@ const BrainSkills = {
        UNREGISTER
     ===================================================== */
 
-    unregister(name){
+    unregister(
+        name,
+        options = {}
+    ){
 
         const skillName =
             this.normalizeName(
@@ -735,7 +979,9 @@ const BrainSkills = {
 
 
         if(!skillName){
+
             return false;
+
         }
 
 
@@ -746,18 +992,17 @@ const BrainSkills = {
 
 
         if(!skill){
+
             return false;
+
         }
 
-
-        /*
-         * Internal skill normal runtime sırasında
-         * sökülemez.
-         */
 
         if(
             skill.metadata
                 ?.internal ===
+                true &&
+            options.force !==
                 true
         ){
 
@@ -805,8 +1050,13 @@ const BrainSkills = {
             );
 
 
-        return this.skills.has(
-            skillName
+        return (
+            Boolean(
+                skillName
+            ) &&
+            this.skills.has(
+                skillName
+            )
         );
 
     },
@@ -818,6 +1068,13 @@ const BrainSkills = {
             this.normalizeName(
                 name
             );
+
+
+        if(!skillName){
+
+            return null;
+
+        }
 
 
         return (
@@ -839,7 +1096,9 @@ const BrainSkills = {
 
 
         if(!skill){
+
             return null;
+
         }
 
 
@@ -895,15 +1154,29 @@ const BrainSkills = {
             skills =
                 skills.filter(
                     skill =>
-                        skill.enabled
+                        skill.enabled ===
+                            true
                 );
 
         }
 
 
         if(
-            options.mode
+            options.enabled ===
+                false
         ){
+
+            skills =
+                skills.filter(
+                    skill =>
+                        skill.enabled !==
+                            true
+                );
+
+        }
+
+
+        if(options.mode){
 
             const mode =
                 this.normalizeMode(
@@ -922,9 +1195,7 @@ const BrainSkills = {
         }
 
 
-        if(
-            options.sourceAppId
-        ){
+        if(options.sourceAppId){
 
             const sourceAppId =
                 this.normalizeName(
@@ -943,45 +1214,83 @@ const BrainSkills = {
         }
 
 
-        return skills.map(
-            skill => ({
+        if(options.tag){
 
-                name:
-                    skill.name,
+            const tag =
+                this.normalizeName(
+                    options.tag
+                );
 
-                metadata:
-                    this.clone(
-                        skill.metadata
-                    ),
 
-                enabled:
-                    skill.enabled,
+            skills =
+                skills.filter(
+                    skill =>
+                        Array.isArray(
+                            skill.metadata
+                                ?.tags
+                        ) &&
+                        skill.metadata.tags
+                            .includes(
+                                tag
+                            )
+                );
 
-                registeredAt:
-                    skill.registeredAt,
+        }
 
-                updatedAt:
-                    skill.updatedAt,
 
-                runs:
-                    skill.runs,
-
-                failures:
-                    skill.failures,
-
-                blockedRuns:
-                    skill.blockedRuns,
-
-                lastRunAt:
-                    skill.lastRunAt,
-
-                lastResult:
-                    this.clone(
-                        skill.lastResult
+        return skills
+            .sort(
+                (
+                    a,
+                    b
+                ) =>
+                    String(
+                        a.name
+                    ).localeCompare(
+                        String(
+                            b.name
+                        )
                     )
+            )
+            .map(
+                skill => ({
 
-            })
-        );
+                    name:
+                        skill.name,
+
+                    metadata:
+                        this.clone(
+                            skill.metadata
+                        ),
+
+                    enabled:
+                        skill.enabled,
+
+                    registeredAt:
+                        skill.registeredAt,
+
+                    updatedAt:
+                        skill.updatedAt,
+
+                    runs:
+                        skill.runs,
+
+                    failures:
+                        skill.failures,
+
+                    blockedRuns:
+                        skill.blockedRuns,
+
+                    lastRunAt:
+                        skill.lastRunAt,
+
+                    lastResult:
+                        this.clone(
+                            skill.lastResult
+                        )
+
+                })
+            );
 
     },
 
@@ -1002,14 +1311,30 @@ const BrainSkills = {
 
 
         if(!skill){
+
             return false;
+
+        }
+
+
+        const next =
+            Boolean(
+                enabled
+            );
+
+
+        if(
+            skill.enabled ===
+                next
+        ){
+
+            return true;
+
         }
 
 
         skill.enabled =
-            Boolean(
-                enabled
-            );
+            next;
 
 
         skill.updatedAt =
@@ -1019,7 +1344,6 @@ const BrainSkills = {
         this.emit(
             "brain:skill:state",
             {
-
                 skill:
                     skill.name,
 
@@ -1028,7 +1352,6 @@ const BrainSkills = {
 
                 time:
                     skill.updatedAt
-
             }
         );
 
@@ -1051,7 +1374,9 @@ const BrainSkills = {
 
 
         if(!sourceAppId){
+
             return null;
+
         }
 
 
@@ -1062,28 +1387,148 @@ const BrainSkills = {
 
 
         if(!organSystem){
+
             return null;
+
         }
 
 
         try{
 
-            return (
-                organSystem.get?.(
-                    sourceAppId
-                ) ||
-                organSystem
-                    .findBySlug?.(
+            if(
+                typeof organSystem.get ===
+                    "function"
+            ){
+
+                const organ =
+                    organSystem.get(
                         sourceAppId
-                    ) ||
-                null
-            );
+                    );
+
+
+                if(organ){
+
+                    return organ;
+
+                }
+
+            }
+
+
+            if(
+                typeof organSystem.findBySlug ===
+                    "function"
+            ){
+
+                const organ =
+                    organSystem.findBySlug(
+                        sourceAppId
+                    );
+
+
+                if(organ){
+
+                    return organ;
+
+                }
+
+            }
 
         } catch(error){
 
             return null;
 
         }
+
+
+        return null;
+
+    },
+
+
+    /* =====================================================
+       APPLICATION MANIFEST
+    ===================================================== */
+
+    getSourceManifest(skill){
+
+        const sourceAppId =
+            skill?.metadata
+                ?.sourceAppId ||
+            null;
+
+
+        if(!sourceAppId){
+
+            return null;
+
+        }
+
+
+        const registry =
+            this.getService(
+                "appRegistry"
+            ) ||
+            this.getService(
+                "applicationRegistry"
+            );
+
+
+        if(!registry){
+
+            return null;
+
+        }
+
+
+        const methods = [
+            "find",
+            "get"
+        ];
+
+
+        for(
+            const method of methods
+        ){
+
+            if(
+                typeof registry[
+                    method
+                ] !==
+                    "function"
+            ){
+
+                continue;
+
+            }
+
+
+            try{
+
+                const manifest =
+                    registry[
+                        method
+                    ](
+                        sourceAppId
+                    );
+
+
+                if(manifest){
+
+                    return manifest;
+
+                }
+
+            } catch(error){
+
+                /* next resolver */
+
+            }
+
+        }
+
+
+        return null;
 
     },
 
@@ -1099,20 +1544,26 @@ const BrainSkills = {
             {};
 
 
-        /*
-         * VAERO internal skill app organına
-         * bağımlı değildir.
-         */
-
         if(
             metadata.internal ===
                 true
         ){
 
             return {
-                allowed:true,
-                reason:null,
-                organ:null
+                allowed:
+                    true,
+
+                reason:
+                    null,
+
+                organ:
+                    null,
+
+                manifest:
+                    null,
+
+                source:
+                    "internal"
             };
 
         }
@@ -1122,80 +1573,81 @@ const BrainSkills = {
             !metadata.sourceAppId
         ){
 
-            /*
-             * Kaynaksız read skill kullanılabilir.
-             * Kaynaksız action skill kullanılmaz.
-             */
-
             if(
                 metadata.mode ===
                     "action"
             ){
 
                 return {
-                    allowed:false,
+                    allowed:
+                        false,
+
                     reason:
                         "Action skill sourceAppId olmadan çalıştırılamaz.",
-                    organ:null
+
+                    organ:
+                        null,
+
+                    manifest:
+                        null
                 };
 
             }
 
 
             return {
-                allowed:true,
-                reason:null,
-                organ:null
+                allowed:
+                    true,
+
+                reason:
+                    null,
+
+                organ:
+                    null,
+
+                manifest:
+                    null,
+
+                source:
+                    "unbound-read"
             };
 
         }
 
 
-        const registry =
-            this.getService(
-                "appRegistry"
+        const manifest =
+            this.getSourceManifest(
+                skill
             );
 
 
-        let manifest =
-            null;
-
-
-        try{
-
-            manifest =
-                registry?.find?.(
-                    metadata.sourceAppId
-                ) ||
-                registry?.get?.(
-                    metadata.sourceAppId
-                ) ||
-                null;
-
-        } catch(error){
-
-            manifest =
-                null;
-
-        }
-
-
-        /*
-         * Built-in app doğrudan sistem kaynağıdır.
-         */
-
-        if(
+        const builtIn =
             manifest?.system ===
                 true ||
             manifest?.distribution ===
-                "built-in"
-        ){
+                "built-in" ||
+            manifest?.builtIn ===
+                true;
+
+
+        if(builtIn){
 
             return {
-                allowed:true,
-                reason:null,
-                organ:null,
-                manifest
+                allowed:
+                    true,
+
+                reason:
+                    null,
+
+                organ:
+                    this.getSourceOrgan(
+                        skill
+                    ),
+
+                manifest,
+
+                source:
+                    "built-in"
             };
 
         }
@@ -1210,27 +1662,63 @@ const BrainSkills = {
         if(!organ){
 
             return {
-                allowed:false,
+                allowed:
+                    false,
+
                 reason:
                     "Skill kaynağı olan application kurulu değil.",
-                organ:null,
-                manifest
+
+                organ:
+                    null,
+
+                manifest,
+
+                source:
+                    "application"
             };
 
         }
 
 
-        if(
-            organ.installed !==
-                true
-        ){
+        /*
+         * OrganSystem status is authoritative.
+         * Older organs may also expose installed:true.
+         */
+
+        const installed =
+            organ.installed ===
+                true ||
+            [
+                "active",
+                "inactive",
+                "paused",
+                "disabled",
+                "error"
+            ].includes(
+                String(
+                    organ.status ||
+                        ""
+                )
+                    .trim()
+                    .toLowerCase()
+            );
+
+
+        if(!installed){
 
             return {
-                allowed:false,
+                allowed:
+                    false,
+
                 reason:
                     "Skill kaynağı olan application aktif kurulumda değil.",
+
                 organ,
-                manifest
+
+                manifest,
+
+                source:
+                    "application"
             };
 
         }
@@ -1242,21 +1730,36 @@ const BrainSkills = {
         ){
 
             return {
-                allowed:false,
+                allowed:
+                    false,
+
                 reason:
                     "Skill kaynağı olan application trusted değil.",
+
                 organ,
-                manifest
+
+                manifest,
+
+                source:
+                    "application"
             };
 
         }
 
 
         return {
-            allowed:true,
-            reason:null,
+            allowed:
+                true,
+
+            reason:
+                null,
+
             organ,
-            manifest
+
+            manifest,
+
+            source:
+                "application"
         };
 
     },
@@ -1288,20 +1791,23 @@ const BrainSkills = {
             [];
 
 
-        /*
-         * Internal skill için gereksinimler skill'in kendi
-         * metadata sözleşmesidir. App permission kontrolü
-         * uygulanmaz.
-         */
-
         if(
             metadata.internal ===
                 true
         ){
 
             return {
-                allowed:true,
-                reason:null
+                allowed:
+                    true,
+
+                reason:
+                    null,
+
+                missingPermissions:
+                    [],
+
+                missingCapabilities:
+                    []
             };
 
         }
@@ -1312,153 +1818,218 @@ const BrainSkills = {
             null;
 
 
-        if(
-            permissions.length > 0
-        ){
-
-            if(!organ){
-
-                return {
-                    allowed:false,
-                    reason:
-                        "Skill permission kontrolü için runtime organ bulunamadı."
-                };
-
-            }
+        const manifest =
+            authority?.manifest ||
+            null;
 
 
-            const missingPermission =
-                permissions.find(
-                    permission => {
+        const missingPermissions =
+            [];
 
-                        try{
 
-                            if(
-                                typeof organ
-                                    .hasPermission ===
-                                    "function"
-                            ){
+        permissions.forEach(
+            permission => {
 
-                                return (
-                                    organ.hasPermission(
-                                        permission
-                                    ) !== true
-                                );
+                let available =
+                    false;
 
-                            }
 
-                        } catch(error){
+                if(organ){
 
-                            return true;
+                    try{
+
+                        if(
+                            typeof organ.hasPermission ===
+                                "function"
+                        ){
+
+                            available =
+                                organ.hasPermission(
+                                    permission
+                                ) ===
+                                true;
 
                         }
 
+                    } catch(error){
 
-                        return !(
-                            Array.isArray(
-                                organ.permissions
-                            ) &&
-                            organ.permissions
-                                .includes(
-                                    permission
-                                )
-                        );
+                        available =
+                            false;
 
                     }
-                );
 
 
-            if(missingPermission){
+                    if(
+                        !available &&
+                        Array.isArray(
+                            organ.permissions
+                        )
+                    ){
 
-                return {
-                    allowed:false,
-                    reason:
-                        `Skill için gerekli permission eksik: ${missingPermission}`
-                };
+                        available =
+                            organ.permissions
+                                .map(
+                                    item =>
+                                        String(
+                                            item
+                                        )
+                                            .trim()
+                                            .toLowerCase()
+                                )
+                                .includes(
+                                    permission
+                                );
+
+                    }
+
+                }
+
+             if(!available){
+
+                    missingPermissions.push(
+                        permission
+                    );
+
+                }
 
             }
+        );
+
+
+        if(
+            missingPermissions.length >
+                0
+        ){
+
+            return {
+                allowed:
+                    false,
+
+                reason:
+                    `Skill için gerekli permission eksik: ${missingPermissions.join(", ")}`,
+
+                missingPermissions,
+
+                missingCapabilities:
+                    []
+            };
 
         }
 
 
-        if(
-            capabilities.length > 0
-        ){
-
-            const source =
-                organ ||
-                authority?.manifest ||
-                null;
+        const source =
+            organ ||
+            manifest ||
+            null;
 
 
-            if(!source){
-
-                return {
-                    allowed:false,
-                    reason:
-                        "Skill capability kaynağı bulunamadı."
-                };
-
-            }
+        const missingCapabilities =
+            [];
 
 
-            const missingCapability =
-                capabilities.find(
-                    capability => {
+        capabilities.forEach(
+            capability => {
 
-                        try{
+                let available =
+                    false;
 
-                            if(
-                                typeof source
-                                    .hasCapability ===
-                                    "function"
-                            ){
 
-                                return (
-                                    source.hasCapability(
-                                        capability
-                                    ) !== true
-                                );
+                if(source){
 
-                            }
+                    try{
 
-                        } catch(error){
+                        if(
+                            typeof source.hasCapability ===
+                                "function"
+                        ){
 
-                            return true;
+                            available =
+                                source.hasCapability(
+                                    capability
+                                ) ===
+                                true;
 
                         }
 
+                    } catch(error){
 
-                        return !(
-                            Array.isArray(
-                                source.capabilities
-                            ) &&
-                            source.capabilities
-                                .includes(
-                                    capability
-                                )
-                        );
+                        available =
+                            false;
 
                     }
-                );
 
 
-            if(missingCapability){
+                    if(
+                        !available &&
+                        Array.isArray(
+                            source.capabilities
+                        )
+                    ){
 
-                return {
-                    allowed:false,
-                    reason:
-                        `Skill için gerekli capability eksik: ${missingCapability}`
-                };
+                        available =
+                            source.capabilities
+                                .map(
+                                    item =>
+                                        String(
+                                            item
+                                        )
+                                            .trim()
+                                            .toLowerCase()
+                                )
+                                .includes(
+                                    capability
+                                );
+
+                    }
+
+                }
+
+
+                if(!available){
+
+                    missingCapabilities.push(
+                        capability
+                    );
+
+                }
 
             }
+        );
+
+
+        if(
+            missingCapabilities.length >
+                0
+        ){
+
+            return {
+                allowed:
+                    false,
+
+                reason:
+                    `Skill için gerekli capability eksik: ${missingCapabilities.join(", ")}`,
+
+                missingPermissions:
+                    [],
+
+                missingCapabilities
+            };
 
         }
 
 
         return {
-            allowed:true,
-            reason:null
+            allowed:
+                true,
+
+            reason:
+                null,
+
+            missingPermissions:
+                [],
+
+            missingCapabilities:
+                []
         };
 
     },
@@ -1484,9 +2055,14 @@ const BrainSkills = {
         ){
 
             return {
-                allowed:true,
-                evaluation:null,
-                reason:null
+                allowed:
+                    true,
+
+                evaluation:
+                    null,
+
+                reason:
+                    null
             };
 
         }
@@ -1497,8 +2073,12 @@ const BrainSkills = {
         ){
 
             return {
-                allowed:false,
-                evaluation:null,
+                allowed:
+                    false,
+
+                evaluation:
+                    null,
+
                 reason:
                     "Action skill actionType taşımıyor."
             };
@@ -1510,8 +2090,12 @@ const BrainSkills = {
             this.getService(
                 "brainActionPolicy"
             ) ||
-            window.BrainActionPolicy ||
-            null;
+            (
+                typeof window !==
+                    "undefined"
+                    ? window.BrainActionPolicy
+                    : null
+            );
 
 
         if(
@@ -1521,8 +2105,12 @@ const BrainSkills = {
         ){
 
             return {
-                allowed:false,
-                evaluation:null,
+                allowed:
+                    false,
+
+                evaluation:
+                    null,
+
                 reason:
                     "Brain Action Policy bulunamadı."
             };
@@ -1550,8 +2138,12 @@ const BrainSkills = {
         } catch(error){
 
             return {
-                allowed:false,
-                evaluation:null,
+                allowed:
+                    false,
+
+                evaluation:
+                    null,
+
                 reason:
                     "Skill policy değerlendirilemedi."
             };
@@ -1568,9 +2160,13 @@ const BrainSkills = {
         ){
 
             return {
-                allowed:false,
+                allowed:
+                    false,
+
                 evaluation,
+
                 reason:
+                    evaluation?.reason ||
                     "Skill action policy tarafından engellendi."
             };
 
@@ -1582,14 +2178,23 @@ const BrainSkills = {
                 true
         ){
 
+            /*
+             * BrainSkills does not create confirmation.
+             * It only accepts a context that Brain Core
+             * has already marked as a bound confirmation.
+             */
+
             if(
                 context.confirmed !==
                     true
             ){
 
                 return {
-                    allowed:false,
+                    allowed:
+                        false,
+
                     evaluation,
+
                     reason:
                         "Skill kullanıcı onayı gerektiriyor."
                 };
@@ -1603,8 +2208,11 @@ const BrainSkills = {
             ){
 
                 return {
-                    allowed:false,
+                    allowed:
+                        false,
+
                     evaluation,
+
                     reason:
                         "Skill için bağlı confirmation doğrulanamadı."
                 };
@@ -1615,9 +2223,13 @@ const BrainSkills = {
 
 
         return {
-            allowed:true,
+            allowed:
+                true,
+
             evaluation,
-            reason:null
+
+            reason:
+                null
         };
 
     },
@@ -1644,12 +2256,19 @@ const BrainSkills = {
         ){
 
             return {
-                allowed:false,
+                allowed:
+                    false,
+
                 reason:
                     authority.reason,
+
                 authority,
-                requirements:null,
-                policy:null
+
+                requirements:
+                    null,
+
+                policy:
+                    null
             };
 
         }
@@ -1668,12 +2287,18 @@ const BrainSkills = {
         ){
 
             return {
-                allowed:false,
+                allowed:
+                    false,
+
                 reason:
                     requirements.reason,
+
                 authority,
+
                 requirements,
-                policy:null
+
+                policy:
+                    null
             };
 
         }
@@ -1692,11 +2317,16 @@ const BrainSkills = {
         ){
 
             return {
-                allowed:false,
+                allowed:
+                    false,
+
                 reason:
                     policy.reason,
+
                 authority,
+
                 requirements,
+
                 policy
             };
 
@@ -1704,10 +2334,16 @@ const BrainSkills = {
 
 
         return {
-            allowed:true,
-            reason:null,
+            allowed:
+                true,
+
+            reason:
+                null,
+
             authority,
+
             requirements,
+
             policy
         };
 
@@ -1725,23 +2361,22 @@ const BrainSkills = {
 
         if(
             result &&
-            typeof result === "object" &&
+            typeof result ===
+                "object" &&
             !Array.isArray(
                 result
             )
         ){
 
             return {
+                skill:
+                    name,
 
                 success:
                     result.success !==
                         false,
 
-                skill:
-                    name,
-
                 ...result
-
             };
 
         }
@@ -1753,7 +2388,6 @@ const BrainSkills = {
         ){
 
             return {
-
                 success:
                     result,
 
@@ -1764,7 +2398,6 @@ const BrainSkills = {
                     result
                         ? "Skill tamamlandı."
                         : "Skill başarısız oldu."
-
             };
 
         }
@@ -1776,23 +2409,22 @@ const BrainSkills = {
         ){
 
             return {
-
-                success:true,
+                success:
+                    true,
 
                 skill:
                     name,
 
                 message:
                     result
-
             };
 
         }
 
 
         return {
-
-            success:true,
+            success:
+                true,
 
             skill:
                 name,
@@ -1800,7 +2432,6 @@ const BrainSkills = {
             data:
                 result ??
                 null
-
         };
 
     },
@@ -1810,16 +2441,95 @@ const BrainSkills = {
        EXECUTION HISTORY
     ===================================================== */
 
+    createExecutionId(){
+
+        try{
+
+            if(
+                typeof crypto !==
+                    "undefined" &&
+                typeof crypto.randomUUID ===
+                    "function"
+            ){
+
+                return crypto.randomUUID();
+
+            }
+
+        } catch(error){
+
+            /* fallback */
+
+        }
+
+
+        return `skill_exec_${Date.now()}_${Math.random()
+            .toString(36)
+            .slice(2,8)}`;
+
+    },
+
+
     recordExecution(entry){
 
+        const normalized = {
+
+            id:
+                entry?.id ||
+                this.createExecutionId(),
+
+            skill:
+                entry?.skill ||
+                null,
+
+            success:
+                entry?.success ===
+                    true,
+
+            blocked:
+                entry?.blocked ===
+                    true,
+
+            reason:
+                entry?.reason ||
+                null,
+
+            errorCode:
+                entry?.errorCode ||
+                null,
+
+            startedAt:
+                Number(
+                    entry?.startedAt
+                ) ||
+                Date.now(),
+
+            completedAt:
+                Number(
+                    entry?.completedAt
+                ) ||
+                Date.now(),
+
+            duration:
+                Math.max(
+                    0,
+                    Number(
+                        entry?.duration
+                    ) ||
+                    0
+                )
+
+        };
+
+
         this.executionHistory.push(
-            entry
+            normalized
         );
 
 
         if(
             this.executionHistory.length >
-            this.historyLimit
+                this.historyLimit
         ){
 
             this.executionHistory =
@@ -1830,7 +2540,7 @@ const BrainSkills = {
         }
 
 
-        return true;
+        return normalized;
 
     },
 
@@ -1848,6 +2558,29 @@ const BrainSkills = {
 
         let timer =
             null;
+
+
+        const timerAPI =
+            typeof globalThis !==
+                "undefined"
+                ? globalThis
+                : null;
+
+
+        if(
+            !timerAPI ||
+            typeof timerAPI.setTimeout !==
+                "function"
+        ){
+
+            return await Promise.resolve(
+                handler(
+                    payload,
+                    context
+                )
+            );
+
+        }
 
 
         try{
@@ -1869,7 +2602,7 @@ const BrainSkills = {
                     ) => {
 
                         timer =
-                            window.setTimeout(
+                            timerAPI.setTimeout(
                                 () => {
 
                                     reject(
@@ -1879,7 +2612,9 @@ const BrainSkills = {
                                     );
 
                                 },
-                                timeout
+                                this.normalizeTimeout(
+                                    timeout
+                                )
                             );
 
                     }
@@ -1893,9 +2628,14 @@ const BrainSkills = {
 
         } finally {
 
-            if(timer){
+            if(
+                timer !==
+                    null &&
+                typeof timerAPI.clearTimeout ===
+                    "function"
+            ){
 
-                window.clearTimeout(
+                timerAPI.clearTimeout(
                     timer
                 );
 
@@ -1931,43 +2671,46 @@ const BrainSkills = {
         if(!skill){
 
             return {
-
-                success:false,
+                success:
+                    false,
 
                 skill:
                     skillName ||
                     null,
 
-                executed:false,
+                executed:
+                    false,
 
                 error:
                     "skill-not-found",
 
                 message:
                     "Skill bulunamadı."
-
             };
 
         }
 
 
-        if(!skill.enabled){
+        if(
+            skill.enabled !==
+                true
+        ){
 
             return {
-
-                success:false,
+                success:
+                    false,
 
                 skill:
                     skillName,
 
-                executed:false,
+                executed:
+                    false,
 
                 error:
                     "skill-disabled",
 
                 message:
                     "Skill devre dışı."
-
             };
 
         }
@@ -1975,7 +2718,8 @@ const BrainSkills = {
 
         const safePayload =
             payload &&
-            typeof payload === "object" &&
+            typeof payload ===
+                "object" &&
             !Array.isArray(
                 payload
             )
@@ -1995,7 +2739,8 @@ const BrainSkills = {
 
         const safeContext =
             context &&
-            typeof context === "object" &&
+            typeof context ===
+                "object" &&
             !Array.isArray(
                 context
             )
@@ -2024,13 +2769,20 @@ const BrainSkills = {
                 1;
 
 
+            const time =
+                Date.now();
+
+
             const blockedResult = {
 
-                success:false,
+                success:
+                    false,
 
-                executed:false,
+                executed:
+                    false,
 
-                blocked:true,
+                blocked:
+                    true,
 
                 skill:
                     skillName,
@@ -2055,43 +2807,44 @@ const BrainSkills = {
                         ?.sourceAppId ||
                     null,
 
-                time:
-                    Date.now()
+                time
 
             };
 
 
             skill.lastResult =
-                blockedResult;
+                this.clone(
+                    blockedResult
+                );
 
 
             this.recordExecution({
-
                 skill:
                     skillName,
 
-                success:false,
+                success:
+                    false,
 
-                blocked:true,
+                blocked:
+                    true,
 
                 reason:
                     authorization.reason,
 
                 startedAt:
-                    blockedResult.time,
+                    time,
 
                 completedAt:
-                    blockedResult.time,
+                    time,
 
-                duration:0
-
+                duration:
+                    0
             });
 
 
             this.emit(
                 "brain:skill:blocked",
                 {
-
                     skill:
                         skillName,
 
@@ -2103,9 +2856,12 @@ const BrainSkills = {
                             ?.actionType ||
                         null,
 
-                    time:
-                        blockedResult.time
+                    sourceAppId:
+                        skill.metadata
+                            ?.sourceAppId ||
+                        null,
 
+                    time
                 }
             );
 
@@ -2119,7 +2875,8 @@ const BrainSkills = {
             Date.now();
 
 
-        skill.runs += 1;
+        skill.runs +=
+            1;
 
 
         skill.lastRunAt =
@@ -2129,7 +2886,6 @@ const BrainSkills = {
         this.emit(
             "brain:skill:started",
             {
-
                 skill:
                     skillName,
 
@@ -2149,7 +2905,6 @@ const BrainSkills = {
                     null,
 
                 startedAt
-
             }
         );
 
@@ -2183,8 +2938,12 @@ const BrainSkills = {
                 ...result,
 
                 executed:
-                    result.success !==
-                        false,
+                    result.executed !==
+                        undefined
+                        ? result.executed ===
+                            true
+                        : result.success !==
+                            false,
 
                 actionType:
                     skill.metadata
@@ -2201,14 +2960,19 @@ const BrainSkills = {
                 completedAt,
 
                 duration:
-                    completedAt -
-                    startedAt
+                    Math.max(
+                        0,
+                        completedAt -
+                        startedAt
+                    )
 
             };
 
 
             skill.lastResult =
-                finalResult;
+                this.clone(
+                    finalResult
+                );
 
 
             if(
@@ -2223,14 +2987,15 @@ const BrainSkills = {
 
 
             this.recordExecution({
-
                 skill:
                     skillName,
 
                 success:
-                    finalResult.success,
+                    finalResult.success ===
+                        true,
 
-                blocked:false,
+                blocked:
+                    false,
 
                 startedAt,
 
@@ -2238,26 +3003,28 @@ const BrainSkills = {
 
                 duration:
                     finalResult.duration
-
             });
 
 
             this.emit(
                 "brain:skill:completed",
                 {
-
                     skill:
                         skillName,
 
                     success:
-                        finalResult.success,
+                        finalResult.success ===
+                            true,
+
+                    executed:
+                        finalResult.executed ===
+                            true,
 
                     duration:
                         finalResult.duration,
 
                     time:
                         completedAt
-
                 }
             );
 
@@ -2283,14 +3050,17 @@ const BrainSkills = {
 
             const result = {
 
-                success:false,
+                success:
+                    false,
 
-                executed:false,
+                executed:
+                    false,
 
                 skill:
                     skillName,
 
-                error:true,
+                error:
+                    true,
 
                 errorCode,
 
@@ -2318,24 +3088,30 @@ const BrainSkills = {
                 completedAt,
 
                 duration:
-                    completedAt -
-                    startedAt
+                    Math.max(
+                        0,
+                        completedAt -
+                        startedAt
+                    )
 
             };
 
 
             skill.lastResult =
-                result;
+                this.clone(
+                    result
+                );
 
 
             this.recordExecution({
-
                 skill:
                     skillName,
 
-                success:false,
+                success:
+                    false,
 
-                blocked:false,
+                blocked:
+                    false,
 
                 errorCode,
 
@@ -2345,14 +3121,12 @@ const BrainSkills = {
 
                 duration:
                     result.duration
-
             });
 
 
             this.emit(
                 "brain:skill:error",
                 {
-
                     skill:
                         skillName,
 
@@ -2361,9 +3135,11 @@ const BrainSkills = {
                     message:
                         result.message,
 
+                    duration:
+                        result.duration,
+
                     time:
                         completedAt
-
                 }
             );
 
@@ -2387,13 +3163,24 @@ const BrainSkills = {
 
     history(limit = 10){
 
+        const numeric =
+            Number(
+                limit
+            );
+
+
         const safeLimit =
             Math.max(
                 1,
                 Math.min(
                     this.historyLimit,
-                    Number(limit) ||
-                    10
+                    Number.isFinite(
+                        numeric
+                    )
+                        ? Math.floor(
+                            numeric
+                        )
+                        : 10
                 )
             );
 
@@ -2421,6 +3208,8 @@ const BrainSkills = {
 
 
         return {
+            version:
+                this.version,
 
             total:
                 skills.length,
@@ -2428,13 +3217,15 @@ const BrainSkills = {
             enabled:
                 skills.filter(
                     skill =>
-                        skill.enabled
+                        skill.enabled ===
+                            true
                 ).length,
 
             disabled:
                 skills.filter(
                     skill =>
-                        !skill.enabled
+                        skill.enabled !==
+                            true
                 ).length,
 
             readSkills:
@@ -2507,6 +3298,8 @@ const BrainSkills = {
 
 
         return {
+            version:
+                this.version,
 
             total:
                 status.total,
@@ -2543,6 +3336,9 @@ const BrainSkills = {
                 Boolean(
                     this.getService(
                         "appRegistry"
+                    ) ||
+                    this.getService(
+                        "applicationRegistry"
                     )
                 ),
 
@@ -2574,18 +3370,31 @@ const BrainSkills = {
                 skill.runs =
                     0;
 
+
                 skill.failures =
                     0;
+
 
                 skill.blockedRuns =
                     0;
 
+
                 skill.lastRunAt =
                     null;
+
 
                 skill.lastResult =
                     null;
 
+            }
+        );
+
+
+        this.emit(
+            "brain:skills:runtime-reset",
+            {
+                time:
+                    Date.now()
             }
         );
 
@@ -2597,11 +3406,46 @@ const BrainSkills = {
 };
 
 
-VAERO.register(
-    "brainSkills",
-    BrainSkills
-);
+/* =========================================================
+   REGISTER
+========================================================= */
+
+try{
+
+    if(
+        typeof VAERO !==
+            "undefined" &&
+        typeof VAERO.register ===
+            "function"
+    ){
+
+        VAERO.register(
+            "brainSkills",
+            BrainSkills
+        );
+
+    }
+
+} catch(error){
+
+    console.error(
+        "BrainSkills register edilemedi:",
+        error
+    );
+
+}
 
 
-window.BrainSkills =
-    BrainSkills;
+/* =========================================================
+   GLOBAL
+========================================================= */
+
+if(
+    typeof window !==
+        "undefined"
+){
+
+    window.BrainSkills =
+        BrainSkills;
+
+}
