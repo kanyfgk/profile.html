@@ -5,6 +5,9 @@
 
 const BrainCore = {
 
+    version:
+        "3.0.0",
+
     provider:
         null,
 
@@ -38,6 +41,12 @@ const BrainCore = {
     maxContextArray:
         50,
 
+    maxContextKeys:
+        100,
+
+    maxPromptLength:
+        8000,
+
 
     /* =====================================================
        SERVICE ACCESS
@@ -45,26 +54,45 @@ const BrainCore = {
 
     getService(name){
 
+        const serviceName =
+            String(
+                name ??
+                ""
+            ).trim();
+
+
+        if(!serviceName){
+
+            return null;
+
+        }
+
+
         try{
 
             if(
-                typeof VAERO === "undefined" ||
+                typeof VAERO ===
+                    "undefined" ||
                 typeof VAERO.get !==
                     "function"
             ){
+
                 return null;
+
             }
 
 
             return (
-                VAERO.get(name) ||
+                VAERO.get(
+                    serviceName
+                ) ||
                 null
             );
 
         } catch(error){
 
             console.warn(
-                `Brain service okunamadı: ${name}`,
+                `Brain service okunamadı: ${serviceName}`,
                 error
             );
 
@@ -80,20 +108,35 @@ const BrainCore = {
 
         try{
 
-            return (
-                VAERO?.engine ||
-                window.Engine ||
-                null
-            );
+            if(
+                typeof VAERO !==
+                    "undefined" &&
+                VAERO.engine
+            ){
+
+                return VAERO.engine;
+
+            }
 
         } catch(error){
 
-            return (
-                window.Engine ||
-                null
-            );
+            /* fallback below */
 
         }
+
+
+        if(
+            typeof window !==
+                "undefined" &&
+            window.Engine
+        ){
+
+            return window.Engine;
+
+        }
+
+
+        return null;
 
     },
 
@@ -104,13 +147,22 @@ const BrainCore = {
 
     createId(prefix = "brain"){
 
-        if(
-            typeof crypto !== "undefined" &&
-            typeof crypto.randomUUID ===
-                "function"
-        ){
+        try{
 
-            return crypto.randomUUID();
+            if(
+                typeof crypto !==
+                    "undefined" &&
+                typeof crypto.randomUUID ===
+                    "function"
+            ){
+
+                return crypto.randomUUID();
+
+            }
+
+        } catch(error){
+
+            /* fallback */
 
         }
 
@@ -129,10 +181,14 @@ const BrainCore = {
     clone(value){
 
         if(
-            value === null ||
-            value === undefined
+            value ===
+                null ||
+            value ===
+                undefined
         ){
+
             return value;
+
         }
 
 
@@ -152,6 +208,7 @@ const BrainCore = {
         } catch(error){
 
             /* JSON fallback */
+
         }
 
 
@@ -183,18 +240,24 @@ const BrainCore = {
     ){
 
         if(
-            value === null ||
-            value === undefined
+            value ===
+                null ||
+            value ===
+                undefined
         ){
+
             return value;
+
         }
 
 
         if(
             depth >
-            this.maxContextDepth
+                this.maxContextDepth
         ){
+
             return "[depth-limit]";
+
         }
 
 
@@ -212,8 +275,22 @@ const BrainCore = {
 
 
         if(
-            typeof value === "number" ||
-            typeof value === "boolean"
+            typeof value ===
+                "number"
+        ){
+
+            return Number.isFinite(
+                value
+            )
+                ? value
+                : null;
+
+        }
+
+
+        if(
+            typeof value ===
+                "boolean"
         ){
 
             return value;
@@ -223,10 +300,41 @@ const BrainCore = {
 
         if(
             typeof value ===
-                "function"
+                "bigint"
+        ){
+
+            return String(
+                value
+            );
+
+        }
+
+
+        if(
+            typeof value ===
+                "function" ||
+            typeof value ===
+                "symbol"
         ){
 
             return undefined;
+
+        }
+
+
+        if(
+            value instanceof Date
+        ){
+
+            const timestamp =
+                value.getTime();
+
+
+            return Number.isFinite(
+                timestamp
+            )
+                ? value.toISOString()
+                : null;
 
         }
 
@@ -249,6 +357,11 @@ const BrainCore = {
                             depth + 1,
                             seen
                         )
+                )
+                .filter(
+                    item =>
+                        item !==
+                            undefined
                 );
 
         }
@@ -283,7 +396,37 @@ const BrainCore = {
             }
 
 
-            const output = {};
+            const blockedKeys =
+                new Set([
+
+                    "password",
+                    "passphrase",
+                    "secret",
+                    "clientsecret",
+                    "client_secret",
+                    "token",
+                    "idtoken",
+                    "id_token",
+                    "accesstoken",
+                    "access_token",
+                    "refreshtoken",
+                    "refresh_token",
+                    "authorization",
+                    "apikey",
+                    "api_key",
+                    "privatekey",
+                    "private_key",
+                    "cardnumber",
+                    "card_number",
+                    "cvv",
+                    "cvc",
+                    "pin"
+
+                ]);
+
+
+            const output =
+                {};
 
 
             Object.entries(
@@ -291,41 +434,26 @@ const BrainCore = {
             )
                 .slice(
                     0,
-                    100
+                    this.maxContextKeys
                 )
                 .forEach(
-                    ([key,item]) => {
-
-                        /*
-                         * Provider / history context içine
-                         * açık credential benzeri alanlar
-                         * taşınmaz.
-                         */
+                    (
+                        [
+                            key,
+                            item
+                        ]
+                    ) => {
 
                         const normalizedKey =
                             String(
                                 key
                             )
                                 .trim()
-                                .toLowerCase();
-
-
-                        const blockedKeys =
-                            new Set([
-                                "password",
-                                "passphrase",
-                                "secret",
-                                "token",
-                                "accesstoken",
-                                "refreshtoken",
-                                "authorization",
-                                "apikey",
-                                "api_key",
-                                "privatekey",
-                                "private_key",
-                                "cardnumber",
-                                "cvv"
-                            ]);
+                                .toLowerCase()
+                                .replace(
+                                    /[\s-]/g,
+                                    ""
+                                );
 
 
                         if(
@@ -334,8 +462,11 @@ const BrainCore = {
                             )
                         ){
 
-                            output[key] =
+                            output[
+                                key
+                            ] =
                                 "[redacted]";
+
 
                             return;
 
@@ -355,7 +486,9 @@ const BrainCore = {
                                 undefined
                         ){
 
-                            output[key] =
+                            output[
+                                key
+                            ] =
                                 sanitized;
 
                         }
@@ -371,6 +504,9 @@ const BrainCore = {
 
         return String(
             value
+        ).slice(
+            0,
+            4000
         );
 
     },
@@ -386,15 +522,27 @@ const BrainCore = {
                 context
             )
         ){
+
             return {};
+
         }
 
 
-        return (
+        const sanitized =
             this.sanitizeValue(
                 context
-            ) ||
-            {}
+            );
+
+
+        return (
+            sanitized &&
+            typeof sanitized ===
+                "object" &&
+            !Array.isArray(
+                sanitized
+            )
+                ? sanitized
+                : {}
         );
 
     },
@@ -425,6 +573,33 @@ const BrainCore = {
         }
 
 
+        const now =
+            Date.now();
+
+
+        const capabilities =
+            Array.isArray(
+                meta.capabilities
+            )
+                ? [
+                    ...new Set(
+                        meta.capabilities
+                            .map(
+                                item =>
+                                    String(
+                                        item ??
+                                            ""
+                                    )
+                                        .trim()
+                            )
+                            .filter(
+                                Boolean
+                            )
+                    )
+                ]
+                : [];
+
+
         this.provider =
             provider;
 
@@ -437,32 +612,55 @@ const BrainCore = {
                     provider.id ||
                     provider.name ||
                     "brain-provider"
-                ),
+                )
+                    .trim()
+                    .slice(
+                        0,
+                        240
+                    ),
 
             name:
                 String(
                     meta.name ||
                     provider.name ||
                     "Brain Provider"
-                ),
+                )
+                    .trim()
+                    .slice(
+                        0,
+                        240
+                    ),
 
             version:
                 meta.version ||
+                provider.version ||
                 null,
 
-            capabilities:
-                Array.isArray(
-                    meta.capabilities
-                )
-                    ? [
-                        ...meta.capabilities
-                    ]
-                    : [],
+            type:
+                meta.type ||
+                provider.type ||
+                null,
+
+            local:
+                meta.local ===
+                    true ||
+                provider.local ===
+                    true,
+
+            fallback:
+                meta.fallback ===
+                    true,
+
+            externalAI:
+                meta.externalAI ===
+                    true ||
+                provider.externalAI ===
+                    true,
+
+            capabilities,
 
             registeredAt:
-                Date.now(),
-
-            ...meta
+                now
 
         };
 
@@ -474,7 +672,7 @@ const BrainCore = {
                     this.getProviderInfo(),
 
                 time:
-                    Date.now()
+                    now
             }
         );
 
@@ -492,6 +690,7 @@ const BrainCore = {
 
         this.provider =
             null;
+
 
         this.providerMeta =
             null;
@@ -530,7 +729,9 @@ const BrainCore = {
         if(
             !this.hasProvider()
         ){
+
             return null;
+
         }
 
 
@@ -558,6 +759,20 @@ const BrainCore = {
         payload = {}
     ){
 
+        const name =
+            String(
+                eventName ??
+                    ""
+            ).trim();
+
+
+        if(!name){
+
+            return false;
+
+        }
+
+
         try{
 
             if(
@@ -568,7 +783,7 @@ const BrainCore = {
             ){
 
                 VAERO.emit(
-                    eventName,
+                    name,
                     payload
                 );
 
@@ -577,6 +792,17 @@ const BrainCore = {
 
             }
 
+        } catch(error){
+
+            console.warn(
+                `BrainCore event gönderilemedi: ${name}`,
+                error
+            );
+
+        }
+
+
+        try{
 
             const events =
                 this.getService(
@@ -591,7 +817,7 @@ const BrainCore = {
             ){
 
                 events.emit(
-                    eventName,
+                    name,
                     payload
                 );
 
@@ -603,7 +829,7 @@ const BrainCore = {
         } catch(error){
 
             console.warn(
-                `BrainCore event gönderilemedi: ${eventName}`,
+                `BrainCore event fallback gönderilemedi: ${name}`,
                 error
             );
 
@@ -622,12 +848,13 @@ const BrainCore = {
     normalizePrompt(prompt){
 
         return String(
-            prompt ?? ""
+            prompt ??
+                ""
         )
             .trim()
             .slice(
                 0,
-                8000
+                this.maxPromptLength
             );
 
     },
@@ -654,21 +881,46 @@ const BrainCore = {
             null;
 
 
-        return [
+        const actionType =
+            intent.actionType ||
             intent.type ||
-                "unknown",
+            "unknown";
 
+
+        const target =
             intent.target ||
-                "unknown",
+            intent.targetId ||
+            "unknown";
 
+
+        const operation =
             intent.operation ||
-                "general",
+            intent.action ||
+            "general";
 
-            entityId ||
-                "no-entity",
 
-            worldId ||
+        return [
+            String(
+                actionType
+            ),
+
+            String(
+                target
+            ),
+
+            String(
+                operation
+            ),
+
+            String(
+                entityId ||
+                "no-entity"
+            ),
+
+            String(
+                worldId ||
                 "no-world"
+            )
         ].join(
             "::"
         );
@@ -677,7 +929,7 @@ const BrainCore = {
 
 
     /* =====================================================
-       CONFIRMATION
+       CONFIRMATION CLEANUP
     ===================================================== */
 
     cleanExpiredConfirmations(){
@@ -695,10 +947,12 @@ const BrainCore = {
 
                     if(
                         !confirmation ||
-                        confirmation.expiresAt <=
-                            now ||
                         confirmation.used ===
-                            true
+                            true ||
+                        Number(
+                            confirmation.expiresAt
+                        ) <=
+                            now
                     ){
 
                         this.pendingConfirmations
@@ -717,11 +971,26 @@ const BrainCore = {
     },
 
 
+    /* =====================================================
+       CONFIRMATION
+    ===================================================== */
+
     createConfirmation(
         analysis
     ){
 
         this.cleanExpiredConfirmations();
+
+
+        if(
+            !analysis ||
+            typeof analysis !==
+                "object"
+        ){
+
+            return null;
+
+        }
 
 
         const id =
@@ -752,6 +1021,8 @@ const BrainCore = {
             actionType:
                 analysis.policy
                     ?.actionType ||
+                analysis.intent
+                    ?.actionType ||
                 null,
 
             createdAt:
@@ -780,19 +1051,27 @@ const BrainCore = {
                     id,
 
                 intent:
-                    confirmation.intent,
+                    this.clone(
+                        confirmation.intent
+                    ),
 
                 actionType:
                     confirmation.actionType,
 
                 expiresAt:
-                    confirmation.expiresAt
+                    confirmation.expiresAt,
+
+                time:
+                    now
             }
         );
 
 
-        return this.clone(
-            confirmation
+        return (
+            this.clone(
+                confirmation
+            ) ||
+            null
         );
 
     },
@@ -803,18 +1082,32 @@ const BrainCore = {
         this.cleanExpiredConfirmations();
 
 
+        const confirmationId =
+            String(
+                id ??
+                    ""
+            ).trim();
+
+
+        if(!confirmationId){
+
+            return null;
+
+        }
+
+
         const confirmation =
             this.pendingConfirmations.get(
-                String(
-                    id ||
-                    ""
-                )
+                confirmationId
             );
 
 
         return confirmation
-            ? this.clone(
-                confirmation
+            ? (
+                this.clone(
+                    confirmation
+                ) ||
+                null
             )
             : null;
 
@@ -829,12 +1122,26 @@ const BrainCore = {
         this.cleanExpiredConfirmations();
 
 
+        const confirmationId =
+            String(
+                id ??
+                    ""
+            ).trim();
+
+
+        if(
+            !confirmationId ||
+            !analysis
+        ){
+
+            return false;
+
+        }
+
+
         const confirmation =
             this.pendingConfirmations.get(
-                String(
-                    id ||
-                    ""
-                )
+                confirmationId
             );
 
 
@@ -843,7 +1150,27 @@ const BrainCore = {
             confirmation.used ===
                 true
         ){
+
             return false;
+
+        }
+
+
+        if(
+            Number(
+                confirmation.expiresAt
+            ) <=
+                Date.now()
+        ){
+
+            this.pendingConfirmations
+                .delete(
+                    confirmationId
+                );
+
+
+            return false;
+
         }
 
 
@@ -859,20 +1186,50 @@ const BrainCore = {
                 fingerprint
         ){
 
+            this.emit(
+                "brain:confirmation:rejected",
+                {
+                    confirmationId,
+
+                    reason:
+                        "fingerprint-mismatch",
+
+                    time:
+                        Date.now()
+                }
+            );
+
+
             return false;
 
         }
 
 
+        const policyActionType =
+            analysis.policy
+                ?.actionType ||
+            null;
+
+
         if(
-            confirmation.expiresAt <=
-                Date.now()
+            confirmation.actionType &&
+            policyActionType &&
+            confirmation.actionType !==
+                policyActionType
         ){
 
-            this.pendingConfirmations
-                .delete(
-                    confirmation.id
-                );
+            this.emit(
+                "brain:confirmation:rejected",
+                {
+                    confirmationId,
+
+                    reason:
+                        "action-type-mismatch",
+
+                    time:
+                        Date.now()
+                }
+            );
 
 
             return false;
@@ -885,17 +1242,19 @@ const BrainCore = {
 
 
         this.pendingConfirmations.delete(
-            confirmation.id
+            confirmationId
         );
 
 
         this.emit(
             "brain:confirmation:consumed",
             {
-                confirmationId:
-                    confirmation.id,
+                confirmationId,
 
                 fingerprint,
+
+                actionType:
+                    confirmation.actionType,
 
                 time:
                     Date.now()
@@ -970,12 +1329,23 @@ const BrainCore = {
 
             try{
 
-                intent =
+                const detected =
                     intentService.detect(
                         normalizedPrompt,
                         safeContext
-                    ) ||
-                    intent;
+                    );
+
+
+                if(
+                    detected &&
+                    typeof detected ===
+                        "object"
+                ){
+
+                    intent =
+                        detected;
+
+                }
 
             } catch(error){
 
@@ -1020,12 +1390,23 @@ const BrainCore = {
 
             try{
 
-                policy =
+                const evaluated =
                     policyService.evaluateIntent(
                         intent,
                         safeContext
-                    ) ||
-                    policy;
+                    );
+
+
+                if(
+                    evaluated &&
+                    typeof evaluated ===
+                        "object"
+                ){
+
+                    policy =
+                        evaluated;
+
+                }
 
             } catch(error){
 
@@ -1047,9 +1428,17 @@ const BrainCore = {
             context:
                 safeContext,
 
-            intent,
+            intent:
+                this.sanitizeValue(
+                    intent
+                ) ||
+                intent,
 
-            policy,
+            policy:
+                this.sanitizeValue(
+                    policy
+                ) ||
+                policy,
 
             fingerprint:
                 this.createIntentFingerprint(
@@ -1102,18 +1491,26 @@ const BrainCore = {
             null;
 
 
+        const confirmationId =
+            String(
+                options.confirmationId ??
+                    ""
+            ).trim();
+
+
         /*
-         * Yeni güvenli yol:
-         * options.confirmationId
+         * Confirmation is accepted only when bound to the
+         * exact intent/context fingerprint.
+         *
+         * A raw boolean such as confirmed:true is NOT an
+         * execution authority.
          */
 
-        if(
-            options.confirmationId
-        ){
+        if(confirmationId){
 
             confirmationApproved =
                 this.consumeConfirmation(
-                    options.confirmationId,
+                    confirmationId,
                     analysis
                 );
 
@@ -1122,29 +1519,6 @@ const BrainCore = {
                 confirmationApproved
                     ? "bound-confirmation"
                     : "invalid-confirmation";
-
-        }
-
-
-        /*
-         * Legacy compatibility.
-         *
-         * brain-action-policy ve UI confirmation flow
-         * güncellendiğinde bu yol kaldırılabilir.
-         */
-
-        if(
-            !confirmationApproved &&
-            options.confirmed ===
-                true
-        ){
-
-            confirmationApproved =
-                true;
-
-
-            confirmationMode =
-                "legacy-boolean";
 
         }
 
@@ -1161,14 +1535,26 @@ const BrainCore = {
 
         if(
             analysis.policy
-                ?.requiresConfirmation &&
+                ?.requiresConfirmation ===
+                true &&
             !confirmationApproved
         ){
 
-            confirmation =
-                this.createConfirmation(
-                    analysis
-                );
+            /*
+             * Do not create another confirmation when the
+             * caller supplied an invalid/expired ID.
+             *
+             * The caller must explicitly restart the route.
+             */
+
+            if(!confirmationId){
+
+                confirmation =
+                    this.createConfirmation(
+                        analysis
+                    );
+
+            }
 
         }
 
@@ -1185,24 +1571,43 @@ const BrainCore = {
             null;
 
 
+        const policyAllows =
+            analysis.policy?.allowed ===
+                true;
+
+
+        const policyExecutable =
+            analysis.policy?.executable ===
+                true;
+
+
+        const policyBlocked =
+            analysis.policy?.blocked ===
+                true;
+
+
+        const requiresConfirmation =
+            analysis.policy?.requiresConfirmation ===
+                true;
+
+
+        const confirmationSatisfied =
+            !requiresConfirmation ||
+            confirmationApproved;
+
+
         const canExecute =
             Boolean(
 
                 shouldExecute &&
 
-                analysis.policy &&
+                policyAllows &&
 
-                analysis.policy.allowed &&
+                policyExecutable &&
 
-                analysis.policy.executable &&
+                !policyBlocked &&
 
-                !analysis.policy.blocked &&
-
-                (
-                    !analysis.policy
-                        .requiresConfirmation ||
-                    confirmationApproved
-                ) &&
+                confirmationSatisfied &&
 
                 actionService &&
 
@@ -1216,24 +1621,32 @@ const BrainCore = {
 
             try{
 
+                const executionContext = {
+
+                    ...analysis.context,
+
+                    message:
+                        analysis.prompt,
+
+                    confirmed:
+                        confirmationApproved,
+
+                    confirmationId:
+                        confirmationApproved
+                            ? confirmationId
+                            : null,
+
+                    confirmationMode:
+                        confirmationApproved
+                            ? "bound-confirmation"
+                            : null
+                };
+
+
                 const result =
                     actionService.execute(
                         analysis.intent,
-                        {
-                            ...analysis.context,
-
-                            message:
-                                analysis.prompt,
-
-                            confirmed:
-                                confirmationApproved,
-
-                            confirmationId:
-                                options.confirmationId ||
-                                null,
-
-                            confirmationMode
-                        }
+                        executionContext
                     );
 
 
@@ -1248,15 +1661,20 @@ const BrainCore = {
 
 
                     executed =
-                        result.executed !==
-                            false;
+                        result.executed ===
+                            true ||
+                        (
+                            result.executed ===
+                                undefined &&
+                            result.success !==
+                                false
+                        );
 
                 } else {
 
                     executed =
-                        Boolean(
-                            result
-                        );
+                        result ===
+                            true;
 
 
                     actionResult =
@@ -1300,21 +1718,28 @@ const BrainCore = {
 
             }
 
-        } else {
+        }
+        else {
 
-            if(
-                analysis.policy
-                    ?.blocked
-            ){
+            if(policyBlocked){
 
                 executionReason =
-                    analysis.policy.reason ||
+                    analysis.policy?.reason ||
                     "Aksiyon policy tarafından engellendi.";
 
             }
             else if(
-                analysis.policy
-                    ?.requiresConfirmation &&
+                requiresConfirmation &&
+                confirmationId &&
+                !confirmationApproved
+            ){
+
+                executionReason =
+                    "Confirmation geçersiz, süresi dolmuş veya bu intent ile eşleşmiyor.";
+
+            }
+            else if(
+                requiresConfirmation &&
                 !confirmationApproved
             ){
 
@@ -1322,39 +1747,33 @@ const BrainCore = {
                     "Kullanıcı onayı gerekiyor.";
 
             }
-            else if(
-                !analysis.policy
-                    ?.allowed
-            ){
+            else if(!policyAllows){
 
                 executionReason =
                     analysis.policy?.reason ||
                     "Aksiyona izin verilmedi.";
 
             }
-            else if(
-                !analysis.policy
-                    ?.executable
-            ){
+            else if(!policyExecutable){
 
                 executionReason =
                     "Intent yürütülebilir bir aksiyon değil.";
 
             }
+            else if(!shouldExecute){
+
+                executionReason =
+                    "Execution devre dışı.";
+
+            }
             else if(
-                !actionService
+                !actionService ||
+                typeof actionService.execute !==
+                    "function"
             ){
 
                 executionReason =
                     "Brain Actions servisi bulunamadı.";
-
-            }
-            else if(
-                !shouldExecute
-            ){
-
-                executionReason =
-                    "Execution devre dışı.";
 
             }
 
@@ -1366,19 +1785,14 @@ const BrainCore = {
             ...analysis,
 
             executed:
-                Boolean(
-                    executed
-                ),
+                executed ===
+                    true,
 
             actionResult,
 
             executionReason,
 
-            requiresConfirmation:
-                Boolean(
-                    analysis.policy
-                        ?.requiresConfirmation
-                ),
+            requiresConfirmation,
 
             confirmationApproved,
 
@@ -1387,10 +1801,7 @@ const BrainCore = {
             confirmation,
 
             blocked:
-                Boolean(
-                    analysis.policy
-                        ?.blocked
-                ),
+                policyBlocked,
 
             routedAt:
                 Date.now()
@@ -1406,7 +1817,9 @@ const BrainCore = {
             "brain:routed",
             {
                 intent:
-                    routeResult.intent,
+                    this.clone(
+                        routeResult.intent
+                    ),
 
                 executed:
                     routeResult.executed,
@@ -1422,6 +1835,10 @@ const BrainCore = {
                     routeResult
                         .confirmationApproved,
 
+                confirmationId:
+                    confirmation?.id ||
+                    null,
+
                 time:
                     routeResult.routedAt
             }
@@ -1432,7 +1849,8 @@ const BrainCore = {
 
     },
 
-   /* =====================================================
+
+    /* =====================================================
        PROVIDER CONTEXT
     ===================================================== */
 
@@ -1455,28 +1873,24 @@ const BrainCore = {
                 policy:{
 
                     allowed:
-                        Boolean(
-                            routeResult.policy
-                                ?.allowed
-                        ),
+                        routeResult.policy
+                            ?.allowed ===
+                        true,
 
                     executable:
-                        Boolean(
-                            routeResult.policy
-                                ?.executable
-                        ),
+                        routeResult.policy
+                            ?.executable ===
+                        true,
 
                     blocked:
-                        Boolean(
-                            routeResult.policy
-                                ?.blocked
-                        ),
+                        routeResult.policy
+                            ?.blocked ===
+                        true,
 
                     requiresConfirmation:
-                        Boolean(
-                            routeResult.policy
-                                ?.requiresConfirmation
-                        ),
+                        routeResult.policy
+                            ?.requiresConfirmation ===
+                        true,
 
                     actionType:
                         routeResult.policy
@@ -1490,21 +1904,30 @@ const BrainCore = {
                 },
 
                 executed:
-                    routeResult.executed,
+                    routeResult.executed ===
+                    true,
 
                 actionResult:
                     routeResult.actionResult,
 
                 requiresConfirmation:
                     routeResult
-                        .requiresConfirmation,
+                        .requiresConfirmation ===
+                    true,
 
                 confirmationApproved:
                     routeResult
-                        .confirmationApproved,
+                        .confirmationApproved ===
+                    true,
+
+                confirmationMode:
+                    routeResult
+                        .confirmationMode ||
+                    null,
 
                 blocked:
-                    routeResult.blocked
+                    routeResult.blocked ===
+                    true
 
             }
 
@@ -1516,6 +1939,38 @@ const BrainCore = {
     /* =====================================================
        PROVIDER TIMEOUT
     ===================================================== */
+
+    normalizeProviderTimeout(value){
+
+        const timeout =
+            Number(
+                value
+            );
+
+
+        if(
+            !Number.isFinite(
+                timeout
+            )
+        ){
+
+            return this.providerTimeout;
+
+        }
+
+
+        return Math.max(
+            1000,
+            Math.min(
+                60000,
+                Math.round(
+                    timeout
+                )
+            )
+        );
+
+    },
+
 
     async callProvider(
         prompt,
@@ -1535,17 +1990,34 @@ const BrainCore = {
 
 
         const timeout =
-            Math.max(
-                1000,
-                Math.min(
-                    60000,
-                    Number(
-                        options.providerTimeout ||
-                        this.providerTimeout
-                    ) ||
-                    this.providerTimeout
+            this.normalizeProviderTimeout(
+                options.providerTimeout ||
+                this.providerTimeout
+            );
+
+
+        const timerAPI =
+            typeof globalThis !==
+                "undefined"
+                ? globalThis
+                : null;
+
+
+        if(
+            !timerAPI ||
+            typeof timerAPI.setTimeout !==
+                "function"
+        ){
+
+            return await Promise.resolve(
+                this.provider.ask(
+                    prompt,
+                    context,
+                    options
                 )
             );
+
+        }
 
 
         let timer =
@@ -1572,7 +2044,7 @@ const BrainCore = {
                     ) => {
 
                         timer =
-                            window.setTimeout(
+                            timerAPI.setTimeout(
                                 () => {
 
                                     reject(
@@ -1596,9 +2068,14 @@ const BrainCore = {
 
         } finally {
 
-            if(timer){
+            if(
+                timer !==
+                    null &&
+                typeof timerAPI.clearTimeout ===
+                    "function"
+            ){
 
-                window.clearTimeout(
+                timerAPI.clearTimeout(
                     timer
                 );
 
@@ -1610,7 +2087,7 @@ const BrainCore = {
 
 
     /* =====================================================
-       LOCAL FALLBACK REPLY
+       LOCAL ROUTE REPLY
     ===================================================== */
 
     createLocalRouteReply(
@@ -1618,13 +2095,17 @@ const BrainCore = {
     ){
 
         if(
-            routeResult.executed
+            routeResult.executed ===
+                true
         ){
 
             return (
                 routeResult
                     .actionResult
                     ?.message ||
+                routeResult
+                    .actionResult
+                    ?.reply ||
                 "İşlem tamamlandı."
             );
 
@@ -1632,13 +2113,14 @@ const BrainCore = {
 
 
         if(
-            routeResult
-                .requiresConfirmation &&
-            !routeResult
-                .confirmationApproved
+            routeResult.requiresConfirmation ===
+                true &&
+            routeResult.confirmationApproved !==
+                true
         ){
 
             return (
+                routeResult.executionReason ||
                 routeResult.policy
                     ?.reason ||
                 "Bu işlem devam etmeden önce onayını gerektiriyor."
@@ -1648,7 +2130,8 @@ const BrainCore = {
 
 
         if(
-            routeResult.blocked
+            routeResult.blocked ===
+                true
         ){
 
             return (
@@ -1661,9 +2144,7 @@ const BrainCore = {
         }
 
 
-        if(
-            routeResult.executionReason
-        ){
+        if(routeResult.executionReason){
 
             return routeResult
                 .executionReason;
@@ -1752,9 +2233,9 @@ const BrainCore = {
         /* =================================================
            NO PROVIDER
 
-           Provider yokluğu Action yürütülmesini engellemez.
-           Brain local Engine coordinator olarak çalışmaya
-           devam eder.
+           Action routing remains local.
+           Missing provider never grants or blocks action
+           authority.
         ================================================= */
 
         if(
@@ -1794,6 +2275,36 @@ const BrainCore = {
                 result;
 
 
+            this.emit(
+                "brain:response",
+                {
+                    requestId,
+
+                    provider:
+                        null,
+
+                    executed:
+                        result.executed,
+
+                    blocked:
+                        result.blocked,
+
+                    requiresConfirmation:
+                        result
+                            .requiresConfirmation,
+
+                    error:
+                        false,
+
+                    local:
+                        true,
+
+                    time:
+                        result.respondedAt
+                }
+            );
+
+
             return result;
 
         }
@@ -1802,11 +2313,8 @@ const BrainCore = {
         /* =================================================
            PROVIDER
 
-           Provider yalnız language/reasoning response
-           üretir.
-
-           Engine action authority:
-           Intent → Policy → BrainActions zincirindedir.
+           Provider may generate language/reasoning output,
+           but cannot overwrite action authority.
         ================================================= */
 
         try{
@@ -1836,23 +2344,22 @@ const BrainCore = {
             ){
 
                 providerPayload = {
-
                     reply:
                         providerResult
-
                 };
 
             }
             else if(
                 providerResult &&
                 typeof providerResult ===
-                    "object"
+                    "object" &&
+                !Array.isArray(
+                    providerResult
+                )
             ){
 
                 providerPayload = {
-
                     ...providerResult
-
                 };
 
             }
@@ -1868,9 +2375,15 @@ const BrainCore = {
 
                 (
                     routeResult.executed
-                        ? routeResult
-                            .actionResult
-                            ?.message
+                        ? (
+                            routeResult
+                                .actionResult
+                                ?.message ||
+                            routeResult
+                                .actionResult
+                                ?.reply ||
+                            null
+                        )
                         : null
                 ) ||
 
@@ -1882,17 +2395,8 @@ const BrainCore = {
 
 
             /*
-             * Provider şu authority alanlarını
-             * overwrite edemez:
-             *
-             * intent
-             * policy
-             * executed
-             * blocked
-             * confirmation
-             * actionResult
-             *
-             * Spread sırası bu nedenle önemlidir.
+             * Authority fields are spread AFTER provider
+             * payload so provider cannot forge them.
              */
 
             const result = {
@@ -1915,9 +2419,8 @@ const BrainCore = {
                     true,
 
                 error:
-                    Boolean(
-                        providerPayload.error
-                    ),
+                    providerPayload.error ===
+                        true,
 
                 respondedAt:
                     Date.now()
@@ -1987,6 +2490,9 @@ const BrainCore = {
                             routeResult
                                 .actionResult
                                 ?.message ||
+                            routeResult
+                                .actionResult
+                                ?.reply ||
                             "İşlem tamamlandı ancak Brain provider yanıtı alınamadı."
                         )
                         : routeResult
@@ -1994,6 +2500,8 @@ const BrainCore = {
                           !routeResult
                               .confirmationApproved
                             ? (
+                                routeResult
+                                    .executionReason ||
                                 routeResult.policy
                                     ?.reason ||
                                 "Bu işlem onayını gerektiriyor."
@@ -2065,20 +2573,70 @@ const BrainCore = {
 
     confirm(
         confirmationId,
-        prompt,
+        prompt = "",
         context = {},
         options = {}
     ){
 
-        if(
-            !confirmationId
-        ){
-            return null;
+        const id =
+            String(
+                confirmationId ??
+                    ""
+            ).trim();
+
+
+        if(!id){
+
+            return {
+                success:
+                    false,
+
+                executed:
+                    false,
+
+                confirmationApproved:
+                    false,
+
+                error:
+                    "confirmation-id-required",
+
+                message:
+                    "Confirmation ID gerekli."
+            };
+
+        }
+
+
+        const cleanPrompt =
+            this.normalizePrompt(
+                prompt
+            );
+
+
+        if(!cleanPrompt){
+
+            return {
+                success:
+                    false,
+
+                executed:
+                    false,
+
+                confirmationApproved:
+                    false,
+
+                error:
+                    "confirmation-prompt-required",
+
+                message:
+                    "Confirmation için orijinal işlem isteği gerekli."
+            };
+
         }
 
 
         return this.route(
-            prompt,
+            cleanPrompt,
             context,
             {
                 ...options,
@@ -2086,7 +2644,8 @@ const BrainCore = {
                 execute:
                     true,
 
-                confirmationId
+                confirmationId:
+                    id
             }
         );
 
@@ -2103,9 +2662,19 @@ const BrainCore = {
 
         const id =
             String(
-                confirmationId ||
-                ""
-            );
+                confirmationId ??
+                    ""
+            ).trim();
+
+
+        if(!id){
+
+            return false;
+
+        }
+
+
+        this.cleanExpiredConfirmations();
 
 
         if(
@@ -2113,7 +2682,9 @@ const BrainCore = {
                 id
             )
         ){
+
             return false;
+
         }
 
 
@@ -2149,6 +2720,9 @@ const BrainCore = {
 
 
         return {
+
+            version:
+                this.version,
 
             providerConnected:
                 this.hasProvider(),
@@ -2233,6 +2807,20 @@ const BrainCore = {
                         )
                     ),
 
+                skills:
+                    Boolean(
+                        this.getService(
+                            "brainSkills"
+                        )
+                    ),
+
+                mode:
+                    Boolean(
+                        this.getService(
+                            "brainMode"
+                        )
+                    ),
+
                 provider:
                     status
                         .providerConnected
@@ -2252,11 +2840,14 @@ const BrainCore = {
         this.lastAnalysis =
             null;
 
+
         this.lastRoute =
             null;
 
+
         this.lastResponse =
             null;
+
 
         this.requestSequence =
             0;
@@ -2266,6 +2857,15 @@ const BrainCore = {
             .clear();
 
 
+        this.emit(
+            "brain:runtime:reset",
+            {
+                time:
+                    Date.now()
+            }
+        );
+
+
         return true;
 
     }
@@ -2273,11 +2873,46 @@ const BrainCore = {
 };
 
 
-VAERO.register(
-    "brainCore",
-    BrainCore
-);
+/* =========================================================
+   REGISTER
+========================================================= */
+
+try{
+
+    if(
+        typeof VAERO !==
+            "undefined" &&
+        typeof VAERO.register ===
+            "function"
+    ){
+
+        VAERO.register(
+            "brainCore",
+            BrainCore
+        );
+
+    }
+
+} catch(error){
+
+    console.error(
+        "BrainCore register edilemedi:",
+        error
+    );
+
+}
 
 
-window.BrainCore =
-    BrainCore;
+/* =========================================================
+   GLOBAL
+========================================================= */
+
+if(
+    typeof window !==
+        "undefined"
+){
+
+    window.BrainCore =
+        BrainCore;
+
+}
