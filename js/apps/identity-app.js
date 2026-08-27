@@ -15,6 +15,19 @@ const IdentityApp = {
 
     escapeHTML(value){
 
+        if(
+            window.UI &&
+            typeof UI.escapeHTML ===
+                "function"
+        ){
+
+            return UI.escapeHTML(
+                value
+            );
+
+        }
+
+
         return String(
             value ?? ""
         )
@@ -36,15 +49,19 @@ const IdentityApp = {
         try{
 
             if(
-                typeof VAERO !== "undefined" &&
+                typeof VAERO !==
+                    "undefined" &&
                 VAERO.engine
             ){
+
                 return VAERO.engine;
+
             }
 
         } catch(error){
 
             /* fallback */
+
         }
 
 
@@ -61,16 +78,21 @@ const IdentityApp = {
         try{
 
             if(
-                typeof VAERO === "undefined" ||
+                typeof VAERO ===
+                    "undefined" ||
                 typeof VAERO.get !==
                     "function"
             ){
+
                 return null;
+
             }
 
 
             return (
-                VAERO.get(name) ||
+                VAERO.get(
+                    name
+                ) ||
                 null
             );
 
@@ -110,12 +132,21 @@ const IdentityApp = {
             typeof engine.mount !==
                 "function"
         ){
+
             return false;
+
         }
 
 
+        const entity =
+            engine.currentOpenedEntity ||
+            engine.currentEntity ||
+            engine.rootEntity ||
+            null;
+
+
         return engine.mount(
-            engine.currentEntity
+            entity
         );
 
     },
@@ -125,7 +156,9 @@ const IdentityApp = {
        BRAIN CONTEXT
     ===================================================== */
 
-    enterBrainContext(entity = null){
+    enterBrainContext(
+        entity = null
+    ){
 
         try{
 
@@ -145,7 +178,11 @@ const IdentityApp = {
                     verification:
                         entity?.identity
                             ?.verificationStatus ||
-                        "unverified"
+                        "unverified",
+
+                    editorOpen:
+                        this.editorOpen ===
+                            true
                 }
             );
 
@@ -173,7 +210,16 @@ const IdentityApp = {
                 "VA"
             )
                 .trim()
-                .toUpperCase();
+                .toUpperCase()
+                .replace(
+                    /[^A-Z0-9]/g,
+                    ""
+                )
+                .slice(
+                    0,
+                    8
+                ) ||
+            "VA";
 
 
         let randomPart =
@@ -183,7 +229,8 @@ const IdentityApp = {
         try{
 
             if(
-                typeof crypto !== "undefined" &&
+                typeof crypto !==
+                    "undefined" &&
                 typeof crypto.randomUUID ===
                     "function"
             ){
@@ -217,6 +264,14 @@ const IdentityApp = {
                 `${Date.now().toString(36)}${Math.random()
                     .toString(36)
                     .slice(2,8)}`
+                    .replace(
+                        /[^a-z0-9]/gi,
+                        ""
+                    )
+                    .slice(
+                        0,
+                        12
+                    )
                     .toUpperCase();
 
         }
@@ -280,6 +335,44 @@ const IdentityApp = {
     },
 
 
+    normalizeExternalIdentifier(value){
+
+        return String(
+            value ||
+            ""
+        )
+            .trim()
+            .replace(
+                /\s+/g,
+                " "
+            )
+            .slice(
+                0,
+                120
+            );
+
+    },
+
+
+    normalizeAlias(value){
+
+        return String(
+            value ||
+            ""
+        )
+            .trim()
+            .replace(
+                /\s+/g,
+                " "
+            )
+            .slice(
+                0,
+                80
+            );
+
+    },
+
+
     getIdentity(entity){
 
         const existing =
@@ -299,6 +392,12 @@ const IdentityApp = {
             Date.now();
 
 
+        const verificationStatus =
+            this.normalizeVerification(
+                existing.verificationStatus
+            );
+
+
         return {
 
             vaId:
@@ -306,37 +405,36 @@ const IdentityApp = {
                     existing.vaId ||
                     existing.vaID ||
                     ""
-                ).trim(),
+                )
+                    .trim()
+                    .slice(
+                        0,
+                        160
+                    ),
 
             aeId:
-                String(
+                this.normalizeExternalIdentifier(
                     existing.aeId ||
-                    existing.aeID ||
-                    ""
-                ).trim(),
+                    existing.aeID
+                ),
 
             eaId:
-                String(
+                this.normalizeExternalIdentifier(
                     existing.eaId ||
-                    existing.eaID ||
-                    ""
-                ).trim(),
+                    existing.eaID
+                ),
 
             alias:
-                String(
-                    existing.alias ||
-                    ""
-                ).trim(),
+                this.normalizeAlias(
+                    existing.alias
+                ),
 
             visibility:
                 this.normalizeVisibility(
                     existing.visibility
                 ),
 
-            verificationStatus:
-                this.normalizeVerification(
-                    existing.verificationStatus
-                ),
+            verificationStatus,
 
             verificationRequestedAt:
                 Number(
@@ -345,21 +443,31 @@ const IdentityApp = {
                 null,
 
             verifiedAt:
-                Number(
-                    existing.verifiedAt
-                ) ||
-                null,
+                verificationStatus ===
+                    "verified"
+                    ? (
+                        Number(
+                            existing.verifiedAt
+                        ) ||
+                        null
+                    )
+                    : null,
 
             issuer:
                 String(
                     existing.issuer ||
                     (
-                        existing.verificationStatus ===
+                        verificationStatus ===
                             "verified"
                             ? "VAERO"
                             : ""
                     )
-                ).trim(),
+                )
+                    .trim()
+                    .slice(
+                        0,
+                        120
+                    ),
 
             createdAt:
                 Number(
@@ -384,7 +492,9 @@ const IdentityApp = {
     ensureVAID(entity){
 
         if(!entity){
+
             return null;
+
         }
 
 
@@ -395,7 +505,14 @@ const IdentityApp = {
 
 
         if(identity.vaId){
+
+            entity.identity = {
+                ...identity
+            };
+
+
             return identity;
+
         }
 
 
@@ -434,8 +551,23 @@ const IdentityApp = {
             !entity ||
             !entity.id
         ){
+
             return false;
+
         }
+
+
+        const normalizedIdentity =
+            this.getIdentity(
+                entity
+            );
+
+
+        entity.identity = {
+            ...normalizedIdentity,
+            updatedAt:
+                Date.now()
+        };
 
 
         const manager =
@@ -444,23 +576,17 @@ const IdentityApp = {
             );
 
 
-        /*
-         * EntityManager.update şu anda identity alanını
-         * doğrudan yönetmiyorsa Entity nesnesini koruyoruz.
-         */
-
-        if(
-            manager &&
-            typeof manager.get ===
-                "function"
-        ){
+        if(manager){
 
             try{
 
                 const managed =
-                    manager.get(
-                        entity.id
-                    );
+                    typeof manager.get ===
+                        "function"
+                        ? manager.get(
+                            entity.id
+                        )
+                        : null;
 
 
                 if(managed){
@@ -477,10 +603,41 @@ const IdentityApp = {
 
                         managed.touch();
 
-                    } else {
+                    }
+
+                    else {
 
                         managed.updatedAt =
                             Date.now();
+
+                    }
+
+                }
+
+
+                if(
+                    typeof manager.update ===
+                        "function"
+                ){
+
+                    try{
+
+                        manager.update(
+                            entity.id,
+                            {
+                                identity:{
+                                    ...entity.identity
+                                }
+                            }
+                        );
+
+                    } catch(error){
+
+                        /*
+                         * Direct object sync yukarıda yapıldı.
+                         * Manager API farklı imzaya sahipse
+                         * sistemi burada kırmıyoruz.
+                         */
 
                     }
 
@@ -497,10 +654,6 @@ const IdentityApp = {
 
         }
 
-
-        /*
-         * Current World snapshot da güncel kalmalı.
-         */
 
         const engine =
             this.getEngine();
@@ -525,10 +678,40 @@ const IdentityApp = {
                 );
 
 
-            if(index >= 0){
+            if(
+                index >=
+                    0
+            ){
 
-                world.entities[index] =
-                    entity;
+                const current =
+                    world.entities[
+                        index
+                    ];
+
+
+                if(
+                    current &&
+                    typeof current ===
+                        "object"
+                ){
+
+                    current.identity = {
+                        ...entity.identity
+                    };
+
+
+                    current.updatedAt =
+                        Date.now();
+
+                }
+
+                else {
+
+                    world.entities[
+                        index
+                    ] = entity;
+
+                }
 
             }
 
@@ -563,14 +746,26 @@ const IdentityApp = {
     saveIdentity(entity){
 
         if(!entity){
+
             return false;
+
         }
 
 
         const identity =
+            this.ensureVAID(
+                entity
+            ) ||
             this.getIdentity(
                 entity
             );
+
+
+        if(!identity){
+
+            return false;
+
+        }
 
 
         const aliasInput =
@@ -598,10 +793,9 @@ const IdentityApp = {
 
 
         identity.alias =
-            String(
-                aliasInput?.value ||
-                ""
-            ).trim();
+            this.normalizeAlias(
+                aliasInput?.value
+            );
 
 
         identity.visibility =
@@ -611,18 +805,20 @@ const IdentityApp = {
 
 
         identity.aeId =
-            String(
-                aeIdInput?.value ||
-                ""
-            ).trim();
+            this.normalizeExternalIdentifier(
+                aeIdInput?.value
+            );
 
 
         identity.eaId =
-            String(
-                eaIdInput?.value ||
-                ""
-            ).trim();
+            this.normalizeExternalIdentifier(
+                eaIdInput?.value
+            );
 
+
+        /*
+         * VA ID editörden değiştirilemez.
+         */
 
         if(!identity.vaId){
 
@@ -634,6 +830,11 @@ const IdentityApp = {
         }
 
 
+        /*
+         * Verification alanları da editörden değiştirilemez.
+         * getIdentity() mevcut authority durumunu korur.
+         */
+
         identity.updatedAt =
             Date.now();
 
@@ -643,9 +844,15 @@ const IdentityApp = {
         };
 
 
-        this.persistEntity(
-            entity
-        );
+        if(
+            !this.persistEntity(
+                entity
+            )
+        ){
+
+            return false;
+
+        }
 
 
         this.recordEvolution(
@@ -670,7 +877,9 @@ const IdentityApp = {
     requestVerification(entity){
 
         if(!entity){
+
             return false;
+
         }
 
 
@@ -680,20 +889,49 @@ const IdentityApp = {
             );
 
 
-        if(
-            !identity ||
-            identity.verificationStatus ===
-                "verified"
-        ){
+        if(!identity){
+
             return false;
+
+        }
+
+
+        /*
+         * Verified ve pending kimlik için yeni talep üretme.
+         */
+
+        if(
+            identity.verificationStatus ===
+                "verified" ||
+            identity.verificationStatus ===
+                "pending"
+        ){
+
+            return false;
+
         }
 
 
         identity.verificationStatus =
             "pending";
 
+
         identity.verificationRequestedAt =
             Date.now();
+
+
+        /*
+         * Önceki rejected / stale issuer bilgisi
+         * yeni talepte authority sayılmaz.
+         */
+
+        identity.verifiedAt =
+            null;
+
+
+        identity.issuer =
+            "";
+
 
         identity.updatedAt =
             Date.now();
@@ -704,9 +942,15 @@ const IdentityApp = {
         };
 
 
-        this.persistEntity(
-            entity
-        );
+        if(
+            !this.persistEntity(
+                entity
+            )
+        ){
+
+            return false;
+
+        }
 
 
         this.recordEvolution(
@@ -740,7 +984,9 @@ const IdentityApp = {
             typeof evolution.record !==
                 "function"
         ){
+
             return false;
+
         }
 
 
@@ -869,6 +1115,7 @@ const IdentityApp = {
 
             engine:
                 "Engine"
+
         };
 
 
@@ -876,6 +1123,69 @@ const IdentityApp = {
             labels[value] ||
             "Özel"
         );
+
+    },
+
+
+    /* =====================================================
+       UI FALLBACKS
+    ===================================================== */
+
+    renderAppHeader(entity){
+
+        if(
+            window.UI &&
+            typeof UI.appHeader ===
+                "function"
+        ){
+
+            return UI.appHeader(
+                this.escapeHTML(
+                    entity.name ||
+                    "İsimsiz Varlık"
+                ),
+                "IDENTITY",
+                "◈"
+            );
+
+        }
+
+
+        return `
+            <header class="engine-app-header">
+
+                <span class="engine-section-label">
+                    IDENTITY
+                </span>
+
+                <h1>
+                    ${this.escapeHTML(
+                        entity.name ||
+                        "İsimsiz Varlık"
+                    )}
+                </h1>
+
+            </header>
+        `;
+
+    },
+
+
+    renderBrainPanel(){
+
+        try{
+
+            return (
+                window.UI
+                    ?.brainPanel?.() ||
+                ""
+            );
+
+        } catch(error){
+
+            return "";
+
+        }
 
     },
 
@@ -1015,6 +1325,7 @@ const IdentityApp = {
                                 id="identityAliasInput"
                                 type="text"
                                 maxlength="80"
+                                autocomplete="off"
                                 value="${this.escapeHTML(
                                     identity.alias
                                 )}"
@@ -1085,6 +1396,7 @@ const IdentityApp = {
                                 id="identityAeIdInput"
                                 type="text"
                                 maxlength="120"
+                                autocomplete="off"
                                 value="${this.escapeHTML(
                                     identity.aeId
                                 )}"
@@ -1104,6 +1416,7 @@ const IdentityApp = {
                                 id="identityEaIdInput"
                                 type="text"
                                 maxlength="120"
+                                autocomplete="off"
                                 value="${this.escapeHTML(
                                     identity.eaId
                                 )}"
@@ -1170,11 +1483,6 @@ const IdentityApp = {
 
     render(entity){
 
-        this.enterBrainContext(
-            entity
-        );
-
-
         if(!entity){
 
             return `
@@ -1211,6 +1519,11 @@ const IdentityApp = {
             );
 
 
+        this.enterBrainContext(
+            entity
+        );
+
+
         return `
             <section class="engine-page identity-app-page">
 
@@ -1229,13 +1542,8 @@ const IdentityApp = {
                     </div>
 
 
-                    ${UI.appHeader(
-                        this.escapeHTML(
-                            entity.name ||
-                            "İsimsiz Varlık"
-                        ),
-                        "IDENTITY",
-                        "◈"
+                    ${this.renderAppHeader(
+                        entity
                     )}
 
 
@@ -1444,13 +1752,13 @@ const IdentityApp = {
                                 ${
                                     verification ===
                                         "verified"
-                                        ? "Bu kimlik doğrulanmış olarak işaretlenmiş."
+                                        ? "Bu kimlik VAERO doğrulama otoritesi tarafından doğrulanmış."
                                         : verification ===
                                             "pending"
-                                            ? "Doğrulama talebi oluşturuldu. Gerçek doğrulama servisi bağlandığında inceleme burada devam edecek."
+                                            ? "Doğrulama talebi oluşturuldu. Identity Verifier sonucu geldiğinde durum burada güncellenecek."
                                             : verification ===
                                                 "rejected"
-                                                ? "Önceki doğrulama talebi reddedilmiş."
+                                                ? "Önceki doğrulama talebi reddedilmiş. Yeni bir talep oluşturabilirsin."
                                                 : "Kimlik henüz doğrulanmadı. Doğrulama talebi oluşturabilirsin."
                                 }
                             </p>
@@ -1478,7 +1786,7 @@ const IdentityApp = {
                     </section>
 
 
-                    ${UI.brainPanel()}
+                    ${this.renderBrainPanel()}
 
                 </div>
 
@@ -1502,16 +1810,16 @@ const IdentityApp = {
        COMMANDS
     ===================================================== */
 
-    handleAction(
-        action
-    ){
+    handleAction(action){
 
         const entity =
             this.getCurrentEntity();
 
 
         if(!entity){
+
             return false;
+
         }
 
 
@@ -1541,10 +1849,12 @@ const IdentityApp = {
                     entity
                 );
 
+
+            default:
+
+                return false;
+
         }
-
-
-        return false;
 
     }
 
@@ -1566,7 +1876,9 @@ document.addEventListener(
 
 
         if(!element){
+
             return;
+
         }
 
 
@@ -1597,7 +1909,9 @@ document.addEventListener(
 
 
         if(!form){
+
             return;
+
         }
 
 
@@ -1610,7 +1924,9 @@ document.addEventListener(
 
 
         if(!entity){
+
             return;
+
         }
 
 
@@ -1620,6 +1936,24 @@ document.addEventListener(
 
     }
 );
+
+
+/* =========================================================
+   REGISTER
+========================================================= */
+
+try{
+
+    VAERO?.register?.(
+        "identityApp",
+        IdentityApp
+    );
+
+} catch(error){
+
+    /* global remains available */
+
+}
 
 
 window.IdentityApp =
