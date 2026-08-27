@@ -1,9 +1,13 @@
 /* =========================================================
    VAERO APPLICATIONS
-   Application Discovery / Installation / Permissions / Updates / Built-In Safety
+   Application Discovery / Installation / Permissions /
+   Updates / Built-In Safety
 ========================================================= */
 
 const ApplicationsApp = {
+
+    version:
+        "3.0.0",
 
     searchQuery:
         "",
@@ -27,10 +31,25 @@ const ApplicationsApp = {
 
     getService(name){
 
+        const serviceName =
+            String(
+                name ??
+                    ""
+            ).trim();
+
+
+        if(!serviceName){
+
+            return null;
+
+        }
+
+
         try{
 
             if(
-                typeof VAERO === "undefined" ||
+                typeof VAERO ===
+                    "undefined" ||
                 typeof VAERO.get !==
                     "function"
             ){
@@ -41,14 +60,16 @@ const ApplicationsApp = {
 
 
             return (
-                VAERO.get(name) ||
+                VAERO.get(
+                    serviceName
+                ) ||
                 null
             );
 
         } catch(error){
 
             console.warn(
-                `Applications service lookup failed: ${name}`,
+                `Applications service lookup failed: ${serviceName}`,
                 error
             );
 
@@ -64,13 +85,27 @@ const ApplicationsApp = {
 
         try{
 
-            return (
-                VAERO?.engine ||
-                window.Engine ||
-                null
-            );
+            if(
+                typeof VAERO !==
+                    "undefined" &&
+                VAERO.engine
+            ){
+
+                return VAERO.engine;
+
+            }
 
         } catch(error){
+
+            /* fallback */
+
+        }
+
+
+        if(
+            typeof window !==
+                "undefined"
+        ){
 
             return (
                 window.Engine ||
@@ -78,6 +113,9 @@ const ApplicationsApp = {
             );
 
         }
+
+
+        return null;
 
     },
 
@@ -98,23 +136,89 @@ const ApplicationsApp = {
     },
 
 
-    escapeHTML(value){
+    remount(){
+
+        const engine =
+            this.getEngine();
+
 
         if(
-            window.UI &&
-            typeof UI.escapeHTML ===
+            !engine ||
+            typeof engine.mount !==
                 "function"
         ){
 
-            return UI.escapeHTML(
-                value
+            return false;
+
+        }
+
+
+        const entity =
+            engine.currentOpenedEntity ||
+            engine.currentEntity ||
+            engine.rootEntity ||
+            null;
+
+
+        if(!entity){
+
+            return false;
+
+        }
+
+
+        try{
+
+            return (
+                engine.mount(
+                    entity
+                ) !==
+                false
             );
+
+        } catch(error){
+
+            console.warn(
+                "Applications remount failed:",
+                error
+            );
+
+
+            return false;
+
+        }
+
+    },
+
+
+    escapeHTML(value){
+
+        try{
+
+            if(
+                typeof window !==
+                    "undefined" &&
+                window.UI &&
+                typeof window.UI.escapeHTML ===
+                    "function"
+            ){
+
+                return window.UI.escapeHTML(
+                    value
+                );
+
+            }
+
+        } catch(error){
+
+            /* local fallback */
 
         }
 
 
         return String(
-            value ?? ""
+            value ??
+                ""
         )
             .replaceAll(
                 "&",
@@ -154,9 +258,21 @@ const ApplicationsApp = {
                 );
 
 
-            awareness?.enter?.(
+            if(
+                !awareness ||
+                typeof awareness.enter !==
+                    "function"
+            ){
+
+                return false;
+
+            }
+
+
+            awareness.enter(
                 "applications",
                 {
+
                     entityId:
                         this.getCurrentEntity()
                             ?.id ||
@@ -169,9 +285,24 @@ const ApplicationsApp = {
                         this.category,
 
                     selectedAppId:
-                        this.selectedAppId
+                        this.selectedAppId,
+
+                    searchActive:
+                        Boolean(
+                            String(
+                                this.searchQuery ||
+                                    ""
+                            ).trim()
+                        ),
+
+                    source:
+                        "applications-app"
+
                 }
             );
+
+
+            return true;
 
         } catch(error){
 
@@ -179,6 +310,9 @@ const ApplicationsApp = {
                 "Applications Brain context açılamadı:",
                 error
             );
+
+
+            return false;
 
         }
 
@@ -191,27 +325,52 @@ const ApplicationsApp = {
 
     getRegistry(){
 
-        return (
+        const service =
             this.getService(
                 "appRegistry"
             ) ||
             this.getService(
                 "applicationRegistry"
-            ) ||
-            (
+            );
+
+
+        if(service){
+
+            return service;
+
+        }
+
+
+        try{
+
+            if(
                 typeof AppRegistry !==
                     "undefined"
-                    ? AppRegistry
-                    : null
-            ) ||
-            (
-                typeof OrganRegistry !==
-                    "undefined"
-                    ? OrganRegistry
-                    : null
-            ) ||
-            null
-        );
+            ){
+
+                return AppRegistry;
+
+            }
+
+        } catch(error){
+
+            /* fallback */
+
+        }
+
+
+        if(
+            typeof window !==
+                "undefined" &&
+            window.AppRegistry
+        ){
+
+            return window.AppRegistry;
+
+        }
+
+
+        return null;
 
     },
 
@@ -222,8 +381,13 @@ const ApplicationsApp = {
             this.getService(
                 "organSystem"
             ) ||
-            window.OrganSystem ||
-            null
+            (
+                typeof window !==
+                    "undefined"
+                    ? window.OrganSystem ||
+                      null
+                    : null
+            )
         );
 
     },
@@ -246,18 +410,62 @@ const ApplicationsApp = {
         }
 
 
-        return [
-            ...new Set(
-                value
-                    .map(
-                        item =>
-                            String(
-                                item ?? ""
-                            ).trim()
+        const seen =
+            new Set();
+
+
+        const result =
+            [];
+
+
+        value.forEach(
+            item => {
+
+                const normalized =
+                    String(
+                        item ??
+                            ""
+                    ).trim();
+
+
+                if(!normalized){
+
+                    return;
+
+                }
+
+
+                const key =
+                    normalized.toLocaleLowerCase(
+                        "tr-TR"
+                    );
+
+
+                if(
+                    seen.has(
+                        key
                     )
-                    .filter(Boolean)
-            )
-        ];
+                ){
+
+                    return;
+
+                }
+
+
+                seen.add(
+                    key
+                );
+
+
+                result.push(
+                    normalized
+                );
+
+            }
+        );
+
+
+        return result;
 
     },
 
@@ -279,16 +487,14 @@ const ApplicationsApp = {
         const model =
             String(
                 app?.pricing?.model ||
-                "free"
+                    "free"
             )
                 .trim()
                 .toLowerCase();
 
 
-        return (
-            model !==
-                "free"
-        );
+        return model !==
+            "free";
 
     },
 
@@ -323,31 +529,48 @@ const ApplicationsApp = {
                 });
 
 
+            if(
+                Array.isArray(
+                    apps
+                )
+            ){
+
+                return apps.filter(
+                    Boolean
+                );
+
+            }
+
+        } catch(error){
+
+            /* simple registry fallback */
+
+        }
+
+
+        try{
+
+            const apps =
+                registry.all();
+
+
             return Array.isArray(
                 apps
             )
-                ? apps.filter(Boolean)
+                ? apps.filter(
+                    Boolean
+                )
                 : [];
 
         } catch(error){
 
-            try{
+            console.warn(
+                "Application catalog could not be read:",
+                error
+            );
 
-                const apps =
-                    registry.all();
 
-
-                return Array.isArray(
-                    apps
-                )
-                    ? apps.filter(Boolean)
-                    : [];
-
-            } catch(secondError){
-
-                return [];
-
-            }
+            return [];
 
         }
 
@@ -359,7 +582,7 @@ const ApplicationsApp = {
         const id =
             String(
                 appId ||
-                ""
+                    ""
             ).trim();
 
 
@@ -374,13 +597,13 @@ const ApplicationsApp = {
             this.getRegistry();
 
 
-        try{
+        if(
+            registry &&
+            typeof registry.find ===
+                "function"
+        ){
 
-            if(
-                registry &&
-                typeof registry.find ===
-                    "function"
-            ){
+            try{
 
                 const app =
                     registry.find(
@@ -394,11 +617,11 @@ const ApplicationsApp = {
 
                 }
 
+            } catch(error){
+
+                /* catalog fallback */
+
             }
-
-        } catch(error){
-
-            /* catalog fallback */
 
         }
 
@@ -407,7 +630,10 @@ const ApplicationsApp = {
             this.getCatalogApps()
                 .find(
                     app =>
-                        app?.id ===
+                        String(
+                            app?.id ||
+                                ""
+                        ) ===
                         id
                 ) ||
             null
@@ -422,7 +648,10 @@ const ApplicationsApp = {
 
     getInstalledOrgan(app){
 
-        if(!app){
+        if(
+            !app ||
+            !app.id
+        ){
 
             return null;
 
@@ -463,7 +692,7 @@ const ApplicationsApp = {
 
         } catch(error){
 
-            /* slug fallback */
+            /* fallback */
 
         }
 
@@ -475,18 +704,23 @@ const ApplicationsApp = {
                     "function"
             ){
 
-                return (
+                const bySlug =
                     organSystem.findBySlug(
                         app.id
-                    ) ||
-                    null
-                );
+                    );
+
+
+                if(bySlug){
+
+                    return bySlug;
+
+                }
 
             }
 
         } catch(error){
 
-            return null;
+            /* no compatible lookup */
 
         }
 
@@ -509,21 +743,30 @@ const ApplicationsApp = {
             value =>
                 String(
                     value ||
-                    "0"
+                        "0"
                 )
-                    .split(".")
+                    .split(
+                        "."
+                    )
                     .map(
-                        part =>
-                            Number(
+                        part => {
+
+                            const match =
                                 String(
                                     part
-                                )
-                                    .replace(
-                                        /[^0-9]/g,
-                                        ""
-                                    )
-                            ) ||
-                            0
+                                ).match(
+                                    /\d+/
+                                );
+
+
+                            return match
+                                ? Number(
+                                    match[0]
+                                ) ||
+                                  0
+                                : 0;
+
+                        }
                     );
 
 
@@ -553,12 +796,16 @@ const ApplicationsApp = {
         ){
 
             const currentInstalled =
-                installed[index] ||
+                installed[
+                    index
+                ] ||
                 0;
 
 
             const currentCatalog =
-                catalog[index] ||
+                catalog[
+                    index
+                ] ||
                 0;
 
 
@@ -589,7 +836,38 @@ const ApplicationsApp = {
     },
 
 
+    /* =====================================================
+       APPLICATION STATE
+    ===================================================== */
+
     getAppState(app){
+
+        if(!app){
+
+            return {
+
+                builtIn:
+                    false,
+
+                installed:
+                    false,
+
+                updateAvailable:
+                    false,
+
+                status:
+                    "not-installed",
+
+                trusted:
+                    false,
+
+                organ:
+                    null
+
+            };
+
+        }
+
 
         const builtIn =
             this.isBuiltIn(
@@ -603,6 +881,11 @@ const ApplicationsApp = {
             );
 
 
+        /*
+         * Built-in means bundled with VAERO Engine.
+         * It is not evidence that an external package was
+         * dynamically installed.
+         */
         const installed =
             builtIn ||
             organ?.installed ===
@@ -611,6 +894,7 @@ const ApplicationsApp = {
 
         const updateAvailable =
             Boolean(
+                !builtIn &&
                 installed &&
                 organ &&
                 app.version &&
@@ -623,11 +907,31 @@ const ApplicationsApp = {
             );
 
 
+        /*
+         * Built-in applications inherit Engine trust.
+         * External applications require OrganSystem trust.
+         */
         const trusted =
             builtIn
                 ? true
                 : organ?.trusted ===
                     true;
+
+
+        const status =
+            builtIn
+                ? (
+                    organ?.status ||
+                    "active"
+                )
+                : (
+                    organ?.status ||
+                    (
+                        installed
+                            ? "inactive"
+                            : "not-installed"
+                    )
+                );
 
 
         return {
@@ -638,13 +942,7 @@ const ApplicationsApp = {
 
             updateAvailable,
 
-            status:
-                organ?.status ||
-                (
-                    builtIn
-                        ? "active"
-                        : "not-installed"
-                ),
+            status,
 
             trusted,
 
@@ -659,13 +957,100 @@ const ApplicationsApp = {
        VISIBLE CATALOG
     ===================================================== */
 
+    normalizeView(value){
+
+        const view =
+            String(
+                value ||
+                    "discover"
+            )
+                .trim()
+                .toLowerCase();
+
+
+        return [
+            "discover",
+            "installed",
+            "updates"
+        ].includes(
+            view
+        )
+            ? view
+            : "discover";
+
+    },
+
+
+    setView(value){
+
+        this.view =
+            this.normalizeView(
+                value
+            );
+
+
+        this.selectedAppId =
+            null;
+
+
+        return this.view;
+
+    },
+
+
+    setCategory(value){
+
+        const category =
+            String(
+                value ||
+                    "all"
+            )
+                .trim()
+                .toLowerCase();
+
+
+        this.category =
+            category ||
+            "all";
+
+
+        this.selectedAppId =
+            null;
+
+
+        return this.category;
+
+    },
+
+
+    setSearchQuery(value){
+
+        this.searchQuery =
+            String(
+                value ??
+                    ""
+            ).slice(
+                0,
+                500
+            );
+
+
+        this.selectedAppId =
+            null;
+
+
+        return this.searchQuery;
+
+    },
+
+
     getApps(){
 
         let apps =
             this.getCatalogApps()
                 .filter(
                     app =>
-                        app.enabled !==
+                        app?.enabled !==
                             false
                 );
 
@@ -711,7 +1096,12 @@ const ApplicationsApp = {
             apps =
                 apps.filter(
                     app =>
-                        app.category ===
+                        String(
+                            app?.category ||
+                                "other"
+                        )
+                            .trim()
+                            .toLowerCase() ===
                         this.category
                 );
 
@@ -719,7 +1109,10 @@ const ApplicationsApp = {
 
 
         const query =
-            this.searchQuery
+            String(
+                this.searchQuery ||
+                    ""
+            )
                 .trim()
                 .toLocaleLowerCase(
                     "tr-TR"
@@ -734,30 +1127,36 @@ const ApplicationsApp = {
 
                         const searchable = [
 
-                            app.id,
-                            app.title,
-                            app.subtitle,
-                            app.description,
-                            app.developer,
-                            app.category,
+                            app?.id,
+                            app?.title,
+                            app?.subtitle,
+                            app?.description,
+                            app?.developer,
+                            app?.category,
 
-                            ...(
-                                app.tags ||
-                                []
+                            ...this.normalizeList(
+                                app?.tags
                             ),
 
-                            ...(
-                                app.capabilities ||
-                                []
+                            ...this.normalizeList(
+                                app?.capabilities
                             ),
 
-                            ...(
-                                app.requestedPermissions ||
-                                []
+                            ...this.normalizeList(
+                                app?.requestedPermissions
                             )
 
                         ]
-                            .join(" ")
+                            .filter(
+                                value =>
+                                    value !==
+                                        null &&
+                                    value !==
+                                        undefined
+                            )
+                            .join(
+                                " "
+                            )
                             .toLocaleLowerCase(
                                 "tr-TR"
                             );
@@ -820,18 +1219,21 @@ const ApplicationsApp = {
 
 
         const ids = [
-
             ...new Set(
                 this.getCatalogApps()
                     .map(
                         app =>
                             String(
                                 app?.category ||
-                                "other"
+                                    "other"
                             )
+                                .trim()
+                                .toLowerCase()
+                    )
+                    .filter(
+                        Boolean
                     )
             )
-
         ];
 
 
@@ -845,6 +1247,15 @@ const ApplicationsApp = {
 
 
     getCategoryLabel(id){
+
+        const categoryId =
+            String(
+                id ||
+                    "other"
+            )
+                .trim()
+                .toLowerCase();
+
 
         const labels = {
 
@@ -885,8 +1296,10 @@ const ApplicationsApp = {
 
 
         return (
-            labels[id] ||
-            id
+            labels[
+                categoryId
+            ] ||
+            categoryId
         );
 
     },
@@ -920,7 +1333,8 @@ const ApplicationsApp = {
 
 
         if(
-            !entity?.id
+            !entity ||
+            !entity.id
         ){
 
             return defaults;
@@ -928,7 +1342,22 @@ const ApplicationsApp = {
         }
 
 
+        /*
+         * Settings App currently owns this persisted policy.
+         * Applications only reads it; it does not create
+         * another application-settings authority.
+         */
         try{
+
+            if(
+                typeof localStorage ===
+                    "undefined"
+            ){
+
+                return defaults;
+
+            }
+
 
             const saved =
                 localStorage.getItem(
@@ -949,19 +1378,63 @@ const ApplicationsApp = {
                 );
 
 
+            const applications =
+                parsed?.applications;
+
+
+            if(
+                !applications ||
+                typeof applications !==
+                    "object" ||
+                Array.isArray(
+                    applications
+                )
+            ){
+
+                return defaults;
+
+            }
+
+
             return {
 
-                ...defaults,
+                allowInstall:
+                    applications.allowInstall ===
+                        undefined
+                        ? defaults.allowInstall
+                        : applications.allowInstall ===
+                            true,
 
-                ...(
-                    parsed
-                        ?.applications ||
-                    {}
-                )
+                requirePermissionReview:
+                    applications.requirePermissionReview ===
+                        undefined
+                        ? defaults.requirePermissionReview
+                        : applications.requirePermissionReview ===
+                            true,
+
+                allowExternalApps:
+                    applications.allowExternalApps ===
+                        undefined
+                        ? defaults.allowExternalApps
+                        : applications.allowExternalApps ===
+                            true,
+
+                allowBackgroundActivity:
+                    applications.allowBackgroundActivity ===
+                        undefined
+                        ? defaults.allowBackgroundActivity
+                        : applications.allowBackgroundActivity ===
+                            true
 
             };
 
         } catch(error){
+
+            console.warn(
+                "Application policy could not be read:",
+                error
+            );
+
 
             return defaults;
 
@@ -971,10 +1444,20 @@ const ApplicationsApp = {
 
 
     /* =====================================================
-       VERIFIER
+       PACKAGE VERIFIER
     ===================================================== */
 
     verifyPackage(app){
+
+        if(
+            !app ||
+            !app.id
+        ){
+
+            return null;
+
+        }
+
 
         const verifier =
             this.getService(
@@ -990,7 +1473,7 @@ const ApplicationsApp = {
 
             console.warn(
                 "Applications install blocked: package verifier unavailable.",
-                app?.id
+                app.id
             );
 
 
@@ -1007,6 +1490,11 @@ const ApplicationsApp = {
                 );
 
 
+            /*
+             * Current Applications command path is synchronous.
+             * An async verifier must not accidentally be treated
+             * as an approved package.
+             */
             if(
                 result &&
                 typeof result.then ===
@@ -1014,7 +1502,7 @@ const ApplicationsApp = {
             ){
 
                 console.warn(
-                    "Applications install blocked: async verification is not wired yet.",
+                    "Applications install blocked: async verification is not wired into this flow.",
                     app.id
                 );
 
@@ -1037,8 +1525,12 @@ const ApplicationsApp = {
 
             if(
                 result.appId &&
-                result.appId !==
+                String(
+                    result.appId
+                ) !==
+                String(
                     app.id
+                )
             ){
 
                 return null;
@@ -1088,13 +1580,14 @@ const ApplicationsApp = {
 
         if(
             !paymentCore ||
-            typeof paymentCore.hasVerifiedEntitlement !==
+            typeof paymentCore
+                .hasVerifiedEntitlement !==
                 "function"
         ){
 
             console.warn(
                 "Applications install blocked: verified entitlement unavailable.",
-                app.id
+                app?.id
             );
 
 
@@ -1105,15 +1598,38 @@ const ApplicationsApp = {
 
         try{
 
-            return (
+            const result =
                 paymentCore
                     .hasVerifiedEntitlement(
                         app.id
-                    ) ===
-                true
-            );
+                    );
+
+
+            /*
+             * Payment authority must return an explicit,
+             * synchronous verified entitlement.
+             */
+            if(
+                result &&
+                typeof result.then ===
+                    "function"
+            ){
+
+                return false;
+
+            }
+
+
+            return result ===
+                true;
 
         } catch(error){
+
+            console.warn(
+                "Application entitlement check failed:",
+                error
+            );
+
 
             return false;
 
@@ -1131,12 +1647,28 @@ const ApplicationsApp = {
         operation
     ){
 
+        if(
+            !app ||
+            !app.id
+        ){
+
+            return false;
+
+        }
+
+
         const guardian =
             this.getService(
                 "guardian"
             );
 
 
+        /*
+         * Guardian is a security boundary.
+         * If the service exists, a failed check blocks.
+         * If it has not been registered yet, the installation
+         * flow itself still requires verifier + policy + trust.
+         */
         if(
             !guardian ||
             typeof guardian.check !==
@@ -1155,21 +1687,46 @@ const ApplicationsApp = {
                     app,
                     "application-install",
                     {
-                        operation,
+
+                        operation:
+                            String(
+                                operation ||
+                                    ""
+                            ),
 
                         appId:
                             app.id,
 
                         distribution:
-                            app.distribution
+                            app.distribution ||
+                            null,
+
+                        builtIn:
+                            this.isBuiltIn(
+                                app
+                            )
+
                     }
                 );
+
+
+            if(
+                validation &&
+                typeof validation.then ===
+                    "function"
+            ){
+
+                return false;
+
+            }
 
 
             return !(
                 validation ===
                     false ||
                 validation?.valid ===
+                    false ||
+                validation?.allowed ===
                     false
             );
 
@@ -1189,7 +1746,7 @@ const ApplicationsApp = {
 
 
     /* =====================================================
-       INSTALL RESULT NORMALIZATION
+       OPERATION RESULT
     ===================================================== */
 
     operationSucceeded(result){
@@ -1214,6 +1771,17 @@ const ApplicationsApp = {
 
 
         if(
+            result &&
+            typeof result.then ===
+                "function"
+        ){
+
+            return false;
+
+        }
+
+
+        if(
             typeof result ===
                 "object"
         ){
@@ -1222,6 +1790,8 @@ const ApplicationsApp = {
                 result.success ===
                     false ||
                 result.valid ===
+                    false ||
+                result.allowed ===
                     false ||
                 result.error ===
                     true
@@ -1237,15 +1807,17 @@ const ApplicationsApp = {
         }
 
 
-        return (
-            result !==
-                false
-        );
+        return result !==
+            false;
 
     },
 
 
     /* =====================================================
+       CONTINUE IN PART 2
+    ===================================================== */
+
+   /* =====================================================
        INSTALL
     ===================================================== */
 
@@ -1272,10 +1844,9 @@ const ApplicationsApp = {
 
 
         /*
-         * Built-in applications are already part of Engine.
-         * They are not installed through external package flow.
+         * Built-in applications already ship with Engine.
+         * They do not enter the external installation flow.
          */
-
         if(
             this.isBuiltIn(
                 app
@@ -1312,7 +1883,7 @@ const ApplicationsApp = {
         ){
 
             console.warn(
-                "Applications install blocked: external applications disabled in Settings."
+                "Applications install blocked: external applications disabled."
             );
 
 
@@ -1373,12 +1944,20 @@ const ApplicationsApp = {
             );
 
 
+        /*
+         * Existing Organ record may be present but disabled /
+         * uninstalled. In that case use OrganSystem.install.
+         */
         if(existing){
 
             if(
                 existing.installed ===
                     true
             ){
+
+                this.selectedAppId =
+                    app.id;
+
 
                 return true;
 
@@ -1395,15 +1974,33 @@ const ApplicationsApp = {
             }
 
 
-            const result =
-                organSystem.install(
-                    existing.id
+            let installResult =
+                false;
+
+
+            try{
+
+                installResult =
+                    organSystem.install(
+                        existing.id
+                    );
+
+            } catch(error){
+
+                console.error(
+                    "Existing application could not be installed:",
+                    error
                 );
+
+
+                return false;
+
+            }
 
 
             if(
                 !this.operationSucceeded(
-                    result
+                    installResult
                 )
             ){
 
@@ -1417,6 +2014,16 @@ const ApplicationsApp = {
                 app,
                 existing
             );
+
+
+            this.selectedAppId =
+                app.id;
+
+
+            this.enterBrainContext();
+
+
+            this.remount();
 
 
             return true;
@@ -1440,118 +2047,130 @@ const ApplicationsApp = {
             );
 
 
-        const organ =
-            organSystem.create(
-                app.title,
-                "inactive",
-                {
-                    id:
-                        app.id,
+        let organ =
+            null;
 
-                    slug:
-                        app.id,
 
-                    title:
-                        app.title,
+        try{
 
-                    description:
-                        app.description ||
-                        app.subtitle ||
-                        "",
+            organ =
+                organSystem.create(
+                    app.title,
+                    "inactive",
+                    {
 
-                    icon:
-                        app.icon ||
-                        "◌",
-
-                    action:
-                        app.action ||
-                        "",
-
-                    version:
-                        app.version ||
-                        "1.0.0",
-
-                    type:
-                        "application",
-
-                    source:
-                        app.distribution ||
-                        "external",
-
-                    developer:
-                        app.developer ||
-                        null,
-
-                    signature:
-                        verification.signature ||
-                        app.signature ||
-                        null,
-
-                    trusted:
-                        false,
-
-                    installed:
-                        true,
-
-                    removable:
-                        app.removable !==
-                            false,
-
-                    permissions:
-                        [],
-
-                    capabilities:
-                        this.normalizeList(
-                            app.capabilities
-                        ),
-
-                    dependencies:
-                        this.normalizeList(
-                            app.dependencies
-                        ),
-
-                    metadata:{
-
-                        applicationId:
+                        id:
                             app.id,
 
-                        requestedPermissions,
+                        slug:
+                            app.id,
 
-                        permissionReviewRequired:
-                            Boolean(
-                                policy.requirePermissionReview &&
-                                requestedPermissions.length
+                        title:
+                            app.title,
+
+                        description:
+                            app.description ||
+                            app.subtitle ||
+                            "",
+
+                        icon:
+                            app.icon ||
+                            "◌",
+
+                        action:
+                            app.action ||
+                            "",
+
+                        version:
+                            app.version ||
+                            "1.0.0",
+
+                        type:
+                            "application",
+
+                        source:
+                            app.distribution ||
+                            "external",
+
+                        developer:
+                            app.developer ||
+                            null,
+
+                        signature:
+                            verification.signature ||
+                            app.signature ||
+                            null,
+
+                        trusted:
+                            false,
+
+                        installed:
+                            true,
+
+                        removable:
+                            app.removable !==
+                            false,
+
+                        permissions:
+                            [],
+
+                        capabilities:
+                            this.normalizeList(
+                                app.capabilities
                             ),
 
-                        verification:{
+                        dependencies:
+                            this.normalizeList(
+                                app.dependencies
+                            ),
 
-                            verified:
-                                true,
+                        metadata: {
 
-                            verifiedAt:
-                                Date.now(),
+                            applicationId:
+                                app.id,
 
-                            authority:
-                                verification.authority ||
-                                null,
+                            requestedPermissions,
 
-                            hash:
-                                verification.hash ||
-                                null,
+                            permissionReviewRequired:
+                                Boolean(
+                                    policy.requirePermissionReview &&
+                                    requestedPermissions.length
+                                ),
 
-                            reference:
-                                verification.reference ||
-                                null
+                            verification: {
+
+                                verified:
+                                    true,
+
+                                verifiedAt:
+                                    Date.now(),
+
+                                authority:
+                                    verification.authority ||
+                                    null,
+
+                                hash:
+                                    verification.hash ||
+                                    null,
+
+                                reference:
+                                    verification.reference ||
+                                    null
+
+                            }
 
                         }
 
                     }
+                );
 
-                }
+        } catch(error){
+
+            console.error(
+                "Application Organ could not be created:",
+                error
             );
 
-
-        if(!organ){
 
             return false;
 
@@ -1559,17 +2178,39 @@ const ApplicationsApp = {
 
 
         if(
+            !organ ||
+            !organ.id
+        ){
+
+            return false;
+
+        }
+
+
+        /*
+         * Manifest trusted=true is never accepted as trust.
+         * Trust is granted only after verifier success.
+         */
+        if(
             typeof organSystem.setTrusted !==
                 "function"
         ){
 
-            organSystem.remove?.(
-                organ.id,
-                {
-                    force:
-                        true
-                }
-            );
+            try{
+
+                organSystem.remove?.(
+                    organ.id,
+                    {
+                        force:
+                            true
+                    }
+                );
+
+            } catch(error){
+
+                /* cleanup best effort */
+
+            }
 
 
             return false;
@@ -1577,17 +2218,34 @@ const ApplicationsApp = {
         }
 
 
-        const trustResult =
-            organSystem.setTrusted(
-                organ.id,
-                true,
-                {
-                    verified:
-                        true,
+        let trustResult =
+            false;
 
-                    verification
-                }
+
+        try{
+
+            trustResult =
+                organSystem.setTrusted(
+                    organ.id,
+                    true,
+                    {
+
+                        verified:
+                            true,
+
+                        verification
+
+                    }
+                );
+
+        } catch(error){
+
+            console.error(
+                "Application trust could not be set:",
+                error
             );
+
+        }
 
 
         if(
@@ -1596,13 +2254,21 @@ const ApplicationsApp = {
             )
         ){
 
-            organSystem.remove?.(
-                organ.id,
-                {
-                    force:
-                        true
-                }
-            );
+            try{
+
+                organSystem.remove?.(
+                    organ.id,
+                    {
+                        force:
+                            true
+                    }
+                );
+
+            } catch(error){
+
+                /* cleanup best effort */
+
+            }
 
 
             return false;
@@ -1610,22 +2276,47 @@ const ApplicationsApp = {
         }
 
 
+        /*
+         * Apps with no requested permissions may activate
+         * immediately. Others remain inactive until every
+         * requested permission is reviewed.
+         */
         if(
             requestedPermissions.length ===
                 0
         ){
 
-            organSystem.setStatus?.(
-                organ.id,
-                "active"
-            );
+            try{
 
-        } else {
+                organSystem.setStatus?.(
+                    organ.id,
+                    "active"
+                );
 
-            organSystem.setStatus?.(
-                organ.id,
-                "inactive"
-            );
+            } catch(error){
+
+                console.warn(
+                    "Application status could not be activated:",
+                    error
+                );
+
+            }
+
+        }
+        else {
+
+            try{
+
+                organSystem.setStatus?.(
+                    organ.id,
+                    "inactive"
+                );
+
+            } catch(error){
+
+                /* already created inactive */
+
+            }
 
         }
 
@@ -1639,6 +2330,9 @@ const ApplicationsApp = {
 
         this.selectedAppId =
             app.id;
+
+
+        this.enterBrainContext();
 
 
         this.remount();
@@ -1683,7 +2377,10 @@ const ApplicationsApp = {
 
         if(
             !organ ||
-            !state.trusted
+            !state.installed ||
+            state.builtIn ||
+            state.trusted !==
+                true
         ){
 
             return false;
@@ -1700,21 +2397,30 @@ const ApplicationsApp = {
         const normalized =
             String(
                 permission ||
-                ""
+                    ""
             )
                 .trim()
                 .toLowerCase();
 
 
+        if(!normalized){
+
+            return false;
+
+        }
+
+
+        const requestedNormalized =
+            requested.map(
+                item =>
+                    item.toLowerCase()
+            );
+
+
         if(
-            !requested
-                .map(
-                    item =>
-                        item.toLowerCase()
-                )
-                .includes(
-                    normalized
-                )
+            !requestedNormalized.includes(
+                normalized
+            )
         ){
 
             return false;
@@ -1737,18 +2443,38 @@ const ApplicationsApp = {
         }
 
 
-        const result =
-            organSystem.grantPermission(
-                organ.id,
-                normalized,
-                {
-                    source:
-                        "applications-consent",
+        let result =
+            false;
 
-                    confirmed:
-                        true
-                }
+
+        try{
+
+            result =
+                organSystem.grantPermission(
+                    organ.id,
+                    normalized,
+                    {
+
+                        source:
+                            "applications-consent",
+
+                        confirmed:
+                            true
+
+                    }
+                );
+
+        } catch(error){
+
+            console.error(
+                "Application permission could not be granted:",
+                error
             );
+
+
+            return false;
+
+        }
 
 
         if(
@@ -1772,10 +2498,15 @@ const ApplicationsApp = {
             app,
             organ,
             {
+
                 permission:
                     normalized
+
             }
         );
+
+
+        this.enterBrainContext();
 
 
         this.remount();
@@ -1788,6 +2519,13 @@ const ApplicationsApp = {
 
     activateWhenPermissionsReviewed(app){
 
+        if(!app){
+
+            return false;
+
+        }
+
+
         const state =
             this.getAppState(
                 app
@@ -1798,7 +2536,11 @@ const ApplicationsApp = {
             state.organ;
 
 
-        if(!organ){
+        if(
+            !organ ||
+            state.trusted !==
+                true
+        ){
 
             return false;
 
@@ -1845,20 +2587,46 @@ const ApplicationsApp = {
             this.getOrganSystem();
 
 
-        const result =
-            organSystem?.setStatus?.(
-                organ.id,
-                "active"
+        if(
+            !organSystem ||
+            typeof organSystem.setStatus !==
+                "function"
+        ){
+
+            return false;
+
+        }
+
+
+        try{
+
+            const result =
+                organSystem.setStatus(
+                    organ.id,
+                    "active"
+                );
+
+
+            return this.operationSucceeded(
+                result
+            );
+
+        } catch(error){
+
+            console.warn(
+                "Application activation failed:",
+                error
             );
 
 
-        return this.operationSucceeded(
-            result
-        );
+            return false;
+
+        }
 
     },
 
-   revokePermission(
+
+    revokePermission(
         appId,
         permission
     ){
@@ -1869,12 +2637,21 @@ const ApplicationsApp = {
             );
 
 
+        if(!app){
+
+            return false;
+
+        }
+
+
+        const state =
+            this.getAppState(
+                app
+            );
+
+
         const organ =
-            app
-                ? this.getInstalledOrgan(
-                    app
-                )
-                : null;
+            state.organ;
 
 
         const organSystem =
@@ -1883,6 +2660,7 @@ const ApplicationsApp = {
 
         if(
             !organ ||
+            state.builtIn ||
             !organSystem ||
             typeof organSystem.revokePermission !==
                 "function"
@@ -1896,7 +2674,7 @@ const ApplicationsApp = {
         const normalized =
             String(
                 permission ||
-                ""
+                    ""
             )
                 .trim()
                 .toLowerCase();
@@ -1909,11 +2687,29 @@ const ApplicationsApp = {
         }
 
 
-        const result =
-            organSystem.revokePermission(
-                organ.id,
-                normalized
+        let result =
+            false;
+
+
+        try{
+
+            result =
+                organSystem.revokePermission(
+                    organ.id,
+                    normalized
+                );
+
+        } catch(error){
+
+            console.error(
+                "Application permission could not be revoked:",
+                error
             );
+
+
+            return false;
+
+        }
 
 
         if(
@@ -1937,16 +2733,31 @@ const ApplicationsApp = {
                 );
 
 
+        /*
+         * Revoking a required permission returns the app to
+         * inactive until permission review is complete again.
+         */
         if(
             requested.includes(
                 normalized
             )
         ){
 
-            organSystem.setStatus?.(
-                organ.id,
-                "inactive"
-            );
+            try{
+
+                organSystem.setStatus?.(
+                    organ.id,
+                    "inactive"
+                );
+
+            } catch(error){
+
+                console.warn(
+                    "Application could not be deactivated after permission revoke:",
+                    error
+                );
+
+            }
 
         }
 
@@ -1956,10 +2767,15 @@ const ApplicationsApp = {
             app,
             organ,
             {
+
                 permission:
                     normalized
+
             }
         );
+
+
+        this.enterBrainContext();
 
 
         this.remount();
@@ -2024,14 +2840,11 @@ const ApplicationsApp = {
 
 
         /*
-         * Built-in applications Engine sürümüyle birlikte
-         * güncellenir. Application Store update akışına girmez.
+         * Built-in applications update with Engine releases.
+         * Applications Store does not mutate their runtime.
          */
-
         if(
-            this.isBuiltIn(
-                app
-            )
+            state.builtIn
         ){
 
             return false;
@@ -2064,6 +2877,17 @@ const ApplicationsApp = {
         }
 
 
+        if(
+            !this.hasEntitlement(
+                app
+            )
+        ){
+
+            return false;
+
+        }
+
+
         const organSystem =
             this.getOrganSystem();
 
@@ -2083,75 +2907,101 @@ const ApplicationsApp = {
             state.organ.version;
 
 
-        const updated =
-            organSystem.update(
-                state.organ.id,
-                {
-                    version:
-                        app.version,
+        let updated =
+            null;
 
-                    title:
-                        app.title,
 
-                    description:
-                        app.description ||
-                        app.subtitle ||
-                        "",
+        try{
 
-                    icon:
-                        app.icon,
+            updated =
+                organSystem.update(
+                    state.organ.id,
+                    {
 
-                    action:
-                        app.action,
+                        version:
+                            app.version,
 
-                    capabilities:
-                        this.normalizeList(
-                            app.capabilities
-                        ),
+                        title:
+                            app.title,
 
-                    dependencies:
-                        this.normalizeList(
-                            app.dependencies
-                        ),
+                        description:
+                            app.description ||
+                            app.subtitle ||
+                            "",
 
-                    metadata:{
+                        icon:
+                            app.icon ||
+                            state.organ.icon ||
+                            "◌",
 
-                        ...(
-                            state.organ.metadata ||
-                            {}
-                        ),
+                        action:
+                            app.action ||
+                            state.organ.action ||
+                            "",
 
-                        requestedPermissions:
+                        capabilities:
                             this.normalizeList(
-                                app.requestedPermissions
+                                app.capabilities
                             ),
 
-                        verification:{
+                        dependencies:
+                            this.normalizeList(
+                                app.dependencies
+                            ),
 
-                            verified:
-                                true,
+                        metadata: {
 
-                            verifiedAt:
-                                Date.now(),
+                            ...(
+                                state.organ.metadata ||
+                                {}
+                            ),
 
-                            authority:
-                                verification.authority ||
-                                null,
+                            applicationId:
+                                app.id,
 
-                            hash:
-                                verification.hash ||
-                                null,
+                            requestedPermissions:
+                                this.normalizeList(
+                                    app.requestedPermissions
+                                ),
 
-                            reference:
-                                verification.reference ||
-                                null
+                            verification: {
+
+                                verified:
+                                    true,
+
+                                verifiedAt:
+                                    Date.now(),
+
+                                authority:
+                                    verification.authority ||
+                                    null,
+
+                                hash:
+                                    verification.hash ||
+                                    null,
+
+                                reference:
+                                    verification.reference ||
+                                    null
+
+                            }
 
                         }
 
                     }
+                );
 
-                }
+        } catch(error){
+
+            console.error(
+                "Application update failed:",
+                error
             );
+
+
+            return false;
+
+        }
 
 
         if(
@@ -2161,6 +3011,65 @@ const ApplicationsApp = {
         ){
 
             return false;
+
+        }
+
+
+        /*
+         * Re-check permission completeness because an update
+         * may request a different permission set.
+         */
+        const freshState =
+            this.getAppState(
+                app
+            );
+
+
+        const requested =
+            this.normalizeList(
+                app.requestedPermissions
+            )
+                .map(
+                    item =>
+                        item.toLowerCase()
+                );
+
+
+        const granted =
+            this.normalizeList(
+                freshState.organ
+                    ?.permissions
+            )
+                .map(
+                    item =>
+                        item.toLowerCase()
+                );
+
+
+        const permissionsComplete =
+            requested.every(
+                permission =>
+                    granted.includes(
+                        permission
+                    )
+            );
+
+
+        try{
+
+            organSystem.setStatus?.(
+                state.organ.id,
+                permissionsComplete
+                    ? "active"
+                    : "inactive"
+            );
+
+        } catch(error){
+
+            console.warn(
+                "Application update status could not be synchronized:",
+                error
+            );
 
         }
 
@@ -2175,12 +3084,21 @@ const ApplicationsApp = {
                     : state.organ
             ),
             {
+
                 previousVersion,
 
                 version:
                     app.version
+
             }
         );
+
+
+        this.selectedAppId =
+            app.id;
+
+
+        this.enterBrainContext();
 
 
         this.remount();
@@ -2236,6 +3154,18 @@ const ApplicationsApp = {
         }
 
 
+        if(
+            !this.guardianAllows(
+                app,
+                "remove"
+            )
+        ){
+
+            return false;
+
+        }
+
+
         const organSystem =
             this.getOrganSystem();
 
@@ -2251,10 +3181,28 @@ const ApplicationsApp = {
         }
 
 
-        const result =
-            organSystem.uninstall(
-                state.organ.id
+        let result =
+            false;
+
+
+        try{
+
+            result =
+                organSystem.uninstall(
+                    state.organ.id
+                );
+
+        } catch(error){
+
+            console.error(
+                "Application removal failed:",
+                error
             );
+
+
+            return false;
+
+        }
 
 
         if(
@@ -2277,6 +3225,9 @@ const ApplicationsApp = {
 
         this.selectedAppId =
             null;
+
+
+        this.enterBrainContext();
 
 
         this.remount();
@@ -2307,6 +3258,20 @@ const ApplicationsApp = {
         extra = {}
     ){
 
+        const normalizedAction =
+            String(
+                action ||
+                    ""
+            ).trim();
+
+
+        if(!normalizedAction){
+
+            return false;
+
+        }
+
+
         const payload = {
 
             appId:
@@ -2317,9 +3282,19 @@ const ApplicationsApp = {
                 organ?.id ||
                 null,
 
-            action,
+            action:
+                normalizedAction,
 
-            ...extra,
+            ...(
+                extra &&
+                typeof extra ===
+                    "object" &&
+                !Array.isArray(
+                    extra
+                )
+                    ? extra
+                    : {}
+            ),
 
             time:
                 Date.now()
@@ -2327,34 +3302,74 @@ const ApplicationsApp = {
         };
 
 
-        try{
-
-            VAERO?.emit?.(
-                `application:${action}`,
-                payload
-            );
-
-        } catch(error){
-
-            /* non-fatal */
-
-        }
+        let emitted =
+            false;
 
 
         try{
 
-            this.getService(
-                "events"
-            )?.emit?.(
-                `application:${action}`,
-                payload
-            );
+            if(
+                typeof VAERO !==
+                    "undefined" &&
+                typeof VAERO.emit ===
+                    "function"
+            ){
+
+                VAERO.emit(
+                    `application:${normalizedAction}`,
+                    payload
+                );
+
+
+                emitted =
+                    true;
+
+            }
 
         } catch(error){
 
-            /* non-fatal */
+            /* fallback below */
 
         }
+
+
+        if(!emitted){
+
+            try{
+
+                const events =
+                    this.getService(
+                        "events"
+                    );
+
+
+                if(
+                    events &&
+                    typeof events.emit ===
+                        "function"
+                ){
+
+                    events.emit(
+                        `application:${normalizedAction}`,
+                        payload
+                    );
+
+
+                    emitted =
+                        true;
+
+                }
+
+            } catch(error){
+
+                /* non-fatal */
+
+            }
+
+        }
+
+
+        return emitted;
 
     },
 
@@ -2396,6 +3411,13 @@ const ApplicationsApp = {
                 true
         ){
 
+            this.selectedAppId =
+                app.id;
+
+
+            this.remount();
+
+
             return false;
 
         }
@@ -2419,8 +3441,22 @@ const ApplicationsApp = {
         }
 
 
+        if(
+            typeof document ===
+                "undefined"
+        ){
+
+            return false;
+
+        }
+
+
         try{
 
+            /*
+             * Reuse Engine's existing delegated data-action
+             * routing rather than duplicating route logic here.
+             */
             const button =
                 document.createElement(
                     "button"
@@ -2435,8 +3471,14 @@ const ApplicationsApp = {
                 app.action;
 
 
-            button.style.display =
-                "none";
+            button.hidden =
+                true;
+
+
+            button.setAttribute(
+                "aria-hidden",
+                "true"
+            );
 
 
             document.body.appendChild(
@@ -2462,7 +3504,7 @@ const ApplicationsApp = {
         } catch(error){
 
             console.warn(
-                "Application açılamadı:",
+                "Application could not be opened:",
                 error
             );
 
@@ -2476,20 +3518,42 @@ const ApplicationsApp = {
 
     openApplication(appId){
 
-        return this.open(
+        const app =
             this.findApp(
                 appId
-            )
+            );
+
+
+        if(!app){
+
+            return false;
+
+        }
+
+
+        return this.open(
+            app
         );
 
     },
 
 
     /* =====================================================
+       CONTINUE IN PART 3
+    ===================================================== */
+
+   /* =====================================================
        APP CARD
     ===================================================== */
 
     renderAppCard(app){
+
+        if(!app){
+
+            return "";
+
+        }
+
 
         const state =
             this.getAppState(
@@ -2497,22 +3561,44 @@ const ApplicationsApp = {
             );
 
 
-        if(
-            window.UI &&
-            typeof UI.applicationCard ===
-                "function"
-        ){
+        try{
 
-            return UI.applicationCard(
-                app,
-                state
-            );
+            if(
+                typeof window !==
+                    "undefined" &&
+                window.UI &&
+                typeof window.UI.applicationCard ===
+                    "function"
+            ){
+
+                const result =
+                    window.UI.applicationCard(
+                        app,
+                        state
+                    );
+
+
+                if(
+                    typeof result ===
+                        "string"
+                ){
+
+                    return result;
+
+                }
+
+            }
+
+        } catch(error){
+
+            /* local fallback */
 
         }
 
 
         const pricing =
-            app.pricing || {
+            app.pricing ||
+            {
                 model:
                     "free"
             };
@@ -2522,6 +3608,10 @@ const ApplicationsApp = {
             "İncele";
 
 
+        let command =
+            "details";
+
+
         if(
             state.updateAvailable
         ){
@@ -2529,17 +3619,41 @@ const ApplicationsApp = {
             actionLabel =
                 "Güncelle";
 
-        }
 
+            command =
+                "update";
+
+        }
         else if(
             state.installed
         ){
 
-            actionLabel =
-                "Aç";
+            if(
+                !state.builtIn &&
+                state.status !==
+                    "active"
+            ){
+
+                actionLabel =
+                    "İzinleri İncele";
+
+
+                command =
+                    "details";
+
+            }
+            else {
+
+                actionLabel =
+                    "Aç";
+
+
+                command =
+                    "open";
+
+            }
 
         }
-
         else if(
             pricing.model ===
                 "free"
@@ -2548,12 +3662,19 @@ const ApplicationsApp = {
             actionLabel =
                 "Yükle";
 
-        }
 
+            command =
+                "install";
+
+        }
         else {
 
             actionLabel =
-                "Al";
+                "Satın Al / Yükle";
+
+
+            command =
+                "install";
 
         }
 
@@ -2575,34 +3696,44 @@ const ApplicationsApp = {
 
                 </div>
 
-
                 <div class="applications-card-copy">
 
                     <div class="applications-card-title-row">
 
                         <h3>
                             ${this.escapeHTML(
-                                app.title
+                                app.title ||
+                                app.id
                             )}
                         </h3>
 
-
                         ${
-                            state.trusted ||
                             state.builtIn
                                 ? `
                                     <span
                                         class="applications-trusted"
-                                        title="Güvenilir kaynak"
+                                        title="VAERO Engine ile birlikte gelir"
+                                        aria-label="VAERO built-in uygulaması"
                                     >
                                         ✓
                                     </span>
-                                  `
-                                : ""
+                                `
+                                : (
+                                    state.trusted
+                                        ? `
+                                            <span
+                                                class="applications-trusted"
+                                                title="Paket doğrulaması tamamlandı"
+                                                aria-label="Doğrulanmış uygulama"
+                                            >
+                                                ✓
+                                            </span>
+                                        `
+                                        : ""
+                                )
                         }
 
                     </div>
-
 
                     <p>
                         ${this.escapeHTML(
@@ -2610,7 +3741,6 @@ const ApplicationsApp = {
                             ""
                         )}
                     </p>
-
 
                     <div class="applications-card-meta">
 
@@ -2621,7 +3751,6 @@ const ApplicationsApp = {
                             )}
                         </span>
 
-
                         <span>
                             v${this.escapeHTML(
                                 app.version ||
@@ -2629,21 +3758,19 @@ const ApplicationsApp = {
                             )}
                         </span>
 
-
                         ${
                             state.updateAvailable
                                 ? `
                                     <span>
                                         Güncelleme
                                     </span>
-                                  `
+                                `
                                 : ""
                         }
 
                     </div>
 
                 </div>
-
 
                 <div class="applications-card-actions">
 
@@ -2658,22 +3785,19 @@ const ApplicationsApp = {
                         Bilgi
                     </button>
 
-
                     <button
                         type="button"
                         class="primary-btn applications-main-btn"
-                        data-applications-command="${
-                            state.updateAvailable
-                                ? "update"
-                                : state.installed
-                                    ? "open"
-                                    : "install"
-                        }"
+                        data-applications-command="${this.escapeHTML(
+                            command
+                        )}"
                         data-app-id="${this.escapeHTML(
                             app.id
                         )}"
                     >
-                        ${actionLabel}
+                        ${this.escapeHTML(
+                            actionLabel
+                        )}
                     </button>
 
                 </div>
@@ -2695,11 +3819,14 @@ const ApplicationsApp = {
 
         const requested =
             this.normalizeList(
-                app.requestedPermissions
+                app?.requestedPermissions
             );
 
 
-        if(!requested.length){
+        if(
+            requested.length ===
+                0
+        ){
 
             return `
                 <p class="applications-muted">
@@ -2712,8 +3839,7 @@ const ApplicationsApp = {
 
         const granted =
             this.normalizeList(
-                state.organ
-                    ?.permissions
+                state?.organ?.permissions
             )
                 .map(
                     item =>
@@ -2721,50 +3847,63 @@ const ApplicationsApp = {
                 );
 
 
-        if(
-            window.UI &&
-            typeof UI.permissionRow ===
-                "function"
-        ){
+        try{
 
-            return `
-                <div class="applications-permission-list">
+            if(
+                typeof window !==
+                    "undefined" &&
+                window.UI &&
+                typeof window.UI.permissionRow ===
+                    "function"
+            ){
 
-                    ${requested
-                        .map(
-                            permission => {
+                return `
+                    <div class="applications-permission-list">
 
-                                const isGranted =
-                                    granted.includes(
-                                        permission
-                                            .toLowerCase()
+                        ${requested
+                            .map(
+                                permission => {
+
+                                    const isGranted =
+                                        granted.includes(
+                                            permission.toLowerCase()
+                                        );
+
+
+                                    return window.UI.permissionRow(
+                                        permission,
+                                        {
+
+                                            granted:
+                                                isGranted,
+
+                                            appId:
+                                                app.id,
+
+                                            editable:
+                                                Boolean(
+                                                    state.installed &&
+                                                    !state.builtIn &&
+                                                    state.trusted
+                                                )
+
+                                        }
                                     );
 
+                                }
+                            )
+                            .join(
+                                ""
+                            )}
 
-                                return UI.permissionRow(
-                                    permission,
-                                    {
-                                        granted:
-                                            isGranted,
+                    </div>
+                `;
 
-                                        appId:
-                                            app.id,
+            }
 
-                                        editable:
-                                            Boolean(
-                                                state.installed &&
-                                                !state.builtIn &&
-                                                state.trusted
-                                            )
-                                    }
-                                );
+        } catch(error){
 
-                            }
-                        )
-                        .join("")}
-
-                </div>
-            `;
+            /* fallback */
 
         }
 
@@ -2777,13 +3916,20 @@ const ApplicationsApp = {
                         permission => {
 
                             const normalized =
-                                permission
-                                    .toLowerCase();
+                                permission.toLowerCase();
 
 
                             const isGranted =
                                 granted.includes(
                                     normalized
+                                );
+
+
+                            const editable =
+                                Boolean(
+                                    state.installed &&
+                                    !state.builtIn &&
+                                    state.trusted
                                 );
 
 
@@ -2808,11 +3954,8 @@ const ApplicationsApp = {
 
                                     </div>
 
-
                                     ${
-                                        state.installed &&
-                                        !state.builtIn &&
-                                        state.trusted
+                                        editable
                                             ? `
                                                 <button
                                                     type="button"
@@ -2835,7 +3978,7 @@ const ApplicationsApp = {
                                                             : "İzin Ver"
                                                     }
                                                 </button>
-                                              `
+                                            `
                                             : ""
                                     }
 
@@ -2844,7 +3987,9 @@ const ApplicationsApp = {
 
                         }
                     )
-                    .join("")}
+                    .join(
+                        ""
+                    )}
 
             </div>
         `;
@@ -2878,7 +4023,8 @@ const ApplicationsApp = {
 
 
         const pricing =
-            app.pricing || {
+            app.pricing ||
+            {
                 model:
                     "free"
             };
@@ -2892,9 +4038,12 @@ const ApplicationsApp = {
 
         const granted =
             this.normalizeList(
-                state.organ
-                    ?.permissions
-            );
+                state.organ?.permissions
+            )
+                .map(
+                    item =>
+                        item.toLowerCase()
+                );
 
 
         const permissionComplete =
@@ -2902,15 +4051,53 @@ const ApplicationsApp = {
                 0 ||
             requested.every(
                 permission =>
-                    granted
-                        .map(
-                            item =>
-                                item.toLowerCase()
-                        )
-                        .includes(
-                            permission.toLowerCase()
-                        )
+                    granted.includes(
+                        permission.toLowerCase()
+                    )
             );
+
+
+        let statusLabel =
+            "Yüklü değil";
+
+
+        if(
+            state.installed
+        ){
+
+            if(
+                state.updateAvailable
+            ){
+
+                statusLabel =
+                    "Güncelleme mevcut";
+
+            }
+            else if(
+                state.builtIn
+            ){
+
+                statusLabel =
+                    "Engine ile birlikte";
+
+            }
+            else if(
+                state.status ===
+                    "active"
+            ){
+
+                statusLabel =
+                    "Aktif";
+
+            }
+            else {
+
+                statusLabel =
+                    "İzin incelemesi gerekiyor";
+
+            }
+
+        }
 
 
         return `
@@ -2921,21 +4108,21 @@ const ApplicationsApp = {
                     data-applications-command="close-details"
                 ></div>
 
-
                 <section
                     class="applications-detail"
                     role="dialog"
                     aria-modal="true"
+                    aria-labelledby="applicationsDetailTitle"
                 >
 
                     <button
                         type="button"
                         class="secondary-btn applications-detail-close"
                         data-applications-command="close-details"
+                        aria-label="Kapat"
                     >
                         ×
                     </button>
-
 
                     <div class="applications-detail-head">
 
@@ -2948,28 +4135,26 @@ const ApplicationsApp = {
 
                         </div>
 
-
                         <div>
 
                             <div class="eyebrow">
-
                                 ${
                                     state.builtIn
                                         ? "VAERO BUILT-IN APPLICATION"
-                                        : state.trusted
-                                            ? "DOĞRULANMIŞ UYGULAMA"
-                                            : "UYGULAMA"
+                                        : (
+                                            state.trusted
+                                                ? "DOĞRULANMIŞ UYGULAMA"
+                                                : "UYGULAMA"
+                                        )
                                 }
-
                             </div>
 
-
-                            <h2>
+                            <h2 id="applicationsDetailTitle">
                                 ${this.escapeHTML(
-                                    app.title
+                                    app.title ||
+                                    app.id
                                 )}
                             </h2>
-
 
                             <p>
                                 ${this.escapeHTML(
@@ -2982,7 +4167,6 @@ const ApplicationsApp = {
                         </div>
 
                     </div>
-
 
                     <div class="applications-detail-grid">
 
@@ -3001,7 +4185,6 @@ const ApplicationsApp = {
 
                         </div>
 
-
                         <div>
 
                             <span>
@@ -3017,7 +4200,6 @@ const ApplicationsApp = {
 
                         </div>
 
-
                         <div>
 
                             <span>
@@ -3025,22 +4207,12 @@ const ApplicationsApp = {
                             </span>
 
                             <strong>
-
-                                ${
-                                    state.installed
-                                        ? state.updateAvailable
-                                            ? "Güncelleme mevcut"
-                                            : state.status ===
-                                                "active"
-                                                ? "Aktif"
-                                                : "İzin incelemesi gerekiyor"
-                                        : "Yüklü değil"
-                                }
-
+                                ${this.escapeHTML(
+                                    statusLabel
+                                )}
                             </strong>
 
                         </div>
-
 
                         <div>
 
@@ -3051,12 +4223,15 @@ const ApplicationsApp = {
                             <strong>
                                 ${this.escapeHTML(
                                     app.distribution ||
-                                    "built-in"
+                                    (
+                                        state.builtIn
+                                            ? "built-in"
+                                            : "external"
+                                    )
                                 )}
                             </strong>
 
                         </div>
-
 
                         <div>
 
@@ -3072,7 +4247,6 @@ const ApplicationsApp = {
                             </strong>
 
                         </div>
-
 
                         <div>
 
@@ -3090,13 +4264,11 @@ const ApplicationsApp = {
 
                     </div>
 
-
                     <div class="applications-detail-section">
 
                         <div class="eyebrow">
                             YETENEKLER
                         </div>
-
 
                         ${
                             capabilities.length
@@ -3113,19 +4285,20 @@ const ApplicationsApp = {
                                                     </span>
                                                 `
                                             )
-                                            .join("")}
+                                            .join(
+                                                ""
+                                            )}
 
                                     </div>
-                                  `
+                                `
                                 : `
                                     <p class="applications-muted">
                                         Özel capability tanımlanmamış.
                                     </p>
-                                  `
+                                `
                         }
 
                     </div>
-
 
                     <div class="applications-detail-section">
 
@@ -3133,14 +4306,12 @@ const ApplicationsApp = {
                             İZİNLER
                         </div>
 
-
                         ${this.renderPermissions(
                             app,
                             state
                         )}
 
                     </div>
-
 
                     ${
                         state.installed &&
@@ -3158,30 +4329,29 @@ const ApplicationsApp = {
                                     </span>
 
                                 </div>
-                              `
+                            `
                             : ""
                     }
 
-
                     ${
                         !state.builtIn &&
+                        state.installed &&
                         !state.trusted
                             ? `
                                 <div class="applications-security-warning">
 
                                     <strong>
-                                        Güven doğrulaması gerekli
+                                        Güven doğrulaması tamamlanmadı
                                     </strong>
 
                                     <span>
-                                        Manifest içindeki trusted değeri tek başına güven kanıtı değildir. Paket doğrulaması ve VAERO trust sonucu olmadan sistem kaynaklarına erişemez.
+                                        Manifest içindeki trusted değeri güven kanıtı değildir. Paket doğrulaması ve OrganSystem trust sonucu olmadan uygulama sistem kaynaklarına erişemez.
                                     </span>
 
                                 </div>
-                              `
+                            `
                             : ""
                     }
-
 
                     <div class="applications-detail-actions">
 
@@ -3198,57 +4368,60 @@ const ApplicationsApp = {
                                     >
                                         Güncelle
                                     </button>
-                                  `
-                                : state.installed
-                                    ? `
-                                        <button
-                                            type="button"
-                                            class="primary-btn"
-                                            data-applications-command="open"
-                                            data-app-id="${this.escapeHTML(
-                                                app.id
-                                            )}"
-                                            ${
-                                                !state.builtIn &&
-                                                state.status !==
-                                                    "active"
-                                                    ? "disabled"
-                                                    : ""
-                                            }
-                                        >
-
-                                            ${
-                                                !state.builtIn &&
-                                                state.status !==
-                                                    "active"
-                                                    ? "İzinleri Tamamla"
-                                                    : "Aç"
-                                            }
-
-                                        </button>
-                                      `
-                                    : `
-                                        <button
-                                            type="button"
-                                            class="primary-btn"
-                                            data-applications-command="install"
-                                            data-app-id="${this.escapeHTML(
-                                                app.id
-                                            )}"
-                                        >
-
-                                            ${
-                                                this.isPaid(
-                                                    app
-                                                )
-                                                    ? "Satın Al / Yükle"
-                                                    : "Yükle"
-                                            }
-
-                                        </button>
-                                      `
+                                `
+                                : (
+                                    state.installed
+                                        ? `
+                                            <button
+                                                type="button"
+                                                class="primary-btn"
+                                                data-applications-command="${
+                                                    !state.builtIn &&
+                                                    state.status !==
+                                                        "active"
+                                                        ? "details"
+                                                        : "open"
+                                                }"
+                                                data-app-id="${this.escapeHTML(
+                                                    app.id
+                                                )}"
+                                                ${
+                                                    !state.builtIn &&
+                                                    state.status !==
+                                                        "active"
+                                                        ? "disabled"
+                                                        : ""
+                                                }
+                                            >
+                                                ${
+                                                    !state.builtIn &&
+                                                    state.status !==
+                                                        "active"
+                                                        ? "İzinleri Tamamla"
+                                                        : "Aç"
+                                                }
+                                            </button>
+                                        `
+                                        : `
+                                            <button
+                                                type="button"
+                                                class="primary-btn"
+                                                data-applications-command="install"
+                                                data-app-id="${this.escapeHTML(
+                                                    app.id
+                                                )}"
+                                            >
+                                                ${
+                                                    this.isPaid(
+                                                        app
+                                                    )
+                                                        ? "Satın Al / Yükle"
+                                                        : "Yükle"
+                                                }
+                                            </button>
+                                        `
+                                )
                         }
-
 
                         ${
                             state.installed &&
@@ -3266,7 +4439,7 @@ const ApplicationsApp = {
                                     >
                                         Kaldır
                                     </button>
-                                  `
+                                `
                                 : ""
                         }
 
@@ -3307,11 +4480,18 @@ const ApplicationsApp = {
 
 
         return `
-            <div class="applications-view-nav">
+            <div
+                class="applications-view-nav"
+                role="group"
+                aria-label="Uygulama görünümü"
+            >
 
                 ${views
                     .map(
-                        ([id,label]) => `
+                        ([
+                            id,
+                            label
+                        ]) => `
                             <button
                                 type="button"
                                 class="${
@@ -3322,15 +4502,62 @@ const ApplicationsApp = {
                                 }"
                                 data-applications-command="view"
                                 data-view="${id}"
+                                aria-pressed="${
+                                    this.view ===
+                                        id
+                                        ? "true"
+                                        : "false"
+                                }"
                             >
                                 ${label}
                             </button>
                         `
                     )
-                    .join("")}
+                    .join(
+                        ""
+                    )}
 
             </div>
         `;
+
+    },
+
+
+    /* =====================================================
+       BRAIN PANEL
+    ===================================================== */
+
+    renderBrainPanel(){
+
+        try{
+
+            if(
+                typeof window !==
+                    "undefined" &&
+                window.UI &&
+                typeof window.UI.brainPanel ===
+                    "function"
+            ){
+
+                const result =
+                    window.UI.brainPanel();
+
+
+                return typeof result ===
+                    "string"
+                    ? result
+                    : "";
+
+            }
+
+        } catch(error){
+
+            /* optional */
+
+        }
+
+
+        return "";
 
     },
 
@@ -3340,6 +4567,12 @@ const ApplicationsApp = {
     ===================================================== */
 
     render(){
+
+        this.view =
+            this.normalizeView(
+                this.view
+            );
+
 
         this.enterBrainContext();
 
@@ -3374,12 +4607,27 @@ const ApplicationsApp = {
             ).length;
 
 
-        const selectedApp =
+        let selectedApp =
             this.selectedAppId
                 ? this.findApp(
                     this.selectedAppId
                 )
                 : null;
+
+
+        if(
+            this.selectedAppId &&
+            !selectedApp
+        ){
+
+            this.selectedAppId =
+                null;
+
+
+            selectedApp =
+                null;
+
+        }
 
 
         return `
@@ -3399,7 +4647,6 @@ const ApplicationsApp = {
 
                     </div>
 
-
                     <header class="applications-header">
 
                         <div>
@@ -3408,18 +4655,15 @@ const ApplicationsApp = {
                                 VAERO APPLICATIONS
                             </div>
 
-
                             <h1>
                                 Uygulamalar
                             </h1>
-
 
                             <p>
                                 Engine'ini yeni yeteneklerle genişlet. Uygulamaları keşfet, izinlerini incele ve kurulu uygulamalarını yönet.
                             </p>
 
                         </div>
-
 
                         <div class="applications-header-stats">
 
@@ -3435,7 +4679,6 @@ const ApplicationsApp = {
 
                             </div>
 
-
                             <div>
 
                                 <strong>
@@ -3447,7 +4690,6 @@ const ApplicationsApp = {
                                 </span>
 
                             </div>
-
 
                             <div>
 
@@ -3465,18 +4707,15 @@ const ApplicationsApp = {
 
                     </header>
 
-
                     ${this.renderViewNavigation()}
-
 
                     <div class="applications-toolbar">
 
                         <label class="applications-search">
 
-                            <span>
+                            <span aria-hidden="true">
                                 ⌕
                             </span>
-
 
                             <input
                                 type="search"
@@ -3486,12 +4725,17 @@ const ApplicationsApp = {
                                     this.searchQuery
                                 )}"
                                 autocomplete="off"
+                                enterkeyhint="search"
+                                aria-label="Uygulamalarda ara"
                             >
 
                         </label>
 
-
-                        <div class="applications-categories">
+                        <div
+                            class="applications-categories"
+                            role="group"
+                            aria-label="Uygulama kategorileri"
+                        >
 
                             <button
                                 type="button"
@@ -3503,10 +4747,15 @@ const ApplicationsApp = {
                                 }"
                                 data-applications-command="category"
                                 data-category="all"
+                                aria-pressed="${
+                                    this.category ===
+                                        "all"
+                                        ? "true"
+                                        : "false"
+                                }"
                             >
                                 Tümü
                             </button>
-
 
                             ${categories
                                 .map(
@@ -3516,7 +4765,14 @@ const ApplicationsApp = {
                                             typeof category ===
                                                 "string"
                                                 ? category
-                                                : category.id;
+                                                : category?.id;
+
+
+                                        if(!id){
+
+                                            return "";
+
+                                        }
 
 
                                         return `
@@ -3532,6 +4788,12 @@ const ApplicationsApp = {
                                                 data-category="${this.escapeHTML(
                                                     id
                                                 )}"
+                                                aria-pressed="${
+                                                    this.category ===
+                                                        id
+                                                        ? "true"
+                                                        : "false"
+                                                }"
                                             >
                                                 ${this.escapeHTML(
                                                     this.getCategoryLabel(
@@ -3543,12 +4805,13 @@ const ApplicationsApp = {
 
                                     }
                                 )
-                                .join("")}
+                                .join(
+                                    ""
+                                )}
 
                         </div>
 
                     </div>
-
 
                     <div class="applications-scroll">
 
@@ -3564,10 +4827,12 @@ const ApplicationsApp = {
                                                         app
                                                     )
                                             )
-                                            .join("")}
+                                            .join(
+                                                ""
+                                            )}
 
                                     </div>
-                                  `
+                                `
                                 : `
                                     <div class="applications-empty">
 
@@ -3575,52 +4840,44 @@ const ApplicationsApp = {
                                             ◌
                                         </div>
 
-
                                         <strong>
-
                                             ${
                                                 this.view ===
                                                     "updates"
                                                     ? "Bekleyen güncelleme yok"
-                                                    : this.view ===
-                                                        "installed"
-                                                        ? "Yüklü uygulama bulunamadı"
-                                                        : "Uygulama bulunamadı"
+                                                    : (
+                                                        this.view ===
+                                                            "installed"
+                                                            ? "Yüklü uygulama bulunamadı"
+                                                            : "Uygulama bulunamadı"
+                                                    )
                                             }
-
                                         </strong>
 
-
                                         <span>
-
                                             ${
                                                 this.searchQuery ||
                                                 this.category !==
                                                     "all"
                                                     ? "Arama veya kategori filtresini değiştir."
-                                                    : this.view ===
-                                                        "updates"
-                                                        ? "Kurulu uygulamalar güncel."
-                                                        : "Application Registry şu anda eşleşen bir uygulama döndürmedi."
+                                                    : (
+                                                        this.view ===
+                                                            "updates"
+                                                            ? "Kurulu uygulamalar güncel."
+                                                            : "Application Registry şu anda eşleşen bir uygulama döndürmedi."
+                                                    )
                                             }
-
                                         </span>
 
                                     </div>
-                                  `
+                                `
                         }
 
                     </div>
 
-
-                    ${
-                        window.UI
-                            ?.brainPanel?.() ||
-                        ""
-                    }
+                    ${this.renderBrainPanel()}
 
                 </div>
-
 
                 ${
                     selectedApp
@@ -3637,34 +4894,6 @@ const ApplicationsApp = {
 
 
     /* =====================================================
-       REMOUNT
-    ===================================================== */
-
-    remount(){
-
-        const engine =
-            this.getEngine();
-
-
-        if(
-            !engine ||
-            typeof engine.mount !==
-                "function"
-        ){
-
-            return false;
-
-        }
-
-
-        return engine.mount(
-            engine.currentEntity
-        );
-
-    },
-
-
-    /* =====================================================
        COMMANDS
     ===================================================== */
 
@@ -3673,18 +4902,39 @@ const ApplicationsApp = {
         element
     ){
 
+        const normalizedCommand =
+            String(
+                command ||
+                    ""
+            )
+                .trim()
+                .toLowerCase();
+
+
         const appId =
             element?.dataset
                 ?.appId ||
             null;
 
 
-        switch(command){
+        switch(
+            normalizedCommand
+        ){
 
             case "details":
 
+                if(!appId){
+
+                    return false;
+
+                }
+
+
                 this.selectedAppId =
                     appId;
+
+
+                this.enterBrainContext();
 
 
                 return this.remount();
@@ -3696,19 +4946,22 @@ const ApplicationsApp = {
                     null;
 
 
+                this.enterBrainContext();
+
+
                 return this.remount();
 
 
             case "category":
 
-                this.category =
-                    element.dataset
-                        .category ||
-                    "all";
+                this.setCategory(
+                    element?.dataset
+                        ?.category ||
+                    "all"
+                );
 
 
-                this.selectedAppId =
-                    null;
+                this.enterBrainContext();
 
 
                 return this.remount();
@@ -3716,29 +4969,20 @@ const ApplicationsApp = {
 
             case "view":
 
-                this.view =
-                    [
-                        "discover",
-                        "installed",
-                        "updates"
-                    ]
-                        .includes(
-                            element.dataset
-                                .view
-                        )
-                            ? element.dataset
-                                .view
-                            : "discover";
+                this.setView(
+                    element?.dataset
+                        ?.view ||
+                    "discover"
+                );
 
 
-                this.selectedAppId =
-                    null;
+                this.enterBrainContext();
 
 
                 return this.remount();
 
 
-            case "install":{
+            case "install": {
 
                 const installed =
                     this.install(
@@ -3750,6 +4994,9 @@ const ApplicationsApp = {
 
                     this.selectedAppId =
                         appId;
+
+
+                    this.enterBrainContext();
 
 
                     return this.remount();
@@ -3764,10 +5011,8 @@ const ApplicationsApp = {
 
             case "open":
 
-                return this.open(
-                    this.findApp(
-                        appId
-                    )
+                return this.openApplication(
+                    appId
                 );
 
 
@@ -3790,8 +5035,8 @@ const ApplicationsApp = {
 
                 return this.grantRequestedPermission(
                     appId,
-                    element.dataset
-                        .permission
+                    element?.dataset
+                        ?.permission
                 );
 
 
@@ -3800,8 +5045,8 @@ const ApplicationsApp = {
 
                 return this.revokePermission(
                     appId,
-                    element.dataset
-                        .permission
+                    element?.dataset
+                        ?.permission
                 );
 
 
@@ -3810,6 +5055,108 @@ const ApplicationsApp = {
                 return false;
 
         }
+
+    },
+
+
+    /* =====================================================
+       SEARCH
+    ===================================================== */
+
+    handleSearchInput(value){
+
+        this.setSearchQuery(
+            value
+        );
+
+
+        if(
+            this.searchTimer !==
+                null
+        ){
+
+            clearTimeout(
+                this.searchTimer
+            );
+
+        }
+
+
+        this.searchTimer =
+            setTimeout(
+                () => {
+
+                    this.searchTimer =
+                        null;
+
+
+                    this.enterBrainContext();
+
+
+                    this.remount();
+
+                },
+                120
+            );
+
+
+        return true;
+
+    },
+
+
+    /* =====================================================
+       REPORT
+    ===================================================== */
+
+    report(){
+
+        const catalog =
+            this.getCatalogApps();
+
+
+        return {
+
+            version:
+                this.version,
+
+            view:
+                this.view,
+
+            category:
+                this.category,
+
+            searchQuery:
+                this.searchQuery,
+
+            selectedAppId:
+                this.selectedAppId,
+
+            catalogCount:
+                catalog.length,
+
+            installedCount:
+                catalog.filter(
+                    app =>
+                        this.getAppState(
+                            app
+                        ).installed
+                ).length,
+
+            updateCount:
+                catalog.filter(
+                    app =>
+                        this.getAppState(
+                            app
+                        ).updateAvailable
+                ).length,
+
+            externalAppsAllowed:
+                this.getApplicationPolicy()
+                    .allowExternalApps ===
+                true
+
+        };
 
     }
 
@@ -3820,82 +5167,82 @@ const ApplicationsApp = {
    EVENT DELEGATION
 ========================================================= */
 
-document.addEventListener(
-    "click",
-    event => {
+if(
+    typeof document !==
+        "undefined"
+){
 
-        const target =
-            event.target.closest(
-                "[data-applications-command]"
+    document.addEventListener(
+        "click",
+        event => {
+
+            const target =
+                event.target;
+
+
+            if(
+                !target ||
+                typeof target.closest !==
+                    "function"
+            ){
+
+                return;
+
+            }
+
+
+            const commandTarget =
+                target.closest(
+                    "[data-applications-command]"
+                );
+
+
+            if(!commandTarget){
+
+                return;
+
+            }
+
+
+            event.preventDefault();
+
+
+            ApplicationsApp.handleCommand(
+                commandTarget.dataset
+                    .applicationsCommand,
+                commandTarget
             );
-
-
-        if(!target){
-
-            return;
 
         }
+    );
 
 
-        event.preventDefault();
+    /* =====================================================
+       SEARCH
+    ===================================================== */
+
+    document.addEventListener(
+        "input",
+        event => {
+
+            if(
+                event.target?.id !==
+                    "applicationsSearch"
+            ){
+
+                return;
+
+            }
 
 
-        ApplicationsApp.handleCommand(
-            target.dataset
-                .applicationsCommand,
-            target
-        );
-
-    }
-);
-
-
-/* =========================================================
-   SEARCH
-========================================================= */
-
-document.addEventListener(
-    "input",
-    event => {
-
-        if(
-            event.target.id !==
-                "applicationsSearch"
-        ){
-
-            return;
+            ApplicationsApp.handleSearchInput(
+                event.target.value
+            );
 
         }
+    );
 
-
-        ApplicationsApp.searchQuery =
-            String(
-                event.target.value ||
-                ""
-            );
-
-
-        clearTimeout(
-            ApplicationsApp.searchTimer
-        );
-
-
-        ApplicationsApp.searchTimer =
-            setTimeout(
-                () => {
-
-                    ApplicationsApp.selectedAppId =
-                        null;
-
-
-                    ApplicationsApp.remount();
-
-                },
-                120
-            );
-
-    }
-);
+}
 
 
 /* =========================================================
@@ -3904,17 +5251,40 @@ document.addEventListener(
 
 try{
 
-    VAERO?.register?.(
-        "applicationsApp",
-        ApplicationsApp
-    );
+    if(
+        typeof VAERO !==
+            "undefined" &&
+        typeof VAERO.register ===
+            "function"
+    ){
+
+        VAERO.register(
+            "applicationsApp",
+            ApplicationsApp
+        );
+
+    }
 
 } catch(error){
 
-    /* global remains available */
+    console.warn(
+        "ApplicationsApp VAERO registration failed:",
+        error
+    );
 
 }
 
 
-window.ApplicationsApp =
-    ApplicationsApp;
+/* =========================================================
+   GLOBAL
+========================================================= */
+
+if(
+    typeof window !==
+        "undefined"
+){
+
+    window.ApplicationsApp =
+        ApplicationsApp;
+
+}
