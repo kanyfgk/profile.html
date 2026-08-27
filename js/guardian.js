@@ -5,13 +5,20 @@
 
 const Guardian = {
 
-    rules: new Map(),
+    rules:
+        new Map(),
 
-    violations: [],
+    violations:
+        [],
 
-    maxViolations: 100,
+    maxViolations:
+        100,
 
-    maxStringLength: 10000,
+    maxStringLength:
+        10000,
+
+    maxValidationDepth:
+        8,
 
 
     /* =====================================================
@@ -21,11 +28,86 @@ const Guardian = {
     normalizeRuleName(name){
 
         return String(
-            name ?? ""
+            name ??
+            ""
         )
             .trim()
             .toLowerCase()
-            .replace(/\s+/g, "-");
+            .replace(
+                /\s+/g,
+                "-"
+            );
+
+    },
+
+
+    normalizeScope(scope){
+
+        const value =
+            String(
+                scope ??
+                "global"
+            )
+                .trim()
+                .toLowerCase();
+
+
+        return (
+            value ||
+            "global"
+        );
+
+    },
+
+
+    normalizeSeverity(
+        severity
+    ){
+
+        const value =
+            String(
+                severity ??
+                ""
+            )
+                .trim()
+                .toLowerCase();
+
+
+        if(
+            [
+                "low",
+                "medium",
+                "high",
+                "critical"
+            ].includes(
+                value
+            )
+        ){
+
+            return value;
+
+        }
+
+
+        return "high";
+
+    },
+
+
+    normalizeText(
+        value,
+        maxLength = 500
+    ){
+
+        return String(
+            value ??
+            ""
+        )
+            .trim()
+            .slice(
+                0,
+                maxLength
+            );
 
     },
 
@@ -40,7 +122,9 @@ const Guardian = {
             value === null ||
             value === undefined
         ){
+
             return value;
+
         }
 
 
@@ -48,16 +132,19 @@ const Guardian = {
 
             if(
                 typeof structuredClone ===
-                "function"
+                    "function"
             ){
+
                 return structuredClone(
                     value
                 );
+
             }
 
         } catch(error){
 
             /* fallback below */
+
         }
 
 
@@ -72,7 +159,144 @@ const Guardian = {
         } catch(error){
 
             return null;
+
         }
+
+    },
+
+
+    /* =====================================================
+       ID
+    ===================================================== */
+
+    createViolationId(){
+
+        try{
+
+            if(
+                typeof crypto !==
+                    "undefined" &&
+                typeof crypto.randomUUID ===
+                    "function"
+            ){
+
+                return crypto.randomUUID();
+
+            }
+
+        } catch(error){
+
+            /* fallback below */
+
+        }
+
+
+        return `guardian_${Date.now()}_${Math.random()
+            .toString(36)
+            .slice(2,10)}`;
+
+    },
+
+
+    /* =====================================================
+       SAFE SERVICE ACCESS
+    ===================================================== */
+
+    getService(name){
+
+        const serviceName =
+            String(
+                name ??
+                ""
+            ).trim();
+
+
+        if(!serviceName){
+
+            return null;
+
+        }
+
+
+        try{
+
+            if(
+                typeof VAERO ===
+                    "undefined" ||
+                typeof VAERO.get !==
+                    "function"
+            ){
+
+                return null;
+
+            }
+
+
+            return (
+                VAERO.get(
+                    serviceName
+                ) ||
+                null
+            );
+
+        } catch(error){
+
+            return null;
+
+        }
+
+    },
+
+
+    emit(
+        eventName,
+        payload = {}
+    ){
+
+        const name =
+            String(
+                eventName ??
+                ""
+            ).trim();
+
+
+        if(!name){
+
+            return false;
+
+        }
+
+
+        try{
+
+            if(
+                typeof VAERO !==
+                    "undefined" &&
+                typeof VAERO.emit ===
+                    "function"
+            ){
+
+                VAERO.emit(
+                    name,
+                    payload
+                );
+
+
+                return true;
+
+            }
+
+        } catch(error){
+
+            console.warn(
+                `Guardian event gönderilemedi: ${name}`,
+                error
+            );
+
+        }
+
+
+        return false;
 
     },
 
@@ -99,77 +323,113 @@ const Guardian = {
                 "Guardian rule adı geçersiz."
             );
 
+
             return false;
+
         }
 
 
         if(
             typeof validator !==
-            "function"
+                "function"
         ){
 
             console.warn(
                 `Guardian rule validator geçersiz: ${id}`
             );
 
+
             return false;
+
         }
 
 
         if(
-            this.rules.has(id) &&
-            options.overwrite !== true
+            this.rules.has(
+                id
+            ) &&
+            options.overwrite !==
+                true
         ){
 
             console.warn(
                 `Guardian rule zaten kayıtlı: ${id}`
             );
 
+
             return false;
+
         }
+
+
+        const rule = {
+
+            id,
+
+            name:
+                this.normalizeText(
+                    name,
+                    200
+                ) ||
+                id,
+
+            validator,
+
+            enabled:
+                options.enabled !==
+                    false,
+
+            severity:
+                this.normalizeSeverity(
+                    options.severity
+                ),
+
+            scope:
+                this.normalizeScope(
+                    options.scope ||
+                    "entity"
+                ),
+
+            description:
+                options.description
+                    ? this.normalizeText(
+                        options.description,
+                        1000
+                    )
+                    : null,
+
+            registeredAt:
+                Date.now()
+
+        };
 
 
         this.rules.set(
             id,
+            rule
+        );
+
+
+        this.emit(
+            "guardian:rule:added",
             {
-                id,
-
-                name:
-                    String(name),
-
-                validator,
-
-                enabled:
-                    options.enabled !==
-                    false,
-
-                severity:
-                    [
-                        "low",
-                        "medium",
-                        "high",
-                        "critical"
-                    ].includes(
-                        options.severity
-                    )
-                        ? options.severity
-                        : "high",
+                id:
+                    rule.id,
 
                 scope:
-                    options.scope ||
-                    "entity",
+                    rule.scope,
 
-                description:
-                    options.description ||
-                    null,
+                severity:
+                    rule.severity,
 
-                registeredAt:
+                time:
                     Date.now()
             }
         );
 
 
         return true;
+
     },
 
 
@@ -182,23 +442,147 @@ const Guardian = {
 
 
         if(!id){
+
             return false;
+
         }
 
 
-        return this.rules.delete(
-            id
-        );
+        const removed =
+            this.rules.delete(
+                id
+            );
+
+
+        if(removed){
+
+            this.emit(
+                "guardian:rule:removed",
+                {
+                    id,
+
+                    time:
+                        Date.now()
+                }
+            );
+
+        }
+
+
+        return removed;
+
     },
 
 
     hasRule(name){
 
-        return this.rules.has(
+        const id =
             this.normalizeRuleName(
                 name
-            )
+            );
+
+
+        if(!id){
+
+            return false;
+
+        }
+
+
+        return this.rules.has(
+            id
         );
+
+    },
+
+
+    getRule(name){
+
+        const id =
+            this.normalizeRuleName(
+                name
+            );
+
+
+        if(!id){
+
+            return null;
+
+        }
+
+
+        return (
+            this.rules.get(
+                id
+            ) ||
+            null
+        );
+
+    },
+
+
+    allRules(options = {}){
+
+        let rules =
+            [
+                ...this.rules.values()
+            ];
+
+
+        if(options.scope){
+
+            const scope =
+                this.normalizeScope(
+                    options.scope
+                );
+
+
+            rules =
+                rules.filter(
+                    rule =>
+                        rule.scope ===
+                            scope ||
+                        rule.scope ===
+                            "global"
+                );
+
+        }
+
+
+        if(
+            options.enabled ===
+                true
+        ){
+
+            rules =
+                rules.filter(
+                    rule =>
+                        rule.enabled ===
+                            true
+                );
+
+        }
+
+
+        if(
+            options.enabled ===
+                false
+        ){
+
+            rules =
+                rules.filter(
+                    rule =>
+                        rule.enabled ===
+                            false
+                );
+
+        }
+
+
+        return [
+            ...rules
+        ];
+
     },
 
 
@@ -207,20 +591,16 @@ const Guardian = {
         enabled = true
     ){
 
-        const id =
-            this.normalizeRuleName(
+        const rule =
+            this.getRule(
                 name
             );
 
 
-        const rule =
-            this.rules.get(
-                id
-            );
-
-
         if(!rule){
+
             return false;
+
         }
 
 
@@ -230,7 +610,23 @@ const Guardian = {
             );
 
 
+        this.emit(
+            "guardian:rule:state",
+            {
+                id:
+                    rule.id,
+
+                enabled:
+                    rule.enabled,
+
+                time:
+                    Date.now()
+            }
+        );
+
+
         return true;
+
     },
 
 
@@ -244,9 +640,13 @@ const Guardian = {
             !value ||
             typeof value !==
                 "object" ||
-            Array.isArray(value)
+            Array.isArray(
+                value
+            )
         ){
+
             return false;
+
         }
 
 
@@ -262,6 +662,21 @@ const Guardian = {
             prototype ===
                 null
         );
+
+    },
+
+
+    isObjectLike(value){
+
+        return Boolean(
+            value &&
+            typeof value ===
+                "object" &&
+            !Array.isArray(
+                value
+            )
+        );
+
     },
 
 
@@ -269,44 +684,73 @@ const Guardian = {
 
         const text =
             String(
-                value ?? ""
+                value ??
+                ""
             ).trim();
 
 
         if(
             !text ||
-            text.length > 200
+            text.length >
+                200
         ){
+
             return false;
+
         }
 
 
         return /^[a-zA-Z0-9:_\-.]+$/.test(
             text
         );
+
     },
 
 
     hasDangerousObjectKeys(
         value,
-        depth = 0
+        depth = 0,
+        visited = new WeakSet()
     ){
 
         if(
-            depth > 8 ||
-            value === null ||
-            value === undefined
+            depth >
+                this.maxValidationDepth ||
+            value ===
+                null ||
+            value ===
+                undefined
         ){
+
             return false;
+
         }
 
 
         if(
             typeof value !==
-            "object"
+                "object"
         ){
+
             return false;
+
         }
+
+
+        if(
+            visited.has(
+                value
+            )
+        ){
+
+            return false;
+
+        }
+
+
+        visited.add(
+            value
+        );
 
 
         const dangerousKeys =
@@ -317,9 +761,25 @@ const Guardian = {
             ]);
 
 
+        let keys = [];
+
+
+        try{
+
+            keys =
+                Object.keys(
+                    value
+                );
+
+        } catch(error){
+
+            return true;
+
+        }
+
+
         for(
-            const key of
-            Object.keys(value)
+            const key of keys
         ){
 
             if(
@@ -327,12 +787,27 @@ const Guardian = {
                     key
                 )
             ){
+
                 return true;
+
             }
 
 
-            const child =
-                value[key];
+            let child;
+
+
+            try{
+
+                child =
+                    value[
+                        key
+                    ];
+
+            } catch(error){
+
+                return true;
+
+            }
 
 
             if(
@@ -341,32 +816,42 @@ const Guardian = {
                     "object" &&
                 this.hasDangerousObjectKeys(
                     child,
-                    depth + 1
+                    depth + 1,
+                    visited
                 )
             ){
+
                 return true;
+
             }
 
         }
 
 
         return false;
+
     },
 
 
     hasOversizedStrings(
         value,
-        depth = 0
+        depth = 0,
+        visited = new WeakSet()
     ){
 
-        if(depth > 8){
+        if(
+            depth >
+                this.maxValidationDepth
+        ){
+
             return false;
+
         }
 
 
         if(
             typeof value ===
-            "string"
+                "string"
         ){
 
             return (
@@ -382,28 +867,83 @@ const Guardian = {
             typeof value !==
                 "object"
         ){
+
             return false;
+
+        }
+
+
+        if(
+            visited.has(
+                value
+            )
+        ){
+
+            return false;
+
+        }
+
+
+        visited.add(
+            value
+        );
+
+
+        let keys = [];
+
+
+        try{
+
+            keys =
+                Object.keys(
+                    value
+                );
+
+        } catch(error){
+
+            return true;
+
         }
 
 
         for(
-            const key of
-            Object.keys(value)
+            const key of keys
         ){
+
+            let child;
+
+
+            try{
+
+                child =
+                    value[
+                        key
+                    ];
+
+            } catch(error){
+
+                return true;
+
+            }
+
 
             if(
                 this.hasOversizedStrings(
-                    value[key],
-                    depth + 1
+                    child,
+                    depth + 1,
+                    visited
                 )
             ){
+
                 return true;
+
             }
 
         }
 
 
         return false;
+
     },
 
 
@@ -421,16 +961,7 @@ const Guardian = {
         const violation = {
 
             id:
-                (
-                    typeof crypto !==
-                        "undefined" &&
-                    typeof crypto.randomUUID ===
-                        "function"
-                )
-                    ? crypto.randomUUID()
-                    : `guardian_${Date.now()}_${Math.random()
-                        .toString(36)
-                        .slice(2, 8)}`,
+                this.createViolationId(),
 
             ruleId:
                 rule?.id ||
@@ -441,19 +972,40 @@ const Guardian = {
                 null,
 
             severity:
-                rule?.severity ||
-                "high",
+                this.normalizeSeverity(
+                    rule?.severity
+                ),
 
             scope:
-                rule?.scope ||
-                null,
+                this.normalizeScope(
+                    rule?.scope ||
+                    context?.scope ||
+                    "global"
+                ),
 
             reason:
-                reason ||
+                this.normalizeText(
+                    reason ||
+                    "Validation failed.",
+                    2000
+                ) ||
                 "Validation failed.",
 
             subjectId:
-                subject?.id ||
+                this.normalizeText(
+                    subject?.id ||
+                    subject?.slug ||
+                    "",
+                    200
+                ) ||
+                null,
+
+            operation:
+                this.normalizeText(
+                    context?.operation ||
+                    "",
+                    120
+                ) ||
                 null,
 
             context:
@@ -463,6 +1015,7 @@ const Guardian = {
 
             detectedAt:
                 Date.now()
+
         };
 
 
@@ -473,7 +1026,7 @@ const Guardian = {
 
         if(
             this.violations.length >
-            this.maxViolations
+                this.maxViolations
         ){
 
             this.violations =
@@ -484,7 +1037,50 @@ const Guardian = {
         }
 
 
+        this.emit(
+            "guardian:violation",
+            violation
+        );
+
+
         return violation;
+
+    },
+
+
+    /* =====================================================
+       RULE SCOPE
+    ===================================================== */
+
+    shouldRunRule(
+        rule,
+        requestedScope
+    ){
+
+        if(
+            !rule ||
+            rule.enabled !==
+                true
+        ){
+
+            return false;
+
+        }
+
+
+        const scope =
+            this.normalizeScope(
+                requestedScope
+            );
+
+
+        return (
+            rule.scope ===
+                "global" ||
+            rule.scope ===
+                scope
+        );
+
     },
 
 
@@ -497,7 +1093,30 @@ const Guardian = {
         context = {}
     ){
 
-        const failures = [];
+        const safeContext =
+            context &&
+            typeof context ===
+                "object" &&
+            !Array.isArray(
+                context
+            )
+                ? context
+                : {};
+
+
+        const scope =
+            this.normalizeScope(
+                safeContext.scope ||
+                "entity"
+            );
+
+
+        const failures =
+            [];
+
+
+        let checkedRules =
+            0;
 
 
         for(
@@ -505,20 +1124,20 @@ const Guardian = {
             this.rules.values()
         ){
 
-            if(!rule.enabled){
-                continue;
-            }
-
-
             if(
-                context.scope &&
-                rule.scope !==
-                    context.scope &&
-                rule.scope !==
-                    "global"
+                !this.shouldRunRule(
+                    rule,
+                    scope
+                )
             ){
+
                 continue;
+
             }
+
+
+            checkedRules +=
+                1;
 
 
             try{
@@ -526,15 +1145,18 @@ const Guardian = {
                 const result =
                     rule.validator(
                         subject,
-                        context
+                        {
+                            ...safeContext,
+
+                            scope
+                        }
                     );
 
 
                 /*
-                 * Guardian'ın ana validate() API'si
-                 * synchronous kalıyor.
-                 * Promise dönen validator burada sessizce
-                 * başarılı kabul edilmez.
+                 * Guardian is intentionally synchronous.
+                 * An async rule cannot silently pass a
+                 * synchronous integrity gate.
                  */
 
                 if(
@@ -548,7 +1170,11 @@ const Guardian = {
                             rule,
                             subject,
                             "Async validator synchronous Guardian kapısında kullanılamaz.",
-                            context
+                            {
+                                ...safeContext,
+
+                                scope
+                            }
                         );
 
 
@@ -558,10 +1184,14 @@ const Guardian = {
 
 
                     continue;
+
                 }
 
 
-                if(result !== true){
+                if(
+                    result !==
+                        true
+                ){
 
                     let reason =
                         "Validation failed.";
@@ -569,13 +1199,15 @@ const Guardian = {
 
                     if(
                         typeof result ===
-                        "string"
+                            "string"
                     ){
 
                         reason =
                             result;
 
-                    } else if(
+                    }
+
+                    else if(
                         result &&
                         typeof result ===
                             "object" &&
@@ -595,7 +1227,11 @@ const Guardian = {
                             rule,
                             subject,
                             reason,
-                            context
+                            {
+                                ...safeContext,
+
+                                scope
+                            }
                         );
 
 
@@ -613,7 +1249,11 @@ const Guardian = {
                         subject,
                         error?.message ||
                         "Validator exception.",
-                        context
+                        {
+                            ...safeContext,
+
+                            scope
+                        }
                     );
 
 
@@ -626,26 +1266,52 @@ const Guardian = {
         }
 
 
-        return {
+        const result = {
 
             valid:
-                failures.length === 0,
+                failures.length ===
+                    0,
 
             failures,
 
-            checkedRules:
-                [
-                    ...this.rules.values()
-                ]
-                    .filter(
-                        rule =>
-                            rule.enabled
-                    )
-                    .length,
+            checkedRules,
+
+            scope,
 
             checkedAt:
                 Date.now()
+
         };
+
+
+        this.emit(
+            result.valid
+                ? "guardian:passed"
+                : "guardian:blocked",
+            {
+                subjectId:
+                    subject?.id ||
+                    subject?.slug ||
+                    null,
+
+                scope,
+
+                operation:
+                    safeContext.operation ||
+                    null,
+
+                failures:
+                    failures.length,
+
+                checkedRules,
+
+                time:
+                    result.checkedAt
+            }
+        );
+
+
+        return result;
 
     },
 
@@ -659,23 +1325,38 @@ const Guardian = {
         context = {}
     ){
 
+        const safeContext =
+            context &&
+            typeof context ===
+                "object" &&
+            !Array.isArray(
+                context
+            )
+                ? context
+                : {};
+
+
         const result =
             this.validateDetailed(
                 entity,
                 {
-                    scope:
-                        context.scope ||
-                        "entity",
+                    ...safeContext,
 
-                    ...context
+                    scope:
+                        safeContext.scope ||
+                        "entity"
                 }
             );
 
 
-        if(!result.valid){
+        if(
+            !result.valid
+        ){
 
             const first =
-                result.failures[0];
+                result.failures[
+                    0
+                ];
 
 
             console.warn(
@@ -688,11 +1369,17 @@ const Guardian = {
 
 
         return result.valid;
+
     },
 
 
     /* =====================================================
        GENERIC CHECK
+
+       OrganSystem uses:
+       guardian.check(organ, "organ", context)
+
+       check() deliberately returns the detailed result.
     ===================================================== */
 
     check(
@@ -701,12 +1388,111 @@ const Guardian = {
         context = {}
     ){
 
+        const safeContext =
+            context &&
+            typeof context ===
+                "object" &&
+            !Array.isArray(
+                context
+            )
+                ? context
+                : {};
+
+
         return this.validateDetailed(
             subject,
             {
-                ...context,
-                scope
+                ...safeContext,
+
+                scope:
+                    this.normalizeScope(
+                        scope
+                    )
             }
+        );
+
+    },
+
+
+    /* =====================================================
+       VIOLATION QUERY
+    ===================================================== */
+
+    allViolations(
+        options = {}
+    ){
+
+        let items =
+            [
+                ...this.violations
+            ];
+
+
+        if(options.scope){
+
+            const scope =
+                this.normalizeScope(
+                    options.scope
+                );
+
+
+            items =
+                items.filter(
+                    item =>
+                        item.scope ===
+                            scope
+                );
+
+        }
+
+
+        if(options.severity){
+
+            const severity =
+                this.normalizeSeverity(
+                    options.severity
+                );
+
+
+            items =
+                items.filter(
+                    item =>
+                        item.severity ===
+                            severity
+                );
+
+        }
+
+
+        if(options.subjectId){
+
+            const subjectId =
+                String(
+                    options.subjectId
+                ).trim();
+
+
+            items =
+                items.filter(
+                    item =>
+                        item.subjectId ===
+                            subjectId
+                );
+
+        }
+
+
+        return items.sort(
+            (
+                a,
+                b
+            ) =>
+                Number(
+                    b.detectedAt
+                ) -
+                Number(
+                    a.detectedAt
+                )
         );
 
     },
@@ -724,6 +1510,12 @@ const Guardian = {
             ];
 
 
+        const violations =
+            [
+                ...this.violations
+            ];
+
+
         return {
 
             totalRules:
@@ -735,35 +1527,187 @@ const Guardian = {
                         rule.enabled
                 ).length,
 
+            entityRules:
+                rules.filter(
+                    rule =>
+                        rule.scope ===
+                            "entity"
+                ).length,
+
+            organRules:
+                rules.filter(
+                    rule =>
+                        rule.scope ===
+                            "organ"
+                ).length,
+
+            globalRules:
+                rules.filter(
+                    rule =>
+                        rule.scope ===
+                            "global"
+                ).length,
+
             violations:
-                this.violations.length,
+                violations.length,
 
             criticalViolations:
-                this.violations.filter(
+                violations.filter(
                     item =>
                         item.severity ===
-                        "critical"
+                            "critical"
+                ).length,
+
+            highViolations:
+                violations.filter(
+                    item =>
+                        item.severity ===
+                            "high"
                 ).length,
 
             lastViolation:
-                this.violations.length
+                violations.length
                     ? this.clone(
-                        this.violations[
-                            this.violations.length - 1
+                        violations[
+                            violations.length -
+                            1
                         ]
                     )
                     : null
 
         };
+
     },
 
 
-    clearViolations(){
+    clearViolations(options = {}){
+
+        if(
+            !options ||
+            Object.keys(
+                options
+            ).length ===
+                0
+        ){
+
+            const count =
+                this.violations.length;
+
+
+            this.violations =
+                [];
+
+
+            this.emit(
+                "guardian:violations:cleared",
+                {
+                    count,
+
+                    time:
+                        Date.now()
+                }
+            );
+
+
+            return true;
+
+        }
+
+
+        const removeSet =
+            new Set(
+                this.allViolations(
+                    options
+                )
+                    .map(
+                        item =>
+                            item.id
+                    )
+            );
+
+
+        if(
+            removeSet.size ===
+                0
+        ){
+
+            return false;
+
+        }
+
 
         this.violations =
-            [];
+            this.violations.filter(
+                item =>
+                    !removeSet.has(
+                        item.id
+                    )
+            );
+
+
+        this.emit(
+            "guardian:violations:cleared",
+            {
+                count:
+                    removeSet.size,
+
+                time:
+                    Date.now()
+            }
+        );
+
 
         return true;
+
+    },
+
+
+    /* =====================================================
+       REPORT
+    ===================================================== */
+
+    report(){
+
+        const status =
+            this.status();
+
+
+        return {
+
+            ...status,
+
+            healthy:
+                status.criticalViolations ===
+                    0,
+
+            rules:
+                [
+                    ...this.rules.values()
+                ].map(
+                    rule => ({
+                        id:
+                            rule.id,
+
+                        scope:
+                            rule.scope,
+
+                        severity:
+                            rule.severity,
+
+                        enabled:
+                            rule.enabled
+                    })
+                ),
+
+            recentViolations:
+                this.allViolations()
+                    .slice(
+                        0,
+                        10
+                    )
+
+        };
+
     }
 
 };
@@ -775,15 +1719,15 @@ const Guardian = {
 
 Guardian.addRule(
     "Entity Must Be Object",
-    entity =>
-        Guardian.isPlainObject(
+    entity => {
+
+        return Guardian.isObjectLike(
             entity
-        ) ||
-        (
-            entity &&
-            typeof entity ===
-                "object"
-        ),
+        )
+            ? true
+            : "Entity geçerli bir object olmalı.";
+
+    },
     {
         scope:
             "entity",
@@ -801,8 +1745,12 @@ Guardian.addRule(
     "Entity Must Have ID",
     entity => {
 
-        if(!entity?.id){
+        if(
+            !entity?.id
+        ){
+
             return "Entity ID eksik.";
+
         }
 
 
@@ -811,11 +1759,14 @@ Guardian.addRule(
                 entity.id
             )
         ){
+
             return "Entity ID geçersiz formatta.";
+
         }
 
 
         return true;
+
     },
     {
         scope:
@@ -839,16 +1790,24 @@ Guardian.addRule(
 
 
         if(!name){
+
             return "Entity adı eksik.";
+
         }
 
 
-        if(name.length > 200){
+        if(
+            name.length >
+                200
+        ){
+
             return "Entity adı izin verilen uzunluğu aşıyor.";
+
         }
 
 
         return true;
+
     },
     {
         scope:
@@ -905,14 +1864,374 @@ Guardian.addRule(
 
 
 /* =========================================================
-   REGISTER
+   ORGAN INTEGRITY RULES
 ========================================================= */
 
-VAERO.register(
-    "guardian",
-    Guardian
+Guardian.addRule(
+    "Organ Must Be Object",
+    organ => {
+
+        return Guardian.isObjectLike(
+            organ
+        )
+            ? true
+            : "Organ geçerli bir object olmalı.";
+
+    },
+    {
+        scope:
+            "organ",
+
+        severity:
+            "critical"
+    }
 );
 
 
-window.Guardian =
-    Guardian;
+Guardian.addRule(
+    "Organ Must Have Identifier",
+    organ => {
+
+        const id =
+            organ?.id ||
+            organ?.slug;
+
+
+        if(!id){
+
+            return "Organ ID veya slug eksik.";
+
+        }
+
+
+        if(
+            !Guardian.isSafeIdentifier(
+                id
+            )
+        ){
+
+            return "Organ identifier geçersiz formatta.";
+
+        }
+
+
+        return true;
+
+    },
+    {
+        scope:
+            "organ",
+
+        severity:
+            "critical"
+    }
+);
+
+
+Guardian.addRule(
+    "Organ Must Have Valid Status",
+    organ => {
+
+        const status =
+            String(
+                organ?.status ??
+                ""
+            )
+                .trim()
+                .toLowerCase();
+
+
+        if(!status){
+
+            /*
+             * Creation path may validate an organ before
+             * its default runtime status is attached.
+             */
+
+            return true;
+
+        }
+
+
+        const allowed =
+            new Set([
+                "active",
+                "inactive",
+                "paused",
+                "disabled",
+                "installing",
+                "updating",
+                "error"
+            ]);
+
+
+        return allowed.has(
+            status
+        )
+            ? true
+            : `Organ status geçersiz: ${status}`;
+
+    },
+    {
+        scope:
+            "organ",
+
+        severity:
+            "high"
+    }
+);
+
+
+Guardian.addRule(
+    "Organ Permissions Must Be Valid",
+    organ => {
+
+        const collections = [
+            organ?.permissions,
+            organ?.requestedPermissions
+        ];
+
+
+        for(
+            const collection of collections
+        ){
+
+            if(
+                collection ===
+                    undefined ||
+                collection ===
+                    null
+            ){
+
+                continue;
+
+            }
+
+
+            if(
+                !Array.isArray(
+                    collection
+                ) &&
+                !(collection instanceof Set) &&
+                !Guardian.isPlainObject(
+                    collection
+                )
+            ){
+
+                return "Organ permission yapısı geçersiz.";
+
+            }
+
+        }
+
+
+        return true;
+
+    },
+    {
+        scope:
+            "organ",
+
+        severity:
+            "high"
+    }
+);
+
+
+Guardian.addRule(
+    "Organ Dependencies Must Be Valid",
+    organ => {
+
+        const dependencies =
+            organ?.dependencies;
+
+
+        if(
+            dependencies ===
+                undefined ||
+            dependencies ===
+                null
+        ){
+
+            return true;
+
+        }
+
+
+        if(
+            !Array.isArray(
+                dependencies
+            ) &&
+            !(dependencies instanceof Set)
+        ){
+
+            return "Organ dependencies listesi geçersiz.";
+
+        }
+
+
+        for(
+            const dependency of
+            dependencies
+        ){
+
+            if(
+                !Guardian.isSafeIdentifier(
+                    dependency
+                )
+            ){
+
+                return `Geçersiz Organ dependency: ${String(
+                    dependency ??
+                    ""
+                )}`;
+
+            }
+
+        }
+
+
+        return true;
+
+    },
+    {
+        scope:
+            "organ",
+
+        severity:
+            "high"
+    }
+);
+
+
+Guardian.addRule(
+    "Organ Must Not Contain Dangerous Keys",
+    organ => {
+
+        return Guardian
+            .hasDangerousObjectKeys(
+                organ
+            )
+            ? "Organ tehlikeli object anahtarı içeriyor."
+            : true;
+
+    },
+    {
+        scope:
+            "organ",
+
+        severity:
+            "critical"
+    }
+);
+
+
+Guardian.addRule(
+    "Organ Payload Size Guard",
+    organ => {
+
+        return Guardian
+            .hasOversizedStrings(
+                organ
+            )
+            ? "Organ içerisinde aşırı büyük metin alanı bulundu."
+            : true;
+
+    },
+    {
+        scope:
+            "organ",
+
+        severity:
+            "high"
+    }
+);
+
+
+/* =========================================================
+   GLOBAL INTEGRITY RULES
+========================================================= */
+
+Guardian.addRule(
+    "Global Payload Dangerous Keys",
+    subject => {
+
+        return Guardian
+            .hasDangerousObjectKeys(
+                subject
+            )
+            ? "Runtime payload tehlikeli object anahtarı içeriyor."
+            : true;
+
+    },
+    {
+        scope:
+            "global",
+
+        severity:
+            "critical"
+    }
+);
+
+
+Guardian.addRule(
+    "Global Payload Size Guard",
+    subject => {
+
+        return Guardian
+            .hasOversizedStrings(
+                subject
+            )
+            ? "Runtime payload içerisinde aşırı büyük metin alanı bulundu."
+            : true;
+
+    },
+    {
+        scope:
+            "global",
+
+        severity:
+            "high"
+    }
+);
+
+
+/* =========================================================
+   REGISTER
+========================================================= */
+
+try{
+
+    if(
+        typeof VAERO !==
+            "undefined" &&
+        typeof VAERO.register ===
+            "function"
+    ){
+
+        VAERO.register(
+            "guardian",
+            Guardian
+        );
+
+    }
+
+} catch(error){
+
+    console.error(
+        "Guardian register edilemedi:",
+        error
+    );
+
+}
+
+
+if(
+    typeof window !==
+        "undefined"
+){
+
+    window.Guardian =
+        Guardian;
+
+}
