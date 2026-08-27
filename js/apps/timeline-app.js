@@ -21,6 +21,9 @@ const TimelineApp = {
     searchTimer:
         null,
 
+    orphanCleanupAttempted:
+        false,
+
 
     /* =====================================================
        SAFETY
@@ -28,14 +31,42 @@ const TimelineApp = {
 
     escapeHTML(value){
 
+        if(
+            window.UI &&
+            typeof UI.escapeHTML ===
+                "function"
+        ){
+
+            return UI.escapeHTML(
+                value
+            );
+
+        }
+
+
         return String(
             value ?? ""
         )
-            .replaceAll("&", "&amp;")
-            .replaceAll("<", "&lt;")
-            .replaceAll(">", "&gt;")
-            .replaceAll('"', "&quot;")
-            .replaceAll("'", "&#039;");
+            .replaceAll(
+                "&",
+                "&amp;"
+            )
+            .replaceAll(
+                "<",
+                "&lt;"
+            )
+            .replaceAll(
+                ">",
+                "&gt;"
+            )
+            .replaceAll(
+                '"',
+                "&quot;"
+            )
+            .replaceAll(
+                "'",
+                "&#039;"
+            );
 
     },
 
@@ -49,15 +80,19 @@ const TimelineApp = {
         try{
 
             if(
-                typeof VAERO !== "undefined" &&
+                typeof VAERO !==
+                    "undefined" &&
                 VAERO.engine
             ){
+
                 return VAERO.engine;
+
             }
 
         } catch(error){
 
             /* fallback */
+
         }
 
 
@@ -74,15 +109,21 @@ const TimelineApp = {
         try{
 
             if(
-                typeof VAERO === "undefined" ||
-                typeof VAERO.get !== "function"
+                typeof VAERO ===
+                    "undefined" ||
+                typeof VAERO.get !==
+                    "function"
             ){
+
                 return null;
+
             }
 
 
             return (
-                VAERO.get(name) ||
+                VAERO.get(
+                    name
+                ) ||
                 null
             );
 
@@ -128,12 +169,21 @@ const TimelineApp = {
             typeof engine.mount !==
                 "function"
         ){
+
             return false;
+
         }
 
 
+        const entity =
+            engine.currentOpenedEntity ||
+            engine.currentEntity ||
+            engine.rootEntity ||
+            null;
+
+
         return engine.mount(
-            engine.currentEntity
+            entity
         );
 
     },
@@ -153,28 +203,28 @@ const TimelineApp = {
                 );
 
 
-            if(
-                awareness &&
-                typeof awareness.enter ===
-                    "function"
-            ){
+            awareness?.enter?.(
+                "timeline",
+                {
+                    entityId:
+                        entity?.id ||
+                        null,
 
-                awareness.enter(
-                    "timeline",
-                    {
-                        entityId:
-                            entity?.id ||
-                            null,
+                    filter:
+                        this.activeFilter,
 
-                        filter:
-                            this.activeFilter,
+                    selectedItemId:
+                        this.selectedItemId,
 
-                        selectedItemId:
-                            this.selectedItemId
-                    }
-                );
-
-            }
+                    searchActive:
+                        Boolean(
+                            String(
+                                this.searchQuery ||
+                                ""
+                            ).trim()
+                        )
+                }
+            );
 
         } catch(error){
 
@@ -203,6 +253,19 @@ const TimelineApp = {
 
     cleanOrphans(){
 
+        if(
+            this.orphanCleanupAttempted
+        ){
+
+            return true;
+
+        }
+
+
+        this.orphanCleanupAttempted =
+            true;
+
+
         const timeline =
             this.getTimelineCore();
 
@@ -212,13 +275,16 @@ const TimelineApp = {
             typeof timeline.cleanOrphanLifeEvents !==
                 "function"
         ){
+
             return false;
+
         }
 
 
         try{
 
             timeline.cleanOrphanLifeEvents();
+
 
             return true;
 
@@ -243,13 +309,22 @@ const TimelineApp = {
 
     getTimestamp(item){
 
-        return Number(
-            item?.occurredAt ||
-            item?.updatedAt ||
-            item?.createdAt ||
-            item?.timestamp ||
-            0
-        ) || 0;
+        const value =
+            Number(
+                item?.occurredAt ||
+                item?.updatedAt ||
+                item?.createdAt ||
+                item?.timestamp ||
+                item?.time ||
+                0
+            );
+
+
+        return Number.isFinite(
+            value
+        )
+            ? value
+            : 0;
 
     },
 
@@ -263,10 +338,15 @@ const TimelineApp = {
 
 
         if(
-            !Number.isFinite(value) ||
-            value <= 0
+            !Number.isFinite(
+                value
+            ) ||
+            value <=
+                0
         ){
+
             return "Tarih bilinmiyor";
+
         }
 
 
@@ -291,18 +371,75 @@ const TimelineApp = {
                         "2-digit"
                 }
             ).format(
-                new Date(value)
+                new Date(
+                    value
+                )
             );
 
         } catch(error){
 
-            return new Date(
-                value
-            ).toLocaleString(
-                "tr-TR"
-            );
+            try{
+
+                return new Date(
+                    value
+                ).toLocaleString(
+                    "tr-TR"
+                );
+
+            } catch(secondError){
+
+                return "Tarih bilinmiyor";
+
+            }
 
         }
+
+    },
+
+
+    getDayKey(timestamp){
+
+        const value =
+            Number(
+                timestamp
+            );
+
+
+        if(
+            !Number.isFinite(
+                value
+            ) ||
+            value <=
+                0
+        ){
+
+            return "unknown";
+
+        }
+
+
+        const date =
+            new Date(
+                value
+            );
+
+
+        return [
+            date.getFullYear(),
+            String(
+                date.getMonth() +
+                1
+            ).padStart(
+                2,
+                "0"
+            ),
+            String(
+                date.getDate()
+            ).padStart(
+                2,
+                "0"
+            )
+        ].join("-");
 
     },
 
@@ -316,10 +453,15 @@ const TimelineApp = {
 
 
         if(
-            !Number.isFinite(value) ||
-            value <= 0
+            !Number.isFinite(
+                value
+            ) ||
+            value <=
+                0
         ){
+
             return "Tarih bilinmiyor";
+
         }
 
 
@@ -333,51 +475,49 @@ const TimelineApp = {
             new Date();
 
 
-        const todayKey =
-            [
-                now.getFullYear(),
-                now.getMonth(),
-                now.getDate()
-            ].join("-");
-
-
-        const dateKey =
-            [
-                date.getFullYear(),
-                date.getMonth(),
-                date.getDate()
-            ].join("-");
-
-
-        if(
-            dateKey ===
-            todayKey
-        ){
-            return "Bugün";
-        }
-
-
-        const yesterday =
+        const today =
             new Date(
                 now.getFullYear(),
                 now.getMonth(),
-                now.getDate() - 1
+                now.getDate()
             );
 
 
-        const yesterdayKey =
-            [
-                yesterday.getFullYear(),
-                yesterday.getMonth(),
-                yesterday.getDate()
-            ].join("-");
+        const target =
+            new Date(
+                date.getFullYear(),
+                date.getMonth(),
+                date.getDate()
+            );
+
+
+        const difference =
+            Math.round(
+                (
+                    today.getTime() -
+                    target.getTime()
+                ) /
+                86400000
+            );
 
 
         if(
-            dateKey ===
-            yesterdayKey
+            difference ===
+                0
         ){
+
+            return "Bugün";
+
+        }
+
+
+        if(
+            difference ===
+                1
+        ){
+
             return "Dün";
+
         }
 
 
@@ -455,7 +595,9 @@ const TimelineApp = {
                 "memory"
             )
         ){
+
             return "memory";
+
         }
 
 
@@ -464,20 +606,108 @@ const TimelineApp = {
                 "evolution"
             )
         ){
+
             return "evolution";
+
         }
 
 
         if(
             source.includes(
                 "system"
+            ) ||
+            source.includes(
+                "engine"
             )
         ){
+
             return "system";
+
         }
 
 
         return "timeline";
+
+    },
+
+
+    normalizeTags(value){
+
+        if(
+            !Array.isArray(
+                value
+            )
+        ){
+
+            return [];
+
+        }
+
+
+        const seen =
+            new Set();
+
+
+        const tags =
+            [];
+
+
+        value.forEach(
+            item => {
+
+                const tag =
+                    String(
+                        item ?? ""
+                    )
+                        .trim()
+                        .replace(
+                            /\s+/g,
+                            " "
+                        )
+                        .slice(
+                            0,
+                            80
+                        );
+
+
+                if(!tag){
+
+                    return;
+
+                }
+
+
+                const key =
+                    tag.toLocaleLowerCase(
+                        "tr-TR"
+                    );
+
+
+                if(
+                    seen.has(
+                        key
+                    )
+                ){
+
+                    return;
+
+                }
+
+
+                seen.add(
+                    key
+                );
+
+
+                tags.push(
+                    tag
+                );
+
+            }
+        );
+
+
+        return tags;
 
     },
 
@@ -577,7 +807,9 @@ const TimelineApp = {
     ){
 
         if(!entityId){
+
             return true;
+
         }
 
 
@@ -594,23 +826,30 @@ const TimelineApp = {
             item?.context?.entityId
 
         ]
-            .filter(Boolean)
+            .filter(
+                value =>
+                    value !==
+                        null &&
+                    value !==
+                        undefined &&
+                    value !==
+                        ""
+            )
             .map(
                 value =>
-                    String(value)
+                    String(
+                        value
+                    )
             );
 
 
-        /*
-         * Eski Timeline kayıtlarında entity bilgisi
-         * bulunmayabilir. Bunları root/general timeline
-         * olarak göstermeye devam ediyoruz.
-         */
-
         if(
-            candidates.length === 0
+            candidates.length ===
+                0
         ){
+
             return true;
+
         }
 
 
@@ -638,18 +877,28 @@ const TimelineApp = {
             typeof timeline.all !==
                 "function"
         ){
+
             return [];
+
         }
 
 
-        let records = [];
+        let records =
+            [];
 
 
         try{
 
+            const result =
+                timeline.all();
+
+
             records =
-                timeline.all() ||
-                [];
+                Array.isArray(
+                    result
+                )
+                    ? result
+                    : [];
 
         } catch(error){
 
@@ -661,15 +910,6 @@ const TimelineApp = {
 
             return [];
 
-        }
-
-
-        if(
-            !Array.isArray(
-                records
-            )
-        ){
-            return [];
         }
 
 
@@ -723,15 +963,38 @@ const TimelineApp = {
                             );
 
 
+                    const timestamp =
+                        lifeEvent?.occurredAt ||
+                        lifeEvent?.updatedAt ||
+                        lifeEvent?.createdAt ||
+                        item.occurredAt ||
+                        item.updatedAt ||
+                        item.createdAt ||
+                        item.timestamp ||
+                        item.time ||
+                        0;
+
+
+                    const fallbackId =
+                        `${source}:${timestamp}:${String(
+                            item.title ||
+                            item.description ||
+                            item.type ||
+                            "event"
+                        )
+                            .slice(
+                                0,
+                                60
+                            )}`;
+
+
                     return {
 
                         id:
                             `timeline:${
                                 item.id ||
                                 lifeEvent?.id ||
-                                this.getTimestamp(
-                                    item
-                                )
+                                fallbackId
                             }`,
 
                         rawId:
@@ -742,32 +1005,42 @@ const TimelineApp = {
 
                         sourceId:
                             lifeEvent?.id ||
+                            item.sourceId ||
                             item.id ||
                             null,
 
                         entityId:
                             lifeEvent?.relatedEntityId ||
+                            lifeEvent?.entityId ||
                             item.entityId ||
+                            item.relatedEntityId ||
                             item.payload?.entityId ||
+                            item.payload?.relatedEntityId ||
                             null,
 
                         worldId:
                             lifeEvent?.relatedWorldId ||
+                            lifeEvent?.worldId ||
                             item.worldId ||
+                            item.relatedWorldId ||
                             item.payload?.worldId ||
                             null,
 
                         title:
-                            lifeEvent?.title ||
-                            item.title ||
-                            item.description ||
-                            "Timeline Olayı",
+                            String(
+                                lifeEvent?.title ||
+                                item.title ||
+                                item.description ||
+                                "Timeline Olayı"
+                            ).trim(),
 
                         description:
-                            lifeEvent?.description ||
-                            item.description ||
-                            item.content ||
-                            "",
+                            String(
+                                lifeEvent?.description ||
+                                item.description ||
+                                item.content ||
+                                ""
+                            ).trim(),
 
                         importance:
                             this.normalizeImportance(
@@ -786,27 +1059,22 @@ const TimelineApp = {
 
                         category:
                             item.category ||
+                            lifeEvent?.category ||
                             null,
 
                         tags:
-                            Array.isArray(
-                                lifeEvent?.tags
-                            )
-                                ? lifeEvent.tags
-                                : (
-                                    Array.isArray(
-                                        item.tags
-                                    )
-                                        ? item.tags
-                                        : []
-                                ),
+                            this.normalizeTags(
+                                Array.isArray(
+                                    lifeEvent?.tags
+                                )
+                                    ? lifeEvent.tags
+                                    : item.tags
+                            ),
 
                         occurredAt:
-                            lifeEvent?.occurredAt ||
-                            lifeEvent?.createdAt ||
-                            item.occurredAt ||
-                            item.createdAt ||
-                            item.updatedAt ||
+                            Number(
+                                timestamp
+                            ) ||
                             Date.now(),
 
                         raw:
@@ -841,32 +1109,39 @@ const TimelineApp = {
             typeof evolution.all !==
                 "function"
         ){
+
             return [];
+
         }
 
 
-        let events = [];
+        let events =
+            [];
 
 
         try{
 
+            const result =
+                evolution.all();
+
+
             events =
-                evolution.all() ||
-                [];
+                Array.isArray(
+                    result
+                )
+                    ? result
+                    : [];
 
         } catch(error){
 
+            console.warn(
+                "Evolution Timeline verisi okunamadı:",
+                error
+            );
+
+
             return [];
 
-        }
-
-
-        if(
-            !Array.isArray(
-                events
-            )
-        ){
-            return [];
         }
 
 
@@ -885,79 +1160,101 @@ const TimelineApp = {
                     )
             )
             .map(
-                event => ({
+                event => {
 
-                    id:
-                        `evolution:${
-                            event.id ||
-                            this.getTimestamp(
-                                event
-                            )
-                        }`,
-
-                    rawId:
-                        event.id ||
-                        null,
-
-                    source:
-                        "evolution",
-
-                    sourceId:
-                        event.id ||
-                        null,
-
-                    entityId:
-                        event.relatedEntityId ||
-                        event.entityId ||
-                        null,
-
-                    worldId:
-                        event.relatedWorldId ||
-                        event.worldId ||
-                        null,
-
-                    title:
-                        event.title ||
-                        event.description ||
-                        event.type ||
-                        "Evolution Olayı",
-
-                    description:
-                        event.description ||
-                        "",
-
-                    importance:
-                        this.normalizeImportance(
-                            event.importance
-                        ),
-
-                    type:
-                        event.type ||
-                        "life-event",
-
-                    category:
-                        "evolution",
-
-                    tags:
-                        Array.isArray(
-                            event.tags
-                        )
-                            ? event.tags
-                            : [],
-
-                    occurredAt:
+                    const timestamp =
                         event.occurredAt ||
-                        event.createdAt ||
                         event.updatedAt ||
-                        Date.now(),
+                        event.createdAt ||
+                        event.timestamp ||
+                        event.time ||
+                        0;
 
-                    raw:
-                        event,
 
-                    linked:
-                        event
+                    return {
 
-                })
+                        id:
+                            `evolution:${
+                                event.id ||
+                                `${timestamp}:${String(
+                                    event.title ||
+                                    event.description ||
+                                    event.type ||
+                                    "event"
+                                ).slice(
+                                    0,
+                                    60
+                                )}`
+                            }`,
+
+                        rawId:
+                            event.id ||
+                            null,
+
+                        source:
+                            "evolution",
+
+                        sourceId:
+                            event.id ||
+                            null,
+
+                        entityId:
+                            event.relatedEntityId ||
+                            event.entityId ||
+                            null,
+
+                        worldId:
+                            event.relatedWorldId ||
+                            event.worldId ||
+                            null,
+
+                        title:
+                            String(
+                                event.title ||
+                                event.description ||
+                                event.type ||
+                                "Evolution Olayı"
+                            ).trim(),
+
+                        description:
+                            String(
+                                event.description ||
+                                ""
+                            ).trim(),
+
+                        importance:
+                            this.normalizeImportance(
+                                event.importance
+                            ),
+
+                        type:
+                            event.type ||
+                            "life-event",
+
+                        category:
+                            event.category ||
+                            "evolution",
+
+                        tags:
+                            this.normalizeTags(
+                                event.tags
+                            ),
+
+                        occurredAt:
+                            Number(
+                                timestamp
+                            ) ||
+                            Date.now(),
+
+                        raw:
+                            event,
+
+                        linked:
+                            event
+
+                    };
+
+                }
             );
 
     },
@@ -967,68 +1264,143 @@ const TimelineApp = {
        MEMORY SOURCE
     ===================================================== */
 
-    getMemoryItems(entity){
+    readMemoryCore(entity){
 
-        const memory =
-            this.getService(
-                "memorySystem"
-            );
+        if(!entity?.id){
 
-
-        if(
-            !memory ||
-            !entity?.id
-        ){
             return [];
+
         }
 
 
-        let records = [];
+        const candidates = [
+
+            this.getService(
+                "memorySystem"
+            ),
+
+            this.getService(
+                "memory"
+            )
+
+        ]
+            .filter(Boolean);
+
+
+        for(
+            const memory of candidates
+        ){
+
+            try{
+
+                if(
+                    typeof memory.forEntity ===
+                        "function"
+                ){
+
+                    const records =
+                        memory.forEntity(
+                            entity.id
+                        );
+
+
+                    if(
+                        Array.isArray(
+                            records
+                        )
+                    ){
+
+                        return records;
+
+                    }
+
+                }
+
+
+                if(
+                    typeof memory.all ===
+                        "function"
+                ){
+
+                    const records =
+                        memory.all();
+
+
+                    if(
+                        Array.isArray(
+                            records
+                        )
+                    ){
+
+                        return records.filter(
+                            record =>
+                                this.belongsToEntity(
+                                    record,
+                                    entity.id
+                                )
+                        );
+
+                    }
+
+                }
+
+            } catch(error){
+
+                console.warn(
+                    "Memory Core Timeline verisi okunamadı:",
+                    error
+                );
+
+            }
+
+        }
 
 
         try{
 
             if(
-                typeof memory.forEntity ===
+                window.MemoryApp &&
+                typeof window.MemoryApp
+                    .getAllMemories ===
                     "function"
             ){
 
-                records =
-                    memory.forEntity(
-                        entity.id
-                    ) ||
-                    [];
+                const records =
+                    window.MemoryApp
+                        .getAllMemories(
+                            entity
+                        );
 
-            } else if(
-                typeof memory.all ===
-                    "function"
-            ){
 
-                records =
-                    (
-                        memory.all() ||
-                        []
-                    ).filter(
-                        record =>
-                            this.belongsToEntity(
-                                record,
-                                entity.id
-                            )
-                    );
+                return Array.isArray(
+                    records
+                )
+                    ? records
+                    : [];
 
             }
 
         } catch(error){
 
             console.warn(
-                "Memory Timeline verisi okunamadı:",
+                "Memory App Timeline verisi okunamadı:",
                 error
             );
 
-
-            return [];
-
         }
+
+
+        return [];
+
+    },
+
+
+    getMemoryItems(entity){
+
+        const records =
+            this.readMemoryCore(
+                entity
+            );
 
 
         if(
@@ -1036,7 +1408,9 @@ const TimelineApp = {
                 records
             )
         ){
+
             return [];
+
         }
 
 
@@ -1050,18 +1424,15 @@ const TimelineApp = {
             .filter(
                 memoryRecord => {
 
-                    /*
-                     * Evolution'dan otomatik üretilen Memory kayıtlarını
-                     * Timeline'da ikinci kez göstermiyoruz.
-                     */
-
                     if(
                         memoryRecord.type ===
                             "life-event" ||
                         memoryRecord.source ===
                             "evolution"
                     ){
+
                         return false;
+
                     }
 
 
@@ -1069,74 +1440,108 @@ const TimelineApp = {
 
                 }
             )
+            .filter(
+                memoryRecord =>
+                    this.belongsToEntity(
+                        memoryRecord,
+                        entity?.id
+                    )
+            )
             .map(
-                memoryRecord => ({
+                memoryRecord => {
 
-                    id:
-                        `memory:${
-                            memoryRecord.id
-                        }`,
+                    const timestamp =
+                        memoryRecord.updatedAt ||
+                        memoryRecord.createdAt ||
+                        memoryRecord.timestamp ||
+                        0;
 
-                    rawId:
-                        memoryRecord.id,
 
-                    source:
+                    const source =
                         memoryRecord.source ===
                             "system"
                             ? "system"
-                            : "memory",
+                            : "memory";
 
-                    sourceId:
-                        memoryRecord.id,
 
-                    entityId:
-                        memoryRecord.entityId ||
-                        null,
+                    return {
 
-                    worldId:
-                        memoryRecord.worldId ||
-                        null,
+                        id:
+                            `memory:${
+                                memoryRecord.id ||
+                                `${timestamp}:${String(
+                                    memoryRecord.title ||
+                                    "memory"
+                                ).slice(
+                                    0,
+                                    60
+                                )}`
+                            }`,
 
-                    title:
-                        memoryRecord.title ||
-                        "Hafıza",
+                        rawId:
+                            memoryRecord.id ||
+                            null,
 
-                    description:
-                        memoryRecord.content ||
-                        "",
+                        source,
 
-                    importance:
-                        memoryRecord.important
-                            ? "high"
-                            : "low",
+                        sourceId:
+                            memoryRecord.id ||
+                            null,
 
-                    type:
-                        memoryRecord.type ||
-                        "memory",
+                        entityId:
+                            memoryRecord.entityId ||
+                            null,
 
-                    category:
-                        memoryRecord.category ||
-                        "note",
+                        worldId:
+                            memoryRecord.worldId ||
+                            null,
 
-                    tags:
-                        Array.isArray(
-                            memoryRecord.tags
-                        )
-                            ? memoryRecord.tags
-                            : [],
+                        title:
+                            String(
+                                memoryRecord.title ||
+                                "Hafıza"
+                            ).trim(),
 
-                    occurredAt:
-                        memoryRecord.updatedAt ||
-                        memoryRecord.createdAt ||
-                        Date.now(),
+                        description:
+                            String(
+                                memoryRecord.content ||
+                                memoryRecord.description ||
+                                ""
+                            ).trim(),
 
-                    raw:
-                        memoryRecord,
+                        importance:
+                            memoryRecord.important
+                                ? "high"
+                                : "low",
 
-                    linked:
-                        memoryRecord
+                        type:
+                            memoryRecord.type ||
+                            "memory",
 
-                })
+                        category:
+                            memoryRecord.category ||
+                            "note",
+
+                        tags:
+                            this.normalizeTags(
+                                memoryRecord.tags
+                            ),
+
+                        occurredAt:
+                            Number(
+                                timestamp
+                            ) ||
+                            Date.now(),
+
+                        raw:
+                            memoryRecord,
+
+                        linked:
+                            memoryRecord
+
+                    };
+
+                }
             );
 
     },
@@ -1146,87 +1551,176 @@ const TimelineApp = {
        DEDUPLICATION
     ===================================================== */
 
+    getDeduplicationKey(item){
+
+        if(!item){
+
+            return null;
+
+        }
+
+
+        if(
+            item.source ===
+                "evolution" &&
+            item.sourceId
+        ){
+
+            return `evolution:${item.sourceId}`;
+
+        }
+
+
+        if(
+            item.source ===
+                "memory" &&
+            item.sourceId
+        ){
+
+            return `memory:${item.sourceId}`;
+
+        }
+
+
+        if(
+            item.source ===
+                "system" &&
+            item.sourceId
+        ){
+
+            return `system:${item.sourceId}`;
+
+        }
+
+
+        return (
+            item.id ||
+            null
+        );
+
+    },
+
+
     deduplicate(items){
 
         const map =
             new Map();
 
 
-        items.forEach(
-            item => {
+        (
+            Array.isArray(
+                items
+            )
+                ? items
+                : []
+        )
+            .forEach(
+                item => {
 
-                if(!item){
-                    return;
-                }
+                    if(!item){
 
+                        return;
 
-                /*
-                 * Evolution event hem Timeline referansı hem
-                 * Evolution Core'dan geliyorsa tek göster.
-                 */
-
-                const key =
-                    item.source ===
-                        "evolution" &&
-                    item.sourceId
-                        ? `evolution:${item.sourceId}`
-                        : item.id;
+                    }
 
 
-                const existing =
-                    map.get(
-                        key
-                    );
+                    const key =
+                        this.getDeduplicationKey(
+                            item
+                        );
 
 
-                if(!existing){
+                    if(!key){
+
+                        return;
+
+                    }
+
+
+                    const existing =
+                        map.get(
+                            key
+                        );
+
+
+                    if(!existing){
+
+                        map.set(
+                            key,
+                            item
+                        );
+
+
+                        return;
+
+                    }
+
+
+                    const existingDescription =
+                        String(
+                            existing.description ||
+                            ""
+                        );
+
+
+                    const incomingDescription =
+                        String(
+                            item.description ||
+                            ""
+                        );
+
+
+                    const description =
+                        incomingDescription.length >
+                            existingDescription.length
+                            ? incomingDescription
+                            : existingDescription;
+
+
+                    const timestamp =
+                        Math.max(
+                            this.getTimestamp(
+                                existing
+                            ),
+                            this.getTimestamp(
+                                item
+                            )
+                        );
+
 
                     map.set(
                         key,
-                        item
+                        {
+                            ...existing,
+                            ...item,
+
+                            title:
+                                item.title ||
+                                existing.title,
+
+                            description,
+
+                            tags:
+                                this.normalizeTags([
+                                    ...(
+                                        existing.tags ||
+                                        []
+                                    ),
+                                    ...(
+                                        item.tags ||
+                                        []
+                                    )
+                                ]),
+
+                            occurredAt:
+                                timestamp ||
+                                item.occurredAt ||
+                                existing.occurredAt
+                        }
                     );
 
-                    return;
-
                 }
-
-
-                /*
-                 * Daha zengin description/tags varsa onu koru.
-                 */
-
-                map.set(
-                    key,
-                    {
-                        ...existing,
-                        ...item,
-
-                        description:
-                            item.description ||
-                            existing.description,
-
-                        tags:
-                            [
-                                ...new Set([
-                                    ...(existing.tags || []),
-                                    ...(item.tags || [])
-                                ])
-                            ],
-
-                        occurredAt:
-                            Math.max(
-                                this.getTimestamp(
-                                    existing
-                                ),
-                                this.getTimestamp(
-                                    item
-                                )
-                            )
-                    }
-                );
-
-            }
-        );
+            );
 
 
         return [
@@ -1237,35 +1731,48 @@ const TimelineApp = {
 
 
     /* =====================================================
+       RAW UNIFIED STREAM
+    ===================================================== */
+
+    getAllUnifiedItems(entity){
+
+        return this.deduplicate([
+            ...this.getTimelineItems(
+                entity
+            ),
+            ...this.getEvolutionItems(
+                entity
+            ),
+            ...this.getMemoryItems(
+                entity
+            )
+        ])
+            .sort(
+                (
+                    a,
+                    b
+                ) =>
+                    this.getTimestamp(
+                        b
+                    ) -
+                    this.getTimestamp(
+                        a
+                    )
+            );
+
+    },
+
+
+    /* =====================================================
        UNIFIED STREAM
     ===================================================== */
 
     getUnifiedItems(entity){
 
-        const timelineItems =
-            this.getTimelineItems(
-                entity
-            );
-
-
-        const evolutionItems =
-            this.getEvolutionItems(
-                entity
-            );
-
-
-        const memoryItems =
-            this.getMemoryItems(
-                entity
-            );
-
-
         let items =
-            this.deduplicate([
-                ...timelineItems,
-                ...evolutionItems,
-                ...memoryItems
-            ]);
+            this.getAllUnifiedItems(
+                entity
+            );
 
 
         if(
@@ -1277,7 +1784,7 @@ const TimelineApp = {
                 items.filter(
                     item =>
                         item.source ===
-                        this.activeFilter
+                            this.activeFilter
                 );
 
         }
@@ -1303,16 +1810,15 @@ const TimelineApp = {
                         const haystack = [
 
                             item.title,
-
                             item.description,
-
                             item.type,
-
                             item.category,
-
                             item.source,
 
-                            ...(item.tags || [])
+                            ...(
+                                item.tags ||
+                                []
+                            )
 
                         ]
                             .join(" ")
@@ -1331,16 +1837,16 @@ const TimelineApp = {
         }
 
 
-        return items
-            .sort(
-                (a,b) =>
-                    this.getTimestamp(b) -
-                    this.getTimestamp(a)
+        return items.slice(
+            0,
+            Math.max(
+                1,
+                Number(
+                    this.visibleLimit
+                ) ||
+                40
             )
-            .slice(
-                0,
-                this.visibleLimit
-            );
+        );
 
     },
 
@@ -1352,11 +1858,9 @@ const TimelineApp = {
     getStats(entity){
 
         const items =
-            this.deduplicate([
-                ...this.getTimelineItems(entity),
-                ...this.getEvolutionItems(entity),
-                ...this.getMemoryItems(entity)
-            ]);
+            this.getAllUnifiedItems(
+                entity
+            );
 
 
         return {
@@ -1383,6 +1887,13 @@ const TimelineApp = {
                     item =>
                         item.source ===
                             "system"
+                ).length,
+
+            timeline:
+                items.filter(
+                    item =>
+                        item.source ===
+                            "timeline"
                 ).length
 
         };
@@ -1399,55 +1910,82 @@ const TimelineApp = {
         const groups =
             [];
 
+        const map =
+            new Map();
 
-        items.forEach(
-            item => {
 
-                const label =
-                    this.formatDay(
+        (
+            Array.isArray(
+                items
+            )
+                ? items
+                : []
+        )
+            .forEach(
+                item => {
+
+                    const timestamp =
                         this.getTimestamp(
                             item
-                        )
-                    );
+                        );
 
 
-                let group =
-                    groups.find(
-                        current =>
-                            current.label ===
-                            label
-                    );
+                    const key =
+                        this.getDayKey(
+                            timestamp
+                        );
 
 
-                if(!group){
-
-                    group = {
-                        label,
-                        items:[]
-                    };
+                    let group =
+                        map.get(
+                            key
+                        );
 
 
-                    groups.push(
-                        group
+                    if(!group){
+
+                        group = {
+
+                            key,
+
+                            label:
+                                this.formatDay(
+                                    timestamp
+                                ),
+
+                            timestamp,
+
+                            items:[]
+
+                        };
+
+
+                        map.set(
+                            key,
+                            group
+                        );
+
+
+                        groups.push(
+                            group
+                        );
+
+                    }
+
+
+                    group.items.push(
+                        item
                     );
 
                 }
-
-
-                group.items.push(
-                    item
-                );
-
-            }
-        );
+            );
 
 
         return groups;
 
     },
 
-
-    /* =====================================================
+   /* =====================================================
        ITEM CARD
     ===================================================== */
 
@@ -1461,7 +1999,8 @@ const TimelineApp = {
 
 
         const preview =
-            description.length > 150
+            description.length >
+                150
                 ? `${description
                     .slice(
                         0,
@@ -1575,8 +2114,13 @@ const TimelineApp = {
                                     <small>
                                         ${this.escapeHTML(
                                             item.tags
-                                                .slice(0,2)
-                                                .join(" · ")
+                                                .slice(
+                                                    0,
+                                                    2
+                                                )
+                                                .join(
+                                                    " · "
+                                                )
                                         )}
                                     </small>
                                   `
@@ -1651,33 +2195,61 @@ const TimelineApp = {
        FILTERS
     ===================================================== */
 
+    getAllowedFilters(){
+
+        return [
+            "all",
+            "evolution",
+            "memory",
+            "system",
+            "timeline"
+        ];
+
+    },
+
+
     renderToolbar(){
 
         const filters = [
 
             {
-                id:"all",
-                label:"Tümü"
+                id:
+                    "all",
+
+                label:
+                    "Tümü"
             },
 
             {
-                id:"evolution",
-                label:"Evolution"
+                id:
+                    "evolution",
+
+                label:
+                    "Evolution"
             },
 
             {
-                id:"memory",
-                label:"Memory"
+                id:
+                    "memory",
+
+                label:
+                    "Memory"
             },
 
             {
-                id:"system",
-                label:"System"
+                id:
+                    "system",
+
+                label:
+                    "System"
             },
 
             {
-                id:"timeline",
-                label:"Timeline"
+                id:
+                    "timeline",
+
+                label:
+                    "Timeline"
             }
 
         ];
@@ -1691,6 +2263,7 @@ const TimelineApp = {
                     <span aria-hidden="true">
                         ⌕
                     </span>
+
 
                     <input
                         id="timelineSearchInput"
@@ -1748,20 +2321,29 @@ const TimelineApp = {
         itemId
     ){
 
-        const items =
-            this.deduplicate([
-                ...this.getTimelineItems(entity),
-                ...this.getEvolutionItems(entity),
-                ...this.getMemoryItems(entity)
-            ]);
+        const id =
+            String(
+                itemId ||
+                ""
+            );
+
+
+        if(!id){
+
+            return null;
+
+        }
 
 
         return (
-            items.find(
-                item =>
-                    item.id ===
-                    itemId
-            ) ||
+            this.getAllUnifiedItems(
+                entity
+            )
+                .find(
+                    item =>
+                        item.id ===
+                            id
+                ) ||
             null
         );
 
@@ -1771,7 +2353,9 @@ const TimelineApp = {
     renderDetail(item){
 
         if(!item){
+
             return "";
+
         }
 
 
@@ -1802,6 +2386,7 @@ const TimelineApp = {
                                     )
                                 )}
                             </span>
+
 
                             <h2>
                                 ${this.escapeHTML(
@@ -1911,6 +2496,27 @@ const TimelineApp = {
 
                             </div>
 
+
+                            ${
+                                item.category
+                                    ? `
+                                        <div>
+
+                                            <span>
+                                                Kategori
+                                            </span>
+
+                                            <strong>
+                                                ${this.escapeHTML(
+                                                    item.category
+                                                )}
+                                            </strong>
+
+                                        </div>
+                                      `
+                                    : ""
+                            }
+
                         </div>
 
 
@@ -1943,15 +2549,15 @@ const TimelineApp = {
 
                         ${
                             item.source ===
-                                "evolution"
+                                "evolution" &&
+                            item.sourceId
                                 ? `
                                     <button
                                         type="button"
                                         class="primary-btn"
                                         data-timeline-action="source:evolution"
                                         data-source-id="${this.escapeHTML(
-                                            item.sourceId ||
-                                            ""
+                                            item.sourceId
                                         )}"
                                     >
                                         Evolution’da Aç
@@ -1963,15 +2569,15 @@ const TimelineApp = {
 
                         ${
                             item.source ===
-                                "memory"
+                                "memory" &&
+                            item.sourceId
                                 ? `
                                     <button
                                         type="button"
                                         class="primary-btn"
                                         data-timeline-action="source:memory"
                                         data-source-id="${this.escapeHTML(
-                                            item.sourceId ||
-                                            ""
+                                            item.sourceId
                                         )}"
                                     >
                                         Memory’de Aç
@@ -2015,6 +2621,7 @@ const TimelineApp = {
                     ◷
                 </span>
 
+
                 <h3>
                     ${
                         this.searchQuery ||
@@ -2024,6 +2631,7 @@ const TimelineApp = {
                             : "Timeline henüz sessiz"
                     }
                 </h3>
+
 
                 <p>
                     ${
@@ -2042,18 +2650,73 @@ const TimelineApp = {
 
 
     /* =====================================================
+       UI FALLBACKS
+    ===================================================== */
+
+    renderAppHeader(entity){
+
+        if(
+            window.UI &&
+            typeof UI.appHeader ===
+                "function"
+        ){
+
+            return UI.appHeader(
+                this.escapeHTML(
+                    entity.name ||
+                    "VAERO Varlığı"
+                ),
+                "TIMELINE",
+                "◷"
+            );
+
+        }
+
+
+        return `
+            <header class="engine-app-header">
+
+                <span class="engine-section-label">
+                    TIMELINE
+                </span>
+
+                <h1>
+                    ${this.escapeHTML(
+                        entity.name ||
+                        "VAERO Varlığı"
+                    )}
+                </h1>
+
+            </header>
+        `;
+
+    },
+
+
+    renderBrainPanel(){
+
+        try{
+
+            return (
+                window.UI
+                    ?.brainPanel?.() ||
+                ""
+            );
+
+        } catch(error){
+
+            return "";
+
+        }
+
+    },
+
+
+    /* =====================================================
        RENDER
     ===================================================== */
 
     render(entity){
-
-        this.enterBrainContext(
-            entity
-        );
-
-
-        this.cleanOrphans();
-
 
         if(!entity){
 
@@ -2078,6 +2741,27 @@ const TimelineApp = {
         }
 
 
+        this.enterBrainContext(
+            entity
+        );
+
+
+        this.cleanOrphans();
+
+
+        if(
+            !this.getAllowedFilters()
+                .includes(
+                    this.activeFilter
+                )
+        ){
+
+            this.activeFilter =
+                "all";
+
+        }
+
+
         const items =
             this.getUnifiedItems(
                 entity
@@ -2096,13 +2780,28 @@ const TimelineApp = {
             );
 
 
-        const selected =
+        let selected =
             this.selectedItemId
                 ? this.findVisibleItem(
                     entity,
                     this.selectedItemId
                 )
                 : null;
+
+
+        if(
+            this.selectedItemId &&
+            !selected
+        ){
+
+            this.selectedItemId =
+                null;
+
+
+            selected =
+                null;
+
+        }
 
 
         return `
@@ -2123,13 +2822,8 @@ const TimelineApp = {
                     </div>
 
 
-                    ${UI.appHeader(
-                        this.escapeHTML(
-                            entity.name ||
-                            "VAERO Varlığı"
-                        ),
-                        "TIMELINE",
-                        "◷"
+                    ${this.renderAppHeader(
+                        entity
                     )}
 
 
@@ -2141,9 +2835,11 @@ const TimelineApp = {
                                 LIVING TIMELINE
                             </span>
 
+
                             <h2>
                                 Yaşam akışı
                             </h2>
+
 
                             <p>
                                 Memory, Evolution ve Engine olaylarının zaman içinde oluşturduğu birleşik akış.
@@ -2155,6 +2851,7 @@ const TimelineApp = {
                         <div class="timeline-stats">
 
                             <div>
+
                                 <strong>
                                     ${stats.total}
                                 </strong>
@@ -2162,10 +2859,12 @@ const TimelineApp = {
                                 <span>
                                     Toplam
                                 </span>
+
                             </div>
 
 
                             <div>
+
                                 <strong>
                                     ${stats.evolution}
                                 </strong>
@@ -2173,10 +2872,12 @@ const TimelineApp = {
                                 <span>
                                     Evolution
                                 </span>
+
                             </div>
 
 
                             <div>
+
                                 <strong>
                                     ${stats.memory}
                                 </strong>
@@ -2184,10 +2885,12 @@ const TimelineApp = {
                                 <span>
                                     Memory
                                 </span>
+
                             </div>
 
 
                             <div>
+
                                 <strong>
                                     ${stats.system}
                                 </strong>
@@ -2195,6 +2898,7 @@ const TimelineApp = {
                                 <span>
                                     System
                                 </span>
+
                             </div>
 
                         </div>
@@ -2229,7 +2933,7 @@ const TimelineApp = {
                     </div>
 
 
-                    ${UI.brainPanel()}
+                    ${this.renderBrainPanel()}
 
                 </div>
 
@@ -2249,6 +2953,145 @@ const TimelineApp = {
 
 
     /* =====================================================
+       SOURCE NAVIGATION
+    ===================================================== */
+
+    openEvolutionSource(
+        sourceId
+    ){
+
+        if(!sourceId){
+
+            return false;
+
+        }
+
+
+        this.selectedItemId =
+            null;
+
+
+        try{
+
+            if(
+                window.EvolutionApp &&
+                typeof window.EvolutionApp
+                    .selectEvent ===
+                    "function"
+            ){
+
+                window.EvolutionApp
+                    .selectEvent(
+                        sourceId
+                    );
+
+            }
+
+            else if(
+                window.EvolutionApp &&
+                "selectedEventId" in
+                    window.EvolutionApp
+            ){
+
+                window.EvolutionApp
+                    .selectedEventId =
+                    sourceId;
+
+            }
+
+        } catch(error){
+
+            console.warn(
+                "Evolution olayı seçilemedi:",
+                error
+            );
+
+        }
+
+
+        if(
+            window.Actions &&
+            typeof window.Actions
+                .openEntityPage ===
+                "function"
+        ){
+
+            return window.Actions
+                .openEntityPage(
+                    "evolution"
+                );
+
+        }
+
+
+        return false;
+
+    },
+
+
+    openMemorySource(
+        sourceId
+    ){
+
+        if(!sourceId){
+
+            return false;
+
+        }
+
+
+        this.selectedItemId =
+            null;
+
+
+        try{
+
+            if(
+                window.MemoryApp
+            ){
+
+                window.MemoryApp
+                    .selectedMemoryId =
+                    sourceId;
+
+
+                window.MemoryApp
+                    .editorMode =
+                    null;
+
+            }
+
+        } catch(error){
+
+            console.warn(
+                "Memory kaydı seçilemedi:",
+                error
+            );
+
+        }
+
+
+        if(
+            window.Actions &&
+            typeof window.Actions
+                .openEntityPage ===
+                "function"
+        ){
+
+            return window.Actions
+                .openEntityPage(
+                    "memory"
+                );
+
+        }
+
+
+        return false;
+
+    },
+
+
+    /* =====================================================
        COMMANDS
     ===================================================== */
 
@@ -2262,21 +3105,41 @@ const TimelineApp = {
 
 
         if(!entity){
+
             return false;
+
         }
 
 
         switch(action){
 
-            case "open":
+            case "open":{
 
-                this.selectedItemId =
-                    button.dataset
-                        .timelineId ||
+                const itemId =
+                    button?.dataset
+                        ?.timelineId ||
                     null;
 
 
+                if(
+                    !this.findVisibleItem(
+                        entity,
+                        itemId
+                    )
+                ){
+
+                    return false;
+
+                }
+
+
+                this.selectedItemId =
+                    itemId;
+
+
                 return this.remount();
+
+            }
 
 
             case "close":
@@ -2288,12 +3151,23 @@ const TimelineApp = {
                 return this.remount();
 
 
-            case "filter":
+            case "filter":{
+
+                const filter =
+                    String(
+                        button?.dataset
+                            ?.timelineFilter ||
+                        "all"
+                    );
+
 
                 this.activeFilter =
-                    button.dataset
-                        .timelineFilter ||
-                    "all";
+                    this.getAllowedFilters()
+                        .includes(
+                            filter
+                        )
+                            ? filter
+                            : "all";
 
 
                 this.selectedItemId =
@@ -2302,116 +3176,32 @@ const TimelineApp = {
 
                 return this.remount();
 
-
-            case "source:evolution":{
-
-                const sourceId =
-                    button.dataset
-                        .sourceId ||
-                    null;
-
-
-                this.selectedItemId =
-                    null;
-
-
-                if(
-                    window.EvolutionApp &&
-                    sourceId &&
-                    typeof window.EvolutionApp
-                        .selectEvent ===
-                        "function"
-                ){
-
-                    try{
-
-                        window.EvolutionApp
-                            .selectEvent(
-                                sourceId
-                            );
-
-                    } catch(error){
-
-                        console.warn(
-                            "Evolution olayı seçilemedi:",
-                            error
-                        );
-
-                    }
-
-                }
-
-
-                if(
-                    window.Actions &&
-                    typeof window.Actions
-                        .openEntityPage ===
-                        "function"
-                ){
-
-                    return window.Actions
-                        .openEntityPage(
-                            "evolution"
-                        );
-
-                }
-
-
-                return false;
-
             }
 
 
-            case "source:memory":{
+            case "source:evolution":
 
-                const sourceId =
-                    button.dataset
-                        .sourceId ||
-                    null;
-
-
-                this.selectedItemId =
-                    null;
+                return this.openEvolutionSource(
+                    button?.dataset
+                        ?.sourceId ||
+                    null
+                );
 
 
-                if(
-                    window.MemoryApp
-                ){
+            case "source:memory":
 
-                    window.MemoryApp
-                        .selectedMemoryId =
-                        sourceId;
-
-                    window.MemoryApp
-                        .editorMode =
-                        null;
-
-                }
+                return this.openMemorySource(
+                    button?.dataset
+                        ?.sourceId ||
+                    null
+                );
 
 
-                if(
-                    window.Actions &&
-                    typeof window.Actions
-                        .openEntityPage ===
-                        "function"
-                ){
-
-                    return window.Actions
-                        .openEntityPage(
-                            "memory"
-                        );
-
-                }
-
+            default:
 
                 return false;
-
-            }
 
         }
-
-
-        return false;
 
     }
 
@@ -2433,7 +3223,9 @@ document.addEventListener(
 
 
         if(!button){
+
             return;
+
         }
 
 
@@ -2462,7 +3254,9 @@ document.addEventListener(
             event.target.id !==
                 "timelineSearchInput"
         ){
+
             return;
+
         }
 
 
@@ -2494,6 +3288,24 @@ document.addEventListener(
 
     }
 );
+
+
+/* =========================================================
+   REGISTER
+========================================================= */
+
+try{
+
+    VAERO?.register?.(
+        "timelineApp",
+        TimelineApp
+    );
+
+} catch(error){
+
+    /* global remains available */
+
+}
 
 
 window.TimelineApp =
