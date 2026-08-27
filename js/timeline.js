@@ -5,7 +5,8 @@
 
 const Timeline = {
 
-    events: [],
+    events:
+        [],
 
     booted:
         false,
@@ -23,25 +24,45 @@ const Timeline = {
 
     getService(name){
 
+        const serviceName =
+            String(
+                name ??
+                ""
+            ).trim();
+
+
+        if(!serviceName){
+
+            return null;
+
+        }
+
+
         try{
 
             if(
-                typeof VAERO === "undefined" ||
-                typeof VAERO.get !== "function"
+                typeof VAERO ===
+                    "undefined" ||
+                typeof VAERO.get !==
+                    "function"
             ){
+
                 return null;
+
             }
 
 
             return (
-                VAERO.get(name) ||
+                VAERO.get(
+                    serviceName
+                ) ||
                 null
             );
 
         } catch(error){
 
             console.warn(
-                `Timeline service okunamadı: ${name}`,
+                `Timeline service okunamadı: ${serviceName}`,
                 error
             );
 
@@ -58,22 +79,61 @@ const Timeline = {
         payload = {}
     ){
 
+        const name =
+            String(
+                eventName ??
+                ""
+            ).trim();
+
+
+        if(!name){
+
+            return false;
+
+        }
+
+
+        const safePayload =
+            payload &&
+            typeof payload ===
+                "object" &&
+            !Array.isArray(
+                payload
+            )
+                ? payload
+                : {};
+
+
         try{
 
             if(
-                typeof VAERO !== "undefined" &&
-                typeof VAERO.emit === "function"
+                typeof VAERO !==
+                    "undefined" &&
+                typeof VAERO.emit ===
+                    "function"
             ){
 
                 VAERO.emit(
-                    eventName,
-                    payload
+                    name,
+                    safePayload
                 );
+
 
                 return true;
 
             }
 
+        } catch(error){
+
+            console.warn(
+                `Timeline VAERO event gönderilemedi: ${name}`,
+                error
+            );
+
+        }
+
+
+        try{
 
             const events =
                 this.getService(
@@ -83,13 +143,15 @@ const Timeline = {
 
             if(
                 events &&
-                typeof events.emit === "function"
+                typeof events.emit ===
+                    "function"
             ){
 
                 events.emit(
-                    eventName,
-                    payload
+                    name,
+                    safePayload
                 );
+
 
                 return true;
 
@@ -98,7 +160,7 @@ const Timeline = {
         } catch(error){
 
             console.warn(
-                `Timeline event gönderilemedi: ${eventName}`,
+                `Timeline event fallback gönderilemedi: ${name}`,
                 error
             );
 
@@ -116,12 +178,22 @@ const Timeline = {
 
     createId(){
 
-        if(
-            typeof crypto !== "undefined" &&
-            typeof crypto.randomUUID === "function"
-        ){
+        try{
 
-            return crypto.randomUUID();
+            if(
+                typeof crypto !==
+                    "undefined" &&
+                typeof crypto.randomUUID ===
+                    "function"
+            ){
+
+                return crypto.randomUUID();
+
+            }
+
+        } catch(error){
+
+            /* fallback below */
 
         }
 
@@ -141,10 +213,15 @@ const Timeline = {
 
         if(
             !value ||
-            typeof value !== "object" ||
-            Array.isArray(value)
+            typeof value !==
+                "object" ||
+            Array.isArray(
+                value
+            )
         ){
+
             return {};
+
         }
 
 
@@ -158,24 +235,84 @@ const Timeline = {
     normalizeTags(value){
 
         if(
-            !Array.isArray(value)
+            !Array.isArray(
+                value
+            ) &&
+            !(value instanceof Set)
         ){
+
             return [];
+
         }
 
 
-        return [
-            ...new Set(
+        const source =
+            Array.isArray(
                 value
-                    .map(
-                        item =>
-                            String(
-                                item ?? ""
-                            ).trim()
-                    )
-                    .filter(Boolean)
             )
-        ];
+                ? value
+                : [
+                    ...value
+                ];
+
+
+        const seen =
+            new Set();
+
+
+        return source
+            .map(
+                item =>
+                    String(
+                        item ??
+                        ""
+                    )
+                        .trim()
+                        .slice(
+                            0,
+                            80
+                        )
+            )
+            .filter(
+                item => {
+
+                    if(!item){
+
+                        return false;
+
+                    }
+
+
+                    const key =
+                        item.toLocaleLowerCase(
+                            "tr-TR"
+                        );
+
+
+                    if(
+                        seen.has(
+                            key
+                        )
+                    ){
+
+                        return false;
+
+                    }
+
+
+                    seen.add(
+                        key
+                    );
+
+
+                    return true;
+
+                }
+            )
+            .slice(
+                0,
+                40
+            );
 
     },
 
@@ -205,9 +342,80 @@ const Timeline = {
     },
 
 
+    normalizeText(
+        value,
+        maxLength = 10000
+    ){
+
+        return String(
+            value ??
+            ""
+        )
+            .trim()
+            .slice(
+                0,
+                maxLength
+            );
+
+    },
+
+
+    normalizeId(value){
+
+        const id =
+            String(
+                value ??
+                ""
+            )
+                .trim()
+                .slice(
+                    0,
+                    200
+                );
+
+
+        return (
+            id ||
+            null
+        );
+
+    },
+
+
+    normalizeTimestamp(
+        value,
+        fallback = Date.now()
+    ){
+
+        const timestamp =
+            Number(
+                value
+            );
+
+
+        return Number.isFinite(
+            timestamp
+        )
+            ? timestamp
+            : fallback;
+
+    },
+
+
     normalizeRecord(
         event = {}
     ){
+
+        const sourceEvent =
+            event &&
+            typeof event ===
+                "object" &&
+            !Array.isArray(
+                event
+            )
+                ? event
+                : {};
+
 
         const now =
             Date.now();
@@ -215,146 +423,240 @@ const Timeline = {
 
         const payload =
             this.normalizePayload(
-                event.payload
+                sourceEvent.payload
             );
 
 
         const type =
-            String(
-                event.type ||
-                "event"
+            this.normalizeText(
+                sourceEvent.type ||
+                "event",
+                120
             )
-                .trim()
-                .toLowerCase();
+                .toLowerCase() ||
+            "event";
 
 
         const source =
-            String(
-                event.source ||
+            this.normalizeText(
+                sourceEvent.source ||
                 payload.source ||
                 (
-                    type === "life-event"
+                    type ===
+                        "life-event"
                         ? "evolution"
                         : "timeline"
-                )
+                ),
+                120
             )
-                .trim()
-                .toLowerCase();
+                .toLowerCase() ||
+            "timeline";
+
+
+        const createdAt =
+            this.normalizeTimestamp(
+                sourceEvent.createdAt,
+                now
+            );
+
+
+        const occurredAt =
+            this.normalizeTimestamp(
+                sourceEvent.occurredAt ??
+                payload.occurredAt,
+                createdAt
+            );
+
+
+        const updatedAt =
+            this.normalizeTimestamp(
+                sourceEvent.updatedAt,
+                createdAt
+            );
+
+
+        const archived =
+            sourceEvent.archived ===
+                true;
 
 
         return {
 
             id:
-                String(
-                    event.id ||
-                    this.createId()
-                ),
+                this.normalizeId(
+                    sourceEvent.id
+                ) ||
+                this.createId(),
 
             type,
 
             title:
-                String(
-                    event.title ||
+                this.normalizeText(
+                    sourceEvent.title ||
                     payload.title ||
                     type ||
-                    "Timeline Olayı"
-                ).trim(),
+                    "Timeline Olayı",
+                    240
+                ) ||
+                "Timeline Olayı",
 
             description:
-                String(
-                    event.description ||
+                this.normalizeText(
+                    sourceEvent.description ||
                     payload.description ||
                     payload.content ||
-                    ""
-                ).trim(),
+                    "",
+                    30000
+                ),
 
             source,
 
             category:
-                String(
-                    event.category ||
+                this.normalizeText(
+                    sourceEvent.category ||
                     payload.category ||
                     type ||
-                    "event"
+                    "event",
+                    120
                 )
-                    .trim()
-                    .toLowerCase(),
+                    .toLowerCase() ||
+                "event",
 
             importance:
                 this.normalizeImportance(
-                    event.importance ||
+                    sourceEvent.importance ||
                     payload.importance
                 ),
 
             entityId:
-                String(
-                    event.entityId ||
-                    event.relatedEntityId ||
+                this.normalizeId(
+                    sourceEvent.entityId ||
+                    sourceEvent.relatedEntityId ||
                     payload.entityId ||
-                    payload.relatedEntityId ||
-                    ""
-                ).trim() ||
-                null,
+                    payload.relatedEntityId
+                ),
 
             worldId:
-                String(
-                    event.worldId ||
-                    event.relatedWorldId ||
+                this.normalizeId(
+                    sourceEvent.worldId ||
+                    sourceEvent.relatedWorldId ||
                     payload.worldId ||
-                    payload.relatedWorldId ||
-                    ""
-                ).trim() ||
-                null,
+                    payload.relatedWorldId
+                ),
 
             payload,
 
             tags:
                 this.normalizeTags(
-                    event.tags ||
+                    sourceEvent.tags ||
                     payload.tags
                 ),
 
-            archived:
-                event.archived === true,
+            archived,
 
             archivedAt:
-                event.archived === true
-                    ? (
-                        Number(
-                            event.archivedAt
-                        ) ||
-                        now
+                archived
+                    ? this.normalizeTimestamp(
+                        sourceEvent.archivedAt,
+                        updatedAt
                     )
                     : null,
 
-            occurredAt:
-                Number(
-                    event.occurredAt
-                ) ||
-                Number(
-                    payload.occurredAt
-                ) ||
-                Number(
-                    event.createdAt
-                ) ||
-                now,
+            occurredAt,
 
-            createdAt:
-                Number(
-                    event.createdAt
-                ) ||
-                now,
+            createdAt,
 
             updatedAt:
-                Number(
-                    event.updatedAt
-                ) ||
-                Number(
-                    event.createdAt
-                ) ||
-                now
+                Math.max(
+                    createdAt,
+                    updatedAt
+                )
 
         };
+
+    },
+
+
+    /* =====================================================
+       LOOKUP HELPERS
+    ===================================================== */
+
+    findIndex(timelineId){
+
+        const id =
+            this.normalizeId(
+                timelineId
+            );
+
+
+        if(!id){
+
+            return -1;
+
+        }
+
+
+        return this.events.findIndex(
+            event =>
+                event?.id ===
+                    id
+        );
+
+    },
+
+
+    findBySourceEventId(sourceEventId){
+
+        const id =
+            this.normalizeId(
+                sourceEventId
+            );
+
+
+        if(!id){
+
+            return null;
+
+        }
+
+
+        return (
+            this.events.find(
+                event =>
+                    event?.payload
+                        ?.sourceEventId ===
+                        id
+            ) ||
+            null
+        );
+
+    },
+
+
+    findBySourceMemoryId(sourceMemoryId){
+
+        const id =
+            this.normalizeId(
+                sourceMemoryId
+            );
+
+
+        if(!id){
+
+            return null;
+
+        }
+
+
+        return (
+            this.events.find(
+                event =>
+                    event?.payload
+                        ?.sourceMemoryId ===
+                        id
+            ) ||
+            null
+        );
 
     },
 
@@ -365,8 +667,12 @@ const Timeline = {
 
     boot(){
 
-        if(this.booted){
+        if(
+            this.booted
+        ){
+
             return true;
+
         }
 
 
@@ -385,8 +691,13 @@ const Timeline = {
                 "Timeline boot: Events servisi bulunamadı."
             );
 
+
             this.booted =
                 true;
+
+
+            this.cleanOrphanLifeEvents();
+
 
             return true;
 
@@ -394,12 +705,13 @@ const Timeline = {
 
 
         if(
-            typeof events.on === "function"
+            typeof events.on ===
+                "function"
         ){
 
-            /*
-             * Entity Mount
-             */
+            /* =========================
+               ENTITY
+            ========================= */
 
             events.on(
                 "entity.mounted",
@@ -429,9 +741,9 @@ const Timeline = {
             );
 
 
-            /*
-             * Engine
-             */
+            /* =========================
+               ENGINE
+            ========================= */
 
             events.on(
                 "engine.started",
@@ -461,9 +773,9 @@ const Timeline = {
             );
 
 
-            /*
-             * Runtime
-             */
+            /* =========================
+               RUNTIME
+            ========================= */
 
             events.on(
                 "runtime.started",
@@ -494,15 +806,15 @@ const Timeline = {
 
 
             /*
-             * Runtime tick geçmişini şişirmesin.
-             * Yalnız ilk/önemli tick kayıtları dışarıdan
-             * explicit add ile eklenebilir.
+             * Runtime ticks are intentionally excluded.
+             * Timeline should remain meaningful instead
+             * of becoming a raw runtime log.
              */
 
 
-            /*
-             * Evolution
-             */
+            /* =========================
+               EVOLUTION
+            ========================= */
 
             events.on(
                 "life-event:created",
@@ -540,9 +852,9 @@ const Timeline = {
             );
 
 
-            /*
-             * Memory
-             */
+            /* =========================
+               MEMORY
+            ========================= */
 
             events.on(
                 "memory:created",
@@ -557,20 +869,28 @@ const Timeline = {
                         !record ||
                         !record.id
                     ){
+
                         return;
+
                     }
 
 
                     /*
-                     * Evolution kaynaklı Memory,
-                     * Timeline'da ikinci kez eklenmez.
+                     * Evolution memories already have their
+                     * own canonical Timeline life-event.
                      */
 
                     if(
-                        record.source === "evolution" ||
-                        record.type === "life-event"
+                        record.source ===
+                            "evolution" ||
+                        record.type ===
+                            "life-event" ||
+                        record.category ===
+                            "life-event"
                     ){
+
                         return;
+
                     }
 
 
@@ -578,7 +898,6 @@ const Timeline = {
                         "memory",
                         record.title ||
                         "Memory",
-
                         {
                             sourceMemoryId:
                                 record.id,
@@ -600,7 +919,8 @@ const Timeline = {
                                 "memory",
 
                             importance:
-                                record.important
+                                record.important ===
+                                    true
                                     ? "high"
                                     : "low",
 
@@ -638,43 +958,69 @@ const Timeline = {
                         !record ||
                         !record.id
                     ){
+
                         return;
+
                     }
 
 
                     const linked =
-                        this.events.find(
-                            event =>
-                                event.payload
-                                    ?.sourceMemoryId ===
-                                record.id
+                        this.findBySourceMemoryId(
+                            record.id
                         );
 
 
                     if(!linked){
+
                         return;
+
                     }
 
 
                     linked.title =
-                        record.title ||
+                        this.normalizeText(
+                            record.title ||
+                            linked.title,
+                            240
+                        ) ||
                         linked.title;
 
 
                     linked.description =
-                        record.content ||
-                        linked.description;
+                        this.normalizeText(
+                            record.content ??
+                            linked.description,
+                            30000
+                        );
 
 
                     linked.category =
-                        record.category ||
+                        this.normalizeText(
+                            record.category ||
+                            linked.category,
+                            120
+                        )
+                            .toLowerCase() ||
                         linked.category;
 
 
                     linked.importance =
-                        record.important
+                        record.important ===
+                            true
                             ? "high"
                             : "low";
+
+
+                    linked.entityId =
+                        this.normalizeId(
+                            record.entityId
+                        );
+
+
+                    linked.worldId =
+                        this.normalizeId(
+                            record.worldId
+                        );
 
 
                     linked.tags =
@@ -684,18 +1030,52 @@ const Timeline = {
                         );
 
 
+                    linked.payload = {
+
+                        ...linked.payload,
+
+                        sourceMemoryId:
+                            record.id,
+
+                        entityId:
+                            linked.entityId,
+
+                        worldId:
+                            linked.worldId
+
+                    };
+
+
                     linked.updatedAt =
                         Date.now();
 
 
                     linked.occurredAt =
-                        Number(
-                            record.updatedAt
-                        ) ||
-                        linked.occurredAt;
+                        this.normalizeTimestamp(
+                            record.updatedAt,
+                            linked.occurredAt
+                        );
 
 
                     this.save();
+
+
+                    this.emit(
+                        "timeline:updated",
+                        {
+                            event:
+                                linked,
+
+                            timelineId:
+                                linked.id,
+
+                            source:
+                                "memory",
+
+                            time:
+                                Date.now()
+                        }
+                    );
 
                 }
             );
@@ -714,29 +1094,32 @@ const Timeline = {
                         !record ||
                         !record.id
                     ){
+
                         return;
+
                     }
 
 
                     const linked =
-                        this.events.find(
-                            event =>
-                                event.payload
-                                    ?.sourceMemoryId ===
-                                record.id
+                        this.findBySourceMemoryId(
+                            record.id
                         );
 
 
                     if(!linked){
+
                         return;
+
                     }
 
 
                     linked.archived =
                         true;
 
+
                     linked.archivedAt =
                         Date.now();
+
 
                     linked.updatedAt =
                         Date.now();
@@ -761,35 +1144,78 @@ const Timeline = {
                         !record ||
                         !record.id
                     ){
+
                         return;
+
                     }
 
 
                     const linked =
-                        this.events.find(
-                            event =>
-                                event.payload
-                                    ?.sourceMemoryId ===
-                                record.id
+                        this.findBySourceMemoryId(
+                            record.id
                         );
 
 
                     if(!linked){
+
                         return;
+
                     }
 
 
                     linked.archived =
                         false;
 
+
                     linked.archivedAt =
                         null;
+
 
                     linked.updatedAt =
                         Date.now();
 
 
                     this.save();
+
+                }
+            );
+
+
+            events.on(
+                "memory:removed",
+                data => {
+
+                    const record =
+                        data?.record ||
+                        data;
+
+
+                    if(
+                        !record ||
+                        !record.id
+                    ){
+
+                        return;
+
+                    }
+
+
+                    const linked =
+                        this.findBySourceMemoryId(
+                            record.id
+                        );
+
+
+                    if(!linked){
+
+                        return;
+
+                    }
+
+
+                    this.remove(
+                        linked.id
+                    );
 
                 }
             );
@@ -802,6 +1228,18 @@ const Timeline = {
 
         this.booted =
             true;
+
+
+        this.emit(
+            "timeline:ready",
+            {
+                count:
+                    this.events.length,
+
+                time:
+                    Date.now()
+            }
+        );
 
 
         return true;
@@ -826,48 +1264,60 @@ const Timeline = {
             );
 
 
-        /*
-         * source reference varsa duplicate engelle.
-         */
+        const sourceEventId =
+            this.normalizeId(
+                data.sourceEventId
+            );
 
-        if(
-            data.sourceEventId
-        ){
+
+        if(sourceEventId){
 
             const existing =
-                this.events.find(
-                    event =>
-                        event.payload
-                            ?.sourceEventId ===
-                        data.sourceEventId
+                this.findBySourceEventId(
+                    sourceEventId
                 );
 
 
             if(existing){
+
                 return existing;
+
             }
 
         }
 
 
-        if(
-            data.sourceMemoryId
-        ){
+        const sourceMemoryId =
+            this.normalizeId(
+                data.sourceMemoryId
+            );
+
+
+        if(sourceMemoryId){
 
             const existing =
-                this.events.find(
-                    event =>
-                        event.payload
-                            ?.sourceMemoryId ===
-                        data.sourceMemoryId
+                this.findBySourceMemoryId(
+                    sourceMemoryId
                 );
 
 
             if(existing){
+
                 return existing;
+
             }
 
         }
+
+
+        const normalizedType =
+            this.normalizeText(
+                type ||
+                "event",
+                120
+            )
+                .toLowerCase() ||
+            "event";
 
 
         const event =
@@ -876,9 +1326,12 @@ const Timeline = {
                 id:
                     this.createId(),
 
-                type,
+                type:
+                    normalizedType,
 
-                title,
+                title:
+                    title ||
+                    normalizedType,
 
                 description:
                     data.description ||
@@ -888,14 +1341,15 @@ const Timeline = {
                 source:
                     data.source ||
                     (
-                        type === "life-event"
+                        normalizedType ===
+                            "life-event"
                             ? "evolution"
                             : "timeline"
                     ),
 
                 category:
                     data.category ||
-                    type,
+                    normalizedType,
 
                 importance:
                     data.importance ||
@@ -915,8 +1369,19 @@ const Timeline = {
                     data.tags ||
                     [],
 
-                payload:
-                    data,
+                payload:{
+                    ...data,
+
+                    sourceEventId:
+                        sourceEventId ||
+                        data.sourceEventId ||
+                        undefined,
+
+                    sourceMemoryId:
+                        sourceMemoryId ||
+                        data.sourceMemoryId ||
+                        undefined
+                },
 
                 occurredAt:
                     data.occurredAt ||
@@ -943,8 +1408,10 @@ const Timeline = {
             "timeline:created",
             {
                 event,
+
                 timelineId:
                     event.id,
+
                 time:
                     Date.now()
             }
@@ -964,11 +1431,101 @@ const Timeline = {
 
         if(
             !data ||
-            typeof data !== "object" ||
-            Array.isArray(data)
+            typeof data !==
+                "object" ||
+            Array.isArray(
+                data
+            )
         ){
+
             return null;
+
         }
+
+
+        const requestedId =
+            this.normalizeId(
+                data.id
+            );
+
+
+        if(requestedId){
+
+            const existing =
+                this.find(
+                    requestedId,
+                    {
+                        includeArchived:
+                            true
+                    }
+                );
+
+
+            if(existing){
+
+                return existing;
+
+            }
+
+        }
+
+
+        const payload =
+            this.normalizePayload(
+                data.payload
+            );
+
+
+        const sourceEventId =
+            this.normalizeId(
+                data.sourceEventId ||
+                payload.sourceEventId
+            );
+
+
+        if(sourceEventId){
+
+            const existing =
+                this.findBySourceEventId(
+                    sourceEventId
+                );
+
+
+            if(existing){
+
+                return existing;
+
+            }
+
+        }
+
+
+        const sourceMemoryId =
+            this.normalizeId(
+                data.sourceMemoryId ||
+                payload.sourceMemoryId
+            );
+
+
+        if(sourceMemoryId){
+
+            const existing =
+                this.findBySourceMemoryId(
+                    sourceMemoryId
+                );
+
+
+            if(existing){
+
+                return existing;
+
+            }
+
+        }
+
+
+        const now =
+            Date.now();
 
 
         const event =
@@ -976,21 +1533,33 @@ const Timeline = {
 
                 ...data,
 
+                payload:{
+                    ...payload,
+
+                    sourceEventId:
+                        sourceEventId ||
+                        payload.sourceEventId,
+
+                    sourceMemoryId:
+                        sourceMemoryId ||
+                        payload.sourceMemoryId
+                },
+
                 id:
-                    data.id ||
+                    requestedId ||
                     this.createId(),
 
                 createdAt:
-                    Number(
-                        data.createdAt
-                    ) ||
-                    Date.now(),
+                    this.normalizeTimestamp(
+                        data.createdAt,
+                        now
+                    ),
 
                 updatedAt:
-                    Number(
-                        data.updatedAt
-                    ) ||
-                    Date.now()
+                    this.normalizeTimestamp(
+                        data.updatedAt,
+                        now
+                    )
 
             });
 
@@ -1007,8 +1576,10 @@ const Timeline = {
             "timeline:created",
             {
                 event,
+
                 timelineId:
                     event.id,
+
                 time:
                     Date.now()
             }
@@ -1036,77 +1607,104 @@ const Timeline = {
             );
 
 
+        const normalizedType =
+            this.normalizeText(
+                type ||
+                "system",
+                120
+            )
+                .toLowerCase() ||
+            "system";
+
+
         const entityId =
-            String(
+            this.normalizeId(
                 data.entityId ||
-                data.id ||
-                ""
-            ).trim() ||
-            null;
+                data.id
+            );
 
 
         const worldId =
-            String(
+            this.normalizeId(
                 data.worldId ||
-                data.relatedWorldId ||
-                ""
-            ).trim() ||
-            null;
+                data.relatedWorldId
+            );
 
-
-        /*
-         * Boot sırasında aynı event iki farklı event adıyla
-         * tetiklenirse duplicate oluşmasın.
-         */
 
         const now =
             Date.now();
 
+
+        /*
+         * The Engine currently emits some lifecycle events
+         * in both legacy and canonical naming formats.
+         */
 
         const recentDuplicate =
             this.events.find(
                 event => {
 
                     if(
-                        event.source !== "system"
+                        event.source !==
+                            "system"
                     ){
+
                         return false;
+
                     }
 
 
                     if(
                         event.type !==
-                        String(type)
-                            .toLowerCase()
+                            normalizedType
                     ){
+
                         return false;
+
                     }
 
 
                     if(
                         event.entityId !==
-                        entityId
+                            entityId
                     ){
+
                         return false;
+
+                    }
+
+
+                    if(
+                        event.worldId !==
+                            worldId
+                    ){
+
+                        return false;
+
                     }
 
 
                     return (
                         now -
-                        event.createdAt
-                    ) < 1500;
+                        Number(
+                            event.createdAt
+                        )
+                    ) <
+                        1500;
 
                 }
             );
 
 
         if(recentDuplicate){
+
             return recentDuplicate;
+
         }
 
 
         return this.add(
-            type,
+            normalizedType,
             title,
             {
                 ...data,
@@ -1151,14 +1749,20 @@ const Timeline = {
         if(
             !event ||
             !changes ||
-            typeof changes !== "object" ||
-            Array.isArray(changes)
+            typeof changes !==
+                "object" ||
+            Array.isArray(
+                changes
+            )
         ){
+
             return null;
+
         }
 
 
         const before = {
+
             ...event,
 
             payload:{
@@ -1168,32 +1772,49 @@ const Timeline = {
             tags:[
                 ...event.tags
             ]
+
         };
 
 
         if(
-            typeof changes.title === "string" &&
-            changes.title.trim()
+            changes.title !==
+                undefined
         ){
 
-            event.title =
-                changes.title.trim();
+            const title =
+                this.normalizeText(
+                    changes.title,
+                    240
+                );
+
+
+            if(title){
+
+                event.title =
+                    title;
+
+            }
 
         }
 
 
         if(
-            typeof changes.description === "string"
+            changes.description !==
+                undefined
         ){
 
             event.description =
-                changes.description.trim();
+                this.normalizeText(
+                    changes.description,
+                    30000
+                );
 
         }
 
 
         if(
-            changes.importance !== undefined
+            changes.importance !==
+                undefined
         ){
 
             event.importance =
@@ -1205,19 +1826,31 @@ const Timeline = {
 
 
         if(
-            typeof changes.category === "string"
+            changes.category !==
+                undefined
         ){
 
-            event.category =
-                changes.category
-                    .trim()
+            const category =
+                this.normalizeText(
+                    changes.category,
+                    120
+                )
                     .toLowerCase();
+
+
+            if(category){
+
+                event.category =
+                    category;
+
+            }
 
         }
 
 
         if(
-            Array.isArray(changes.tags)
+            changes.tags !==
+                undefined
         ){
 
             event.tags =
@@ -1229,30 +1862,83 @@ const Timeline = {
 
 
         if(
+            changes.entityId !==
+                undefined
+        ){
+
+            event.entityId =
+                this.normalizeId(
+                    changes.entityId
+                );
+
+        }
+
+
+        if(
+            changes.worldId !==
+                undefined
+        ){
+
+            event.worldId =
+                this.normalizeId(
+                    changes.worldId
+                );
+
+        }
+
+
+        if(
+            changes.source !==
+                undefined
+        ){
+
+            const source =
+                this.normalizeText(
+                    changes.source,
+                    120
+                )
+                    .toLowerCase();
+
+
+            if(source){
+
+                event.source =
+                    source;
+
+            }
+
+        }
+
+
+        if(
             changes.payload &&
-            typeof changes.payload === "object" &&
-            !Array.isArray(changes.payload)
+            typeof changes.payload ===
+                "object" &&
+            !Array.isArray(
+                changes.payload
+            )
         ){
 
             event.payload = {
+
                 ...event.payload,
+
                 ...changes.payload
+
             };
 
         }
 
 
         if(
-            Number.isFinite(
-                Number(
-                    changes.occurredAt
-                )
-            )
+            changes.occurredAt !==
+                undefined
         ){
 
             event.occurredAt =
-                Number(
-                    changes.occurredAt
+                this.normalizeTimestamp(
+                    changes.occurredAt,
+                    event.occurredAt
                 );
 
         }
@@ -1269,9 +1955,12 @@ const Timeline = {
             "timeline:updated",
             {
                 event,
+
                 before,
+
                 timelineId:
                     event.id,
+
                 time:
                     Date.now()
             }
@@ -1293,33 +1982,43 @@ const Timeline = {
     ){
 
         const id =
-            String(
-                timelineId ??
-                ""
-            ).trim();
+            this.normalizeId(
+                timelineId
+            );
 
 
         if(!id){
+
             return null;
+
         }
 
 
         const event =
             this.events.find(
                 item =>
-                    item?.id === id
+                    item?.id ===
+                        id
             ) ||
             null;
 
 
-        if(
-            !event ||
-            (
-                event.archived === true &&
-                options.includeArchived !== true
-            )
-        ){
+        if(!event){
+
             return null;
+
+        }
+
+
+        if(
+            event.archived ===
+                true &&
+            options?.includeArchived !==
+                true
+        ){
+
+            return null;
+
         }
 
 
@@ -1340,21 +2039,35 @@ const Timeline = {
             !lifeEvent ||
             !lifeEvent.id
         ){
+
             return null;
+
+        }
+
+
+        const sourceEventId =
+            this.normalizeId(
+                lifeEvent.id
+            );
+
+
+        if(!sourceEventId){
+
+            return null;
+
         }
 
 
         const existing =
-            this.events.find(
-                event =>
-                    event.payload
-                        ?.sourceEventId ===
-                    lifeEvent.id
+            this.findBySourceEventId(
+                sourceEventId
             );
 
 
         if(existing){
+
             return existing;
+
         }
 
 
@@ -1363,8 +2076,7 @@ const Timeline = {
             lifeEvent.title ||
             "Yaşam Olayı",
             {
-                sourceEventId:
-                    lifeEvent.id,
+                sourceEventId,
 
                 entityId:
                     lifeEvent.relatedEntityId ||
@@ -1412,32 +2124,53 @@ const Timeline = {
             !lifeEvent ||
             !lifeEvent.id
         ){
+
             return false;
+
+        }
+
+
+        const sourceEventId =
+            this.normalizeId(
+                lifeEvent.id
+            );
+
+
+        if(!sourceEventId){
+
+            return false;
+
         }
 
 
         const linkedEvent =
-            this.events.find(
-                event =>
-                    event.payload
-                        ?.sourceEventId ===
-                    lifeEvent.id
+            this.findBySourceEventId(
+                sourceEventId
             );
 
 
         if(!linkedEvent){
+
             return false;
+
         }
 
 
         linkedEvent.title =
-            lifeEvent.title ||
+            this.normalizeText(
+                lifeEvent.title ||
+                linkedEvent.title,
+                240
+            ) ||
             linkedEvent.title;
 
 
         linkedEvent.description =
-            lifeEvent.description ||
-            linkedEvent.description;
+            this.normalizeText(
+                lifeEvent.description ??
+                linkedEvent.description,
+                30000
+            );
 
 
         linkedEvent.importance =
@@ -1448,15 +2181,19 @@ const Timeline = {
 
 
         linkedEvent.entityId =
-            lifeEvent.relatedEntityId ||
-            lifeEvent.entityId ||
-            linkedEvent.entityId;
+            this.normalizeId(
+                lifeEvent.relatedEntityId ||
+                lifeEvent.entityId ||
+                linkedEvent.entityId
+            );
 
 
         linkedEvent.worldId =
-            lifeEvent.relatedWorldId ||
-            lifeEvent.worldId ||
-            linkedEvent.worldId;
+            this.normalizeId(
+                lifeEvent.relatedWorldId ||
+                lifeEvent.worldId ||
+                linkedEvent.worldId
+            );
 
 
         linkedEvent.tags =
@@ -1467,11 +2204,26 @@ const Timeline = {
 
 
         linkedEvent.occurredAt =
-            Number(
+            this.normalizeTimestamp(
                 lifeEvent.occurredAt ||
-                lifeEvent.createdAt
-            ) ||
-            linkedEvent.occurredAt;
+                lifeEvent.createdAt,
+                linkedEvent.occurredAt
+            );
+
+
+        linkedEvent.payload = {
+
+            ...linkedEvent.payload,
+
+            sourceEventId,
+
+            entityId:
+                linkedEvent.entityId,
+
+            worldId:
+                linkedEvent.worldId
+
+        };
 
 
         linkedEvent.updatedAt =
@@ -1481,12 +2233,29 @@ const Timeline = {
         this.save();
 
 
+        this.emit(
+            "timeline:updated",
+            {
+                event:
+                    linkedEvent,
+
+                timelineId:
+                    linkedEvent.id,
+
+                source:
+                    "evolution",
+
+                time:
+                    Date.now()
+            }
+        );
+
+
         return true;
 
     },
 
-
-    removeLifeEventReference(
+   removeLifeEventReference(
         lifeEvent
     ){
 
@@ -1500,16 +2269,38 @@ const Timeline = {
         }
 
 
+        const sourceEventId =
+            this.normalizeId(
+                lifeEvent.id
+            );
+
+
+        if(!sourceEventId){
+
+            return 0;
+
+        }
+
+
         const before =
             this.events.length;
+
+
+        const removedEvents =
+            this.events.filter(
+                event =>
+                    event?.payload
+                        ?.sourceEventId ===
+                        sourceEventId
+            );
 
 
         this.events =
             this.events.filter(
                 event =>
-                    event.payload
+                    event?.payload
                         ?.sourceEventId !==
-                    lifeEvent.id
+                        sourceEventId
             );
 
 
@@ -1518,9 +2309,28 @@ const Timeline = {
             this.events.length;
 
 
-        if(removed > 0){
+        if(
+            removed >
+                0
+        ){
 
             this.save();
+
+
+            this.emit(
+                "timeline:life-event:removed",
+                {
+                    sourceEventId,
+
+                    removed,
+
+                    events:
+                        removedEvents,
+
+                    time:
+                        Date.now()
+                }
+            );
 
         }
 
@@ -1536,11 +2346,14 @@ const Timeline = {
 
         if(
             !timelineEvent ||
-            timelineEvent.type !== "life-event" ||
+            timelineEvent.type !==
+                "life-event" ||
             !timelineEvent.payload
                 ?.sourceEventId
         ){
+
             return null;
+
         }
 
 
@@ -1550,26 +2363,57 @@ const Timeline = {
             );
 
 
-        if(
-            !evolution ||
-            typeof evolution.find !== "function"
-        ){
+        if(!evolution){
+
             return null;
+
         }
+
+
+        const sourceEventId =
+            timelineEvent.payload
+                .sourceEventId;
 
 
         try{
 
-            return evolution.find(
-                timelineEvent.payload
-                    .sourceEventId
-            );
+            if(
+                typeof evolution.find ===
+                    "function"
+            ){
+
+                return (
+                    evolution.find(
+                        sourceEventId
+                    ) ||
+                    null
+                );
+
+            }
+
+
+            if(
+                typeof evolution.get ===
+                    "function"
+            ){
+
+                return (
+                    evolution.get(
+                        sourceEventId
+                    ) ||
+                    null
+                );
+
+            }
 
         } catch(error){
 
             return null;
 
         }
+
+
+        return null;
 
     },
 
@@ -1582,16 +2426,40 @@ const Timeline = {
             );
 
 
-        if(
-            !evolution ||
-            typeof evolution.find !== "function"
-        ){
+        if(!evolution){
+
             return 0;
+
         }
 
 
-        const before =
-            this.events.length;
+        const resolver =
+            typeof evolution.find ===
+                "function"
+                ? id =>
+                    evolution.find(
+                        id
+                    )
+                : (
+                    typeof evolution.get ===
+                        "function"
+                        ? id =>
+                            evolution.get(
+                                id
+                            )
+                        : null
+                );
+
+
+        if(!resolver){
+
+            return 0;
+
+        }
+
+
+        const removedEvents =
+            [];
 
 
         this.events =
@@ -1599,24 +2467,45 @@ const Timeline = {
                 event => {
 
                     if(
-                        event.type !== "life-event" ||
+                        event.type !==
+                            "life-event" ||
                         !event.payload
                             ?.sourceEventId
                     ){
+
                         return true;
+
                     }
 
 
                     try{
 
-                        return Boolean(
-                            evolution.find(
-                                event.payload
-                                    .sourceEventId
-                            )
-                        );
+                        const exists =
+                            Boolean(
+                                resolver(
+                                    event.payload
+                                        .sourceEventId
+                                )
+                            );
+
+
+                        if(!exists){
+
+                            removedEvents.push(
+                                event
+                            );
+
+                        }
+
+
+                        return exists;
 
                     } catch(error){
+
+                        /*
+                         * Temporary Evolution lookup errors must
+                         * never destroy Timeline history.
+                         */
 
                         return true;
 
@@ -1627,13 +2516,26 @@ const Timeline = {
 
 
         const removed =
-            before -
-            this.events.length;
+            removedEvents.length;
 
 
-        if(removed > 0){
+        if(
+            removed >
+                0
+        ){
 
             this.save();
+
+
+            this.emit(
+                "timeline:orphans:cleaned",
+                {
+                    removed,
+
+                    time:
+                        Date.now()
+                }
+            );
 
         }
 
@@ -1653,51 +2555,111 @@ const Timeline = {
     ){
 
         const id =
-            String(
-                entityId ??
-                ""
-            ).trim();
+            this.normalizeId(
+                entityId
+            );
 
 
         if(!id){
+
             return [];
+
         }
+
+
+        const safeOptions =
+            options &&
+            typeof options ===
+                "object" &&
+            !Array.isArray(
+                options
+            )
+                ? options
+                : {};
 
 
         let events =
             this.events.filter(
                 event =>
-                    event.entityId === id
+                    event.entityId ===
+                        id
             );
 
 
         if(
-            options.includeArchived !== true
+            safeOptions.includeArchived !==
+                true
         ){
 
             events =
                 events.filter(
                     event =>
-                        event.archived !== true
+                        event.archived !==
+                            true
                 );
 
         }
 
 
-        if(options.source){
+        if(
+            safeOptions.source
+        ){
 
             const source =
-                String(
-                    options.source
+                this.normalizeText(
+                    safeOptions.source,
+                    120
                 )
-                    .trim()
                     .toLowerCase();
 
 
             events =
                 events.filter(
                     event =>
-                        event.source === source
+                        event.source ===
+                            source
+                );
+
+        }
+
+
+        if(
+            safeOptions.type
+        ){
+
+            const type =
+                this.normalizeText(
+                    safeOptions.type,
+                    120
+                )
+                    .toLowerCase();
+
+
+            events =
+                events.filter(
+                    event =>
+                        event.type ===
+                            type
+                );
+
+        }
+
+
+        if(
+            safeOptions.importance
+        ){
+
+            const importance =
+                this.normalizeImportance(
+                    safeOptions.importance
+                );
+
+
+            events =
+                events.filter(
+                    event =>
+                        event.importance ===
+                            importance
                 );
 
         }
@@ -1705,11 +2667,19 @@ const Timeline = {
 
         return [
             ...events
-        ].sort(
-            (a,b) =>
-                b.occurredAt -
-                a.occurredAt
-        );
+        ]
+            .sort(
+                (
+                    a,
+                    b
+                ) =>
+                    Number(
+                        b.occurredAt
+                    ) -
+                    Number(
+                        a.occurredAt
+                    )
+            );
 
     },
 
@@ -1724,32 +2694,91 @@ const Timeline = {
     ){
 
         const id =
-            String(
-                worldId ??
-                ""
-            ).trim();
+            this.normalizeId(
+                worldId
+            );
 
 
         if(!id){
+
             return [];
+
         }
+
+
+        const safeOptions =
+            options &&
+            typeof options ===
+                "object" &&
+            !Array.isArray(
+                options
+            )
+                ? options
+                : {};
 
 
         let events =
             this.events.filter(
                 event =>
-                    event.worldId === id
+                    event.worldId ===
+                        id
             );
 
 
         if(
-            options.includeArchived !== true
+            safeOptions.includeArchived !==
+                true
         ){
 
             events =
                 events.filter(
                     event =>
-                        event.archived !== true
+                        event.archived !==
+                            true
+                );
+
+        }
+
+
+        if(
+            safeOptions.source
+        ){
+
+            const source =
+                this.normalizeText(
+                    safeOptions.source,
+                    120
+                )
+                    .toLowerCase();
+
+
+            events =
+                events.filter(
+                    event =>
+                        event.source ===
+                            source
+                );
+
+        }
+
+
+        if(
+            safeOptions.type
+        ){
+
+            const type =
+                this.normalizeText(
+                    safeOptions.type,
+                    120
+                )
+                    .toLowerCase();
+
+
+            events =
+                events.filter(
+                    event =>
+                        event.type ===
+                            type
                 );
 
         }
@@ -1757,11 +2786,19 @@ const Timeline = {
 
         return [
             ...events
-        ].sort(
-            (a,b) =>
-                b.occurredAt -
-                a.occurredAt
-        );
+        ]
+            .sort(
+                (
+                    a,
+                    b
+                ) =>
+                    Number(
+                        b.occurredAt
+                    ) -
+                    Number(
+                        a.occurredAt
+                    )
+            );
 
     },
 
@@ -1776,11 +2813,10 @@ const Timeline = {
     ){
 
         const text =
-            String(
-                query ??
-                ""
+            this.normalizeText(
+                query,
+                500
             )
-                .trim()
                 .toLocaleLowerCase(
                     "tr-TR"
                 );
@@ -1793,7 +2829,9 @@ const Timeline = {
 
 
         if(!text){
+
             return events;
+
         }
 
 
@@ -1848,20 +2886,29 @@ const Timeline = {
 
 
         if(!event){
+
             return false;
+
         }
 
 
-        if(event.archived){
+        if(
+            event.archived ===
+                true
+        ){
+
             return true;
+
         }
 
 
         event.archived =
             true;
 
+
         event.archivedAt =
             Date.now();
+
 
         event.updatedAt =
             Date.now();
@@ -1874,8 +2921,10 @@ const Timeline = {
             "timeline:archived",
             {
                 event,
+
                 timelineId:
                     event.id,
+
                 time:
                     Date.now()
             }
@@ -1900,20 +2949,29 @@ const Timeline = {
 
 
         if(!event){
+
             return false;
+
         }
 
 
-        if(!event.archived){
+        if(
+            event.archived !==
+                true
+        ){
+
             return true;
+
         }
 
 
         event.archived =
             false;
 
+
         event.archivedAt =
             null;
+
 
         event.updatedAt =
             Date.now();
@@ -1926,8 +2984,10 @@ const Timeline = {
             "timeline:restored",
             {
                 event,
+
                 timelineId:
                     event.id,
+
                 time:
                     Date.now()
             }
@@ -1956,7 +3016,9 @@ const Timeline = {
 
 
         if(!event){
+
             return false;
+
         }
 
 
@@ -1968,15 +3030,17 @@ const Timeline = {
             this.events.filter(
                 item =>
                     item.id !==
-                    event.id
+                        event.id
             );
 
 
         if(
             before ===
-            this.events.length
+                this.events.length
         ){
+
             return false;
+
         }
 
 
@@ -1987,8 +3051,10 @@ const Timeline = {
             "timeline:removed",
             {
                 event,
+
                 timelineId:
                     event.id,
+
                 time:
                     Date.now()
             }
@@ -2006,6 +3072,17 @@ const Timeline = {
 
     all(options = {}){
 
+        const safeOptions =
+            options &&
+            typeof options ===
+                "object" &&
+            !Array.isArray(
+                options
+            )
+                ? options
+                : {};
+
+
         let events =
             [
                 ...this.events
@@ -2013,23 +3090,27 @@ const Timeline = {
 
 
         if(
-            options.includeArchived !== true
+            safeOptions.includeArchived !==
+                true
         ){
 
             events =
                 events.filter(
                     event =>
-                        event.archived !== true
+                        event.archived !==
+                            true
                 );
 
         }
 
 
-        if(options.entityId){
+        if(
+            safeOptions.entityId
+        ){
 
             const entityId =
-                String(
-                    options.entityId
+                this.normalizeId(
+                    safeOptions.entityId
                 );
 
 
@@ -2037,17 +3118,19 @@ const Timeline = {
                 events.filter(
                     event =>
                         event.entityId ===
-                        entityId
+                            entityId
                 );
 
         }
 
 
-        if(options.worldId){
+        if(
+            safeOptions.worldId
+        ){
 
             const worldId =
-                String(
-                    options.worldId
+                this.normalizeId(
+                    safeOptions.worldId
                 );
 
 
@@ -2055,19 +3138,21 @@ const Timeline = {
                 events.filter(
                     event =>
                         event.worldId ===
-                        worldId
+                            worldId
                 );
 
         }
 
 
-        if(options.source){
+        if(
+            safeOptions.source
+        ){
 
             const source =
-                String(
-                    options.source
+                this.normalizeText(
+                    safeOptions.source,
+                    120
                 )
-                    .trim()
                     .toLowerCase();
 
 
@@ -2075,35 +3160,87 @@ const Timeline = {
                 events.filter(
                     event =>
                         event.source ===
-                        source
+                            source
                 );
 
         }
 
 
-        if(options.type){
+        if(
+            safeOptions.type
+        ){
 
             const type =
-                String(
-                    options.type
+                this.normalizeText(
+                    safeOptions.type,
+                    120
                 )
-                    .trim()
                     .toLowerCase();
 
 
             events =
                 events.filter(
                     event =>
-                        event.type === type
+                        event.type ===
+                            type
+                );
+
+        }
+
+
+        if(
+            safeOptions.category
+        ){
+
+            const category =
+                this.normalizeText(
+                    safeOptions.category,
+                    120
+                )
+                    .toLowerCase();
+
+
+            events =
+                events.filter(
+                    event =>
+                        event.category ===
+                            category
+                );
+
+        }
+
+
+        if(
+            safeOptions.importance
+        ){
+
+            const importance =
+                this.normalizeImportance(
+                    safeOptions.importance
+                );
+
+
+            events =
+                events.filter(
+                    event =>
+                        event.importance ===
+                            importance
                 );
 
         }
 
 
         return events.sort(
-            (a,b) =>
-                b.occurredAt -
-                a.occurredAt
+            (
+                a,
+                b
+            ) =>
+                Number(
+                    b.occurredAt
+                ) -
+                Number(
+                    a.occurredAt
+                )
         );
 
     },
@@ -2134,21 +3271,21 @@ const Timeline = {
                 events.filter(
                     event =>
                         event.source ===
-                        "evolution"
+                            "evolution"
                 ).length,
 
             memory:
                 events.filter(
                     event =>
                         event.source ===
-                        "memory"
+                            "memory"
                 ).length,
 
             system:
                 events.filter(
                     event =>
                         event.source ===
-                        "system"
+                            "system"
                 ).length,
 
             highImportance:
@@ -2158,6 +3295,20 @@ const Timeline = {
                             "high" ||
                         event.importance ===
                             "critical"
+                ).length,
+
+            critical:
+                events.filter(
+                    event =>
+                        event.importance ===
+                            "critical"
+                ).length,
+
+            lifeEvents:
+                events.filter(
+                    event =>
+                        event.type ===
+                            "life-event"
                 ).length
 
         };
@@ -2177,7 +3328,9 @@ const Timeline = {
                 typeof localStorage ===
                     "undefined"
             ){
+
                 return false;
+
             }
 
 
@@ -2215,7 +3368,9 @@ const Timeline = {
                     "undefined"
             ){
 
-                this.events = [];
+                this.events =
+                    [];
+
 
                 return this.events;
 
@@ -2228,8 +3383,12 @@ const Timeline = {
                 );
 
 
+            let migrated =
+                false;
+
+
             /*
-             * v1 -> v2 migration
+             * Legacy Timeline storage → v2.
              */
 
             if(!saved){
@@ -2239,12 +3398,20 @@ const Timeline = {
                         this.legacyStorageKey
                     );
 
+
+                migrated =
+                    Boolean(
+                        saved
+                    );
+
             }
 
 
             if(!saved){
 
-                this.events = [];
+                this.events =
+                    [];
+
 
                 return this.events;
 
@@ -2257,25 +3424,195 @@ const Timeline = {
                 );
 
 
-            this.events =
-                Array.isArray(parsed)
+            const sourceEvents =
+                Array.isArray(
+                    parsed
+                )
                     ? parsed
-                        .filter(
-                            event =>
-                                event &&
-                                typeof event ===
-                                    "object"
-                        )
-                        .map(
-                            event =>
-                                this.normalizeRecord(
-                                    event
-                                )
-                        )
                     : [];
 
 
+            const normalized =
+                sourceEvents
+                    .filter(
+                        event =>
+                            event &&
+                            typeof event ===
+                                "object" &&
+                            !Array.isArray(
+                                event
+                            )
+                    )
+                    .map(
+                        event =>
+                            this.normalizeRecord(
+                                event
+                            )
+                    );
+
+
+            /*
+             * Timeline IDs are unique registry keys.
+             * During migration the newest version wins.
+             */
+
+            const byId =
+                new Map();
+
+
+            normalized.forEach(
+                event => {
+
+                    const existing =
+                        byId.get(
+                            event.id
+                        );
+
+
+                    if(
+                        !existing ||
+                        Number(
+                            event.updatedAt
+                        ) >
+                        Number(
+                            existing.updatedAt
+                        )
+                    ){
+
+                        byId.set(
+                            event.id,
+                            event
+                        );
+
+                    }
+
+                }
+            );
+
+
+            /*
+             * Also prevent duplicate canonical references.
+             */
+
+            const finalEvents =
+                [];
+
+
+            const sourceEventIds =
+                new Set();
+
+
+            const sourceMemoryIds =
+                new Set();
+
+
+            [
+                ...byId.values()
+            ]
+                .sort(
+                    (
+                        a,
+                        b
+                    ) =>
+                        Number(
+                            b.updatedAt
+                        ) -
+                        Number(
+                            a.updatedAt
+                        )
+                )
+                .forEach(
+                    event => {
+
+                        const sourceEventId =
+                            this.normalizeId(
+                                event.payload
+                                    ?.sourceEventId
+                            );
+
+
+                        if(sourceEventId){
+
+                            if(
+                                sourceEventIds.has(
+                                    sourceEventId
+                                )
+                            ){
+
+                                return;
+
+                            }
+
+
+                            sourceEventIds.add(
+                                sourceEventId
+                            );
+
+                        }
+
+
+                        const sourceMemoryId =
+                            this.normalizeId(
+                                event.payload
+                                    ?.sourceMemoryId
+                            );
+
+
+                        if(sourceMemoryId){
+
+                            if(
+                                sourceMemoryIds.has(
+                                    sourceMemoryId
+                                )
+                            ){
+
+                                return;
+
+                            }
+
+
+                            sourceMemoryIds.add(
+                                sourceMemoryId
+                            );
+
+                        }
+
+
+                        finalEvents.push(
+                            event
+                        );
+
+                    }
+                );
+
+
+            this.events =
+                finalEvents;
+
+
             this.save();
+
+
+            if(migrated){
+
+                this.emit(
+                    "timeline:migrated",
+                    {
+                        from:
+                            this.legacyStorageKey,
+
+                        to:
+                            this.storageKey,
+
+                        count:
+                            this.events.length,
+
+                        time:
+                            Date.now()
+                    }
+                );
+
+            }
 
 
             return this.events;
@@ -2288,7 +3625,8 @@ const Timeline = {
             );
 
 
-            this.events = [];
+            this.events =
+                [];
 
 
             return this.events;
@@ -2304,16 +3642,50 @@ const Timeline = {
 
     clear(options = {}){
 
-        if(options.entityId){
+        const safeOptions =
+            options &&
+            typeof options ===
+                "object" &&
+            !Array.isArray(
+                options
+            )
+                ? options
+                : {};
+
+
+        if(
+            safeOptions.entityId
+        ){
 
             const entityId =
-                String(
-                    options.entityId
+                this.normalizeId(
+                    safeOptions.entityId
                 );
 
 
-            const before =
-                this.events.length;
+            if(!entityId){
+
+                return false;
+
+            }
+
+
+            const removed =
+                this.events.filter(
+                    event =>
+                        event.entityId ===
+                            entityId
+                );
+
+
+            if(
+                removed.length ===
+                    0
+            ){
+
+                return false;
+
+            }
 
 
             this.events =
@@ -2324,15 +3696,21 @@ const Timeline = {
                 );
 
 
-            if(
-                this.events.length ===
-                before
-            ){
-                return false;
-            }
-
-
             this.save();
+
+
+            this.emit(
+                "timeline:cleared",
+                {
+                    entityId,
+
+                    removed:
+                        removed.length,
+
+                    time:
+                        Date.now()
+                }
+            );
 
 
             return true;
@@ -2340,10 +3718,29 @@ const Timeline = {
         }
 
 
-        this.events = [];
+        const removed =
+            this.events.length;
+
+
+        this.events =
+            [];
 
 
         this.save();
+
+
+        this.emit(
+            "timeline:cleared",
+            {
+                entityId:
+                    null,
+
+                removed,
+
+                time:
+                    Date.now()
+            }
+        );
 
 
         return true;
@@ -2357,6 +3754,44 @@ const Timeline = {
 
     report(){
 
+        const active =
+            this.events.filter(
+                event =>
+                    event.archived !==
+                        true
+            );
+
+
+        const archived =
+            this.events.filter(
+                event =>
+                    event.archived ===
+                        true
+            );
+
+
+        const entityIds =
+            new Set(
+                this.events
+                    .map(
+                        event =>
+                            event.entityId
+                    )
+                    .filter(Boolean)
+            );
+
+
+        const worldIds =
+            new Set(
+                this.events
+                    .map(
+                        event =>
+                            event.worldId
+                    )
+                    .filter(Boolean)
+            );
+
+
         return {
 
             booted:
@@ -2366,16 +3801,16 @@ const Timeline = {
                 this.events.length,
 
             active:
-                this.events.filter(
-                    event =>
-                        event.archived !== true
-                ).length,
+                active.length,
 
             archived:
-                this.events.filter(
-                    event =>
-                        event.archived === true
-                ).length,
+                archived.length,
+
+            entities:
+                entityIds.size,
+
+            worlds:
+                worldIds.size,
 
             evolution:
                 this.events.filter(
@@ -2396,7 +3831,24 @@ const Timeline = {
                     event =>
                         event.source ===
                             "system"
-                ).length
+                ).length,
+
+            lifeEvents:
+                this.events.filter(
+                    event =>
+                        event.type ===
+                            "life-event"
+                ).length,
+
+            critical:
+                this.events.filter(
+                    event =>
+                        event.importance ===
+                            "critical"
+                ).length,
+
+            storageKey:
+                this.storageKey
 
         };
 
@@ -2405,11 +3857,39 @@ const Timeline = {
 };
 
 
-VAERO.register(
-    "timeline",
-    Timeline
-);
+/* =========================================================
+   REGISTER
+========================================================= */
 
+try{
+
+    if(
+        typeof VAERO !==
+            "undefined" &&
+        typeof VAERO.register ===
+            "function"
+    ){
+
+        VAERO.register(
+            "timeline",
+            Timeline
+        );
+
+    }
+
+} catch(error){
+
+    console.warn(
+        "Timeline VAERO register başarısız:",
+        error
+    );
+
+}
+
+
+/* =========================================================
+   GLOBAL
+========================================================= */
 
 window.Timeline =
     Timeline;
