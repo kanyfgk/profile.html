@@ -25,19 +25,14 @@ class DiscoveryApp {
         this.completedAtKey =
             "vaero:discovery:completedAt";
 
+        this.welcomeCompletedKey =
+            "vaero:welcome:completed:v2";
+
         this.container =
             null;
 
-
-        const draft =
-            this.loadDraft();
-
-
-        this.currentStep =
-            draft.currentStep;
-
-        this.answers =
-            draft.answers;
+        this.isCompleting =
+            false;
 
 
         this.steps = [
@@ -187,16 +182,23 @@ class DiscoveryApp {
         ];
 
 
-        if(
-            this.currentStep < 0 ||
-            this.currentStep >=
-                this.steps.length
-        ){
+        const draft =
+            this.loadDraft();
 
-            this.currentStep =
-                0;
 
-        }
+        this.currentStep =
+            this.normalizeStepIndex(
+                draft.currentStep
+            );
+
+
+        this.answers =
+            this.sanitizeAnswers(
+                draft.answers
+            );
+
+
+        this.saveDraft();
 
     }
 
@@ -207,14 +209,70 @@ class DiscoveryApp {
 
     escapeHTML(value){
 
+        if(
+            window.UI &&
+            typeof UI.escapeHTML ===
+                "function"
+        ){
+
+            return UI.escapeHTML(
+                value
+            );
+
+        }
+
+
         return String(
             value ?? ""
         )
-            .replaceAll("&", "&amp;")
-            .replaceAll("<", "&lt;")
-            .replaceAll(">", "&gt;")
-            .replaceAll('"', "&quot;")
-            .replaceAll("'", "&#039;");
+            .replaceAll(
+                "&",
+                "&amp;"
+            )
+            .replaceAll(
+                "<",
+                "&lt;"
+            )
+            .replaceAll(
+                ">",
+                "&gt;"
+            )
+            .replaceAll(
+                '"',
+                "&quot;"
+            )
+            .replaceAll(
+                "'",
+                "&#039;"
+            );
+
+    }
+
+
+    normalizeStepIndex(value){
+
+        const index =
+            Number(
+                value
+            );
+
+
+        if(
+            !Number.isInteger(
+                index
+            ) ||
+            index <
+                0 ||
+            index >=
+                this.steps.length
+        ){
+
+            return 0;
+
+        }
+
+
+        return index;
 
     }
 
@@ -233,12 +291,16 @@ class DiscoveryApp {
                 typeof VAERO.get !==
                     "function"
             ){
+
                 return null;
+
             }
 
 
             return (
-                VAERO.get(name) ||
+                VAERO.get(
+                    name
+                ) ||
                 null
             );
 
@@ -255,20 +317,27 @@ class DiscoveryApp {
 
         try{
 
-            return (
-                VAERO?.engine ||
-                window.Engine ||
-                null
-            );
+            if(
+                typeof VAERO !==
+                    "undefined" &&
+                VAERO.engine
+            ){
+
+                return VAERO.engine;
+
+            }
 
         } catch(error){
 
-            return (
-                window.Engine ||
-                null
-            );
+            /* fallback */
 
         }
+
+
+        return (
+            window.Engine ||
+            null
+        );
 
     }
 
@@ -316,8 +385,11 @@ class DiscoveryApp {
             if(!saved){
 
                 return {
-                    currentStep:0,
-                    answers:{}
+                    currentStep:
+                        0,
+
+                    answers:
+                        {}
                 };
 
             }
@@ -329,17 +401,37 @@ class DiscoveryApp {
                 );
 
 
+            if(
+                !parsed ||
+                typeof parsed !==
+                    "object" ||
+                Array.isArray(
+                    parsed
+                )
+            ){
+
+                return {
+                    currentStep:
+                        0,
+
+                    answers:
+                        {}
+                };
+
+            }
+
+
             return {
 
                 currentStep:
                     Number.isInteger(
-                        parsed?.currentStep
+                        parsed.currentStep
                     )
                         ? parsed.currentStep
                         : 0,
 
                 answers:
-                    parsed?.answers &&
+                    parsed.answers &&
                     typeof parsed.answers ===
                         "object" &&
                     !Array.isArray(
@@ -359,8 +451,11 @@ class DiscoveryApp {
 
 
             return {
-                currentStep:0,
-                answers:{}
+                currentStep:
+                    0,
+
+                answers:
+                    {}
             };
 
         }
@@ -376,10 +471,14 @@ class DiscoveryApp {
                 this.storageKey,
                 JSON.stringify({
                     currentStep:
-                        this.currentStep,
+                        this.normalizeStepIndex(
+                            this.currentStep
+                        ),
 
                     answers:
-                        this.answers,
+                        this.sanitizeAnswers(
+                            this.answers
+                        ),
 
                     updatedAt:
                         Date.now()
@@ -435,6 +534,13 @@ class DiscoveryApp {
 
     getSelectedAnswers(step){
 
+        if(!step){
+
+            return [];
+
+        }
+
+
         const answer =
             this.answers[
                 step.id
@@ -449,14 +555,23 @@ class DiscoveryApp {
             return Array.isArray(
                 answer
             )
-                ? answer
+                ? answer.filter(
+                    item =>
+                        step.options.includes(
+                            item
+                        )
+                )
                 : [];
 
         }
 
 
-        return answer
-            ? [answer]
+        return step.options.includes(
+            answer
+        )
+            ? [
+                answer
+            ]
             : [];
 
     }
@@ -469,13 +584,27 @@ class DiscoveryApp {
                 .getSelectedAnswers(
                     step
                 )
-                .length > 0
+                .length >
+                0
         );
 
     }
 
 
-    sanitizeAnswers(){
+    sanitizeAnswers(
+        source = this.answers
+    ){
+
+        const input =
+            source &&
+            typeof source ===
+                "object" &&
+            !Array.isArray(
+                source
+            )
+                ? source
+                : {};
+
 
         const output = {};
 
@@ -484,7 +613,7 @@ class DiscoveryApp {
             step => {
 
                 const value =
-                    this.answers[
+                    input[
                         step.id
                     ];
 
@@ -494,30 +623,58 @@ class DiscoveryApp {
                         "multiple"
                 ){
 
+                    const seen =
+                        new Set();
+
+
                     output[
                         step.id
                     ] =
                         Array.isArray(
                             value
                         )
-                            ? [
-                                ...new Set(
-                                    value
-                                        .map(
-                                            item =>
-                                                String(
-                                                    item ||
-                                                    ""
-                                                ).trim()
-                                        )
-                                        .filter(
-                                            item =>
-                                                step.options.includes(
-                                                    item
-                                                )
-                                        )
+                            ? value
+                                .map(
+                                    item =>
+                                        String(
+                                            item ??
+                                            ""
+                                        ).trim()
                                 )
-                            ]
+                                .filter(
+                                    item => {
+
+                                        if(
+                                            !step.options.includes(
+                                                item
+                                            )
+                                        ){
+
+                                            return false;
+
+                                        }
+
+
+                                        if(
+                                            seen.has(
+                                                item
+                                            )
+                                        ){
+
+                                            return false;
+
+                                        }
+
+
+                                        seen.add(
+                                            item
+                                        );
+
+
+                                        return true;
+
+                                    }
+                                )
                             : [];
 
 
@@ -556,11 +713,21 @@ class DiscoveryApp {
 
         const signals = {
 
-            direction:[],
-            interests:[],
-            strengths:[],
-            connectionNeeds:[],
-            recommendedApps:[],
+            direction:
+                [],
+
+            interests:
+                [],
+
+            strengths:
+                [],
+
+            connectionNeeds:
+                [],
+
+            recommendedApps:
+                [],
+
             brainMode:
                 "balanced",
 
@@ -582,7 +749,9 @@ class DiscoveryApp {
         };
 
 
-        /* PURPOSE */
+        /* =================================================
+           PURPOSE
+        ================================================= */
 
         switch(
             answers.purpose
@@ -592,6 +761,7 @@ class DiscoveryApp {
 
                 signals.growthBias +=
                     3;
+
 
                 signals.direction.push(
                     "personal-growth"
@@ -605,6 +775,7 @@ class DiscoveryApp {
                 signals.builderBias +=
                     4;
 
+
                 signals.direction.push(
                     "build"
                 );
@@ -616,6 +787,7 @@ class DiscoveryApp {
 
                 signals.networkBias +=
                     4;
+
 
                 signals.direction.push(
                     "network"
@@ -629,6 +801,7 @@ class DiscoveryApp {
                 signals.opportunityBias +=
                     4;
 
+
                 signals.direction.push(
                     "opportunity"
                 );
@@ -641,6 +814,7 @@ class DiscoveryApp {
                 signals.investmentBias +=
                     4;
 
+
                 signals.direction.push(
                     "investment"
                 );
@@ -650,7 +824,9 @@ class DiscoveryApp {
         }
 
 
-        /* INTERESTS */
+        /* =================================================
+           INTERESTS
+        ================================================= */
 
         signals.interests =
             Array.isArray(
@@ -698,7 +874,9 @@ class DiscoveryApp {
         }
 
 
-        /* STRENGTHS */
+        /* =================================================
+           STRENGTHS
+        ================================================= */
 
         signals.strengths =
             Array.isArray(
@@ -752,7 +930,9 @@ class DiscoveryApp {
         }
 
 
-        /* GOAL */
+        /* =================================================
+           GOAL
+        ================================================= */
 
         switch(
             answers.goal
@@ -789,6 +969,7 @@ class DiscoveryApp {
                 signals.investmentBias +=
                     4;
 
+
                 signals.opportunityBias +=
                     2;
 
@@ -797,7 +978,9 @@ class DiscoveryApp {
         }
 
 
-        /* CONNECTION */
+        /* =================================================
+           CONNECTION
+        ================================================= */
 
         signals.connectionNeeds =
             Array.isArray(
@@ -810,7 +993,9 @@ class DiscoveryApp {
 
 
         if(
-            signals.connectionNeeds.length
+            signals.connectionNeeds
+                .length >
+            0
         ){
 
             signals.networkBias +=
@@ -819,7 +1004,12 @@ class DiscoveryApp {
         }
 
 
-        /* GUIDANCE */
+        /* =================================================
+           GUIDANCE
+
+           brainMode burada Brain runtime mode değildir.
+           Discovery'nin yönlendirme tercihidir.
+        ================================================= */
 
         switch(
             answers.guidance
@@ -846,6 +1036,7 @@ class DiscoveryApp {
                 signals.brainMode =
                     "connections";
 
+
                 signals.networkBias +=
                     2;
 
@@ -856,6 +1047,7 @@ class DiscoveryApp {
 
                 signals.brainMode =
                     "opportunities";
+
 
                 signals.opportunityBias +=
                     2;
@@ -871,7 +1063,9 @@ class DiscoveryApp {
         }
 
 
-        /* RECOMMENDED APPLICATIONS */
+        /* =================================================
+           RECOMMENDED ENGINE SURFACES
+        ================================================= */
 
         signals.recommendedApps.push(
             "profile"
@@ -879,7 +1073,8 @@ class DiscoveryApp {
 
 
         if(
-            signals.growthBias > 0
+            signals.growthBias >
+            0
         ){
 
             signals.recommendedApps.push(
@@ -892,7 +1087,8 @@ class DiscoveryApp {
 
 
         if(
-            signals.networkBias > 0
+            signals.networkBias >
+            0
         ){
 
             signals.recommendedApps.push(
@@ -902,8 +1098,15 @@ class DiscoveryApp {
         }
 
 
+        /*
+         * World bir Applications catalog uygulaması olmak
+         * zorunda değildir. Bu değer Discovery recommendation
+         * sinyali olarak korunur.
+         */
+
         if(
-            signals.builderBias > 0
+            signals.builderBias >
+            0
         ){
 
             signals.recommendedApps.push(
@@ -934,51 +1137,71 @@ class DiscoveryApp {
         const rankings = [
 
             {
-                id:"builder",
+                id:
+                    "builder",
+
                 score:
                     signals.builderBias,
+
                 label:
                     "Üret ve geliştir",
+
                 description:
                     "Projeler, fikirler ve yeni dünyalar oluşturmak öncelikli yönün."
             },
 
             {
-                id:"network",
+                id:
+                    "network",
+
                 score:
                     signals.networkBias,
+
                 label:
                     "Doğru bağlantıları kur",
+
                 description:
                     "Bridge ve ilişki ağı senin yolculuğunda daha önemli rol oynayacak."
             },
 
             {
-                id:"growth",
+                id:
+                    "growth",
+
                 score:
                     signals.growthBias,
+
                 label:
                     "Kendini geliştir",
+
                 description:
                     "Evolution, Memory ve Timeline ilerlemeni görünür hale getirecek."
             },
 
             {
-                id:"investment",
+                id:
+                    "investment",
+
                 score:
                     signals.investmentBias,
+
                 label:
                     "Fırsatları değerlendir",
+
                 description:
                     "Kaynak, yatırım ve potansiyel fırsat sinyalleri senin için daha önemli."
             },
 
             {
-                id:"opportunity",
+                id:
+                    "opportunity",
+
                 score:
                     signals.opportunityBias,
+
                 label:
                     "Yeni fırsatları keşfet",
+
                 description:
                     "VAERO yeni yön ve fırsatları keşfetmen için daha geniş bir pencere açacak."
             }
@@ -987,25 +1210,37 @@ class DiscoveryApp {
 
 
         rankings.sort(
-            (a,b) =>
+            (
+                a,
+                b
+            ) =>
                 b.score -
                 a.score
         );
 
 
         const winner =
-            rankings[0];
+            rankings[
+                0
+            ];
 
 
         if(
             !winner ||
-            winner.score <= 0
+            winner.score <=
+                0
         ){
 
             return {
-                id:"balanced",
-                score:0,
-                label:"Dengeli keşif",
+                id:
+                    "balanced",
+
+                score:
+                    0,
+
+                label:
+                    "Dengeli keşif",
+
                 description:
                     "VAERO ilk aşamada farklı alanları dengeli biçimde önüne çıkaracak."
             };
@@ -1013,7 +1248,9 @@ class DiscoveryApp {
         }
 
 
-        return winner;
+        return {
+            ...winner
+        };
 
     }
 
@@ -1027,91 +1264,143 @@ class DiscoveryApp {
         direction
     ){
 
-        const actions = [];
+        const actions =
+            [];
 
 
         if(
-            signals.builderBias > 0
+            signals.builderBias >
+            0
         ){
 
             actions.push({
-                id:"create-world",
-                title:"İlk dünyanı oluştur",
+                id:
+                    "create-world",
+
+                title:
+                    "İlk dünyanı oluştur",
+
                 description:
                     "Bir proje, fikir veya çalışma alanı için yeni bir World başlat.",
-                target:"worlds"
+
+                target:
+                    "worlds"
             });
 
         }
 
 
         if(
-            signals.networkBias > 0
+            signals.networkBias >
+            0
         ){
 
             actions.push({
-                id:"build-network",
-                title:"Bridge ağını kur",
+                id:
+                    "build-network",
+
+                title:
+                    "Bridge ağını kur",
+
                 description:
                     "İhtiyacın olan insan ve varlık türlerini bağlantı ağına ekle.",
-                target:"bridge"
+
+                target:
+                    "bridge"
             });
 
         }
 
 
         if(
-            signals.growthBias > 0
+            signals.growthBias >
+            0
         ){
 
             actions.push({
-                id:"define-goal",
-                title:"İlk hedefini tanımla",
+                id:
+                    "define-goal",
+
+                title:
+                    "İlk hedefini tanımla",
+
                 description:
                     "Evolution içinde takip edilebilir bir hedef oluştur.",
-                target:"evolution"
+
+                target:
+                    "evolution"
             });
 
         }
 
 
         if(
-            signals.investmentBias > 0 ||
-            signals.opportunityBias > 0
+            signals.investmentBias >
+                0 ||
+            signals.opportunityBias >
+                0
         ){
 
             actions.push({
-                id:"map-opportunities",
-                title:"Fırsat alanlarını belirle",
+                id:
+                    "map-opportunities",
+
+                title:
+                    "Fırsat alanlarını belirle",
+
                 description:
                     "İlgilendiğin sektör, insan ve kaynakları profil sinyallerinle eşleştir.",
-                target:"profile"
+
+                target:
+                    "profile"
             });
 
         }
 
 
         actions.push({
-            id:"complete-profile",
-            title:"Profilini tamamla",
+            id:
+                "complete-profile",
+
+            title:
+                "Profilini tamamla",
+
             description:
                 "Discovery sinyallerini gerçek profil bilgilerinle güçlendir.",
-            target:"profile"
+
+            target:
+                "profile"
         });
+
+
+        const seen =
+            new Set();
 
 
         return actions
             .filter(
-                (
-                    action,
-                    index,
-                    list
-                ) =>
-                    list.findIndex(
-                        item =>
-                            item.id ===
+                action => {
+
+                    if(
+                        !action?.id ||
+                        seen.has(
                             action.id
-                    ) === index
+                        )
+                    ){
+
+                        return false;
+
+                    }
+
+
+                    seen.add(
+                        action.id
+                    );
+
+
+                    return true;
+
+                }
             )
             .slice(
                 0,
@@ -1122,6 +1411,10 @@ class DiscoveryApp {
 
 
     buildResult(){
+
+        const answers =
+            this.sanitizeAnswers();
+
 
         const signals =
             this.buildSignals();
@@ -1135,10 +1428,13 @@ class DiscoveryApp {
 
         return {
 
-            version:2,
+            version:
+                2,
 
-            answers:
-                this.sanitizeAnswers(),
+            journeyVersion:
+                3,
+
+            answers,
 
             signals,
 
@@ -1165,7 +1461,9 @@ class DiscoveryApp {
     render(container){
 
         if(!container){
-            return;
+
+            return false;
+
         }
 
 
@@ -1178,10 +1476,23 @@ class DiscoveryApp {
         );
 
 
+        this.currentStep =
+            this.normalizeStepIndex(
+                this.currentStep
+            );
+
+
         const step =
             this.steps[
                 this.currentStep
             ];
+
+
+        if(!step){
+
+            return false;
+
+        }
 
 
         const selectedAnswers =
@@ -1191,18 +1502,23 @@ class DiscoveryApp {
 
 
         const progress =
-            (
-                (
-                    this.currentStep +
-                    1
-                ) /
-                this.steps.length
-            ) *
-            100;
+            Math.max(
+                0,
+                Math.min(
+                    100,
+                    (
+                        (
+                            this.currentStep +
+                            1
+                        ) /
+                        this.steps.length
+                    ) *
+                    100
+                )
+            );
 
 
-        container.innerHTML = `
-
+        this.container.innerHTML = `
             <div class="discovery-screen">
 
                 <main class="discovery-content">
@@ -1210,7 +1526,8 @@ class DiscoveryApp {
                     <div class="discovery-navigation">
 
                         ${
-                            this.currentStep > 0
+                            this.currentStep >
+                                0
                                 ? `
                                     <button
                                         type="button"
@@ -1223,6 +1540,7 @@ class DiscoveryApp {
                                 : `
                                     <span
                                         class="discovery-back-placeholder"
+                                        aria-hidden="true"
                                     ></span>
                                   `
                         }
@@ -1239,13 +1557,17 @@ class DiscoveryApp {
 
                     <div
                         class="discovery-progress"
-                        aria-hidden="true"
+                        role="progressbar"
+                        aria-valuemin="0"
+                        aria-valuemax="100"
+                        aria-valuenow="${Math.round(
+                            progress
+                        )}"
+                        aria-label="Discovery ilerlemesi"
                     >
-
                         <span
                             style="width:${progress}%"
                         ></span>
-
                     </div>
 
 
@@ -1256,6 +1578,7 @@ class DiscoveryApp {
                                 step.title
                             )}
                         </h1>
+
 
                         <p class="discovery-description">
                             ${this.escapeHTML(
@@ -1289,7 +1612,11 @@ class DiscoveryApp {
                                             data-discovery-option="${this.escapeHTML(
                                                 option
                                             )}"
-                                            aria-pressed="${isSelected}"
+                                            aria-pressed="${
+                                                isSelected
+                                                    ? "true"
+                                                    : "false"
+                                            }"
                                         >
 
                                             <span>
@@ -1357,13 +1684,18 @@ class DiscoveryApp {
 
         this.bindContainerEvents();
 
+
+        return true;
+
     }
 
 
     bindContainerEvents(){
 
         if(!this.container){
-            return;
+
+            return false;
+
         }
 
 
@@ -1374,7 +1706,9 @@ class DiscoveryApp {
 
 
         if(!screen){
-            return;
+
+            return false;
+
         }
 
 
@@ -1389,6 +1723,9 @@ class DiscoveryApp {
 
 
                 if(optionButton){
+
+                    event.preventDefault();
+
 
                     this.selectOption(
                         optionButton.dataset
@@ -1408,8 +1745,13 @@ class DiscoveryApp {
 
 
                 if(!actionButton){
+
                     return;
+
                 }
+
+
+                event.preventDefault();
 
 
                 const action =
@@ -1417,50 +1759,52 @@ class DiscoveryApp {
                         .discoveryAction;
 
 
-                if(
-                    action ===
-                        "back"
-                ){
+                switch(action){
 
-                    this.goBack();
+                    case "back":
 
-                    return;
+                        this.goBack();
 
-                }
+                        break;
 
 
-                if(
-                    action ===
-                        "continue"
-                ){
+                    case "continue":
 
-                    this.continueJourney();
+                        this.continueJourney();
 
-                    return;
-
-                }
+                        break;
 
 
-                if(
-                    action ===
-                        "enter"
-                ){
+                    case "enter":
 
-                    this.enterEngine();
+                        this.enterEngine();
+
+                        break;
 
                 }
 
             }
         );
 
+
+        return true;
+
     }
 
-
-    /* =====================================================
+/* =====================================================
        SELECTION
     ===================================================== */
 
     selectOption(answer){
+
+        if(
+            this.isCompleting
+        ){
+
+            return false;
+
+        }
+
 
         const step =
             this.steps[
@@ -1469,11 +1813,14 @@ class DiscoveryApp {
 
 
         if(
+            !step ||
             !step.options.includes(
                 answer
             )
         ){
-            return;
+
+            return false;
+
         }
 
 
@@ -1503,7 +1850,9 @@ class DiscoveryApp {
                     unknownStrength
                 ];
 
-            } else {
+            }
+
+            else {
 
                 if(
                     step.id ===
@@ -1514,7 +1863,7 @@ class DiscoveryApp {
                         selected.filter(
                             item =>
                                 item !==
-                                unknownStrength
+                                    unknownStrength
                         );
 
                 }
@@ -1530,10 +1879,12 @@ class DiscoveryApp {
                         selected.filter(
                             item =>
                                 item !==
-                                answer
+                                    answer
                         );
 
-                } else {
+                }
+
+                else {
 
                     selected = [
                         ...selected,
@@ -1547,10 +1898,18 @@ class DiscoveryApp {
 
             this.answers[
                 step.id
-            ] = selected;
+            ] =
+                selected;
+
+
+            this.answers =
+                this.sanitizeAnswers(
+                    this.answers
+                );
 
 
             this.saveDraft();
+
 
             this.refreshSelection(
                 step,
@@ -1558,19 +1917,30 @@ class DiscoveryApp {
             );
 
 
-            return;
+            return true;
 
         }
 
 
         this.answers[
             step.id
-        ] = answer;
+        ] =
+            answer;
+
+
+        this.answers =
+            this.sanitizeAnswers(
+                this.answers
+            );
 
 
         this.saveDraft();
 
+
         this.advance();
+
+
+        return true;
 
     }
 
@@ -1580,9 +1950,22 @@ class DiscoveryApp {
         selected
     ){
 
-        if(!this.container){
-            return;
+        if(
+            !this.container ||
+            !step
+        ){
+
+            return false;
+
         }
+
+
+        const safeSelected =
+            Array.isArray(
+                selected
+            )
+                ? selected
+                : [];
 
 
         this.container
@@ -1593,7 +1976,7 @@ class DiscoveryApp {
                 button => {
 
                     const isSelected =
-                        selected.includes(
+                        safeSelected.includes(
                             button.dataset
                                 .discoveryOption
                         );
@@ -1633,10 +2016,9 @@ class DiscoveryApp {
 
 
         const continueButton =
-            this.container
-                .querySelector(
-                    "[data-discovery-action='continue']"
-                );
+            this.container.querySelector(
+                "[data-discovery-action='continue']"
+            );
 
 
         if(continueButton){
@@ -1647,6 +2029,9 @@ class DiscoveryApp {
                 );
 
         }
+
+
+        return true;
 
     }
 
@@ -1664,20 +2049,32 @@ class DiscoveryApp {
 
 
         if(
+            !step ||
             !this.hasAnswer(
                 step
             )
         ){
-            return;
+
+            return false;
+
         }
 
 
-        this.advance();
+        return this.advance();
 
     }
 
 
     advance(){
+
+        if(
+            this.isCompleting
+        ){
+
+            return false;
+
+        }
+
 
         if(
             this.currentStep <
@@ -1691,17 +2088,15 @@ class DiscoveryApp {
 
             this.saveDraft();
 
-            this.render(
+
+            return this.render(
                 this.container
             );
-
-
-            return;
 
         }
 
 
-        this.complete();
+        return this.complete();
 
     }
 
@@ -1709,9 +2104,13 @@ class DiscoveryApp {
     goBack(){
 
         if(
-            this.currentStep <= 0
+            this.isCompleting ||
+            this.currentStep <=
+                0
         ){
-            return;
+
+            return false;
+
         }
 
 
@@ -1721,7 +2120,8 @@ class DiscoveryApp {
 
         this.saveDraft();
 
-        this.render(
+
+        return this.render(
             this.container
         );
 
@@ -1729,29 +2129,20 @@ class DiscoveryApp {
 
 
     /* =====================================================
-       COMPLETE
+       COMPLETION STORAGE
     ===================================================== */
 
-    complete(){
-
-        const completedAt =
-            Date.now();
-
-
-        this.answers =
-            this.sanitizeAnswers();
-
-
-        const result =
-            this.buildResult();
-
+    persistCompletion(
+        result,
+        completedAt
+    ){
 
         try{
 
             localStorage.setItem(
                 this.answersKey,
                 JSON.stringify(
-                    this.answers
+                    result.answers
                 )
             );
 
@@ -1771,7 +2162,7 @@ class DiscoveryApp {
 
 
             localStorage.setItem(
-                "vaero:welcome:completed:v2",
+                this.welcomeCompletedKey,
                 "true"
             );
 
@@ -1783,6 +2174,9 @@ class DiscoveryApp {
                 )
             );
 
+
+            return true;
+
         } catch(error){
 
             console.warn(
@@ -1790,21 +2184,117 @@ class DiscoveryApp {
                 error
             );
 
+
+            return false;
+
+        }
+
+    }
+
+
+    /* =====================================================
+       COMPLETE
+    ===================================================== */
+
+    complete(){
+
+        if(
+            this.isCompleting
+        ){
+
+            return false;
+
+        }
+
+
+        const finalStep =
+            this.steps[
+                this.steps.length -
+                1
+            ];
+
+
+        if(
+            !this.hasAnswer(
+                finalStep
+            )
+        ){
+
+            return false;
+
+        }
+
+
+        this.isCompleting =
+            true;
+
+
+        const completedAt =
+            Date.now();
+
+
+        this.answers =
+            this.sanitizeAnswers(
+                this.answers
+            );
+
+
+        const result =
+            this.buildResult();
+
+
+        const persisted =
+            this.persistCompletion(
+                result,
+                completedAt
+            );
+
+
+        if(!persisted){
+
+            this.isCompleting =
+                false;
+
+
+            return false;
+
         }
 
 
         this.clearDraft();
 
 
-        this.recordJourney(
-            completedAt,
-            result
-        );
+        try{
+
+            this.recordJourney(
+                completedAt,
+                result
+            );
+
+        } catch(error){
+
+            console.warn(
+                "Discovery Evolution kaydı oluşturulamadı:",
+                error
+            );
+
+        }
 
 
-        this.applyDiscoveryToProfile(
-            result
-        );
+        try{
+
+            this.applyDiscoveryToProfile(
+                result
+            );
+
+        } catch(error){
+
+            console.warn(
+                "Discovery Profile senkronizasyonu yapılamadı:",
+                error
+            );
+
+        }
 
 
         this.emitCompleted(
@@ -1817,6 +2307,13 @@ class DiscoveryApp {
             result
         );
 
+
+        this.isCompleting =
+            false;
+
+
+        return true;
+
     }
 
 
@@ -1824,43 +2321,151 @@ class DiscoveryApp {
        EVOLUTION
     ===================================================== */
 
-    findExistingJourneyEvent(
-        evolution
+    getEvolutionEvents(
+        evolution,
+        entity
     ){
+
+        if(!evolution){
+
+            return [];
+
+        }
+
 
         try{
 
-            const events =
-                typeof evolution.all ===
+            if(
+                entity?.id &&
+                typeof evolution.forEntity ===
                     "function"
-                    ? evolution.all({
-                        includeArchived:true
-                    })
-                    : (
-                        Array.isArray(
-                            evolution.history
-                        )
-                            ? evolution.history
-                            : []
+            ){
+
+                const result =
+                    evolution.forEntity(
+                        entity.id,
+                        {
+                            includeArchived:
+                                true
+                        }
                     );
 
 
-            return (
-                events.find(
-                    event =>
-                        event?.source ===
-                            "discovery" &&
-                        event?.title ===
-                            "Discovery Journey tamamlandı"
-                ) ||
-                null
-            );
+                if(
+                    Array.isArray(
+                        result
+                    )
+                ){
+
+                    return result;
+
+                }
+
+            }
 
         } catch(error){
 
-            return null;
+            /* fallback */
 
         }
+
+
+        try{
+
+            if(
+                typeof evolution.all ===
+                    "function"
+            ){
+
+                const result =
+                    evolution.all({
+                        includeArchived:
+                            true
+                    });
+
+
+                return Array.isArray(
+                    result
+                )
+                    ? result
+                    : [];
+
+            }
+
+        } catch(error){
+
+            /* fallback */
+
+        }
+
+
+        return Array.isArray(
+            evolution.history
+        )
+            ? evolution.history
+            : [];
+
+    }
+
+
+    findExistingJourneyEvent(
+        evolution,
+        entity
+    ){
+
+        const events =
+            this.getEvolutionEvents(
+                evolution,
+                entity
+            );
+
+
+        const entityId =
+            entity?.id
+                ? String(
+                    entity.id
+                )
+                : null;
+
+
+        return (
+            events.find(
+                event => {
+
+                    if(
+                        !event ||
+                        event.source !==
+                            "discovery" ||
+                        event.title !==
+                            "Discovery Journey tamamlandı"
+                    ){
+
+                        return false;
+
+                    }
+
+
+                    if(
+                        entityId &&
+                        event.relatedEntityId
+                    ){
+
+                        return (
+                            String(
+                                event.relatedEntityId
+                            ) ===
+                            entityId
+                        );
+
+                    }
+
+
+                    return !entityId;
+
+                }
+            ) ||
+            null
+        );
 
     }
 
@@ -1870,16 +2475,34 @@ class DiscoveryApp {
         result
     ){
 
-        const evolution =
+        let evolution =
             this.getService(
                 "evolution"
-            ) ||
-            (
-                typeof Evolution !==
-                    "undefined"
-                    ? Evolution
-                    : null
             );
+
+
+        if(!evolution){
+
+            try{
+
+                if(
+                    typeof Evolution !==
+                        "undefined"
+                ){
+
+                    evolution =
+                        Evolution;
+
+                }
+
+            } catch(error){
+
+                evolution =
+                    null;
+
+            }
+
+        }
 
 
         if(
@@ -1887,7 +2510,9 @@ class DiscoveryApp {
             typeof evolution.record !==
                 "function"
         ){
+
             return null;
+
         }
 
 
@@ -1901,7 +2526,8 @@ class DiscoveryApp {
 
         const existing =
             this.findExistingJourneyEvent(
-                evolution
+                evolution,
+                entity
             );
 
 
@@ -1929,12 +2555,18 @@ class DiscoveryApp {
             ],
 
             effects:{
-                awareness:8,
-                experience:6,
-                connectionReadiness:5
+                awareness:
+                    8,
+
+                experience:
+                    6,
+
+                connectionReadiness:
+                    5
             },
 
-            xp:15,
+            xp:
+                15,
 
             organs:[
                 "identity",
@@ -1981,7 +2613,8 @@ class DiscoveryApp {
                     ?.id ||
                 null,
 
-            journeyVersion:3,
+            journeyVersion:
+                3,
 
             occurredAt:
                 completedAt
@@ -1989,31 +2622,30 @@ class DiscoveryApp {
         };
 
 
-        /*
-         * Aynı Journey tekrar tamamlanırsa
-         * ikinci bir milestone üretmek yerine güncellenir.
-         */
-
         if(
             existing &&
             typeof evolution.update ===
                 "function"
         ){
 
-            return evolution.update(
-                existing.id,
-                payload
-            );
+            try{
+
+                return evolution.update(
+                    existing.id,
+                    payload
+                );
+
+            } catch(error){
+
+                console.warn(
+                    "Discovery milestone güncellenemedi:",
+                    error
+                );
+
+            }
 
         }
 
-
-        /*
-         * Evolution.record() artık life-event:created
-         * yayınını KENDİSİ yapıyor.
-         *
-         * Burada publishLifeEvent() tekrar çağrılmaz.
-         */
 
         return evolution.record(
             "milestone",
@@ -2035,7 +2667,9 @@ class DiscoveryApp {
 
 
         if(!entity){
+
             return false;
+
         }
 
 
@@ -2050,24 +2684,54 @@ class DiscoveryApp {
             typeof profile.update !==
                 "function"
         ){
+
             return false;
+
         }
 
 
         const answers =
-            result.answers;
+            result.answers ||
+            {};
 
 
-        const currentProfile =
-            profile.get?.(
-                entity
-            ) ||
+        let currentProfile =
+            null;
+
+
+        try{
+
+            if(
+                typeof profile.get ===
+                    "function"
+            ){
+
+                currentProfile =
+                    profile.get(
+                        entity
+                    ) ||
+                    null;
+
+            }
+
+        } catch(error){
+
+            currentProfile =
+                null;
+
+        }
+
+
+        currentProfile =
+            currentProfile ||
             entity.profile ||
             null;
 
 
         if(!currentProfile){
+
             return false;
+
         }
 
 
@@ -2087,63 +2751,88 @@ class DiscoveryApp {
                 : [];
 
 
-        /*
-         * Discovery Profile'ı kullanıcının manuel
-         * yazdığı verilerin üzerine zorla yazmaz.
-         * Sadece eksik/sinyal alanlarını tamamlar.
-         */
+        const interests =
+            [
+                ...new Set([
+                    ...existingInterests,
+                    ...discoveryInterests
+                ])
+            ];
 
-        return Boolean(
-            profile.update(
-                currentProfile,
-                {
-                    interests:[
-                        ...new Set([
-                            ...existingInterests,
-                            ...discoveryInterests
-                        ])
-                    ],
 
-                    metadata:{
-                        ...(
-                            currentProfile.metadata ||
-                            {}
-                        ),
+        const changes = {
 
-                        discovery:{
-                            purpose:
-                                answers.purpose ||
-                                null,
+            interests,
 
-                            goal:
-                                answers.goal ||
-                                null,
+            metadata:{
+                ...(
+                    currentProfile.metadata ||
+                    {}
+                ),
 
-                            connection:
-                                answers.connection ||
-                                [],
+                discovery:{
+                    purpose:
+                        answers.purpose ||
+                        null,
 
-                            guidance:
-                                answers.guidance ||
-                                null,
+                    goal:
+                        answers.goal ||
+                        null,
 
-                            primaryDirection:
-                                result.primaryDirection
-                                    ?.id ||
-                                null,
+                    connection:
+                        Array.isArray(
+                            answers.connection
+                        )
+                            ? [
+                                ...answers.connection
+                            ]
+                            : [],
 
-                            brainMode:
-                                result.signals
-                                    ?.brainMode ||
-                                "balanced",
+                    guidance:
+                        answers.guidance ||
+                        null,
 
-                            updatedAt:
-                                Date.now()
-                        }
-                    }
+                    primaryDirection:
+                        result.primaryDirection
+                            ?.id ||
+                        null,
+
+                    brainMode:
+                        result.signals
+                            ?.brainMode ||
+                        "balanced",
+
+                    updatedAt:
+                        Date.now()
                 }
-            )
-        );
+            }
+
+        };
+
+
+        try{
+
+            const updated =
+                profile.update(
+                    currentProfile,
+                    changes
+                );
+
+
+            return updated !==
+                false;
+
+        } catch(error){
+
+            console.warn(
+                "Discovery Profile güncellemesi başarısız:",
+                error
+            );
+
+
+            return false;
+
+        }
 
     }
 
@@ -2189,6 +2878,7 @@ class DiscoveryApp {
         } catch(error){
 
             /* non-fatal */
+
         }
 
 
@@ -2204,7 +2894,11 @@ class DiscoveryApp {
         } catch(error){
 
             /* non-fatal */
+
         }
+
+
+        return true;
 
     }
 
@@ -2216,21 +2910,26 @@ class DiscoveryApp {
     renderCompletion(result){
 
         if(!this.container){
-            return;
+
+            return false;
+
         }
 
 
         const direction =
-            result.primaryDirection;
+            result.primaryDirection ||
+            {};
 
 
         const actions =
-            result.startingActions ||
-            [];
+            Array.isArray(
+                result.startingActions
+            )
+                ? result.startingActions
+                : [];
 
 
         this.container.innerHTML = `
-
             <div class="discovery-screen">
 
                 <main
@@ -2240,7 +2939,10 @@ class DiscoveryApp {
                     "
                 >
 
-                    <div class="discovery-completion-mark">
+                    <div
+                        class="discovery-completion-mark"
+                        aria-hidden="true"
+                    >
                         ✓
                     </div>
 
@@ -2251,22 +2953,18 @@ class DiscoveryApp {
 
 
                     <h1>
-                        ${
-                            this.escapeHTML(
-                                direction?.label ||
-                                "Yolculuğun hazır."
-                            )
-                        }
+                        ${this.escapeHTML(
+                            direction.label ||
+                            "Yolculuğun hazır."
+                        )}
                     </h1>
 
 
                     <p class="discovery-description">
-                        ${
-                            this.escapeHTML(
-                                direction?.description ||
-                                "VAERO ilk yönünü, ilgi alanlarını ve bağlantı beklentilerini öğrendi."
-                            )
-                        }
+                        ${this.escapeHTML(
+                            direction.description ||
+                            "VAERO ilk yönünü, ilgi alanlarını ve bağlantı beklentilerini öğrendi."
+                        )}
                     </p>
 
 
@@ -2284,20 +2982,30 @@ class DiscoveryApp {
                                                 <div class="discovery-starting-action">
 
                                                     <span>
-                                                        0${index + 1}
+                                                        ${String(
+                                                            index +
+                                                            1
+                                                        ).padStart(
+                                                            2,
+                                                            "0"
+                                                        )}
                                                     </span>
+
 
                                                     <div>
 
                                                         <strong>
                                                             ${this.escapeHTML(
-                                                                action.title
+                                                                action.title ||
+                                                                ""
                                                             )}
                                                         </strong>
 
+
                                                         <small>
                                                             ${this.escapeHTML(
-                                                                action.description
+                                                                action.description ||
+                                                                ""
                                                             )}
                                                         </small>
 
@@ -2317,7 +3025,9 @@ class DiscoveryApp {
                     <div class="discovery-result-meta">
 
                         <span>
+
                             Brain
+
                             <strong>
                                 ${this.escapeHTML(
                                     this.getBrainModeLabel(
@@ -2326,19 +3036,27 @@ class DiscoveryApp {
                                     )
                                 )}
                             </strong>
+
                         </span>
 
 
                         <span>
+
                             Başlangıç
+
                             <strong>
                                 ${
-                                    result.signals
-                                        ?.recommendedApps
-                                        ?.length ||
-                                    0
+                                    Array.isArray(
+                                        result.signals
+                                            ?.recommendedApps
+                                    )
+                                        ? result.signals
+                                            .recommendedApps
+                                            .length
+                                        : 0
                                 } uygulama
                             </strong>
+
                         </span>
 
                     </div>
@@ -2359,6 +3077,9 @@ class DiscoveryApp {
 
 
         this.bindContainerEvents();
+
+
+        return true;
 
     }
 
@@ -2402,7 +3123,9 @@ class DiscoveryApp {
     enterEngine(){
 
         if(!this.container){
+
             return false;
+
         }
 
 
@@ -2423,22 +3146,37 @@ class DiscoveryApp {
 
         if(screen){
 
-            transitionLayer =
-                screen.cloneNode(
-                    true
-                );
+            try{
+
+                transitionLayer =
+                    screen.cloneNode(
+                        true
+                    );
 
 
-            transitionLayer
-                .classList
-                .add(
-                    "discovery-transition-layer"
-                );
-
-
-            document.body.appendChild(
                 transitionLayer
-            );
+                    .classList
+                    .add(
+                        "discovery-transition-layer"
+                    );
+
+
+                transitionLayer.setAttribute(
+                    "aria-hidden",
+                    "true"
+                );
+
+
+                document.body.appendChild(
+                    transitionLayer
+                );
+
+            } catch(error){
+
+                transitionLayer =
+                    null;
+
+            }
 
         }
 
@@ -2448,30 +3186,52 @@ class DiscoveryApp {
 
 
         if(
-            engine &&
-            typeof engine.start ===
+            !engine ||
+            typeof engine.start !==
                 "function"
         ){
 
-            try{
-
-                engine.start();
-
-            } catch(error){
-
-                console.error(
-                    "Engine başlatılamadı:",
-                    error
-                );
+            transitionLayer
+                ?.remove();
 
 
-                transitionLayer
-                    ?.remove();
+            screen?.classList.remove(
+                "is-leaving"
+            );
 
 
-                return false;
+            console.error(
+                "Engine.start kullanılamıyor."
+            );
 
-            }
+
+            return false;
+
+        }
+
+
+        try{
+
+            engine.start();
+
+        } catch(error){
+
+            console.error(
+                "Engine başlatılamadı:",
+                error
+            );
+
+
+            transitionLayer
+                ?.remove();
+
+
+            screen?.classList.remove(
+                "is-leaving"
+            );
+
+
+            return false;
 
         }
 
@@ -2514,7 +3274,9 @@ class DiscoveryApp {
 
 
             if(!saved){
+
                 return null;
+
             }
 
 
@@ -2524,16 +3286,21 @@ class DiscoveryApp {
                 );
 
 
-            return (
-                parsed &&
-                typeof parsed ===
-                    "object" &&
-                !Array.isArray(
+            if(
+                !parsed ||
+                typeof parsed !==
+                    "object" ||
+                Array.isArray(
                     parsed
                 )
-            )
-                ? parsed
-                : null;
+            ){
+
+                return null;
+
+            }
+
+
+            return parsed;
 
         } catch(error){
 
@@ -2564,6 +3331,33 @@ class DiscoveryApp {
     }
 
 
+    getCompletedAt(){
+
+        try{
+
+            const value =
+                Number(
+                    localStorage.getItem(
+                        this.completedAtKey
+                    )
+                );
+
+
+            return Number.isFinite(
+                value
+            )
+                ? value
+                : null;
+
+        } catch(error){
+
+            return null;
+
+        }
+
+    }
+
+
     /* =====================================================
        RESTART
     ===================================================== */
@@ -2573,8 +3367,13 @@ class DiscoveryApp {
         this.currentStep =
             0;
 
+
         this.answers =
             {};
+
+
+        this.isCompleting =
+            false;
 
 
         try{
@@ -2600,12 +3399,13 @@ class DiscoveryApp {
 
 
             localStorage.removeItem(
-                "vaero:welcome:completed:v2"
+                this.welcomeCompletedKey
             );
 
         } catch(error){
 
             /* continue */
+
         }
 
 
@@ -2628,5 +3428,36 @@ class DiscoveryApp {
 }
 
 
+/* =========================================================
+   INSTANCE
+========================================================= */
+
 window.DiscoveryApp =
     new DiscoveryApp();
+
+
+/* =========================================================
+   REGISTER
+========================================================= */
+
+try{
+
+    if(
+        typeof VAERO !==
+            "undefined" &&
+        typeof VAERO.register ===
+            "function"
+    ){
+
+        VAERO.register(
+            "discoveryApp",
+            window.DiscoveryApp
+        );
+
+    }
+
+} catch(error){
+
+    /* global instance remains available */
+
+}
