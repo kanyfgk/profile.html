@@ -18,14 +18,42 @@ const SettingsApp = {
 
     escapeHTML(value){
 
+        if(
+            window.UI &&
+            typeof UI.escapeHTML ===
+                "function"
+        ){
+
+            return UI.escapeHTML(
+                value
+            );
+
+        }
+
+
         return String(
             value ?? ""
         )
-            .replaceAll("&", "&amp;")
-            .replaceAll("<", "&lt;")
-            .replaceAll(">", "&gt;")
-            .replaceAll('"', "&quot;")
-            .replaceAll("'", "&#039;");
+            .replaceAll(
+                "&",
+                "&amp;"
+            )
+            .replaceAll(
+                "<",
+                "&lt;"
+            )
+            .replaceAll(
+                ">",
+                "&gt;"
+            )
+            .replaceAll(
+                '"',
+                "&quot;"
+            )
+            .replaceAll(
+                "'",
+                "&#039;"
+            );
 
     },
 
@@ -39,15 +67,19 @@ const SettingsApp = {
         try{
 
             if(
-                typeof VAERO !== "undefined" &&
+                typeof VAERO !==
+                    "undefined" &&
                 VAERO.engine
             ){
+
                 return VAERO.engine;
+
             }
 
         } catch(error){
 
             /* fallback */
+
         }
 
 
@@ -64,16 +96,21 @@ const SettingsApp = {
         try{
 
             if(
-                typeof VAERO === "undefined" ||
+                typeof VAERO ===
+                    "undefined" ||
                 typeof VAERO.get !==
                     "function"
             ){
+
                 return null;
+
             }
 
 
             return (
-                VAERO.get(name) ||
+                VAERO.get(
+                    name
+                ) ||
                 null
             );
 
@@ -113,12 +150,21 @@ const SettingsApp = {
             typeof engine.mount !==
                 "function"
         ){
+
             return false;
+
         }
 
 
+        const entity =
+            engine.currentOpenedEntity ||
+            engine.currentEntity ||
+            engine.rootEntity ||
+            null;
+
+
         return engine.mount(
-            engine.currentEntity
+            entity
         );
 
     },
@@ -128,7 +174,9 @@ const SettingsApp = {
        BRAIN CONTEXT
     ===================================================== */
 
-    enterBrainContext(entity = null){
+    enterBrainContext(
+        entity = null
+    ){
 
         try{
 
@@ -158,6 +206,130 @@ const SettingsApp = {
             );
 
         }
+
+    },
+
+
+    /* =====================================================
+       SECTIONS
+    ===================================================== */
+
+    getSections(){
+
+        return [
+
+            {
+                id:
+                    "privacy",
+
+                label:
+                    "Gizlilik",
+
+                icon:
+                    "◎"
+            },
+
+            {
+                id:
+                    "brain",
+
+                label:
+                    "Brain",
+
+                icon:
+                    "◇"
+            },
+
+            {
+                id:
+                    "memory",
+
+                label:
+                    "Memory",
+
+                icon:
+                    "◫"
+            },
+
+            {
+                id:
+                    "notifications",
+
+                label:
+                    "Bildirimler",
+
+                icon:
+                    "◉"
+            },
+
+            {
+                id:
+                    "applications",
+
+                label:
+                    "Uygulamalar",
+
+                icon:
+                    "▦"
+            },
+
+            {
+                id:
+                    "security",
+
+                label:
+                    "Güvenlik",
+
+                icon:
+                    "⌾"
+            },
+
+            {
+                id:
+                    "appearance",
+
+                label:
+                    "Görünüm",
+
+                icon:
+                    "◐"
+            }
+
+        ];
+
+    },
+
+
+    getAllowedSections(){
+
+        return this
+            .getSections()
+            .map(
+                section =>
+                    section.id
+            );
+
+    },
+
+
+    normalizeSection(value){
+
+        const section =
+            String(
+                value ||
+                "privacy"
+            )
+                .trim()
+                .toLowerCase();
+
+
+        return this
+            .getAllowedSections()
+            .includes(
+                section
+            )
+                ? section
+                : "privacy";
 
     },
 
@@ -313,68 +485,396 @@ const SettingsApp = {
 
 
     /* =====================================================
-       MERGE
+       NORMALIZATION
     ===================================================== */
 
-    mergeSettings(
-        base,
-        incoming
+    normalizeBoolean(
+        value,
+        fallback = false
     ){
 
-        const result = {
-            ...base
-        };
+        return typeof value ===
+            "boolean"
+                ? value
+                : fallback;
+
+    },
 
 
-        Object.keys(
-            base
-        ).forEach(
-            key => {
+    normalizeChoice(
+        value,
+        allowed,
+        fallback
+    ){
 
-                if(
-                    base[key] &&
-                    typeof base[key] ===
-                        "object" &&
-                    !Array.isArray(
-                        base[key]
+        const normalized =
+            String(
+                value ||
+                ""
+            )
+                .trim()
+                .toLowerCase();
+
+
+        return allowed.includes(
+            normalized
+        )
+            ? normalized
+            : fallback;
+
+    },
+
+
+    normalizeSettings(input = {}){
+
+        const defaults =
+            this.getDefaults();
+
+
+        const source =
+            input &&
+            typeof input ===
+                "object" &&
+            !Array.isArray(
+                input
+            )
+                ? input
+                : {};
+
+
+        return {
+
+            appearance:{
+
+                density:
+                    this.normalizeChoice(
+                        source.appearance
+                            ?.density,
+                        [
+                            "compact",
+                            "comfortable",
+                            "spacious"
+                        ],
+                        defaults.appearance
+                            .density
+                    ),
+
+                reduceMotion:
+                    this.normalizeBoolean(
+                        source.appearance
+                            ?.reduceMotion,
+                        defaults.appearance
+                            .reduceMotion
+                    ),
+
+                showAmbientEffects:
+                    this.normalizeBoolean(
+                        source.appearance
+                            ?.showAmbientEffects,
+                        defaults.appearance
+                            .showAmbientEffects
                     )
-                ){
 
-                    result[key] = {
-                        ...base[key],
-                        ...(
-                            incoming?.[key] &&
-                            typeof incoming[key] ===
-                                "object" &&
-                            !Array.isArray(
-                                incoming[key]
-                            )
-                                ? incoming[key]
-                                : {}
-                        )
-                    };
-
-                } else if(
-                    incoming?.[key] !==
-                        undefined
-                ){
-
-                    result[key] =
-                        incoming[key];
-
-                }
-
-            }
-        );
+            },
 
 
-        return result;
+            privacy:{
+
+                visibility:
+                    this.normalizeChoice(
+                        source.privacy
+                            ?.visibility,
+                        [
+                            "private",
+                            "connections",
+                            "engine"
+                        ],
+                        defaults.privacy
+                            .visibility
+                    ),
+
+                allowBridgeDiscovery:
+                    this.normalizeBoolean(
+                        source.privacy
+                            ?.allowBridgeDiscovery,
+                        defaults.privacy
+                            .allowBridgeDiscovery
+                    ),
+
+                exposeProfileToConnections:
+                    this.normalizeBoolean(
+                        source.privacy
+                            ?.exposeProfileToConnections,
+                        defaults.privacy
+                            .exposeProfileToConnections
+                    ),
+
+                includeInGlobalSearch:
+                    this.normalizeBoolean(
+                        source.privacy
+                            ?.includeInGlobalSearch,
+                        defaults.privacy
+                            .includeInGlobalSearch
+                    )
+
+            },
+
+
+            brain:{
+
+                enabled:
+                    this.normalizeBoolean(
+                        source.brain
+                            ?.enabled,
+                        defaults.brain
+                            .enabled
+                    ),
+
+                allowMemoryRead:
+                    this.normalizeBoolean(
+                        source.brain
+                            ?.allowMemoryRead,
+                        defaults.brain
+                            .allowMemoryRead
+                    ),
+
+                allowTimelineRead:
+                    this.normalizeBoolean(
+                        source.brain
+                            ?.allowTimelineRead,
+                        defaults.brain
+                            .allowTimelineRead
+                    ),
+
+                allowBridgeRead:
+                    this.normalizeBoolean(
+                        source.brain
+                            ?.allowBridgeRead,
+                        defaults.brain
+                            .allowBridgeRead
+                    ),
+
+                allowEvolutionRead:
+                    this.normalizeBoolean(
+                        source.brain
+                            ?.allowEvolutionRead,
+                        defaults.brain
+                            .allowEvolutionRead
+                    ),
+
+                allowProfileRead:
+                    this.normalizeBoolean(
+                        source.brain
+                            ?.allowProfileRead,
+                        defaults.brain
+                            .allowProfileRead
+                    ),
+
+                requireConfirmationForActions:
+                    this.normalizeBoolean(
+                        source.brain
+                            ?.requireConfirmationForActions,
+                        defaults.brain
+                            .requireConfirmationForActions
+                    ),
+
+                allowSensitiveContext:
+                    this.normalizeBoolean(
+                        source.brain
+                            ?.allowSensitiveContext,
+                        defaults.brain
+                            .allowSensitiveContext
+                    )
+
+            },
+
+
+            memory:{
+
+                enabled:
+                    this.normalizeBoolean(
+                        source.memory
+                            ?.enabled,
+                        defaults.memory
+                            .enabled
+                    ),
+
+                allowBrainAccess:
+                    this.normalizeBoolean(
+                        source.memory
+                            ?.allowBrainAccess,
+                        defaults.memory
+                            .allowBrainAccess
+                    ),
+
+                includeArchived:
+                    this.normalizeBoolean(
+                        source.memory
+                            ?.includeArchived,
+                        defaults.memory
+                            .includeArchived
+                    ),
+
+                autoCaptureSystemEvents:
+                    this.normalizeBoolean(
+                        source.memory
+                            ?.autoCaptureSystemEvents,
+                        defaults.memory
+                            .autoCaptureSystemEvents
+                    )
+
+            },
+
+
+            notifications:{
+
+                enabled:
+                    this.normalizeBoolean(
+                        source.notifications
+                            ?.enabled,
+                        defaults.notifications
+                            .enabled
+                    ),
+
+                evolution:
+                    this.normalizeBoolean(
+                        source.notifications
+                            ?.evolution,
+                        defaults.notifications
+                            .evolution
+                    ),
+
+                bridge:
+                    this.normalizeBoolean(
+                        source.notifications
+                            ?.bridge,
+                        defaults.notifications
+                            .bridge
+                    ),
+
+                memory:
+                    this.normalizeBoolean(
+                        source.notifications
+                            ?.memory,
+                        defaults.notifications
+                            .memory
+                    ),
+
+                security:
+                    this.normalizeBoolean(
+                        source.notifications
+                            ?.security,
+                        defaults.notifications
+                            .security
+                    ),
+
+                applications:
+                    this.normalizeBoolean(
+                        source.notifications
+                            ?.applications,
+                        defaults.notifications
+                            .applications
+                    )
+
+            },
+
+
+            applications:{
+
+                allowInstall:
+                    this.normalizeBoolean(
+                        source.applications
+                            ?.allowInstall,
+                        defaults.applications
+                            .allowInstall
+                    ),
+
+                requirePermissionReview:
+                    this.normalizeBoolean(
+                        source.applications
+                            ?.requirePermissionReview,
+                        defaults.applications
+                            .requirePermissionReview
+                    ),
+
+                allowExternalApps:
+                    this.normalizeBoolean(
+                        source.applications
+                            ?.allowExternalApps,
+                        defaults.applications
+                            .allowExternalApps
+                    ),
+
+                allowBackgroundActivity:
+                    this.normalizeBoolean(
+                        source.applications
+                            ?.allowBackgroundActivity,
+                        defaults.applications
+                            .allowBackgroundActivity
+                    )
+
+            },
+
+
+            security:{
+
+                lockSensitiveActions:
+                    this.normalizeBoolean(
+                        source.security
+                            ?.lockSensitiveActions,
+                        defaults.security
+                            .lockSensitiveActions
+                    ),
+
+                requireActionConfirmation:
+                    this.normalizeBoolean(
+                        source.security
+                            ?.requireActionConfirmation,
+                        defaults.security
+                            .requireActionConfirmation
+                    ),
+
+                allowUnknownApplications:
+                    this.normalizeBoolean(
+                        source.security
+                            ?.allowUnknownApplications,
+                        defaults.security
+                            .allowUnknownApplications
+                    ),
+
+                sessionVisibility:
+                    this.normalizeChoice(
+                        source.security
+                            ?.sessionVisibility,
+                        [
+                            "private",
+                            "entity",
+                            "engine"
+                        ],
+                        defaults.security
+                            .sessionVisibility
+                    )
+
+            },
+
+
+            updatedAt:
+                Number(
+                    source.updatedAt
+                ) ||
+                Date.now()
+
+        };
 
     },
 
 
     /* =====================================================
        STORAGE
+       -----------------------------------------------------
+       Entity preference compatibility layer.
+       Policy enforcement remains responsibility of the
+       systems that consume these settings.
     ===================================================== */
 
     getStorageKey(entityId){
@@ -396,6 +896,13 @@ const SettingsApp = {
             this.getDefaults();
 
 
+        if(!entityId){
+
+            return defaults;
+
+        }
+
+
         try{
 
             const saved =
@@ -407,7 +914,9 @@ const SettingsApp = {
 
 
             if(!saved){
+
                 return defaults;
+
             }
 
 
@@ -417,20 +926,7 @@ const SettingsApp = {
                 );
 
 
-            if(
-                !parsed ||
-                typeof parsed !==
-                    "object" ||
-                Array.isArray(
-                    parsed
-                )
-            ){
-                return defaults;
-            }
-
-
-            return this.mergeSettings(
-                defaults,
+            return this.normalizeSettings(
                 parsed
             );
 
@@ -454,13 +950,22 @@ const SettingsApp = {
         settings
     ){
 
+        if(!entityId){
+
+            return false;
+
+        }
+
+
         try{
 
-            const payload = {
-                ...settings,
-                updatedAt:
-                    Date.now()
-            };
+            const payload =
+                this.normalizeSettings({
+                    ...settings,
+
+                    updatedAt:
+                        Date.now()
+                });
 
 
             localStorage.setItem(
@@ -522,7 +1027,9 @@ const SettingsApp = {
             typeof manager.get !==
                 "function"
         ){
+
             return false;
+
         }
 
 
@@ -545,7 +1052,9 @@ const SettingsApp = {
 
 
         if(!entity){
+
             return false;
+
         }
 
 
@@ -593,6 +1102,11 @@ const SettingsApp = {
                     entityId,
                     {
                         metadata:{
+                            ...(
+                                entity.metadata ||
+                                {}
+                            ),
+
                             settings:
                                 settingsSnapshot
                         }
@@ -601,11 +1115,19 @@ const SettingsApp = {
 
             } catch(error){
 
+                console.warn(
+                    "Settings entity metadata güncellenemedi:",
+                    error
+                );
+
+
                 return false;
 
             }
 
-        } else {
+        }
+
+        else {
 
             entity.metadata = {
                 ...(
@@ -620,9 +1142,17 @@ const SettingsApp = {
         }
 
 
-        this.getService(
-            "world"
-        )?.save?.();
+        try{
+
+            this.getService(
+                "world"
+            )?.save?.();
+
+        } catch(error){
+
+            /* compatibility */
+
+        }
 
 
         return true;
@@ -639,22 +1169,30 @@ const SettingsApp = {
         settings
     ){
 
+        const payload = {
+
+            entityId,
+
+            settings,
+
+            time:
+                Date.now()
+
+        };
+
+
         try{
 
             if(
-                typeof VAERO !== "undefined" &&
+                typeof VAERO !==
+                    "undefined" &&
                 typeof VAERO.emit ===
                     "function"
             ){
 
                 VAERO.emit(
                     "settings:updated",
-                    {
-                        entityId,
-                        settings,
-                        time:
-                            Date.now()
-                    }
+                    payload
                 );
 
             }
@@ -662,6 +1200,7 @@ const SettingsApp = {
         } catch(error){
 
             /* non-fatal */
+
         }
 
 
@@ -675,17 +1214,13 @@ const SettingsApp = {
 
             events?.emit?.(
                 "settings:updated",
-                {
-                    entityId,
-                    settings,
-                    time:
-                        Date.now()
-                }
+                payload
             );
 
         } catch(error){
 
             /* non-fatal */
+
         }
 
     },
@@ -706,7 +1241,31 @@ const SettingsApp = {
             !entity ||
             !entity.id
         ){
+
             return false;
+
+        }
+
+
+        const defaults =
+            this.getDefaults();
+
+
+        if(
+            !defaults[section] ||
+            typeof defaults[section] !==
+                "object" ||
+            Array.isArray(
+                defaults[section]
+            ) ||
+            !Object.prototype.hasOwnProperty.call(
+                defaults[section],
+                key
+            )
+        ){
+
+            return false;
+
         }
 
 
@@ -716,29 +1275,29 @@ const SettingsApp = {
             );
 
 
-        if(
-            !settings[section] ||
-            typeof settings[section] !==
-                "object"
-        ){
-            return false;
-        }
-
-
         settings[section] = {
             ...settings[section],
+
             [key]:
                 value
         };
 
 
+        const normalized =
+            this.normalizeSettings(
+                settings
+            );
+
+
         if(
             !this.save(
                 entity.id,
-                settings
+                normalized
             )
         ){
+
             return false;
+
         }
 
 
@@ -757,7 +1316,9 @@ const SettingsApp = {
             !entity ||
             !entity.id
         ){
+
             return false;
+
         }
 
 
@@ -771,7 +1332,9 @@ const SettingsApp = {
                 defaults
             )
         ){
+
             return false;
+
         }
 
 
@@ -840,6 +1403,7 @@ const SettingsApp = {
                         )}
                     </strong>
 
+
                     <small>
                         ${this.escapeHTML(
                             description
@@ -880,6 +1444,14 @@ const SettingsApp = {
         options
     ){
 
+        const safeOptions =
+            Array.isArray(
+                options
+            )
+                ? options
+                : [];
+
+
         return `
             <label class="settings-select-row">
 
@@ -890,6 +1462,7 @@ const SettingsApp = {
                             label
                         )}
                     </strong>
+
 
                     <small>
                         ${this.escapeHTML(
@@ -910,7 +1483,7 @@ const SettingsApp = {
                     )}"
                 >
 
-                    ${options
+                    ${safeOptions
                         .map(
                             option => `
                                 <option
@@ -941,85 +1514,17 @@ const SettingsApp = {
 
 
     /* =====================================================
-       NAV
+       NAVIGATION
     ===================================================== */
-
-    getSections(){
-
-        return [
-
-            {
-                id:
-                    "privacy",
-                label:
-                    "Gizlilik",
-                icon:
-                    "◎"
-            },
-
-            {
-                id:
-                    "brain",
-                label:
-                    "Brain",
-                icon:
-                    "◇"
-            },
-
-            {
-                id:
-                    "memory",
-                label:
-                    "Memory",
-                icon:
-                    "◫"
-            },
-
-            {
-                id:
-                    "notifications",
-                label:
-                    "Bildirimler",
-                icon:
-                    "◉"
-            },
-
-            {
-                id:
-                    "applications",
-                label:
-                    "Uygulamalar",
-                icon:
-                    "▦"
-            },
-
-            {
-                id:
-                    "security",
-                label:
-                    "Güvenlik",
-                icon:
-                    "⌾"
-            },
-
-            {
-                id:
-                    "appearance",
-                label:
-                    "Görünüm",
-                icon:
-                    "◐"
-            }
-
-        ];
-
-    },
-
 
     renderNavigation(){
 
         return `
-            <div class="settings-navigation">
+            <div
+                class="settings-navigation"
+                role="navigation"
+                aria-label="Settings bölümleri"
+            >
 
                 ${this
                     .getSections()
@@ -1037,11 +1542,20 @@ const SettingsApp = {
                                 data-settings-section="${this.escapeHTML(
                                     section.id
                                 )}"
+                                aria-pressed="${
+                                    this.activeSection ===
+                                        section.id
+                                        ? "true"
+                                        : "false"
+                                }"
                             >
 
                                 <span aria-hidden="true">
-                                    ${section.icon}
+                                    ${this.escapeHTML(
+                                        section.icon
+                                    )}
                                 </span>
+
 
                                 <strong>
                                     ${this.escapeHTML(
@@ -1075,12 +1589,14 @@ const SettingsApp = {
                         PRIVACY
                     </span>
 
+
                     <h2>
                         Gizlilik ve görünürlük
                     </h2>
 
+
                     <p>
-                        Bu varlığın Engine içinde ne kadar görünür olduğunu kontrol eder.
+                        Bu varlık için Engine içindeki tercih edilen görünürlük politikasını belirler.
                     </p>
 
                 </header>
@@ -1090,20 +1606,31 @@ const SettingsApp = {
                     "privacy",
                     "visibility",
                     "Varlık görünürlüğü",
-                    "Bu varlığa kimlerin erişebileceğini belirler.",
+                    "Bu varlığın hedeflenen görünürlük seviyesini belirler.",
                     settings.privacy.visibility,
                     [
                         {
-                            value:"private",
-                            label:"Özel"
+                            value:
+                                "private",
+
+                            label:
+                                "Özel"
                         },
+
                         {
-                            value:"connections",
-                            label:"Bağlantılar"
+                            value:
+                                "connections",
+
+                            label:
+                                "Bağlantılar"
                         },
+
                         {
-                            value:"engine",
-                            label:"Engine"
+                            value:
+                                "engine",
+
+                            label:
+                                "Engine"
                         }
                     ]
                 )}
@@ -1113,7 +1640,7 @@ const SettingsApp = {
                     "privacy",
                     "allowBridgeDiscovery",
                     "Bridge keşfine izin ver",
-                    "Diğer uygun varlıkların Bridge üzerinden bu varlığı keşfedebilmesini sağlar.",
+                    "Bridge katmanının bu tercihi keşif politikası olarak kullanmasına izin verir.",
                     settings.privacy.allowBridgeDiscovery
                 )}
 
@@ -1122,7 +1649,7 @@ const SettingsApp = {
                     "privacy",
                     "exposeProfileToConnections",
                     "Profili bağlantılara göster",
-                    "Bridge bağlantılarının profil bağlamını görebilmesine izin verir.",
+                    "Bağlantı katmanları için profil görünürlüğü tercihini belirler.",
                     settings.privacy.exposeProfileToConnections
                 )}
 
@@ -1131,7 +1658,7 @@ const SettingsApp = {
                     "privacy",
                     "includeInGlobalSearch",
                     "Engine aramasında göster",
-                    "VAERO içindeki Search katmanının bu varlığı sonuçlara dahil etmesini sağlar.",
+                    "Search katmanı bu ayarı destekliyorsa varlığın sonuçlara dahil edilmesine izin verir.",
                     settings.privacy.includeInGlobalSearch
                 )}
 
@@ -1156,12 +1683,14 @@ const SettingsApp = {
                         BRAIN POLICY
                     </span>
 
+
                     <h2>
                         Brain erişim sınırları
                     </h2>
 
+
                     <p>
-                        Brain'in bu varlıktan hangi bağlamları okuyabileceğini belirler.
+                        Brain servislerinin bu tercihleri desteklediği alanlarda hangi varlık bağlamlarının kullanılabileceğini tanımlar.
                     </p>
 
                 </header>
@@ -1171,7 +1700,7 @@ const SettingsApp = {
                     "brain",
                     "enabled",
                     "Brain erişimi",
-                    "Brain'in bu varlığın bağlamına erişebilmesini sağlar.",
+                    "Bu varlık için Brain kullanım politikasını açar veya kapatır.",
                     settings.brain.enabled
                 )}
 
@@ -1180,7 +1709,7 @@ const SettingsApp = {
                     "brain",
                     "allowMemoryRead",
                     "Memory erişimi",
-                    "Brain'in kayıtlı Memory içeriklerini okuyabilmesine izin verir.",
+                    "Brain'in Memory bağlamını kullanmasına yönelik tercihi belirler.",
                     settings.brain.allowMemoryRead
                 )}
 
@@ -1189,7 +1718,7 @@ const SettingsApp = {
                     "brain",
                     "allowTimelineRead",
                     "Timeline erişimi",
-                    "Brain'in geçmiş olay akışını okuyabilmesine izin verir.",
+                    "Brain'in Timeline bağlamını kullanmasına yönelik tercihi belirler.",
                     settings.brain.allowTimelineRead
                 )}
 
@@ -1198,7 +1727,7 @@ const SettingsApp = {
                     "brain",
                     "allowBridgeRead",
                     "Bridge erişimi",
-                    "Brain'in ilişki ağını ve bağlantıları okuyabilmesine izin verir.",
+                    "Brain'in Bridge ilişkilerini kullanmasına yönelik tercihi belirler.",
                     settings.brain.allowBridgeRead
                 )}
 
@@ -1207,7 +1736,7 @@ const SettingsApp = {
                     "brain",
                     "allowEvolutionRead",
                     "Evolution erişimi",
-                    "Brain'in hedef, karar ve gelişim kayıtlarını okuyabilmesini sağlar.",
+                    "Brain'in Evolution bağlamını kullanmasına yönelik tercihi belirler.",
                     settings.brain.allowEvolutionRead
                 )}
 
@@ -1216,7 +1745,7 @@ const SettingsApp = {
                     "brain",
                     "allowProfileRead",
                     "Profile erişimi",
-                    "Brain'in profil bağlamını kullanabilmesini sağlar.",
+                    "Brain'in Profile bağlamını kullanmasına yönelik tercihi belirler.",
                     settings.brain.allowProfileRead
                 )}
 
@@ -1225,7 +1754,7 @@ const SettingsApp = {
                     "brain",
                     "requireConfirmationForActions",
                     "Aksiyonlarda onay iste",
-                    "Brain'in değişiklik yapan işlemleri kullanıcı onayı olmadan çalıştırmasını engeller.",
+                    "Brain action policy bu tercihi destekliyorsa değişiklik yapan işlemlerde onay talep eder.",
                     settings.brain.requireConfirmationForActions
                 )}
 
@@ -1234,7 +1763,7 @@ const SettingsApp = {
                     "brain",
                     "allowSensitiveContext",
                     "Hassas bağlama izin ver",
-                    "Hassas olarak işaretlenen bağlamların Brain'e aktarılmasına izin verir.",
+                    "Desteklenen Brain policy katmanlarında hassas bağlam kullanım tercihini açar.",
                     settings.brain.allowSensitiveContext
                 )}
 
@@ -1259,12 +1788,14 @@ const SettingsApp = {
                         MEMORY POLICY
                     </span>
 
+
                     <h2>
                         Hafıza sınırları
                     </h2>
 
+
                     <p>
-                        Bu varlığın hafızasının nasıl kullanılacağını belirler.
+                        Memory servislerinin desteklediği alanlarda bu varlık için kullanılacak tercihleri tanımlar.
                     </p>
 
                 </header>
@@ -1274,7 +1805,7 @@ const SettingsApp = {
                     "memory",
                     "enabled",
                     "Memory aktif",
-                    "Bu varlık için Memory kayıtlarının kullanılmasını sağlar.",
+                    "Bu varlığın Memory kullanım tercihini açar veya kapatır.",
                     settings.memory.enabled
                 )}
 
@@ -1283,7 +1814,7 @@ const SettingsApp = {
                     "memory",
                     "allowBrainAccess",
                     "Brain Memory erişimi",
-                    "Brain'in Memory Core üzerinden bu varlığın hafızasını okuyabilmesini sağlar.",
+                    "Brain ve Memory entegrasyonu bu tercihi destekliyorsa hafıza erişimine izin verir.",
                     settings.memory.allowBrainAccess
                 )}
 
@@ -1292,7 +1823,7 @@ const SettingsApp = {
                     "memory",
                     "includeArchived",
                     "Arşivlenmiş hafızayı dahil et",
-                    "Uygun sorgularda arşivlenmiş kayıtların da kullanılmasına izin verir.",
+                    "Desteklenen Memory sorgularında arşivlenmiş kayıtları dahil etme tercihini belirler.",
                     settings.memory.includeArchived
                 )}
 
@@ -1301,7 +1832,7 @@ const SettingsApp = {
                     "memory",
                     "autoCaptureSystemEvents",
                     "Sistem olaylarını otomatik kaydet",
-                    "Anlamlı Engine olaylarının Memory Core'a aktarılmasına izin verir.",
+                    "Memory Core bu policy'yi tüketiyorsa anlamlı sistem olaylarının kayda alınmasına izin verir.",
                     settings.memory.autoCaptureSystemEvents
                 )}
 
@@ -1326,12 +1857,14 @@ const SettingsApp = {
                         NOTIFICATIONS
                     </span>
 
+
                     <h2>
                         Bildirim tercihleri
                     </h2>
 
+
                     <p>
-                        Engine içindeki hangi olayların bildirim üretebileceğini belirler.
+                        Bildirim sistemi bu tercihleri desteklediğinde hangi olay kategorilerinin bildirim üretebileceğini belirler.
                     </p>
 
                 </header>
@@ -1341,7 +1874,7 @@ const SettingsApp = {
                     "notifications",
                     "enabled",
                     "Bildirimler",
-                    "Bu varlık için bildirim üretimini açar veya kapatır.",
+                    "Bu varlık için genel bildirim tercihini açar veya kapatır.",
                     settings.notifications.enabled
                 )}
 
@@ -1350,7 +1883,7 @@ const SettingsApp = {
                     "notifications",
                     "evolution",
                     "Evolution bildirimleri",
-                    "Önemli hedef ve gelişim olaylarında bildirim üretir.",
+                    "Evolution olayları için bildirim tercihini belirler.",
                     settings.notifications.evolution
                 )}
 
@@ -1359,7 +1892,7 @@ const SettingsApp = {
                     "notifications",
                     "bridge",
                     "Bridge bildirimleri",
-                    "Yeni veya değişen bağlantılarda bildirim üretir.",
+                    "Bridge olayları için bildirim tercihini belirler.",
                     settings.notifications.bridge
                 )}
 
@@ -1368,7 +1901,7 @@ const SettingsApp = {
                     "notifications",
                     "memory",
                     "Memory bildirimleri",
-                    "Önemli Memory değişikliklerinde bildirim üretir.",
+                    "Memory olayları için bildirim tercihini belirler.",
                     settings.notifications.memory
                 )}
 
@@ -1377,7 +1910,7 @@ const SettingsApp = {
                     "notifications",
                     "security",
                     "Güvenlik bildirimleri",
-                    "Güvenlik/policy olaylarının bildirim üretmesini sağlar.",
+                    "Güvenlik ve policy olayları için bildirim tercihini belirler.",
                     settings.notifications.security
                 )}
 
@@ -1386,7 +1919,7 @@ const SettingsApp = {
                     "notifications",
                     "applications",
                     "Uygulama bildirimleri",
-                    "Kurulum, güncelleme ve izin olaylarını bildirir.",
+                    "Application olayları için bildirim tercihini belirler.",
                     settings.notifications.applications
                 )}
 
@@ -1395,8 +1928,7 @@ const SettingsApp = {
 
     },
 
-
-    /* =====================================================
+   /* =====================================================
        APPLICATIONS
     ===================================================== */
 
@@ -1411,12 +1943,14 @@ const SettingsApp = {
                         APPLICATION POLICY
                     </span>
 
+
                     <h2>
-                        Uygulama izinleri
+                        Uygulama tercihleri
                     </h2>
 
+
                     <p>
-                        Applications katmanının bu varlık üzerinde hangi yetkilere sahip olabileceğini belirler.
+                        Applications katmanının desteklediği alanlarda kurulum, izin incelemesi ve arka plan davranışı için tercihleri tanımlar.
                     </p>
 
                 </header>
@@ -1426,7 +1960,7 @@ const SettingsApp = {
                     "applications",
                     "allowInstall",
                     "Uygulama kurulumu",
-                    "Bu varlık bağlamında uygulama kurulmasına izin verir.",
+                    "Applications katmanı bu policy'yi destekliyorsa bu varlık bağlamında uygulama kurulumuna izin verir.",
                     settings.applications.allowInstall
                 )}
 
@@ -1435,7 +1969,7 @@ const SettingsApp = {
                     "applications",
                     "requirePermissionReview",
                     "İzin incelemesi zorunlu",
-                    "Bir uygulama izin talep ettiğinde kullanıcı incelemesi gerektirir.",
+                    "Bir uygulamanın izin talebi varsa kullanıcı incelemesi gerektirilmesi tercihini belirler.",
                     settings.applications.requirePermissionReview
                 )}
 
@@ -1444,7 +1978,7 @@ const SettingsApp = {
                     "applications",
                     "allowExternalApps",
                     "Harici uygulamalara izin ver",
-                    "Doğrulanmış dış uygulamaların kurulabilmesine izin verir. Gerçek doğrulama Application Verifier tarafından yapılmalıdır.",
+                    "Harici uygulamalar desteklendiğinde kuruluma izin verilmesi tercihini belirler. Bu ayar tek başına uygulamayı güvenilir veya doğrulanmış yapmaz.",
                     settings.applications.allowExternalApps
                 )}
 
@@ -1453,7 +1987,7 @@ const SettingsApp = {
                     "applications",
                     "allowBackgroundActivity",
                     "Arka plan etkinliği",
-                    "Yetkili uygulamaların açık olmadıkları sırada sınırlı görev çalıştırabilmesine izin verir.",
+                    "Applications runtime bunu destekliyorsa yetkili uygulamaların sınırlı arka plan çalışmasına izin verilmesi tercihini belirler.",
                     settings.applications.allowBackgroundActivity
                 )}
 
@@ -1478,12 +2012,14 @@ const SettingsApp = {
                         SECURITY POLICY
                     </span>
 
+
                     <h2>
                         Güvenlik tercihleri
                     </h2>
 
+
                     <p>
-                        Bu ayarlar Engine tarafındaki policy davranışını belirler. Sunucu tarafı güvenliğin yerine geçmez.
+                        Bu ekran güvenlik policy tercihlerini saklar. Gerçek enforcement, ilgili Engine servisleri ve sunucu katmanları tarafından uygulanmalıdır.
                     </p>
 
                 </header>
@@ -1493,7 +2029,7 @@ const SettingsApp = {
                     "security",
                     "lockSensitiveActions",
                     "Hassas aksiyonları kilitle",
-                    "Silme, ödeme, izin ve kritik değişikliklerin doğrudan çalışmasını engeller.",
+                    "Action policy bu tercihi destekliyorsa kritik değişikliklerin ek kontrol olmadan çalışmasını sınırlar.",
                     settings.security.lockSensitiveActions
                 )}
 
@@ -1502,7 +2038,7 @@ const SettingsApp = {
                     "security",
                     "requireActionConfirmation",
                     "Kritik işlemlerde onay iste",
-                    "Riskli işlemlerde kullanıcı onayı gerektirir.",
+                    "Desteklenen action policy akışlarında riskli işlemler için kullanıcı onayı tercihini açar.",
                     settings.security.requireActionConfirmation
                 )}
 
@@ -1511,7 +2047,7 @@ const SettingsApp = {
                     "security",
                     "allowUnknownApplications",
                     "Bilinmeyen uygulamalara izin ver",
-                    "Doğrulanmamış uygulamalara güvenilmesini sağlar. Güvenli varsayılan kapalıdır.",
+                    "Uygulama güven politikası bu ayarı destekliyorsa bilinmeyen kaynaklara yönelik tercihi belirler. Güvenli varsayılan kapalıdır.",
                     settings.security.allowUnknownApplications
                 )}
 
@@ -1520,20 +2056,31 @@ const SettingsApp = {
                     "security",
                     "sessionVisibility",
                     "Oturum görünürlüğü",
-                    "Engine içindeki aktif oturum bağlamının görünürlük seviyesini belirler.",
+                    "Oturum bağlamını kullanan servisler bu tercihi destekliyorsa hedef görünürlük seviyesini belirler.",
                     settings.security.sessionVisibility,
                     [
                         {
-                            value:"private",
-                            label:"Özel"
+                            value:
+                                "private",
+
+                            label:
+                                "Özel"
                         },
+
                         {
-                            value:"entity",
-                            label:"Yalnız bu varlık"
+                            value:
+                                "entity",
+
+                            label:
+                                "Yalnız bu varlık"
                         },
+
                         {
-                            value:"engine",
-                            label:"Engine"
+                            value:
+                                "engine",
+
+                            label:
+                                "Engine"
                         }
                     ]
                 )}
@@ -1542,11 +2089,12 @@ const SettingsApp = {
                 <div class="settings-warning-card">
 
                     <strong>
-                        Production güvenliği
+                        Policy sınırı
                     </strong>
 
+
                     <p>
-                        Gerçek kimlik doğrulama, yetkilendirme, rate limiting, WAF, signed applications ve oturum doğrulaması backend katmanında uygulanmalıdır.
+                        Buradaki tercihler tek başına kimlik doğrulama, yetkilendirme, oturum güvenliği veya uygulama doğrulaması sağlamaz.
                     </p>
 
                 </div>
@@ -1572,12 +2120,14 @@ const SettingsApp = {
                         APPEARANCE
                     </span>
 
+
                     <h2>
                         Engine görünümü
                     </h2>
 
+
                     <p>
-                        Bu Entity bağlamındaki arayüz davranış tercihlerini belirler.
+                        Bu varlık bağlamındaki desteklenen arayüz davranış tercihlerini belirler.
                     </p>
 
                 </header>
@@ -1587,20 +2137,31 @@ const SettingsApp = {
                     "appearance",
                     "density",
                     "Arayüz yoğunluğu",
-                    "Kart ve içerik alanlarının sıkılık seviyesini belirler.",
+                    "Arayüz katmanı bu tercihi destekliyorsa kart ve içerik alanlarının yoğunluk seviyesini belirler.",
                     settings.appearance.density,
                     [
                         {
-                            value:"compact",
-                            label:"Kompakt"
+                            value:
+                                "compact",
+
+                            label:
+                                "Kompakt"
                         },
+
                         {
-                            value:"comfortable",
-                            label:"Dengeli"
+                            value:
+                                "comfortable",
+
+                            label:
+                                "Dengeli"
                         },
+
                         {
-                            value:"spacious",
-                            label:"Geniş"
+                            value:
+                                "spacious",
+
+                            label:
+                                "Geniş"
                         }
                     ]
                 )}
@@ -1610,7 +2171,7 @@ const SettingsApp = {
                     "appearance",
                     "reduceMotion",
                     "Hareketleri azalt",
-                    "Animasyon ve hareketli geçişleri azaltır.",
+                    "UI katmanı bu tercihi destekliyorsa animasyon ve hareketli geçişleri azaltır.",
                     settings.appearance.reduceMotion
                 )}
 
@@ -1619,7 +2180,7 @@ const SettingsApp = {
                     "appearance",
                     "showAmbientEffects",
                     "Ambient efektleri göster",
-                    "VAERO'nun yaşayan arayüz atmosferini etkin tutar.",
+                    "UI katmanı bu tercihi destekliyorsa VAERO'nun ambient görsel efektlerini açık tutar.",
                     settings.appearance.showAmbientEffects
                 )}
 
@@ -1640,36 +2201,42 @@ const SettingsApp = {
         ){
 
             case "brain":
+
                 return this.renderBrain(
                     settings
                 );
 
 
             case "memory":
+
                 return this.renderMemory(
                     settings
                 );
 
 
             case "notifications":
+
                 return this.renderNotifications(
                     settings
                 );
 
 
             case "applications":
+
                 return this.renderApplications(
                     settings
                 );
 
 
             case "security":
+
                 return this.renderSecurity(
                     settings
                 );
 
 
             case "appearance":
+
                 return this.renderAppearance(
                     settings
                 );
@@ -1677,6 +2244,7 @@ const SettingsApp = {
 
             case "privacy":
             default:
+
                 return this.renderPrivacy(
                     settings
                 );
@@ -1701,10 +2269,12 @@ const SettingsApp = {
                         Görünürlük
                     </span>
 
+
                     <strong>
                         ${this.escapeHTML(
                             this.visibilityLabel(
-                                settings.privacy.visibility
+                                settings.privacy
+                                    .visibility
                             )
                         )}
                     </strong>
@@ -1718,10 +2288,12 @@ const SettingsApp = {
                         Brain
                     </span>
 
+
                     <strong>
                         ${this.escapeHTML(
                             this.yesNo(
-                                settings.brain.enabled
+                                settings.brain
+                                    .enabled
                             )
                         )}
                     </strong>
@@ -1735,10 +2307,12 @@ const SettingsApp = {
                         Memory
                     </span>
 
+
                     <strong>
                         ${this.escapeHTML(
                             this.yesNo(
-                                settings.memory.enabled
+                                settings.memory
+                                    .enabled
                             )
                         )}
                     </strong>
@@ -1752,10 +2326,12 @@ const SettingsApp = {
                         Bildirim
                     </span>
 
+
                     <strong>
                         ${this.escapeHTML(
                             this.yesNo(
-                                settings.notifications.enabled
+                                settings.notifications
+                                    .enabled
                             )
                         )}
                     </strong>
@@ -1769,15 +2345,74 @@ const SettingsApp = {
 
 
     /* =====================================================
+       UI FALLBACKS
+    ===================================================== */
+
+    renderAppHeader(entity){
+
+        if(
+            window.UI &&
+            typeof UI.appHeader ===
+                "function"
+        ){
+
+            return UI.appHeader(
+                this.escapeHTML(
+                    entity?.name ||
+                    "VAERO Varlığı"
+                ),
+                "SETTINGS",
+                "⚙️"
+            );
+
+        }
+
+
+        return `
+            <header class="engine-app-header">
+
+                <span class="engine-section-label">
+                    SETTINGS
+                </span>
+
+
+                <h1>
+                    ${this.escapeHTML(
+                        entity?.name ||
+                        "VAERO Varlığı"
+                    )}
+                </h1>
+
+            </header>
+        `;
+
+    },
+
+
+    renderBrainPanel(){
+
+        try{
+
+            return (
+                window.UI
+                    ?.brainPanel?.() ||
+                ""
+            );
+
+        } catch(error){
+
+            return "";
+
+        }
+
+    },
+
+
+    /* =====================================================
        RENDER
     ===================================================== */
 
     render(entity){
-
-        this.enterBrainContext(
-            entity
-        );
-
 
         if(!entity){
 
@@ -1790,6 +2425,7 @@ const SettingsApp = {
                             Settings açılamadı
                         </h1>
 
+
                         <p>
                             Bu varlığın ayar bağlamı bulunamadı.
                         </p>
@@ -1800,6 +2436,17 @@ const SettingsApp = {
             `;
 
         }
+
+
+        this.activeSection =
+            this.normalizeSection(
+                this.activeSection
+            );
+
+
+        this.enterBrainContext(
+            entity
+        );
 
 
         const settings =
@@ -1826,13 +2473,8 @@ const SettingsApp = {
                     </div>
 
 
-                    ${UI.appHeader(
-                        this.escapeHTML(
-                            entity.name ||
-                            "VAERO Varlığı"
-                        ),
-                        "SETTINGS",
-                        "⚙️"
+                    ${this.renderAppHeader(
+                        entity
                     )}
 
 
@@ -1844,12 +2486,14 @@ const SettingsApp = {
                                 ENTITY POLICY
                             </span>
 
+
                             <h2>
                                 Ayarlar ve sınırlar
                             </h2>
 
+
                             <p>
-                                Gizlilik, Brain erişimi, Memory davranışı, bildirimler, uygulama izinleri ve güvenlik tercihleri.
+                                Gizlilik, Brain, Memory, bildirimler, uygulamalar, güvenlik ve görünüm için varlık düzeyindeki tercihleri yönet.
                             </p>
 
                         </div>
@@ -1884,6 +2528,7 @@ const SettingsApp = {
                                         Varsayılan ayarlar
                                     </strong>
 
+
                                     <small>
                                         Bu varlığın tüm Settings tercihlerini başlangıç değerlerine döndürür.
                                     </small>
@@ -1906,7 +2551,7 @@ const SettingsApp = {
                     </div>
 
 
-                    ${UI.brainPanel()}
+                    ${this.renderBrainPanel()}
 
                 </div>
 
@@ -1930,7 +2575,9 @@ const SettingsApp = {
 
 
         if(!entity){
+
             return false;
+
         }
 
 
@@ -1939,9 +2586,10 @@ const SettingsApp = {
             case "section":
 
                 this.activeSection =
-                    element.dataset
-                        .settingsSection ||
-                    "privacy";
+                    this.normalizeSection(
+                        element?.dataset
+                            ?.settingsSection
+                    );
 
 
                 return this.remount();
@@ -1953,10 +2601,12 @@ const SettingsApp = {
                     entity
                 );
 
+
+            default:
+
+                return false;
+
         }
-
-
-        return false;
 
     }
 
@@ -1978,7 +2628,9 @@ document.addEventListener(
 
 
         if(!element){
+
             return;
+
         }
 
 
@@ -1996,44 +2648,78 @@ document.addEventListener(
 
 
 /* =========================================================
-   SETTINGS TOGGLES
+   SETTINGS CONTROLS
 ========================================================= */
 
 document.addEventListener(
     "change",
     event => {
 
+        const target =
+            event.target;
+
+
+        if(
+            !target.matches(
+                "[data-settings-toggle], [data-settings-select]"
+            )
+        ){
+
+            return;
+
+        }
+
+
         const entity =
-            SettingsApp.getCurrentEntity();
+            SettingsApp
+                .getCurrentEntity();
 
 
         if(!entity){
+
             return;
+
+        }
+
+
+        const section =
+            String(
+                target.dataset
+                    .section ||
+                ""
+            );
+
+
+        const key =
+            String(
+                target.dataset
+                    .key ||
+                ""
+            );
+
+
+        if(
+            !section ||
+            !key
+        ){
+
+            return;
+
         }
 
 
         if(
-            event.target.matches(
+            target.matches(
                 "[data-settings-toggle]"
             )
         ){
-
-            const section =
-                event.target.dataset
-                    .section;
-
-
-            const key =
-                event.target.dataset
-                    .key;
-
 
             SettingsApp.updateSetting(
                 entity,
                 section,
                 key,
                 Boolean(
-                    event.target.checked
+                    target.checked
                 )
             );
 
@@ -2043,33 +2729,42 @@ document.addEventListener(
         }
 
 
-        if(
-            event.target.matches(
-                "[data-settings-select]"
-            )
-        ){
-
-            const section =
-                event.target.dataset
-                    .section;
-
-
-            const key =
-                event.target.dataset
-                    .key;
-
-
-            SettingsApp.updateSetting(
-                entity,
-                section,
-                key,
-                event.target.value
-            );
-
-        }
+        SettingsApp.updateSetting(
+            entity,
+            section,
+            key,
+            target.value
+        );
 
     }
 );
+
+
+/* =========================================================
+   REGISTER
+========================================================= */
+
+try{
+
+    if(
+        typeof VAERO !==
+            "undefined" &&
+        typeof VAERO.register ===
+            "function"
+    ){
+
+        VAERO.register(
+            "settingsApp",
+            SettingsApp
+        );
+
+    }
+
+} catch(error){
+
+    /* global remains available */
+
+}
 
 
 window.SettingsApp =
