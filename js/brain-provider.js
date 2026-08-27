@@ -12,10 +12,13 @@ const BrainProvider = {
         "VAERO Local Brain",
 
     version:
-        "2.0.0",
+        "3.0.0",
 
     type:
         "local-fallback",
+
+    local:
+        true,
 
     externalAI:
         false,
@@ -28,7 +31,8 @@ const BrainProvider = {
     normalizePrompt(prompt){
 
         return String(
-            prompt ?? ""
+            prompt ??
+                ""
         )
             .trim()
             .slice(
@@ -43,12 +47,15 @@ const BrainProvider = {
 
         if(
             !context ||
-            typeof context !== "object" ||
+            typeof context !==
+                "object" ||
             Array.isArray(
                 context
             )
         ){
+
             return {};
+
         }
 
 
@@ -60,20 +67,45 @@ const BrainProvider = {
     normalizeText(value){
 
         return String(
-            value ?? ""
+            value ??
+                ""
         )
             .trim()
             .toLocaleLowerCase(
                 "tr-TR"
             )
-            .replaceAll("ı", "i")
-            .replaceAll("ğ", "g")
-            .replaceAll("ü", "u")
-            .replaceAll("ş", "s")
-            .replaceAll("ö", "o")
-            .replaceAll("ç", "c")
-            .replace(/[?.!,;:()[\]{}"'`]/g, " ")
-            .replace(/\s+/g, " ")
+            .replaceAll(
+                "ı",
+                "i"
+            )
+            .replaceAll(
+                "ğ",
+                "g"
+            )
+            .replaceAll(
+                "ü",
+                "u"
+            )
+            .replaceAll(
+                "ş",
+                "s"
+            )
+            .replaceAll(
+                "ö",
+                "o"
+            )
+            .replaceAll(
+                "ç",
+                "c"
+            )
+            .replace(
+                /[?.!,;:()[\]{}"'`]/g,
+                " "
+            )
+            .replace(
+                /\s+/g,
+                " "
+            )
             .trim();
 
     },
@@ -94,13 +126,35 @@ const BrainProvider = {
             );
 
 
+        if(
+            !normalized ||
+            !Array.isArray(
+                phrases
+            )
+        ){
+
+            return false;
+
+        }
+
+
         return phrases.some(
-            phrase =>
-                normalized.includes(
+            phrase => {
+
+                const target =
                     this.normalizeText(
                         phrase
+                    );
+
+
+                return (
+                    target &&
+                    normalized.includes(
+                        target
                     )
-                )
+                );
+
+            }
         );
 
     },
@@ -111,7 +165,10 @@ const BrainProvider = {
         return (
             context?.brain &&
             typeof context.brain ===
-                "object"
+                "object" &&
+            !Array.isArray(
+                context.brain
+            )
                 ? context.brain
                 : {}
         );
@@ -120,7 +177,7 @@ const BrainProvider = {
 
 
     /* =====================================================
-       ROUTE-AWARE RESPONSE
+       ROUTE / POLICY RESPONSE
     ===================================================== */
 
     getRouteReply(context){
@@ -132,42 +189,64 @@ const BrainProvider = {
 
 
         if(
-            brainContext.executed &&
+            brainContext.executed ===
+                true &&
             brainContext.actionResult
         ){
 
-            const actionMessage =
-                brainContext
-                    .actionResult
-                    .message;
+            const actionResult =
+                brainContext.actionResult;
 
 
-            if(actionMessage){
+            if(
+                typeof actionResult ===
+                    "string"
+            ){
 
-                return String(
-                    actionMessage
-                );
+                return actionResult;
 
             }
 
 
-            return (
-                "İşlem tamamlandı."
-            );
+            if(
+                typeof actionResult ===
+                    "object"
+            ){
+
+                const actionMessage =
+                    actionResult.message ||
+                    actionResult.reply ||
+                    actionResult.text ||
+                    null;
+
+
+                if(actionMessage){
+
+                    return String(
+                        actionMessage
+                    );
+
+                }
+
+            }
+
+
+            return "İşlem tamamlandı.";
 
         }
 
 
         if(
-            brainContext
-                .requiresConfirmation &&
-            !brainContext.executed
+            brainContext.requiresConfirmation ===
+                true &&
+            brainContext.executed !==
+                true
         ){
 
             return (
-                brainContext
-                    .policy
+                brainContext.policy
                     ?.reason ||
+                brainContext.reason ||
                 "Bu işlem devam etmeden önce onayını gerektiriyor."
             );
 
@@ -175,14 +254,29 @@ const BrainProvider = {
 
 
         if(
-            brainContext.blocked
+            brainContext.blocked ===
+                true
         ){
 
             return (
-                brainContext
-                    .policy
+                brainContext.policy
                     ?.reason ||
-                "Bu işlem Brain tarafından uygulanamaz."
+                brainContext.reason ||
+                "Bu işlem mevcut Brain policy kapsamında uygulanamaz."
+            );
+
+        }
+
+
+        if(
+            brainContext.policy?.allowed ===
+                false
+        ){
+
+            return (
+                brainContext.policy
+                    ?.reason ||
+                "Bu işlem mevcut Brain policy tarafından engellendi."
             );
 
         }
@@ -231,6 +325,21 @@ const BrainProvider = {
             null;
 
 
+        const runtime =
+            context?.runtime ||
+            null;
+
+
+        const kernel =
+            context?.kernel ||
+            null;
+
+
+        const data =
+            context?.data ||
+            {};
+
+
         return {
 
             app,
@@ -269,9 +378,45 @@ const BrainProvider = {
                 applications?.installed ??
                 null,
 
+            builtInApplications:
+                applications?.builtIn ??
+                null,
+
             organStatus:
                 organs?.status ||
                 null,
+
+            organTotal:
+                organs?.total ??
+                null,
+
+            problematicOrgans:
+                organs?.problematic ??
+                null,
+
+            runtimeStatus:
+                runtime?.status ||
+                null,
+
+            runtimeRunning:
+                runtime?.running ===
+                    true,
+
+            runtimePaused:
+                runtime?.paused ===
+                    true,
+
+            kernelStatus:
+                kernel?.status ||
+                null,
+
+            kernelBooted:
+                kernel?.booted ===
+                    true,
+
+            securityReady:
+                kernel?.securityReady ===
+                    true,
 
             discoveryCompleted:
                 discovery?.completed ===
@@ -285,9 +430,33 @@ const BrainProvider = {
                 discovery?.brainMode ||
                 null,
 
+            memoryTotal:
+                Number(
+                    data?.memory?.total
+                ) ||
+                0,
+
+            timelineTotal:
+                Number(
+                    data?.timeline?.total
+                ) ||
+                0,
+
+            evolutionTotal:
+                Number(
+                    data?.evolution?.total
+                ) ||
+                0,
+
+            bridgeTotal:
+                Number(
+                    data?.bridge?.total
+                ) ||
+                0,
+
             engineReady:
                 context?.engineReady !==
-                false
+                    false
 
         };
 
@@ -346,7 +515,7 @@ const BrainProvider = {
 
 
             return (
-                "Applications, Engine içindeki uygulamaları keşfetme, yükleme, güncelleme ve izinlerini yönetme katmanıdır."
+                "Applications, Engine içindeki uygulamaları keşfetme ve yönetme katmanıdır."
             );
 
         }
@@ -378,7 +547,7 @@ const BrainProvider = {
 
 
             return (
-                "Şu anda aktif bir World bağlamı bulunmuyor."
+                "Şu anda aktif bir World bağlamı görünmüyor."
             );
 
         }
@@ -410,7 +579,7 @@ const BrainProvider = {
 
 
             return (
-                "Şu anda aktif bir Entity bağlamı bulunmuyor."
+                "Şu anda aktif bir Entity bağlamı görünmüyor."
             );
 
         }
@@ -436,9 +605,20 @@ const BrainProvider = {
                 summary.discoveryCompleted
             ){
 
-                return summary.discoveryDirection
-                    ? `Discovery tamamlandı. Şu anki başlangıç yönün: ${summary.discoveryDirection}.`
-                    : "Discovery tamamlandı ve kişisel Engine bağlamına işlendi.";
+                if(
+                    summary.discoveryDirection
+                ){
+
+                    return (
+                        `Discovery tamamlandı. Başlangıç yönü: ${summary.discoveryDirection}.`
+                    );
+
+                }
+
+
+                return (
+                    "Discovery tamamlandı ve Engine bağlamına işlendi."
+                );
 
             }
 
@@ -451,7 +631,7 @@ const BrainProvider = {
 
 
         /* -------------------------------------------------
-           ORGAN HEALTH
+           SYSTEM HEALTH
         ------------------------------------------------- */
 
         if(
@@ -462,24 +642,155 @@ const BrainProvider = {
                     "organlar",
                     "sistem durumu",
                     "engine health",
-                    "health"
+                    "health",
+                    "kernel",
+                    "runtime",
+                    "guvenlik"
                 ]
             )
         ){
 
+            const parts =
+                [];
+
+
             if(
-                summary.organStatus
+                summary.kernelStatus
             ){
 
-                return (
-                    `Engine organ durumu: ${summary.organStatus}.`
+                parts.push(
+                    `Kernel: ${summary.kernelStatus}`
                 );
 
             }
 
 
+            if(
+                summary.runtimeStatus
+            ){
+
+                parts.push(
+                    `Runtime: ${summary.runtimeStatus}`
+                );
+
+            }
+
+
+            if(
+                summary.organStatus
+            ){
+
+                parts.push(
+                    `Organlar: ${summary.organStatus}`
+                );
+
+            }
+
+
+            parts.push(
+                `Security ready: ${
+                    summary.securityReady
+                        ? "evet"
+                        : "hayır"
+                }`
+            );
+
+
             return (
-                "Organ health bilgisi şu anda kullanılabilir değil."
+                parts.join(
+                    ", "
+                ) +
+                "."
+            );
+
+        }
+
+
+        /* -------------------------------------------------
+           MEMORY
+        ------------------------------------------------- */
+
+        if(
+            this.includesAny(
+                normalized,
+                [
+                    "hafiza",
+                    "memory",
+                    "hatira",
+                    "kayit"
+                ]
+            )
+        ){
+
+            return (
+                `Aktif Entity bağlamında ${summary.memoryTotal} Memory kaydı görünüyor.`
+            );
+
+        }
+
+
+        /* -------------------------------------------------
+           TIMELINE
+        ------------------------------------------------- */
+
+        if(
+            this.includesAny(
+                normalized,
+                [
+                    "timeline",
+                    "zaman cizelgesi",
+                    "gecmis"
+                ]
+            )
+        ){
+
+            return (
+                `Aktif Entity bağlamında ${summary.timelineTotal} Timeline olayı görünüyor.`
+            );
+
+        }
+
+
+        /* -------------------------------------------------
+           BRIDGE
+        ------------------------------------------------- */
+
+        if(
+            this.includesAny(
+                normalized,
+                [
+                    "bridge",
+                    "kopru",
+                    "baglanti",
+                    "baglantilar"
+                ]
+            )
+        ){
+
+            return (
+                `Aktif Entity bağlamında ${summary.bridgeTotal} Bridge bağlantısı görünüyor.`
+            );
+
+        }
+
+
+        /* -------------------------------------------------
+           EVOLUTION
+        ------------------------------------------------- */
+
+        if(
+            this.includesAny(
+                normalized,
+                [
+                    "evolution",
+                    "evrim",
+                    "gelisim"
+                ]
+            )
+        ){
+
+            return (
+                `Aktif Entity bağlamında ${summary.evolutionTotal} Evolution olayı görünüyor.`
             );
 
         }
@@ -502,7 +813,7 @@ const BrainProvider = {
         ){
 
             return (
-                "VAERO Brain şu anda yerel Engine bağlamını, Intent, Policy, Actions, Skills, Applications ve kullanıcı contextini koordine edebiliyor. Dış AI provider henüz bağlı değil."
+                "VAERO Brain'in yerel fallback provider'ıyım. Engine contextini okuyabilir, route ve policy sonuçlarını yansıtabilir ve desteklenen yerel sistem bilgilerini açıklayabilirim. Dış AI provider bağlı değilse genel bilgi üretmem."
             );
 
         }
@@ -525,56 +836,49 @@ const BrainProvider = {
             );
 
 
-        const parts = [];
+        const parts =
+            [];
 
 
-        if(
-            summary.app
-        ){
+        if(summary.app){
 
             parts.push(
-                `${summary.app} bağlamındayım`
+                `${summary.app} bağlamı`
             );
 
         }
 
 
-        if(
-            summary.entityName
-        ){
+        if(summary.entityName){
 
             parts.push(
-                `aktif Entity: ${summary.entityName}`
+                `Entity: ${summary.entityName}`
             );
 
         }
 
 
-        if(
-            summary.worldName
-        ){
+        if(summary.worldName){
 
             parts.push(
-                `aktif World: ${summary.worldName}`
+                `World: ${summary.worldName}`
             );
 
         }
 
 
-        if(
-            parts.length > 0
-        ){
+        if(parts.length > 0){
 
             return (
                 `${parts.join(", ")}. ` +
-                "Engine içindeki desteklenen işlemleri anlayabilir ve güvenli işlem zincirine yönlendirebilirim."
+                "Yerel fallback provider olarak bu bağlamdaki desteklenen Engine işlemlerini ve mevcut sistem durumunu yansıtabilirim."
             );
 
         }
 
 
         return (
-            "VAERO Brain aktif. Engine içindeki desteklenen işlemleri anlayabilir ve güvenli işlem zincirine yönlendirebilirim."
+            "VAERO Local Brain aktif. Yerel Engine bağlamını ve desteklenen işlem sonuçlarını yansıtabilirim."
         );
 
     },
@@ -590,7 +894,7 @@ const BrainProvider = {
     ){
 
         /*
-         * 1. Action / Policy sonucu her şeyden önce gelir.
+         * 1. Route / Policy sonucu her şeyden önce gelir.
          */
 
         const routeReply =
@@ -607,7 +911,7 @@ const BrainProvider = {
 
 
         /*
-         * 2. Yerel Engine bilgisinden anlamlı cevap.
+         * 2. Yerel Engine bilgisinden desteklenen cevap.
          */
 
         const knowledgeReply =
@@ -625,11 +929,11 @@ const BrainProvider = {
 
 
         /*
-         * 3. Aktif bağlama göre genel fallback.
+         * 3. Local provider bilmediği konuda uydurmaz.
          */
 
-        return this.buildContextualReply(
-            context
+        return (
+            "Bu istek için yerel Engine bağlamında yeterli bilgi yok. Dış AI provider bağlı değilse bu konuda genel cevap üretemem."
         );
 
     },
@@ -670,11 +974,17 @@ const BrainProvider = {
                 providerName:
                     this.name,
 
+                providerVersion:
+                    this.version,
+
                 local:
                     true,
 
                 externalAI:
                     false,
+
+                contextual:
+                    true,
 
                 generatedAt:
                     Date.now()
@@ -704,6 +1014,9 @@ const BrainProvider = {
             providerVersion:
                 this.version,
 
+            type:
+                this.type,
+
             local:
                 true,
 
@@ -711,6 +1024,9 @@ const BrainProvider = {
                 false,
 
             contextual:
+                true,
+
+            fallback:
                 true,
 
             generatedAt:
@@ -747,10 +1063,14 @@ const BrainProvider = {
             local:
                 true,
 
+            fallback:
+                true,
+
             externalAI:
                 false,
 
             capabilities:[
+
                 "context.reply",
                 "route.reflect",
                 "policy.reflect",
@@ -758,7 +1078,14 @@ const BrainProvider = {
                 "world.context",
                 "entity.context",
                 "discovery.context",
-                "organ.context"
+                "organ.context",
+                "kernel.context",
+                "runtime.context",
+                "memory.context",
+                "timeline.context",
+                "bridge.context",
+                "evolution.context"
+
             ]
 
         };
@@ -775,8 +1102,10 @@ const BrainProvider = {
 try{
 
     const brainCore =
-        typeof VAERO !== "undefined" &&
-        typeof VAERO.get === "function"
+        typeof VAERO !==
+            "undefined" &&
+        typeof VAERO.get ===
+            "function"
             ? VAERO.get(
                 "brainCore"
             )
@@ -808,13 +1137,18 @@ try{
                 local:
                     true,
 
+                fallback:
+                    true,
+
                 externalAI:
                     false,
 
                 capabilities:
-                    BrainProvider
-                        .status()
-                        .capabilities
+                    [
+                        ...BrainProvider
+                            .status()
+                            .capabilities
+                    ]
 
             }
         );
@@ -837,5 +1171,16 @@ try{
 }
 
 
-window.BrainProvider =
-    BrainProvider;
+/* =========================================================
+   GLOBAL
+========================================================= */
+
+if(
+    typeof window !==
+        "undefined"
+){
+
+    window.BrainProvider =
+        BrainProvider;
+
+}
