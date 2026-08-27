@@ -20,6 +20,10 @@
 
 const BrainApp = {
 
+    busy:
+        false,
+
+
     /* =====================================================
        SERVICE ACCESS
     ===================================================== */
@@ -29,15 +33,21 @@ const BrainApp = {
         try{
 
             if(
-                typeof VAERO === "undefined" ||
-                typeof VAERO.get !== "function"
+                typeof VAERO ===
+                    "undefined" ||
+                typeof VAERO.get !==
+                    "function"
             ){
+
                 return null;
+
             }
 
 
             return (
-                VAERO.get(name) ||
+                VAERO.get(
+                    name
+                ) ||
                 null
             );
 
@@ -46,6 +56,39 @@ const BrainApp = {
             return null;
 
         }
+
+    },
+
+
+    /* =====================================================
+       ENGINE ACCESS
+    ===================================================== */
+
+    getEngine(){
+
+        try{
+
+            if(
+                typeof VAERO !==
+                    "undefined" &&
+                VAERO.engine
+            ){
+
+                return VAERO.engine;
+
+            }
+
+        } catch(error){
+
+            /* fallback */
+
+        }
+
+
+        return (
+            window.Engine ||
+            null
+        );
 
     },
 
@@ -90,11 +133,69 @@ const BrainApp = {
         return String(
             value ?? ""
         )
-            .replaceAll("&", "&amp;")
-            .replaceAll("<", "&lt;")
-            .replaceAll(">", "&gt;")
-            .replaceAll('"', "&quot;")
-            .replaceAll("'", "&#039;");
+            .replaceAll(
+                "&",
+                "&amp;"
+            )
+            .replaceAll(
+                "<",
+                "&lt;"
+            )
+            .replaceAll(
+                ">",
+                "&gt;"
+            )
+            .replaceAll(
+                '"',
+                "&quot;"
+            )
+            .replaceAll(
+                "'",
+                "&#039;"
+            );
+
+    },
+
+
+    normalizeRole(value){
+
+        const role =
+            String(
+                value ||
+                "brain"
+            )
+                .trim()
+                .toLowerCase();
+
+
+        return [
+            "brain",
+            "user",
+            "system",
+            "assistant"
+        ].includes(
+            role
+        )
+            ? role
+            : "brain";
+
+    },
+
+
+    normalizeText(
+        value,
+        maxLength = 4000
+    ){
+
+        return String(
+            value ??
+            ""
+        )
+            .trim()
+            .slice(
+                0,
+                maxLength
+            );
 
     },
 
@@ -134,16 +235,26 @@ const BrainApp = {
                     "function"
             ){
 
-                return (
-                    service.compactContext() ||
-                    {}
-                );
+                const result =
+                    service.compactContext();
+
+
+                if(
+                    result &&
+                    typeof result ===
+                        "object"
+                ){
+
+                    return result;
+
+                }
 
             }
 
         } catch(error){
 
-            /* fallback */
+            /* context fallback */
+
         }
 
 
@@ -155,9 +266,16 @@ const BrainApp = {
 
         try{
 
+            const result =
+                context?.compact?.();
+
+
             return (
-                context?.compact?.() ||
-                {}
+                result &&
+                typeof result ===
+                    "object"
+                    ? result
+                    : {}
             );
 
         } catch(error){
@@ -187,16 +305,24 @@ const BrainApp = {
                     "function"
             ){
 
+                const result =
+                    service.status();
+
+
                 return (
-                    service.status() ||
-                    {}
+                    result &&
+                    typeof result ===
+                        "object"
+                        ? result
+                        : {}
                 );
 
             }
 
         } catch(error){
 
-            /* fallback */
+            /* status unavailable */
+
         }
 
 
@@ -208,6 +334,30 @@ const BrainApp = {
     /* =====================================================
        MODE
     ===================================================== */
+
+    normalizeMode(value){
+
+        const mode =
+            String(
+                value ||
+                "silent"
+            )
+                .trim()
+                .toLowerCase();
+
+
+        return [
+            "active",
+            "balanced",
+            "silent"
+        ].includes(
+            mode
+        )
+            ? mode
+            : "silent";
+
+    },
+
 
     getMode(){
 
@@ -222,12 +372,44 @@ const BrainApp = {
 
 
             if(result){
-                return result;
+
+                if(
+                    typeof result ===
+                        "string"
+                ){
+
+                    return {
+                        mode:
+                            this.normalizeMode(
+                                result
+                            )
+                    };
+
+                }
+
+
+                if(
+                    typeof result ===
+                        "object"
+                ){
+
+                    return {
+                        ...result,
+
+                        mode:
+                            this.normalizeMode(
+                                result.mode
+                            )
+                    };
+
+                }
+
             }
 
         } catch(error){
 
             /* fallback */
+
         }
 
 
@@ -239,20 +421,38 @@ const BrainApp = {
 
         try{
 
-            return (
-                mode?.snapshot?.() ||
-                {
-                    mode:"silent"
-                }
-            );
+            const snapshot =
+                mode?.snapshot?.();
+
+
+            if(
+                snapshot &&
+                typeof snapshot ===
+                    "object"
+            ){
+
+                return {
+                    ...snapshot,
+
+                    mode:
+                        this.normalizeMode(
+                            snapshot.mode
+                        )
+                };
+
+            }
 
         } catch(error){
 
-            return {
-                mode:"silent"
-            };
+            /* fallback */
 
         }
+
+
+        return {
+            mode:
+                "silent"
+        };
 
     },
 
@@ -300,51 +500,72 @@ const BrainApp = {
 
     buildContextLabel(context = {}){
 
-        const parts = [];
+        const parts =
+            [];
+
+
+        const app =
+            this.normalizeText(
+                context?.app,
+                80
+            );
+
+
+        const entityName =
+            this.normalizeText(
+                context?.entity
+                    ?.name,
+                100
+            );
+
+
+        const worldName =
+            this.normalizeText(
+                context?.world
+                    ?.name,
+                100
+            );
 
 
         if(
-            context.app &&
-            context.app !== "home"
+            app &&
+            app !==
+                "home"
         ){
 
             parts.push(
-                String(
-                    context.app
-                )
+                app
+            );
+
+        }
+
+
+        if(entityName){
+
+            parts.push(
+                entityName
+            );
+
+        }
+
+
+        if(worldName){
+
+            parts.push(
+                worldName
             );
 
         }
 
 
         if(
-            context.entity?.name
-        ){
-
-            parts.push(
-                context.entity.name
-            );
-
-        }
-
-
-        if(
-            context.world?.name
-        ){
-
-            parts.push(
-                context.world.name
-            );
-
-        }
-
-
-        if(
-            parts.length === 0
+            parts.length ===
+                0
         ){
 
             return (
-                context.engineReady === false
+                context.engineReady ===
+                    false
                     ? "Engine bağlamı hazırlanıyor."
                     : "Engine genel bağlamı aktif."
             );
@@ -353,7 +574,9 @@ const BrainApp = {
 
 
         return (
-            parts.join(" • ") +
+            parts.join(
+                " • "
+            ) +
             " bağlamı aktif."
         );
 
@@ -367,19 +590,22 @@ const BrainApp = {
     buildModeLabel(mode = {}){
 
         switch(
-            mode.mode
+            this.normalizeMode(
+                mode?.mode
+            )
         ){
 
             case "active":
 
                 return "Aktif";
 
+
             case "balanced":
 
                 return "Dengeli";
 
-            case "silent":
 
+            case "silent":
             default:
 
                 return "Sessiz";
@@ -390,41 +616,104 @@ const BrainApp = {
 
 
     /* =====================================================
-       PROVIDER LABEL
+       PROVIDER
     ===================================================== */
 
-    buildProviderLabel(status = {}){
+    getProviderSnapshot(status = {}){
 
         const provider =
-            status.provider ||
-            status.brain?.provider ||
+            status?.provider ||
+            status?.brain
+                ?.provider ||
             null;
 
 
+        if(!provider){
+
+            return {
+                connected:
+                    false,
+
+                external:
+                    false,
+
+                name:
+                    "Local Brain"
+            };
+
+        }
+
+
         if(
-            provider?.externalAI ===
-                true
+            typeof provider ===
+                "string"
         ){
 
-            return (
-                provider.name ||
-                "AI Provider"
-            );
+            return {
+                connected:
+                    true,
+
+                external:
+                    false,
+
+                name:
+                    provider
+            };
 
         }
 
 
-        if(provider){
+        if(
+            typeof provider ===
+                "object"
+        ){
 
-            return (
-                provider.name ||
+            return {
+                connected:
+                    provider.connected !==
+                        false,
+
+                external:
+                    provider.externalAI ===
+                        true,
+
+                name:
+                    this.normalizeText(
+                        provider.name ||
+                        provider.id ||
+                        (
+                            provider.externalAI
+                                ? "AI Provider"
+                                : "Local Brain"
+                        ),
+                        100
+                    )
+            };
+
+        }
+
+
+        return {
+            connected:
+                false,
+
+            external:
+                false,
+
+            name:
                 "Local Brain"
-            );
+        };
 
-        }
+    },
 
 
-        return "Local Brain";
+    buildProviderLabel(status = {}){
+
+        return this
+            .getProviderSnapshot(
+                status
+            )
+            .name;
 
     },
 
@@ -440,8 +729,32 @@ const BrainApp = {
 
 
         const brainStatus =
-            status.brain ||
-            {};
+            (
+                status?.brain &&
+                typeof status.brain ===
+                    "object"
+            )
+                ? status.brain
+                : {};
+
+
+        const provider =
+            this.getProviderSnapshot(
+                status
+            );
+
+
+        const pendingConfirmations =
+            Number(
+                brainStatus
+                    .pendingConfirmations
+            ) ||
+            (
+                status
+                    ?.pendingConfirmation
+                    ? 1
+                    : 0
+            );
 
 
         if(
@@ -450,32 +763,48 @@ const BrainApp = {
                 "function"
         ){
 
-            return ui.brainStatusBadge({
+            try{
 
-                providerConnected:
-                    Boolean(
-                        brainStatus
-                            .providerConnected
-                    ),
+                return (
+                    ui.brainStatusBadge({
+                        providerConnected:
+                            Boolean(
+                                brainStatus
+                                    .providerConnected ??
+                                provider.connected
+                            ),
 
-                pendingConfirmations:
-                    Number(
-                        brainStatus
-                            .pendingConfirmations
-                    ) ||
-                    (
-                        status
-                            .pendingConfirmation
-                            ? 1
-                            : 0
-                    )
+                        pendingConfirmations:
+                            Math.max(
+                                0,
+                                pendingConfirmations
+                            )
+                    }) ||
+                    ""
+                );
 
-            });
+            } catch(error){
+
+                /* fallback */
+
+            }
 
         }
 
 
-        return "";
+        const state =
+            provider.connected
+                ? "Hazır"
+                : "Yerel";
+
+
+        return `
+            <span class="brain-status-fallback">
+                ${this.escapeHTML(
+                    state
+                )}
+            </span>
+        `;
 
     },
 
@@ -489,7 +818,9 @@ const BrainApp = {
     ){
 
         if(!confirmation){
+
             return "";
+
         }
 
 
@@ -499,28 +830,71 @@ const BrainApp = {
 
         if(
             ui &&
-            typeof ui
-                .brainConfirmationCard ===
+            typeof ui.brainConfirmationCard ===
                 "function"
         ){
 
-            return ui.brainConfirmationCard(
-                confirmation,
-                {
+            try{
 
-                    title:
-                        "İşlem onayı",
+                return (
+                    ui.brainConfirmationCard(
+                        confirmation,
+                        {
+                            title:
+                                "İşlem onayı",
 
-                    message:
-                        "Brain bu işlemi uygulamadan önce senden açık onay bekliyor."
+                            message:
+                                "Brain bu işlemi uygulamadan önce senden açık onay bekliyor."
+                        }
+                    ) ||
+                    ""
+                );
 
-                }
-            );
+            } catch(error){
+
+                /* safe fallback below */
+
+            }
 
         }
 
 
-        return "";
+        const title =
+            this.normalizeText(
+                confirmation?.title ||
+                confirmation?.action ||
+                "İşlem onayı",
+                140
+            );
+
+
+        const description =
+            this.normalizeText(
+                confirmation?.description ||
+                confirmation?.message ||
+                "Brain bu işlemi uygulamadan önce açık onay bekliyor.",
+                500
+            );
+
+
+        return `
+            <div class="brain-confirmation-card">
+
+                <strong>
+                    ${this.escapeHTML(
+                        title
+                    )}
+                </strong>
+
+
+                <p>
+                    ${this.escapeHTML(
+                        description
+                    )}
+                </p>
+
+            </div>
+        `;
 
     },
 
@@ -530,47 +904,71 @@ const BrainApp = {
     ===================================================== */
 
     buildInitialSuggestion(
-        context,
-        mode
+        context = {},
+        mode = {}
     ){
 
+        const currentMode =
+            this.normalizeMode(
+                mode?.mode
+            );
+
+
+        const app =
+            this.normalizeText(
+                context?.app,
+                80
+            );
+
+
+        const entityName =
+            this.normalizeText(
+                context?.entity
+                    ?.name,
+                100
+            );
+
+
+        const worldName =
+            this.normalizeText(
+                context?.world
+                    ?.name,
+                100
+            );
+
+
         if(
-            mode?.mode ===
+            currentMode ===
                 "active"
         ){
 
             if(
-                context?.app ===
+                app ===
                     "applications"
             ){
 
                 return (
-                    "Uygulamaları inceleyebilir, " +
-                    "yüklü olanları açabilir veya izin durumlarını sorabilirsin."
+                    "Uygulamaları inceleyebilir, yüklü olanları açabilir veya izin durumlarını sorabilirsin."
                 );
 
             }
 
 
-            if(
-                context?.entity?.name
-            ){
+            if(entityName){
 
                 return (
-                    `${context.entity.name} bağlamındayım. ` +
-                    "Bu Entity hakkında soru sorabilir veya ilgili uygulamaları açmamı isteyebilirsin."
+                    `${entityName} bağlamındayım. ` +
+                    "Bu varlık hakkında soru sorabilir veya Engine içindeki ilgili işlemi yazabilirsin."
                 );
 
             }
 
 
-            if(
-                context?.world?.name
-            ){
+            if(worldName){
 
                 return (
-                    `${context.world.name} aktif. ` +
-                    "World içindeki yapılarla ilgili ne yapmak istediğini yazabilirsin."
+                    `${worldName} aktif. ` +
+                    "Bu World bağlamında ne yapmak istediğini yazabilirsin."
                 );
 
             }
@@ -579,7 +977,7 @@ const BrainApp = {
 
 
         if(
-            mode?.mode ===
+            currentMode ===
                 "balanced"
         ){
 
@@ -657,7 +1055,6 @@ const BrainApp = {
 
 
         return `
-
             <section
                 id="brainPanel"
                 class="brain-panel"
@@ -667,18 +1064,20 @@ const BrainApp = {
                 aria-describedby="brainContextText"
                 data-brain-region="panel"
                 data-brain-mode="${this.escapeHTML(
-                    mode?.mode ||
-                    "silent"
+                    this.normalizeMode(
+                        mode?.mode
+                    )
                 )}"
                 data-brain-app="${this.escapeHTML(
                     context?.app ||
                     "home"
                 )}"
+                data-brain-busy="${
+                    this.busy
+                        ? "true"
+                        : "false"
+                }"
             >
-
-                <!-- =====================================
-                     MOBILE HANDLE
-                ====================================== -->
 
                 <div
                     class="brain-panel-handle"
@@ -686,44 +1085,31 @@ const BrainApp = {
                 ></div>
 
 
-                <!-- =====================================
-                     HEADER
-                ====================================== -->
-
                 <header
                     class="brain-panel-header"
                     data-brain-region="header"
                 >
 
-                    <div
-                        class="brain-panel-heading"
-                    >
+                    <div class="brain-panel-heading">
 
-                        <div
-                            class="brain-panel-identity"
-                        >
+                        <div class="brain-panel-identity">
 
                             <span
                                 class="brain-status-orb"
                                 aria-hidden="true"
                             >
-                                <span
-                                    class="brain-status-core"
-                                ></span>
+                                <span class="brain-status-core"></span>
                             </span>
 
 
-                            <div
-                                class="brain-panel-title-group"
-                            >
+                            <div class="brain-panel-title-group">
 
-                                <div
-                                    class="brain-panel-eyebrow-row"
-                                >
+                                <div class="brain-panel-eyebrow-row">
 
                                     <span class="eyebrow">
                                         VAERO BRAIN
                                     </span>
+
 
                                     <div
                                         id="brainStatusBadge"
@@ -743,9 +1129,7 @@ const BrainApp = {
                                 </h2>
 
 
-                                <div
-                                    class="brain-runtime-meta"
-                                >
+                                <div class="brain-runtime-meta">
 
                                     <span
                                         id="brainModeLabel"
@@ -756,11 +1140,11 @@ const BrainApp = {
                                         )}
                                     </span>
 
-                                    <span
-                                        aria-hidden="true"
-                                    >
+
+                                    <span aria-hidden="true">
                                         •
                                     </span>
+
 
                                     <span
                                         id="brainProviderLabel"
@@ -794,10 +1178,6 @@ const BrainApp = {
                 </header>
 
 
-                <!-- =====================================
-                     AWARENESS / CONTEXT
-                ====================================== -->
-
                 <div
                     class="brain-awareness"
                     data-brain-region="awareness"
@@ -823,10 +1203,6 @@ const BrainApp = {
                 </div>
 
 
-                <!-- =====================================
-                     ACTIVE SUGGESTION
-                ====================================== -->
-
                 <div
                     id="brainSuggestion"
                     class="brain-suggestion"
@@ -838,13 +1214,6 @@ const BrainApp = {
                     )}
                 </div>
 
-
-                <!-- =====================================
-                     CONFIRMATION REGION
-
-                     Tek-use confirmationId burada
-                     kullanıcıya gösterilir.
-                ====================================== -->
 
                 <div
                     id="brainConfirmationRegion"
@@ -860,10 +1229,6 @@ const BrainApp = {
                 </div>
 
 
-                <!-- =====================================
-                     MINI HISTORY / CONTEXT TRACE
-                ====================================== -->
-
                 <div
                     id="brainMiniHistory"
                     class="brain-mini-history"
@@ -871,10 +1236,6 @@ const BrainApp = {
                     aria-label="Son Brain mesajları"
                 ></div>
 
-
-                <!-- =====================================
-                     CONVERSATION
-                ====================================== -->
 
                 <div
                     id="brainHistory"
@@ -887,33 +1248,30 @@ const BrainApp = {
                 ></div>
 
 
-                <!-- =====================================
-                     BUSY / SYSTEM STATE
-                ====================================== -->
-
                 <div
                     id="brainRuntimeState"
                     class="brain-runtime-state"
                     data-brain-region="runtime-state"
                     aria-live="polite"
-                    hidden
+                    ${
+                        this.busy
+                            ? ""
+                            : "hidden"
+                    }
                 >
+
                     <span
                         class="brain-runtime-state-orb"
                         aria-hidden="true"
                     ></span>
 
-                    <span
-                        id="brainRuntimeStateText"
-                    >
+
+                    <span id="brainRuntimeStateText">
                         Brain düşünüyor...
                     </span>
+
                 </div>
 
-
-                <!-- =====================================
-                     COMPOSER
-                ====================================== -->
 
                 <div
                     class="brain-composer-shell"
@@ -933,6 +1291,11 @@ const BrainApp = {
                             enterkeyhint="send"
                             spellcheck="true"
                             aria-label="Brain mesajı"
+                            ${
+                                this.busy
+                                    ? "disabled"
+                                    : ""
+                            }
                         >
 
 
@@ -941,6 +1304,11 @@ const BrainApp = {
                             class="brain-send"
                             data-action="brain:send"
                             aria-label="Mesajı gönder"
+                            ${
+                                this.busy
+                                    ? "disabled"
+                                    : ""
+                            }
                         >
                             <span aria-hidden="true">
                                 →
@@ -950,13 +1318,9 @@ const BrainApp = {
                     </div>
 
 
-                    <div
-                        class="brain-composer-meta"
-                    >
+                    <div class="brain-composer-meta">
 
-                        <small
-                            class="brain-input-hint"
-                        >
+                        <small class="brain-input-hint">
                             Enter ile gönder
                         </small>
 
@@ -966,9 +1330,7 @@ const BrainApp = {
                             aria-label="Brain bağlam göstergesi"
                         >
 
-                            <span
-                                aria-hidden="true"
-                            >
+                            <span aria-hidden="true">
                                 ◉
                             </span>
 
@@ -980,15 +1342,12 @@ const BrainApp = {
 
                 </div>
 
-
             </section>
-
         `;
 
     },
 
-
-    /* =====================================================
+   /* =====================================================
        DOM HELPERS
     ===================================================== */
 
@@ -1046,6 +1405,31 @@ const BrainApp = {
     },
 
 
+    getInputElement(){
+
+        return document.getElementById(
+            "brainInput"
+        );
+
+    },
+
+
+    getSendButton(){
+
+        const panel =
+            this.getPanel();
+
+
+        return (
+            panel?.querySelector(
+                '[data-action="brain:send"]'
+            ) ||
+            null
+        );
+
+    },
+
+
     /* =====================================================
        RUNTIME STATE
     ===================================================== */
@@ -1054,6 +1438,12 @@ const BrainApp = {
         busy,
         message = "Brain düşünüyor..."
     ){
+
+        this.busy =
+            Boolean(
+                busy
+            );
+
 
         const state =
             document.getElementById(
@@ -1068,21 +1458,17 @@ const BrainApp = {
 
 
         const input =
-            document.getElementById(
-                "brainInput"
-            );
+            this.getInputElement();
 
 
         const send =
-            document.querySelector(
-                '#brainPanel [data-action="brain:send"]'
-            );
+            this.getSendButton();
 
 
         if(state){
 
             state.hidden =
-                !busy;
+                !this.busy;
 
         }
 
@@ -1090,10 +1476,12 @@ const BrainApp = {
         if(text){
 
             text.textContent =
-                String(
+                this.normalizeText(
                     message ||
-                    "Brain düşünüyor..."
-                );
+                    "Brain düşünüyor...",
+                    240
+                ) ||
+                "Brain düşünüyor...";
 
         }
 
@@ -1101,9 +1489,7 @@ const BrainApp = {
         if(input){
 
             input.disabled =
-                Boolean(
-                    busy
-                );
+                this.busy;
 
         }
 
@@ -1111,9 +1497,7 @@ const BrainApp = {
         if(send){
 
             send.disabled =
-                Boolean(
-                    busy
-                );
+                this.busy;
 
         }
 
@@ -1126,10 +1510,14 @@ const BrainApp = {
 
             panel.classList.toggle(
                 "is-busy",
-                Boolean(
-                    busy
-                )
+                this.busy
             );
+
+
+            panel.dataset.brainBusy =
+                this.busy
+                    ? "true"
+                    : "false";
 
         }
 
@@ -1140,7 +1528,7 @@ const BrainApp = {
 
 
     /* =====================================================
-       SET SUGGESTION
+       SUGGESTION
     ===================================================== */
 
     setSuggestion(text){
@@ -1150,14 +1538,16 @@ const BrainApp = {
 
 
         if(!element){
+
             return false;
+
         }
 
 
         element.textContent =
-            String(
-                text ||
-                ""
+            this.normalizeText(
+                text,
+                800
             );
 
 
@@ -1197,10 +1587,12 @@ const BrainApp = {
         if(panel){
 
             panel.dataset.brainApp =
-                String(
+                this.normalizeText(
                     context?.app ||
-                    "home"
-                );
+                    "home",
+                    80
+                ) ||
+                "home";
 
         }
 
@@ -1279,9 +1671,8 @@ const BrainApp = {
         if(panel){
 
             panel.dataset.brainMode =
-                String(
-                    mode?.mode ||
-                    "silent"
+                this.normalizeMode(
+                    mode?.mode
                 );
 
         }
@@ -1305,7 +1696,9 @@ const BrainApp = {
 
 
         if(!region){
+
             return false;
+
         }
 
 
@@ -1341,6 +1734,87 @@ const BrainApp = {
 
 
     /* =====================================================
+       MESSAGE NORMALIZATION
+    ===================================================== */
+
+    normalizeMessageEntry(entry){
+
+        if(
+            typeof entry ===
+                "string"
+        ){
+
+            return {
+                role:
+                    "brain",
+
+                text:
+                    this.normalizeText(
+                        entry
+                    ),
+
+                meta:
+                    null
+            };
+
+        }
+
+
+        if(
+            !entry ||
+            typeof entry !==
+                "object"
+        ){
+
+            return null;
+
+        }
+
+
+        const role =
+            this.normalizeRole(
+                entry.role ||
+                entry.type ||
+                (
+                    entry.user ===
+                        true
+                        ? "user"
+                        : "brain"
+                )
+            );
+
+
+        const text =
+            this.normalizeText(
+                entry.message ??
+                entry.reply ??
+                entry.content ??
+                entry.text ??
+                ""
+            );
+
+
+        if(!text){
+
+            return null;
+
+        }
+
+
+        return {
+            role,
+
+            text,
+
+            meta:
+                entry.meta ??
+                null
+        };
+
+    },
+
+
+    /* =====================================================
        MESSAGE RENDERING
     ===================================================== */
 
@@ -1357,8 +1831,29 @@ const BrainApp = {
 
 
         if(!history){
+
             return false;
+
         }
+
+
+        const text =
+            this.normalizeText(
+                message
+            );
+
+
+        if(!text){
+
+            return false;
+
+        }
+
+
+        const safeRole =
+            this.normalizeRole(
+                role
+            );
 
 
         const ui =
@@ -1375,20 +1870,44 @@ const BrainApp = {
                 "function"
         ){
 
-            html =
-                ui.brainMessage(
-                    message,
-                    {
-                        role,
-                        meta
-                    }
-                );
+            try{
 
-        } else {
+                html =
+                    ui.brainMessage(
+                        text,
+                        {
+                            role:
+                                safeRole,
+
+                            meta
+                        }
+                    ) ||
+                    "";
+
+            } catch(error){
+
+                html =
+                    "";
+
+            }
+
+        }
+
+
+        if(!html){
 
             html = `
-                <div class="ui-brain-message is-${this.escapeHTML(role)}">
-                    ${this.escapeHTML(message)}
+                <div
+                    class="ui-brain-message is-${this.escapeHTML(
+                        safeRole
+                    )}"
+                    data-brain-message-role="${this.escapeHTML(
+                        safeRole
+                    )}"
+                >
+                    ${this.escapeHTML(
+                        text
+                    )}
                 </div>
             `;
 
@@ -1410,6 +1929,96 @@ const BrainApp = {
     },
 
 
+    renderHistory(entries = []){
+
+        const history =
+            this.getHistoryElement();
+
+
+        if(!history){
+
+            return false;
+
+        }
+
+
+        if(
+            !Array.isArray(
+                entries
+            )
+        ){
+
+            history.innerHTML =
+                "";
+
+
+            return false;
+
+        }
+
+
+        history.innerHTML =
+            "";
+
+
+        entries.forEach(
+            entry => {
+
+                const normalized =
+                    this.normalizeMessageEntry(
+                        entry
+                    );
+
+
+                if(!normalized){
+
+                    return;
+
+                }
+
+
+                this.appendMessage(
+                    normalized.text,
+                    {
+                        role:
+                            normalized.role,
+
+                        meta:
+                            normalized.meta
+                    }
+                );
+
+            }
+        );
+
+
+        return true;
+
+    },
+
+
+    clearHistory(){
+
+        const history =
+            this.getHistoryElement();
+
+
+        if(!history){
+
+            return false;
+
+        }
+
+
+        history.innerHTML =
+            "";
+
+
+        return true;
+
+    },
+
+
     /* =====================================================
        MINI HISTORY
     ===================================================== */
@@ -1423,56 +2032,58 @@ const BrainApp = {
 
 
         if(!element){
+
             return false;
+
         }
 
 
         if(
-            !Array.isArray(entries) ||
-            entries.length === 0
+            !Array.isArray(
+                entries
+            ) ||
+            entries.length ===
+                0
         ){
 
             element.innerHTML =
                 "";
+
 
             return true;
 
         }
 
 
-        element.innerHTML =
+        const normalized =
             entries
-                .slice(-3)
                 .map(
-                    entry => {
-
-                        const role =
-                            entry.role ||
-                            entry.type ||
-                            "brain";
-
-
-                        const text =
-                            entry.message ||
-                            entry.reply ||
-                            entry.content ||
-                            "";
+                    entry =>
+                        this.normalizeMessageEntry(
+                            entry
+                        )
+                )
+                .filter(Boolean)
+                .slice(
+                    -3
+                );
 
 
-                        return `
-                            <div
-                                class="brain-mini-history-item"
-                                data-role="${this.escapeHTML(
-                                    role
-                                )}"
-                            >
-                                ${this.escapeHTML(
-                                    text
-                                )}
-                            </div>
-                        `;
-
-                    }
+        element.innerHTML =
+            normalized
+                .map(
+                    entry => `
+                        <div
+                            class="brain-mini-history-item"
+                            data-role="${this.escapeHTML(
+                                entry.role
+                            )}"
+                        >
+                            ${this.escapeHTML(
+                                entry.text
+                            )}
+                        </div>
+                    `
                 )
                 .join("");
 
@@ -1489,19 +2100,23 @@ const BrainApp = {
     focusInput(){
 
         const input =
-            document.getElementById(
-                "brainInput"
-            );
+            this.getInputElement();
 
 
-        if(!input){
+        if(
+            !input ||
+            input.disabled
+        ){
+
             return false;
+
         }
 
 
         try{
 
             input.focus();
+
 
             return true;
 
@@ -1515,23 +2130,140 @@ const BrainApp = {
 
 
     /* =====================================================
+       INPUT
+    ===================================================== */
+
+    getInputValue(){
+
+        const input =
+            this.getInputElement();
+
+
+        if(!input){
+
+            return "";
+
+        }
+
+
+        return this.normalizeText(
+            input.value,
+            1000
+        );
+
+    },
+
+
+    clearInput(){
+
+        const input =
+            this.getInputElement();
+
+
+        if(!input){
+
+            return false;
+
+        }
+
+
+        input.value =
+            "";
+
+
+        return true;
+
+    },
+
+
+    /* =====================================================
+       OPEN STATE
+    ===================================================== */
+
+    onOpen(){
+
+        this.refresh();
+
+
+        requestAnimationFrame(
+            () => {
+
+                this.focusInput();
+
+            }
+        );
+
+
+        return true;
+
+    },
+
+
+    /* =====================================================
        REFRESH
     ===================================================== */
 
     refresh(){
 
-        this.refreshContext();
+        const context =
+            this.refreshContext();
 
-        this.refreshStatus();
+
+        const status =
+            this.refreshStatus();
+
 
         this.refreshConfirmation();
 
 
-        return true;
+        const mode =
+            this.getMode();
+
+
+        this.setSuggestion(
+            this.buildInitialSuggestion(
+                context,
+                mode
+            )
+        );
+
+
+        return {
+            context,
+            status,
+            mode
+        };
 
     }
 
 };
+
+
+/* =========================================================
+   REGISTER
+========================================================= */
+
+try{
+
+    if(
+        typeof VAERO !==
+            "undefined" &&
+        typeof VAERO.register ===
+            "function"
+    ){
+
+        VAERO.register(
+            "brainApp",
+            BrainApp
+        );
+
+    }
+
+} catch(error){
+
+    /* global remains available */
+
+}
 
 
 window.BrainApp =
