@@ -1,6882 +1,9525 @@
 /* =========================================================
-  VAERO ACTIONS V2
-  Engine Interaction / Editors / Brain Gateway / Payment Bridge
+   VAERO ACTIONS V2
+   Engine Interaction / Editors / Brain Gateway / Payment Bridge
 ========================================================= */
 
 const Actions = {
 
-  brainOutsideHandler:
-    null,
+    brainOutsideHandler:
+        null,
 
-  brainSending:
-    false,
+    brainSending:
+        false,
 
 
-  /* =====================================================
-     SAFE ACCESS
-  ===================================================== */
+    /* =====================================================
+       SAFE ACCESS
+    ===================================================== */
 
-  getService(name){
+    getService(name){
 
-     try{
+        const serviceName =
+            String(
+                name ||
+                ""
+            ).trim();
 
-        if(
-              typeof VAERO ===
-                 "undefined" ||
-              typeof VAERO.get !==
-                 "function"
-        ){
 
-              return null;
+        if(!serviceName){
+
+            return null;
 
         }
 
 
-        return (
-           VAERO.get(
-               name
-           ) ||
-           null
-        );
+        try{
 
-     } catch(error){
+            if(
+                typeof VAERO ===
+                    "undefined" ||
+                typeof VAERO.get !==
+                    "function"
+            ){
 
-        console.warn(
-           `Actions servisi okunamadı: ${name}`,
-           error
-        );
+                return null;
+
+            }
+
+
+            return (
+                VAERO.get(
+                    serviceName
+                ) ||
+                null
+            );
+
+        } catch(error){
+
+            console.warn(
+                `Actions servisi okunamadı: ${serviceName}`,
+                error
+            );
+
+
+            return null;
+
+        }
+
+    },
+
+
+    getEngine(){
+
+        try{
+
+            if(
+                typeof VAERO !==
+                    "undefined" &&
+                VAERO.engine
+            ){
+
+                return VAERO.engine;
+
+            }
+
+        } catch(error){
+
+            /* fallback */
+
+        }
+
+
+        if(
+            typeof window !==
+                "undefined" &&
+            window.Engine
+        ){
+
+            return window.Engine;
+
+        }
+
 
         return null;
 
-     }
-
-  },
+    },
 
 
-  getEngine(){
+    getCurrentEntity(){
 
-     try{
+        const engine =
+            this.getEngine();
+
+
+        return (
+            engine?.currentOpenedEntity ||
+            engine?.currentEntity ||
+            engine?.rootEntity ||
+            null
+        );
+
+    },
+
+
+    getCurrentWorld(){
+
+        const engine =
+            this.getEngine();
+
+
+        return (
+            engine?.currentWorld ||
+            null
+        );
+
+    },
+
+
+    remount(
+        entity = undefined
+    ){
+
+        const engine =
+            this.getEngine();
+
 
         if(
-              typeof VAERO !==
-                 "undefined" &&
-              VAERO.engine
+            !engine ||
+            typeof engine.mount !==
+                "function"
         ){
 
-              return VAERO.engine;
+            return false;
 
         }
 
-     } catch(error){
 
-        /* fallback below */
-
-     }
-
-
-     if(
-           typeof window !==
-              "undefined" &&
-           window.Engine
-     ){
-
-           return window.Engine;
-
-     }
+        const target =
+            entity ===
+                undefined
+                ? (
+                    engine.currentOpenedEntity ||
+                    engine.currentEntity ||
+                    engine.rootEntity ||
+                    null
+                )
+                : entity;
 
 
-     return null;
+        try{
 
-  },
+            return engine.mount(
+                target
+            );
 
+        } catch(error){
 
-  createId(
-     prefix = "item"
-  ){
-
-     if(
-           typeof crypto !==
-              "undefined" &&
-           typeof crypto.randomUUID ===
-              "function"
-     ){
-
-           return crypto.randomUUID();
-
-     }
+            console.warn(
+                "Engine yeniden çizilemedi:",
+                error
+            );
 
 
-     return `${prefix}_${Date.now()}_${Math.random()
-        .toString(36)
-        .slice(2,10)}`;
+            return false;
 
-  },
+        }
+
+    },
 
 
-  parseTags(value){
+    createId(
+        prefix = "item"
+    ){
 
-     return [
+        try{
 
-        ...new Set(
+            if(
+                typeof crypto !==
+                    "undefined" &&
+                typeof crypto.randomUUID ===
+                    "function"
+            ){
 
-           String(
-              value ?? ""
-           )
-              .split(",")
-              .map(
-                 item =>
-                    item.trim()
-              )
-              .filter(Boolean)
+                return crypto.randomUUID();
 
+            }
+
+        } catch(error){
+
+            /* fallback */
+
+        }
+
+
+        const safePrefix =
+            String(
+                prefix ||
+                "item"
+            )
+                .trim()
+                .replace(
+                    /[^a-zA-Z0-9_-]/g,
+                    "-"
+                )
+                .slice(
+                    0,
+                    40
+                ) ||
+            "item";
+
+
+        return `${safePrefix}_${Date.now()}_${Math.random()
+            .toString(36)
+            .slice(2,10)}`;
+
+    },
+
+
+    parseTags(value){
+
+        const seen =
+            new Set();
+
+
+        return String(
+            value ??
+            ""
         )
+            .split(",")
+            .map(
+                item =>
+                    item
+                        .trim()
+                        .slice(
+                            0,
+                            80
+                        )
+            )
+            .filter(
+                item => {
 
-     ];
+                    if(!item){
 
-  },
+                        return false;
 
+                    }
 
-  syncAwareness(
-     app,
-     metadata = {}
-  ){
 
-     const awareness =
-        this.getService(
-           "brainAwareness"
-        );
+                    const key =
+                        item.toLocaleLowerCase(
+                            "tr-TR"
+                        );
 
 
-     if(
-           !awareness ||
-           typeof awareness.enter !==
-              "function"
-     ){
+                    if(
+                        seen.has(
+                            key
+                        )
+                    ){
 
-           return false;
+                        return false;
 
-     }
+                    }
 
 
-     try{
+                    seen.add(
+                        key
+                    );
 
-        awareness.enter(
-           app,
-           metadata
-        );
 
+                    return true;
 
-        return true;
+                }
+            )
+            .slice(
+                0,
+                40
+            );
 
-     } catch(error){
+    },
 
-        console.warn(
-           "Brain Awareness güncellenemedi:",
-           error
-        );
 
+    normalizeText(
+        value,
+        maxLength = 1000
+    ){
 
-        return false;
+        return String(
+            value ??
+            ""
+        )
+            .trim()
+            .slice(
+                0,
+                maxLength
+            );
 
-     }
+    },
 
-  },
 
+    /* =====================================================
+       BRAIN AWARENESS
+    ===================================================== */
 
-  recordEvolution(
-     type,
-     description,
-     metadata = {}
-  ){
+    syncAwareness(
+        app,
+        metadata = {}
+    ){
 
-     const evolution =
-        this.getService(
-           "evolution"
-        );
+        const awareness =
+            this.getService(
+                "brainAwareness"
+            );
 
-
-     if(
-           !evolution ||
-           typeof evolution.record !==
-              "function"
-     ){
-
-           return false;
-
-     }
-
-
-     try{
-
-        evolution.record(
-           type,
-           description,
-           metadata
-        );
-
-
-        return true;
-
-     } catch(error){
-
-        console.warn(
-           "Evolution kaydı oluşturulamadı:",
-           error
-        );
-
-
-        return false;
-
-     }
-
-  },
-
-
-  /* =====================================================
-     RESET TRANSIENT UI STATE
-  ===================================================== */
-
-  resetEditorState(){
-
-     const engine =
-        this.getEngine();
-
-
-     if(!engine){
-
-        return false;
-
-     }
-
-
-     engine.worldEditMode =
-        false;
-
-
-     engine.entityEditMode =
-        false;
-
-
-     engine.entityCreateMode =
-        false;
-
-
-     engine.entityType =
-        null;
-
-
-     return true;
-
-  },
-
-
-  /* =====================================================
-     CORE NAVIGATION
-  ===================================================== */
-
-  openHome(){
-
-     const engine =
-        this.getEngine();
-
-
-     if(
-           !engine ||
-           typeof engine.openHome !==
-              "function"
-     ){
-
-           return false;
-
-     }
-
-
-     this.resetEditorState();
-
-
-     const result =
-        engine.openHome();
-
-
-     if(
-           result !==
-              false
-     ){
-
-           this.syncAwareness(
-              "home"
-           );
-
-     }
-
-
-     return result;
-
-  },
-
-
-  openIdentity(){
-
-     const engine =
-        this.getEngine();
-
-
-     if(!engine){
-
-        return false;
-
-     }
-
-
-     this.resetEditorState();
-
-
-     const entity =
-        engine.rootEntity ||
-        engine.currentEntity;
-
-
-     if(!entity){
-
-        return false;
-
-     }
-
-
-     engine.currentOpenedEntity =
-        entity;
-
-
-     engine.currentEntityPage =
-        "identity";
-
-
-     const result =
-        engine.setView(
-           "identity",
-           {
-
-              entity,
-
-              page:
-                 "identity",
-
-              world:
-                 null,
-
-              entityCreateMode:
-                 false,
-
-              entityType:
-                 null
-
-           }
-        );
-
-
-     if(
-           result !==
-              false
-     ){
-
-        this.syncAwareness(
-           "identity",
-           {
-
-              entityId:
-                 entity.id ||
-                 null
-
-           }
-        );
-
-     }
-
-
-     return result;
-
-  },
-
-
-  openProfile(){
-
-     const engine =
-        this.getEngine();
-
-
-     if(!engine){
-
-        return false;
-
-     }
-
-
-     this.resetEditorState();
-
-
-     const entity =
-        engine.rootEntity ||
-        engine.currentEntity;
-
-
-     if(!entity){
-
-        return false;
-
-     }
-
-
-     engine.currentOpenedEntity =
-        entity;
-
-
-     engine.currentEntityPage =
-        "profile";
-
-
-     const result =
-        engine.setView(
-           "profile",
-           {
-
-              entity,
-
-              page:
-                 "profile",
-
-              world:
-                 null,
-
-              entityCreateMode:
-                 false,
-
-              entityType:
-                 null
-
-           }
-        );
-
-
-     if(
-           result !==
-              false
-     ){
-
-        this.syncAwareness(
-           "profile",
-           {
-
-              entityId:
-                 entity.id ||
-                 null
-
-           }
-        );
-
-     }
-
-
-     return result;
-
-  },
-
-
-  openCreate(){
-
-     const engine =
-        this.getEngine();
-
-
-     if(!engine){
-
-        return false;
-
-     }
-
-
-     this.resetEditorState();
-
-
-     const result =
-        engine.setView(
-           "create",
-           {
-
-              entity:
-                 null,
-
-              page:
-                 null,
-
-              world:
-                 null,
-
-              entityCreateMode:
-                 false,
-
-              entityType:
-                 null
-
-           }
-        );
-
-
-     if(
-           result !==
-              false
-     ){
-
-        this.syncAwareness(
-           "create"
-        );
-
-     }
-
-
-     return result;
-
-  },
-
-
-  openWorlds(){
-
-     const engine =
-        this.getEngine();
-
-
-     if(!engine){
-
-        return false;
-
-     }
-
-
-     this.resetEditorState();
-
-
-     const result =
-        engine.setView(
-           "worlds",
-           {
-
-              entity:
-                 null,
-
-              page:
-                 null,
-
-              world:
-                 null,
-
-              entityCreateMode:
-                 false,
-
-              entityType:
-                 null
-
-           }
-        );
-
-
-     if(
-           result !==
-              false
-     ){
-
-        this.syncAwareness(
-           "worlds"
-        );
-
-     }
-
-
-     return result;
-
-  },
-
-
-  openEntities(){
-
-     const worldService =
-        this.getService(
-           "world"
-        );
-
-
-     let worlds =
-        [];
-
-
-     try{
-
-        worlds =
-           worldService &&
-           typeof worldService.all ===
-              "function"
-
-              ? (
-                 worldService.all() ||
-                 []
-              )
-
-              : [];
-
-     } catch(error){
-
-        worlds =
-           [];
-
-     }
-
-
-     const engine =
-        this.getEngine();
-
-
-     if(!engine){
-
-        return false;
-
-     }
-
-
-     const targetWorld =
-
-        engine.currentWorld ||
-
-        worlds.find(
-           world =>
-
-              world?.status ===
-                 "active" &&
-
-              world?.archived !==
-                 true
-        ) ||
-
-        worlds[0] ||
-
-        null;
-
-
-     if(!targetWorld){
-
-        return this.openWorlds();
-
-     }
-
-
-     return this.openWorld(
-        targetWorld.id
-     );
-
-  },
-
-
-  openWorld(worldId){
-
-     const worldService =
-        this.getService(
-           "world"
-        );
-
-
-     const engine =
-        this.getEngine();
-
-
-     if(
-           !worldService ||
-           !engine
-     ){
-
-           return false;
-
-     }
-
-
-     let world =
-        null;
-
-
-     try{
 
         if(
-              typeof worldService.get ===
-                 "function"
+            !awareness ||
+            typeof awareness.enter !==
+                "function"
         ){
 
-              world =
-                 worldService.get(
-                    worldId
-                 );
+            return false;
 
         }
 
-        else if(
-           typeof worldService.all ===
-              "function"
+
+        try{
+
+            awareness.enter(
+                app,
+                metadata
+            );
+
+
+            return true;
+
+        } catch(error){
+
+            console.warn(
+                "Brain Awareness güncellenemedi:",
+                error
+            );
+
+
+            return false;
+
+        }
+
+    },
+
+
+    /* =====================================================
+       EVOLUTION RECORD BRIDGE
+    ===================================================== */
+
+    recordEvolution(
+        type,
+        description,
+        metadata = {}
+    ){
+
+        const evolution =
+            this.getService(
+                "evolution"
+            );
+
+
+        if(
+            !evolution ||
+            typeof evolution.record !==
+                "function"
         ){
 
-              world =
-                 (
-                    worldService.all({
-                       includeArchived:
-                          true
-                    }) ||
-                    []
-                 )
-                    .find(
-                       item =>
-                          item?.id ===
-                          worldId
-                    ) ||
-                 null;
+            return false;
 
         }
 
-     } catch(error){
 
-        console.error(
-           "World açılamadı:",
-           error
-        );
+        try{
 
+            evolution.record(
+                type,
+                description,
+                metadata
+            );
 
-        return false;
 
-     }
+            return true;
 
+        } catch(error){
 
-     if(
-           !world ||
-           world.archived ===
-              true
-     ){
+            console.warn(
+                "Evolution kaydı oluşturulamadı:",
+                error
+            );
 
-        console.warn(
-           "World bulunamadı veya arşivlenmiş:",
-           worldId
-        );
 
-
-        return false;
-
-     }
-
-
-     if(
-           !Array.isArray(
-              world.entities
-           )
-     ){
-
-        world.entities =
-           [];
-
-     }
-
-
-     this.resetEditorState();
-
-
-     const result =
-        engine.setView(
-           "world",
-           {
-
-              world,
-
-              entity:
-                 null,
-
-              page:
-                 null,
-
-              entityCreateMode:
-                 false,
-
-              entityType:
-                 null
-
-           }
-        );
-
-
-     if(
-           result !==
-              false
-     ){
-
-        this.syncAwareness(
-           "world",
-           {
-
-              worldId:
-                 world.id ||
-                 null
-
-           }
-        );
-
-     }
-
-
-     return result;
-
-  },
-
-
-  backToWorld(){
-
-     const engine =
-        this.getEngine();
-
-
-     const world =
-        engine?.currentWorld ||
-        null;
-
-
-     if(!world){
-
-        return this.openWorlds();
-
-     }
-
-
-     this.resetEditorState();
-
-
-     engine.currentOpenedEntity =
-        null;
-
-
-     engine.currentEntityPage =
-        null;
-
-
-     const result =
-        engine.setView(
-           "world",
-           {
-
-              world,
-
-              entity:
-                 null,
-
-              page:
-                 null,
-
-              entityCreateMode:
-                 false,
-
-              entityType:
-                 null
-
-           }
-        );
-
-
-     if(
-           result !==
-              false
-     ){
-
-        this.syncAwareness(
-           "world",
-           {
-
-              worldId:
-                 world.id ||
-                 null
-
-           }
-        );
-
-     }
-
-
-     return result;
-
-  },
-
-
-  /* =====================================================
-     WORLD CREATION
-  ===================================================== */
-
-  createWorld(){
-
-     const engine =
-        this.getEngine();
-
-
-     if(!engine){
-
-        return false;
-
-     }
-
-
-     const nameInput =
-        document.getElementById(
-           "worldNameInput"
-        );
-
-
-     const descriptionInput =
-        document.getElementById(
-           "worldDescriptionInput"
-        );
-
-
-     const tagsInput =
-        document.getElementById(
-           "worldTagsInput"
-        );
-
-
-     const name =
-        String(
-           nameInput?.value ||
-           ""
-        ).trim();
-
-
-     if(!name){
-
-        nameInput?.focus();
-
-
-        return false;
-
-     }
-
-
-     const worldService =
-        this.getService(
-           "world"
-        );
-
-
-     if(
-           !worldService ||
-           typeof worldService.create !==
-              "function"
-     ){
-
-        return false;
-
-     }
-
-
-     const tags =
-        this.parseTags(
-           tagsInput?.value
-        );
-
-
-     let world =
-        null;
-
-
-     try{
-
-        world =
-           worldService.create({
-
-              id:
-                 this.createId(
-                    "world"
-                 ),
-
-              name,
-
-              description:
-                 String(
-                    descriptionInput?.value ||
-                    ""
-                 ).trim(),
-
-              tags,
-
-              type:
-                 "custom-world",
-
-              owner:
-                 engine.rootEntity?.id ||
-                 engine.currentEntity?.id ||
-                 null,
-
-              entities:
-                 [],
-
-              status:
-                 "active"
-
-           });
-
-     } catch(error){
-
-        console.error(
-           "World oluşturulamadı:",
-           error
-        );
-
-
-        return false;
-
-     }
-
-
-     if(!world){
-
-        return false;
-
-     }
-
-
-     this.recordEvolution(
-        "milestone",
-        `${name} dünyası oluşturuldu`,
-        {
-
-           title:
-              `${name} dünyası oluşturuldu`,
-
-           source:
-              "world",
-
-           status:
-              "completed",
-
-           importance:
-              "medium",
-
-           relatedWorldId:
-              world.id,
-
-           tags:[
-              "world",
-              "creation",
-              ...tags
-           ]
+            return false;
 
         }
-     );
+
+    },
 
 
-     this.resetEditorState();
+    /* =====================================================
+       RESET TRANSIENT UI STATE
+    ===================================================== */
+
+    resetEditorState(){
+
+        const engine =
+            this.getEngine();
 
 
-     const result =
-        engine.setView(
-           "world",
-           {
+        if(!engine){
 
-              world,
-
-              entity:
-                 null,
-
-              page:
-                 null,
-
-              entityCreateMode:
-                 false,
-
-              entityType:
-                 null
-
-           }
-        );
-
-
-     if(
-           result !==
-              false
-     ){
-
-        this.syncAwareness(
-           "world",
-           {
-
-              worldId:
-                 world.id
-
-           }
-        );
-
-     }
-
-
-     return result;
-
-  },
-
-
-  /* =====================================================
-     WORLD EDITOR
-  ===================================================== */
-
-  openWorldEditor(){
-
-     const engine =
-        this.getEngine();
-
-
-     const world =
-        engine?.currentWorld ||
-        null;
-
-
-     if(
-           !engine ||
-           !world ||
-           world.archived ===
-              true
-     ){
-
-        return false;
-
-     }
-
-
-     engine.worldEditMode =
-        true;
-
-
-     engine.entityEditMode =
-        false;
-
-
-     engine.entityCreateMode =
-        false;
-
-
-     engine.entityType =
-        null;
-
-
-     return engine.setView(
-        "world",
-        {
-
-           world,
-
-           entity:
-              null,
-
-           page:
-              null,
-
-           entityCreateMode:
-              false,
-
-           entityType:
-              null
+            return false;
 
         }
-     );
-
-  },
 
 
-  /* =====================================================
-     WORLD EDITOR COMPATIBILITY API
-  ===================================================== */
+        engine.worldEditMode =
+            false;
 
-  openWorldEdit(){
+        engine.entityEditMode =
+            false;
 
-     return this.openWorldEditor();
+        engine.entityCreateMode =
+            false;
 
-  },
-
-
-  startWorldEdit(){
-
-     return this.openWorldEditor();
-
-  },
+        engine.entityType =
+            null;
 
 
-  archiveCurrentWorld(){
+        return true;
 
-     return this.archiveWorld();
-
-  },
+    },
 
 
-  cancelWorldEditor(){
+    /* =====================================================
+       CORE NAVIGATION
+    ===================================================== */
 
-     const engine =
-        this.getEngine();
+    openHome(){
 
-
-     if(!engine){
-
-        return false;
-
-     }
+        const engine =
+            this.getEngine();
 
 
-     engine.worldEditMode =
-        false;
+        if(!engine){
 
-
-     return engine.setView(
-        "world",
-        {
-
-           world:
-              engine.currentWorld ||
-              null,
-
-           entity:
-              null,
-
-           page:
-              null,
-
-           entityCreateMode:
-              false,
-
-           entityType:
-              null
+            return false;
 
         }
-     );
-
-  },
 
 
-  saveWorldEditor(){
-
-     const engine =
-        this.getEngine();
+        this.resetEditorState();
 
 
-     const world =
-        engine?.currentWorld ||
-        null;
+        let result =
+            false;
 
 
-     if(
-           !engine ||
-           !world
-     ){
+        try{
 
-        return false;
+            if(
+                typeof engine.openHome ===
+                    "function"
+            ){
 
-     }
+                result =
+                    engine.openHome();
 
+            }
 
-     const nameInput =
-        document.getElementById(
-           "worldEditNameInput"
-        );
+            else if(
+                typeof engine.setView ===
+                    "function"
+            ){
 
+                result =
+                    engine.setView(
+                        "home",
+                        {
+                            entity:
+                                null,
 
-     const descriptionInput =
-        document.getElementById(
-           "worldEditDescriptionInput"
-        );
+                            world:
+                                null,
 
+                            page:
+                                null,
 
-     const tagsInput =
-        document.getElementById(
-           "worldEditTagsInput"
-        );
+                            entityCreateMode:
+                                false,
 
+                            entityType:
+                                null
+                        }
+                    );
 
-     const statusInput =
-        document.getElementById(
-           "worldEditStatusInput"
-        );
+            }
 
+        } catch(error){
 
-     const name =
-        String(
-           nameInput?.value ||
-           ""
-        ).trim();
-
-
-     if(!name){
-
-        nameInput?.focus();
-
-
-        return false;
-
-     }
+            console.error(
+                "Home açılamadı:",
+                error
+            );
 
 
-     const worldService =
-        this.getService(
-           "world"
-        );
-
-
-     if(
-           !worldService ||
-           typeof worldService.update !==
-              "function"
-     ){
-
-        return false;
-
-     }
-
-
-     let updated =
-        null;
-
-
-     try{
-
-        updated =
-           worldService.update(
-              world.id,
-              {
-
-                 name,
-
-                 description:
-                    String(
-                       descriptionInput?.value ||
-                       ""
-                    ).trim(),
-
-                 tags:
-                    this.parseTags(
-                       tagsInput?.value
-                    ),
-
-                 status:
-                    String(
-                       statusInput?.value ||
-                       "active"
-                    )
-
-              }
-           );
-
-     } catch(error){
-
-        console.error(
-           "World güncellenemedi:",
-           error
-        );
-
-
-        return false;
-
-     }
-
-
-     if(!updated){
-
-        return false;
-
-     }
-
-
-     engine.currentWorld =
-        updated;
-
-
-     engine.worldEditMode =
-        false;
-
-
-     this.recordEvolution(
-        "life-event",
-        `${updated.name} dünyası güncellendi`,
-        {
-
-           title:
-              `${updated.name} dünyası güncellendi`,
-
-           source:
-              "world",
-
-           status:
-              "completed",
-
-           importance:
-              "low",
-
-           relatedWorldId:
-              updated.id,
-
-           tags:[
-              "world",
-              "update"
-           ]
+            return false;
 
         }
-     );
 
 
-     return engine.setView(
-        "world",
-        {
+        if(
+            result !==
+                false
+        ){
 
-           world:
-              updated,
-
-           entity:
-              null,
-
-           page:
-              null,
-
-           entityCreateMode:
-              false,
-
-           entityType:
-              null
+            this.syncAwareness(
+                "home"
+            );
 
         }
-     );
-
-  },
 
 
-  archiveWorld(){
+        return result;
 
-     const engine =
-        this.getEngine();
-
-
-     const world =
-        engine?.currentWorld ||
-        null;
+    },
 
 
-     if(
-           !world ||
-           world.id ===
-              "vaero-world"
-     ){
+    openIdentity(){
 
-        return false;
-
-     }
+        const engine =
+            this.getEngine();
 
 
-     const worldService =
-        this.getService(
-           "world"
-        );
+        if(
+            !engine ||
+            typeof engine.setView !==
+                "function"
+        ){
 
-
-     if(
-           !worldService ||
-           typeof worldService.archive !==
-              "function"
-     ){
-
-        return false;
-
-     }
-
-
-     let archived =
-        false;
-
-
-     try{
-
-        archived =
-           worldService.archive(
-              world.id
-           );
-
-     } catch(error){
-
-        console.error(
-           "World arşivlenemedi:",
-           error
-        );
-
-
-        return false;
-
-     }
-
-
-     if(!archived){
-
-        return false;
-
-    }
-
-
-     this.recordEvolution(
-        "life-event",
-        `${world.name} dünyası arşivlendi`,
-        {
-
-           title:
-              `${world.name} dünyası arşivlendi`,
-
-           source:
-              "world",
-
-           relatedWorldId:
-              world.id,
-
-           status:
-              "completed",
-
-           importance:
-              "medium",
-
-           tags:[
-              "world",
-              "archive"
-           ]
+            return false;
 
         }
-     );
 
 
-     engine.currentWorld =
-        null;
+        this.resetEditorState();
 
 
-     engine.worldEditMode =
-        false;
-
-
-     return this.openWorlds();
-
-  },
-
-
-  /* =====================================================
-     ENTITY CREATION
-  ===================================================== */
-
-  startEntityCreate(){
-
-     const engine =
-        this.getEngine();
-
-
-     const world =
-        engine?.currentWorld ||
-        null;
-
-
-     if(!world){
-
-        return this.openWorlds();
-
-     }
-
-
-     engine.worldEditMode =
-        false;
-
-
-     engine.entityEditMode =
-        false;
-
-
-     return engine.setView(
-        "world",
-        {
-
-           world,
-
-           entity:
-              null,
-
-           page:
-              null,
-
-           entityCreateMode:
-              true,
-
-           entityType:
-              null
-
-        }
-     );
-
-  },
-
-
-  selectEntityType(type){
-
-     const engine =
-        this.getEngine();
-
-
-     if(
-           !engine ||
-           !type
-     ){
-
-        return false;
-
-     }
-
-
-     return engine.setView(
-        "world",
-        {
-
-           world:
-              engine.currentWorld ||
-              null,
-
-           entity:
-              null,
-
-           page:
-              null,
-
-           entityCreateMode:
-              true,
-
-           entityType:
-              type
-
-        }
-     );
-
-  },
-
-
-  clearEntityType(){
-
-     const engine =
-        this.getEngine();
-
-
-     if(!engine){
-
-        return false;
-
-     }
-
-
-     return engine.setView(
-        "world",
-        {
-
-           world:
-              engine.currentWorld ||
-              null,
-
-           entity:
-              null,
-
-           page:
-              null,
-
-           entityCreateMode:
-              true,
-
-           entityType:
-              null
-
-        }
-     );
-
-  },
-
-
-  cancelEntityCreate(){
-
-     const engine =
-        this.getEngine();
-
-
-     if(!engine){
-
-        return false;
-
-     }
-
-
-     engine.entityCreateMode =
-        false;
-
-
-     engine.entityType =
-        null;
-
-
-     return engine.setView(
-        "world",
-        {
-
-           world:
-              engine.currentWorld ||
-              null,
-
-           entity:
-              null,
-
-           page:
-              null,
-
-           entityCreateMode:
-              false,
-
-           entityType:
-              null
-
-        }
-     );
-
-  },
-
-
-  createEntity(){
-
-     const engine =
-        this.getEngine();
-
-
-     const world =
-        engine?.currentWorld ||
-        null;
-
-
-     if(!world){
-
-        return false;
-
-     }
-
-
-     const nameInput =
-        document.getElementById(
-           "entityNameInput"
-        );
-
-
-     const descriptionInput =
-        document.getElementById(
-           "entityDescriptionInput"
-        );
-
-
-     const tagsInput =
-        document.getElementById(
-           "entityTagsInput"
-        );
-
-
-     const name =
-        String(
-           nameInput?.value ||
-           ""
-        ).trim();
-
-
-     const type =
-        engine.entityType;
-
-
-     if(!name){
-
-        nameInput?.focus();
-
-
-        return false;
-
-     }
-
-
-     if(!type){
-
-        return false;
-
-     }
-
-
-     const entityManager =
-        this.getService(
-           "entityManager"
-        );
-
-
-     const identityService =
-        this.getService(
-           "identity"
-        );
-
-
-     const profileService =
-        this.getService(
-           "profile"
-        );
-
-
-     const worldService =
-        this.getService(
-           "world"
-        );
-
-
-     if(
-           !entityManager ||
-           !worldService ||
-           typeof entityManager.create !==
-              "function"
-     ){
-
-        return false;
-
-     }
-
-
-     const tags =
-        this.parseTags(
-           tagsInput?.value
-        );
-
-
-     let entity =
-        null;
-
-
-     try{
-
-        entity =
-           entityManager.create({
-
-              id:
-                 this.createId(
-                    "entity"
-                 ),
-
-              name,
-
-              type,
-
-              description:
-                 String(
-                    descriptionInput?.value ||
-                    ""
-                 ).trim(),
-
-              tags,
-
-              status:
-                 "active",
-
-              organs:
-                 [],
-
-              bridges:
-                 [],
-
-              permissions:
-                 [],
-
-              capabilities:
-                 []
-
-           });
+        const entity =
+            engine.rootEntity ||
+            engine.currentEntity ||
+            null;
 
 
         if(!entity){
 
-           return false;
+            return false;
+
+        }
+
+
+        engine.currentOpenedEntity =
+            entity;
+
+
+        engine.currentEntityPage =
+            "identity";
+
+
+        let result =
+            false;
+
+
+        try{
+
+            result =
+                engine.setView(
+                    "identity",
+                    {
+                        entity,
+
+                        page:
+                            "identity",
+
+                        world:
+                            null,
+
+                        entityCreateMode:
+                            false,
+
+                        entityType:
+                            null
+                    }
+                );
+
+        } catch(error){
+
+            console.error(
+                "Identity açılamadı:",
+                error
+            );
+
+
+            return false;
 
         }
 
 
         if(
-              identityService &&
-              typeof identityService.create ===
-                 "function"
+            result !==
+                false
         ){
 
-           entity.identity =
-              identityService.create(
-                 entity
-              );
+            this.syncAwareness(
+                "identity",
+                {
+                    entityId:
+                        entity.id ||
+                        null
+                }
+            );
+
+        }
+
+
+        return result;
+
+    },
+
+
+    openProfile(){
+
+        const engine =
+            this.getEngine();
+
+
+        if(
+            !engine ||
+            typeof engine.setView !==
+                "function"
+        ){
+
+            return false;
+
+        }
+
+
+        this.resetEditorState();
+
+
+        const entity =
+            engine.rootEntity ||
+            engine.currentEntity ||
+            null;
+
+
+        if(!entity){
+
+            return false;
+
+        }
+
+
+        engine.currentOpenedEntity =
+            entity;
+
+
+        engine.currentEntityPage =
+            "profile";
+
+
+        let result =
+            false;
+
+
+        try{
+
+            result =
+                engine.setView(
+                    "profile",
+                    {
+                        entity,
+
+                        page:
+                            "profile",
+
+                        world:
+                            null,
+
+                        entityCreateMode:
+                            false,
+
+                        entityType:
+                            null
+                    }
+                );
+
+        } catch(error){
+
+            console.error(
+                "Profile açılamadı:",
+                error
+            );
+
+
+            return false;
 
         }
 
 
         if(
-              profileService &&
-              typeof profileService.create ===
-                 "function"
+            result !==
+                false
         ){
 
-           entity.profile =
-              profileService.create(
-                 entity
-              );
+            this.syncAwareness(
+                "profile",
+                {
+                    entityId:
+                        entity.id ||
+                        null
+                }
+            );
+
+        }
+
+
+        return result;
+
+    },
+
+
+    openCreate(){
+
+        const engine =
+            this.getEngine();
+
+
+        if(
+            !engine ||
+            typeof engine.setView !==
+                "function"
+        ){
+
+            return false;
+
+        }
+
+
+        this.resetEditorState();
+
+
+        let result =
+            false;
+
+
+        try{
+
+            result =
+                engine.setView(
+                    "create",
+                    {
+                        entity:
+                            null,
+
+                        page:
+                            null,
+
+                        world:
+                            null,
+
+                        entityCreateMode:
+                            false,
+
+                        entityType:
+                            null
+                    }
+                );
+
+        } catch(error){
+
+            console.error(
+                "Create açılamadı:",
+                error
+            );
+
+
+            return false;
 
         }
 
 
         if(
-              typeof worldService.addEntity ===
-                 "function"
+            result !==
+                false
         ){
 
-           worldService.addEntity(
-              world.id,
-              entity
-           );
+            this.syncAwareness(
+                "create"
+            );
 
         }
 
-        else {
 
-           if(
-                 !Array.isArray(
-                    world.entities
-                 )
-           ){
+        return result;
 
-              world.entities =
-                 [];
+    },
 
-           }
 
+    openWorlds(){
 
-           world.entities.push(
-              entity
-           );
+        const engine =
+            this.getEngine();
 
-
-           worldService.save?.();
-
-        }
-
-     } catch(error){
-
-        console.error(
-           "Entity oluşturulamadı:",
-           error
-        );
-
-
-        return false;
-
-     }
-
-
-     this.recordEvolution(
-        "milestone",
-        `${name} varlığı oluşturuldu`,
-        {
-
-           title:
-              `${name} varlığı oluşturuldu`,
-
-           source:
-              "entity",
-
-           status:
-              "completed",
-
-           importance:
-              "medium",
-
-           relatedEntityId:
-              entity.id,
-
-           relatedWorldId:
-              world.id,
-
-           tags:[
-              "entity",
-              "creation",
-              ...tags
-           ],
-
-           organs:[
-              "identity",
-              "profile"
-           ]
-
-        }
-     );
-
-
-     engine.currentOpenedEntity =
-        entity;
-
-
-     engine.entityCreateMode =
-        false;
-
-
-     engine.entityType =
-        null;
-
-
-     engine.entityEditMode =
-        false;
-
-
-     const result =
-        engine.setView(
-           "entity",
-           {
-
-              world,
-
-              entity,
-
-              page:
-                 null,
-
-              entityCreateMode:
-                 false,
-
-              entityType:
-                 null
-
-           }
-        );
-
-
-     if(
-           result !==
-              false
-     ){
-
-        this.syncAwareness(
-           "entity",
-           {
-
-              entityId:
-                 entity.id,
-
-              worldId:
-                 world.id
-
-           }
-        );
-
-     }
-
-
-     return result;
-
-  },
-
-
-  /* =====================================================
-     ENTITY OPEN / EDIT / ARCHIVE
-  ===================================================== */
-
-  openEntity(entityId){
-
-     const engine =
-        this.getEngine();
-
-
-     const world =
-        engine?.currentWorld ||
-        null;
-
-
-     if(
-           !world ||
-           !Array.isArray(
-              world.entities
-           )
-     ){
-
-        return false;
-
-     }
-
-
-     const savedEntity =
-        world.entities.find(
-           item =>
-
-              item?.id ===
-                 entityId &&
-
-              item?.archived !==
-                 true
-        );
-
-
-     if(!savedEntity){
-
-        return false;
-
-     }
-
-
-     const entityManager =
-        this.getService(
-           "entityManager"
-        );
-
-
-     let entity =
-        savedEntity;
-
-
-     try{
 
         if(
-              entityManager &&
-              typeof entityManager.hydrate ===
-                 "function"
+            !engine ||
+            typeof engine.setView !==
+                "function"
         ){
 
-           entity =
-              entityManager.hydrate(
-                 savedEntity
-              );
+            return false;
 
         }
 
-     } catch(error){
 
-        entity =
-           savedEntity;
-
-     }
+        this.resetEditorState();
 
 
-     engine.currentOpenedEntity =
-        entity;
+        let result =
+            false;
 
 
-     engine.currentEntityPage =
-        null;
+        try{
+
+            result =
+                engine.setView(
+                    "worlds",
+                    {
+                        entity:
+                            null,
+
+                        page:
+                            null,
+
+                        world:
+                            null,
+
+                        entityCreateMode:
+                            false,
+
+                        entityType:
+                            null
+                    }
+                );
+
+        } catch(error){
+
+            console.error(
+                "Worlds açılamadı:",
+                error
+            );
 
 
-     engine.entityEditMode =
-        false;
-
-
-     engine.worldEditMode =
-        false;
-
-
-     const result =
-        engine.setView(
-           "entity",
-           {
-
-              world,
-
-              entity,
-
-              page:
-                 null,
-
-              entityCreateMode:
-                 false,
-
-              entityType:
-                 null
-
-           }
-        );
-
-
-     if(
-           result !==
-              false
-     ){
-
-        this.syncAwareness(
-           "entity",
-           {
-
-              entityId:
-                 entity.id ||
-                 null,
-
-              worldId:
-                 world.id ||
-                 null
-
-           }
-        );
-
-     }
-
-
-     return result;
-
-  },
-
-
-  openEntityEditor(){
-
-     const engine =
-        this.getEngine();
-
-
-     const entity =
-        engine?.currentOpenedEntity ||
-        engine?.currentEntity ||
-        null;
-
-
-     if(
-           !engine ||
-           !entity ||
-           entity.archived ===
-              true
-     ){
-
-        return false;
-
-     }
-
-
-     engine.entityEditMode =
-        true;
-
-
-     engine.worldEditMode =
-        false;
-
-
-     engine.currentEntityPage =
-        null;
-
-
-     return engine.setView(
-        "entity",
-        {
-
-           world:
-              engine.currentWorld ||
-              null,
-
-           entity,
-
-           page:
-              null,
-
-           entityCreateMode:
-              false,
-
-           entityType:
-              null
+            return false;
 
         }
-     );
-
-  },
 
 
-  /* =====================================================
-     ENTITY EDITOR COMPATIBILITY API
-  ===================================================== */
+        if(
+            result !==
+                false
+        ){
 
-  openEntityEdit(){
-
-     return this.openEntityEditor();
-
-  },
-
-
-  startEntityEdit(){
-
-     return this.openEntityEditor();
-
-  },
-
-
-  archiveCurrentEntity(){
-
-     return this.archiveEntity();
-
-  },
-
-
-  cancelEntityEditor(){
-
-     const engine =
-        this.getEngine();
-
-
-     const entity =
-        engine?.currentOpenedEntity ||
-        engine?.currentEntity ||
-        null;
-
-
-     if(
-           !engine ||
-           !entity
-     ){
-
-        return false;
-
-     }
-
-
-     engine.entityEditMode =
-        false;
-
-
-     return engine.setView(
-        "entity",
-        {
-
-           world:
-              engine.currentWorld ||
-              null,
-
-           entity,
-
-           page:
-              null,
-
-           entityCreateMode:
-              false,
-
-           entityType:
-              null
+            this.syncAwareness(
+                "worlds"
+            );
 
         }
-     );
-
-  },
 
 
-  saveEntityEditor(){
+        return result;
 
-     const engine =
-        this.getEngine();
-
-
-     const entity =
-        engine?.currentOpenedEntity ||
-        engine?.currentEntity ||
-        null;
+    },
 
 
-     if(
-           !engine ||
-           !entity
-     ){
+    openEntities(){
 
-        return false;
-
-     }
+        const worldService =
+            this.getService(
+                "world"
+            );
 
 
-     const nameInput =
-        document.getElementById(
-           "entityEditNameInput"
-        );
+        const engine =
+            this.getEngine();
 
 
-     const descriptionInput =
-        document.getElementById(
-           "entityEditDescriptionInput"
-        );
+        if(!engine){
+
+            return false;
+
+        }
 
 
-     const tagsInput =
-        document.getElementById(
-           "entityEditTagsInput"
-        );
+        let worlds =
+            [];
 
 
-     const statusInput =
-        document.getElementById(
-           "entityEditStatusInput"
-        );
+        try{
+
+            if(
+                worldService &&
+                typeof worldService.all ===
+                    "function"
+            ){
+
+                const result =
+                    worldService.all();
 
 
-     const name =
-        String(
-           nameInput?.value ||
-           ""
-        ).trim();
-
-
-     if(!name){
-
-        nameInput?.focus();
-
-
-        return false;
-
-     }
-
-
-     const entityManager =
-        this.getService(
-           "entityManager"
-        );
-
-
-     const worldService =
-        this.getService(
-           "world"
-        );
-
-
-     if(
-           !entityManager ||
-           typeof entityManager.update !==
-              "function"
-     ){
-
-        return false;
-
-     }
-
-
-     let updated =
-        null;
-
-
-     try{
-
-        updated =
-           entityManager.update(
-              entity.id,
-              {
-
-                 name,
-
-                 description:
-                    String(
-                       descriptionInput?.value ||
-                       ""
-                    ).trim(),
-
-                 tags:
-                    this.parseTags(
-                       tagsInput?.value
-                    ),
-
-                 status:
-                    String(
-                       statusInput?.value ||
-                       "active"
+                worlds =
+                    Array.isArray(
+                        result
                     )
+                        ? result
+                        : [];
 
-              }
-           );
+            }
 
-     } catch(error){
+        } catch(error){
 
-        console.error(
-           "Entity güncellenemedi:",
-           error
+            worlds =
+                [];
+
+        }
+
+
+        const targetWorld =
+            engine.currentWorld ||
+            worlds.find(
+                world =>
+                    world?.status ===
+                        "active" &&
+                    world?.archived !==
+                        true
+            ) ||
+            worlds.find(
+                world =>
+                    world?.archived !==
+                        true
+            ) ||
+            null;
+
+
+        if(!targetWorld){
+
+            return this.openWorlds();
+
+        }
+
+
+        return this.openWorld(
+            targetWorld.id
         );
 
-
-        return false;
-
-     }
+    },
 
 
-     if(!updated){
+    /* =====================================================
+       WORLD OPEN
+    ===================================================== */
 
-        return false;
+    openWorld(worldId){
 
-     }
-
-
-     /*
-      * World localStorage içinde entity snapshot tutulduğu için
-      * güncel Entity instance'ını tekrar o World üyeliğine yazıyoruz.
-      */
-
-     const world =
-        engine.currentWorld ||
-        null;
+        const id =
+            this.normalizeText(
+                worldId,
+                160
+            );
 
 
-     if(
-           world &&
-           Array.isArray(
-              world.entities
-           )
-     ){
+        if(!id){
 
-        const index =
-           world.entities.findIndex(
-              item =>
-                 item?.id ===
-                 updated.id
-           );
+            return false;
+
+        }
+
+
+        const worldService =
+            this.getService(
+                "world"
+            );
+
+
+        const engine =
+            this.getEngine();
 
 
         if(
-              index >= 0
+            !worldService ||
+            !engine ||
+            typeof engine.setView !==
+                "function"
         ){
 
-           world.entities[index] =
-              updated;
+            return false;
 
         }
 
 
-        if(
-              worldService &&
-              typeof worldService.save ===
-                 "function"
-        ){
+        let world =
+            null;
 
-           worldService.save();
 
-        }
+        try{
 
-     }
-
-
-     engine.currentOpenedEntity =
-        updated;
-
-
-     engine.entityEditMode =
-        false;
-
-
-     this.recordEvolution(
-        "life-event",
-        `${updated.name} varlığı güncellendi`,
-        {
-
-           title:
-              `${updated.name} varlığı güncellendi`,
-
-           source:
-              "entity",
-
-           status:
-              "completed",
-
-           importance:
-              "low",
-
-           relatedEntityId:
-              updated.id,
-
-           relatedWorldId:
-              world?.id ||
-              null,
-
-           tags:[
-              "entity",
-              "update"
-           ]
-
-        }
-     );
-
-
-     return engine.setView(
-        "entity",
-        {
-
-           world,
-
-           entity:
-              updated,
-
-           page:
-              null,
-
-           entityCreateMode:
-              false,
-
-           entityType:
-              null
-
-        }
-     );
-
-  },
-
-
-  archiveEntity(){
-
-     const engine =
-        this.getEngine();
-
-
-     const entity =
-        engine?.currentOpenedEntity ||
-        engine?.currentEntity ||
-        null;
-
-
-     const world =
-        engine?.currentWorld ||
-        null;
-
-
-     if(
-           !entity ||
-           entity.id ===
-              engine?.rootEntity?.id
-     ){
-
-        return false;
-
-     }
-
-
-     const entityManager =
-        this.getService(
-           "entityManager"
-        );
-
-
-     const worldService =
-        this.getService(
-           "world"
-        );
-
-
-     if(
-           !entityManager ||
-           typeof entityManager.archive !==
-              "function"
-     ){
-
-        return false;
-
-     }
-
-
-     let archived =
-        false;
-
-
-     try{
-
-        archived =
-           entityManager.archive(
-              entity.id
-           );
-
-     } catch(error){
-
-        console.error(
-           "Entity arşivlenemedi:",
-           error
-        );
-
-
-        return false;
-
-     }
-
-
-     if(!archived){
-
-        return false;
-
-     }
-
-
-     if(
-           world &&
-           Array.isArray(
-              world.entities
-           )
-     ){
-
-        const index =
-           world.entities.findIndex(
-              item =>
-                 item?.id ===
-                 entity.id
-           );
-
-
-        if(
-              index >= 0
-        ){
-
-           world.entities[index] =
-
-              archived &&
-              typeof archived ===
-                 "object"
-
-                 ? archived
-
-                 : entity;
-
-        }
-
-
-        worldService?.save?.();
-
-     }
-
-
-     this.recordEvolution(
-        "life-event",
-        `${entity.name} varlığı arşivlendi`,
-        {
-
-           title:
-              `${entity.name} varlığı arşivlendi`,
-
-           source:
-              "entity",
-
-           status:
-              "completed",
-
-           importance:
-              "medium",
-
-           relatedEntityId:
-              entity.id,
-
-           relatedWorldId:
-              world?.id ||
-              null,
-
-           tags:[
-              "entity",
-              "archive"
-           ]
-
-        }
-     );
-
-
-     engine.currentOpenedEntity =
-        null;
-
-
-     engine.currentEntityPage =
-        null;
-
-
-     engine.entityEditMode =
-        false;
-
-
-     return this.backToWorld();
-
-  },
-
-
-  /* =====================================================
-     ENTITY PAGES
-  ===================================================== */
-
-  openEntityPage(page){
-
-     const allowedPages = [
-
-        "identity",
-        "profile",
-        "organs",
-        "timeline",
-        "memory",
-        "bridge",
-        "evolution",
-        "settings",
-        "discovery"
-
-     ];
-
-
-     if(
-           !allowedPages.includes(
-              page
-           )
-     ){
-
-        return false;
-
-     }
-
-
-     const engine =
-        this.getEngine();
-
-
-     if(!engine){
-
-        return false;
-
-     }
-
-
-     const entity =
-        engine.currentOpenedEntity ||
-        engine.rootEntity ||
-        engine.currentEntity;
-
-
-     if(!entity){
-
-        return false;
-
-     }
-
-
-     engine.currentOpenedEntity =
-        entity;
-
-
-     engine.currentEntityPage =
-        page;
-
-
-     engine.entityEditMode =
-        false;
-
-
-     engine.worldEditMode =
-        false;
-
-
-     let view =
-        "entity";
-
-
-     if(
-           entity.id ===
-              engine.rootEntity?.id &&
-           page ===
-              "identity"
-     ){
-
-        view =
-           "identity";
-
-     }
-
-
-     if(
-           entity.id ===
-              engine.rootEntity?.id &&
-           page ===
-              "profile"
-     ){
-
-        view =
-           "profile";
-
-     }
-
-
-     const opened =
-        engine.setView(
-           view,
-           {
-
-              entity,
-
-              page,
-
-              entityCreateMode:
-                 false,
-
-              entityType:
-                 null
-
-           }
-        );
-
-
-     if(
-           opened !==
-              false
-     ){
-
-        this.syncAwareness(
-           page,
-           {
-
-              entityId:
-                 entity.id ||
-                 null
-
-           }
-        );
-
-
-        this.trackBrainSession(
-           page
-        );
-
-     }
-
-
-     return opened;
-
-  },
-
-
-  openEntityDashboard(){
-
-     const engine =
-        this.getEngine();
-
-
-     const entity =
-        engine?.currentOpenedEntity ||
-        null;
-
-
-     if(!entity){
-
-        return this.openIdentity();
-
-     }
-
-
-     engine.currentEntityPage =
-        null;
-
-
-     engine.entityEditMode =
-        false;
-
-
-     return engine.setView(
-        "entity",
-        {
-
-           world:
-              engine.currentWorld ||
-              null,
-
-           entity,
-
-           page:
-              null,
-
-           entityCreateMode:
-              false,
-
-           entityType:
-              null
-
-        }
-     );
-
-  },
-
-
-  /* =====================================================
-     PROFILE
-  ===================================================== */
-
-  saveProfile(){
-
-     const nameInput =
-        document.getElementById(
-           "profileNameInput"
-        );
-
-
-     const descriptionInput =
-        document.getElementById(
-           "profileDescriptionInput"
-        );
-
-
-     const name =
-        String(
-           nameInput?.value ||
-           ""
-        ).trim();
-
-
-     if(!name){
-
-        nameInput?.focus();
-
-
-        return false;
-
-     }
-
-
-     const description =
-        String(
-           descriptionInput?.value ||
-           ""
-        ).trim();
-
-
-     const engine =
-        this.getEngine();
-
-
-     const entity =
-        engine?.currentOpenedEntity ||
-        engine?.rootEntity ||
-        null;
-
-
-     if(!entity){
-
-        return false;
-
-     }
-
-
-     const isRoot =
-        entity.id ===
-        engine.rootEntity?.id;
-
-
-     try{
-
-        if(isRoot){
-
-           const userProfile = {
-
-              name,
-
-              description,
-
-              updatedAt:
-                 Date.now()
-
-           };
-
-
-           localStorage.setItem(
-              "vaero:user:profile:v1",
-              JSON.stringify(
-                 userProfile
-              )
-           );
-
-
-           if(
-                 entity.profile
-           ){
-
-              entity.profile.name =
-                 name;
-
-
-              entity.profile.description =
-                 description;
-
-
-              entity.profile.updatedAt =
-                 Date.now();
-
-           }
-
-        }
-
-        else {
-
-           const entityManager =
-              this.getService(
-                 "entityManager"
-              );
-
-
-           if(
-                 entityManager &&
-                 typeof entityManager.update ===
+            if(
+                typeof worldService.get ===
                     "function"
-           ){
+            ){
 
-              entityManager.update(
-                 entity.id,
-                 {
+                world =
+                    worldService.get(
+                        id
+                    );
+
+            }
+
+
+            if(
+                !world &&
+                typeof worldService.all ===
+                    "function"
+            ){
+
+                const worlds =
+                    worldService.all({
+                        includeArchived:
+                            true
+                    });
+
+
+                if(
+                    Array.isArray(
+                        worlds
+                    )
+                ){
+
+                    world =
+                        worlds.find(
+                            item =>
+                                String(
+                                    item?.id ||
+                                    ""
+                                ) ===
+                                    id
+                        ) ||
+                        null;
+
+                }
+
+            }
+
+        } catch(error){
+
+            console.error(
+                "World açılamadı:",
+                error
+            );
+
+
+            return false;
+
+        }
+
+
+        if(
+            !world ||
+            world.archived ===
+                true
+        ){
+
+            console.warn(
+                "World bulunamadı veya arşivlenmiş:",
+                id
+            );
+
+
+            return false;
+
+        }
+
+
+        if(
+            !Array.isArray(
+                world.entities
+            )
+        ){
+
+            world.entities =
+                [];
+
+        }
+
+
+        this.resetEditorState();
+
+
+        engine.currentWorld =
+            world;
+
+
+        engine.currentOpenedEntity =
+            null;
+
+
+        engine.currentEntityPage =
+            null;
+
+
+        let result =
+            false;
+
+
+        try{
+
+            result =
+                engine.setView(
+                    "world",
+                    {
+                        world,
+
+                        entity:
+                            null,
+
+                        page:
+                            null,
+
+                        entityCreateMode:
+                            false,
+
+                        entityType:
+                            null
+                    }
+                );
+
+        } catch(error){
+
+            console.error(
+                "World görünümü açılamadı:",
+                error
+            );
+
+
+            return false;
+
+        }
+
+
+        if(
+            result !==
+                false
+        ){
+
+            this.syncAwareness(
+                "world",
+                {
+                    worldId:
+                        world.id ||
+                        null
+                }
+            );
+
+        }
+
+
+        return result;
+
+    },
+
+
+    backToWorld(){
+
+        const engine =
+            this.getEngine();
+
+
+        if(!engine){
+
+            return false;
+
+        }
+
+
+        const world =
+            engine.currentWorld ||
+            null;
+
+
+        if(!world){
+
+            return this.openWorlds();
+
+        }
+
+
+        this.resetEditorState();
+
+
+        engine.currentOpenedEntity =
+            null;
+
+
+        engine.currentEntityPage =
+            null;
+
+
+        if(
+            typeof engine.setView !==
+                "function"
+        ){
+
+            return false;
+
+        }
+
+
+        const result =
+            engine.setView(
+                "world",
+                {
+                    world,
+
+                    entity:
+                        null,
+
+                    page:
+                        null,
+
+                    entityCreateMode:
+                        false,
+
+                    entityType:
+                        null
+                }
+            );
+
+
+        if(
+            result !==
+                false
+        ){
+
+            this.syncAwareness(
+                "world",
+                {
+                    worldId:
+                        world.id ||
+                        null
+                }
+            );
+
+        }
+
+
+        return result;
+
+    },
+
+
+    /* =====================================================
+       WORLD CREATION
+    ===================================================== */
+
+    createWorld(){
+
+        const engine =
+            this.getEngine();
+
+
+        if(!engine){
+
+            return false;
+
+        }
+
+
+        const nameInput =
+            document.getElementById(
+                "worldNameInput"
+            );
+
+
+        const descriptionInput =
+            document.getElementById(
+                "worldDescriptionInput"
+            );
+
+
+        const tagsInput =
+            document.getElementById(
+                "worldTagsInput"
+            );
+
+
+        const name =
+            this.normalizeText(
+                nameInput?.value,
+                120
+            );
+
+
+        if(!name){
+
+            nameInput?.focus();
+
+
+            return false;
+
+        }
+
+
+        const worldService =
+            this.getService(
+                "world"
+            );
+
+
+        if(
+            !worldService ||
+            typeof worldService.create !==
+                "function"
+        ){
+
+            console.warn(
+                "World create API bulunamadı."
+            );
+
+
+            return false;
+
+        }
+
+
+        const tags =
+            this.parseTags(
+                tagsInput?.value
+            );
+
+
+        const description =
+            this.normalizeText(
+                descriptionInput?.value,
+                1000
+            );
+
+
+        let world =
+            null;
+
+
+        try{
+
+            world =
+                worldService.create({
+                    id:
+                        this.createId(
+                            "world"
+                        ),
 
                     name,
 
-                    description
+                    description,
 
-                 }
-              );
+                    tags,
 
-           }
+                    type:
+                        "custom-world",
 
-           else if(
-              typeof entity.update ===
-                 "function"
-           ){
+                    owner:
+                        engine.rootEntity
+                            ?.id ||
+                        engine.currentEntity
+                            ?.id ||
+                        null,
 
-              entity.update({
+                    entities:
+                        [],
 
-                 name,
+                    status:
+                        "active"
+                });
 
-                 description
+        } catch(error){
 
-              });
-
-           }
-
-           else {
-
-              entity.name =
-                 name;
-
-
-              entity.description =
-                 description;
-
-           }
+            console.error(
+                "World oluşturulamadı:",
+                error
+            );
 
 
-           const profileService =
-              this.getService(
-                 "profile"
-              );
+            return false;
+
+        }
 
 
-           if(
-                 profileService &&
-                 entity.profile &&
-                 typeof profileService.update ===
-                    "function"
-           ){
+        if(!world){
 
-              profileService.update(
-                 entity.profile,
-                 {
+            return false;
+
+        }
+
+
+        this.recordEvolution(
+            "milestone",
+            `${name} dünyası oluşturuldu`,
+            {
+                title:
+                    `${name} dünyası oluşturuldu`,
+
+                source:
+                    "world",
+
+                status:
+                    "completed",
+
+                importance:
+                    "medium",
+
+                relatedWorldId:
+                    world.id,
+
+                tags:[
+                    "world",
+                    "creation",
+                    ...tags
+                ]
+            }
+        );
+
+
+        this.resetEditorState();
+
+
+        engine.currentWorld =
+            world;
+
+
+        let result =
+            false;
+
+
+        try{
+
+            result =
+                engine.setView(
+                    "world",
+                    {
+                        world,
+
+                        entity:
+                            null,
+
+                        page:
+                            null,
+
+                        entityCreateMode:
+                            false,
+
+                        entityType:
+                            null
+                    }
+                );
+
+        } catch(error){
+
+            console.error(
+                "Yeni World açılamadı:",
+                error
+            );
+
+
+            return false;
+
+        }
+
+
+        if(
+            result !==
+                false
+        ){
+
+            this.syncAwareness(
+                "world",
+                {
+                    worldId:
+                        world.id
+                }
+            );
+
+        }
+
+
+        return result;
+
+    },
+
+
+    /* =====================================================
+       WORLD EDITOR
+    ===================================================== */
+
+    openWorldEditor(){
+
+        const engine =
+            this.getEngine();
+
+
+        const world =
+            engine?.currentWorld ||
+            null;
+
+
+        if(
+            !engine ||
+            !world ||
+            world.archived ===
+                true ||
+            typeof engine.setView !==
+                "function"
+        ){
+
+            return false;
+
+        }
+
+
+        engine.worldEditMode =
+            true;
+
+
+        engine.entityEditMode =
+            false;
+
+
+        engine.entityCreateMode =
+            false;
+
+
+        engine.entityType =
+            null;
+
+
+        return engine.setView(
+            "world",
+            {
+                world,
+
+                entity:
+                    null,
+
+                page:
+                    null,
+
+                entityCreateMode:
+                    false,
+
+                entityType:
+                    null
+            }
+        );
+
+    },
+
+
+    /* =====================================================
+       WORLD EDITOR COMPATIBILITY API
+    ===================================================== */
+
+    openWorldEdit(){
+
+        return this.openWorldEditor();
+
+    },
+
+
+    startWorldEdit(){
+
+        return this.openWorldEditor();
+
+    },
+
+
+    archiveCurrentWorld(){
+
+        return this.archiveWorld();
+
+    },
+
+
+    cancelWorldEditor(){
+
+        const engine =
+            this.getEngine();
+
+
+        if(
+            !engine ||
+            typeof engine.setView !==
+                "function"
+        ){
+
+            return false;
+
+        }
+
+
+        engine.worldEditMode =
+            false;
+
+
+        return engine.setView(
+            "world",
+            {
+                world:
+                    engine.currentWorld ||
+                    null,
+
+                entity:
+                    null,
+
+                page:
+                    null,
+
+                entityCreateMode:
+                    false,
+
+                entityType:
+                    null
+            }
+        );
+
+    },
+
+
+    saveWorldEditor(){
+
+        const engine =
+            this.getEngine();
+
+
+        const world =
+            engine?.currentWorld ||
+            null;
+
+
+        if(
+            !engine ||
+            !world
+        ){
+
+            return false;
+
+        }
+
+
+        const nameInput =
+            document.getElementById(
+                "worldEditNameInput"
+            );
+
+
+        const descriptionInput =
+            document.getElementById(
+                "worldEditDescriptionInput"
+            );
+
+
+        const tagsInput =
+            document.getElementById(
+                "worldEditTagsInput"
+            );
+
+
+        const statusInput =
+            document.getElementById(
+                "worldEditStatusInput"
+            );
+
+
+        const name =
+            this.normalizeText(
+                nameInput?.value,
+                120
+            );
+
+
+        if(!name){
+
+            nameInput?.focus();
+
+
+            return false;
+
+        }
+
+
+        const status =
+            [
+                "active",
+                "inactive",
+                "paused"
+            ].includes(
+                String(
+                    statusInput?.value ||
+                    ""
+                )
+            )
+                ? String(
+                    statusInput.value
+                )
+                : (
+                    world.status ||
+                    "active"
+                );
+
+
+        const worldService =
+            this.getService(
+                "world"
+            );
+
+
+        if(
+            !worldService ||
+            typeof worldService.update !==
+                "function"
+        ){
+
+            return false;
+
+        }
+
+
+        let updated =
+            null;
+
+
+        try{
+
+            updated =
+                worldService.update(
+                    world.id,
+                    {
+                        name,
+
+                        description:
+                            this.normalizeText(
+                                descriptionInput
+                                    ?.value,
+                                1000
+                            ),
+
+                        tags:
+                            this.parseTags(
+                                tagsInput?.value
+                            ),
+
+                        status
+                    }
+                );
+
+        } catch(error){
+
+            console.error(
+                "World güncellenemedi:",
+                error
+            );
+
+
+            return false;
+
+        }
+
+
+        if(!updated){
+
+            return false;
+
+        }
+
+
+        engine.currentWorld =
+            updated;
+
+
+        engine.worldEditMode =
+            false;
+
+
+        this.recordEvolution(
+            "life-event",
+            `${updated.name} dünyası güncellendi`,
+            {
+                title:
+                    `${updated.name} dünyası güncellendi`,
+
+                source:
+                    "world",
+
+                status:
+                    "completed",
+
+                importance:
+                    "low",
+
+                relatedWorldId:
+                    updated.id,
+
+                tags:[
+                    "world",
+                    "update"
+                ]
+            }
+        );
+
+
+        return engine.setView(
+            "world",
+            {
+                world:
+                    updated,
+
+                entity:
+                    null,
+
+                page:
+                    null,
+
+                entityCreateMode:
+                    false,
+
+                entityType:
+                    null
+            }
+        );
+
+    },
+
+
+    archiveWorld(){
+
+        const engine =
+            this.getEngine();
+
+
+        const world =
+            engine?.currentWorld ||
+            null;
+
+
+        if(
+            !engine ||
+            !world ||
+            world.id ===
+                "vaero-world"
+        ){
+
+            return false;
+
+        }
+
+
+        const worldService =
+            this.getService(
+                "world"
+            );
+
+
+        if(
+            !worldService ||
+            typeof worldService.archive !==
+                "function"
+        ){
+
+            return false;
+
+        }
+
+
+        let archived =
+            false;
+
+
+        try{
+
+            archived =
+                worldService.archive(
+                    world.id
+                );
+
+        } catch(error){
+
+            console.error(
+                "World arşivlenemedi:",
+                error
+            );
+
+
+            return false;
+
+        }
+
+
+        if(!archived){
+
+            return false;
+
+        }
+
+
+        this.recordEvolution(
+            "life-event",
+            `${world.name} dünyası arşivlendi`,
+            {
+                title:
+                    `${world.name} dünyası arşivlendi`,
+
+                source:
+                    "world",
+
+                relatedWorldId:
+                    world.id,
+
+                status:
+                    "completed",
+
+                importance:
+                    "medium",
+
+                tags:[
+                    "world",
+                    "archive"
+                ]
+            }
+        );
+
+
+        engine.currentWorld =
+            null;
+
+
+        engine.currentOpenedEntity =
+            null;
+
+
+        engine.currentEntityPage =
+            null;
+
+
+        engine.worldEditMode =
+            false;
+
+
+        return this.openWorlds();
+
+    },
+
+
+    /* =====================================================
+       ENTITY CREATION
+    ===================================================== */
+
+    startEntityCreate(){
+
+        const engine =
+            this.getEngine();
+
+
+        const world =
+            engine?.currentWorld ||
+            null;
+
+
+        if(!world){
+
+            return this.openWorlds();
+
+        }
+
+
+        if(
+            typeof engine.setView !==
+                "function"
+        ){
+
+            return false;
+
+        }
+
+
+        engine.worldEditMode =
+            false;
+
+
+        engine.entityEditMode =
+            false;
+
+
+        return engine.setView(
+            "world",
+            {
+                world,
+
+                entity:
+                    null,
+
+                page:
+                    null,
+
+                entityCreateMode:
+                    true,
+
+                entityType:
+                    null
+            }
+        );
+
+    },
+
+
+    selectEntityType(type){
+
+        const engine =
+            this.getEngine();
+
+
+        const entityType =
+            this.normalizeText(
+                type,
+                80
+            );
+
+
+        if(
+            !engine ||
+            !entityType ||
+            typeof engine.setView !==
+                "function"
+        ){
+
+            return false;
+
+        }
+
+
+        return engine.setView(
+            "world",
+            {
+                world:
+                    engine.currentWorld ||
+                    null,
+
+                entity:
+                    null,
+
+                page:
+                    null,
+
+                entityCreateMode:
+                    true,
+
+                entityType
+            }
+        );
+
+    },
+
+
+    clearEntityType(){
+
+        const engine =
+            this.getEngine();
+
+
+        if(
+            !engine ||
+            typeof engine.setView !==
+                "function"
+        ){
+
+            return false;
+
+        }
+
+
+        return engine.setView(
+            "world",
+            {
+                world:
+                    engine.currentWorld ||
+                    null,
+
+                entity:
+                    null,
+
+                page:
+                    null,
+
+                entityCreateMode:
+                    true,
+
+                entityType:
+                    null
+            }
+        );
+
+    },
+
+
+    cancelEntityCreate(){
+
+        const engine =
+            this.getEngine();
+
+
+        if(
+            !engine ||
+            typeof engine.setView !==
+                "function"
+        ){
+
+            return false;
+
+        }
+
+
+        engine.entityCreateMode =
+            false;
+
+
+        engine.entityType =
+            null;
+
+
+        return engine.setView(
+            "world",
+            {
+                world:
+                    engine.currentWorld ||
+                    null,
+
+                entity:
+                    null,
+
+                page:
+                    null,
+
+                entityCreateMode:
+                    false,
+
+                entityType:
+                    null
+            }
+        );
+
+    },
+
+
+    createEntity(){
+
+        const engine =
+            this.getEngine();
+
+
+        const world =
+            engine?.currentWorld ||
+            null;
+
+
+        if(!world){
+
+            return false;
+
+        }
+
+
+        const nameInput =
+            document.getElementById(
+                "entityNameInput"
+            );
+
+
+        const descriptionInput =
+            document.getElementById(
+                "entityDescriptionInput"
+            );
+
+
+        const tagsInput =
+            document.getElementById(
+                "entityTagsInput"
+            );
+
+
+        const name =
+            this.normalizeText(
+                nameInput?.value,
+                120
+            );
+
+
+        const type =
+            this.normalizeText(
+                engine.entityType,
+                80
+            );
+
+
+        if(!name){
+
+            nameInput?.focus();
+
+
+            return false;
+
+        }
+
+
+        if(!type){
+
+            return false;
+
+        }
+
+
+        const entityManager =
+            this.getService(
+                "entityManager"
+            );
+
+
+        const identityService =
+            this.getService(
+                "identity"
+            );
+
+
+        const profileService =
+            this.getService(
+                "profile"
+            );
+
+
+        const worldService =
+            this.getService(
+                "world"
+            );
+
+
+        if(
+            !entityManager ||
+            !worldService ||
+            typeof entityManager.create !==
+                "function"
+        ){
+
+            return false;
+
+        }
+
+
+        const tags =
+            this.parseTags(
+                tagsInput?.value
+            );
+
+
+        let entity =
+            null;
+
+
+        try{
+
+            entity =
+                entityManager.create({
+                    id:
+                        this.createId(
+                            "entity"
+                        ),
 
                     name,
 
-                    description
+                    type,
 
-                 }
-              );
+                    description:
+                        this.normalizeText(
+                            descriptionInput
+                                ?.value,
+                            1000
+                        ),
 
-           }
+                    tags,
+
+                    status:
+                        "active",
+
+                    organs:
+                        [],
+
+                    bridges:
+                        [],
+
+                    permissions:
+                        [],
+
+                    capabilities:
+                        []
+                });
 
 
-           this.getService(
-              "world"
-           )?.save?.();
+            if(!entity){
+
+                return false;
+
+            }
+
+
+            if(
+                identityService &&
+                typeof identityService.create ===
+                    "function" &&
+                !entity.identity
+            ){
+
+                entity.identity =
+                    identityService.create(
+                        entity
+                    );
+
+            }
+
+
+            if(
+                profileService &&
+                typeof profileService.create ===
+                    "function" &&
+                !entity.profile
+            ){
+
+                entity.profile =
+                    profileService.create(
+                        entity
+                    );
+
+            }
+
+
+            if(
+                typeof worldService.addEntity ===
+                    "function"
+            ){
+
+                worldService.addEntity(
+                    world.id,
+                    entity
+                );
+
+            }
+
+            else {
+
+                if(
+                    !Array.isArray(
+                        world.entities
+                    )
+                ){
+
+                    world.entities =
+                        [];
+
+                }
+
+
+                const alreadyExists =
+                    world.entities.some(
+                        item =>
+                            item?.id ===
+                                entity.id
+                    );
+
+
+                if(!alreadyExists){
+
+                    world.entities.push(
+                        entity
+                    );
+
+                }
+
+
+                worldService.save?.();
+
+            }
+
+        } catch(error){
+
+            console.error(
+                "Entity oluşturulamadı:",
+                error
+            );
+
+
+            return false;
 
         }
 
-     } catch(error){
 
-        console.error(
-           "Profil kaydedilemedi:",
-           error
+        this.recordEvolution(
+            "milestone",
+            `${name} varlığı oluşturuldu`,
+            {
+                title:
+                    `${name} varlığı oluşturuldu`,
+
+                source:
+                    "entity",
+
+                status:
+                    "completed",
+
+                importance:
+                    "medium",
+
+                relatedEntityId:
+                    entity.id,
+
+                relatedWorldId:
+                    world.id,
+
+                tags:[
+                    "entity",
+                    "creation",
+                    ...tags
+                ],
+
+                organs:[
+                    "identity",
+                    "profile"
+                ]
+            }
         );
 
 
-        return false;
+        engine.currentOpenedEntity =
+            entity;
 
-     }
 
+        engine.entityCreateMode =
+            false;
 
-     const feedback =
-        document.getElementById(
-           "profileSaveFeedback"
-        );
 
+        engine.entityType =
+            null;
 
-     if(feedback){
 
-        feedback.textContent =
-           "Profil kaydedildi.";
+        engine.entityEditMode =
+            false;
 
-     }
 
+        let result =
+            false;
 
-     return true;
 
-  },
+        try{
 
-  /* =====================================================
-     DISCOVERY
-  ===================================================== */
+            result =
+                engine.setView(
+                    "entity",
+                    {
+                        world,
 
-  restartDiscovery(){
+                        entity,
 
-     try{
+                        page:
+                            null,
 
-        localStorage.removeItem(
-           "vaero:discovery:completed"
-        );
+                        entityCreateMode:
+                            false,
 
+                        entityType:
+                            null
+                    }
+                );
 
-        [
-           "vaero:discovery:draft:v2",
-           "vaero:discovery:draft:v3",
-           "vaero:discovery:result:v2",
-           "vaero:discovery:result:v3"
-        ]
-           .forEach(
-              key =>
-                 localStorage.removeItem(
-                    key
-                 )
-           );
+        } catch(error){
 
-     } catch(error){
+            console.error(
+                "Yeni Entity açılamadı:",
+                error
+            );
 
-        console.warn(
-           "Discovery state temizlenemedi:",
-           error
-        );
 
-     }
-
-
-     const engineRoot =
-        document.getElementById(
-           "engine"
-        );
-
-
-     if(
-           engineRoot &&
-           window.DiscoveryApp &&
-           typeof window.DiscoveryApp.render ===
-              "function"
-     ){
-
-        window.DiscoveryApp.currentStep =
-           0;
-
-
-        window.DiscoveryApp.answers =
-           {};
-
-
-        window.DiscoveryApp.render(
-           engineRoot
-        );
-
-
-        this.syncAwareness(
-           "discovery"
-        );
-
-
-        return true;
-
-     }
-
-
-     return false;
-
-  },
-
-
-  /* =====================================================
-     SYSTEM APPLICATIONS
-  ===================================================== */
-
-  openVaeroApp(){
-
-     const engine =
-        this.getEngine();
-
-
-     if(
-           !engine ||
-           typeof engine.openSystemPage !==
-              "function"
-     ){
-
-        return false;
-
-     }
-
-
-     this.resetEditorState();
-
-
-     const opened =
-        engine.openSystemPage(
-           "vaero"
-        );
-
-
-     if(opened){
-
-        this.syncAwareness(
-           "vaero"
-        );
-
-     }
-
-
-     return opened;
-
-  },
-
-
-  openApplicationsApp(){
-
-     const engine =
-        this.getEngine();
-
-
-     if(
-           !engine ||
-           typeof engine.openSystemPage !==
-              "function"
-     ){
-
-        return false;
-
-     }
-
-
-     this.resetEditorState();
-
-
-     const opened =
-        engine.openSystemPage(
-           "applications"
-        );
-
-
-     if(opened){
-
-        this.syncAwareness(
-           "applications"
-        );
-
-     }
-
-
-     return opened;
-
-  },
-
-
-  /* =====================================================
-     VAERO PAYMENT CORE
-  ===================================================== */
-
-  getVaeroPaymentCore(){
-
-     if(
-           typeof window !==
-              "undefined" &&
-           window.VaeroApp
-     ){
-
-        if(
-              window.VaeroApp
-                 .paymentCore
-        ){
-
-           return window.VaeroApp
-              .paymentCore;
+            return false;
 
         }
 
 
         if(
-              window.VaeroApp.core
+            result !==
+                false
         ){
 
-           return window.VaeroApp
-              .core;
+            this.syncAwareness(
+                "entity",
+                {
+                    entityId:
+                        entity.id,
+
+                    worldId:
+                        world.id
+                }
+            );
 
         }
 
 
-        if(
-              typeof window.VaeroApp
-                 .getPaymentCore ===
-                 "function"
-        ){
+        return result;
 
-           try{
-
-              return window.VaeroApp
-                 .getPaymentCore();
-
-           } catch(error){
-
-              return null;
-
-           }
-
-        }
-
-     }
+    },
 
 
-     return (
-        this.getService(
-           "paymentCore"
-        ) ||
-        null
-     );
+    /* =====================================================
+       ENTITY OPEN
+    ===================================================== */
 
-  },
+    openEntity(entityId){
 
-
-  createVaeroPaymentIntent(
-     payload = {}
-  ){
-
-     const core =
-        this.getVaeroPaymentCore();
+        const id =
+            this.normalizeText(
+                entityId,
+                160
+            );
 
 
-     if(
-           !core ||
-           typeof core.createIntent !==
-              "function"
-     ){
+        if(!id){
 
-        console.warn(
-           "VAERO Payment Core intent API bulunamadı."
-        );
-
-
-        return false;
-
-     }
-
-
-     try{
-
-        const intent =
-           core.createIntent(
-              payload
-           );
-
-
-        if(!intent){
-
-           return false;
+            return false;
 
         }
 
 
         const engine =
-           this.getEngine();
+            this.getEngine();
+
+
+        if(!engine){
+
+            return false;
+
+        }
+
+
+        let world =
+            engine.currentWorld ||
+            null;
+
+
+        const worldService =
+            this.getService(
+                "world"
+            );
+
+
+        /*
+         * Önce aktif World içinde ara.
+         */
+
+        let savedEntity =
+            Array.isArray(
+                world?.entities
+            )
+                ? world.entities.find(
+                    item =>
+                        String(
+                            item?.id ||
+                            ""
+                        ) ===
+                            id &&
+                        item?.archived !==
+                            true
+                ) ||
+                null
+                : null;
+
+
+        /*
+         * Aktif World içinde bulunamadıysa diğer World'lerde
+         * arama yap. Böylece Bridge gibi başka bağlamlardan
+         * gelen Entity navigasyonu sessizce boşa düşmez.
+         */
+
+        if(
+            !savedEntity &&
+            worldService &&
+            typeof worldService.all ===
+                "function"
+        ){
+
+            try{
+
+                const worlds =
+                    worldService.all({
+                        includeArchived:
+                            false
+                    });
+
+
+                if(
+                    Array.isArray(
+                        worlds
+                    )
+                ){
+
+                    const targetWorld =
+                        worlds.find(
+                            candidate =>
+                                candidate
+                                    ?.archived !==
+                                    true &&
+                                Array.isArray(
+                                    candidate.entities
+                                ) &&
+                                candidate.entities.some(
+                                    item =>
+                                        String(
+                                            item?.id ||
+                                            ""
+                                        ) ===
+                                            id &&
+                                        item?.archived !==
+                                            true
+                                )
+                        );
+
+
+                    if(targetWorld){
+
+                        world =
+                            targetWorld;
+
+
+                        savedEntity =
+                            targetWorld.entities.find(
+                                item =>
+                                    String(
+                                        item?.id ||
+                                        ""
+                                    ) ===
+                                        id &&
+                                    item?.archived !==
+                                        true
+                            ) ||
+                            null;
+
+                    }
+
+                }
+
+            } catch(error){
+
+                /* active world result remains authority */
+
+            }
+
+        }
+
+
+        if(!savedEntity){
+
+            return false;
+
+        }
+
+
+        const entityManager =
+            this.getService(
+                "entityManager"
+            );
+
+
+        let entity =
+            savedEntity;
+
+
+        try{
+
+            if(
+                entityManager &&
+                typeof entityManager.hydrate ===
+                    "function"
+            ){
+
+                entity =
+                    entityManager.hydrate(
+                        savedEntity
+                    ) ||
+                    savedEntity;
+
+            }
+
+        } catch(error){
+
+            entity =
+                savedEntity;
+
+        }
+
+
+        engine.currentWorld =
+            world;
+
+
+        engine.currentOpenedEntity =
+            entity;
+
+
+        engine.currentEntityPage =
+            null;
+
+
+        engine.entityEditMode =
+            false;
+
+
+        engine.worldEditMode =
+            false;
+
+
+        if(
+            typeof engine.setView !==
+                "function"
+        ){
+
+            return false;
+
+        }
+
+
+        let result =
+            false;
+
+
+        try{
+
+            result =
+                engine.setView(
+                    "entity",
+                    {
+                        world,
+
+                        entity,
+
+                        page:
+                            null,
+
+                        entityCreateMode:
+                            false,
+
+                        entityType:
+                            null
+                    }
+                );
+
+        } catch(error){
+
+            console.error(
+                "Entity açılamadı:",
+                error
+            );
+
+
+            return false;
+
+        }
+
+
+        if(
+            result !==
+                false
+        ){
+
+            this.syncAwareness(
+                "entity",
+                {
+                    entityId:
+                        entity.id ||
+                        null,
+
+                    worldId:
+                        world?.id ||
+                        null
+                }
+            );
+
+        }
+
+
+        return result;
+
+    },
+
+
+    /* =====================================================
+       ENTITY EDITOR
+    ===================================================== */
+
+    openEntityEditor(){
+
+        const engine =
+            this.getEngine();
+
+
+        const entity =
+            engine?.currentOpenedEntity ||
+            engine?.currentEntity ||
+            null;
+
+
+        if(
+            !engine ||
+            !entity ||
+            entity.archived ===
+                true ||
+            typeof engine.setView !==
+                "function"
+        ){
+
+            return false;
+
+        }
+
+
+        engine.entityEditMode =
+            true;
+
+
+        engine.worldEditMode =
+            false;
+
+
+        engine.currentEntityPage =
+            null;
+
+
+        return engine.setView(
+            "entity",
+            {
+                world:
+                    engine.currentWorld ||
+                    null,
+
+                entity,
+
+                page:
+                    null,
+
+                entityCreateMode:
+                    false,
+
+                entityType:
+                    null
+            }
+        );
+
+    },
+
+
+    /* =====================================================
+       ENTITY EDITOR COMPATIBILITY API
+    ===================================================== */
+
+    openEntityEdit(){
+
+        return this.openEntityEditor();
+
+    },
+
+
+    startEntityEdit(){
+
+        return this.openEntityEditor();
+
+    },
+
+
+    archiveCurrentEntity(){
+
+        return this.archiveEntity();
+
+    },
+
+
+    cancelEntityEditor(){
+
+        const engine =
+            this.getEngine();
+
+
+        const entity =
+            engine?.currentOpenedEntity ||
+            engine?.currentEntity ||
+            null;
+
+
+        if(
+            !engine ||
+            !entity ||
+            typeof engine.setView !==
+                "function"
+        ){
+
+            return false;
+
+        }
+
+
+        engine.entityEditMode =
+            false;
+
+
+        return engine.setView(
+            "entity",
+            {
+                world:
+                    engine.currentWorld ||
+                    null,
+
+                entity,
+
+                page:
+                    null,
+
+                entityCreateMode:
+                    false,
+
+                entityType:
+                    null
+            }
+        );
+
+    },
+
+
+    saveEntityEditor(){
+
+        const engine =
+            this.getEngine();
+
+
+        const entity =
+            engine?.currentOpenedEntity ||
+            engine?.currentEntity ||
+            null;
+
+
+        if(
+            !engine ||
+            !entity
+        ){
+
+            return false;
+
+        }
+
+
+        const nameInput =
+            document.getElementById(
+                "entityEditNameInput"
+            );
+
+
+        const descriptionInput =
+            document.getElementById(
+                "entityEditDescriptionInput"
+            );
+
+
+        const tagsInput =
+            document.getElementById(
+                "entityEditTagsInput"
+            );
+
+
+        const statusInput =
+            document.getElementById(
+                "entityEditStatusInput"
+            );
+
+
+        const name =
+            this.normalizeText(
+                nameInput?.value,
+                120
+            );
+
+
+        if(!name){
+
+            nameInput?.focus();
+
+
+            return false;
+
+        }
+
+
+        const entityManager =
+            this.getService(
+                "entityManager"
+            );
+
+
+        const worldService =
+            this.getService(
+                "world"
+            );
+
+
+        if(
+            !entityManager ||
+            typeof entityManager.update !==
+                "function"
+        ){
+
+            return false;
+
+        }
+
+
+        const requestedStatus =
+            String(
+                statusInput?.value ||
+                ""
+            );
+
+
+        const status =
+            [
+                "active",
+                "inactive",
+                "paused"
+            ].includes(
+                requestedStatus
+            )
+                ? requestedStatus
+                : (
+                    entity.status ||
+                    "active"
+                );
+
+
+        let updated =
+            null;
+
+
+        try{
+
+            updated =
+                entityManager.update(
+                    entity.id,
+                    {
+                        name,
+
+                        description:
+                            this.normalizeText(
+                                descriptionInput
+                                    ?.value,
+                                1000
+                            ),
+
+                        tags:
+                            this.parseTags(
+                                tagsInput?.value
+                            ),
+
+                        status
+                    }
+                );
+
+        } catch(error){
+
+            console.error(
+                "Entity güncellenemedi:",
+                error
+            );
+
+
+            return false;
+
+        }
+
+
+        if(!updated){
+
+            return false;
+
+        }
+
+
+        const world =
+            engine.currentWorld ||
+            null;
+
+
+        if(
+            world &&
+            Array.isArray(
+                world.entities
+            )
+        ){
+
+            const index =
+                world.entities.findIndex(
+                    item =>
+                        item?.id ===
+                            updated.id
+                );
+
+
+            if(
+                index >=
+                    0
+            ){
+
+                world.entities[
+                    index
+                ] =
+                    updated;
+
+            }
+
+
+            try{
+
+                worldService?.save?.();
+
+            } catch(error){
+
+                console.warn(
+                    "World Entity snapshot kaydedilemedi:",
+                    error
+                );
+
+            }
+
+        }
+
+
+        engine.currentOpenedEntity =
+            updated;
+
+
+        engine.entityEditMode =
+            false;
+
+
+        this.recordEvolution(
+            "life-event",
+            `${updated.name} varlığı güncellendi`,
+            {
+                title:
+                    `${updated.name} varlığı güncellendi`,
+
+                source:
+                    "entity",
+
+                status:
+                    "completed",
+
+                importance:
+                    "low",
+
+                relatedEntityId:
+                    updated.id,
+
+                relatedWorldId:
+                    world?.id ||
+                    null,
+
+                tags:[
+                    "entity",
+                    "update"
+                ]
+            }
+        );
+
+
+        if(
+            typeof engine.setView !==
+                "function"
+        ){
+
+            return false;
+
+        }
+
+
+        return engine.setView(
+            "entity",
+            {
+                world,
+
+                entity:
+                    updated,
+
+                page:
+                    null,
+
+                entityCreateMode:
+                    false,
+
+                entityType:
+                    null
+            }
+        );
+
+    },
+
+
+    archiveEntity(){
+
+        const engine =
+            this.getEngine();
+
+
+        const entity =
+            engine?.currentOpenedEntity ||
+            engine?.currentEntity ||
+            null;
+
+
+        const world =
+            engine?.currentWorld ||
+            null;
+
+
+        if(
+            !engine ||
+            !entity ||
+            entity.id ===
+                engine.rootEntity?.id
+        ){
+
+            return false;
+
+        }
+
+
+        const entityManager =
+            this.getService(
+                "entityManager"
+            );
+
+
+        const worldService =
+            this.getService(
+                "world"
+            );
+
+
+        if(
+            !entityManager ||
+            typeof entityManager.archive !==
+                "function"
+        ){
+
+            return false;
+
+        }
+
+
+        let archived =
+            false;
+
+
+        try{
+
+            archived =
+                entityManager.archive(
+                    entity.id
+                );
+
+        } catch(error){
+
+            console.error(
+                "Entity arşivlenemedi:",
+                error
+            );
+
+
+            return false;
+
+        }
+
+
+        if(!archived){
+
+            return false;
+
+        }
+
+
+        if(
+            world &&
+            Array.isArray(
+                world.entities
+            )
+        ){
+
+            const index =
+                world.entities.findIndex(
+                    item =>
+                        item?.id ===
+                            entity.id
+                );
+
+
+            if(
+                index >=
+                    0
+            ){
+
+                if(
+                    archived &&
+                    typeof archived ===
+                        "object"
+                ){
+
+                    world.entities[
+                        index
+                    ] =
+                        archived;
+
+                }
+
+                else {
+
+                    world.entities[
+                        index
+                    ] = {
+                        ...entity,
+
+                        archived:
+                            true,
+
+                        archivedAt:
+                            Date.now()
+                    };
+
+                }
+
+            }
+
+
+            try{
+
+                worldService?.save?.();
+
+            } catch(error){
+
+                console.warn(
+                    "Arşivlenen Entity World snapshot'a yazılamadı:",
+                    error
+                );
+
+            }
+
+        }
+
+
+        this.recordEvolution(
+            "life-event",
+            `${entity.name} varlığı arşivlendi`,
+            {
+                title:
+                    `${entity.name} varlığı arşivlendi`,
+
+                source:
+                    "entity",
+
+                status:
+                    "completed",
+
+                importance:
+                    "medium",
+
+                relatedEntityId:
+                    entity.id,
+
+                relatedWorldId:
+                    world?.id ||
+                    null,
+
+                tags:[
+                    "entity",
+                    "archive"
+                ]
+            }
+        );
+
+
+        engine.currentOpenedEntity =
+            null;
+
+
+        engine.currentEntityPage =
+            null;
+
+
+        engine.entityEditMode =
+            false;
+
+
+        return this.backToWorld();
+
+    },
+
+
+    /* =====================================================
+       ENTITY PAGES
+    ===================================================== */
+
+    getAllowedEntityPages(){
+
+        return [
+            "identity",
+            "profile",
+            "organs",
+            "timeline",
+            "memory",
+            "bridge",
+            "evolution",
+            "settings",
+            "discovery"
+        ];
+
+    },
+
+
+    openEntityPage(page){
+
+        const targetPage =
+            String(
+                page ||
+                ""
+            )
+                .trim()
+                .toLowerCase();
+
+
+        if(
+            !this
+                .getAllowedEntityPages()
+                .includes(
+                    targetPage
+                )
+        ){
+
+            return false;
+
+        }
+
+
+        const engine =
+            this.getEngine();
+
+
+        if(
+            !engine ||
+            typeof engine.setView !==
+                "function"
+        ){
+
+            return false;
+
+        }
+
+
+        const entity =
+            engine.currentOpenedEntity ||
+            engine.rootEntity ||
+            engine.currentEntity ||
+            null;
+
+
+        if(!entity){
+
+            return false;
+
+        }
+
+
+        engine.currentOpenedEntity =
+            entity;
+
+
+        engine.currentEntityPage =
+            targetPage;
+
+
+        engine.entityEditMode =
+            false;
+
+
+        engine.worldEditMode =
+            false;
+
+
+        engine.entityCreateMode =
+            false;
+
+
+        engine.entityType =
+            null;
+
+
+        let view =
+            "entity";
+
+
+        if(
+            entity.id ===
+                engine.rootEntity?.id &&
+            targetPage ===
+                "identity"
+        ){
+
+            view =
+                "identity";
+
+        }
+
+
+        if(
+            entity.id ===
+                engine.rootEntity?.id &&
+            targetPage ===
+                "profile"
+        ){
+
+            view =
+                "profile";
+
+        }
+
+
+        let opened =
+            false;
+
+
+        try{
+
+            opened =
+                engine.setView(
+                    view,
+                    {
+                        world:
+                            engine.currentWorld ||
+                            null,
+
+                        entity,
+
+                        page:
+                            targetPage,
+
+                        entityCreateMode:
+                            false,
+
+                        entityType:
+                            null
+                    }
+                );
+
+        } catch(error){
+
+            console.error(
+                `${targetPage} sayfası açılamadı:`,
+                error
+            );
+
+
+            return false;
+
+        }
+
+
+        if(
+            opened !==
+                false
+        ){
+
+            this.syncAwareness(
+                targetPage,
+                {
+                    entityId:
+                        entity.id ||
+                        null,
+
+                    worldId:
+                        engine.currentWorld
+                            ?.id ||
+                        null
+                }
+            );
+
+
+            if(
+                typeof this.trackBrainSession ===
+                    "function"
+            ){
+
+                this.trackBrainSession(
+                    targetPage
+                );
+
+            }
+
+        }
+
+
+        return opened;
+
+    },
+
+   openEntityDashboard(){
+
+        const engine =
+            this.getEngine();
+
+
+        if(
+            !engine ||
+            typeof engine.setView !==
+                "function"
+        ){
+
+            return false;
+
+        }
+
+
+        const entity =
+            engine.currentOpenedEntity ||
+            engine.currentEntity ||
+            engine.rootEntity ||
+            null;
+
+
+        if(!entity){
+
+            return this.openIdentity();
+
+        }
+
+
+        engine.currentOpenedEntity =
+            entity;
+
+
+        engine.currentEntityPage =
+            null;
+
+
+        engine.entityEditMode =
+            false;
+
+
+        engine.worldEditMode =
+            false;
+
+
+        engine.entityCreateMode =
+            false;
+
+
+        engine.entityType =
+            null;
+
+
+        let result =
+            false;
+
+
+        try{
+
+            result =
+                engine.setView(
+                    "entity",
+                    {
+                        world:
+                            engine.currentWorld ||
+                            null,
+
+                        entity,
+
+                        page:
+                            null,
+
+                        entityCreateMode:
+                            false,
+
+                        entityType:
+                            null
+                    }
+                );
+
+        } catch(error){
+
+            console.error(
+                "Entity dashboard açılamadı:",
+                error
+            );
+
+
+            return false;
+
+        }
+
+
+        if(
+            result !==
+                false
+        ){
+
+            this.syncAwareness(
+                "entity",
+                {
+                    entityId:
+                        entity.id ||
+                        null,
+
+                    worldId:
+                        engine.currentWorld
+                            ?.id ||
+                        null
+                }
+            );
+
+        }
+
+
+        return result;
+
+    },
+
+
+    /* =====================================================
+       PROFILE
+    ===================================================== */
+
+    saveProfile(){
+
+        const nameInput =
+            document.getElementById(
+                "profileNameInput"
+            );
+
+
+        const descriptionInput =
+            document.getElementById(
+                "profileDescriptionInput"
+            );
+
+
+        const name =
+            this.normalizeText(
+                nameInput?.value,
+                120
+            );
+
+
+        if(!name){
+
+            nameInput?.focus();
+
+
+            return false;
+
+        }
+
+
+        const description =
+            this.normalizeText(
+                descriptionInput?.value,
+                1200
+            );
+
+
+        const engine =
+            this.getEngine();
+
+
+        const entity =
+            engine?.currentOpenedEntity ||
+            engine?.rootEntity ||
+            engine?.currentEntity ||
+            null;
+
+
+        if(
+            !engine ||
+            !entity
+        ){
+
+            return false;
+
+        }
+
+
+        const isRoot =
+            entity.id ===
+                engine.rootEntity?.id;
+
+
+        let success =
+            false;
+
+
+        try{
+
+            /*
+             * Root Profile ile Entity Identity birbirine
+             * karıştırılmaz.
+             *
+             * Root profil görünüm adı ve açıklaması,
+             * mevcut kullanıcı-profile compatibility
+             * storage alanında tutulmaya devam eder.
+             */
+
+            if(isRoot){
+
+                const currentProfile =
+                    entity.profile &&
+                    typeof entity.profile ===
+                        "object"
+                        ? entity.profile
+                        : {};
+
+
+                const userProfile = {
+
+                    name,
+
+                    description,
+
+                    updatedAt:
+                        Date.now()
+
+                };
+
+
+                try{
+
+                    localStorage.setItem(
+                        "vaero:user:profile:v1",
+                        JSON.stringify(
+                            userProfile
+                        )
+                    );
+
+                } catch(error){
+
+                    console.warn(
+                        "Root Profile compatibility kaydı yazılamadı:",
+                        error
+                    );
+
+                }
+
+
+                if(
+                    entity.profile &&
+                    typeof entity.profile ===
+                        "object"
+                ){
+
+                    entity.profile.name =
+                        name;
+
+
+                    entity.profile.description =
+                        description;
+
+
+                    entity.profile.updatedAt =
+                        Date.now();
+
+                }
+
+
+                const profileService =
+                    this.getService(
+                        "profile"
+                    );
+
+
+                if(
+                    profileService &&
+                    typeof profileService.update ===
+                        "function" &&
+                    entity.profile
+                ){
+
+                    const updatedProfile =
+                        profileService.update(
+                            entity.profile,
+                            {
+                                name,
+
+                                description,
+
+                                metadata:{
+                                    ...(
+                                        currentProfile
+                                            .metadata ||
+                                        {}
+                                    )
+                                }
+                            }
+                        );
+
+
+                    if(
+                        updatedProfile &&
+                        typeof updatedProfile ===
+                            "object"
+                    ){
+
+                        entity.profile =
+                            updatedProfile;
+
+                    }
+
+                }
+
+
+                success =
+                    true;
+
+            }
+
+            else {
+
+                /*
+                 * Non-root Entity profil ekranında,
+                 * Entity'nin canonical adı ve açıklaması
+                 * değiştirilmez.
+                 *
+                 * Profile presentation katmanı kendi
+                 * profile kaydını günceller.
+                 */
+
+                const profileService =
+                    this.getService(
+                        "profile"
+                    );
+
+
+                if(
+                    !profileService ||
+                    typeof profileService.update !==
+                        "function"
+                ){
+
+                    console.warn(
+                        "Profile update API bulunamadı."
+                    );
+
+
+                    return false;
+
+                }
+
+
+                if(!entity.profile){
+
+                    if(
+                        typeof profileService.create ===
+                            "function"
+                    ){
+
+                        entity.profile =
+                            profileService.create(
+                                entity
+                            );
+
+                    }
+
+                }
+
+
+                if(!entity.profile){
+
+                    return false;
+
+                }
+
+
+                const updatedProfile =
+                    profileService.update(
+                        entity.profile,
+                        {
+                            name,
+
+                            description
+                        }
+                    );
+
+
+                if(
+                    updatedProfile &&
+                    typeof updatedProfile ===
+                        "object"
+                ){
+
+                    entity.profile =
+                        updatedProfile;
+
+                }
+
+
+                try{
+
+                    this.getService(
+                        "world"
+                    )?.save?.();
+
+                } catch(error){
+
+                    console.warn(
+                        "Profile World snapshot kaydedilemedi:",
+                        error
+                    );
+
+                }
+
+
+                success =
+                    updatedProfile !==
+                        false;
+
+            }
+
+        } catch(error){
+
+            console.error(
+                "Profil kaydedilemedi:",
+                error
+            );
+
+
+            return false;
+
+        }
+
+
+        if(!success){
+
+            return false;
+
+        }
+
+
+        const feedback =
+            document.getElementById(
+                "profileSaveFeedback"
+            );
+
+
+        if(feedback){
+
+            feedback.textContent =
+                "Profil kaydedildi.";
+
+        }
+
+
+        this.syncAwareness(
+            "profile",
+            {
+                entityId:
+                    entity.id ||
+                    null,
+
+                saved:
+                    true
+            }
+        );
+
+
+        return true;
+
+    },
+
+
+    /* =====================================================
+       DISCOVERY
+    ===================================================== */
+
+    restartDiscovery(){
+
+        const discovery =
+            window.DiscoveryApp ||
+            null;
+
+
+        const engineRoot =
+            document.getElementById(
+                "engine"
+            );
+
+
+        if(
+            discovery &&
+            typeof discovery.restart ===
+                "function"
+        ){
+
+            try{
+
+                /*
+                 * DiscoveryApp restart() kendi canonical
+                 * storage anahtarlarını temizleme yetkisine
+                 * sahiptir.
+                 */
+
+                if(engineRoot){
+
+                    discovery.container =
+                        engineRoot;
+
+                }
+
+
+                discovery.restart();
+
+
+                if(
+                    engineRoot &&
+                    typeof discovery.render ===
+                        "function"
+                ){
+
+                    discovery.render(
+                        engineRoot
+                    );
+
+                }
+
+
+                this.syncAwareness(
+                    "discovery"
+                );
+
+
+                return true;
+
+            } catch(error){
+
+                console.error(
+                    "Discovery yeniden başlatılamadı:",
+                    error
+                );
+
+            }
+
+        }
+
+
+        /*
+         * Compatibility fallback.
+         */
+
+        try{
+
+            [
+                "vaero:discovery:completed",
+                "vaero:discovery:completedAt",
+                "vaero:discovery:answers",
+                "vaero:discovery:draft:v2",
+                "vaero:discovery:draft:v3",
+                "vaero:discovery:result:v2",
+                "vaero:discovery:result:v3",
+                "vaero:welcome:completed:v2"
+            ]
+                .forEach(
+                    key =>
+                        localStorage.removeItem(
+                            key
+                        )
+                );
+
+        } catch(error){
+
+            console.warn(
+                "Discovery state temizlenemedi:",
+                error
+            );
+
+        }
+
+
+        if(
+            engineRoot &&
+            discovery &&
+            typeof discovery.render ===
+                "function"
+        ){
+
+            discovery.currentStep =
+                0;
+
+
+            discovery.answers =
+                {};
+
+
+            discovery.isCompleting =
+                false;
+
+
+            discovery.render(
+                engineRoot
+            );
+
+
+            this.syncAwareness(
+                "discovery"
+            );
+
+
+            return true;
+
+        }
+
+
+        return false;
+
+    },
+
+
+    /* =====================================================
+       SYSTEM APPLICATIONS
+    ===================================================== */
+
+    openVaeroApp(){
+
+        const engine =
+            this.getEngine();
+
+
+        if(
+            !engine ||
+            typeof engine.openSystemPage !==
+                "function"
+        ){
+
+            return false;
+
+        }
+
+
+        this.resetEditorState();
+
+
+        let opened =
+            false;
+
+
+        try{
+
+            opened =
+                engine.openSystemPage(
+                    "vaero"
+                );
+
+        } catch(error){
+
+            console.error(
+                "VAERO uygulaması açılamadı:",
+                error
+            );
+
+
+            return false;
+
+        }
+
+
+        if(
+            opened !==
+                false
+        ){
+
+            this.syncAwareness(
+                "vaero"
+            );
+
+        }
+
+
+        return opened;
+
+    },
+
+
+    openApplicationsApp(){
+
+        const engine =
+            this.getEngine();
+
+
+        if(
+            !engine ||
+            typeof engine.openSystemPage !==
+                "function"
+        ){
+
+            return false;
+
+        }
+
+
+        this.resetEditorState();
+
+
+        let opened =
+            false;
+
+
+        try{
+
+            opened =
+                engine.openSystemPage(
+                    "applications"
+                );
+
+        } catch(error){
+
+            console.error(
+                "Applications açılamadı:",
+                error
+            );
+
+
+            return false;
+
+        }
+
+
+        if(
+            opened !==
+                false
+        ){
+
+            this.syncAwareness(
+                "applications"
+            );
+
+        }
+
+
+        return opened;
+
+    },
+
+
+    /* =====================================================
+       VAERO PAYMENT CORE
+       -----------------------------------------------------
+       Actions ödeme işlemini kendisi gerçekleştirmez.
+       Yalnızca VaeroApp tarafından gerçekten sağlanan
+       paymentCore contract'ını yönlendirir.
+    ===================================================== */
+
+    getVaeroPaymentCore(){
+
+        const app =
+            typeof window !==
+                "undefined"
+                ? window.VaeroApp
+                : null;
+
+
+        if(app){
+
+            if(
+                app.paymentCore &&
+                typeof app.paymentCore ===
+                    "object"
+            ){
+
+                return app.paymentCore;
+
+            }
+
+
+            if(
+                typeof app.getPaymentCore ===
+                    "function"
+            ){
+
+                try{
+
+                    const core =
+                        app.getPaymentCore();
+
+
+                    if(core){
+
+                        return core;
+
+                    }
+
+                } catch(error){
+
+                    console.warn(
+                        "VaeroApp Payment Core okunamadı:",
+                        error
+                    );
+
+                }
+
+            }
+
+        }
+
+
+        return (
+            this.getService(
+                "paymentCore"
+            ) ||
+            null
+        );
+
+    },
+
+
+    getVaeroPaymentIntent(){
+
+        const engine =
+            this.getEngine();
+
+
+        return (
+            engine?.currentVaeroPaymentIntent ||
+            null
+        );
+
+    },
+
+
+    refreshVaeroPaymentView(){
+
+        const app =
+            window.VaeroApp ||
+            null;
+
+
+        if(
+            app &&
+            typeof app.refresh ===
+                "function"
+        ){
+
+            try{
+
+                const result =
+                    app.refresh();
+
+
+                if(
+                    result !==
+                        false
+                ){
+
+                    return result;
+
+                }
+
+            } catch(error){
+
+                console.warn(
+                    "VAERO ödeme görünümü App üzerinden yenilenemedi:",
+                    error
+                );
+
+            }
+
+        }
+
+
+        return this.remount();
+
+    },
+
+
+    createVaeroPaymentIntent(
+        payload = {}
+    ){
+
+        const core =
+            this.getVaeroPaymentCore();
+
+
+        if(
+            !core ||
+            typeof core.createIntent !==
+                "function"
+        ){
+
+            console.warn(
+                "VAERO Payment Core intent API bulunamadı."
+            );
+
+
+            return false;
+
+        }
+
+
+        const safePayload =
+            payload &&
+            typeof payload ===
+                "object" &&
+            !Array.isArray(
+                payload
+            )
+                ? payload
+                : {};
+
+
+        let intent =
+            null;
+
+
+        try{
+
+            intent =
+                core.createIntent(
+                    safePayload
+                );
+
+        } catch(error){
+
+            console.error(
+                "Payment intent oluşturulamadı:",
+                error
+            );
+
+
+            return false;
+
+        }
+
+
+        if(
+            !intent ||
+            typeof intent !==
+                "object"
+        ){
+
+            return false;
+
+        }
+
+
+        const engine =
+            this.getEngine();
 
 
         if(engine){
 
-           engine.currentVaeroPaymentIntent =
-              intent;
-
-
-           engine.mount(
-              engine.currentEntity
-           );
+            engine.currentVaeroPaymentIntent =
+                intent;
 
         }
+
+
+        this.refreshVaeroPaymentView();
 
 
         return intent;
 
-     } catch(error){
+    },
 
-        console.error(
-           "Payment intent oluşturulamadı:",
-           error
+
+    selectVaeroPaymentMethod(method){
+
+        const selectedMethod =
+            this.normalizeText(
+                method,
+                80
+            );
+
+
+        if(!selectedMethod){
+
+            return false;
+
+        }
+
+
+        const core =
+            this.getVaeroPaymentCore();
+
+
+        const engine =
+            this.getEngine();
+
+
+        const intent =
+            engine?.currentVaeroPaymentIntent ||
+            null;
+
+
+        if(
+            !core ||
+            !engine ||
+            !intent?.id
+        ){
+
+            return false;
+
+        }
+
+
+        let result =
+            false;
+
+
+        try{
+
+            /*
+             * Exact core contract hangisiyse onu kullanır.
+             * Olmayan bir payment API üretmez.
+             */
+
+            if(
+                typeof core.setMethod ===
+                    "function"
+            ){
+
+                result =
+                    core.setMethod(
+                        intent.id,
+                        selectedMethod
+                    );
+
+            }
+
+            else if(
+                typeof core.selectMethod ===
+                    "function"
+            ){
+
+                result =
+                    core.selectMethod(
+                        intent.id,
+                        selectedMethod
+                    );
+
+            }
+
+            else {
+
+                console.warn(
+                    "Payment method seçim API'si bulunamadı."
+                );
+
+
+                return false;
+
+            }
+
+        } catch(error){
+
+            console.error(
+                "Payment method seçilemedi:",
+                error
+            );
+
+
+            return false;
+
+        }
+
+
+        if(
+            result &&
+            typeof result ===
+                "object"
+        ){
+
+            engine.currentVaeroPaymentIntent =
+                result;
+
+        }
+
+        else if(
+            result !==
+                false
+        ){
+
+            engine.currentVaeroPaymentIntent = {
+                ...intent,
+
+                method:
+                    selectedMethod
+            };
+
+        }
+
+
+        if(
+            result !==
+                false
+        ){
+
+            this.refreshVaeroPaymentView();
+
+        }
+
+
+        return result !==
+            false;
+
+    },
+
+
+    selectVaeroPaymentProvider(provider){
+
+        const selectedProvider =
+            this.normalizeText(
+                provider,
+                100
+            );
+
+
+        if(!selectedProvider){
+
+            return false;
+
+        }
+
+
+        const core =
+            this.getVaeroPaymentCore();
+
+
+        const engine =
+            this.getEngine();
+
+
+        const intent =
+            engine?.currentVaeroPaymentIntent ||
+            null;
+
+
+        if(
+            !core ||
+            !engine ||
+            !intent?.id
+        ){
+
+            return false;
+
+        }
+
+
+        let result =
+            false;
+
+
+        try{
+
+            if(
+                typeof core.setProvider ===
+                    "function"
+            ){
+
+                result =
+                    core.setProvider(
+                        intent.id,
+                        selectedProvider
+                    );
+
+            }
+
+            else if(
+                typeof core.selectProvider ===
+                    "function"
+            ){
+
+                result =
+                    core.selectProvider(
+                        intent.id,
+                        selectedProvider
+                    );
+
+            }
+
+            else {
+
+                console.warn(
+                    "Payment provider seçim API'si bulunamadı."
+                );
+
+
+                return false;
+
+            }
+
+        } catch(error){
+
+            console.error(
+                "Payment provider seçilemedi:",
+                error
+            );
+
+
+            return false;
+
+        }
+
+
+        if(
+            result &&
+            typeof result ===
+                "object"
+        ){
+
+            engine.currentVaeroPaymentIntent =
+                result;
+
+        }
+
+        else if(
+            result !==
+                false
+        ){
+
+            engine.currentVaeroPaymentIntent = {
+                ...intent,
+
+                provider:
+                    selectedProvider
+            };
+
+        }
+
+
+        if(
+            result !==
+                false
+        ){
+
+            this.refreshVaeroPaymentView();
+
+        }
+
+
+        return result !==
+            false;
+
+    },
+
+
+    startVaeroPayment(){
+
+        const core =
+            this.getVaeroPaymentCore();
+
+
+        const engine =
+            this.getEngine();
+
+
+        const intent =
+            engine?.currentVaeroPaymentIntent ||
+            null;
+
+
+        if(
+            !core ||
+            !intent?.id
+        ){
+
+            return false;
+
+        }
+
+
+        try{
+
+            if(
+                typeof core.start ===
+                    "function"
+            ){
+
+                return core.start(
+                    intent.id
+                );
+
+            }
+
+
+            if(
+                typeof core.startIntent ===
+                    "function"
+            ){
+
+                return core.startIntent(
+                    intent.id
+                );
+
+            }
+
+        } catch(error){
+
+            console.error(
+                "Payment başlatılamadı:",
+                error
+            );
+
+
+            return false;
+
+        }
+
+
+        console.warn(
+            "Payment start API bulunamadı."
         );
 
 
         return false;
 
-     }
-
-  },
+    },
 
 
-  selectVaeroPaymentMethod(method){
+    cancelVaeroPayment(){
 
-     const core =
-        this.getVaeroPaymentCore();
-
-
-     const engine =
-        this.getEngine();
+        const core =
+            this.getVaeroPaymentCore();
 
 
-     const intent =
-        engine?.currentVaeroPaymentIntent ||
-        null;
+        const engine =
+            this.getEngine();
 
 
-     if(
-           !core ||
-           !intent ||
-           !method
-     ){
+        const intent =
+            engine?.currentVaeroPaymentIntent ||
+            null;
 
-        return false;
-
-     }
-
-
-     try{
 
         if(
-              typeof core.setMethod ===
-                 "function"
+            !core ||
+            !intent?.id
         ){
 
-           const result =
-              core.setMethod(
-                 intent.id,
-                 method
-              );
+            return false;
+
+        }
 
 
-           engine.currentVaeroPaymentIntent =
-              result ||
-              intent;
+        let result =
+            false;
 
 
-           engine.mount(
-              engine.currentEntity
-           );
+        try{
+
+            if(
+                typeof core.cancel ===
+                    "function"
+            ){
+
+                result =
+                    core.cancel(
+                        intent.id
+                    );
+
+            }
+
+            else if(
+                typeof core.cancelIntent ===
+                    "function"
+            ){
+
+                result =
+                    core.cancelIntent(
+                        intent.id
+                    );
+
+            }
+
+            else {
+
+                console.warn(
+                    "Payment cancel API bulunamadı."
+                );
 
 
-           return (
-              result !==
-                 false
-           );
+                return false;
+
+            }
+
+        } catch(error){
+
+            console.error(
+                "Payment iptal edilemedi:",
+                error
+            );
+
+
+            return false;
 
         }
 
 
         if(
-              typeof core.selectMethod ===
-                 "function"
+            result &&
+            typeof result ===
+                "object" &&
+            engine
         ){
 
-           const result =
-              core.selectMethod(
-                 intent.id,
-                 method
-              );
-
-
-           engine.currentVaeroPaymentIntent =
-              result ||
-              intent;
-
-
-           engine.mount(
-              engine.currentEntity
-           );
-
-
-           return (
-              result !==
-                 false
-           );
-
-        }
-
-     } catch(error){
-
-        console.error(
-           "Payment method seçilemedi:",
-           error
-        );
-
-     }
-
-
-     return false;
-
-  },
-
-
-  selectVaeroPaymentProvider(provider){
-
-     const core =
-        this.getVaeroPaymentCore();
-
-
-     const engine =
-        this.getEngine();
-
-
-     const intent =
-        engine?.currentVaeroPaymentIntent ||
-        null;
-
-
-     if(
-           !core ||
-           !intent ||
-           !provider
-     ){
-
-        return false;
-
-     }
-
-
-     try{
-
-        if(
-              typeof core.setProvider ===
-                 "function"
-        ){
-
-           const result =
-              core.setProvider(
-                 intent.id,
-                 provider
-              );
-
-
-           engine.currentVaeroPaymentIntent =
-              result ||
-              intent;
-
-
-           engine.mount(
-              engine.currentEntity
-           );
-
-
-           return (
-              result !==
-                 false
-           );
+            engine.currentVaeroPaymentIntent =
+                result;
 
         }
 
 
         if(
-              typeof core.selectProvider ===
-                 "function"
+            result !==
+                false
         ){
 
-           const result =
-              core.selectProvider(
-                 intent.id,
-                 provider
-              );
-
-
-           engine.currentVaeroPaymentIntent =
-              result ||
-              intent;
-
-
-           engine.mount(
-              engine.currentEntity
-           );
-
-
-           return (
-              result !==
-                 false
-           );
+            this.refreshVaeroPaymentView();
 
         }
 
-     } catch(error){
 
-        console.error(
-           "Payment provider seçilemedi:",
-           error
-        );
+        return result !==
+            false;
 
-     }
+    },
 
 
-     return false;
+    refundVaeroPayment(
+        transactionId
+    ){
 
-  },
-
-
-  startVaeroPayment(){
-
-     const core =
-        this.getVaeroPaymentCore();
-
-
-     const engine =
-        this.getEngine();
+        const id =
+            this.normalizeText(
+                transactionId,
+                180
+            );
 
 
-     const intent =
-        engine?.currentVaeroPaymentIntent ||
-        null;
+        if(!id){
 
-
-     if(
-           !core ||
-           !intent
-     ){
-
-        return false;
-
-     }
-
-
-     try{
-
-        if(
-              typeof core.start ===
-                 "function"
-        ){
-
-           return core.start(
-              intent.id
-           );
+            return false;
 
         }
+
+
+        const core =
+            this.getVaeroPaymentCore();
 
 
         if(
-              typeof core.startIntent ===
-                 "function"
+            !core ||
+            typeof core.refund !==
+                "function"
         ){
 
-           return core.startIntent(
-              intent.id
-           );
+            console.warn(
+                "Payment refund API bulunamadı."
+            );
+
+
+            return false;
 
         }
 
-     } catch(error){
 
-        console.error(
-           "Payment başlatılamadı:",
-           error
-        );
+        try{
 
-     }
+            return core.refund(
+                id
+            );
 
+        } catch(error){
 
-     return false;
-
-  },
-
-
-  cancelVaeroPayment(){
-
-     const core =
-        this.getVaeroPaymentCore();
+            console.error(
+                "Refund işlemi başlatılamadı:",
+                error
+            );
 
 
-     const engine =
-        this.getEngine();
+            return false;
+
+        }
+
+    },
 
 
-     const intent =
-        engine?.currentVaeroPaymentIntent ||
-        null;
+    /* =====================================================
+       BRAIN STORAGE
+    ===================================================== */
+
+    getBrainStorageKey(){
+
+        return "vaero:brain:global";
+
+    },
 
 
-     if(
-           !core ||
-           !intent
-     ){
+    getBrainDayKey(
+        timestamp = Date.now()
+    ){
 
-        return false;
+        const value =
+            Number(
+                timestamp
+            );
 
-     }
+
+        const date =
+            new Date(
+                Number.isFinite(
+                    value
+                )
+                    ? value
+                    : Date.now()
+            );
 
 
-     try{
+        const year =
+            date.getFullYear();
+
+
+        const month =
+            String(
+                date.getMonth() +
+                1
+            )
+                .padStart(
+                    2,
+                    "0"
+                );
+
+
+        const day =
+            String(
+                date.getDate()
+            )
+                .padStart(
+                    2,
+                    "0"
+                );
+
+
+        return `${year}-${month}-${day}`;
+
+    },
+
+
+    normalizeBrainAction(
+        action,
+        fallbackTimestamp = Date.now()
+    ){
 
         if(
-              typeof core.cancel ===
-                 "function"
+            typeof action ===
+                "string"
         ){
 
-           return core.cancel(
-              intent.id
-           );
+            const content =
+                action.trim();
 
-        }
 
+            if(!content){
 
-        if(
-              typeof core.cancelIntent ===
-                 "function"
-        ){
+                return null;
 
-           return core.cancelIntent(
-              intent.id
-           );
+            }
 
-        }
 
-     } catch(error){
-
-        console.error(
-           "Payment iptal edilemedi:",
-           error
-        );
-
-     }
-
-
-     return false;
-
-  },
-
-
-  refundVaeroPayment(
-     transactionId
-  ){
-
-     const core =
-        this.getVaeroPaymentCore();
-
-
-     if(
-           !core ||
-           !transactionId
-     ){
-
-        return false;
-
-     }
-
-
-     try{
-
-        if(
-              typeof core.refund ===
-                 "function"
-        ){
-
-           return core.refund(
-              transactionId
-           );
-
-        }
-
-     } catch(error){
-
-        console.error(
-           "Refund işlemi başlatılamadı:",
-           error
-        );
-
-     }
-
-
-     return false;
-
-  },
-
-
-  /* =====================================================
-     BRAIN STORAGE
-  ===================================================== */
-
-  getBrainStorageKey(){
-
-     return "vaero:brain:global";
-
-  },
-
-
-  getBrainDayKey(
-     timestamp = Date.now()
-  ){
-
-     const date =
-        new Date(
-           timestamp
-        );
-
-
-     const year =
-        date.getFullYear();
-
-
-     const month =
-        String(
-           date.getMonth() + 1
-        )
-           .padStart(
-              2,
-              "0"
-           );
-
-
-     const day =
-        String(
-           date.getDate()
-        )
-           .padStart(
-              2,
-              "0"
-           );
-
-
-     return `${year}-${month}-${day}`;
-
-  },
-
-
-  normalizeBrainSessions(sessions){
-
-     if(
-           !Array.isArray(
-              sessions
-           )
-     ){
-
-        return [];
-
-     }
-
-
-     return sessions
-        .filter(
-           session =>
-              session &&
-              typeof session ===
-                 "object"
-        )
-        .map(
-           session => {
-
-              const startedAt =
-                 Number(
-                    session.startedAt
-                 ) ||
-                 Number(
-                    session.updatedAt
-                 ) ||
-                 Date.now();
-
-
-              const updatedAt =
-                 Number(
-                    session.updatedAt
-                 ) ||
-                 startedAt;
-
-
-              const actions =
-                 Array.isArray(
-                    session.actions
-                 )
-
-                    ? session.actions
-                       .map(
-                          action => {
-
-                             if(
-                                   typeof action ===
-                                      "string"
-                             ){
-
-                                return {
-
-                                   id:
-                                      this.createId(
-                                         "brain-action"
-                                      ),
-
-                                   role:
-                                      "user",
-
-                                   type:
-                                      "message",
-
-                                   content:
-                                      action,
-
-                                   createdAt:
-                                      updatedAt,
-
-                                   context:
-                                      null,
-
-                                   appLinks:
-                                      []
-
-                                };
-
-                             }
-
-
-                             if(
-                                   !action ||
-                                   typeof action !==
-                                      "object"
-                             ){
-
-                                return null;
-
-                             }
-
-
-                             const content =
-                                String(
-                                   action.content ||
-                                   action.fullContent ||
-                                   action.text ||
-                                   action.message ||
-                                   ""
-                                ).trim();
-
-
-                             if(!content){
-
-                                return null;
-
-                             }
-
-
-                             return {
-
-                                ...action,
-
-                                id:
-                                   action.id ||
-                                   this.createId(
-                                      "brain-action"
-                                   ),
-
-                                content,
-
-                                createdAt:
-                                   Number(
-                                      action.createdAt
-                                   ) ||
-                                   updatedAt,
-
-                                appLinks:
-                                   Array.isArray(
-                                      action.appLinks
-                                   )
-                                      ? action.appLinks
-                                      : []
-
-                             };
-
-                          }
-                       )
-                       .filter(Boolean)
-
-                    : [];
-
-
-              return {
-
-                 id:
-                    session.id ||
+            return {
+                id:
                     this.createId(
-                       "brain-session"
+                        "brain-action"
                     ),
 
-                 title:
-                    String(
-                       session.title ||
-                       "Brain Sohbeti · Bugün"
-                    ),
+                role:
+                    "user",
 
-                 kind:
-                    "conversation",
+                type:
+                    "message",
 
-                 target:
+                content,
+
+                createdAt:
+                    fallbackTimestamp,
+
+                context:
                     null,
 
-                 status:
-                    session.status ===
-                       "error"
+                appLinks:
+                    []
+            };
 
-                       ? "error"
+        }
 
-                       : (
-                          session.status ===
-                             "done" ||
-                          session.status ===
-                             "closed"
-                       )
-
-                          ? "done"
-
-                          : "progress",
-
-                 startedAt,
-
-                 updatedAt,
-
-                 actions,
-
-                 favorite:
-                    Boolean(
-                       session.favorite
-                    ),
-
-                 summary:
-                    session.summary ||
-                    null,
-
-                 topic:
-                    session.topic ||
-                    "daily-brain",
-
-                 dayKey:
-                    session.dayKey ||
-                    this.getBrainDayKey(
-                       startedAt
-                    ),
-
-                 pendingConfirmation:
-                    session.pendingConfirmation &&
-                    typeof session.pendingConfirmation ===
-                       "object"
-
-                       ? {
-                          ...session.pendingConfirmation
-                       }
-
-                       : null
-
-              };
-
-           }
-        )
-        .sort(
-           (a,b) =>
-              b.updatedAt -
-              a.updatedAt
-        );
-
-  },
-
-
-  loadBrainState(){
-
-     const brain =
-        this.getService(
-           "brain"
-        );
-
-
-     if(!brain){
-
-        return false;
-
-     }
-
-
-     let saved =
-        null;
-
-
-     try{
-
-        saved =
-           localStorage.getItem(
-              this.getBrainStorageKey()
-           );
-
-     } catch(error){
-
-        return false;
-
-     }
-
-
-     if(!saved){
-
-        brain.sessions =
-           [];
-
-
-        brain.resumePoint =
-           null;
-
-
-        return true;
-
-     }
-
-
-     try{
-
-        const parsed =
-           JSON.parse(
-              saved
-           );
-
-
-        brain.sessions =
-           this.normalizeBrainSessions(
-              parsed.sessions
-           );
-
-
-        brain.resumePoint =
-           parsed.resumePoint ||
-           null;
-
-
-        return true;
-
-     } catch(error){
-
-        console.error(
-           "Brain geçmişi okunamadı:",
-           error
-        );
-
-
-        brain.sessions =
-           [];
-
-
-        brain.resumePoint =
-           null;
-
-
-        return false;
-
-     }
-
-  },
-
-
-  saveBrainState(){
-
-     const brain =
-        this.getService(
-           "brain"
-        );
-
-
-     if(!brain){
-
-        return false;
-
-     }
-
-
-     try{
-
-        localStorage.setItem(
-           this.getBrainStorageKey(),
-           JSON.stringify({
-
-              sessions:
-                 Array.isArray(
-                    brain.sessions
-                 )
-                    ? brain.sessions
-                    : [],
-
-              resumePoint:
-                 brain.resumePoint ||
-                 null,
-
-              savedAt:
-                 Date.now()
-
-           })
-        );
-
-
-        return true;
-
-     } catch(error){
-
-        console.error(
-           "Brain geçmişi kaydedilemedi:",
-           error
-        );
-
-
-        return false;
-
-     }
-
-  },
-
-
-  getTodayBrainConversationSession(brain){
-
-     if(
-           !brain ||
-           !Array.isArray(
-              brain.sessions
-           )
-     ){
-
-        return null;
-
-     }
-
-
-     const todayKey =
-        this.getBrainDayKey();
-
-
-     return (
-        brain.sessions.find(
-           session =>
-
-              session.kind ===
-                 "conversation" &&
-
-              session.dayKey ===
-                 todayKey
-        ) ||
-        null
-     );
-
-  },
-
-
-  createTodayBrainConversation(brain){
-
-     const now =
-        Date.now();
-
-
-     const session = {
-
-        id:
-           this.createId(
-              "brain-session"
-           ),
-
-        title:
-           "Brain Sohbeti · Bugün",
-
-        kind:
-           "conversation",
-
-        target:
-           null,
-
-        status:
-           "progress",
-
-        startedAt:
-           now,
-
-        updatedAt:
-           now,
-
-        actions:
-           [],
-
-        favorite:
-           false,
-
-        summary:
-           null,
-
-        topic:
-           "daily-brain",
-
-        dayKey:
-           this.getBrainDayKey(
-              now
-           ),
-
-        pendingConfirmation:
-           null
-
-     };
-
-
-     brain.sessions.unshift(
-        session
-     );
-
-
-     return session;
-
-  },
-
-
-  trackBrainSession(page){
-
-     const brain =
-        this.getService(
-           "brain"
-        );
-
-
-     if(!brain){
-
-        return false;
-
-     }
-
-
-     if(
-           !Array.isArray(
-              brain.sessions
-           )
-     ){
-
-        brain.sessions =
-           [];
-
-     }
-
-
-     const labels = {
-
-        profile:
-           "Profil ekranı açıldı",
-
-        identity:
-           "Kimlik ekranı açıldı",
-
-        organs:
-           "Organlar ekranı açıldı",
-
-        timeline:
-           "Zaman Çizelgesi açıldı",
-
-        memory:
-           "Hafıza ekranı açıldı",
-
-        bridge:
-           "Köprü ekranı açıldı",
-
-        evolution:
-           "Evrim ekranı açıldı",
-
-        settings:
-           "Ayarlar ekranı açıldı",
-
-        discovery:
-           "Discovery ekranı açıldı"
-
-     };
-
-
-     const content =
-        labels[page];
-
-
-     if(!content){
-
-        return false;
-
-     }
-
-
-     const session =
-        this.getTodayBrainConversationSession(
-           brain
-        ) ||
-        this.createTodayBrainConversation(
-           brain
-        );
-
-
-     const now =
-        Date.now();
-
-
-     session.actions.push({
-
-        id:
-           this.createId(
-              "brain-action"
-           ),
-
-        role:
-           "system",
-
-        type:
-           "navigation",
-
-        content,
-
-        createdAt:
-           now,
-
-        target:
-           page,
-
-        context:{
-           page
-        },
-
-        appLinks:
-           []
-
-     });
-
-
-     session.updatedAt =
-        now;
-
-
-     this.saveBrainState();
-
-
-     this.renderBrainHistory();
-
-
-     return true;
-
-  },
-
-
-  /* =====================================================
-     BRAIN PANEL
-  ===================================================== */
-
-  getBrainGateway(){
-
-     return (
-        this.getService(
-           "brainService"
-        ) ||
-        window.BrainService ||
-        null
-     );
-
-  },
-
-
-  getActiveBrainSession(){
-
-     const brain =
-        this.getService(
-           "brain"
-        );
-
-
-     if(!brain){
-
-        return null;
-
-     }
-
-
-     if(
-           !Array.isArray(
-              brain.sessions
-           )
-     ){
-
-        brain.sessions =
-           [];
-
-     }
-
-
-     return (
-        this.getTodayBrainConversationSession(
-           brain
-        ) ||
-        this.createTodayBrainConversation(
-           brain
-        )
-     );
-
-  },
-
-
-  getBrainPendingConfirmation(){
-
-     const session =
-        this.getActiveBrainSession();
-
-
-     return (
-        session?.pendingConfirmation ||
-        null
-     );
-
-  },
-
-
-  openBrain(){
-
-     this.loadBrainState();
-
-
-     let panel =
-        document.getElementById(
-           "brainPanel"
-        );
-
-
-     if(!panel){
 
         if(
-              !window.BrainApp ||
-              typeof window.BrainApp.render !==
-                 "function"
+            !action ||
+            typeof action !==
+                "object" ||
+            Array.isArray(
+                action
+            )
         ){
 
-           return false;
+            return null;
 
         }
 
 
-        document.body.insertAdjacentHTML(
-           "beforeend",
-           window.BrainApp.render()
-        );
+        const content =
+            String(
+                action.content ||
+                action.fullContent ||
+                action.text ||
+                action.message ||
+                ""
+            ).trim();
 
 
-        panel =
-           document.getElementById(
-              "brainPanel"
-           );
+        if(!content){
 
-     }
+            return null;
 
-
-     if(!panel){
-
-        return false;
-
-     }
-
-
-     panel.classList.remove(
-        "is-expanded"
-     );
-
-
-     panel.classList.add(
-        "is-compact"
-     );
-
-
-     panel.style.display =
-        "flex";
-
-
-     if(
-           window.BrainApp &&
-           typeof window.BrainApp.refresh ===
-              "function"
-     ){
-
-        window.BrainApp.refresh();
-
-     }
-
-
-     const pending =
-        this.getBrainPendingConfirmation();
-
-
-     if(
-           window.BrainApp &&
-           typeof window.BrainApp.refreshConfirmation ===
-              "function"
-     ){
-
-        window.BrainApp.refreshConfirmation(
-           pending
-        );
-
-     }
-
-
-     const input =
-        document.getElementById(
-           "brainInput"
-        );
-
-
-     input?.addEventListener(
-        "focus",
-        () => {
-
-           panel.classList.remove(
-              "is-compact"
-           );
-
-
-           panel.classList.add(
-              "is-expanded"
-           );
-
-        },
-        {
-           once:
-              true
         }
-     );
 
 
-     if(
-           this.brainOutsideHandler
-     ){
-
-        document.removeEventListener(
-           "pointerdown",
-           this.brainOutsideHandler
-        );
-
-     }
-
-  this.brainOutsideHandler =
-        event => {
-
-           const currentPanel =
-              document.getElementById(
-                 "brainPanel"
-              );
+        const allowedRoles =
+            [
+                "user",
+                "brain",
+                "assistant",
+                "system"
+            ];
 
 
-           if(
-                 !currentPanel ||
-                 currentPanel.contains(
-                    event.target
-                 ) ||
-                 event.target.closest(
-                    '[data-action="brain:open"]'
-                 )
-           ){
-
-              return;
-
-           }
+        let role =
+            String(
+                action.role ||
+                "brain"
+            )
+                .trim()
+                .toLowerCase();
 
 
-           currentPanel.classList.remove(
-              "is-expanded"
-           );
+        if(
+            role ===
+                "assistant"
+        ){
+
+            role =
+                "brain";
+
+        }
 
 
-           currentPanel.classList.add(
-              "is-compact"
-           );
+        if(
+            !allowedRoles.includes(
+                role
+            )
+        ){
 
+            role =
+                "brain";
+
+        }
+
+
+        const createdAt =
+            Number(
+                action.createdAt
+            );
+
+
+        return {
+            ...action,
+
+            id:
+                action.id ||
+                this.createId(
+                    "brain-action"
+                ),
+
+            role,
+
+            type:
+                String(
+                    action.type ||
+                    "message"
+                ),
+
+            content,
+
+            createdAt:
+                Number.isFinite(
+                    createdAt
+                )
+                    ? createdAt
+                    : fallbackTimestamp,
+
+            context:
+                action.context &&
+                typeof action.context ===
+                    "object" &&
+                !Array.isArray(
+                    action.context
+                )
+                    ? {
+                        ...action.context
+                    }
+                    : null,
+
+            appLinks:
+                Array.isArray(
+                    action.appLinks
+                )
+                    ? action.appLinks
+                        .filter(
+                            link =>
+                                link &&
+                                typeof link ===
+                                    "object"
+                        )
+                        .map(
+                            link => ({
+                                ...link
+                            })
+                        )
+                    : []
         };
 
-
-     document.addEventListener(
-        "pointerdown",
-        this.brainOutsideHandler
-     );
+    },
 
 
-     this.syncAwareness(
-        "brain",
-        {
+    normalizeBrainSessions(sessions){
 
-           source:
-              "panel",
+        if(
+            !Array.isArray(
+                sessions
+            )
+        ){
 
-           screen:
-              this.getEngine()?.currentView ||
-              "home",
-
-           page:
-              this.getEngine()?.currentEntityPage ||
-              null
+            return [];
 
         }
-     );
 
 
-     this.renderBrainHistory();
-
-
-     requestAnimationFrame(
-        () =>
-           window.BrainApp
-              ?.focusInput?.()
-     );
-
-
-     return true;
-
-  },
-
-
-  closeBrain(){
-
-     this.saveBrainState();
-
-
-     if(
-           this.brainOutsideHandler
-     ){
-
-        document.removeEventListener(
-           "pointerdown",
-           this.brainOutsideHandler
-        );
-
-
-        this.brainOutsideHandler =
-           null;
-
-     }
-
-
-     document
-        .querySelectorAll(
-           "#brainPanel"
-        )
-        .forEach(
-           panel =>
-              panel.remove()
-        );
-
-
-     return true;
-
-  },
-
-
-  /* =====================================================
-     BRAIN CONFIRMATION
-  ===================================================== */
-
-  async confirmBrainAction(
-     confirmationId
-  ){
-
-     if(
-           this.brainSending
-     ){
-
-        return false;
-
-     }
-
-
-     const id =
-        String(
-           confirmationId ||
-           ""
-        ).trim();
-
-
-     if(!id){
-
-        return false;
-
-     }
-
-
-     const gateway =
-        this.getBrainGateway();
-
-
-     const session =
-        this.getActiveBrainSession();
-
-
-     const pending =
-        session?.pendingConfirmation ||
-        null;
-
-
-     if(
-           !gateway ||
-           typeof gateway.confirm !==
-              "function" ||
-           !session ||
-           !pending ||
-           pending.id !==
-              id
-     ){
-
-        return false;
-
-     }
-
-
-     this.brainSending =
-        true;
-
-
-     window.BrainApp?.setBusy?.(
-        true,
-        "Onaylanan işlem uygulanıyor..."
-     );
-
-
-     let result =
-        null;
-
-
-     try{
-
-        result =
-           await Promise.resolve(
-              gateway.confirm(
-                 id,
-                 pending.prompt ||
-                 "",
-                 {
-
-                    context:
-                       pending.context ||
-                       {}
-
-                 }
-              )
-           );
-
-     } catch(error){
-
-        console.error(
-           "Brain confirmation uygulanamadı:",
-           error
-        );
-
-
-        result = {
-
-           executed:
-              false,
-
-           error:
-              true,
-
-           message:
-              "Onaylanan işlem uygulanamadı."
-
-        };
-
-     } finally {
-
-        this.brainSending =
-           false;
-
-
-        window.BrainApp?.setBusy?.(
-           false
-        );
-
-     }
-
-
-     const reply =
-        result?.actionResult
-           ?.message ||
-        result?.reply ||
-        result?.message ||
-        (
-           result?.executed
-              ? "İşlem tamamlandı."
-              : "İşlem uygulanamadı."
-        );
-
-
-     session.actions.push({
-
-        id:
-           this.createId(
-              "brain-action"
-           ),
-
-        role:
-           "brain",
-
-        type:
-           result?.executed
-              ? "action-result"
-              : "action-failed",
-
-        content:
-           String(
-              reply
-           ),
-
-        createdAt:
-           Date.now(),
-
-        confirmationId:
-           id,
-
-        executed:
-           Boolean(
-              result?.executed
-           ),
-
-        actionType:
-           result?.policy?.actionType ||
-           pending.actionType ||
-           null,
-
-        context:{
-
-           page:
-              pending.context?.page ||
-              pending.context?.screen ||
-              null
-
-        },
-
-        appLinks:
-           this.extractBrainAppMentions(
-              reply
-           )
-
-     });
-
-
-     session.pendingConfirmation =
-        null;
-
-
-     session.updatedAt =
-        Date.now();
-
-
-     this.updateBrainConversationSummary(
-        session
-     );
-
-
-     this.saveBrainState();
-
-
-     this.renderBrainHistory();
-
-
-     window.BrainApp?.refreshConfirmation?.(
-        null
-     );
-
-
-     window.BrainApp?.refreshStatus?.();
-
-
-     window.BrainApp?.focusInput?.();
-
-
-     return Boolean(
-        result?.executed
-     );
-
-  },
-
-
-  cancelBrainConfirmation(
-     confirmationId
-  ){
-
-     const id =
-        String(
-           confirmationId ||
-           ""
-        ).trim();
-
-
-     if(!id){
-
-        return false;
-
-     }
-
-
-     const gateway =
-        this.getBrainGateway();
-
-
-     const session =
-        this.getActiveBrainSession();
-
-
-     if(
-           !session ||
-           session.pendingConfirmation?.id !==
-              id
-     ){
-
-        return false;
-
-     }
-
-
-     let cancelled =
-        true;
-
-
-     if(
-           gateway &&
-           typeof gateway.cancelConfirmation ===
-              "function"
-     ){
-
-        cancelled =
-           gateway.cancelConfirmation(
-              id
-           ) !==
-           false;
-
-     }
-
-
-     if(!cancelled){
-
-        return false;
-
-     }
-
-
-     session.actions.push({
-
-        id:
-           this.createId(
-              "brain-action"
-           ),
-
-        role:
-           "system",
-
-        type:
-           "confirmation-cancelled",
-
-        content:
-           "İşlem onayı iptal edildi.",
-
-        createdAt:
-           Date.now(),
-
-        confirmationId:
-           id,
-
-        context:{
-
-           page:
-              session
-                 .pendingConfirmation
-                 ?.context?.page ||
-              null
-
-        },
-
-        appLinks:
-           []
-
-     });
-
-
-     session.pendingConfirmation =
-        null;
-
-
-     session.updatedAt =
-        Date.now();
-
-
-     this.saveBrainState();
-
-
-     this.renderBrainHistory();
-
-
-     window.BrainApp?.refreshConfirmation?.(
-        null
-     );
-
-
-     window.BrainApp?.refreshStatus?.();
-
-
-     return true;
-
-  },
-
-
-  /* =====================================================
-     BRAIN APP LINKS
-  ===================================================== */
-
-  getBrainAppDefinitions(){
-
-     return [
-
-        {
-
-           id:
-              "applications",
-
-           label:
-              "Applications",
-
-           words:[
-              "applications",
-              "uygulamalar",
-              "uygulama"
-           ]
-
-        },
-
-        {
-
-           id:
-              "vaero",
-
-           label:
-              "VAERO",
-
-           words:[
-              "vaero",
-              "engine"
-           ]
-
-        },
-
-        {
-
-           id:
-              "profile",
-
-           label:
-              "Profil",
-
-           words:[
-              "profil",
-              "profile"
-           ]
-
-        },
-
-        {
-
-           id:
-              "identity",
-
-           label:
-              "Kimlik",
-
-           words:[
-              "kimlik",
-              "identity"
-           ]
-
-        },
-
-        {
-
-           id:
-              "memory",
-
-           label:
-              "Hafıza",
-
-           words:[
-              "hafıza",
-              "hafiza",
-              "memory"
-           ]
-
-        },
-
-        {
-
-           id:
-              "timeline",
-
-           label:
-              "Zaman Çizelgesi",
-
-           words:[
-              "timeline",
-              "zaman çizelgesi",
-              "zaman cizelgesi"
-           ]
-
-        },
-
-        {
-
-           id:
-              "bridge",
-
-           label:
-              "Köprü",
-
-           words:[
-              "köprü",
-              "kopru",
-              "bridge"
-           ]
-
-        },
-
-        {
-
-           id:
-              "evolution",
-
-           label:
-              "Evrim",
-
-           words:[
-              "evrim",
-              "evolution"
-           ]
-
-        },
-
-        {
-
-           id:
-              "organs",
-
-           label:
-              "Organlar",
-
-           words:[
-              "organ",
-              "organlar"
-           ]
-
-        },
-
-        {
-
-           id:
-              "settings",
-
-           label:
-              "Ayarlar",
-
-           words:[
-              "ayar",
-              "ayarlar",
-              "settings"
-           ]
-
-        },
-
-        {
-
-           id:
-              "discovery",
-
-           label:
-              "Discovery",
-
-           words:[
-              "discovery",
-              "keşif",
-              "kesif"
-           ]
-
-        }
-
-     ];
-
-  },
-
-
-  extractBrainAppMentions(text){
-
-     const normalized =
-        String(
-           text ||
-           ""
-        )
-           .toLocaleLowerCase(
-              "tr-TR"
-           );
-
-
-     return this
-        .getBrainAppDefinitions()
-        .filter(
-           app =>
-              app.words.some(
-                 word =>
-                    normalized.includes(
-                       word
+        return sessions
+            .filter(
+                session =>
+                    session &&
+                    typeof session ===
+                        "object" &&
+                    !Array.isArray(
+                        session
                     )
-              )
-        )
-        .map(
-           app => ({
+            )
+            .map(
+                session => {
 
-              app:
-                 app.id,
-
-              label:
-                 app.label
-
-           })
-        );
-
-  },
+                    const startedCandidate =
+                        Number(
+                            session.startedAt
+                        );
 
 
-  openBrainAppLink(app){
-
-     const target =
-        String(
-           app ||
-           ""
-        )
-           .trim()
-           .toLowerCase();
+                    const updatedCandidate =
+                        Number(
+                            session.updatedAt
+                        );
 
 
-     if(!target){
-
-        return false;
-
-     }
-
-
-     this.closeBrain();
-
-
-     if(
-           target ===
-              "applications"
-     ){
-
-        return this.openApplicationsApp();
-
-     }
+                    const startedAt =
+                        Number.isFinite(
+                            startedCandidate
+                        )
+                            ? startedCandidate
+                            : (
+                                Number.isFinite(
+                                    updatedCandidate
+                                )
+                                    ? updatedCandidate
+                                    : Date.now()
+                            );
 
 
-     if(
-           target ===
-              "vaero"
-     ){
-
-        return this.openVaeroApp();
-
-     }
+                    const updatedAt =
+                        Number.isFinite(
+                            updatedCandidate
+                        )
+                            ? updatedCandidate
+                            : startedAt;
 
 
-     if(
-           target ===
-              "discovery"
-     ){
-
-        return this.restartDiscovery();
-
-     }
-
-
-     return this.openEntityPage(
-        target
-     );
-
-  },
-
-
-  /* =====================================================
-     BRAIN SEND
-  ===================================================== */
-
-  async sendBrainMessage(){
-
-     if(
-           this.brainSending
-     ){
-
-        return false;
-
-     }
+                    const actions =
+                        Array.isArray(
+                            session.actions
+                        )
+                            ? session.actions
+                                .map(
+                                    action =>
+                                        this.normalizeBrainAction(
+                                            action,
+                                            updatedAt
+                                        )
+                                )
+                                .filter(
+                                    Boolean
+                                )
+                            : [];
 
 
-     const input =
-        document.getElementById(
-           "brainInput"
-        );
+                    let status =
+                        String(
+                            session.status ||
+                            "progress"
+                        )
+                            .trim()
+                            .toLowerCase();
 
 
-     if(!input){
+                    if(
+                        status ===
+                            "closed"
+                    ){
 
-        return false;
+                        status =
+                            "done";
 
-     }
-
-
-     const text =
-        String(
-           input.value ||
-           ""
-        ).trim();
+                    }
 
 
-     if(!text){
+                    if(
+                        ![
+                            "progress",
+                            "done",
+                            "error"
+                        ].includes(
+                            status
+                        )
+                    ){
 
-        return false;
+                        status =
+                            "progress";
 
-     }
-
-
-     const brain =
-        this.getService(
-           "brain"
-        );
-
-
-     if(!brain){
-
-        return false;
-
-     }
+                    }
 
 
-     if(
-           !Array.isArray(
-              brain.sessions
-           )
-     ){
+                    return {
+                        id:
+                            session.id ||
+                            this.createId(
+                                "brain-session"
+                            ),
+
+                        title:
+                            String(
+                                session.title ||
+                                "Brain Sohbeti · Bugün"
+                            )
+                                .trim()
+                                .slice(
+                                    0,
+                                    140
+                                ) ||
+                            "Brain Sohbeti · Bugün",
+
+                        kind:
+                            "conversation",
+
+                        target:
+                            null,
+
+                        status,
+
+                        startedAt,
+
+                        updatedAt,
+
+                        actions,
+
+                        favorite:
+                            Boolean(
+                                session.favorite
+                            ),
+
+                        summary:
+                            session.summary
+                                ? String(
+                                    session.summary
+                                )
+                                    .trim()
+                                    .slice(
+                                        0,
+                                        200
+                                    )
+                                : null,
+
+                        topic:
+                            String(
+                                session.topic ||
+                                "daily-brain"
+                            )
+                                .trim() ||
+                            "daily-brain",
+
+                        dayKey:
+                            String(
+                                session.dayKey ||
+                                this.getBrainDayKey(
+                                    startedAt
+                                )
+                            ),
+
+                        pendingConfirmation:
+                            session
+                                .pendingConfirmation &&
+                            typeof session
+                                .pendingConfirmation ===
+                                "object" &&
+                            !Array.isArray(
+                                session
+                                    .pendingConfirmation
+                            )
+                                ? {
+                                    ...session
+                                        .pendingConfirmation
+                                }
+                                : null
+                    };
+
+                }
+            )
+            .sort(
+                (
+                    a,
+                    b
+                ) =>
+                    b.updatedAt -
+                    a.updatedAt
+            );
+
+    },
+
+
+    loadBrainState(){
+
+        const brain =
+            this.getService(
+                "brain"
+            );
+
+
+        if(!brain){
+
+            return false;
+
+        }
+
+
+        let saved =
+            null;
+
+
+        try{
+
+            saved =
+                localStorage.getItem(
+                    this.getBrainStorageKey()
+                );
+
+        } catch(error){
+
+            console.warn(
+                "Brain storage okunamadı:",
+                error
+            );
+
+
+            return false;
+
+        }
+
+
+        if(!saved){
+
+            brain.sessions =
+                [];
+
+
+            brain.resumePoint =
+                null;
+
+
+            return true;
+
+        }
+
+
+        try{
+
+            const parsed =
+                JSON.parse(
+                    saved
+                );
+
+
+            if(
+                !parsed ||
+                typeof parsed !==
+                    "object" ||
+                Array.isArray(
+                    parsed
+                )
+            ){
+
+                brain.sessions =
+                    [];
+
+
+                brain.resumePoint =
+                    null;
+
+
+                return false;
+
+            }
+
+
+            brain.sessions =
+                this.normalizeBrainSessions(
+                    parsed.sessions
+                );
+
+
+            brain.resumePoint =
+                parsed.resumePoint &&
+                typeof parsed.resumePoint ===
+                    "object" &&
+                !Array.isArray(
+                    parsed.resumePoint
+                )
+                    ? {
+                        ...parsed.resumePoint
+                    }
+                    : null;
+
+
+            return true;
+
+        } catch(error){
+
+            console.error(
+                "Brain geçmişi okunamadı:",
+                error
+            );
+
+
+            brain.sessions =
+                [];
+
+
+            brain.resumePoint =
+                null;
+
+
+            return false;
+
+        }
+
+    },
+
+
+    saveBrainState(){
+
+        const brain =
+            this.getService(
+                "brain"
+            );
+
+
+        if(!brain){
+
+            return false;
+
+        }
+
+
+        const sessions =
+            this.normalizeBrainSessions(
+                brain.sessions
+            );
+
 
         brain.sessions =
-           [];
-
-     }
+            sessions;
 
 
-     const gateway =
-        this.getBrainGateway();
+        try{
+
+            localStorage.setItem(
+                this.getBrainStorageKey(),
+                JSON.stringify({
+                    sessions,
+
+                    resumePoint:
+                        brain.resumePoint &&
+                        typeof brain.resumePoint ===
+                            "object"
+                            ? brain.resumePoint
+                            : null,
+
+                    savedAt:
+                        Date.now()
+                })
+            );
 
 
-     const contextService =
-        this.getService(
-           "brainContext"
-        );
+            return true;
+
+        } catch(error){
+
+            console.error(
+                "Brain geçmişi kaydedilemedi:",
+                error
+            );
 
 
-     let context =
-        null;
+            return false;
+
+        }
+
+    },
 
 
-     try{
-
-        context =
-           contextService &&
-           typeof contextService.build ===
-              "function"
-
-              ? contextService.build({
-                 message:
-                    text
-              })
-
-              : null;
-
-     } catch(error){
-
-        context =
-           null;
-
-     }
-
-
-     const session =
-        this.getTodayBrainConversationSession(
-           brain
-        ) ||
-        this.createTodayBrainConversation(
-           brain
-        );
-
-
-     const now =
-        Date.now();
-
-
-     session.actions.push({
-
-        id:
-           this.createId(
-              "brain-action"
-           ),
-
-        role:
-           "user",
-
-        type:
-           "message",
-
-        content:
-           text,
-
-        createdAt:
-           now,
-
-        context:{
-
-           app:
-              context?.app ||
-              null,
-
-           screen:
-              context?.screen ||
-              null,
-
-           page:
-              context?.page ||
-              null,
-
-           entityId:
-              context?.entity?.id ||
-              context?.entityId ||
-              null,
-
-           worldId:
-              context?.world?.id ||
-              context?.worldId ||
-              null
-
-        },
-
-        appLinks:
-           this.extractBrainAppMentions(
-              text
-           )
-
-     });
-
-
-     session.updatedAt =
-        now;
-
-
-     input.value =
-        "";
-
-
-     this.brainSending =
-        true;
-
-
-     window.BrainApp?.setBusy?.(
-        true,
-        "Brain düşünüyor..."
-     );
-
-
-     this.renderBrainHistory();
-
-
-     let response =
-        null;
-
-
-     try{
+    getTodayBrainConversationSession(
+        brain
+    ){
 
         if(
-              gateway &&
-              typeof gateway.ask ===
-                 "function"
+            !brain ||
+            !Array.isArray(
+                brain.sessions
+            )
         ){
 
-           response =
-              await gateway.ask(
-                 text,
-                 {
-
-                    context:
-                       context ||
-                       {}
-
-                 }
-              );
+            return null;
 
         }
 
-        else if(
-           typeof brain.ask ===
-              "function"
-        ){
 
-           response =
-              await brain.ask(
-                 text,
-                 {
+        const todayKey =
+            this.getBrainDayKey();
 
-                    context:
-                       context ||
-                       {}
 
-                 }
-              );
-
-        }
-
-        else if(
-           typeof brain.receive ===
-              "function"
-        ){
-
-           response =
-              brain.receive(
-                 text,
-                 context ||
-                 {}
-              );
-
-        }
-
-     } catch(error){
-
-        console.error(
-           "Brain mesajı işlenemedi:",
-           error
+        return (
+            brain.sessions.find(
+                session =>
+                    session?.kind ===
+                        "conversation" &&
+                    session?.dayKey ===
+                        todayKey &&
+                    session?.status !==
+                        "error"
+            ) ||
+            null
         );
 
+    },
 
-        response = {
 
-           reply:
-              "Brain isteği şu anda tamamlanamadı.",
+    createTodayBrainConversation(
+        brain
+    ){
 
-           error:
-              true
+        if(!brain){
+
+            return null;
+
+        }
+
+
+        if(
+            !Array.isArray(
+                brain.sessions
+            )
+        ){
+
+            brain.sessions =
+                [];
+
+        }
+
+
+        const now =
+            Date.now();
+
+
+        const session = {
+
+            id:
+                this.createId(
+                    "brain-session"
+                ),
+
+            title:
+                "Brain Sohbeti · Bugün",
+
+            kind:
+                "conversation",
+
+            target:
+                null,
+
+            status:
+                "progress",
+
+            startedAt:
+                now,
+
+            updatedAt:
+                now,
+
+            actions:
+                [],
+
+            favorite:
+                false,
+
+            summary:
+                null,
+
+            topic:
+                "daily-brain",
+
+            dayKey:
+                this.getBrainDayKey(
+                    now
+                ),
+
+            pendingConfirmation:
+                null
 
         };
 
-     } finally {
 
-        this.brainSending =
-           false;
-
-
-        window.BrainApp?.setBusy?.(
-           false
+        brain.sessions.unshift(
+            session
         );
 
-     }
+
+        return session;
+
+    },
 
 
-     const replyText =
-        typeof response ===
-           "string"
+    trackBrainSession(page){
 
-           ? response
-
-           : (
-              response?.reply ||
-              response?.message ||
-              response?.text ||
-              ""
-           );
+        const targetPage =
+            String(
+                page ||
+                ""
+            )
+                .trim()
+                .toLowerCase();
 
 
-     if(
-           response?.confirmation &&
-           response.confirmation.id
-     ){
+        const brain =
+            this.getService(
+                "brain"
+            );
 
-        session.pendingConfirmation = {
 
-           ...response.confirmation,
+        if(
+            !brain ||
+            !targetPage
+        ){
 
-           prompt:
-              text,
+            return false;
 
-           context:
-              context ||
-              {},
+        }
 
-           actionType:
-              response?.policy?.actionType ||
-              response.confirmation.actionType ||
-              null,
 
-           receivedAt:
-              Date.now()
+        if(
+            !Array.isArray(
+                brain.sessions
+            )
+        ){
+
+            brain.sessions =
+                [];
+
+        }
+
+
+        const labels = {
+
+            profile:
+                "Profil ekranı açıldı",
+
+            identity:
+                "Kimlik ekranı açıldı",
+
+            organs:
+                "Organlar ekranı açıldı",
+
+            timeline:
+                "Zaman Çizelgesi açıldı",
+
+            memory:
+                "Hafıza ekranı açıldı",
+
+            bridge:
+                "Köprü ekranı açıldı",
+
+            evolution:
+                "Evrim ekranı açıldı",
+
+            settings:
+                "Ayarlar ekranı açıldı",
+
+            discovery:
+                "Discovery ekranı açıldı"
 
         };
 
-     }
 
-     else if(
-        response?.confirmationApproved ===
-           true ||
-        response?.executed ===
-           true ||
-        response?.blocked ===
-           true
-     ){
-
-        session.pendingConfirmation =
-           null;
-
-     }
+        const content =
+            labels[
+                targetPage
+            ];
 
 
-     if(replyText){
+        if(!content){
+
+            return false;
+
+        }
+
+
+        const session =
+            this.getTodayBrainConversationSession(
+                brain
+            ) ||
+            this.createTodayBrainConversation(
+                brain
+            );
+
+
+        if(!session){
+
+            return false;
+
+        }
+
+
+        /*
+         * Aynı navigation olayı art arda birkaç milisaniye
+         * içinde iki ayrı router tarafından yazılırsa
+         * Brain geçmişini şişirme.
+         */
+
+        const lastAction =
+            Array.isArray(
+                session.actions
+            )
+                ? session.actions[
+                    session.actions.length -
+                    1
+                ]
+                : null;
+
+
+        const now =
+            Date.now();
+
+
+        if(
+            lastAction?.type ===
+                "navigation" &&
+            lastAction?.target ===
+                targetPage &&
+            (
+                now -
+                Number(
+                    lastAction.createdAt ||
+                    0
+                )
+            ) <
+                500
+        ){
+
+            return true;
+
+        }
+
 
         session.actions.push({
+            id:
+                this.createId(
+                    "brain-action"
+                ),
 
-           id:
-              this.createId(
-                 "brain-action"
-              ),
+            role:
+                "system",
 
-           role:
-              "brain",
+            type:
+                "navigation",
 
-           type:
-              response?.requiresConfirmation &&
-              !response?.confirmationApproved
-                 ? "confirmation-required"
-                 : "reply",
+            content,
 
-           content:
-              String(
-                 replyText
-              ),
+            createdAt:
+                now,
 
-           createdAt:
-              Date.now(),
+            target:
+                targetPage,
 
-           confirmationId:
-              response?.confirmation?.id ||
-              null,
+            context:{
+                page:
+                    targetPage
+            },
 
-           requiresConfirmation:
-              Boolean(
-                 response?.requiresConfirmation
-              ),
-
-           blocked:
-              Boolean(
-                 response?.blocked
-              ),
-
-           executed:
-              Boolean(
-                 response?.executed
-              ),
-
-           actionType:
-              response?.policy?.actionType ||
-              null,
-
-           context:{
-
-              app:
-                 context?.app ||
-                 null,
-
-              screen:
-                 context?.screen ||
-                 null,
-
-              page:
-                 context?.page ||
-                 null
-
-           },
-
-           appLinks:
-              this.extractBrainAppMentions(
-                 replyText
-              )
-
+            appLinks:
+                []
         });
 
-     }
+
+        session.updatedAt =
+            now;
 
 
-     session.updatedAt =
-        Date.now();
+        this.saveBrainState();
 
 
-     this.updateBrainConversationSummary(
-        session
-     );
+        if(
+            typeof this.renderBrainHistory ===
+                "function"
+        ){
+
+            this.renderBrainHistory();
+
+        }
 
 
-     this.saveBrainState();
+        return true;
+
+    },
 
 
-     this.renderBrainHistory();
+    /* =====================================================
+       BRAIN PANEL ACCESS
+    ===================================================== */
 
+    getBrainGateway(){
 
-     window.BrainApp?.refreshConfirmation?.(
-        session.pendingConfirmation ||
-        null
-     );
-
-
-     window.BrainApp?.refreshContext?.();
-
-
-     window.BrainApp?.refreshStatus?.();
-
-
-     const panel =
-        document.getElementById(
-           "brainPanel"
+        return (
+            this.getService(
+                "brainService"
+            ) ||
+            window.BrainService ||
+            null
         );
 
+    },
 
-     if(panel){
+
+    getActiveBrainSession(){
+
+        const brain =
+            this.getService(
+                "brain"
+            );
+
+
+        if(!brain){
+
+            return null;
+
+        }
+
+
+        if(
+            !Array.isArray(
+                brain.sessions
+            )
+        ){
+
+            brain.sessions =
+                [];
+
+        }
+
+
+        return (
+            this.getTodayBrainConversationSession(
+                brain
+            ) ||
+            this.createTodayBrainConversation(
+                brain
+            )
+        );
+
+    },
+
+
+    getBrainPendingConfirmation(){
+
+        const session =
+            this.getActiveBrainSession();
+
+
+        return (
+            session?.pendingConfirmation ||
+            null
+        );
+
+    },
+
+
+    openBrain(){
+
+        this.loadBrainState();
+
+
+        let panel =
+            document.getElementById(
+                "brainPanel"
+            );
+
+
+        if(!panel){
+
+            if(
+                !window.BrainApp ||
+                typeof window.BrainApp.render !==
+                    "function"
+            ){
+
+                return false;
+
+            }
+
+
+            let markup =
+                "";
+
+
+            try{
+
+                markup =
+                    window.BrainApp.render();
+
+            } catch(error){
+
+                console.error(
+                    "Brain paneli render edilemedi:",
+                    error
+                );
+
+
+                return false;
+
+            }
+
+
+            if(
+                typeof markup ===
+                    "string" &&
+                markup.trim()
+            ){
+
+                document.body.insertAdjacentHTML(
+                    "beforeend",
+                    markup
+                );
+
+            }
+
+
+            panel =
+                document.getElementById(
+                    "brainPanel"
+                );
+
+        }
+
+
+        if(!panel){
+
+            return false;
+
+        }
+
 
         panel.classList.remove(
-           "is-compact"
+            "is-expanded"
         );
 
 
         panel.classList.add(
-           "is-expanded"
-        );
-
-     }
-
-
-     window.BrainApp?.focusInput?.();
-
-
-     return true;
-
-  },
-
-
-  updateBrainConversationSummary(session){
-
-     if(
-           !session ||
-           !Array.isArray(
-              session.actions
-           )
-     ){
-
-        return false;
-
-     }
-
-
-     const messages =
-        session.actions
-           .filter(
-              action =>
-                 action?.role ===
-                    "user" &&
-                 action.content
-           )
-           .map(
-              action =>
-                 String(
-                    action.content
-                 ).trim()
-           )
-           .filter(Boolean)
-           .slice(-3);
-
-
-     const summary =
-        messages.join(
-           " · "
+            "is-compact"
         );
 
 
-     session.summary =
-        summary.length >
-           160
-
-           ? `${summary
-              .slice(
-                 0,
-                 160
-              )
-              .trim()}…`
-
-           : (
-              summary ||
-              null
-           );
+        panel.style.display =
+            "flex";
 
 
-     return true;
+        try{
 
-  },
+            window.BrainApp
+                ?.onOpen?.();
+
+        } catch(error){
+
+            /* compatibility */
+
+        }
 
 
-  /* =====================================================
-     RESUME POINT
-  ===================================================== */
+        try{
 
-  saveBrainResumePoint(note){
+            window.BrainApp
+                ?.refresh?.();
 
-     const brain =
-        this.getService(
-           "brain"
+        } catch(error){
+
+            console.warn(
+                "Brain paneli yenilenemedi:",
+                error
+            );
+
+        }
+
+
+        const pending =
+            this.getBrainPendingConfirmation();
+
+
+        try{
+
+            window.BrainApp
+                ?.refreshConfirmation?.(
+                    pending
+                );
+
+        } catch(error){
+
+            /* non-fatal */
+
+        }
+
+
+        const input =
+            document.getElementById(
+                "brainInput"
+            );
+
+
+        input?.addEventListener(
+            "focus",
+            () => {
+
+                const currentPanel =
+                    document.getElementById(
+                        "brainPanel"
+                    );
+
+
+                if(!currentPanel){
+
+                    return;
+
+                }
+
+
+                currentPanel.classList.remove(
+                    "is-compact"
+                );
+
+
+                currentPanel.classList.add(
+                    "is-expanded"
+                );
+
+            },
+            {
+                once:
+                    true
+            }
         );
-
-
-     const contextService =
-        this.getService(
-           "brainContext"
-        );
-
-
-     if(!brain){
-
-        return false;
-
-     }
-
-
-     let context =
-        null;
-
-
-     try{
-
-        context =
-           contextService &&
-           typeof contextService.build ===
-              "function"
-
-              ? contextService.build()
-
-              : null;
-
-     } catch(error){
-
-        context =
-           null;
-
-     }
-
-
-     brain.resumePoint = {
-
-        id:
-           this.createId(
-              "resume"
-           ),
-
-        app:
-           context?.app ||
-           null,
-
-        screen:
-           context?.screen ||
-           null,
-
-        page:
-           context?.page ||
-           null,
-
-        worldId:
-           context?.world?.id ||
-           null,
-
-        entityId:
-           context?.entity?.id ||
-           null,
-
-        note:
-           String(
-              note ||
-              ""
-           ),
-
-        savedAt:
-           Date.now()
-
-     };
-
-
-     this.saveBrainState();
-
-
-     this.renderBrainHistory();
-
-
-     return true;
-
-  },
-
-
-  restoreBrainResumePoint(){
-
-     const brain =
-        this.getService(
-           "brain"
-        );
-
-
-     const point =
-        brain?.resumePoint ||
-        null;
-
-
-     if(!point){
-
-        return false;
-
-     }
-
-
-     if(
-           point.worldId
-     ){
-
-        const opened =
-           this.openWorld(
-              point.worldId
-           );
 
 
         if(
-              opened &&
-              point.entityId
+            this.brainOutsideHandler
         ){
 
-           this.openEntity(
-              point.entityId
-           );
+            document.removeEventListener(
+                "pointerdown",
+                this.brainOutsideHandler
+            );
+
+        }
+
+
+        this.brainOutsideHandler =
+            event => {
+
+                const currentPanel =
+                    document.getElementById(
+                        "brainPanel"
+                    );
+
+
+                if(!currentPanel){
+
+                    return;
+
+                }
+
+
+                if(
+                    currentPanel.contains(
+                        event.target
+                    )
+                ){
+
+                    return;
+
+                }
+
+
+                if(
+                    event.target.closest?.(
+                        '[data-action="brain:open"]'
+                    )
+                ){
+
+                    return;
+
+                }
+
+
+                currentPanel.classList.remove(
+                    "is-expanded"
+                );
+
+
+                currentPanel.classList.add(
+                    "is-compact"
+                );
+
+            };
+
+
+        document.addEventListener(
+            "pointerdown",
+            this.brainOutsideHandler
+        );
+
+
+        this.syncAwareness(
+            "brain",
+            {
+                source:
+                    "panel",
+
+                screen:
+                    this.getEngine()
+                        ?.currentView ||
+                    "home",
+
+                page:
+                    this.getEngine()
+                        ?.currentEntityPage ||
+                    null
+            }
+        );
+
+
+        if(
+            typeof this.renderBrainHistory ===
+                "function"
+        ){
+
+            this.renderBrainHistory();
+
+        }
+
+
+        requestAnimationFrame(
+            () => {
+
+                window.BrainApp
+                    ?.focusInput?.();
+
+            }
+        );
+
+
+        return true;
+
+    },
+
+
+    closeBrain(){
+
+        this.saveBrainState();
+
+
+        if(
+            this.brainOutsideHandler
+        ){
+
+            document.removeEventListener(
+                "pointerdown",
+                this.brainOutsideHandler
+            );
+
+
+            this.brainOutsideHandler =
+                null;
+
+        }
+
+
+        document
+            .querySelectorAll(
+                "#brainPanel"
+            )
+            .forEach(
+                panel =>
+                    panel.remove()
+            );
+
+
+        return true;
+
+    },
+
+  /* =====================================================
+       BRAIN CONFIRMATION
+    ===================================================== */
+
+    async confirmBrainAction(
+        confirmationId
+    ){
+
+        if(
+            this.brainSending
+        ){
+
+            return false;
+
+        }
+
+
+        const id =
+            this.normalizeText(
+                confirmationId,
+                180
+            );
+
+
+        if(!id){
+
+            return false;
+
+        }
+
+
+        const gateway =
+            this.getBrainGateway();
+
+
+        const session =
+            this.getActiveBrainSession();
+
+
+        const pending =
+            session?.pendingConfirmation ||
+            null;
+
+
+        if(
+            !gateway ||
+            typeof gateway.confirm !==
+                "function" ||
+            !session ||
+            !pending ||
+            String(
+                pending.id ||
+                ""
+            ) !==
+                id
+        ){
+
+            return false;
+
+        }
+
+
+        this.brainSending =
+            true;
+
+
+        try{
+
+            window.BrainApp
+                ?.setBusy?.(
+                    true,
+                    "Onaylanan işlem uygulanıyor..."
+                );
+
+        } catch(error){
+
+            /* non-fatal */
+
+        }
+
+
+        let result =
+            null;
+
+
+        try{
+
+            result =
+                await Promise.resolve(
+                    gateway.confirm(
+                        id,
+                        pending.prompt ||
+                        "",
+                        {
+                            context:
+                                pending.context &&
+                                typeof pending.context ===
+                                    "object"
+                                    ? {
+                                        ...pending.context
+                                    }
+                                    : {}
+                        }
+                    )
+                );
+
+        } catch(error){
+
+            console.error(
+                "Brain confirmation uygulanamadı:",
+                error
+            );
+
+
+            result = {
+                executed:
+                    false,
+
+                error:
+                    true,
+
+                message:
+                    "Onaylanan işlem uygulanamadı."
+            };
+
+        } finally {
+
+            this.brainSending =
+                false;
+
+
+            try{
+
+                window.BrainApp
+                    ?.setBusy?.(
+                        false
+                    );
+
+            } catch(error){
+
+                /* non-fatal */
+
+            }
+
+        }
+
+
+        const reply =
+            result?.actionResult
+                ?.message ||
+            result?.reply ||
+            result?.message ||
+            (
+                result?.executed
+                    ? "İşlem tamamlandı."
+                    : "İşlem uygulanamadı."
+            );
+
+
+        if(
+            !Array.isArray(
+                session.actions
+            )
+        ){
+
+            session.actions =
+                [];
+
+        }
+
+
+        session.actions.push({
+            id:
+                this.createId(
+                    "brain-action"
+                ),
+
+            role:
+                "brain",
+
+            type:
+                result?.executed
+                    ? "action-result"
+                    : "action-failed",
+
+            content:
+                String(
+                    reply ||
+                    ""
+                ),
+
+            createdAt:
+                Date.now(),
+
+            confirmationId:
+                id,
+
+            executed:
+                Boolean(
+                    result?.executed
+                ),
+
+            actionType:
+                result?.policy
+                    ?.actionType ||
+                pending.actionType ||
+                null,
+
+            context:{
+                page:
+                    pending.context
+                        ?.page ||
+                    pending.context
+                        ?.screen ||
+                    null
+            },
+
+            appLinks:
+                this.extractBrainAppMentions(
+                    reply
+                )
+        });
+
+
+        session.pendingConfirmation =
+            null;
+
+
+        session.updatedAt =
+            Date.now();
+
+
+        this.updateBrainConversationSummary(
+            session
+        );
+
+
+        this.saveBrainState();
+
+
+        this.renderBrainHistory();
+
+
+        try{
+
+            window.BrainApp
+                ?.refreshConfirmation?.(
+                    null
+                );
+
+
+            window.BrainApp
+                ?.refreshStatus?.();
+
+
+            window.BrainApp
+                ?.refreshContext?.();
+
+
+            window.BrainApp
+                ?.focusInput?.();
+
+        } catch(error){
+
+            /* non-fatal */
+
+        }
+
+
+        return Boolean(
+            result?.executed
+        );
+
+    },
+
+
+    cancelBrainConfirmation(
+        confirmationId
+    ){
+
+        const id =
+            this.normalizeText(
+                confirmationId,
+                180
+            );
+
+
+        if(!id){
+
+            return false;
+
+        }
+
+
+        const gateway =
+            this.getBrainGateway();
+
+
+        const session =
+            this.getActiveBrainSession();
+
+
+        if(
+            !session ||
+            String(
+                session
+                    .pendingConfirmation
+                    ?.id ||
+                ""
+            ) !==
+                id
+        ){
+
+            return false;
+
+        }
+
+
+        const pending =
+            session.pendingConfirmation;
+
+
+        let cancelled =
+            true;
+
+
+        if(
+            gateway &&
+            typeof gateway.cancelConfirmation ===
+                "function"
+        ){
+
+            try{
+
+                cancelled =
+                    gateway.cancelConfirmation(
+                        id
+                    ) !==
+                        false;
+
+            } catch(error){
+
+                console.error(
+                    "Brain confirmation iptal edilemedi:",
+                    error
+                );
+
+
+                return false;
+
+            }
+
+        }
+
+
+        if(!cancelled){
+
+            return false;
 
         }
 
 
         if(
-              point.page &&
-              point.entityId
+            !Array.isArray(
+                session.actions
+            )
         ){
 
-           this.openEntityPage(
-              point.page
-           );
+            session.actions =
+                [];
+
+        }
+
+
+        session.actions.push({
+            id:
+                this.createId(
+                    "brain-action"
+                ),
+
+            role:
+                "system",
+
+            type:
+                "confirmation-cancelled",
+
+            content:
+                "İşlem onayı iptal edildi.",
+
+            createdAt:
+                Date.now(),
+
+            confirmationId:
+                id,
+
+            context:{
+                page:
+                    pending
+                        ?.context
+                        ?.page ||
+                    null
+            },
+
+            appLinks:
+                []
+        });
+
+
+        session.pendingConfirmation =
+            null;
+
+
+        session.updatedAt =
+            Date.now();
+
+
+        this.updateBrainConversationSummary(
+            session
+        );
+
+
+        this.saveBrainState();
+
+
+        this.renderBrainHistory();
+
+
+        try{
+
+            window.BrainApp
+                ?.refreshConfirmation?.(
+                    null
+                );
+
+
+            window.BrainApp
+                ?.refreshStatus?.();
+
+
+            window.BrainApp
+                ?.focusInput?.();
+
+        } catch(error){
+
+            /* non-fatal */
 
         }
 
 
         return true;
 
-     }
+    },
 
 
-     if(
-           point.page
-     ){
+    /* =====================================================
+       BRAIN APP LINKS
+    ===================================================== */
 
-        return this.openEntityPage(
-           point.page
-        );
+    getBrainAppDefinitions(){
 
-     }
+        return [
 
+            {
+                id:
+                    "applications",
 
-     if(
-           point.screen ===
-              "create"
-     ){
+                label:
+                    "Applications",
 
-        return this.openCreate();
+                words:[
+                    "applications",
+                    "uygulamalar",
+                    "uygulama"
+                ]
+            },
 
-     }
 
+            {
+                id:
+                    "vaero",
 
-     if(
-           point.screen ===
-              "worlds"
-     ){
+                label:
+                    "VAERO",
 
-        return this.openWorlds();
+                words:[
+                    "vaero"
+                ]
+            },
 
-     }
 
+            {
+                id:
+                    "profile",
 
-     return this.openHome();
+                label:
+                    "Profil",
 
-  },
+                words:[
+                    "profil",
+                    "profile"
+                ]
+            },
 
-  /* =====================================================
-     BRAIN HISTORY
-  ===================================================== */
 
-  getBrainActionText(action){
+            {
+                id:
+                    "identity",
 
-     if(
-           typeof action ===
-              "string"
-     ){
+                label:
+                    "Kimlik",
 
-        return action;
+                words:[
+                    "kimlik",
+                    "identity"
+                ]
+            },
 
-     }
 
+            {
+                id:
+                    "memory",
 
-     if(
-           action &&
-           typeof action ===
-              "object"
-     ){
+                label:
+                    "Hafıza",
 
-        return String(
-           action.content ||
-           action.text ||
-           action.message ||
-           ""
-        );
+                words:[
+                    "hafıza",
+                    "hafiza",
+                    "memory"
+                ]
+            },
 
-     }
 
+            {
+                id:
+                    "timeline",
 
-     return "";
+                label:
+                    "Zaman Çizelgesi",
 
-  },
+                words:[
+                    "timeline",
+                    "zaman çizelgesi",
+                    "zaman cizelgesi"
+                ]
+            },
 
 
-  escapeBrainHTML(value){
+            {
+                id:
+                    "bridge",
 
-     return String(
-        value ?? ""
-     )
-        .replaceAll(
-           "&",
-           "&amp;"
-        )
-        .replaceAll(
-           "<",
-           "&lt;"
-        )
-        .replaceAll(
-           ">",
-           "&gt;"
-        )
-        .replaceAll(
-           '"',
-           "&quot;"
-        )
-        .replaceAll(
-           "'",
-           "&#039;"
-        );
+                label:
+                    "Köprü",
 
-  },
+                words:[
+                    "köprü",
+                    "kopru",
+                    "bridge"
+                ]
+            },
 
 
-  renderBrainHistory(){
+            {
+                id:
+                    "evolution",
 
-     const history =
-        document.getElementById(
-           "brainHistory"
-        );
+                label:
+                    "Evrim",
 
+                words:[
+                    "evrim",
+                    "evolution"
+                ]
+            },
 
-     const miniHistory =
-        document.getElementById(
-           "brainMiniHistory"
-        );
 
+            {
+                id:
+                    "organs",
 
-     const brain =
-        this.getService(
-           "brain"
-        );
+                label:
+                    "Organlar",
 
+                words:[
+                    "organ",
+                    "organlar"
+                ]
+            },
 
-     if(
-           !history ||
-           !brain
-     ){
 
-        return false;
+            {
+                id:
+                    "settings",
 
-     }
+                label:
+                    "Ayarlar",
 
+                words:[
+                    "ayar",
+                    "ayarlar",
+                    "settings"
+                ]
+            },
 
-     history.innerHTML =
-        "";
 
+            {
+                id:
+                    "discovery",
 
-     if(miniHistory){
+                label:
+                    "Discovery",
 
-        miniHistory.innerHTML =
-           "";
+                words:[
+                    "discovery",
+                    "keşif",
+                    "kesif"
+                ]
+            }
 
-     }
+        ];
 
+    },
 
-     const todaySession =
-        this.getTodayBrainConversationSession(
-           brain
-        );
 
+    extractBrainAppMentions(text){
 
-     const actions =
-        Array.isArray(
-           todaySession?.actions
-        )
+        const normalized =
+            String(
+                text ||
+                ""
+            )
+                .toLocaleLowerCase(
+                    "tr-TR"
+                );
 
-           ? [
-              ...todaySession.actions
-           ]
-              .filter(
-                 action =>
-                    this
-                       .getBrainActionText(
-                          action
-                       )
-                       .trim()
-              )
-              .sort(
-                 (a,b) =>
-                    (
-                       a?.createdAt ||
-                       0
-                    ) -
-                    (
-                       b?.createdAt ||
-                       0
-                    )
-              )
 
-           : [];
+        if(!normalized){
 
+            return [];
 
-     const flow =
-        document.createElement(
-           "div"
-        );
+        }
 
 
-     flow.className =
-        "brain-chat-flow";
+        const seen =
+            new Set();
 
 
-     if(
-           actions.length ===
-              0
-     ){
+        return this
+            .getBrainAppDefinitions()
+            .filter(
+                app => {
 
-        flow.innerHTML = `
-           <div class="brain-chat-empty">
+                    if(
+                        !app ||
+                        !app.id ||
+                        !Array.isArray(
+                            app.words
+                        )
+                    ){
 
-              <strong>
-                 Bugünün sohbeti
-              </strong>
+                        return false;
 
-              <span>
-                 Brain’e bir şey yazarak başlayabilirsin.
-              </span>
+                    }
 
-           </div>
-        `;
 
-     }
+                    const matched =
+                        app.words.some(
+                            word =>
+                                normalized.includes(
+                                    String(
+                                        word ||
+                                        ""
+                                    )
+                                        .toLocaleLowerCase(
+                                            "tr-TR"
+                                        )
+                                )
+                        );
 
-     else {
 
-        actions.forEach(
-           action => {
+                    if(!matched){
 
-              const content =
-                 this.getBrainActionText(
-                    action
-                 );
+                        return false;
 
+                    }
 
-              const time =
-                 new Date(
-                    action.createdAt ||
-                    Date.now()
-                 )
-                    .toLocaleTimeString(
-                       "tr-TR",
-                       {
-                          hour:
-                             "2-digit",
 
-                          minute:
-                             "2-digit"
-                       }
+                    if(
+                        seen.has(
+                            app.id
+                        )
+                    ){
+
+                        return false;
+
+                    }
+
+
+                    seen.add(
+                        app.id
                     );
 
 
-              if(
-                    action.role ===
-                       "system" ||
-                    action.type ===
-                       "navigation"
-              ){
+                    return true;
 
-                 const systemRow =
-                    document.createElement(
-                       "div"
-                    );
+                }
+            )
+            .map(
+                app => ({
+                    app:
+                        app.id,
 
+                    label:
+                        app.label
+                })
+            );
 
-                 systemRow.className =
-                    "brain-chat-system";
-
-
-                 systemRow.innerHTML = `
-                    <span class="brain-chat-system-time">
-                       ${this.escapeBrainHTML(time)}
-                    </span>
-
-                    <span>
-                       ${this.escapeBrainHTML(content)}
-                    </span>
-                 `;
+    },
 
 
-                 flow.appendChild(
-                    systemRow
-                 );
+    openBrainAppLink(app){
+
+        const target =
+            String(
+                app ||
+                ""
+            )
+                .trim()
+                .toLowerCase();
 
 
-                 return;
+        if(!target){
 
-              }
+            return false;
 
-
-              const message =
-                 document.createElement(
-                    "div"
-                 );
+        }
 
 
-              message.className =
-                 action.role ===
-                    "user"
-
-                    ? "brain-chat-message brain-chat-user"
-
-                    : "brain-chat-message brain-chat-brain";
-
-
-              const links =
-                 Array.isArray(
-                    action.appLinks
-                 )
-
-                    ? action.appLinks
-                       .filter(
-                          (
-                             link,
-                             index,
-                             all
-                          ) =>
-                             link?.app &&
-                             all.findIndex(
-                                item =>
-                                   item?.app ===
-                                   link.app
-                             ) ===
-                             index
-                       )
-
-                    : [];
-
-
-              message.innerHTML = `
-                 <div class="brain-chat-meta">
-
-                    <span>
-                       ${this.escapeBrainHTML(time)}
-                    </span>
-
-                    ${
-                       action?.context?.page
-                          ? `
-                             <span class="brain-chat-context">
-                                ${this.escapeBrainHTML(
-                                   action.context.page
-                                )}
-                             </span>
-                          `
-                          : ""
-                    }
-
-                    ${
-                       action?.actionType
-                          ? `
-                             <span class="brain-chat-context">
-                                ${this.escapeBrainHTML(
-                                   action.actionType
-                                )}
-                             </span>
-                          `
-                          : ""
-                    }
-
-                 </div>
-
-
-                 <div class="brain-chat-content">
-
-                    ${this.escapeBrainHTML(content)}
-
-                    ${
-                       links.length
-
-                          ? `
-                             <span class="brain-message-app-links">
-
-                                ${links
-                                   .map(
-                                      link => `
-                                         <button
-                                            type="button"
-                                            class="brain-message-app-link"
-                                            data-brain-app="${this.escapeBrainHTML(
-                                               link.app
-                                            )}"
-                                         >
-                                            ${this.escapeBrainHTML(
-                                               link.label
-                                            )}
-                                         </button>
-                                      `
-                                   )
-                                   .join("")}
-
-                             </span>
-                          `
-
-                          : ""
-                    }
-
-                 </div>
-              `;
-
-
-              flow.appendChild(
-                 message
-              );
-
-           }
-        );
-
-     }
-
-
-     history.appendChild(
-        flow
-     );
-
-
-     history
-        .querySelectorAll(
-           "[data-brain-app]"
-        )
-        .forEach(
-           button => {
-
-              button.addEventListener(
-                 "click",
-                 () => {
-
-                    this.openBrainAppLink(
-                       button.dataset
-                          .brainApp
-                    );
-
-                 }
-              );
-
-           }
-        );
-
-
-     if(miniHistory){
-
-        const recent =
-           actions
-              .filter(
-                 action =>
-                    action.role ===
-                       "user" ||
-                    action.role ===
-                       "brain"
-              )
-              .slice(-3);
+        this.closeBrain();
 
 
         if(
-              window.BrainApp &&
-              typeof window.BrainApp.renderMiniHistory ===
-                 "function"
+            target ===
+                "applications"
         ){
 
-           window.BrainApp.renderMiniHistory(
-              recent.map(
-                 action => ({
+            return this.openApplicationsApp();
 
-                    role:
-                       action.role,
+        }
 
-                    message:
-                       this.getBrainActionText(
-                          action
-                       )
 
-                 })
-              )
-           );
+        if(
+            target ===
+                "vaero"
+        ){
+
+            return this.openVaeroApp();
+
+        }
+
+
+        if(
+            target ===
+                "discovery"
+        ){
+
+            return this.restartDiscovery();
+
+        }
+
+
+        if(
+            !this
+                .getAllowedEntityPages()
+                .includes(
+                    target
+                )
+        ){
+
+            return false;
+
+        }
+
+
+        return this.openEntityPage(
+            target
+        );
+
+    },
+
+
+    /* =====================================================
+       BRAIN SEND
+    ===================================================== */
+
+    async sendBrainMessage(){
+
+        if(
+            this.brainSending
+        ){
+
+            return false;
+
+        }
+
+
+        const input =
+            document.getElementById(
+                "brainInput"
+            );
+
+
+        if(!input){
+
+            return false;
+
+        }
+
+
+        const text =
+            String(
+                input.value ||
+                ""
+            )
+                .trim()
+                .slice(
+                    0,
+                    12000
+                );
+
+
+        if(!text){
+
+            return false;
+
+        }
+
+
+        const brain =
+            this.getService(
+                "brain"
+            );
+
+
+        if(!brain){
+
+            return false;
+
+        }
+
+
+        if(
+            !Array.isArray(
+                brain.sessions
+            )
+        ){
+
+            brain.sessions =
+                [];
+
+        }
+
+
+        const gateway =
+            this.getBrainGateway();
+
+
+        const contextService =
+            this.getService(
+                "brainContext"
+            );
+
+
+        let context =
+            null;
+
+
+        try{
+
+            if(
+                contextService &&
+                typeof contextService.build ===
+                    "function"
+            ){
+
+                context =
+                    contextService.build({
+                        message:
+                            text
+                    });
+
+            }
+
+        } catch(error){
+
+            console.warn(
+                "Brain Context oluşturulamadı:",
+                error
+            );
+
+
+            context =
+                null;
+
+        }
+
+
+        const session =
+            this.getTodayBrainConversationSession(
+                brain
+            ) ||
+            this.createTodayBrainConversation(
+                brain
+            );
+
+
+        if(!session){
+
+            return false;
+
+        }
+
+
+        if(
+            !Array.isArray(
+                session.actions
+            )
+        ){
+
+            session.actions =
+                [];
+
+        }
+
+
+        const now =
+            Date.now();
+
+
+        session.actions.push({
+            id:
+                this.createId(
+                    "brain-action"
+                ),
+
+            role:
+                "user",
+
+            type:
+                "message",
+
+            content:
+                text,
+
+            createdAt:
+                now,
+
+            context:{
+                app:
+                    context?.app ||
+                    null,
+
+                screen:
+                    context?.screen ||
+                    null,
+
+                page:
+                    context?.page ||
+                    null,
+
+                entityId:
+                    context?.entity
+                        ?.id ||
+                    context?.entityId ||
+                    null,
+
+                worldId:
+                    context?.world
+                        ?.id ||
+                    context?.worldId ||
+                    null
+            },
+
+            appLinks:
+                this.extractBrainAppMentions(
+                    text
+                )
+        });
+
+
+        session.updatedAt =
+            now;
+
+
+        input.value =
+            "";
+
+
+        this.brainSending =
+            true;
+
+
+        try{
+
+            window.BrainApp
+                ?.setBusy?.(
+                    true,
+                    "Brain düşünüyor..."
+                );
+
+        } catch(error){
+
+            /* non-fatal */
+
+        }
+
+
+        this.renderBrainHistory();
+
+
+        let response =
+            null;
+
+
+        try{
+
+            if(
+                gateway &&
+                typeof gateway.ask ===
+                    "function"
+            ){
+
+                response =
+                    await Promise.resolve(
+                        gateway.ask(
+                            text,
+                            {
+                                context:
+                                    context ||
+                                    {}
+                            }
+                        )
+                    );
+
+            }
+
+            else if(
+                typeof brain.ask ===
+                    "function"
+            ){
+
+                response =
+                    await Promise.resolve(
+                        brain.ask(
+                            text,
+                            {
+                                context:
+                                    context ||
+                                    {}
+                            }
+                        )
+                    );
+
+            }
+
+            else if(
+                typeof brain.receive ===
+                    "function"
+            ){
+
+                response =
+                    await Promise.resolve(
+                        brain.receive(
+                            text,
+                            context ||
+                            {}
+                        )
+                    );
+
+            }
+
+            else {
+
+                response = {
+                    reply:
+                        "Brain servis bağlantısı hazır değil.",
+
+                    error:
+                        true
+                };
+
+            }
+
+        } catch(error){
+
+            console.error(
+                "Brain mesajı işlenemedi:",
+                error
+            );
+
+
+            response = {
+                reply:
+                    "Brain isteği şu anda tamamlanamadı.",
+
+                error:
+                    true
+            };
+
+        } finally {
+
+            this.brainSending =
+                false;
+
+
+            try{
+
+                window.BrainApp
+                    ?.setBusy?.(
+                        false
+                    );
+
+            } catch(error){
+
+                /* non-fatal */
+
+            }
+
+        }
+
+
+        let replyText =
+            "";
+
+
+        if(
+            typeof response ===
+                "string"
+        ){
+
+            replyText =
+                response;
+
+        }
+
+        else if(
+            response &&
+            typeof response ===
+                "object"
+        ){
+
+            replyText =
+                response.reply ||
+                response.message ||
+                response.text ||
+                "";
+
+        }
+
+
+        replyText =
+            String(
+                replyText ||
+                ""
+            )
+                .trim()
+                .slice(
+                    0,
+                    30000
+                );
+
+
+        /*
+         * Pending confirmation yalnızca gateway gerçekten
+         * confirmation nesnesi döndürdüğünde saklanır.
+         */
+
+        if(
+            response &&
+            typeof response ===
+                "object" &&
+            response.confirmation &&
+            response.confirmation.id
+        ){
+
+            session.pendingConfirmation = {
+                ...response.confirmation,
+
+                prompt:
+                    text,
+
+                context:
+                    context &&
+                    typeof context ===
+                        "object"
+                        ? {
+                            ...context
+                        }
+                        : {},
+
+                actionType:
+                    response?.policy
+                        ?.actionType ||
+                    response.confirmation
+                        .actionType ||
+                    null,
+
+                receivedAt:
+                    Date.now()
+            };
+
+        }
+
+        else if(
+            response?.confirmationApproved ===
+                true ||
+            response?.executed ===
+                true ||
+            response?.blocked ===
+                true
+        ){
+
+            session.pendingConfirmation =
+                null;
+
+        }
+
+
+        if(replyText){
+
+            session.actions.push({
+                id:
+                    this.createId(
+                        "brain-action"
+                    ),
+
+                role:
+                    "brain",
+
+                type:
+                    response
+                        ?.requiresConfirmation &&
+                    !response
+                        ?.confirmationApproved
+                        ? "confirmation-required"
+                        : "reply",
+
+                content:
+                    replyText,
+
+                createdAt:
+                    Date.now(),
+
+                confirmationId:
+                    response
+                        ?.confirmation
+                        ?.id ||
+                    null,
+
+                requiresConfirmation:
+                    Boolean(
+                        response
+                            ?.requiresConfirmation
+                    ),
+
+                blocked:
+                    Boolean(
+                        response?.blocked
+                    ),
+
+                executed:
+                    Boolean(
+                        response?.executed
+                    ),
+
+                actionType:
+                    response
+                        ?.policy
+                        ?.actionType ||
+                    null,
+
+                context:{
+                    app:
+                        context?.app ||
+                        null,
+
+                    screen:
+                        context?.screen ||
+                        null,
+
+                    page:
+                        context?.page ||
+                        null
+                },
+
+                appLinks:
+                    this.extractBrainAppMentions(
+                        replyText
+                    )
+            });
+
+        }
+
+
+        session.updatedAt =
+            Date.now();
+
+
+        this.updateBrainConversationSummary(
+            session
+        );
+
+
+        this.saveBrainState();
+
+
+        this.renderBrainHistory();
+
+
+        try{
+
+            window.BrainApp
+                ?.refreshConfirmation?.(
+                    session
+                        .pendingConfirmation ||
+                    null
+                );
+
+
+            window.BrainApp
+                ?.refreshContext?.();
+
+
+            window.BrainApp
+                ?.refreshStatus?.();
+
+        } catch(error){
+
+            /* non-fatal */
+
+        }
+
+
+        const panel =
+            document.getElementById(
+                "brainPanel"
+            );
+
+
+        if(panel){
+
+            panel.classList.remove(
+                "is-compact"
+            );
+
+
+            panel.classList.add(
+                "is-expanded"
+            );
+
+        }
+
+
+        try{
+
+            window.BrainApp
+                ?.focusInput?.();
+
+        } catch(error){
+
+            /* non-fatal */
+
+        }
+
+
+        return true;
+
+    },
+
+
+    /* =====================================================
+       BRAIN SUMMARY
+    ===================================================== */
+
+    updateBrainConversationSummary(
+        session
+    ){
+
+        if(
+            !session ||
+            !Array.isArray(
+                session.actions
+            )
+        ){
+
+            return false;
+
+        }
+
+
+        const messages =
+            session.actions
+                .filter(
+                    action =>
+                        action?.role ===
+                            "user" &&
+                        action.content
+                )
+                .map(
+                    action =>
+                        String(
+                            action.content
+                        ).trim()
+                )
+                .filter(
+                    Boolean
+                )
+                .slice(
+                    -3
+                );
+
+
+        const summary =
+            messages.join(
+                " · "
+            );
+
+
+        session.summary =
+            summary.length >
+                160
+                ? `${summary
+                    .slice(
+                        0,
+                        160
+                    )
+                    .trim()}…`
+                : (
+                    summary ||
+                    null
+                );
+
+
+        /*
+         * Kullanıcının ilk mesajlarından kaba bir title
+         * üretmek yerine mevcut conversation title
+         * authority'sini koruyoruz.
+         */
+
+        if(
+            !session.title ||
+            !String(
+                session.title
+            ).trim()
+        ){
+
+            session.title =
+                "Brain Sohbeti · Bugün";
+
+        }
+
+
+        return true;
+
+    },
+
+
+    /* =====================================================
+       RESUME POINT
+    ===================================================== */
+
+    saveBrainResumePoint(note){
+
+        const brain =
+            this.getService(
+                "brain"
+            );
+
+
+        const contextService =
+            this.getService(
+                "brainContext"
+            );
+
+
+        if(!brain){
+
+            return false;
+
+        }
+
+
+        let context =
+            null;
+
+
+        try{
+
+            if(
+                contextService &&
+                typeof contextService.build ===
+                    "function"
+            ){
+
+                context =
+                    contextService.build();
+
+            }
+
+        } catch(error){
+
+            context =
+                null;
+
+        }
+
+
+        const engine =
+            this.getEngine();
+
+
+        brain.resumePoint = {
+
+            id:
+                this.createId(
+                    "resume"
+                ),
+
+            app:
+                context?.app ||
+                null,
+
+            screen:
+                context?.screen ||
+                engine?.currentView ||
+                null,
+
+            page:
+                context?.page ||
+                engine?.currentEntityPage ||
+                null,
+
+            worldId:
+                context?.world
+                    ?.id ||
+                context?.worldId ||
+                engine?.currentWorld
+                    ?.id ||
+                null,
+
+            entityId:
+                context?.entity
+                    ?.id ||
+                context?.entityId ||
+                engine
+                    ?.currentOpenedEntity
+                    ?.id ||
+                null,
+
+            note:
+                this.normalizeText(
+                    note,
+                    500
+                ),
+
+            savedAt:
+                Date.now()
+
+        };
+
+
+        this.saveBrainState();
+
+
+        this.renderBrainHistory();
+
+
+        return true;
+
+    },
+
+
+    restoreBrainResumePoint(){
+
+        const brain =
+            this.getService(
+                "brain"
+            );
+
+
+        const point =
+            brain?.resumePoint ||
+            null;
+
+
+        if(
+            !point ||
+            typeof point !==
+                "object"
+        ){
+
+            return false;
+
+        }
+
+
+        /*
+         * World varsa önce World bağlamı geri yüklenir.
+         */
+
+        if(
+            point.worldId
+        ){
+
+            const openedWorld =
+                this.openWorld(
+                    point.worldId
+                );
+
+
+            if(
+                openedWorld ===
+                    false
+            ){
+
+                return false;
+
+            }
+
+
+            if(
+                point.entityId
+            ){
+
+                const openedEntity =
+                    this.openEntity(
+                        point.entityId
+                    );
+
+
+                if(
+                    openedEntity ===
+                        false
+                ){
+
+                    return false;
+
+                }
+
+
+                if(
+                    point.page
+                ){
+
+                    return this.openEntityPage(
+                        point.page
+                    );
+
+                }
+
+            }
+
+
+            return true;
+
+        }
+
+
+        /*
+         * Entity page resume.
+         */
+
+        if(
+            point.page
+        ){
+
+            return this.openEntityPage(
+                point.page
+            );
+
+        }
+
+
+        /*
+         * System-level screens.
+         */
+
+        if(
+            point.app ===
+                "vaero"
+        ){
+
+            return this.openVaeroApp();
+
+        }
+
+
+        if(
+            point.app ===
+                "applications"
+        ){
+
+            return this.openApplicationsApp();
+
+        }
+
+
+        if(
+            point.screen ===
+                "create"
+        ){
+
+            return this.openCreate();
+
+        }
+
+
+        if(
+            point.screen ===
+                "worlds"
+        ){
+
+            return this.openWorlds();
+
+        }
+
+
+        return this.openHome();
+
+    },
+
+
+    /* =====================================================
+       BRAIN HISTORY HELPERS
+    ===================================================== */
+
+    getBrainActionText(action){
+
+        if(
+            typeof action ===
+                "string"
+        ){
+
+            return action;
+
+        }
+
+
+        if(
+            action &&
+            typeof action ===
+                "object"
+        ){
+
+            return String(
+                action.content ||
+                action.fullContent ||
+                action.text ||
+                action.message ||
+                ""
+            );
+
+        }
+
+
+        return "";
+
+    },
+
+
+    escapeBrainHTML(value){
+
+        const ui =
+            typeof window !==
+                "undefined"
+                ? window.UI
+                : null;
+
+
+        if(
+            ui &&
+            typeof ui.escapeHTML ===
+                "function"
+        ){
+
+            try{
+
+                return ui.escapeHTML(
+                    value
+                );
+
+            } catch(error){
+
+                /* fallback */
+
+            }
+
+        }
+
+
+        return String(
+            value ??
+            ""
+        )
+            .replaceAll(
+                "&",
+                "&amp;"
+            )
+            .replaceAll(
+                "<",
+                "&lt;"
+            )
+            .replaceAll(
+                ">",
+                "&gt;"
+            )
+            .replaceAll(
+                '"',
+                "&quot;"
+            )
+            .replaceAll(
+                "'",
+                "&#039;"
+            );
+
+    },
+
+  renderBrainHistory(){
+
+        const history =
+            document.getElementById(
+                "brainHistory"
+            );
+
+
+        const miniHistory =
+            document.getElementById(
+                "brainMiniHistory"
+            );
+
+
+        const brain =
+            this.getService(
+                "brain"
+            );
+
+
+        if(
+            !history ||
+            !brain
+        ){
+
+            return false;
+
+        }
+
+
+        history.innerHTML =
+            "";
+
+
+        if(miniHistory){
+
+            miniHistory.innerHTML =
+                "";
+
+        }
+
+
+        const todaySession =
+            this.getTodayBrainConversationSession(
+                brain
+            );
+
+
+        const actions =
+            Array.isArray(
+                todaySession?.actions
+            )
+                ? [
+                    ...todaySession.actions
+                ]
+                    .filter(
+                        action =>
+                            this
+                                .getBrainActionText(
+                                    action
+                                )
+                                .trim()
+                    )
+                    .sort(
+                        (
+                            a,
+                            b
+                        ) =>
+                            (
+                                Number(
+                                    a?.createdAt
+                                ) ||
+                                0
+                            ) -
+                            (
+                                Number(
+                                    b?.createdAt
+                                ) ||
+                                0
+                            )
+                    )
+                : [];
+
+
+        const flow =
+            document.createElement(
+                "div"
+            );
+
+
+        flow.className =
+            "brain-chat-flow";
+
+
+        if(
+            actions.length ===
+                0
+        ){
+
+            flow.innerHTML = `
+                <div class="brain-chat-empty">
+
+                    <strong>
+                        Bugünün sohbeti
+                    </strong>
+
+                    <span>
+                        Brain’e bir şey yazarak başlayabilirsin.
+                    </span>
+
+                </div>
+            `;
 
         }
 
         else {
 
-           const miniFlow =
-              document.createElement(
-                 "div"
-              );
+            actions.forEach(
+                action => {
+
+                    const content =
+                        this.getBrainActionText(
+                            action
+                        );
 
 
-           miniFlow.className =
-              "brain-mini-chat-flow";
+                    if(!content){
+
+                        return;
+
+                    }
 
 
-           recent.forEach(
-              action => {
+                    const createdAt =
+                        Number(
+                            action?.createdAt
+                        );
 
-                 const row =
-                    document.createElement(
-                       "div"
+
+                    const date =
+                        new Date(
+                            Number.isFinite(
+                                createdAt
+                            )
+                                ? createdAt
+                                : Date.now()
+                        );
+
+
+                    const time =
+                        date.toLocaleTimeString(
+                            "tr-TR",
+                            {
+                                hour:
+                                    "2-digit",
+
+                                minute:
+                                    "2-digit"
+                            }
+                        );
+
+
+                    /*
+                     * System/navigation kayıtları
+                     * conversation mesajı gibi gösterilmez.
+                     */
+
+                    if(
+                        action.role ===
+                            "system" ||
+                        action.type ===
+                            "navigation"
+                    ){
+
+                        const systemRow =
+                            document.createElement(
+                                "div"
+                            );
+
+
+                        systemRow.className =
+                            "brain-chat-system";
+
+
+                        systemRow.innerHTML = `
+                            <span class="brain-chat-system-time">
+                                ${this.escapeBrainHTML(
+                                    time
+                                )}
+                            </span>
+
+                            <span>
+                                ${this.escapeBrainHTML(
+                                    content
+                                )}
+                            </span>
+                        `;
+
+
+                        flow.appendChild(
+                            systemRow
+                        );
+
+
+                        return;
+
+                    }
+
+
+                    const message =
+                        document.createElement(
+                            "div"
+                        );
+
+
+                    const role =
+                        action.role ===
+                            "user"
+                            ? "user"
+                            : "brain";
+
+
+                    message.className =
+                        role ===
+                            "user"
+                            ? "brain-chat-message brain-chat-user"
+                            : "brain-chat-message brain-chat-brain";
+
+
+                    const links =
+                        Array.isArray(
+                            action.appLinks
+                        )
+                            ? action.appLinks
+                                .filter(
+                                    (
+                                        link,
+                                        index,
+                                        all
+                                    ) =>
+                                        link?.app &&
+                                        all.findIndex(
+                                            item =>
+                                                item?.app ===
+                                                    link.app
+                                        ) ===
+                                            index
+                                )
+                            : [];
+
+
+                    const page =
+                        action?.context?.page ||
+                        null;
+
+
+                    const actionType =
+                        action?.actionType ||
+                        null;
+
+
+                    message.innerHTML = `
+                        <div class="brain-chat-meta">
+
+                            <span>
+                                ${this.escapeBrainHTML(
+                                    time
+                                )}
+                            </span>
+
+                            ${
+                                page
+                                    ? `
+                                        <span class="brain-chat-context">
+                                            ${this.escapeBrainHTML(
+                                                page
+                                            )}
+                                        </span>
+                                      `
+                                    : ""
+                            }
+
+                            ${
+                                actionType
+                                    ? `
+                                        <span class="brain-chat-context">
+                                            ${this.escapeBrainHTML(
+                                                actionType
+                                            )}
+                                        </span>
+                                      `
+                                    : ""
+                            }
+
+                        </div>
+
+
+                        <div class="brain-chat-content">
+
+                            ${this.escapeBrainHTML(
+                                content
+                            )}
+
+                            ${
+                                links.length
+                                    ? `
+                                        <span class="brain-message-app-links">
+
+                                            ${links
+                                                .map(
+                                                    link => `
+                                                        <button
+                                                            type="button"
+                                                            class="brain-message-app-link"
+                                                            data-brain-app="${this.escapeBrainHTML(
+                                                                link.app
+                                                            )}"
+                                                        >
+                                                            ${this.escapeBrainHTML(
+                                                                link.label
+                                                            )}
+                                                        </button>
+                                                    `
+                                                )
+                                                .join("")}
+
+                                        </span>
+                                      `
+                                    : ""
+                            }
+
+                        </div>
+                    `;
+
+
+                    flow.appendChild(
+                        message
+                    );
+
+                }
+            );
+
+        }
+
+
+        history.appendChild(
+            flow
+        );
+
+
+        history
+            .querySelectorAll(
+                "[data-brain-app]"
+            )
+            .forEach(
+                button => {
+
+                    button.addEventListener(
+                        "click",
+                        () => {
+
+                            this.openBrainAppLink(
+                                button.dataset
+                                    .brainApp
+                            );
+
+                        }
+                    );
+
+                }
+            );
+
+
+        /* =================================================
+           MINI HISTORY
+        ================================================= */
+
+        if(miniHistory){
+
+            const recent =
+                actions
+                    .filter(
+                        action =>
+                            action.role ===
+                                "user" ||
+                            action.role ===
+                                "brain"
+                    )
+                    .slice(
+                        -3
                     );
 
 
-                 row.className =
-                    "brain-mini-chat-message";
+            if(
+                window.BrainApp &&
+                typeof window.BrainApp
+                    .renderMiniHistory ===
+                    "function"
+            ){
+
+                try{
+
+                    window.BrainApp
+                        .renderMiniHistory(
+                            recent.map(
+                                action => ({
+                                    role:
+                                        action.role,
+
+                                    message:
+                                        this.getBrainActionText(
+                                            action
+                                        )
+                                })
+                            )
+                        );
+
+                } catch(error){
+
+                    console.warn(
+                        "Brain mini history render edilemedi:",
+                        error
+                    );
+
+                }
+
+            }
+
+            else {
+
+                const miniFlow =
+                    document.createElement(
+                        "div"
+                    );
 
 
-                 row.innerHTML = `
-                    <strong>
-                       ${
-                          action.role ===
-                             "user"
-
-                             ? "Sen:"
-
-                             : "Brain:"
-                       }
-                    </strong>
-
-                    <span>
-                       ${this.escapeBrainHTML(
-                          this.getBrainActionText(
-                             action
-                          )
-                       )}
-                    </span>
-                 `;
+                miniFlow.className =
+                    "brain-mini-chat-flow";
 
 
-                 miniFlow.appendChild(
-                    row
-                 );
+                recent.forEach(
+                    action => {
 
-              }
-           );
+                        const row =
+                            document.createElement(
+                                "div"
+                            );
 
 
-           miniHistory.appendChild(
-              miniFlow
-           );
+                        row.className =
+                            "brain-mini-chat-message";
+
+
+                        row.innerHTML = `
+                            <strong>
+                                ${
+                                    action.role ===
+                                        "user"
+                                        ? "Sen:"
+                                        : "Brain:"
+                                }
+                            </strong>
+
+                            <span>
+                                ${this.escapeBrainHTML(
+                                    this.getBrainActionText(
+                                        action
+                                    )
+                                )}
+                            </span>
+                        `;
+
+
+                        miniFlow.appendChild(
+                            row
+                        );
+
+                    }
+                );
+
+
+                miniHistory.appendChild(
+                    miniFlow
+                );
+
+            }
+
+
+            miniHistory.onclick =
+                () => {
+
+                    const panel =
+                        document.getElementById(
+                            "brainPanel"
+                        );
+
+
+                    if(!panel){
+
+                        return;
+
+                    }
+
+
+                    panel.classList.remove(
+                        "is-compact"
+                    );
+
+
+                    panel.classList.add(
+                        "is-expanded"
+                    );
+
+
+                    try{
+
+                        window.BrainApp
+                            ?.focusInput?.();
+
+                    } catch(error){
+
+                        /* non-fatal */
+
+                    }
+
+                };
 
         }
 
 
-        miniHistory.onclick =
-           () => {
+        try{
 
-              const panel =
-                 document.getElementById(
-                    "brainPanel"
-                 );
-
-
-              if(panel){
-
-                 panel.classList.remove(
-                    "is-compact"
-                 );
+            window.BrainApp
+                ?.refreshConfirmation?.(
+                    todaySession
+                        ?.pendingConfirmation ||
+                    null
+                );
 
 
-                 panel.classList.add(
-                    "is-expanded"
-                 );
-
-              }
-
-           };
-
-     }
+            window.BrainApp
+                ?.refreshContext?.();
 
 
-     window.BrainApp?.refreshConfirmation?.(
-        todaySession
-           ?.pendingConfirmation ||
-        null
-     );
+            window.BrainApp
+                ?.refreshStatus?.();
 
+        } catch(error){
 
-     window.BrainApp?.refreshContext?.();
-
-
-     window.BrainApp?.refreshStatus?.();
-
-
-     requestAnimationFrame(
-        () => {
-
-           history.scrollTop =
-              history.scrollHeight;
-
-        }
-     );
-
-
-     return true;
-
-  },
-
-
-  /* =====================================================
-     EVOLUTION ACTIONS
-  ===================================================== */
-
-  handleEvolutionAction(
-     action,
-     button
-  ){
-
-     const engine =
-        this.getEngine();
-
-
-     if(
-           action ===
-              "evolution:filter" &&
-           window.EvolutionApp &&
-           typeof window.EvolutionApp
-              .setFilter ===
-              "function"
-     ){
-
-        window.EvolutionApp
-           .setFilter(
-              button.dataset.filter
-           );
-
-
-        engine?.mount();
-
-
-        return true;
-
-     }
-
-
-     if(
-           action ===
-              "evolution:event:open" &&
-           window.EvolutionApp &&
-           typeof window.EvolutionApp
-              .selectEvent ===
-              "function"
-     ){
-
-        window.EvolutionApp
-           .selectEvent(
-              button.dataset
-                 .eventId
-           );
-
-
-        engine?.mount();
-
-
-        return true;
-
-     }
-
-
-     if(
-           action ===
-              "evolution:event:close" &&
-           window.EvolutionApp &&
-           typeof window.EvolutionApp
-              .clearSelectedEvent ===
-              "function"
-     ){
-
-        window.EvolutionApp
-           .clearSelectedEvent();
-
-
-        engine?.mount();
-
-
-        return true;
-
-     }
-
-
-     if(
-           action ===
-              "evolution:linked:open"
-     ){
-
-        const target =
-           String(
-              button.dataset.target ||
-              ""
-           )
-              .trim()
-              .toLowerCase();
-
-
-        if(
-              target !==
-                 "timeline" &&
-              target !==
-                 "memory"
-        ){
-
-           return false;
+            /* non-fatal */
 
         }
 
 
-        if(
-              window.EvolutionApp &&
-              typeof window.EvolutionApp
-                 .clearSelectedEvent ===
-                 "function"
-        ){
+        requestAnimationFrame(
+            () => {
 
-           window.EvolutionApp
-              .clearSelectedEvent();
+                history.scrollTop =
+                    history.scrollHeight;
 
-        }
-
-
-        return this.openEntityPage(
-           target
+            }
         );
 
-     }
+
+        return true;
+
+    },
 
 
-     return false;
+    /* =====================================================
+       EVOLUTION ACTIONS
+       -----------------------------------------------------
+       EvolutionApp owns Evolution UI state.
+       Actions only routes generic Engine data-action calls.
+    ===================================================== */
 
-  }
+    handleEvolutionAction(
+        action,
+        button
+    ){
+
+        const targetAction =
+            String(
+                action ||
+                ""
+            )
+                .trim();
+
+
+        if(
+            !targetAction ||
+            !button
+        ){
+
+            return false;
+
+        }
+
+
+        const app =
+            window.EvolutionApp ||
+            null;
+
+
+        if(!app){
+
+            return false;
+
+        }
+
+
+        /*
+         * Filter
+         */
+
+        if(
+            targetAction ===
+                "evolution:filter" &&
+            typeof app.setFilter ===
+                "function"
+        ){
+
+            const filter =
+                String(
+                    button.dataset
+                        .filter ||
+                    ""
+                );
+
+
+            app.setFilter(
+                filter
+            );
+
+
+            /*
+             * EvolutionApp artık kendi remount/render
+             * davranışına sahipse onu kullan.
+             */
+
+            if(
+                typeof app.remount ===
+                    "function"
+            ){
+
+                app.remount();
+
+            }
+
+            else {
+
+                this.remount();
+
+            }
+
+
+            return true;
+
+        }
+
+
+        /*
+         * Open event
+         */
+
+        if(
+            targetAction ===
+                "evolution:event:open" &&
+            typeof app.selectEvent ===
+                "function"
+        ){
+
+            const eventId =
+                String(
+                    button.dataset
+                        .eventId ||
+                    ""
+                )
+                    .trim();
+
+
+            if(!eventId){
+
+                return false;
+
+            }
+
+
+            app.selectEvent(
+                eventId
+            );
+
+
+            if(
+                typeof app.remount ===
+                    "function"
+            ){
+
+                app.remount();
+
+            }
+
+            else {
+
+                this.remount();
+
+            }
+
+
+            return true;
+
+        }
+
+
+        /*
+         * Close event
+         */
+
+        if(
+            targetAction ===
+                "evolution:event:close" &&
+            typeof app.clearSelectedEvent ===
+                "function"
+        ){
+
+            app.clearSelectedEvent();
+
+
+            if(
+                typeof app.remount ===
+                    "function"
+            ){
+
+                app.remount();
+
+            }
+
+            else {
+
+                this.remount();
+
+            }
+
+
+            return true;
+
+        }
+
+
+        /*
+         * Linked Timeline / Memory navigation.
+         */
+
+        if(
+            targetAction ===
+                "evolution:linked:open"
+        ){
+
+            const target =
+                String(
+                    button.dataset
+                        .target ||
+                    ""
+                )
+                    .trim()
+                    .toLowerCase();
+
+
+            if(
+                target !==
+                    "timeline" &&
+                target !==
+                    "memory"
+            ){
+
+                return false;
+
+            }
+
+
+            if(
+                typeof app.clearSelectedEvent ===
+                    "function"
+            ){
+
+                app.clearSelectedEvent();
+
+            }
+
+
+            return this.openEntityPage(
+                target
+            );
+
+        }
+
+
+        return false;
+
+    },
+
+
+    /* =====================================================
+       GENERIC ACTION ROUTER HELPERS
+    ===================================================== */
+
+    getActionTarget(event){
+
+        if(
+            !event ||
+            !event.target
+        ){
+
+            return null;
+
+        }
+
+
+        try{
+
+            return event.target.closest(
+                "[data-action]"
+            );
+
+        } catch(error){
+
+            return null;
+
+        }
+
+    },
+
+
+    shouldPreventDefaultAction(action){
+
+        return [
+            "world:create:submit",
+            "world:edit:submit",
+            "entity:create:submit",
+            "entity:edit:submit"
+        ].includes(
+            action
+        );
+
+    },
+
+
+    /* =====================================================
+       ROUTE GENERIC ACTION
+    ===================================================== */
+
+    routeAction(
+        action,
+        button
+    ){
+
+        const targetAction =
+            String(
+                action ||
+                ""
+            )
+                .trim();
+
+
+        if(
+            !targetAction ||
+            !button
+        ){
+
+            return false;
+
+        }
+
+
+        switch(targetAction){
+
+            /* ---------------------------------------------
+               CORE NAVIGATION
+            --------------------------------------------- */
+
+            case "home:open":
+
+                return this.openHome();
+
+
+            case "identity:open":
+
+                return this.openIdentity();
+
+
+            case "profile:open":
+
+                return this.openProfile();
+
+
+            case "create:open":
+
+                return this.openCreate();
+
+
+            case "worlds:open":
+
+                return this.openWorlds();
+
+
+            case "entities:open":
+
+                return this.openEntities();
+
+
+            /* ---------------------------------------------
+               WORLD
+            --------------------------------------------- */
+
+            case "world:open":
+
+                return this.openWorld(
+                    button.dataset
+                        .worldId
+                );
+
+
+            case "world:create:submit":
+
+                return this.createWorld();
+
+
+            case "world:edit:open":
+
+                return this.openWorldEditor();
+
+
+            case "world:edit:cancel":
+
+                return this.cancelWorldEditor();
+
+
+            case "world:edit:submit":
+
+                return this.saveWorldEditor();
+
+
+            case "world:archive":
+
+                return this.archiveWorld();
+
+
+            case "world:back":
+
+                return this.backToWorld();
+
+
+            /* ---------------------------------------------
+               ENTITY CREATE
+            --------------------------------------------- */
+
+            case "entity:create:first":
+
+                return this.startEntityCreate();
+
+
+            case "entity:type:select":
+
+                return this.selectEntityType(
+                    button.dataset
+                        .entityType
+                );
+
+
+            case "entity:type:clear":
+
+                return this.clearEntityType();
+
+
+            case "entity:create:cancel":
+
+                return this.cancelEntityCreate();
+
+
+            case "entity:create:submit":
+
+                return this.createEntity();
+
+
+            /* ---------------------------------------------
+               ENTITY
+            --------------------------------------------- */
+
+            case "entity:open":
+
+                return this.openEntity(
+                    button.dataset
+                        .entityId
+                );
+
+
+            case "entity:edit:open":
+
+                return this.openEntityEditor();
+
+
+            case "entity:edit:cancel":
+
+                return this.cancelEntityEditor();
+
+
+            case "entity:edit:submit":
+
+                return this.saveEntityEditor();
+
+
+            case "entity:archive":
+
+                return this.archiveEntity();
+
+
+            case "entity:dashboard":
+
+                return this.openEntityDashboard();
+
+
+            /* ---------------------------------------------
+               ENTITY PAGES
+            --------------------------------------------- */
+
+            case "entity:identity":
+
+                return this.openEntityPage(
+                    "identity"
+                );
+
+
+            case "entity:profile":
+
+                return this.openEntityPage(
+                    "profile"
+                );
+
+
+            case "entity:organs":
+
+                return this.openEntityPage(
+                    "organs"
+                );
+
+
+            case "entity:timeline":
+
+                return this.openEntityPage(
+                    "timeline"
+                );
+
+
+            case "entity:memory":
+
+                return this.openEntityPage(
+                    "memory"
+                );
+
+
+            case "entity:bridge":
+
+                return this.openEntityPage(
+                    "bridge"
+                );
+
+
+            case "entity:evolution":
+
+                return this.openEntityPage(
+                    "evolution"
+                );
+
+
+            case "entity:settings":
+
+                return this.openEntityPage(
+                    "settings"
+                );
+
+
+            case "entity:discovery":
+
+                return this.openEntityPage(
+                    "discovery"
+                );
+
+
+            /* ---------------------------------------------
+               PROFILE / DISCOVERY
+            --------------------------------------------- */
+
+            case "profile:save":
+
+                return this.saveProfile();
+
+
+            case "discovery:restart":
+
+                return this.restartDiscovery();
+
+
+            /* ---------------------------------------------
+               SYSTEM APPLICATIONS
+            --------------------------------------------- */
+
+            case "app:applications":
+
+                return this.openApplicationsApp();
+
+
+            case "app:vaero":
+
+                return this.openVaeroApp();
+
+
+            /* ---------------------------------------------
+               PAYMENT
+            --------------------------------------------- */
+
+            case "vaero:payment:method":
+
+                return this.selectVaeroPaymentMethod(
+                    button.dataset
+                        .paymentMethod
+                );
+
+
+            case "vaero:payment:provider":
+
+                return this.selectVaeroPaymentProvider(
+                    button.dataset
+                        .paymentProvider
+                );
+
+
+            case "vaero:payment:start":
+
+                return this.startVaeroPayment();
+
+
+            case "vaero:payment:cancel":
+
+                return this.cancelVaeroPayment();
+
+
+            case "vaero:payment:refund":
+
+                return this.refundVaeroPayment(
+                    button.dataset
+                        .transactionId
+                );
+
+
+            /* ---------------------------------------------
+               BRAIN
+            --------------------------------------------- */
+
+            case "brain:open":
+
+                return this.openBrain();
+
+
+            case "brain:close":
+
+                return this.closeBrain();
+
+
+            case "brain:send":
+
+                return this.sendBrainMessage();
+
+        }
+
+
+        /*
+         * Evolution generic actions are intentionally
+         * delegated here only if no canonical action matched.
+         */
+
+        if(
+            targetAction.startsWith(
+                "evolution:"
+            )
+        ){
+
+            return this.handleEvolutionAction(
+                targetAction,
+                button
+            );
+
+        }
+
+
+        return false;
+
+    }
 
 };
 
@@ -6886,417 +9529,55 @@ const Actions = {
 ========================================================= */
 
 document.addEventListener(
-   "click",
-   event => {
+    "click",
+    event => {
 
-      const button =
-         event.target.closest(
-            "[data-action]"
-         );
-
-
-      if(!button){
-
-         return;
-
-      }
+        const button =
+            Actions.getActionTarget(
+                event
+            );
 
 
-      const action =
-         button.dataset.action;
+        if(!button){
+
+            return;
+
+        }
 
 
-      if(
-            [
-               "world:create:submit",
-               "world:edit:submit",
-               "entity:create:submit",
-               "entity:edit:submit"
-            ].includes(
-               action
+        const action =
+            String(
+                button.dataset
+                    .action ||
+                ""
             )
-      ){
+                .trim();
 
-         event.preventDefault();
 
-      }
+        if(!action){
 
+            return;
 
-      switch(action){
+        }
 
-         case "home:open":
 
-            Actions.openHome();
+        if(
+            Actions.shouldPreventDefaultAction(
+                action
+            )
+        ){
 
-            break;
+            event.preventDefault();
 
+        }
 
-         case "identity:open":
 
-            Actions.openIdentity();
+        Actions.routeAction(
+            action,
+            button
+        );
 
-            break;
-
-
-         case "profile:open":
-
-            Actions.openProfile();
-
-            break;
-
-
-         case "create:open":
-
-            Actions.openCreate();
-
-            break;
-
-
-         case "worlds:open":
-
-            Actions.openWorlds();
-
-            break;
-
-
-         case "entities:open":
-
-            Actions.openEntities();
-
-            break;
-
-
-         case "world:open":
-
-            Actions.openWorld(
-               button.dataset
-                  .worldId
-            );
-
-            break;
-
-
-         case "world:create:submit":
-
-            Actions.createWorld();
-
-            break;
-
-
-         case "world:edit:open":
-
-            Actions.openWorldEditor();
-
-            break;
-
-
-         case "world:edit:cancel":
-
-            Actions.cancelWorldEditor();
-
-            break;
-
-
-         case "world:edit:submit":
-
-            Actions.saveWorldEditor();
-
-            break;
-
-
-         case "world:archive":
-
-            Actions.archiveWorld();
-
-            break;
-
-
-         case "world:back":
-
-            Actions.backToWorld();
-
-            break;
-
-
-         case "entity:create:first":
-
-            Actions.startEntityCreate();
-
-            break;
-
-
-         case "entity:type:select":
-
-            Actions.selectEntityType(
-               button.dataset
-                  .entityType
-            );
-
-            break;
-
-
-         case "entity:type:clear":
-
-            Actions.clearEntityType();
-
-            break;
-
-
-         case "entity:create:cancel":
-
-            Actions.cancelEntityCreate();
-
-            break;
-
-
-         case "entity:create:submit":
-
-            Actions.createEntity();
-
-            break;
-
-
-         case "entity:open":
-
-            Actions.openEntity(
-               button.dataset
-                  .entityId
-            );
-
-            break;
-
-
-         case "entity:edit:open":
-
-            Actions.openEntityEditor();
-
-            break;
-
-
-         case "entity:edit:cancel":
-
-            Actions.cancelEntityEditor();
-
-            break;
-
-
-         case "entity:edit:submit":
-
-            Actions.saveEntityEditor();
-
-            break;
-
-
-         case "entity:archive":
-
-            Actions.archiveEntity();
-
-            break;
-
-
-         case "entity:dashboard":
-
-            Actions.openEntityDashboard();
-
-            break;
-
-
-         case "entity:identity":
-
-            Actions.openEntityPage(
-               "identity"
-            );
-
-            break;
-
-
-         case "entity:profile":
-
-            Actions.openEntityPage(
-               "profile"
-            );
-
-            break;
-
-
-         case "entity:organs":
-
-            Actions.openEntityPage(
-               "organs"
-            );
-
-            break;
-
-
-         case "entity:timeline":
-
-            Actions.openEntityPage(
-               "timeline"
-            );
-
-            break;
-
-
-         case "entity:memory":
-
-            Actions.openEntityPage(
-               "memory"
-            );
-
-            break;
-
-
-         case "entity:bridge":
-
-            Actions.openEntityPage(
-               "bridge"
-            );
-
-            break;
-
-
-         case "entity:evolution":
-
-            Actions.openEntityPage(
-               "evolution"
-            );
-
-            break;
-
-
-         case "entity:settings":
-
-            Actions.openEntityPage(
-               "settings"
-            );
-
-            break;
-
-
-         case "entity:discovery":
-
-            Actions.openEntityPage(
-               "discovery"
-            );
-
-            break;
-
-
-         case "profile:save":
-
-            Actions.saveProfile();
-
-            break;
-
-
-         case "discovery:restart":
-
-            Actions.restartDiscovery();
-
-            break;
-
-
-         /* ---------------------------------------------
-            SYSTEM APPLICATIONS
-         --------------------------------------------- */
-
-         case "app:applications":
-
-            Actions.openApplicationsApp();
-
-            break;
-
-
-         case "app:vaero":
-
-            Actions.openVaeroApp();
-
-            break;
-
-
-         /* ---------------------------------------------
-            PAYMENT CORE
-         --------------------------------------------- */
-
-         case "vaero:payment:method":
-
-            Actions.selectVaeroPaymentMethod(
-               button.dataset
-                  .paymentMethod
-            );
-
-            break;
-
-
-         case "vaero:payment:provider":
-
-            Actions.selectVaeroPaymentProvider(
-               button.dataset
-                  .paymentProvider
-            );
-
-            break;
-
-
-         case "vaero:payment:start":
-
-            Actions.startVaeroPayment();
-
-            break;
-
-
-         case "vaero:payment:cancel":
-
-            Actions.cancelVaeroPayment();
-
-            break;
-
-
-         case "vaero:payment:refund":
-
-            Actions.refundVaeroPayment(
-               button.dataset
-                  .transactionId
-            );
-
-            break;
-
-
-         /* ---------------------------------------------
-            BRAIN
-         --------------------------------------------- */
-
-         case "brain:open":
-
-            Actions.openBrain();
-
-            break;
-
-
-         case "brain:close":
-
-            Actions.closeBrain();
-
-            break;
-
-
-         case "brain:send":
-
-            Actions.sendBrainMessage();
-
-            break;
-
-
-         default:
-
-            Actions.handleEvolutionAction(
-               action,
-               button
-            );
-
-      }
-
-   }
+    }
 );
 
 
@@ -7305,66 +9586,70 @@ document.addEventListener(
 ========================================================= */
 
 document.addEventListener(
-   "click",
-   event => {
+    "click",
+    event => {
 
-      const button =
-         event.target.closest(
-            "[data-brain-command]"
-         );
-
-
-      if(!button){
-
-         return;
-
-      }
+        const button =
+            event.target.closest?.(
+                "[data-brain-command]"
+            );
 
 
-      const command =
-         button.dataset
-            .brainCommand;
+        if(!button){
+
+            return;
+
+        }
 
 
-      const confirmationId =
-         button.dataset
-            .confirmationId ||
-         null;
+        const command =
+            String(
+                button.dataset
+                    .brainCommand ||
+                ""
+            )
+                .trim();
 
 
-      if(
+        const confirmationId =
+            button.dataset
+                .confirmationId ||
+            null;
+
+
+        if(
             command ===
-               "confirm"
-      ){
+                "confirm"
+        ){
 
-         event.preventDefault();
-
-
-         Actions.confirmBrainAction(
-            confirmationId
-         );
+            event.preventDefault();
 
 
-         return;
+            Actions.confirmBrainAction(
+                confirmationId
+            );
 
-      }
+
+            return;
+
+        }
 
 
-      if(
+        if(
             command ===
-               "cancel-confirmation"
-      ){
+                "cancel-confirmation"
+        ){
 
-         event.preventDefault();
+            event.preventDefault();
 
 
-         Actions.cancelBrainConfirmation(
-            confirmationId
-         );
+            Actions.cancelBrainConfirmation(
+                confirmationId
+            );
 
-      }
+        }
 
-   }
+    }
 );
 
 
@@ -7373,60 +9658,66 @@ document.addEventListener(
 ========================================================= */
 
 document.addEventListener(
-   "submit",
-   event => {
+    "submit",
+    event => {
 
-      const form =
-         event.target.closest(
-            "[data-engine-form]"
-         );
-
-
-      if(!form){
-
-         return;
-
-      }
+        const form =
+            event.target.closest?.(
+                "[data-engine-form]"
+            );
 
 
-      event.preventDefault();
+        if(!form){
+
+            return;
+
+        }
 
 
-      switch(
-         form.dataset
-            .engineForm
-      ){
-
-         case "world-create":
-
-            Actions.createWorld();
-
-            break;
+        event.preventDefault();
 
 
-         case "world-edit":
-
-            Actions.saveWorldEditor();
-
-            break;
-
-
-         case "entity-create":
-
-            Actions.createEntity();
-
-            break;
+        const formType =
+            String(
+                form.dataset
+                    .engineForm ||
+                ""
+            )
+                .trim();
 
 
-         case "entity-edit":
+        switch(formType){
 
-            Actions.saveEntityEditor();
+            case "world-create":
 
-            break;
+                Actions.createWorld();
 
-      }
+                break;
 
-   }
+
+            case "world-edit":
+
+                Actions.saveWorldEditor();
+
+                break;
+
+
+            case "entity-create":
+
+                Actions.createEntity();
+
+                break;
+
+
+            case "entity-edit":
+
+                Actions.saveEntityEditor();
+
+                break;
+
+        }
+
+    }
 );
 
 
@@ -7435,28 +9726,29 @@ document.addEventListener(
 ========================================================= */
 
 document.addEventListener(
-   "keydown",
-   event => {
+    "keydown",
+    event => {
 
-      if(
-            event.target.id !==
-               "brainInput" ||
+        if(
+            event.target?.id !==
+                "brainInput" ||
             event.key !==
-               "Enter" ||
-            event.shiftKey
-      ){
+                "Enter" ||
+            event.shiftKey ||
+            event.isComposing
+        ){
 
-         return;
+            return;
 
-      }
-
-
-      event.preventDefault();
+        }
 
 
-      Actions.sendBrainMessage();
+        event.preventDefault();
 
-   }
+
+        Actions.sendBrainMessage();
+
+    }
 );
 
 
@@ -7464,11 +9756,36 @@ document.addEventListener(
    REGISTER
 ========================================================= */
 
-VAERO.register(
-   "actions",
-   Actions
-);
+try{
 
+    if(
+        typeof VAERO !==
+            "undefined" &&
+        typeof VAERO.register ===
+            "function"
+    ){
+
+        VAERO.register(
+            "actions",
+            Actions
+        );
+
+    }
+
+} catch(error){
+
+    console.warn(
+        "Actions VAERO registry'e kaydedilemedi:",
+        error
+    );
+
+}
+
+
+/* =========================================================
+   GLOBAL
+========================================================= */
 
 window.Actions =
-   Actions;
+    Actions;
+
