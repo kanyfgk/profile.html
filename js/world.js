@@ -5,7 +5,8 @@
 
 const World = {
 
-    worlds: [],
+    worlds:
+        [],
 
     booted:
         false,
@@ -20,23 +21,48 @@ const World = {
 
     getService(name){
 
+        const serviceName =
+            String(
+                name ??
+                ""
+            ).trim();
+
+
+        if(!serviceName){
+
+            return null;
+
+        }
+
+
         try{
 
             if(
-                typeof VAERO === "undefined" ||
-                typeof VAERO.get !== "function"
+                typeof VAERO ===
+                    "undefined" ||
+                typeof VAERO.get !==
+                    "function"
             ){
+
                 return null;
+
             }
 
-            return VAERO.get(name) || null;
+
+            return (
+                VAERO.get(
+                    serviceName
+                ) ||
+                null
+            );
 
         } catch(error){
 
             console.warn(
-                `World service lookup failed: ${name}`,
+                `World service lookup failed: ${serviceName}`,
                 error
             );
+
 
             return null;
 
@@ -54,22 +80,50 @@ const World = {
         payload = {}
     ){
 
+        const name =
+            String(
+                eventName ??
+                ""
+            ).trim();
+
+
+        if(!name){
+
+            return false;
+
+        }
+
+
         try{
 
             if(
-                typeof VAERO !== "undefined" &&
-                typeof VAERO.emit === "function"
+                typeof VAERO !==
+                    "undefined" &&
+                typeof VAERO.emit ===
+                    "function"
             ){
 
                 VAERO.emit(
-                    eventName,
+                    name,
                     payload
                 );
+
 
                 return true;
 
             }
 
+        } catch(error){
+
+            console.warn(
+                `World event failed: ${name}`,
+                error
+            );
+
+        }
+
+
+        try{
 
             const events =
                 this.getService(
@@ -79,13 +133,15 @@ const World = {
 
             if(
                 events &&
-                typeof events.emit === "function"
+                typeof events.emit ===
+                    "function"
             ){
 
                 events.emit(
-                    eventName,
+                    name,
                     payload
                 );
+
 
                 return true;
 
@@ -94,7 +150,7 @@ const World = {
         } catch(error){
 
             console.warn(
-                `World event failed: ${eventName}`,
+                `World event fallback failed: ${name}`,
                 error
             );
 
@@ -106,18 +162,72 @@ const World = {
     },
 
 
+    emitAliases(
+        names,
+        payload = {}
+    ){
+
+        if(
+            !Array.isArray(
+                names
+            )
+        ){
+
+            return false;
+
+        }
+
+
+        let emitted =
+            false;
+
+
+        names.forEach(
+            name => {
+
+                if(
+                    this.emit(
+                        name,
+                        payload
+                    )
+                ){
+
+                    emitted =
+                        true;
+
+                }
+
+            }
+        );
+
+
+        return emitted;
+
+    },
+
+
     /* =====================================================
        ID
     ===================================================== */
 
     createId(){
 
-        if(
-            typeof crypto !== "undefined" &&
-            typeof crypto.randomUUID === "function"
-        ){
+        try{
 
-            return crypto.randomUUID();
+            if(
+                typeof crypto !==
+                    "undefined" &&
+                typeof crypto.randomUUID ===
+                    "function"
+            ){
+
+                return crypto.randomUUID();
+
+            }
+
+        } catch(error){
+
+            /* fallback below */
 
         }
 
@@ -133,23 +243,86 @@ const World = {
        NORMALIZATION
     ===================================================== */
 
+    normalizeId(value){
+
+        const id =
+            String(
+                value ??
+                    ""
+            )
+                .trim()
+                .slice(
+                    0,
+                    200
+                );
+
+
+        return (
+            id ||
+            null
+        );
+
+    },
+
+
     normalizeText(
         value,
-        fallback = ""
+        fallback = "",
+        maxLength = 10000
     ){
 
         const result =
             String(
-                value ?? fallback
-            ).trim();
+                value ??
+                fallback
+            )
+                .trim()
+                .slice(
+                    0,
+                    maxLength
+                );
+
+
+        if(result){
+
+            return result;
+
+        }
+
+
+        return String(
+            fallback ??
+                ""
+        )
+            .trim()
+            .slice(
+                0,
+                maxLength
+            );
+
+    },
+
+
+    normalizeTimestamp(
+        value,
+        fallback = Date.now()
+    ){
+
+        const timestamp =
+            Number(
+                value
+            );
 
 
         return (
-            result ||
-            String(
-                fallback
-            ).trim()
-        );
+            Number.isFinite(
+                timestamp
+            ) &&
+            timestamp >
+                0
+        )
+            ? timestamp
+            : fallback;
 
     },
 
@@ -159,24 +332,78 @@ const World = {
         if(
             !Array.isArray(
                 value
-            )
+            ) &&
+            !(value instanceof Set)
         ){
+
             return [];
+
         }
 
 
-        return [
-            ...new Set(
+        const source =
+            Array.isArray(
                 value
-                    .map(
-                        item =>
-                            String(
-                                item ?? ""
-                            ).trim()
-                    )
-                    .filter(Boolean)
             )
-        ];
+                ? value
+                : [
+                    ...value
+                ];
+
+
+        const seen =
+            new Set();
+
+
+        return source
+            .map(
+                item =>
+                    String(
+                        item ??
+                            ""
+                    )
+                        .trim()
+                        .slice(
+                            0,
+                            160
+                        )
+            )
+            .filter(
+                item => {
+
+                    if(!item){
+
+                        return false;
+
+                    }
+
+
+                    const key =
+                        item.toLocaleLowerCase(
+                            "tr-TR"
+                        );
+
+
+                    if(
+                        seen.has(
+                            key
+                        )
+                    ){
+
+                        return false;
+
+                    }
+
+
+                    seen.add(
+                        key
+                    );
+
+
+                    return true;
+
+                }
+            );
 
     },
 
@@ -185,10 +412,15 @@ const World = {
 
         if(
             !value ||
-            typeof value !== "object" ||
-            Array.isArray(value)
+            typeof value !==
+                "object" ||
+            Array.isArray(
+                value
+            )
         ){
+
             return {};
+
         }
 
 
@@ -203,17 +435,20 @@ const World = {
 
         const value =
             String(
-                status || "active"
+                status ||
+                "active"
             )
                 .trim()
                 .toLowerCase();
 
 
         const allowed = [
+
             "active",
             "inactive",
             "paused",
             "archived"
+
         ];
 
 
@@ -226,99 +461,227 @@ const World = {
     },
 
 
+    normalizeEntityList(value){
+
+        if(
+            !Array.isArray(
+                value
+            )
+        ){
+
+            return [];
+
+        }
+
+
+        const byId =
+            new Map();
+
+
+        value.forEach(
+            entity => {
+
+                if(
+                    !entity ||
+                    typeof entity !==
+                        "object" ||
+                    Array.isArray(
+                        entity
+                    )
+                ){
+
+                    return;
+
+                }
+
+
+                const id =
+                    this.normalizeId(
+                        entity.id
+                    );
+
+
+                if(!id){
+
+                    return;
+
+                }
+
+
+                const existing =
+                    byId.get(
+                        id
+                    );
+
+
+                if(!existing){
+
+                    byId.set(
+                        id,
+                        entity
+                    );
+
+
+                    return;
+
+                }
+
+
+                const existingUpdatedAt =
+                    Number(
+                        existing.updatedAt ||
+                        existing.createdAt ||
+                        0
+                    );
+
+
+                const incomingUpdatedAt =
+                    Number(
+                        entity.updatedAt ||
+                        entity.createdAt ||
+                        0
+                    );
+
+
+                if(
+                    incomingUpdatedAt >=
+                        existingUpdatedAt
+                ){
+
+                    byId.set(
+                        id,
+                        entity
+                    );
+
+                }
+
+            }
+        );
+
+
+        return [
+            ...byId.values()
+        ];
+
+    },
+
+
     normalize(world = {}){
+
+        const source =
+            world &&
+            typeof world ===
+                "object" &&
+            !Array.isArray(
+                world
+            )
+                ? world
+                : {};
+
 
         const now =
             Date.now();
 
 
         const archived =
-            world.archived === true ||
-            world.status === "archived";
+            source.archived ===
+                true ||
+            String(
+                source.status ||
+                    ""
+            )
+                .trim()
+                .toLowerCase() ===
+                    "archived";
+
+
+        const createdAt =
+            this.normalizeTimestamp(
+                source.createdAt,
+                now
+            );
+
+
+        const updatedAt =
+            this.normalizeTimestamp(
+                source.updatedAt,
+                createdAt
+            );
 
 
         return {
 
             id:
-                this.normalizeText(
-                    world.id,
-                    this.createId()
-                ),
+                this.normalizeId(
+                    source.id
+                ) ||
+                this.createId(),
 
             name:
                 this.normalizeText(
-                    world.name,
-                    "İsimsiz Dünya"
+                    source.name,
+                    "İsimsiz Dünya",
+                    240
                 ),
 
             description:
                 this.normalizeText(
-                    world.description,
-                    ""
+                    source.description,
+                    "",
+                    10000
                 ),
 
             type:
                 this.normalizeText(
-                    world.type,
-                    "custom-world"
+                    source.type,
+                    "custom-world",
+                    120
                 ),
 
             owner:
-                world.owner
-                    ? String(
-                        world.owner
-                    )
-                    : null,
+                this.normalizeId(
+                    source.owner
+                ),
 
             entities:
-                Array.isArray(
-                    world.entities
-                )
-                    ? [
-                        ...world.entities
-                    ]
-                    : [],
+                this.normalizeEntityList(
+                    source.entities
+                ),
 
             tags:
                 this.normalizeArray(
-                    world.tags
+                    source.tags
                 ),
 
             metadata:
                 this.normalizeObject(
-                    world.metadata
+                    source.metadata
                 ),
 
             status:
                 archived
                     ? "archived"
                     : this.normalizeStatus(
-                        world.status
+                        source.status
                     ),
 
             archived,
 
             archivedAt:
                 archived
-                    ? (
-                        Number(
-                            world.archivedAt
-                        ) ||
-                        now
+                    ? this.normalizeTimestamp(
+                        source.archivedAt,
+                        updatedAt
                     )
                     : null,
 
-            createdAt:
-                Number(
-                    world.createdAt
-                ) ||
-                now,
+            createdAt,
 
             updatedAt:
-                Number(
-                    world.updatedAt
-                ) ||
-                now
+                Math.max(
+                    createdAt,
+                    updatedAt
+                )
 
         };
 
@@ -331,8 +694,12 @@ const World = {
 
     boot(){
 
-        if(this.booted){
+        if(
+            this.booted
+        ){
+
             return true;
+
         }
 
 
@@ -345,46 +712,87 @@ const World = {
             );
 
 
-        if(!events){
+        if(
+            !events ||
+            typeof events.on !==
+                "function"
+        ){
 
             console.error(
                 "World boot failed: Events service not found."
             );
+
 
             return false;
 
         }
 
 
-        if(
-            typeof events.on ===
-            "function"
-        ){
+        const handleEngineStarted =
+            data => {
+
+                const entityId =
+                    this.normalizeId(
+                        data?.entityId ||
+                        data?.rootEntityId ||
+                        data?.ownerId
+                    );
+
+
+                if(!entityId){
+
+                    return;
+
+                }
+
+
+                this.ensureRootWorld(
+                    entityId
+                );
+
+            };
+
+
+        try{
 
             events.on(
                 "engine.started",
-                data => {
-
-                    if(
-                        !data ||
-                        !data.entityId
-                    ){
-                        return;
-                    }
-
-
-                    this.ensureRootWorld(
-                        data.entityId
-                    );
-
-                }
+                handleEngineStarted
             );
+
+
+            events.on(
+                "engine:started",
+                handleEngineStarted
+            );
+
+        } catch(error){
+
+            console.error(
+                "World engine listener kurulamadı:",
+                error
+            );
+
+
+            return false;
 
         }
 
 
         this.booted =
             true;
+
+
+        this.emit(
+            "world:ready",
+            {
+                worlds:
+                    this.worlds.length,
+
+                time:
+                    Date.now()
+            }
+        );
 
 
         return true;
@@ -398,6 +806,12 @@ const World = {
 
     ensureRootWorld(ownerId){
 
+        const normalizedOwner =
+            this.normalizeId(
+                ownerId
+            );
+
+
         const existing =
             this.get(
                 "vaero-world"
@@ -406,42 +820,103 @@ const World = {
 
         if(existing){
 
-            /*
-             * Root world daha önce archive edilmişse
-             * Engine başlatılırken yeniden aktif edilir.
-             */
+            let changed =
+                false;
 
-            if(existing.archived){
+
+            if(
+                existing.archived
+            ){
 
                 existing.archived =
                     false;
 
+
                 existing.archivedAt =
                     null;
+
 
                 existing.status =
                     "active";
 
-                existing.updatedAt =
-                    Date.now();
 
-                this.save();
+                changed =
+                    true;
 
             }
 
 
             if(
                 !existing.owner &&
-                ownerId
+                normalizedOwner
             ){
 
                 existing.owner =
-                    ownerId;
+                    normalizedOwner;
+
+
+                changed =
+                    true;
+
+            }
+
+
+            if(
+                existing.type !==
+                    "root-world"
+            ){
+
+                existing.type =
+                    "root-world";
+
+
+                changed =
+                    true;
+
+            }
+
+
+            existing.metadata = {
+
+                ...existing.metadata,
+
+                system:
+                    true,
+
+                removable:
+                    false
+
+            };
+
+
+            if(changed){
 
                 existing.updatedAt =
                     Date.now();
 
+
                 this.save();
+
+
+                this.emitAliases(
+                    [
+                        "world.updated",
+                        "world:updated"
+                    ],
+                    {
+                        world:
+                            existing,
+
+                        worldId:
+                            existing.id,
+
+                        system:
+                            true,
+
+                        time:
+                            existing.updatedAt
+                    }
+                );
 
             }
 
@@ -461,6 +936,7 @@ const World = {
 
         const world =
             this.create({
+
                 id:
                     "vaero-world",
 
@@ -474,7 +950,7 @@ const World = {
                     "root-world",
 
                 owner:
-                    ownerId,
+                    normalizedOwner,
 
                 entities:
                     [],
@@ -486,6 +962,7 @@ const World = {
                     removable:
                         false
                 }
+
             });
 
 
@@ -494,7 +971,9 @@ const World = {
             world,
 
             created:
-                Boolean(world)
+                Boolean(
+                    world
+                )
 
         };
 
@@ -509,10 +988,15 @@ const World = {
 
         if(
             !world ||
-            typeof world !== "object" ||
-            Array.isArray(world)
+            typeof world !==
+                "object" ||
+            Array.isArray(
+                world
+            )
         ){
+
             return null;
+
         }
 
 
@@ -529,7 +1013,9 @@ const World = {
 
 
         if(existing){
+
             return existing;
+
         }
 
 
@@ -538,21 +1024,46 @@ const World = {
         );
 
 
+        this.sort();
+
+
         this.save();
 
 
-        this.emit(
-            "world.created",
-            {
-                world:
-                    item,
+        const payload = {
 
-                worldId:
-                    item.id,
+            ...item,
 
-                time:
-                    Date.now()
-            }
+            world:
+                item,
+
+            worldId:
+                item.id,
+
+            id:
+                item.id,
+
+            name:
+                item.name,
+
+            owner:
+                item.owner,
+
+            universeId:
+                "vaero-universe",
+
+            time:
+                Date.now()
+
+        };
+
+
+        this.emitAliases(
+            [
+                "world.created",
+                "world:created"
+            ],
+            payload
         );
 
 
@@ -568,22 +1079,43 @@ const World = {
     get(worldId){
 
         const id =
-            String(
-                worldId ?? ""
-            ).trim();
+            this.normalizeId(
+                worldId
+            );
 
 
         if(!id){
+
             return null;
+
         }
 
 
         return (
             this.worlds.find(
                 world =>
-                    world?.id === id
+                    world?.id ===
+                        id
             ) ||
             null
+        );
+
+    },
+
+
+    find(worldId){
+
+        return this.get(
+            worldId
+        );
+
+    },
+
+
+    getById(worldId){
+
+        return this.get(
+            worldId
         );
 
     },
@@ -618,86 +1150,136 @@ const World = {
         if(
             !world ||
             !changes ||
-            typeof changes !== "object" ||
-            Array.isArray(changes)
+            typeof changes !==
+                "object" ||
+            Array.isArray(
+                changes
+            )
         ){
+
             return null;
+
         }
 
 
         const before = {
+
             ...world,
+
             entities:[
                 ...(world.entities || [])
             ],
+
             tags:[
                 ...(world.tags || [])
             ],
+
             metadata:{
                 ...(world.metadata || {})
             }
+
         };
 
 
         if(
-            typeof changes.name ===
-                "string" &&
-            changes.name.trim()
+            changes.name !==
+                undefined
         ){
 
-            world.name =
-                changes.name.trim();
+            const name =
+                this.normalizeText(
+                    changes.name,
+                    "",
+                    240
+                );
+
+
+            if(name){
+
+                world.name =
+                    name;
+
+            }
 
         }
 
 
         if(
-            typeof changes.description ===
-                "string"
+            changes.description !==
+                undefined
         ){
 
             world.description =
-                changes.description.trim();
+                this.normalizeText(
+                    changes.description,
+                    "",
+                    10000
+                );
 
         }
 
 
         /*
-         * Root world tipi sonradan değiştirilemez.
+         * Root world type is immutable.
          */
 
         if(
             world.id !==
                 "vaero-world" &&
-            typeof changes.type ===
-                "string" &&
-            changes.type.trim()
+            changes.type !==
+                undefined
         ){
 
-            world.type =
-                changes.type.trim();
+            const type =
+                this.normalizeText(
+                    changes.type,
+                    "",
+                    120
+                );
+
+
+            if(type){
+
+                world.type =
+                    type;
+
+            }
 
         }
 
 
         if(
+            changes.owner !==
+                undefined
+        ){
+
+            world.owner =
+                this.normalizeId(
+                    changes.owner
+                );
+
+        }
+
+
+        if(
+            changes.entities !==
+                undefined &&
             Array.isArray(
                 changes.entities
             )
         ){
 
             world.entities =
-                [
-                    ...changes.entities
-                ];
+                this.normalizeEntityList(
+                    changes.entities
+                );
 
         }
 
 
         if(
-            Array.isArray(
-                changes.tags
-            )
+            changes.tags !==
+                undefined
         ){
 
             world.tags =
@@ -718,8 +1300,11 @@ const World = {
         ){
 
             world.metadata = {
+
                 ...world.metadata,
+
                 ...changes.metadata
+
             };
 
         }
@@ -740,7 +1325,7 @@ const World = {
 
             if(
                 status !==
-                "archived"
+                    "archived"
             ){
 
                 world.status =
@@ -751,20 +1336,76 @@ const World = {
         }
 
 
+        /*
+         * Root world protection remains authoritative.
+         */
+
+        if(
+            world.id ===
+                "vaero-world"
+        ){
+
+            world.type =
+                "root-world";
+
+
+            world.archived =
+                false;
+
+
+            world.archivedAt =
+                null;
+
+
+            if(
+                world.status ===
+                    "archived"
+            ){
+
+                world.status =
+                    "active";
+
+            }
+
+
+            world.metadata = {
+
+                ...world.metadata,
+
+                system:
+                    true,
+
+                removable:
+                    false
+
+            };
+
+        }
+
+
         world.updatedAt =
             Date.now();
+
+
+        this.sort();
 
 
         this.save();
 
 
-        this.emit(
-            "world.updated",
+        this.emitAliases(
+            [
+                "world.updated",
+                "world:updated"
+            ],
             {
                 world,
+
                 worldId:
                     world.id,
+
                 before,
+
                 time:
                     Date.now()
             }
@@ -794,11 +1435,31 @@ const World = {
         if(
             !world ||
             !entity ||
+            typeof entity !==
+                "object" ||
+            Array.isArray(
+                entity
+            ) ||
             !entity.id ||
             world.archived ===
                 true
         ){
+
             return null;
+
+        }
+
+
+        const entityId =
+            this.normalizeId(
+                entity.id
+            );
+
+
+        if(!entityId){
+
+            return null;
+
         }
 
 
@@ -814,21 +1475,53 @@ const World = {
         }
 
 
-        const exists =
-            world.entities.some(
+        const index =
+            world.entities.findIndex(
                 item =>
                     item?.id ===
-                    entity.id
+                        entityId
             );
 
 
-        if(exists){
+        if(
+            index >=
+                0
+        ){
 
-            return world.entities.find(
-                item =>
-                    item?.id ===
-                    entity.id
-            );
+            const existing =
+                world.entities[
+                    index
+                ];
+
+
+            /*
+             * Keep the newest canonical object reference
+             * when the caller provides a newer entity.
+             */
+
+            if(
+                entity !==
+                    existing
+            ){
+
+                world.entities[
+                    index
+                ] =
+                    entity;
+
+
+                world.updatedAt =
+                    Date.now();
+
+
+                this.save();
+
+            }
+
+
+            return world.entities[
+                index
+            ];
 
         }
 
@@ -838,6 +1531,12 @@ const World = {
         );
 
 
+        world.entities =
+            this.normalizeEntityList(
+                world.entities
+            );
+
+
         world.updatedAt =
             Date.now();
 
@@ -845,14 +1544,16 @@ const World = {
         this.save();
 
 
-        this.emit(
-            "world.entity.added",
+        this.emitAliases(
+            [
+                "world.entity.added",
+                "world:entity:added"
+            ],
             {
                 worldId:
                     world.id,
 
-                entityId:
-                    entity.id,
+                entityId,
 
                 entity,
 
@@ -879,9 +1580,9 @@ const World = {
 
 
         const id =
-            String(
-                entityId ?? ""
-            ).trim();
+            this.normalizeId(
+                entityId
+            );
 
 
         if(
@@ -891,28 +1592,34 @@ const World = {
                 world.entities
             )
         ){
+
             return false;
+
         }
 
 
-        const before =
-            world.entities.length;
+        const removed =
+            world.entities.find(
+                entity =>
+                    entity?.id ===
+                        id
+            ) ||
+            null;
+
+
+        if(!removed){
+
+            return false;
+
+        }
 
 
         world.entities =
             world.entities.filter(
                 entity =>
                     entity?.id !==
-                    id
+                        id
             );
-
-
-        if(
-            world.entities.length ===
-            before
-        ){
-            return false;
-        }
 
 
         world.updatedAt =
@@ -922,14 +1629,20 @@ const World = {
         this.save();
 
 
-        this.emit(
-            "world.entity.removed",
+        this.emitAliases(
+            [
+                "world.entity.removed",
+                "world:entity:removed"
+            ],
             {
                 worldId:
                     world.id,
 
                 entityId:
                     id,
+
+                entity:
+                    removed,
 
                 time:
                     Date.now()
@@ -947,32 +1660,11 @@ const World = {
         entityId
     ){
 
-        const world =
-            this.get(
-                worldId
-            );
-
-
-        if(
-            !world ||
-            !Array.isArray(
-                world.entities
+        return Boolean(
+            this.getEntity(
+                worldId,
+                entityId
             )
-        ){
-            return false;
-        }
-
-
-        const id =
-            String(
-                entityId ?? ""
-            ).trim();
-
-
-        return world.entities.some(
-            entity =>
-                entity?.id ===
-                id
         );
 
     },
@@ -989,30 +1681,70 @@ const World = {
             );
 
 
+        const id =
+            this.normalizeId(
+                entityId
+            );
+
+
         if(
             !world ||
+            !id ||
             !Array.isArray(
                 world.entities
             )
         ){
+
             return null;
+
         }
-
-
-        const id =
-            String(
-                entityId ?? ""
-            ).trim();
 
 
         return (
             world.entities.find(
                 entity =>
                     entity?.id ===
-                    id
+                        id
             ) ||
             null
         );
+
+    },
+
+
+    worldsForEntity(
+        entityId,
+        options = {}
+    ){
+
+        const id =
+            this.normalizeId(
+                entityId
+            );
+
+
+        if(!id){
+
+            return [];
+
+        }
+
+
+        return this
+            .all(
+                options
+            )
+            .filter(
+                world =>
+                    Array.isArray(
+                        world.entities
+                    ) &&
+                    world.entities.some(
+                        entity =>
+                            entity?.id ===
+                                id
+                    )
+            );
 
     },
 
@@ -1030,13 +1762,11 @@ const World = {
 
 
         if(!world){
+
             return false;
+
         }
 
-
-        /*
-         * VAERO root world silinemez veya arşivlenemez.
-         */
 
         if(
             world.id ===
@@ -1049,38 +1779,54 @@ const World = {
                 "VAERO root world cannot be archived."
             );
 
+
             return false;
 
         }
 
 
-        if(world.archived){
+        if(
+            world.archived
+        ){
+
             return true;
+
         }
 
 
         world.archived =
             true;
 
+
         world.archivedAt =
             Date.now();
 
+
         world.status =
             "archived";
+
 
         world.updatedAt =
             Date.now();
 
 
+        this.sort();
+
+
         this.save();
 
 
-        this.emit(
-            "world.archived",
+        this.emitAliases(
+            [
+                "world.archived",
+                "world:archived"
+            ],
             {
                 world,
+
                 worldId:
                     world.id,
+
                 time:
                     Date.now()
             }
@@ -1105,37 +1851,54 @@ const World = {
 
 
         if(!world){
+
             return false;
+
         }
 
 
-        if(!world.archived){
+        if(
+            !world.archived
+        ){
+
             return true;
+
         }
 
 
         world.archived =
             false;
 
+
         world.archivedAt =
             null;
 
+
         world.status =
             "active";
+
 
         world.updatedAt =
             Date.now();
 
 
+        this.sort();
+
+
         this.save();
 
 
-        this.emit(
-            "world.restored",
+        this.emitAliases(
+            [
+                "world.restored",
+                "world:restored"
+            ],
             {
                 world,
+
                 worldId:
                     world.id,
+
                 time:
                     Date.now()
             }
@@ -1163,7 +1926,9 @@ const World = {
 
 
         if(!world){
+
             return false;
+
         }
 
 
@@ -1178,23 +1943,27 @@ const World = {
                 "VAERO root world cannot be removed."
             );
 
+
             return false;
 
         }
 
 
         if(
-            options.force !== true &&
+            options.force !==
+                true &&
             Array.isArray(
                 world.entities
             ) &&
-            world.entities.length > 0
+            world.entities.length >
+                0
         ){
 
             console.warn(
                 "World remove blocked: world still contains entities.",
                 world.id
             );
+
 
             return false;
 
@@ -1205,30 +1974,49 @@ const World = {
             this.worlds.findIndex(
                 item =>
                     item?.id ===
-                    world.id
+                        world.id
             );
 
 
-        if(index < 0){
+        if(
+            index <
+                0
+        ){
+
             return false;
+
         }
 
 
-        this.worlds.splice(
-            index,
-            1
-        );
+        const [
+            removed
+        ] =
+            this.worlds.splice(
+                index,
+                1
+            );
 
 
         this.save();
 
 
-        this.emit(
-            "world.removed",
+        this.emitAliases(
+            [
+                "world.removed",
+                "world:removed"
+            ],
             {
-                world,
+                ...removed,
+
+                world:
+                    removed,
+
+                id:
+                    removed.id,
+
                 worldId:
-                    world.id,
+                    removed.id,
+
                 time:
                     Date.now()
             }
@@ -1267,29 +2055,32 @@ const World = {
         }
 
 
-        if(
-            options.owner
-        ){
+        if(options.owner){
+
+            const owner =
+                this.normalizeId(
+                    options.owner
+                );
+
 
             worlds =
                 worlds.filter(
                     world =>
                         world?.owner ===
-                        options.owner
+                            owner
                 );
 
         }
 
 
-        if(
-            options.type
-        ){
+        if(options.type){
 
             const type =
-                String(
-                    options.type
+                this.normalizeText(
+                    options.type,
+                    "",
+                    120
                 )
-                    .trim()
                     .toLowerCase();
 
 
@@ -1308,18 +2099,60 @@ const World = {
         }
 
 
-        return worlds;
+        if(options.status){
+
+            const status =
+                this.normalizeStatus(
+                    options.status
+                );
+
+
+            worlds =
+                worlds.filter(
+                    world =>
+                        world?.status ===
+                            status
+                );
+
+        }
+
+
+        return worlds.sort(
+            (
+                a,
+                b
+            ) =>
+                Number(
+                    b.updatedAt
+                ) -
+                Number(
+                    a.updatedAt
+                )
+        );
 
     },
 
 
     archived(){
 
-        return this.worlds.filter(
-            world =>
-                world?.archived ===
-                true
-        );
+        return this.worlds
+            .filter(
+                world =>
+                    world?.archived ===
+                        true
+            )
+            .sort(
+                (
+                    a,
+                    b
+                ) =>
+                    Number(
+                        b.updatedAt
+                    ) -
+                    Number(
+                        a.updatedAt
+                    )
+            );
 
     },
 
@@ -1335,7 +2168,8 @@ const World = {
 
         const text =
             String(
-                query ?? ""
+                query ??
+                    ""
             )
                 .trim()
                 .toLocaleLowerCase(
@@ -1343,27 +2177,40 @@ const World = {
                 );
 
 
-        if(!text){
-
-            return this.all(
+        const worlds =
+            this.all(
                 options
             );
+
+
+        if(!text){
+
+            return worlds;
 
         }
 
 
-        return this.all(
-            options
-        ).filter(
+        return worlds.filter(
             world => {
 
                 const haystack = [
+
                     world.id,
+
                     world.name,
+
                     world.description,
+
                     world.type,
+
+                    world.owner,
+
+                    world.status,
+
                     ...(world.tags || [])
+
                 ]
+                    .filter(Boolean)
                     .join(" ")
                     .toLocaleLowerCase(
                         "tr-TR"
@@ -1381,6 +2228,60 @@ const World = {
 
 
     /* =====================================================
+       SORT
+    ===================================================== */
+
+    sort(){
+
+        this.worlds.sort(
+            (
+                a,
+                b
+            ) => {
+
+                if(
+                    a?.id ===
+                        "vaero-world"
+                ){
+
+                    return -1;
+
+                }
+
+
+                if(
+                    b?.id ===
+                        "vaero-world"
+                ){
+
+                    return 1;
+
+                }
+
+
+                return (
+                    Number(
+                        b?.updatedAt ||
+                        b?.createdAt ||
+                        0
+                    ) -
+                    Number(
+                        a?.updatedAt ||
+                        a?.createdAt ||
+                        0
+                    )
+                );
+
+            }
+        );
+
+
+        return this.worlds;
+
+    },
+
+
+    /* =====================================================
        PERSISTENCE
     ===================================================== */
 
@@ -1392,7 +2293,9 @@ const World = {
                 typeof localStorage ===
                     "undefined"
             ){
+
                 return false;
+
             }
 
 
@@ -1433,6 +2336,7 @@ const World = {
                 this.worlds =
                     [];
 
+
                 return false;
 
             }
@@ -1448,6 +2352,7 @@ const World = {
 
                 this.worlds =
                     [];
+
 
                 return true;
 
@@ -1469,28 +2374,129 @@ const World = {
                 this.worlds =
                     [];
 
+
                 return false;
 
             }
 
 
-            this.worlds =
-                parsed
-                    .filter(
-                        world =>
-                            world &&
-                            typeof world ===
-                                "object" &&
-                            !Array.isArray(
-                                world
-                            )
-                    )
-                    .map(
-                        world =>
+            const byId =
+                new Map();
+
+
+            parsed
+                .filter(
+                    world =>
+                        world &&
+                        typeof world ===
+                            "object" &&
+                        !Array.isArray(
+                            world
+                        )
+                )
+                .forEach(
+                    world => {
+
+                        const normalized =
                             this.normalize(
                                 world
+                            );
+
+
+                        const existing =
+                            byId.get(
+                                normalized.id
+                            );
+
+
+                        if(
+                            !existing ||
+                            Number(
+                                normalized.updatedAt
+                            ) >=
+                            Number(
+                                existing.updatedAt
                             )
-                    );
+                        ){
+
+                            byId.set(
+                                normalized.id,
+                                normalized
+                            );
+
+                        }
+
+                    }
+                );
+
+
+            this.worlds =
+                [
+                    ...byId.values()
+                ];
+
+
+            /*
+             * Root-world invariants are repaired on load
+             * if a previous version stored invalid state.
+             */
+
+            const rootWorld =
+                this.worlds.find(
+                    world =>
+                        world.id ===
+                            "vaero-world"
+                );
+
+
+            if(rootWorld){
+
+                rootWorld.type =
+                    "root-world";
+
+
+                rootWorld.archived =
+                    false;
+
+
+                rootWorld.archivedAt =
+                    null;
+
+
+                if(
+                    rootWorld.status ===
+                        "archived"
+                ){
+
+                    rootWorld.status =
+                        "active";
+
+                }
+
+
+                rootWorld.metadata = {
+
+                    ...rootWorld.metadata,
+
+                    system:
+                        true,
+
+                    removable:
+                        false
+
+                };
+
+            }
+
+
+            this.sort();
+
+
+            /*
+             * Persist canonical representation.
+             */
+
+            this.save();
 
 
             return true;
@@ -1520,29 +2526,53 @@ const World = {
 
     report(){
 
+        const active =
+            this.worlds.filter(
+                world =>
+                    world?.archived !==
+                        true
+            );
+
+
+        const archived =
+            this.worlds.filter(
+                world =>
+                    world?.archived ===
+                        true
+            );
+
+
         return {
 
             total:
                 this.worlds.length,
 
             active:
-                this.worlds.filter(
+                active.filter(
                     world =>
-                        world?.archived !==
-                            true &&
-                        world?.status ===
+                        world.status ===
                             "active"
                 ).length,
 
-            archived:
-                this.worlds.filter(
+            inactive:
+                active.filter(
                     world =>
-                        world?.archived ===
-                            true
+                        world.status ===
+                            "inactive"
                 ).length,
 
+            paused:
+                active.filter(
+                    world =>
+                        world.status ===
+                            "paused"
+                ).length,
+
+            archived:
+                archived.length,
+
             entities:
-                this.worlds.reduce(
+                active.reduce(
                     (
                         total,
                         world
@@ -1558,6 +2588,13 @@ const World = {
                     0
                 ),
 
+            rootWorld:
+                Boolean(
+                    this.get(
+                        "vaero-world"
+                    )
+                ),
+
             booted:
                 this.booted
 
@@ -1568,11 +2605,42 @@ const World = {
 };
 
 
-VAERO.register(
-    "world",
-    World
-);
+/* =========================================================
+   REGISTER
+========================================================= */
+
+try{
+
+    if(
+        typeof VAERO !==
+            "undefined" &&
+        typeof VAERO.register ===
+            "function"
+    ){
+
+        VAERO.register(
+            "world",
+            World
+        );
+
+    }
+
+} catch(error){
+
+    console.error(
+        "World register edilemedi:",
+        error
+    );
+
+}
 
 
-window.World =
-    World;
+if(
+    typeof window !==
+        "undefined"
+){
+
+    window.World =
+        World;
+
+}
