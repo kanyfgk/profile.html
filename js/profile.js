@@ -5,7 +5,8 @@
 
 const Profile = {
 
-    profiles:{},
+    profiles:
+        {},
 
     booted:
         false,
@@ -17,19 +18,38 @@ const Profile = {
 
     getService(name){
 
+        const serviceName =
+            String(
+                name ??
+                ""
+            ).trim();
+
+
+        if(!serviceName){
+
+            return null;
+
+        }
+
+
         try{
 
             if(
-                typeof VAERO === "undefined" ||
+                typeof VAERO ===
+                    "undefined" ||
                 typeof VAERO.get !==
                     "function"
             ){
+
                 return null;
+
             }
 
 
             return (
-                VAERO.get(name) ||
+                VAERO.get(
+                    serviceName
+                ) ||
                 null
             );
 
@@ -47,23 +67,50 @@ const Profile = {
         payload = {}
     ){
 
+        const name =
+            String(
+                eventName ??
+                ""
+            ).trim();
+
+
+        if(!name){
+
+            return false;
+
+        }
+
+
         try{
 
             if(
-                typeof VAERO !== "undefined" &&
+                typeof VAERO !==
+                    "undefined" &&
                 typeof VAERO.emit ===
                     "function"
             ){
 
                 VAERO.emit(
-                    eventName,
+                    name,
                     payload
                 );
+
 
                 return true;
 
             }
 
+        } catch(error){
+
+            console.warn(
+                `Profile event gönderilemedi: ${name}`,
+                error
+            );
+
+        }
+
+
+        try{
 
             const events =
                 this.getService(
@@ -71,25 +118,33 @@ const Profile = {
                 );
 
 
-            events?.emit?.(
-                eventName,
-                payload
-            );
+            if(
+                events &&
+                typeof events.emit ===
+                    "function"
+            ){
+
+                events.emit(
+                    name,
+                    payload
+                );
 
 
-            return true;
+                return true;
+
+            }
 
         } catch(error){
 
             console.warn(
-                `Profile event gönderilemedi: ${eventName}`,
+                `Profile event fallback gönderilemedi: ${name}`,
                 error
             );
 
-
-            return false;
-
         }
+
+
+        return false;
 
     },
 
@@ -97,6 +152,70 @@ const Profile = {
     /* =====================================================
        NORMALIZATION
     ===================================================== */
+
+    normalizeId(value){
+
+        const id =
+            String(
+                value ??
+                ""
+            )
+                .trim()
+                .slice(
+                    0,
+                    200
+                );
+
+
+        return (
+            id ||
+            null
+        );
+
+    },
+
+
+    normalizeText(
+        value,
+        maxLength = 1000
+    ){
+
+        return String(
+            value ??
+                ""
+        )
+            .trim()
+            .slice(
+                0,
+                maxLength
+            );
+
+    },
+
+
+    normalizeTimestamp(
+        value,
+        fallback = Date.now()
+    ){
+
+        const timestamp =
+            Number(
+                value
+            );
+
+
+        return (
+            Number.isFinite(
+                timestamp
+            ) &&
+            timestamp >
+                0
+        )
+            ? timestamp
+            : fallback;
+
+    },
+
 
     normalizeVisibility(value){
 
@@ -122,7 +241,35 @@ const Profile = {
     },
 
 
+    normalizeStatus(value){
+
+        const status =
+            String(
+                value ||
+                "active"
+            )
+                .trim()
+                .toLowerCase();
+
+
+        return [
+            "active",
+            "inactive",
+            "suspended",
+            "archived"
+        ].includes(
+            status
+        )
+            ? status
+            : "active";
+
+    },
+
+
     normalizeList(value){
+
+        let source;
+
 
         if(
             Array.isArray(
@@ -130,36 +277,91 @@ const Profile = {
             )
         ){
 
-            return [
-                ...new Set(
-                    value
-                        .map(
-                            item =>
-                                String(
-                                    item ?? ""
-                                ).trim()
-                        )
-                        .filter(Boolean)
+            source =
+                value;
+
+        }
+
+        else if(
+            value instanceof Set
+        ){
+
+            source =
+                [
+                    ...value
+                ];
+
+        }
+
+        else {
+
+            source =
+                String(
+                    value ??
+                    ""
                 )
-            ];
+                    .split(",");
 
         }
 
 
-        return [
-            ...new Set(
-                String(
-                    value ||
-                    ""
-                )
-                    .split(",")
-                    .map(
-                        item =>
-                            item.trim()
+        const seen =
+            new Set();
+
+
+        return source
+            .map(
+                item =>
+                    String(
+                        item ??
+                        ""
                     )
-                    .filter(Boolean)
+                        .trim()
+                        .slice(
+                            0,
+                            120
+                        )
             )
-        ];
+            .filter(
+                item => {
+
+                    if(!item){
+
+                        return false;
+
+                    }
+
+
+                    const key =
+                        item.toLocaleLowerCase(
+                            "tr-TR"
+                        );
+
+
+                    if(
+                        seen.has(
+                            key
+                        )
+                    ){
+
+                        return false;
+
+                    }
+
+
+                    seen.add(
+                        key
+                    );
+
+
+                    return true;
+
+                }
+            )
+            .slice(
+                0,
+                100
+            );
 
     },
 
@@ -174,7 +376,9 @@ const Profile = {
                 value
             )
         ){
+
             return {};
+
         }
 
 
@@ -190,120 +394,150 @@ const Profile = {
         entity = null
     ){
 
+        const source =
+            profile &&
+            typeof profile ===
+                "object" &&
+            !Array.isArray(
+                profile
+            )
+                ? profile
+                : {};
+
+
         const now =
             Date.now();
+
+
+        const entityId =
+            this.normalizeId(
+                source.entityId ||
+                entity?.id ||
+                source.id
+            );
+
+
+        const profileId =
+            this.normalizeId(
+                source.id ||
+                entityId
+            );
+
+
+        const createdAt =
+            this.normalizeTimestamp(
+                source.createdAt ||
+                entity?.createdAt,
+                now
+            );
+
+
+        const updatedAt =
+            this.normalizeTimestamp(
+                source.updatedAt,
+                createdAt
+            );
 
 
         return {
 
             id:
-                String(
-                    profile.id ||
-                    entity?.id ||
-                    ""
-                ).trim(),
+                profileId ||
+                entityId ||
+                "",
 
             entityId:
-                String(
-                    profile.entityId ||
-                    entity?.id ||
-                    profile.id ||
-                    ""
-                ).trim(),
+                entityId ||
+                profileId ||
+                "",
 
             displayName:
-                String(
-                    profile.displayName ||
-                    profile.name ||
+                this.normalizeText(
+                    source.displayName ||
+                    source.name ||
                     entity?.name ||
-                    "İsimsiz Varlık"
-                ).trim(),
+                    "İsimsiz Varlık",
+                    240
+                ) ||
+                "İsimsiz Varlık",
 
             headline:
-                String(
-                    profile.headline ||
-                    ""
-                ).trim(),
+                this.normalizeText(
+                    source.headline,
+                    300
+                ),
 
             bio:
-                String(
-                    profile.bio ||
-                    profile.about ||
-                    profile.description ||
-                    entity?.description ||
-                    ""
-                ).trim(),
+                this.normalizeText(
+                    source.bio ||
+                    source.about ||
+                    source.description ||
+                    entity?.description,
+                    5000
+                ),
 
             location:
-                String(
-                    profile.location ||
-                    ""
-                ).trim(),
+                this.normalizeText(
+                    source.location,
+                    300
+                ),
 
             website:
-                String(
-                    profile.website ||
-                    ""
-                ).trim(),
+                this.normalizeText(
+                    source.website,
+                    1000
+                ),
 
             interests:
                 this.normalizeList(
-                    profile.interests
+                    source.interests
                 ),
 
             skills:
                 this.normalizeList(
-                    profile.skills
+                    source.skills
                 ),
 
             languages:
                 this.normalizeList(
-                    profile.languages
+                    source.languages
                 ),
 
             visibility:
                 this.normalizeVisibility(
-                    profile.visibility
+                    source.visibility
                 ),
 
             discoverable:
-                profile.discoverable !==
+                source.discoverable !==
                     false,
 
             showEvolution:
-                profile.showEvolution !==
+                source.showEvolution !==
                     false,
 
             showConnections:
-                profile.showConnections !==
+                source.showConnections !==
                     false,
 
             status:
-                String(
-                    profile.status ||
-                    entity?.status ||
-                    "active"
-                )
-                    .trim()
-                    .toLowerCase(),
+                this.normalizeStatus(
+                    source.status ||
+                    entity?.status
+                ),
 
             metadata:
                 this.normalizeMetadata(
-                    profile.metadata
+                    source.metadata
                 ),
 
-            createdAt:
-                Number(
-                    profile.createdAt ||
-                    entity?.createdAt
-                ) ||
-                now,
+            createdAt,
 
             updatedAt:
-                Number(
-                    profile.updatedAt
-                ) ||
-                now
+                Math.max(
+                    createdAt,
+                    updatedAt
+                )
 
         };
 
@@ -316,8 +550,12 @@ const Profile = {
 
     boot(){
 
-        if(this.booted){
+        if(
+            this.booted
+        ){
+
             return true;
+
         }
 
 
@@ -327,41 +565,77 @@ const Profile = {
             );
 
 
-        if(
-            manager &&
-            typeof manager.all ===
-                "function"
-        ){
+        if(manager){
 
-            try{
-
-                const entities =
-                    manager.all({
-                        includeArchived:true
-                    }) ||
-                    [];
+            const methods = [
+                "all",
+                "getAll"
+            ];
 
 
-                entities.forEach(
-                    entity => {
+            for(
+                const method of methods
+            ){
 
-                        if(entity){
+                if(
+                    typeof manager[
+                        method
+                    ] !==
+                        "function"
+                ){
 
-                            this.create(
-                                entity
-                            );
+                    continue;
 
-                        }
+                }
+
+
+                try{
+
+                    const entities =
+                        manager[
+                            method
+                        ]({
+                            includeArchived:
+                                true
+                        }) ||
+                        [];
+
+
+                    if(
+                        Array.isArray(
+                            entities
+                        )
+                    ){
+
+                        entities.forEach(
+                            entity => {
+
+                                if(
+                                    entity?.id
+                                ){
+
+                                    this.create(
+                                        entity
+                                    );
+
+                                }
+
+                            }
+                        );
 
                     }
-                );
 
-            } catch(error){
 
-                console.warn(
-                    "Profile boot Entity taraması başarısız:",
-                    error
-                );
+                    break;
+
+                } catch(error){
+
+                    console.warn(
+                        "Profile boot Entity taraması başarısız:",
+                        error
+                    );
+
+                }
 
             }
 
@@ -399,16 +673,29 @@ const Profile = {
 
         if(
             !entity ||
+            typeof entity !==
+                "object" ||
             !entity.id
         ){
+
             return null;
+
         }
+
+
+        const existing =
+            this.profiles[
+                entity.id
+            ] ||
+            null;
 
 
         const profile =
             this.normalizeProfile(
-                entity.profile ||
-                {},
+                {
+                    ...(existing || {}),
+                    ...(entity.profile || {})
+                },
                 entity
             );
 
@@ -419,7 +706,8 @@ const Profile = {
 
         this.profiles[
             entity.id
-        ] = profile;
+        ] =
+            profile;
 
 
         return profile;
@@ -434,15 +722,40 @@ const Profile = {
 
         if(
             !entity ||
+            typeof entity !==
+                "object" ||
             !entity.id
         ){
+
             return null;
+
         }
+
+
+        const existing =
+            this.profiles[
+                entity.id
+            ] ||
+            {};
+
+
+        const safeData =
+            data &&
+            typeof data ===
+                "object" &&
+            !Array.isArray(
+                data
+            )
+                ? data
+                : {};
 
 
         const profile =
             this.normalizeProfile(
-                data,
+                {
+                    ...existing,
+                    ...safeData
+                },
                 entity
             );
 
@@ -453,7 +766,8 @@ const Profile = {
 
         this.profiles[
             entity.id
-        ] = profile;
+        ] =
+            profile;
 
 
         return profile;
@@ -462,13 +776,97 @@ const Profile = {
 
 
     /* =====================================================
-       RESOLVE
+       ENTITY RESOLUTION
+    ===================================================== */
+
+    resolveEntity(entityId){
+
+        const id =
+            this.normalizeId(
+                entityId
+            );
+
+
+        if(!id){
+
+            return null;
+
+        }
+
+
+        const manager =
+            this.getService(
+                "entityManager"
+            );
+
+
+        if(manager){
+
+            const methods = [
+                "get",
+                "find",
+                "getById"
+            ];
+
+
+            for(
+                const method of methods
+            ){
+
+                if(
+                    typeof manager[
+                        method
+                    ] !==
+                        "function"
+                ){
+
+                    continue;
+
+                }
+
+
+                try{
+
+                    const entity =
+                        manager[
+                            method
+                        ](
+                            id
+                        );
+
+
+                    if(entity){
+
+                        return entity;
+
+                    }
+
+                } catch(error){
+
+                    /* next resolver */
+
+                }
+
+            }
+
+        }
+
+
+        return null;
+
+    },
+
+
+    /* =====================================================
+       GET
     ===================================================== */
 
     get(entityOrId){
 
         if(!entityOrId){
+
             return null;
+
         }
 
 
@@ -481,9 +879,20 @@ const Profile = {
                 entityOrId.profile
             ){
 
+                const existing =
+                    entityOrId.id
+                        ? this.profiles[
+                            entityOrId.id
+                        ]
+                        : null;
+
+
                 const profile =
                     this.normalizeProfile(
-                        entityOrId.profile,
+                        {
+                            ...(existing || {}),
+                            ...entityOrId.profile
+                        },
                         entityOrId
                     );
 
@@ -492,11 +901,14 @@ const Profile = {
                     profile;
 
 
-                if(entityOrId.id){
+                if(
+                    entityOrId.id
+                ){
 
                     this.profiles[
                         entityOrId.id
-                    ] = profile;
+                    ] =
+                        profile;
 
                 }
 
@@ -506,7 +918,9 @@ const Profile = {
             }
 
 
-            if(entityOrId.id){
+            if(
+                entityOrId.id
+            ){
 
                 return this.create(
                     entityOrId
@@ -521,18 +935,22 @@ const Profile = {
 
 
         const id =
-            String(
+            this.normalizeId(
                 entityOrId
-            ).trim();
+            );
 
 
         if(!id){
+
             return null;
+
         }
 
 
         if(
-            this.profiles[id]
+            this.profiles[
+                id
+            ]
         ){
 
             return this.profiles[
@@ -542,31 +960,18 @@ const Profile = {
         }
 
 
-        const manager =
-            this.getService(
-                "entityManager"
+        const entity =
+            this.resolveEntity(
+                id
             );
 
 
-        try{
+        if(entity){
 
-            const entity =
-                manager?.get?.(
-                    id
-                );
+            return this.create(
+                entity
+            );
 
-
-            if(entity){
-
-                return this.create(
-                    entity
-                );
-
-            }
-
-        } catch(error){
-
-            /* fallback */
         }
 
 
@@ -599,7 +1004,9 @@ const Profile = {
                 data
             )
         ){
+
             return null;
+
         }
 
 
@@ -634,11 +1041,11 @@ const Profile = {
         ){
 
             const displayName =
-                String(
+                this.normalizeText(
                     data.displayName ??
-                    data.name ??
-                    ""
-                ).trim();
+                    data.name,
+                    240
+                );
 
 
             if(displayName){
@@ -657,10 +1064,10 @@ const Profile = {
         ){
 
             profile.headline =
-                String(
-                    data.headline ||
-                    ""
-                ).trim();
+                this.normalizeText(
+                    data.headline,
+                    300
+                );
 
         }
 
@@ -673,11 +1080,11 @@ const Profile = {
         ){
 
             profile.bio =
-                String(
+                this.normalizeText(
                     data.bio ??
-                    data.description ??
-                    ""
-                ).trim();
+                    data.description,
+                    5000
+                );
 
         }
 
@@ -688,10 +1095,10 @@ const Profile = {
         ){
 
             profile.location =
-                String(
-                    data.location ||
-                    ""
-                ).trim();
+                this.normalizeText(
+                    data.location,
+                    300
+                );
 
         }
 
@@ -702,10 +1109,10 @@ const Profile = {
         ){
 
             profile.website =
-                String(
-                    data.website ||
-                    ""
-                ).trim();
+                this.normalizeText(
+                    data.website,
+                    1000
+                );
 
         }
 
@@ -807,12 +1214,9 @@ const Profile = {
         ){
 
             profile.status =
-                String(
-                    data.status ||
-                    "active"
-                )
-                    .trim()
-                    .toLowerCase();
+                this.normalizeStatus(
+                    data.status
+                );
 
         }
 
@@ -827,8 +1231,11 @@ const Profile = {
         ){
 
             profile.metadata = {
+
                 ...profile.metadata,
+
                 ...data.metadata
+
             };
 
         }
@@ -847,9 +1254,12 @@ const Profile = {
             "profile:updated",
             {
                 profile,
+
                 before,
+
                 entityId:
                     profile.entityId,
+
                 time:
                     Date.now()
             }
@@ -898,6 +1308,42 @@ const Profile = {
     },
 
 
+    setEvolutionVisibility(
+        entityOrProfile,
+        enabled
+    ){
+
+        return this.update(
+            entityOrProfile,
+            {
+                showEvolution:
+                    Boolean(
+                        enabled
+                    )
+            }
+        );
+
+    },
+
+
+    setConnectionsVisibility(
+        entityOrProfile,
+        enabled
+    ){
+
+        return this.update(
+            entityOrProfile,
+            {
+                showConnections:
+                    Boolean(
+                        enabled
+                    )
+            }
+        );
+
+    },
+
+
     /* =====================================================
        LIST MANAGEMENT
     ===================================================== */
@@ -914,17 +1360,19 @@ const Profile = {
 
 
         const value =
-            String(
-                interest ||
-                ""
-            ).trim();
+            this.normalizeText(
+                interest,
+                120
+            );
 
 
         if(
             !profile ||
             !value
         ){
+
             return null;
+
         }
 
 
@@ -953,18 +1401,26 @@ const Profile = {
 
 
         const value =
-            String(
-                interest ||
-                ""
-            ).trim();
+            this.normalizeText(
+                interest,
+                120
+            );
 
 
         if(
             !profile ||
             !value
         ){
+
             return null;
+
         }
+
+
+        const key =
+            value.toLocaleLowerCase(
+                "tr-TR"
+            );
 
 
         return this.update(
@@ -973,8 +1429,10 @@ const Profile = {
                 interests:
                     profile.interests.filter(
                         item =>
-                            item !==
-                            value
+                            item.toLocaleLowerCase(
+                                "tr-TR"
+                            ) !==
+                            key
                     )
             }
         );
@@ -994,17 +1452,19 @@ const Profile = {
 
 
         const value =
-            String(
-                skill ||
-                ""
-            ).trim();
+            this.normalizeText(
+                skill,
+                120
+            );
 
 
         if(
             !profile ||
             !value
         ){
+
             return null;
+
         }
 
 
@@ -1033,18 +1493,26 @@ const Profile = {
 
 
         const value =
-            String(
-                skill ||
-                ""
-            ).trim();
+            this.normalizeText(
+                skill,
+                120
+            );
 
 
         if(
             !profile ||
             !value
         ){
+
             return null;
+
         }
+
+
+        const key =
+            value.toLocaleLowerCase(
+                "tr-TR"
+            );
 
 
         return this.update(
@@ -1053,8 +1521,102 @@ const Profile = {
                 skills:
                     profile.skills.filter(
                         item =>
-                            item !==
-                            value
+                            item.toLocaleLowerCase(
+                                "tr-TR"
+                            ) !==
+                            key
+                    )
+            }
+        );
+
+    },
+
+
+    addLanguage(
+        entityOrProfile,
+        language
+    ){
+
+        const profile =
+            this.get(
+                entityOrProfile
+            );
+
+
+        const value =
+            this.normalizeText(
+                language,
+                120
+            );
+
+
+        if(
+            !profile ||
+            !value
+        ){
+
+            return null;
+
+        }
+
+
+        return this.update(
+            profile,
+            {
+                languages:[
+                    ...profile.languages,
+                    value
+                ]
+            }
+        );
+
+    },
+
+
+    removeLanguage(
+        entityOrProfile,
+        language
+    ){
+
+        const profile =
+            this.get(
+                entityOrProfile
+            );
+
+
+        const value =
+            this.normalizeText(
+                language,
+                120
+            );
+
+
+        if(
+            !profile ||
+            !value
+        ){
+
+            return null;
+
+        }
+
+
+        const key =
+            value.toLocaleLowerCase(
+                "tr-TR"
+            );
+
+
+        return this.update(
+            profile,
+            {
+                languages:
+                    profile.languages.filter(
+                        item =>
+                            item.toLocaleLowerCase(
+                                "tr-TR"
+                            ) !==
+                            key
                     )
             }
         );
@@ -1063,14 +1625,24 @@ const Profile = {
 
 
     /* =====================================================
-       VERIFY PROFILE STRUCTURE
-       This is data integrity, NOT identity verification.
+       PROFILE STRUCTURE VALIDATION
+
+       This validates Profile data structure.
+       It is NOT Identity verification.
     ===================================================== */
 
-    verify(profile){
+    verify(profileOrEntity){
+
+        const profile =
+            this.get(
+                profileOrEntity
+            );
+
 
         if(!profile){
+
             return false;
+
         }
 
 
@@ -1086,6 +1658,185 @@ const Profile = {
 
 
     /* =====================================================
+       IDENTITY RESOLUTION
+    ===================================================== */
+
+    getIdentity(profileOrEntity){
+
+        const profile =
+            this.get(
+                profileOrEntity
+            );
+
+
+        if(
+            !profile ||
+            !profile.entityId
+        ){
+
+            return null;
+
+        }
+
+
+        const identity =
+            this.getService(
+                "identity"
+            );
+
+
+        if(
+            !identity ||
+            typeof identity.get !==
+                "function"
+        ){
+
+            return null;
+
+        }
+
+
+        try{
+
+            return (
+                identity.get(
+                    profile.entityId
+                ) ||
+                null
+            );
+
+        } catch(error){
+
+            return null;
+
+        }
+
+    },
+
+
+    /* =====================================================
+       CONNECTION / EVOLUTION RESOLUTION
+    ===================================================== */
+
+    getConnections(
+        profileOrEntity,
+        options = {}
+    ){
+
+        const profile =
+            this.get(
+                profileOrEntity
+            );
+
+
+        if(
+            !profile ||
+            !profile.entityId ||
+            profile.showConnections !==
+                true
+        ){
+
+            return [];
+
+        }
+
+
+        const bridge =
+            this.getService(
+                "bridge"
+            );
+
+
+        if(
+            !bridge ||
+            typeof bridge.forEntity !==
+                "function"
+        ){
+
+            return [];
+
+        }
+
+
+        try{
+
+            return (
+                bridge.forEntity(
+                    profile.entityId,
+                    options
+                ) ||
+                []
+            );
+
+        } catch(error){
+
+            return [];
+
+        }
+
+    },
+
+
+    getEvolution(
+        profileOrEntity,
+        options = {}
+    ){
+
+        const profile =
+            this.get(
+                profileOrEntity
+            );
+
+
+        if(
+            !profile ||
+            !profile.entityId ||
+            profile.showEvolution !==
+                true
+        ){
+
+            return [];
+
+        }
+
+
+        const evolution =
+            this.getService(
+                "evolution"
+            );
+
+
+        if(
+            !evolution ||
+            typeof evolution.forEntity !==
+                "function"
+        ){
+
+            return [];
+
+        }
+
+
+        try{
+
+            return (
+                evolution.forEntity(
+                    profile.entityId,
+                    options
+                ) ||
+                []
+            );
+
+        } catch(error){
+
+            return [];
+
+        }
+
+    },
+
+
+    /* =====================================================
        ENTITY SYNC
     ===================================================== */
 
@@ -1095,34 +1846,16 @@ const Profile = {
             !profile ||
             !profile.entityId
         ){
+
             return false;
+
         }
 
 
-        const manager =
-            this.getService(
-                "entityManager"
+        const entity =
+            this.resolveEntity(
+                profile.entityId
             );
-
-
-        let entity =
-            null;
-
-
-        try{
-
-            entity =
-                manager?.get?.(
-                    profile.entityId
-                ) ||
-                null;
-
-        } catch(error){
-
-            entity =
-                null;
-
-        }
 
 
         if(entity){
@@ -1136,9 +1869,20 @@ const Profile = {
                     "function"
             ){
 
-                entity.touch();
+                try{
 
-            } else {
+                    entity.touch();
+
+                } catch(error){
+
+                    entity.updatedAt =
+                        Date.now();
+
+                }
+
+            }
+
+            else {
 
                 entity.updatedAt =
                     Date.now();
@@ -1150,84 +1894,233 @@ const Profile = {
 
         this.profiles[
             profile.entityId
-        ] = profile;
+        ] =
+            profile;
 
 
-        const engine =
-            (
-                typeof VAERO !==
-                    "undefined"
-                    ? VAERO.engine
-                    : null
-            ) ||
-            window.Engine ||
-            null;
+        /*
+         * Current world compatibility sync.
+         */
+
+        try{
+
+            const engine =
+                (
+                    typeof VAERO !==
+                        "undefined"
+                        ? VAERO.engine
+                        : null
+                ) ||
+                (
+                    typeof window !==
+                        "undefined"
+                        ? window.Engine
+                        : null
+                ) ||
+                null;
 
 
-        const world =
-            engine?.currentWorld;
+            const world =
+                engine?.currentWorld;
 
 
-        if(
-            world &&
-            Array.isArray(
-                world.entities
-            )
-        ){
+            if(
+                world &&
+                Array.isArray(
+                    world.entities
+                )
+            ){
 
-            const index =
-                world.entities.findIndex(
-                    item =>
-                        item?.id ===
-                        profile.entityId
-                );
+                const index =
+                    world.entities.findIndex(
+                        item =>
+                            item?.id ===
+                                profile.entityId
+                    );
 
 
-            if(index >= 0){
+                if(
+                    index >=
+                        0
+                ){
 
-                if(entity){
+                    if(entity){
 
-                    world.entities[
-                        index
-                    ] = entity;
-
-                } else {
-
-                    world.entities[
-                        index
-                    ] = {
-                        ...world.entities[
+                        world.entities[
                             index
-                        ],
+                        ] =
+                            entity;
 
-                        profile:{
-                            ...profile
-                        },
+                    }
 
-                        updatedAt:
-                            Date.now()
-                    };
+                    else {
+
+                        world.entities[
+                            index
+                        ] = {
+
+                            ...world.entities[
+                                index
+                            ],
+
+                            profile:{
+                                ...profile
+                            },
+
+                            updatedAt:
+                                Date.now()
+
+                        };
+
+                    }
 
                 }
 
             }
+
+        } catch(error){
+
+            /* compatibility only */
 
         }
 
 
         try{
 
-            this.getService(
-                "world"
-            )?.save?.();
+            const worldService =
+                this.getService(
+                    "world"
+                );
+
+
+            if(
+                typeof worldService?.save ===
+                    "function"
+            ){
+
+                worldService.save();
+
+            }
 
         } catch(error){
 
             /* persistence layer may not be ready */
+
         }
 
 
         return true;
+
+    },
+
+
+    /* =====================================================
+       REMOVE CACHE
+    ===================================================== */
+
+    remove(entityOrId){
+
+        const profile =
+            this.get(
+                entityOrId
+            );
+
+
+        if(
+            !profile ||
+            !profile.entityId
+        ){
+
+            return false;
+
+        }
+
+
+        const entityId =
+            profile.entityId;
+
+
+        if(
+            !Object.prototype.hasOwnProperty.call(
+                this.profiles,
+                entityId
+            )
+        ){
+
+            return false;
+
+        }
+
+
+        delete this.profiles[
+            entityId
+        ];
+
+
+        this.emit(
+            "profile:removed",
+            {
+                profile,
+
+                entityId,
+
+                time:
+                    Date.now()
+            }
+        );
+
+
+        return true;
+
+    },
+
+
+    /* =====================================================
+       DISCOVERY POLICY
+    ===================================================== */
+
+    canDiscover(profileOrEntity){
+
+        const profile =
+            this.get(
+                profileOrEntity
+            );
+
+
+        if(!profile){
+
+            return false;
+
+        }
+
+
+        return Boolean(
+            profile.status ===
+                "active" &&
+            profile.discoverable ===
+                true &&
+            profile.visibility !==
+                "private"
+        );
+
+    },
+
+
+    discoverable(options = {}){
+
+        return this
+            .all({
+                ...options,
+
+                discoverable:
+                    true
+            })
+            .filter(
+                profile =>
+                    this.canDiscover(
+                        profile
+                    )
+            );
 
     },
 
@@ -1256,7 +2149,7 @@ const Profile = {
                 profiles.filter(
                     profile =>
                         profile.visibility ===
-                        visibility
+                            visibility
                 );
 
         }
@@ -1271,7 +2164,22 @@ const Profile = {
                 profiles.filter(
                     profile =>
                         profile.discoverable ===
-                        true
+                            true
+                );
+
+        }
+
+
+        if(
+            options.discoverable ===
+                false
+        ){
+
+            profiles =
+                profiles.filter(
+                    profile =>
+                        profile.discoverable !==
+                            true
                 );
 
         }
@@ -1280,18 +2188,16 @@ const Profile = {
         if(options.status){
 
             const status =
-                String(
+                this.normalizeStatus(
                     options.status
-                )
-                    .trim()
-                    .toLowerCase();
+                );
 
 
             profiles =
                 profiles.filter(
                     profile =>
                         profile.status ===
-                        status
+                            status
                 );
 
         }
@@ -1299,16 +2205,18 @@ const Profile = {
 
         return [
             ...profiles
-        ];
-
-    },
-
-
-    discoverable(){
-
-        return this.all({
-            discoverable:true
-        });
+        ].sort(
+            (
+                a,
+                b
+            ) =>
+                Number(
+                    b.updatedAt
+                ) -
+                Number(
+                    a.updatedAt
+                )
+        );
 
     },
 
@@ -1320,8 +2228,8 @@ const Profile = {
 
         const text =
             String(
-                query ||
-                ""
+                query ??
+                    ""
             )
                 .trim()
                 .toLocaleLowerCase(
@@ -1329,14 +2237,16 @@ const Profile = {
                 );
 
 
-        let profiles =
+        const profiles =
             this.all(
                 options
             );
 
 
         if(!text){
+
             return profiles;
+
         }
 
 
@@ -1362,6 +2272,7 @@ const Profile = {
                     ...(profile.languages || [])
 
                 ]
+                    .filter(Boolean)
                     .join(" ")
                     .toLocaleLowerCase(
                         "tr-TR"
@@ -1391,8 +2302,16 @@ const Profile = {
 
 
         if(!profile){
+
             return null;
+
         }
+
+
+        const identity =
+            this.getIdentity(
+                profile
+            );
 
 
         return {
@@ -1415,13 +2334,36 @@ const Profile = {
             discoverable:
                 profile.discoverable,
 
+            showEvolution:
+                profile.showEvolution,
+
+            showConnections:
+                profile.showConnections,
+
             interests:[
                 ...profile.interests
             ],
 
             skills:[
                 ...profile.skills
-            ]
+            ],
+
+            languages:[
+                ...profile.languages
+            ],
+
+            identity:
+                identity
+                    ? {
+                        vaId:
+                            identity.vaId ||
+                            null,
+
+                        verificationStatus:
+                            identity.verificationStatus ||
+                            "unverified"
+                    }
+                    : null
 
         };
 
@@ -1446,32 +2388,54 @@ const Profile = {
             total:
                 profiles.length,
 
+            active:
+                profiles.filter(
+                    profile =>
+                        profile.status ===
+                            "active"
+                ).length,
+
             discoverable:
                 profiles.filter(
                     profile =>
-                        profile.discoverable ===
-                        true
+                        this.canDiscover(
+                            profile
+                        )
                 ).length,
 
             private:
                 profiles.filter(
                     profile =>
                         profile.visibility ===
-                        "private"
+                            "private"
                 ).length,
 
             connections:
                 profiles.filter(
                     profile =>
                         profile.visibility ===
-                        "connections"
+                            "connections"
                 ).length,
 
             engineVisible:
                 profiles.filter(
                     profile =>
                         profile.visibility ===
-                        "engine"
+                            "engine"
+                ).length,
+
+            evolutionVisible:
+                profiles.filter(
+                    profile =>
+                        profile.showEvolution ===
+                            true
+                ).length,
+
+            connectionsVisible:
+                profiles.filter(
+                    profile =>
+                        profile.showConnections ===
+                            true
                 ).length
 
         };
@@ -1481,11 +2445,42 @@ const Profile = {
 };
 
 
-VAERO.register(
-    "profile",
-    Profile
-);
+/* =========================================================
+   REGISTER
+========================================================= */
+
+try{
+
+    if(
+        typeof VAERO !==
+            "undefined" &&
+        typeof VAERO.register ===
+            "function"
+    ){
+
+        VAERO.register(
+            "profile",
+            Profile
+        );
+
+    }
+
+} catch(error){
+
+    console.error(
+        "Profile register edilemedi:",
+        error
+    );
+
+}
 
 
-window.Profile =
-    Profile;
+if(
+    typeof window !==
+        "undefined"
+){
+
+    window.Profile =
+        Profile;
+
+}
