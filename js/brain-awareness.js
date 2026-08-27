@@ -38,6 +38,21 @@ const BrainAwareness = {
     bootedAt:
         null,
 
+    subscriptions:
+        [],
+
+    maxMetadataDepth:
+        3,
+
+    maxMetadataArray:
+        30,
+
+    maxMetadataKeys:
+        60,
+
+    maxStringLength:
+        2000,
+
 
     /* =====================================================
        SERVICE ACCESS
@@ -45,18 +60,38 @@ const BrainAwareness = {
 
     getService(name){
 
+        const serviceName =
+            String(
+                name ??
+                ""
+            ).trim();
+
+
+        if(!serviceName){
+
+            return null;
+
+        }
+
+
         try{
 
             if(
-                typeof VAERO === "undefined" ||
-                typeof VAERO.get !== "function"
+                typeof VAERO ===
+                    "undefined" ||
+                typeof VAERO.get !==
+                    "function"
             ){
+
                 return null;
+
             }
 
 
             return (
-                VAERO.get(name) ||
+                VAERO.get(
+                    serviceName
+                ) ||
                 null
             );
 
@@ -74,7 +109,8 @@ const BrainAwareness = {
         try{
 
             if(
-                typeof VAERO !== "undefined" &&
+                typeof VAERO !==
+                    "undefined" &&
                 VAERO.engine
             ){
 
@@ -84,14 +120,23 @@ const BrainAwareness = {
 
         } catch(error){
 
-            /* fallback */
+            /* fallback below */
+
         }
 
 
-        return (
-            window.Engine ||
-            null
-        );
+        if(
+            typeof window !==
+                "undefined" &&
+            window.Engine
+        ){
+
+            return window.Engine;
+
+        }
+
+
+        return null;
 
     },
 
@@ -104,10 +149,15 @@ const BrainAwareness = {
 
         const normalized =
             String(
-                app ?? ""
+                app ??
+                    ""
             )
                 .trim()
-                .toLowerCase();
+                .toLowerCase()
+                .slice(
+                    0,
+                    160
+                );
 
 
         return (
@@ -122,10 +172,15 @@ const BrainAwareness = {
 
         const normalized =
             String(
-                screen ?? ""
+                screen ??
+                    ""
             )
                 .trim()
-                .toLowerCase();
+                .toLowerCase()
+                .slice(
+                    0,
+                    160
+                );
 
 
         return (
@@ -140,16 +195,45 @@ const BrainAwareness = {
 
         const normalized =
             String(
-                page ?? ""
+                page ??
+                    ""
             )
                 .trim()
-                .toLowerCase();
+                .toLowerCase()
+                .slice(
+                    0,
+                    160
+                );
 
 
         return (
             normalized ||
             null
         );
+
+    },
+
+
+    normalizeTimestamp(
+        value,
+        fallback = null
+    ){
+
+        const timestamp =
+            Number(
+                value
+            );
+
+
+        return (
+            Number.isFinite(
+                timestamp
+            ) &&
+            timestamp >
+                0
+        )
+            ? timestamp
+            : fallback;
 
     },
 
@@ -161,17 +245,22 @@ const BrainAwareness = {
     clone(value){
 
         if(
-            value === null ||
-            value === undefined
+            value ===
+                null ||
+            value ===
+                undefined
         ){
+
             return value;
+
         }
 
 
         try{
 
             if(
-                typeof structuredClone === "function"
+                typeof structuredClone ===
+                    "function"
             ){
 
                 return structuredClone(
@@ -183,6 +272,7 @@ const BrainAwareness = {
         } catch(error){
 
             /* JSON fallback */
+
         }
 
 
@@ -204,14 +294,294 @@ const BrainAwareness = {
 
 
     /* =====================================================
-       METADATA
+       METADATA SANITIZATION
     ===================================================== */
+
+    sanitizeValue(
+        value,
+        depth = 0,
+        seen = new WeakSet()
+    ){
+
+        if(
+            value ===
+                null ||
+            value ===
+                undefined
+        ){
+
+            return value;
+
+        }
+
+
+        if(
+            depth >
+                this.maxMetadataDepth
+        ){
+
+            return "[depth-limit]";
+
+        }
+
+
+        if(
+            typeof value ===
+                "string"
+        ){
+
+            return value.slice(
+                0,
+                this.maxStringLength
+            );
+
+        }
+
+
+        if(
+            typeof value ===
+                "number"
+        ){
+
+            return Number.isFinite(
+                value
+            )
+                ? value
+                : null;
+
+        }
+
+
+        if(
+            typeof value ===
+                "boolean"
+        ){
+
+            return value;
+
+        }
+
+
+        if(
+            typeof value ===
+                "bigint"
+        ){
+
+            return String(
+                value
+            );
+
+        }
+
+
+        if(
+            typeof value ===
+                "function" ||
+            typeof value ===
+                "symbol"
+        ){
+
+            return undefined;
+
+        }
+
+
+        if(
+            value instanceof Date
+        ){
+
+            const timestamp =
+                value.getTime();
+
+
+            return Number.isFinite(
+                timestamp
+            )
+                ? value.toISOString()
+                : null;
+
+        }
+
+
+        if(
+            Array.isArray(
+                value
+            )
+        ){
+
+            return value
+                .slice(
+                    0,
+                    this.maxMetadataArray
+                )
+                .map(
+                    item =>
+                        this.sanitizeValue(
+                            item,
+                            depth + 1,
+                            seen
+                        )
+                )
+                .filter(
+                    item =>
+                        item !==
+                            undefined
+                );
+
+        }
+
+
+        if(
+            typeof value ===
+                "object"
+        ){
+
+            try{
+
+                if(
+                    seen.has(
+                        value
+                    )
+                ){
+
+                    return "[circular]";
+
+                }
+
+
+                seen.add(
+                    value
+                );
+
+            } catch(error){
+
+                return null;
+
+            }
+
+
+            const blockedKeys =
+                new Set([
+
+                    "password",
+                    "passphrase",
+                    "secret",
+                    "clientsecret",
+                    "client_secret",
+                    "token",
+                    "idtoken",
+                    "id_token",
+                    "accesstoken",
+                    "access_token",
+                    "refreshtoken",
+                    "refresh_token",
+                    "authorization",
+                    "apikey",
+                    "api_key",
+                    "privatekey",
+                    "private_key",
+                    "cardnumber",
+                    "card_number",
+                    "cvv",
+                    "cvc",
+                    "pin"
+
+                ]);
+
+
+            const result =
+                {};
+
+
+            Object.entries(
+                value
+            )
+                .slice(
+                    0,
+                    this.maxMetadataKeys
+                )
+                .forEach(
+                    (
+                        [
+                            key,
+                            item
+                        ]
+                    ) => {
+
+                        const normalizedKey =
+                            String(
+                                key
+                            )
+                                .trim()
+                                .toLowerCase()
+                                .replace(
+                                    /[\s-]/g,
+                                    ""
+                                );
+
+
+                        if(
+                            blockedKeys.has(
+                                normalizedKey
+                            )
+                        ){
+
+                            result[
+                                key
+                            ] =
+                                "[redacted]";
+
+
+                            return;
+
+                        }
+
+
+                        const sanitized =
+                            this.sanitizeValue(
+                                item,
+                                depth + 1,
+                                seen
+                            );
+
+
+                        if(
+                            sanitized !==
+                                undefined
+                        ){
+
+                            result[
+                                key
+                            ] =
+                                sanitized;
+
+                        }
+
+                    }
+                );
+
+
+            return result;
+
+        }
+
+
+        return String(
+            value
+        ).slice(
+            0,
+            this.maxStringLength
+        );
+
+    },
+
 
     normalizeMetadata(metadata){
 
         if(
             !metadata ||
-            typeof metadata !== "object" ||
+            typeof metadata !==
+                "object" ||
             Array.isArray(
                 metadata
             )
@@ -222,76 +592,22 @@ const BrainAwareness = {
         }
 
 
-        const safe = {};
-
-
-        Object.entries(
-            metadata
-        )
-            .slice(
-                0,
-                60
-            )
-            .forEach(
-                ([key,value]) => {
-
-                    const normalizedKey =
-                        String(
-                            key
-                        )
-                            .trim()
-                            .toLowerCase();
-
-
-                    const blocked =
-                        new Set([
-                            "password",
-                            "secret",
-                            "token",
-                            "authorization",
-                            "apikey",
-                            "api_key",
-                            "privatekey",
-                            "private_key",
-                            "cardnumber",
-                            "cvv"
-                        ]);
-
-
-                    if(
-                        blocked.has(
-                            normalizedKey
-                        )
-                    ){
-
-                        safe[key] =
-                            "[redacted]";
-
-                        return;
-
-                    }
-
-
-                    const cloned =
-                        this.clone(
-                            value
-                        );
-
-
-                    if(
-                        cloned !== undefined
-                    ){
-
-                        safe[key] =
-                            cloned;
-
-                    }
-
-                }
+        const sanitized =
+            this.sanitizeValue(
+                metadata
             );
 
 
-        return safe;
+        return (
+            sanitized &&
+            typeof sanitized ===
+                "object" &&
+            !Array.isArray(
+                sanitized
+            )
+                ? sanitized
+                : {}
+        );
 
     },
 
@@ -309,6 +625,7 @@ const BrainAwareness = {
 
 
         const entity =
+
             engine?.currentOpenedEntity ||
             engine?.currentEntity ||
             engine?.rootEntity ||
@@ -358,11 +675,41 @@ const BrainAwareness = {
        TRANSITION HISTORY
     ===================================================== */
 
+    createTransitionId(){
+
+        try{
+
+            if(
+                typeof crypto !==
+                    "undefined" &&
+                typeof crypto.randomUUID ===
+                    "function"
+            ){
+
+                return crypto.randomUUID();
+
+            }
+
+        } catch(error){
+
+            /* fallback */
+
+        }
+
+
+        return `awareness_${Date.now()}_${Math.random()
+            .toString(36)
+            .slice(2,8)}`;
+
+    },
+
+
     recordTransition({
         from,
         to,
         fromScreen = null,
         toScreen = null,
+        fromPage = null,
         page = null,
         metadata = {},
         enteredAt = null
@@ -371,9 +718,7 @@ const BrainAwareness = {
         const transition = {
 
             id:
-                `awareness_${Date.now()}_${Math.random()
-                    .toString(36)
-                    .slice(2,8)}`,
+                this.createTransitionId(),
 
             from:
                 from ||
@@ -392,6 +737,10 @@ const BrainAwareness = {
                 to ||
                 "home",
 
+            fromPage:
+                fromPage ||
+                null,
+
             page:
                 page ||
                 null,
@@ -402,10 +751,10 @@ const BrainAwareness = {
                 ),
 
             enteredAt:
-                Number(
-                    enteredAt
-                ) ||
-                Date.now()
+                this.normalizeTimestamp(
+                    enteredAt,
+                    Date.now()
+                )
 
         };
 
@@ -417,7 +766,7 @@ const BrainAwareness = {
 
         if(
             this.transitions.length >
-            this.historyLimit
+                this.historyLimit
         ){
 
             this.transitions =
@@ -428,8 +777,11 @@ const BrainAwareness = {
         }
 
 
-        return this.clone(
-            transition
+        return (
+            this.clone(
+                transition
+            ) ||
+            null
         );
 
     },
@@ -464,14 +816,10 @@ const BrainAwareness = {
 
         const nextPage =
             this.normalizePage(
-                metadata.page ||
-                engine?.currentEntityPage ||
+                metadata.page ??
+                engine?.currentEntityPage ??
                 null
             );
-
-
-        const now =
-            Date.now();
 
 
         const previousApp =
@@ -484,6 +832,11 @@ const BrainAwareness = {
             previousApp;
 
 
+        const previousPage =
+            this.currentPage ||
+            null;
+
+
         const normalizedMetadata =
             this.buildEngineMetadata(
                 metadata
@@ -491,9 +844,16 @@ const BrainAwareness = {
 
 
         const changed =
-            previousApp !== nextApp ||
-            previousScreen !== nextScreen ||
-            this.currentPage !== nextPage;
+            previousApp !==
+                nextApp ||
+            previousScreen !==
+                nextScreen ||
+            previousPage !==
+                nextPage;
+
+
+        const now =
+            Date.now();
 
 
         if(changed){
@@ -520,6 +880,9 @@ const BrainAwareness = {
                 toScreen:
                     nextScreen,
 
+                fromPage:
+                    previousPage,
+
                 page:
                     nextPage,
 
@@ -530,6 +893,18 @@ const BrainAwareness = {
                     now
 
             });
+
+
+            /*
+             * enteredAt only changes when the actual
+             * application/screen/page context changes.
+             *
+             * Metadata refreshes therefore do not reset
+             * time-in-context.
+             */
+
+            this.enteredAt =
+                now;
 
         }
 
@@ -550,17 +925,19 @@ const BrainAwareness = {
             normalizedMetadata;
 
 
-        this.enteredAt =
-            now;
+        const snapshot =
+            this.snapshot();
 
 
         this.emit(
-            "brain:awareness:entered",
-            this.snapshot()
+            changed
+                ? "brain:awareness:entered"
+                : "brain:awareness:updated",
+            snapshot
         );
 
 
-        return this.snapshot();
+        return snapshot;
 
     },
 
@@ -593,6 +970,7 @@ const BrainAwareness = {
             nextScreen ||
             "home",
             {
+
                 ...metadata,
 
                 screen:
@@ -600,7 +978,25 @@ const BrainAwareness = {
 
                 page:
                     nextPage
+
             }
+        );
+
+    },
+
+
+    /* =====================================================
+       APP UPDATE
+    ===================================================== */
+
+    setApp(
+        app,
+        metadata = {}
+    ){
+
+        return this.enter(
+            app,
+            metadata
         );
 
     },
@@ -626,13 +1022,102 @@ const BrainAwareness = {
         this.metadata =
             merge
                 ? this.normalizeMetadata({
+
                     ...this.metadata,
+
                     ...nextMetadata
+
                 })
                 : nextMetadata;
 
 
-        return this.snapshot();
+        const snapshot =
+            this.snapshot();
+
+
+        this.emit(
+            "brain:awareness:metadata",
+            snapshot
+        );
+
+
+        return snapshot;
+
+    },
+
+
+    /* =====================================================
+       EVENT PAYLOAD HINTS
+    ===================================================== */
+
+    extractEventHints(
+        eventName,
+        payload = {}
+    ){
+
+        const data =
+            payload &&
+            typeof payload ===
+                "object" &&
+            !Array.isArray(
+                payload
+            )
+                ? payload
+                : {};
+
+
+        const hints = {
+
+            source:
+                eventName,
+
+            screen:
+                data.screen ||
+                data.view ||
+                null,
+
+            page:
+                data.page ||
+                data.entityPage ||
+                null,
+
+            app:
+                data.app ||
+                data.appId ||
+                data.applicationId ||
+                null,
+
+            entityId:
+                data.entityId ||
+                data.entity?.id ||
+                null,
+
+            entityName:
+                data.entityName ||
+                data.entity?.name ||
+                null,
+
+            entityType:
+                data.entityType ||
+                data.entity?.type ||
+                null,
+
+            worldId:
+                data.worldId ||
+                data.world?.id ||
+                null,
+
+            worldName:
+                data.worldName ||
+                data.world?.name ||
+                null
+
+        };
+
+
+        return this.normalizeMetadata(
+            hints
+        );
 
     },
 
@@ -650,28 +1135,53 @@ const BrainAwareness = {
 
 
         if(!engine){
+
+            /*
+             * Even before Engine is available, explicit
+             * application hints can still update Awareness.
+             */
+
+            if(metadata.app){
+
+                return this.enter(
+                    metadata.app,
+                    metadata
+                );
+
+            }
+
+
             return this.snapshot();
+
         }
 
 
         const page =
-            engine.currentEntityPage ||
-            null;
+            this.normalizePage(
+                metadata.page ??
+                engine.currentEntityPage ??
+                null
+            );
 
 
         const screen =
-            engine.currentView ||
-            "home";
+            this.normalizeScreen(
+                metadata.screen ||
+                engine.currentView ||
+                "home"
+            );
 
 
         let app =
+            metadata.app ||
             page ||
             screen ||
             "home";
 
 
         if(
-            screen === "vaero"
+            screen ===
+                "vaero"
         ){
 
             app =
@@ -681,7 +1191,8 @@ const BrainAwareness = {
 
 
         if(
-            screen === "applications"
+            screen ===
+                "applications"
         ){
 
             app =
@@ -693,6 +1204,7 @@ const BrainAwareness = {
         return this.enter(
             app,
             {
+
                 ...metadata,
 
                 screen,
@@ -702,6 +1214,7 @@ const BrainAwareness = {
                 source:
                     metadata.source ||
                     "engine-sync"
+
             }
         );
 
@@ -757,7 +1270,9 @@ const BrainAwareness = {
         if(
             !Number.isFinite(
                 enteredAt
-            )
+            ) ||
+            enteredAt <=
+                0
         ){
 
             return 0;
@@ -824,12 +1339,24 @@ const BrainAwareness = {
 
     history(limit = 8){
 
+        const numeric =
+            Number(
+                limit
+            );
+
+
         const safeLimit =
             Math.max(
                 1,
                 Math.min(
                     this.historyLimit,
-                    Number(limit) || 8
+                    Number.isFinite(
+                        numeric
+                    )
+                        ? Math.floor(
+                            numeric
+                        )
+                        : 8
                 )
             );
 
@@ -849,16 +1376,23 @@ const BrainAwareness = {
     lastTransition(){
 
         if(
-            this.transitions.length === 0
+            this.transitions.length ===
+                0
         ){
+
             return null;
+
         }
 
 
-        return this.clone(
-            this.transitions[
-                this.transitions.length - 1
-            ]
+        return (
+            this.clone(
+                this.transitions[
+                    this.transitions.length -
+                    1
+                ]
+            ) ||
+            null
         );
 
     },
@@ -870,18 +1404,34 @@ const BrainAwareness = {
 
     emit(
         eventName,
-        payload
+        payload = {}
     ){
+
+        const name =
+            String(
+                eventName ??
+                    ""
+            ).trim();
+
+
+        if(!name){
+
+            return false;
+
+        }
+
 
         try{
 
             if(
-                typeof VAERO !== "undefined" &&
-                typeof VAERO.emit === "function"
+                typeof VAERO !==
+                    "undefined" &&
+                typeof VAERO.emit ===
+                    "function"
             ){
 
                 VAERO.emit(
-                    eventName,
+                    name,
                     payload
                 );
 
@@ -893,6 +1443,7 @@ const BrainAwareness = {
         } catch(error){
 
             /* fallback */
+
         }
 
 
@@ -904,10 +1455,76 @@ const BrainAwareness = {
                 );
 
 
-            events?.emit?.(
-                eventName,
-                payload
-            );
+            if(
+                events &&
+                typeof events.emit ===
+                    "function"
+            ){
+
+                events.emit(
+                    name,
+                    payload
+                );
+
+
+                return true;
+
+            }
+
+        } catch(error){
+
+            return false;
+
+        }
+
+
+        return false;
+
+    },
+
+
+    /* =====================================================
+       SUBSCRIPTIONS
+    ===================================================== */
+
+    subscribe(
+        events,
+        eventName,
+        callback
+    ){
+
+        if(
+            !events ||
+            typeof events.on !==
+                "function" ||
+            typeof callback !==
+                "function"
+        ){
+
+            return false;
+
+        }
+
+
+        try{
+
+            const unsubscribe =
+                events.on(
+                    eventName,
+                    callback
+                );
+
+
+            if(
+                typeof unsubscribe ===
+                    "function"
+            ){
+
+                this.subscriptions.push(
+                    unsubscribe
+                );
+
+            }
 
 
             return true;
@@ -917,6 +1534,44 @@ const BrainAwareness = {
             return false;
 
         }
+
+    },
+
+
+    clearSubscriptions(){
+
+        this.subscriptions.forEach(
+            unsubscribe => {
+
+                if(
+                    typeof unsubscribe !==
+                        "function"
+                ){
+
+                    return;
+
+                }
+
+
+                try{
+
+                    unsubscribe();
+
+                } catch(error){
+
+                    /* ignore */
+
+                }
+
+            }
+        );
+
+
+        this.subscriptions =
+            [];
+
+
+        return true;
 
     },
 
@@ -934,6 +1589,12 @@ const BrainAwareness = {
         }
 
 
+        const events =
+            this.getService(
+                "events"
+            );
+
+
         this.booted =
             true;
 
@@ -942,56 +1603,27 @@ const BrainAwareness = {
             Date.now();
 
 
-        const events =
-            this.getService(
-                "events"
-            );
-
-
         if(
             events &&
-            typeof events.on === "function"
+            typeof events.on ===
+                "function"
         ){
-
-            const sync =
-                source => {
-
-                    try{
-
-                        this.syncFromEngine({
-                            source
-                        });
-
-                    } catch(error){
-
-                        console.warn(
-                            `Brain Awareness sync başarısız: ${source}`,
-                            error
-                        );
-
-                    }
-
-                };
-
 
             const subscriptions = [
 
                 "engine.started",
+                "engine:started",
 
                 "engine:view:changed",
-
                 "engine.view.changed",
 
                 "entity:mounted",
-
                 "entity.mounted",
 
                 "world:opened",
-
                 "world.opened",
 
                 "application:opened",
-
                 "application.opened"
 
             ];
@@ -1000,23 +1632,35 @@ const BrainAwareness = {
             subscriptions.forEach(
                 eventName => {
 
-                    try{
+                    this.subscribe(
+                        events,
+                        eventName,
+                        payload => {
 
-                        events.on(
-                            eventName,
-                            () => {
+                            try{
 
-                                sync(
-                                    eventName
+                                const hints =
+                                    this.extractEventHints(
+                                        eventName,
+                                        payload
+                                    );
+
+
+                                this.syncFromEngine(
+                                    hints
+                                );
+
+                            } catch(error){
+
+                                console.warn(
+                                    `Brain Awareness sync başarısız: ${eventName}`,
+                                    error
                                 );
 
                             }
-                        );
 
-                    } catch(error){
-
-                        /* optional event */
-                    }
+                        }
+                    );
 
                 }
             );
@@ -1057,29 +1701,46 @@ const BrainAwareness = {
             Date.now();
 
 
-        const previous =
+        const previousApp =
             this.currentApp ||
             null;
 
 
+        const previousScreen =
+            this.currentScreen ||
+            null;
+
+
+        const previousPage =
+            this.currentPage ||
+            null;
+
+
         if(
-            previous &&
-            previous !== "home"
+            previousApp !==
+                "home" ||
+            previousScreen !==
+                "home" ||
+            previousPage !==
+                null
         ){
 
             this.recordTransition({
 
                 from:
-                    previous,
+                    previousApp,
 
                 to:
                     "home",
 
                 fromScreen:
-                    this.currentScreen,
+                    previousScreen,
 
                 toScreen:
                     "home",
+
+                fromPage:
+                    previousPage,
 
                 page:
                     null,
@@ -1095,11 +1756,11 @@ const BrainAwareness = {
 
 
         this.previousApp =
-            previous;
+            previousApp;
 
 
         this.previousScreen =
-            this.currentScreen;
+            previousScreen;
 
 
         this.currentApp =
@@ -1122,7 +1783,17 @@ const BrainAwareness = {
             now;
 
 
-        return this.snapshot();
+        const snapshot =
+            this.snapshot();
+
+
+        this.emit(
+            "brain:awareness:reset",
+            snapshot
+        );
+
+
+        return snapshot;
 
     },
 
@@ -1165,7 +1836,17 @@ const BrainAwareness = {
             [];
 
 
-        return this.snapshot();
+        const snapshot =
+            this.snapshot();
+
+
+        this.emit(
+            "brain:awareness:cleared",
+            snapshot
+        );
+
+
+        return snapshot;
 
     },
 
@@ -1200,11 +1881,17 @@ const BrainAwareness = {
             previousApp:
                 snapshot.previousApp,
 
+            previousScreen:
+                snapshot.previousScreen,
+
             duration:
                 snapshot.duration,
 
             transitions:
                 this.transitions.length,
+
+            subscriptions:
+                this.subscriptions.length,
 
             entityId:
                 snapshot.metadata
@@ -1223,14 +1910,45 @@ const BrainAwareness = {
 };
 
 
-VAERO.register(
-    "brainAwareness",
-    BrainAwareness
-);
+/* =========================================================
+   REGISTER
+========================================================= */
+
+try{
+
+    if(
+        typeof VAERO !==
+            "undefined" &&
+        typeof VAERO.register ===
+            "function"
+    ){
+
+        VAERO.register(
+            "brainAwareness",
+            BrainAwareness
+        );
+
+    }
+
+} catch(error){
+
+    console.error(
+        "BrainAwareness register edilemedi:",
+        error
+    );
+
+}
 
 
-window.BrainAwareness =
-    BrainAwareness;
+if(
+    typeof window !==
+        "undefined"
+){
+
+    window.BrainAwareness =
+        BrainAwareness;
+
+}
 
 
 /* =========================================================
