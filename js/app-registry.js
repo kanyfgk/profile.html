@@ -1,22 +1,26 @@
 /* =========================================================
    VAERO APPLICATION REGISTRY
    Application Catalog / Manifest Authority
-   Final Built-In Registry
+   Built-In + External Application Manifests
 ========================================================= */
 
 const AppRegistry = (() => {
 
+    /* =====================================================
+       PRIVATE BUILT-IN AUTHORITY
+    ===================================================== */
+
     /*
-     * Built-in yetkisi yalnız bu closure içinde bulunan
-     * private token ile verilebilir.
+     * Built-in yetkisi yalnızca bu closure içindeki private
+     * token üzerinden verilebilir.
      *
-     * Dış bir manifest:
+     * External bir manifest:
      *
      * system:true
      * trusted:true
      * distribution:"built-in"
      *
-     * yazsa bile kendisini sistem uygulaması yapamaz.
+     * yazsa bile kendisini VAERO built-in uygulaması yapamaz.
      */
 
     const BUILT_IN_TOKEN =
@@ -27,10 +31,13 @@ const AppRegistry = (() => {
 
     const Registry = {
 
-        apps:[],
+        version:
+            "3.0.0",
 
         manifestVersion:
-            2,
+            3,
+
+        apps: [],
 
 
         /* =====================================================
@@ -40,7 +47,8 @@ const AppRegistry = (() => {
         normalizeId(id){
 
             return String(
-                id ?? ""
+                id ??
+                ""
             )
                 .trim()
                 .toLowerCase()
@@ -72,25 +80,64 @@ const AppRegistry = (() => {
                     value
                 )
             ){
+
                 return [];
+
             }
 
 
-            return [
-                ...new Set(
-                    value
-                        .map(
-                            item =>
-                                String(
-                                    item ??
-                                    ""
-                                )
-                                    .trim()
-                                    .toLowerCase()
+            const seen =
+                new Set();
+
+
+            const result =
+                [];
+
+
+            value.forEach(
+                item => {
+
+                    const normalized =
+                        String(
+                            item ??
+                            ""
                         )
-                        .filter(Boolean)
-                )
-            ];
+                            .trim()
+                            .toLowerCase();
+
+
+                    if(!normalized){
+
+                        return;
+
+                    }
+
+
+                    if(
+                        seen.has(
+                            normalized
+                        )
+                    ){
+
+                        return;
+
+                    }
+
+
+                    seen.add(
+                        normalized
+                    );
+
+
+                    result.push(
+                        normalized
+                    );
+
+                }
+            );
+
+
+            return result;
 
         },
 
@@ -118,6 +165,7 @@ const AppRegistry = (() => {
                 "utility",
                 "service",
                 "finance",
+                "commerce",
                 "other"
 
             ];
@@ -228,7 +276,8 @@ const AppRegistry = (() => {
                 Number.isFinite(
                     numericAmount
                 ) &&
-                numericAmount >= 0
+                numericAmount >=
+                    0
                     ? numericAmount
                     : 0;
 
@@ -242,14 +291,18 @@ const AppRegistry = (() => {
                     "free"
             ){
 
+                const requestedCurrency =
+                    String(
+                        pricing.currency ||
+                        ""
+                    )
+                        .trim()
+                        .toUpperCase();
+
+
                 currency =
-                    pricing.currency
-                        ? String(
-                            pricing.currency
-                        )
-                            .trim()
-                            .toUpperCase()
-                        : null;
+                    requestedCurrency ||
+                    null;
 
             }
 
@@ -354,6 +407,29 @@ const AppRegistry = (() => {
         },
 
 
+        normalizeMetadata(value){
+
+            if(
+                !value ||
+                typeof value !==
+                    "object" ||
+                Array.isArray(
+                    value
+                )
+            ){
+
+                return {};
+
+            }
+
+
+            return {
+                ...value
+            };
+
+        },
+
+
         /* =====================================================
            CLONE
         ===================================================== */
@@ -361,7 +437,9 @@ const AppRegistry = (() => {
         cloneApp(app){
 
             if(!app){
+
                 return null;
+
             }
 
 
@@ -369,49 +447,49 @@ const AppRegistry = (() => {
 
                 ...app,
 
-                requestedPermissions:[
+                requestedPermissions: [
                     ...(
                         app.requestedPermissions ||
                         []
                     )
                 ],
 
-                capabilities:[
+                capabilities: [
                     ...(
                         app.capabilities ||
                         []
                     )
                 ],
 
-                dependencies:[
+                dependencies: [
                     ...(
                         app.dependencies ||
                         []
                     )
                 ],
 
-                tags:[
+                tags: [
                     ...(
                         app.tags ||
                         []
                     )
                 ],
 
-                pricing:{
+                pricing: {
                     ...(
                         app.pricing ||
                         {}
                     )
                 },
 
-                compatibility:{
+                compatibility: {
                     ...(
                         app.compatibility ||
                         {}
                     )
                 },
 
-                metadata:{
+                metadata: {
                     ...(
                         app.metadata ||
                         {}
@@ -440,7 +518,8 @@ const AppRegistry = (() => {
 
                 return {
 
-                    valid:false,
+                    valid:
+                        false,
 
                     reason:
                         "Application manifest object değil."
@@ -460,7 +539,8 @@ const AppRegistry = (() => {
 
                 return {
 
-                    valid:false,
+                    valid:
+                        false,
 
                     reason:
                         "Application id eksik."
@@ -478,7 +558,8 @@ const AppRegistry = (() => {
 
                 return {
 
-                    valid:false,
+                    valid:
+                        false,
 
                     reason:
                         "Application id formatı geçersiz."
@@ -495,7 +576,8 @@ const AppRegistry = (() => {
 
                 return {
 
-                    valid:false,
+                    valid:
+                        false,
 
                     reason:
                         "Application id çok uzun."
@@ -516,7 +598,8 @@ const AppRegistry = (() => {
 
                 return {
 
-                    valid:false,
+                    valid:
+                        false,
 
                     reason:
                         "Application title eksik."
@@ -533,7 +616,8 @@ const AppRegistry = (() => {
 
                 return {
 
-                    valid:false,
+                    valid:
+                        false,
 
                     reason:
                         "Application title çok uzun."
@@ -545,9 +629,23 @@ const AppRegistry = (() => {
 
             const action =
                 this.normalizeText(
-                    app.action,
-                    `entity:${id}`
+                    app.action
                 );
+
+
+            if(!action){
+
+                return {
+
+                    valid:
+                        false,
+
+                    reason:
+                        "Application action eksik."
+
+                };
+
+            }
 
 
             if(
@@ -558,7 +656,8 @@ const AppRegistry = (() => {
 
                 return {
 
-                    valid:false,
+                    valid:
+                        false,
 
                     reason:
                         "Application action formatı geçersiz."
@@ -582,7 +681,8 @@ const AppRegistry = (() => {
 
                 return {
 
-                    valid:false,
+                    valid:
+                        false,
 
                     reason:
                         "Ücretli application için currency gerekli."
@@ -600,7 +700,8 @@ const AppRegistry = (() => {
 
                 return {
 
-                    valid:false,
+                    valid:
+                        false,
 
                     reason:
                         "Subscription application için interval gerekli."
@@ -612,9 +713,12 @@ const AppRegistry = (() => {
 
             return {
 
-                valid:true,
+                valid:
+                    true,
 
                 id,
+
+                title,
 
                 action,
 
@@ -665,6 +769,10 @@ const AppRegistry = (() => {
                     BUILT_IN_TOKEN;
 
 
+            /*
+             * External manifest built-in distribution talep
+             * edemez. Built-in yalnız private token ile oluşur.
+             */
             const distribution =
                 isBuiltIn
                     ? "built-in"
@@ -699,10 +807,7 @@ const AppRegistry = (() => {
                     ),
 
                 title:
-                    this.normalizeText(
-                        app.title,
-                        id
-                    ),
+                    validation.title,
 
                 subtitle:
                     this.normalizeText(
@@ -747,13 +852,17 @@ const AppRegistry = (() => {
                     isBuiltIn,
 
                 /*
-                 * Registry trusted yalnız built-in için
-                 * doğrudan true olabilir.
+                 * Registry trust built-in uygulamalar dışında
+                 * verilmez.
                  *
-                 * External runtime trust OrganSystem +
-                 * ApplicationVerifier tarafından tutulur.
+                 * External runtime trust:
+                 *
+                 * ApplicationVerifier
+                 *        ↓
+                 * OrganSystem.setTrusted()
+                 *
+                 * zincirinin sorumluluğudur.
                  */
-
                 trusted:
                     isBuiltIn,
 
@@ -769,9 +878,15 @@ const AppRegistry = (() => {
                         : app.installable ===
                             true,
 
+                /*
+                 * Built-in uygulamalar Store tarafından
+                 * güncellenmez. Engine build'i ile güncellenir.
+                 */
                 updateable:
-                    app.updateable !==
-                        false,
+                    isBuiltIn
+                        ? false
+                        : app.updateable !==
+                            false,
 
                 signature:
                     isBuiltIn
@@ -815,18 +930,9 @@ const AppRegistry = (() => {
                     ),
 
                 metadata:
-                    (
-                        app.metadata &&
-                        typeof app.metadata ===
-                            "object" &&
-                        !Array.isArray(
-                            app.metadata
-                        )
-                    )
-                        ? {
-                            ...app.metadata
-                        }
-                        : {},
+                    this.normalizeMetadata(
+                        app.metadata
+                    ),
 
                 createdAt:
                     Number.isFinite(
@@ -858,7 +964,8 @@ const AppRegistry = (() => {
             ================================================= */
 
             if(
-                existingIndex >= 0
+                existingIndex >=
+                    0
             ){
 
                 const existing =
@@ -868,10 +975,9 @@ const AppRegistry = (() => {
 
 
                 /*
-                 * Built-in manifest dış kayıt tarafından
-                 * değiştirilemez.
+                 * Built-in manifest external kayıt tarafından
+                 * overwrite edilemez.
                  */
-
                 if(
                     existing.system ===
                         true &&
@@ -891,6 +997,11 @@ const AppRegistry = (() => {
                 }
 
 
+                /*
+                 * External kayıt mevcutsa built-in bootstrap
+                 * aynı ID'yi devralabilir. Private token burada
+                 * authority'dir.
+                 */
                 if(isBuiltIn){
 
                     normalizedApp.system =
@@ -908,7 +1019,14 @@ const AppRegistry = (() => {
                     normalizedApp.installable =
                         false;
 
-                } else {
+                    normalizedApp.updateable =
+                        false;
+
+                    normalizedApp.signature =
+                        null;
+
+                }
+                else {
 
                     normalizedApp.system =
                         false;
@@ -961,7 +1079,7 @@ const AppRegistry = (() => {
 
 
         /* =====================================================
-           REGISTER EXTERNAL MANIFEST
+           EXTERNAL MANIFEST
         ===================================================== */
 
         registerExternal(app = {}){
@@ -986,6 +1104,13 @@ const AppRegistry = (() => {
                 );
 
 
+            if(!normalizedId){
+
+                return false;
+
+            }
+
+
             const index =
                 this.apps.findIndex(
                     item =>
@@ -998,7 +1123,9 @@ const AppRegistry = (() => {
                 index <
                     0
             ){
+
                 return false;
+
             }
 
 
@@ -1044,6 +1171,13 @@ const AppRegistry = (() => {
                 );
 
 
+            if(!normalizedId){
+
+                return false;
+
+            }
+
+
             const app =
                 this.apps.find(
                     item =>
@@ -1053,15 +1187,15 @@ const AppRegistry = (() => {
 
 
             if(!app){
+
                 return false;
+
             }
 
 
             /*
-             * Built-in entry runtime'dan silinmez;
-             * catalog visibility değiştirilemez.
+             * Built-in manifest catalogdan kapatılamaz.
              */
-
             if(
                 app.system ===
                     true &&
@@ -1078,6 +1212,7 @@ const AppRegistry = (() => {
                 Boolean(
                     enabled
                 );
+
 
             app.updatedAt =
                 Date.now();
@@ -1098,6 +1233,13 @@ const AppRegistry = (() => {
                 this.normalizeId(
                     id
                 );
+
+
+            if(!normalizedId){
+
+                return null;
+
+            }
 
 
             const app =
@@ -1133,6 +1275,13 @@ const AppRegistry = (() => {
                 );
 
 
+            if(!normalizedId){
+
+                return false;
+
+            }
+
+
             return this.apps.some(
                 app =>
                     app.id ===
@@ -1148,8 +1297,21 @@ const AppRegistry = (() => {
 
         all(options = {}){
 
+            const safeOptions =
+                (
+                    options &&
+                    typeof options ===
+                        "object" &&
+                    !Array.isArray(
+                        options
+                    )
+                )
+                    ? options
+                    : {};
+
+
             const includeDisabled =
-                options.includeDisabled ===
+                safeOptions.includeDisabled ===
                     true;
 
 
@@ -1166,12 +1328,12 @@ const AppRegistry = (() => {
 
 
             if(
-                options.category
+                safeOptions.category
             ){
 
                 const category =
                     this.normalizeCategory(
-                        options.category
+                        safeOptions.category
                     );
 
 
@@ -1186,7 +1348,7 @@ const AppRegistry = (() => {
 
 
             if(
-                options.installable ===
+                safeOptions.installable ===
                     true
             ){
 
@@ -1201,7 +1363,7 @@ const AppRegistry = (() => {
 
 
             if(
-                options.system ===
+                safeOptions.system ===
                     true
             ){
 
@@ -1216,7 +1378,7 @@ const AppRegistry = (() => {
 
 
             if(
-                options.external ===
+                safeOptions.external ===
                     true
             ){
 
@@ -1231,7 +1393,7 @@ const AppRegistry = (() => {
 
 
             if(
-                options.firstParty ===
+                safeOptions.firstParty ===
                     true
             ){
 
@@ -1246,7 +1408,7 @@ const AppRegistry = (() => {
 
 
             if(
-                options.thirdParty ===
+                safeOptions.thirdParty ===
                     true
             ){
 
@@ -1261,7 +1423,7 @@ const AppRegistry = (() => {
 
 
             if(
-                options.paid ===
+                safeOptions.paid ===
                     true
             ){
 
@@ -1347,7 +1509,16 @@ const AppRegistry = (() => {
                         )
 
                     ]
-                        .join(" ")
+                        .filter(
+                            value =>
+                                value !==
+                                    null &&
+                                value !==
+                                    undefined
+                        )
+                        .join(
+                            " "
+                        )
                         .toLocaleLowerCase(
                             "tr-TR"
                         );
@@ -1386,7 +1557,8 @@ const AppRegistry = (() => {
 
                         map.set(
                             app.category,
-                            current + 1
+                            current +
+                            1
                         );
 
                     }
@@ -1403,6 +1575,7 @@ const AppRegistry = (() => {
                     ]) => ({
 
                         id,
+
                         total
 
                     })
@@ -1428,7 +1601,8 @@ const AppRegistry = (() => {
 
             const apps =
                 this.all({
-                    includeDisabled:true
+                    includeDisabled:
+                        true
                 });
 
 
@@ -1518,6 +1692,9 @@ const AppRegistry = (() => {
 
             return {
 
+                version:
+                    this.version,
+
                 manifestVersion:
                     catalog.manifestVersion,
 
@@ -1584,15 +1761,15 @@ const AppRegistry = (() => {
                 "identity",
 
             version:
-                "2.0.0",
+                "3.0.0",
 
-            capabilities:[
+            capabilities: [
                 "identity.read",
                 "identity.manage",
                 "identity.verification.request"
             ],
 
-            tags:[
+            tags: [
                 "identity",
                 "va-id",
                 "verification"
@@ -1618,7 +1795,7 @@ const AppRegistry = (() => {
                 "Kendini VAERO içinde ifade et",
 
             description:
-                "Görünen isim, bio, yetenekler, ilgi alanları ve Discovery yönünü yönetir.",
+                "Görünen isim, bio, yetenekler, ilgi alanları ve Discovery sunumunu yönetir.",
 
             action:
                 "entity:profile",
@@ -1627,15 +1804,15 @@ const AppRegistry = (() => {
                 "identity",
 
             version:
-                "2.0.0",
+                "3.0.0",
 
-            capabilities:[
+            capabilities: [
                 "profile.read",
                 "profile.manage",
                 "profile.discovery"
             ],
 
-            tags:[
+            tags: [
                 "profile",
                 "discovery",
                 "presentation"
@@ -1661,7 +1838,7 @@ const AppRegistry = (() => {
                 "Kalıcı bağlamlarını yönet",
 
             description:
-                "Notları, kararları, fikirleri, olayları ve önemli kişisel kayıtları saklar.",
+                "Notları, kararları, fikirleri, olayları ve önemli bağlamları merkezi Memory System üzerinden yönetir.",
 
             action:
                 "entity:memory",
@@ -1670,16 +1847,16 @@ const AppRegistry = (() => {
                 "knowledge",
 
             version:
-                "2.0.0",
+                "3.0.0",
 
-            capabilities:[
+            capabilities: [
                 "memory.read",
                 "memory.create",
                 "memory.manage",
                 "memory.search"
             ],
 
-            tags:[
+            tags: [
                 "memory",
                 "knowledge",
                 "context"
@@ -1705,7 +1882,7 @@ const AppRegistry = (() => {
                 "Yaşam ve sistem akışını gör",
 
             description:
-                "Memory, Evolution ve sistem olaylarını kronolojik bir akışta birleştirir.",
+                "Memory, Evolution ve sistem olaylarını tek kronolojik görünümde birleştirir.",
 
             action:
                 "entity:timeline",
@@ -1714,15 +1891,15 @@ const AppRegistry = (() => {
                 "knowledge",
 
             version:
-                "2.0.0",
+                "3.0.0",
 
-            capabilities:[
+            capabilities: [
                 "timeline.read",
                 "timeline.search",
                 "timeline.link"
             ],
 
-            tags:[
+            tags: [
                 "timeline",
                 "history",
                 "events"
@@ -1748,7 +1925,7 @@ const AppRegistry = (() => {
                 "Bağlantılarını yönet",
 
             description:
-                "İnsanlar, varlıklar ve dünyalar arasındaki ilişki ağını temsil eder.",
+                "Varlıklar ve dünyalar arasındaki ilişki ve bağlantı ağını yönetir.",
 
             action:
                 "entity:bridge",
@@ -1757,16 +1934,16 @@ const AppRegistry = (() => {
                 "social",
 
             version:
-                "2.0.0",
+                "3.0.0",
 
-            capabilities:[
+            capabilities: [
                 "bridge.read",
                 "bridge.create",
                 "bridge.manage",
                 "bridge.search"
             ],
 
-            tags:[
+            tags: [
                 "bridge",
                 "connections",
                 "network"
@@ -1792,7 +1969,7 @@ const AppRegistry = (() => {
                 "Gelişimini takip et",
 
             description:
-                "Hedefleri, kararları, başarıları, kilometre taşlarını ve XP gelişimini takip eder.",
+                "Hedefleri, kararları, başarıları, yaşam olaylarını ve gelişim ilerlemesini takip eder.",
 
             action:
                 "entity:evolution",
@@ -1801,20 +1978,20 @@ const AppRegistry = (() => {
                 "development",
 
             version:
-                "2.0.0",
+                "3.0.0",
 
-            capabilities:[
+            capabilities: [
                 "evolution.read",
                 "evolution.create",
                 "evolution.manage",
                 "evolution.goals"
             ],
 
-            tags:[
+            tags: [
                 "evolution",
                 "goals",
                 "progress",
-                "xp"
+                "life-events"
             ]
         },
 
@@ -1837,7 +2014,7 @@ const AppRegistry = (() => {
                 "Varlığının çalışan sistemlerini gör",
 
             description:
-                "Kimlik, Hafıza, Zaman Çizelgesi, Bridge, Evolution ve diğer aktif organların durumunu ve bağlantılarını tek yerde gösterir.",
+                "Entity içindeki organların durumunu, yeteneklerini, izinlerini ve çalışma sağlığını tek yerde gösterir.",
 
             action:
                 "entity:organs",
@@ -1846,16 +2023,16 @@ const AppRegistry = (() => {
                 "system",
 
             version:
-                "2.0.0",
+                "3.0.0",
 
-            capabilities:[
+            capabilities: [
                 "organs.read",
                 "organs.status",
                 "organs.inspect",
                 "organs.navigate"
             ],
 
-            tags:[
+            tags: [
                 "organs",
                 "system",
                 "entity",
@@ -1891,15 +2068,15 @@ const AppRegistry = (() => {
                 "system",
 
             version:
-                "2.0.0",
+                "3.0.0",
 
-            capabilities:[
+            capabilities: [
                 "settings.read",
                 "settings.manage",
                 "privacy.manage"
             ],
 
-            tags:[
+            tags: [
                 "settings",
                 "privacy",
                 "security"
@@ -1925,7 +2102,7 @@ const AppRegistry = (() => {
                 "Kişisel yönünü keşfet",
 
             description:
-                "Amaç, ilgi, güçlü yön, hedef ve bağlantı sinyallerinden kişisel başlangıç yönü üretir.",
+                "Amaç, ilgi, güçlü yön, hedef ve bağlantı sinyallerinden kişisel başlangıç yönünü oluşturur.",
 
             action:
                 "entity:discovery",
@@ -1936,13 +2113,13 @@ const AppRegistry = (() => {
             version:
                 "3.0.0",
 
-            capabilities:[
+            capabilities: [
                 "discovery.read",
                 "discovery.analyse",
                 "discovery.personalise"
             ],
 
-            tags:[
+            tags: [
                 "discovery",
                 "direction",
                 "personalisation"
@@ -1968,7 +2145,7 @@ const AppRegistry = (() => {
                 "Engine yeteneklerini genişlet",
 
             description:
-                "Uygulamaları keşfet, kurulu uygulamaları yönet, izinleri incele ve güncellemeleri takip et.",
+                "Engine içindeki uygulamaları keşfet, izinleri incele, kurulu uygulamaları yönet ve güncellemeleri takip et.",
 
             action:
                 "app:applications",
@@ -1977,9 +2154,9 @@ const AppRegistry = (() => {
                 "system",
 
             version:
-                "2.0.0",
+                "3.0.0",
 
-            capabilities:[
+            capabilities: [
                 "applications.catalog",
                 "applications.install",
                 "applications.manage",
@@ -1987,7 +2164,7 @@ const AppRegistry = (() => {
                 "permissions.review"
             ],
 
-            tags:[
+            tags: [
                 "applications",
                 "catalog",
                 "permissions",
@@ -1997,7 +2174,7 @@ const AppRegistry = (() => {
 
 
         /* =====================================================
-           VAERO SYSTEM APP
+           VAERO OFFICIAL APP
         ===================================================== */
 
         {
@@ -2011,33 +2188,45 @@ const AppRegistry = (() => {
                 "VAERO",
 
             subtitle:
-                "Living Engine merkezi",
+                "Kişisel Atmosfer Sistemin",
 
             description:
-                "Worlds, Entities, Memory, Evolution, Bridge, Applications, Brain ve Engine durumunu tek sistem bağlamında birleştirir.",
+                "VAERO cihazlarını, atmosferlerini, ürün deneyimini, Care hizmetlerini ve VAERO'nun fiziksel dünya katmanlarını tek resmi uygulamada yönetir.",
 
             action:
                 "app:vaero",
 
             category:
-                "system",
+                "service",
 
             version:
-                "2.0.0",
+                "3.0.0",
 
-            capabilities:[
-                "engine.overview",
-                "engine.context",
-                "engine.health",
-                "engine.continuity"
+            capabilities: [
+                "vaero.products",
+                "vaero.atmospheres",
+                "vaero.purchase",
+                "vaero.care",
+                "vaero.vision"
             ],
 
-            tags:[
+            tags: [
                 "vaero",
-                "engine",
-                "continuity",
-                "system"
-            ]
+                "atmosphere",
+                "device",
+                "care",
+                "vision"
+            ],
+
+            metadata: {
+
+                firstPartyProductApp:
+                    true,
+
+                engineCore:
+                    false
+
+            }
         }
 
     ];
@@ -2085,16 +2274,45 @@ try{
 
 
         /*
-         * Legacy compatibility alias.
+         * Deprecated compatibility alias.
          *
-         * Yeni application katalog kodu
-         * appRegistry kullanmalıdır.
+         * Gerçek bir organRegistry servisi zaten varsa
+         * Application Registry onun üzerine yazılmaz.
          */
+        let existingOrganRegistry =
+            null;
 
-        VAERO.register(
-            "organRegistry",
-            AppRegistry
-        );
+
+        try{
+
+            if(
+                typeof VAERO.get ===
+                    "function"
+            ){
+
+                existingOrganRegistry =
+                    VAERO.get(
+                        "organRegistry"
+                    );
+
+            }
+
+        } catch(error){
+
+            existingOrganRegistry =
+                null;
+
+        }
+
+
+        if(!existingOrganRegistry){
+
+            VAERO.register(
+                "organRegistry",
+                AppRegistry
+            );
+
+        }
 
     }
 
@@ -2112,16 +2330,26 @@ try{
    GLOBALS
 ========================================================= */
 
-window.AppRegistry =
-    AppRegistry;
+if(
+    typeof window !==
+        "undefined"
+){
+
+    window.AppRegistry =
+        AppRegistry;
 
 
-/*
- * Legacy compatibility.
- *
- * Eski OrgansApp / OrganStatus kodu henüz bu globali
- * kullanabiliyor.
- */
+    /*
+     * Legacy global yalnız gerçek OrganRegistry henüz yoksa
+     * sağlanır.
+     */
+    if(
+        !window.OrganRegistry
+    ){
 
-window.OrganRegistry =
-    AppRegistry;
+        window.OrganRegistry =
+            AppRegistry;
+
+    }
+
+}
