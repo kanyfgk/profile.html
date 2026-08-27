@@ -6,6 +6,9 @@
 
 const TimelineApp = {
 
+    version:
+        "3.0.0",
+
     searchQuery:
         "",
 
@@ -21,9 +24,6 @@ const TimelineApp = {
     searchTimer:
         null,
 
-    orphanCleanupAttempted:
-        false,
-
 
     /* =====================================================
        SAFETY
@@ -31,21 +31,32 @@ const TimelineApp = {
 
     escapeHTML(value){
 
-        if(
-            window.UI &&
-            typeof UI.escapeHTML ===
-                "function"
-        ){
+        try{
 
-            return UI.escapeHTML(
-                value
-            );
+            if(
+                typeof window !==
+                    "undefined" &&
+                window.UI &&
+                typeof window.UI.escapeHTML ===
+                    "function"
+            ){
+
+                return window.UI.escapeHTML(
+                    value
+                );
+
+            }
+
+        } catch(error){
+
+            /* local fallback */
 
         }
 
 
         return String(
-            value ?? ""
+            value ??
+                ""
         )
             .replaceAll(
                 "&",
@@ -67,6 +78,57 @@ const TimelineApp = {
                 "'",
                 "&#039;"
             );
+
+    },
+
+
+    clone(value){
+
+        if(
+            value ===
+                null ||
+            value ===
+                undefined
+        ){
+
+            return value;
+
+        }
+
+
+        try{
+
+            if(
+                typeof structuredClone ===
+                    "function"
+            ){
+
+                return structuredClone(
+                    value
+                );
+
+            }
+
+        } catch(error){
+
+            /* JSON fallback */
+
+        }
+
+
+        try{
+
+            return JSON.parse(
+                JSON.stringify(
+                    value
+                )
+            );
+
+        } catch(error){
+
+            return null;
+
+        }
 
     },
 
@@ -96,15 +158,39 @@ const TimelineApp = {
         }
 
 
-        return (
-            window.Engine ||
-            null
-        );
+        if(
+            typeof window !==
+                "undefined"
+        ){
+
+            return (
+                window.Engine ||
+                null
+            );
+
+        }
+
+
+        return null;
 
     },
 
 
     getService(name){
+
+        const serviceName =
+            String(
+                name ??
+                    ""
+            ).trim();
+
+
+        if(!serviceName){
+
+            return null;
+
+        }
+
 
         try{
 
@@ -122,7 +208,7 @@ const TimelineApp = {
 
             return (
                 VAERO.get(
-                    name
+                    serviceName
                 ) ||
                 null
             );
@@ -130,7 +216,7 @@ const TimelineApp = {
         } catch(error){
 
             console.warn(
-                `Timeline service okunamadı: ${name}`,
+                `Timeline service okunamadı: ${serviceName}`,
                 error
             );
 
@@ -182,9 +268,33 @@ const TimelineApp = {
             null;
 
 
-        return engine.mount(
-            entity
-        );
+        if(!entity){
+
+            return false;
+
+        }
+
+
+        try{
+
+            return (
+                engine.mount(
+                    entity
+                ) !==
+                false
+            );
+
+        } catch(error){
+
+            console.warn(
+                "Timeline remount başarısız:",
+                error
+            );
+
+
+            return false;
+
+        }
 
     },
 
@@ -203,9 +313,21 @@ const TimelineApp = {
                 );
 
 
-            awareness?.enter?.(
+            if(
+                !awareness ||
+                typeof awareness.enter !==
+                    "function"
+            ){
+
+                return false;
+
+            }
+
+
+            awareness.enter(
                 "timeline",
                 {
+
                     entityId:
                         entity?.id ||
                         null,
@@ -220,11 +342,18 @@ const TimelineApp = {
                         Boolean(
                             String(
                                 this.searchQuery ||
-                                ""
+                                    ""
                             ).trim()
-                        )
+                        ),
+
+                    source:
+                        "timeline-app"
+
                 }
             );
+
+
+            return true;
 
         } catch(error){
 
@@ -232,6 +361,9 @@ const TimelineApp = {
                 "Timeline Brain context açılamadı:",
                 error
             );
+
+
+            return false;
 
         }
 
@@ -251,54 +383,26 @@ const TimelineApp = {
     },
 
 
-    cleanOrphans(){
+    getEvolutionCore(){
 
-        if(
-            this.orphanCleanupAttempted
-        ){
+        return this.getService(
+            "evolution"
+        );
 
-            return true;
-
-        }
+    },
 
 
-        this.orphanCleanupAttempted =
-            true;
+    getMemoryCore(){
 
-
-        const timeline =
-            this.getTimelineCore();
-
-
-        if(
-            !timeline ||
-            typeof timeline.cleanOrphanLifeEvents !==
-                "function"
-        ){
-
-            return false;
-
-        }
-
-
-        try{
-
-            timeline.cleanOrphanLifeEvents();
-
-
-            return true;
-
-        } catch(error){
-
-            console.warn(
-                "Timeline orphan kayıtları temizlenemedi:",
-                error
-            );
-
-
-            return false;
-
-        }
+        return (
+            this.getService(
+                "memorySystem"
+            ) ||
+            this.getService(
+                "memory"
+            ) ||
+            null
+        );
 
     },
 
@@ -309,22 +413,44 @@ const TimelineApp = {
 
     getTimestamp(item){
 
-        const value =
-            Number(
-                item?.occurredAt ||
-                item?.updatedAt ||
-                item?.createdAt ||
-                item?.timestamp ||
-                item?.time ||
-                0
-            );
+        const candidates = [
+
+            item?.occurredAt,
+            item?.updatedAt,
+            item?.createdAt,
+            item?.timestamp,
+            item?.time
+
+        ];
 
 
-        return Number.isFinite(
-            value
-        )
-            ? value
-            : 0;
+        for(
+            const candidate of
+                candidates
+        ){
+
+            const value =
+                Number(
+                    candidate
+                );
+
+
+            if(
+                Number.isFinite(
+                    value
+                ) &&
+                value >
+                    0
+            ){
+
+                return value;
+
+            }
+
+        }
+
+
+        return 0;
 
     },
 
@@ -355,6 +481,7 @@ const TimelineApp = {
             return new Intl.DateTimeFormat(
                 "tr-TR",
                 {
+
                     day:
                         "2-digit",
 
@@ -369,6 +496,7 @@ const TimelineApp = {
 
                     minute:
                         "2-digit"
+
                 }
             ).format(
                 new Date(
@@ -425,21 +553,27 @@ const TimelineApp = {
 
 
         return [
+
             date.getFullYear(),
+
             String(
                 date.getMonth() +
-                1
+                    1
             ).padStart(
                 2,
                 "0"
             ),
+
             String(
                 date.getDate()
             ).padStart(
                 2,
                 "0"
             )
-        ].join("-");
+
+        ].join(
+            "-"
+        );
 
     },
 
@@ -526,6 +660,7 @@ const TimelineApp = {
             return new Intl.DateTimeFormat(
                 "tr-TR",
                 {
+
                     day:
                         "2-digit",
 
@@ -534,6 +669,7 @@ const TimelineApp = {
 
                     year:
                         "numeric"
+
                 }
             ).format(
                 date
@@ -559,7 +695,7 @@ const TimelineApp = {
         const importance =
             String(
                 value ||
-                "medium"
+                    "medium"
             )
                 .trim()
                 .toLowerCase();
@@ -584,7 +720,7 @@ const TimelineApp = {
         const source =
             String(
                 value ||
-                "timeline"
+                    "timeline"
             )
                 .trim()
                 .toLowerCase();
@@ -657,7 +793,8 @@ const TimelineApp = {
 
                 const tag =
                     String(
-                        item ?? ""
+                        item ??
+                            ""
                     )
                         .trim()
                         .replace(
@@ -732,8 +869,13 @@ const TimelineApp = {
 
 
         return (
-            labels[source] ||
-            source
+            labels[
+                source
+            ] ||
+            String(
+                source ||
+                    "Timeline"
+            )
         );
 
     },
@@ -759,7 +901,9 @@ const TimelineApp = {
 
 
         return (
-            icons[source] ||
+            icons[
+                source
+            ] ||
             "◷"
         );
 
@@ -813,17 +957,20 @@ const TimelineApp = {
         }
 
 
+        if(!item){
+
+            return false;
+
+        }
+
+
         const candidates = [
 
-            item?.entityId,
-
-            item?.relatedEntityId,
-
-            item?.payload?.entityId,
-
-            item?.payload?.relatedEntityId,
-
-            item?.context?.entityId
+            item.entityId,
+            item.relatedEntityId,
+            item.payload?.entityId,
+            item.payload?.relatedEntityId,
+            item.context?.entityId
 
         ]
             .filter(
@@ -842,6 +989,11 @@ const TimelineApp = {
                     )
             );
 
+
+        /*
+         * Global/system events without an Entity binding can
+         * still appear in the unified life stream.
+         */
 
         if(
             candidates.length ===
@@ -872,11 +1024,7 @@ const TimelineApp = {
             this.getTimelineCore();
 
 
-        if(
-            !timeline ||
-            typeof timeline.all !==
-                "function"
-        ){
+        if(!timeline){
 
             return [];
 
@@ -889,16 +1037,47 @@ const TimelineApp = {
 
         try{
 
-            const result =
-                timeline.all();
+            /*
+             * Prefer the Entity-aware API from Timeline Core.
+             */
+
+            if(
+                entity?.id &&
+                typeof timeline.forEntity ===
+                    "function"
+            ){
+
+                const result =
+                    timeline.forEntity(
+                        entity.id
+                    );
 
 
-            records =
-                Array.isArray(
-                    result
-                )
-                    ? result
-                    : [];
+                records =
+                    Array.isArray(
+                        result
+                    )
+                        ? result
+                        : [];
+
+            }
+            else if(
+                typeof timeline.all ===
+                    "function"
+            ){
+
+                const result =
+                    timeline.all();
+
+
+                records =
+                    Array.isArray(
+                        result
+                    )
+                        ? result
+                        : [];
+
+            }
 
         } catch(error){
 
@@ -914,7 +1093,9 @@ const TimelineApp = {
 
 
         return records
-            .filter(Boolean)
+            .filter(
+                Boolean
+            )
             .filter(
                 item =>
                     this.belongsToEntity(
@@ -925,54 +1106,30 @@ const TimelineApp = {
             .map(
                 item => {
 
-                    let lifeEvent =
-                        null;
-
-
-                    if(
-                        item.type ===
-                            "life-event" &&
-                        typeof timeline.resolveLifeEvent ===
-                            "function"
-                    ){
-
-                        try{
-
-                            lifeEvent =
-                                timeline.resolveLifeEvent(
-                                    item
-                                ) ||
-                                null;
-
-                        } catch(error){
-
-                            lifeEvent =
-                                null;
-
-                        }
-
-                    }
-
-
                     const source =
-                        lifeEvent
-                            ? "evolution"
-                            : this.normalizeSource(
-                                item.source ||
-                                "timeline"
-                            );
+                        this.normalizeSource(
+                            item.source ||
+                            item.payload?.source ||
+                            "timeline"
+                        );
 
 
                     const timestamp =
-                        lifeEvent?.occurredAt ||
-                        lifeEvent?.updatedAt ||
-                        lifeEvent?.createdAt ||
-                        item.occurredAt ||
-                        item.updatedAt ||
-                        item.createdAt ||
-                        item.timestamp ||
-                        item.time ||
-                        0;
+                        this.getTimestamp(
+                            item
+                        );
+
+
+                    const rawId =
+                        item.id ||
+                        null;
+
+
+                    const sourceId =
+                        item.sourceId ||
+                        item.sourceRef?.id ||
+                        rawId ||
+                        null;
 
 
                     const fallbackId =
@@ -981,54 +1138,44 @@ const TimelineApp = {
                             item.description ||
                             item.type ||
                             "event"
-                        )
-                            .slice(
-                                0,
-                                60
-                            )}`;
+                        ).slice(
+                            0,
+                            60
+                        )}`;
 
 
                     return {
 
                         id:
                             `timeline:${
-                                item.id ||
-                                lifeEvent?.id ||
+                                rawId ||
                                 fallbackId
                             }`,
 
-                        rawId:
-                            item.id ||
-                            null,
+                        rawId,
 
                         source,
 
-                        sourceId:
-                            lifeEvent?.id ||
-                            item.sourceId ||
-                            item.id ||
-                            null,
+                        sourceId,
 
                         entityId:
-                            lifeEvent?.relatedEntityId ||
-                            lifeEvent?.entityId ||
                             item.entityId ||
                             item.relatedEntityId ||
                             item.payload?.entityId ||
-                            item.payload?.relatedEntityId ||
+                            item.payload
+                                ?.relatedEntityId ||
                             null,
 
                         worldId:
-                            lifeEvent?.relatedWorldId ||
-                            lifeEvent?.worldId ||
                             item.worldId ||
                             item.relatedWorldId ||
                             item.payload?.worldId ||
+                            item.payload
+                                ?.relatedWorldId ||
                             null,
 
                         title:
                             String(
-                                lifeEvent?.title ||
                                 item.title ||
                                 item.description ||
                                 "Timeline Olayı"
@@ -1036,7 +1183,6 @@ const TimelineApp = {
 
                         description:
                             String(
-                                lifeEvent?.description ||
                                 item.description ||
                                 item.content ||
                                 ""
@@ -1044,44 +1190,31 @@ const TimelineApp = {
 
                         importance:
                             this.normalizeImportance(
-                                lifeEvent?.importance ||
                                 item.importance ||
-                                item.payload?.importance
+                                item.payload
+                                    ?.importance
                             ),
 
                         type:
-                            lifeEvent
-                                ? "life-event"
-                                : (
-                                    item.type ||
-                                    "timeline-event"
-                                ),
+                            item.type ||
+                            "timeline-event",
 
                         category:
                             item.category ||
-                            lifeEvent?.category ||
                             null,
 
                         tags:
                             this.normalizeTags(
-                                Array.isArray(
-                                    lifeEvent?.tags
-                                )
-                                    ? lifeEvent.tags
-                                    : item.tags
+                                item.tags
                             ),
 
                         occurredAt:
-                            Number(
-                                timestamp
-                            ) ||
-                            Date.now(),
+                            timestamp,
 
                         raw:
                             item,
 
                         linked:
-                            lifeEvent ||
                             null
 
                     };
@@ -1099,16 +1232,10 @@ const TimelineApp = {
     getEvolutionItems(entity){
 
         const evolution =
-            this.getService(
-                "evolution"
-            );
+            this.getEvolutionCore();
 
 
-        if(
-            !evolution ||
-            typeof evolution.all !==
-                "function"
-        ){
+        if(!evolution){
 
             return [];
 
@@ -1121,16 +1248,43 @@ const TimelineApp = {
 
         try{
 
-            const result =
-                evolution.all();
+            if(
+                entity?.id &&
+                typeof evolution.forEntity ===
+                    "function"
+            ){
+
+                const result =
+                    evolution.forEntity(
+                        entity.id
+                    );
 
 
-            events =
-                Array.isArray(
-                    result
-                )
-                    ? result
-                    : [];
+                events =
+                    Array.isArray(
+                        result
+                    )
+                        ? result
+                        : [];
+
+            }
+            else if(
+                typeof evolution.all ===
+                    "function"
+            ){
+
+                const result =
+                    evolution.all();
+
+
+                events =
+                    Array.isArray(
+                        result
+                    )
+                        ? result
+                        : [];
+
+            }
 
         } catch(error){
 
@@ -1146,11 +1300,18 @@ const TimelineApp = {
 
 
         return events
-            .filter(Boolean)
+            .filter(
+                Boolean
+            )
             .filter(
                 event =>
                     event.type !==
                         "runtime:tick"
+            )
+            .filter(
+                event =>
+                    event.archived !==
+                        true
             )
             .filter(
                 event =>
@@ -1163,40 +1324,43 @@ const TimelineApp = {
                 event => {
 
                     const timestamp =
-                        event.occurredAt ||
-                        event.updatedAt ||
-                        event.createdAt ||
-                        event.timestamp ||
-                        event.time ||
-                        0;
+                        this.getTimestamp(
+                            event
+                        );
+
+
+                    const rawId =
+                        event.id ||
+                        null;
+
+
+                    const fallbackId =
+                        `${timestamp}:${String(
+                            event.title ||
+                            event.description ||
+                            event.type ||
+                            "event"
+                        ).slice(
+                            0,
+                            60
+                        )}`;
 
 
                     return {
 
                         id:
                             `evolution:${
-                                event.id ||
-                                `${timestamp}:${String(
-                                    event.title ||
-                                    event.description ||
-                                    event.type ||
-                                    "event"
-                                ).slice(
-                                    0,
-                                    60
-                                )}`
+                                rawId ||
+                                fallbackId
                             }`,
 
-                        rawId:
-                            event.id ||
-                            null,
+                        rawId,
 
                         source:
                             "evolution",
 
                         sourceId:
-                            event.id ||
-                            null,
+                            rawId,
 
                         entityId:
                             event.relatedEntityId ||
@@ -1241,10 +1405,7 @@ const TimelineApp = {
                             ),
 
                         occurredAt:
-                            Number(
-                                timestamp
-                            ) ||
-                            Date.now(),
+                            timestamp,
 
                         raw:
                             event,
@@ -1273,85 +1434,13 @@ const TimelineApp = {
         }
 
 
-        const candidates = [
-
-            this.getService(
-                "memorySystem"
-            ),
-
-            this.getService(
-                "memory"
-            )
-
-        ]
-            .filter(Boolean);
+        const memory =
+            this.getMemoryCore();
 
 
-        for(
-            const memory of candidates
-        ){
+        if(!memory){
 
-            try{
-
-                if(
-                    typeof memory.forEntity ===
-                        "function"
-                ){
-
-                    const records =
-                        memory.forEntity(
-                            entity.id
-                        );
-
-
-                    if(
-                        Array.isArray(
-                            records
-                        )
-                    ){
-
-                        return records;
-
-                    }
-
-                }
-
-
-                if(
-                    typeof memory.all ===
-                        "function"
-                ){
-
-                    const records =
-                        memory.all();
-
-
-                    if(
-                        Array.isArray(
-                            records
-                        )
-                    ){
-
-                        return records.filter(
-                            record =>
-                                this.belongsToEntity(
-                                    record,
-                                    entity.id
-                                )
-                        );
-
-                    }
-
-                }
-
-            } catch(error){
-
-                console.warn(
-                    "Memory Core Timeline verisi okunamadı:",
-                    error
-                );
-
-            }
+            return [];
 
         }
 
@@ -1359,17 +1448,14 @@ const TimelineApp = {
         try{
 
             if(
-                window.MemoryApp &&
-                typeof window.MemoryApp
-                    .getAllMemories ===
+                typeof memory.forEntity ===
                     "function"
             ){
 
                 const records =
-                    window.MemoryApp
-                        .getAllMemories(
-                            entity
-                        );
+                    memory.forEntity(
+                        entity.id
+                    );
 
 
                 return Array.isArray(
@@ -1380,10 +1466,41 @@ const TimelineApp = {
 
             }
 
+
+            if(
+                typeof memory.all ===
+                    "function"
+            ){
+
+                const records =
+                    memory.all();
+
+
+                if(
+                    !Array.isArray(
+                        records
+                    )
+                ){
+
+                    return [];
+
+                }
+
+
+                return records.filter(
+                    record =>
+                        this.belongsToEntity(
+                            record,
+                            entity.id
+                        )
+                );
+
+            }
+
         } catch(error){
 
             console.warn(
-                "Memory App Timeline verisi okunamadı:",
+                "Memory Core Timeline verisi okunamadı:",
                 error
             );
 
@@ -1415,7 +1532,9 @@ const TimelineApp = {
 
 
         return records
-            .filter(Boolean)
+            .filter(
+                Boolean
+            )
             .filter(
                 memoryRecord =>
                     memoryRecord.archived !==
@@ -1423,6 +1542,11 @@ const TimelineApp = {
             )
             .filter(
                 memoryRecord => {
+
+                    /*
+                     * Evolution-backed life events are already
+                     * represented by Evolution/Timeline.
+                     */
 
                     if(
                         memoryRecord.type ===
@@ -1451,10 +1575,9 @@ const TimelineApp = {
                 memoryRecord => {
 
                     const timestamp =
-                        memoryRecord.updatedAt ||
-                        memoryRecord.createdAt ||
-                        memoryRecord.timestamp ||
-                        0;
+                        this.getTimestamp(
+                            memoryRecord
+                        );
 
 
                     const source =
@@ -1464,29 +1587,36 @@ const TimelineApp = {
                             : "memory";
 
 
+                    const rawId =
+                        memoryRecord.id ||
+                        null;
+
+
+                    const fallbackId =
+                        `${timestamp}:${String(
+                            memoryRecord.title ||
+                            memoryRecord.type ||
+                            "memory"
+                        ).slice(
+                            0,
+                            60
+                        )}`;
+
+
                     return {
 
                         id:
                             `memory:${
-                                memoryRecord.id ||
-                                `${timestamp}:${String(
-                                    memoryRecord.title ||
-                                    "memory"
-                                ).slice(
-                                    0,
-                                    60
-                                )}`
+                                rawId ||
+                                fallbackId
                             }`,
 
-                        rawId:
-                            memoryRecord.id ||
-                            null,
+                        rawId,
 
                         source,
 
                         sourceId:
-                            memoryRecord.id ||
-                            null,
+                            rawId,
 
                         entityId:
                             memoryRecord.entityId ||
@@ -1510,9 +1640,15 @@ const TimelineApp = {
                             ).trim(),
 
                         importance:
-                            memoryRecord.important
-                                ? "high"
-                                : "low",
+                            this.normalizeImportance(
+                                memoryRecord.importance ||
+                                (
+                                    memoryRecord.important ===
+                                        true
+                                        ? "high"
+                                        : "low"
+                                )
+                            ),
 
                         type:
                             memoryRecord.type ||
@@ -1528,10 +1664,7 @@ const TimelineApp = {
                             ),
 
                         occurredAt:
-                            Number(
-                                timestamp
-                            ) ||
-                            Date.now(),
+                            timestamp,
 
                         raw:
                             memoryRecord,
@@ -1546,8 +1679,7 @@ const TimelineApp = {
 
     },
 
-
-    /* =====================================================
+   /* =====================================================
        DEDUPLICATION
     ===================================================== */
 
@@ -1560,35 +1692,75 @@ const TimelineApp = {
         }
 
 
-        if(
-            item.source ===
-                "evolution" &&
-            item.sourceId
-        ){
+        const source =
+            this.normalizeSource(
+                item.source
+            );
 
-            return `evolution:${item.sourceId}`;
+
+        const sourceId =
+            item.sourceId ||
+            null;
+
+
+        /*
+         * Timeline Core may already contain a projection of
+         * an Evolution or Memory record.
+         *
+         * When that source reference exists, both projections
+         * must collapse into one life-stream item.
+         */
+
+        if(sourceId){
+
+            if(
+                source ===
+                    "evolution"
+            ){
+
+                return `evolution:${String(
+                    sourceId
+                )}`;
+
+            }
+
+
+            if(
+                source ===
+                    "memory"
+            ){
+
+                return `memory:${String(
+                    sourceId
+                )}`;
+
+            }
+
+
+            if(
+                source ===
+                    "system"
+            ){
+
+                return `system:${String(
+                    sourceId
+                )}`;
+
+            }
+
+
+            return `timeline:${String(
+                sourceId
+            )}`;
 
         }
 
 
-        if(
-            item.source ===
-                "memory" &&
-            item.sourceId
-        ){
+        if(item.rawId){
 
-            return `memory:${item.sourceId}`;
-
-        }
-
-
-        if(
-            item.source ===
-                "system" &&
-            item.sourceId
-        ){
-
-            return `system:${item.sourceId}`;
+            return `${source}:${String(
+                item.rawId
+            )}`;
 
         }
 
@@ -1659,20 +1831,20 @@ const TimelineApp = {
                     const existingDescription =
                         String(
                             existing.description ||
-                            ""
+                                ""
                         );
 
 
                     const incomingDescription =
                         String(
                             item.description ||
-                            ""
+                                ""
                         );
 
 
                     const description =
                         incomingDescription.length >
-                            existingDescription.length
+                        existingDescription.length
                             ? incomingDescription
                             : existingDescription;
 
@@ -1688,34 +1860,106 @@ const TimelineApp = {
                         );
 
 
+                    /*
+                     * Prefer the richer source object while
+                     * retaining stable unified identity.
+                     */
+
+                    const preferred =
+                        this.getItemRichness(
+                            item
+                        ) >=
+                        this.getItemRichness(
+                            existing
+                        )
+                            ? item
+                            : existing;
+
+
+                    const secondary =
+                        preferred ===
+                            item
+                            ? existing
+                            : item;
+
+
                     map.set(
                         key,
                         {
-                            ...existing,
-                            ...item,
+
+                            ...secondary,
+
+                            ...preferred,
+
+                            id:
+                                existing.id ||
+                                item.id ||
+                                key,
+
+                            rawId:
+                                preferred.rawId ||
+                                secondary.rawId ||
+                                null,
+
+                            sourceId:
+                                preferred.sourceId ||
+                                secondary.sourceId ||
+                                null,
+
+                            entityId:
+                                preferred.entityId ||
+                                secondary.entityId ||
+                                null,
+
+                            worldId:
+                                preferred.worldId ||
+                                secondary.worldId ||
+                                null,
 
                             title:
-                                item.title ||
-                                existing.title,
+                                preferred.title ||
+                                secondary.title ||
+                                "Timeline Olayı",
 
                             description,
 
+                            importance:
+                                this.getHigherImportance(
+                                    existing.importance,
+                                    item.importance
+                                ),
+
+                            category:
+                                preferred.category ||
+                                secondary.category ||
+                                null,
+
                             tags:
                                 this.normalizeTags([
+
                                     ...(
                                         existing.tags ||
                                         []
                                     ),
+
                                     ...(
                                         item.tags ||
                                         []
                                     )
+
                                 ]),
 
                             occurredAt:
                                 timestamp ||
-                                item.occurredAt ||
-                                existing.occurredAt
+                                preferred.occurredAt ||
+                                secondary.occurredAt ||
+                                0,
+
+                            linked:
+                                preferred.linked ||
+                                secondary.linked ||
+                                null
+
                         }
                     );
 
@@ -1730,35 +1974,287 @@ const TimelineApp = {
     },
 
 
+    getItemRichness(item){
+
+        if(!item){
+
+            return 0;
+
+        }
+
+
+        let score =
+            0;
+
+
+        if(item.sourceId){
+
+            score +=
+                4;
+
+        }
+
+
+        if(item.rawId){
+
+            score +=
+                2;
+
+        }
+
+
+        if(item.title){
+
+            score +=
+                2;
+
+        }
+
+
+        if(item.description){
+
+            score +=
+                Math.min(
+                    5,
+                    Math.ceil(
+                        String(
+                            item.description
+                        ).length /
+                        80
+                    )
+                );
+
+        }
+
+
+        if(item.category){
+
+            score +=
+                1;
+
+        }
+
+
+        if(
+            Array.isArray(
+                item.tags
+            )
+        ){
+
+            score +=
+                Math.min(
+                    3,
+                    item.tags.length
+                );
+
+        }
+
+
+        if(item.linked){
+
+            score +=
+                3;
+
+        }
+
+
+        return score;
+
+    },
+
+
+    getHigherImportance(
+        first,
+        second
+    ){
+
+        const levels = {
+
+            low:
+                1,
+
+            medium:
+                2,
+
+            high:
+                3,
+
+            critical:
+                4
+
+        };
+
+
+        const firstNormalized =
+            this.normalizeImportance(
+                first
+            );
+
+
+        const secondNormalized =
+            this.normalizeImportance(
+                second
+            );
+
+
+        return (
+            levels[
+                secondNormalized
+            ] >
+            levels[
+                firstNormalized
+            ]
+                ? secondNormalized
+                : firstNormalized
+        );
+
+    },
+
+
     /* =====================================================
        RAW UNIFIED STREAM
     ===================================================== */
 
     getAllUnifiedItems(entity){
 
-        return this.deduplicate([
+        const combined = [
+
             ...this.getTimelineItems(
                 entity
             ),
+
             ...this.getEvolutionItems(
                 entity
             ),
+
             ...this.getMemoryItems(
                 entity
             )
-        ])
+
+        ];
+
+
+        return this
+            .deduplicate(
+                combined
+            )
             .sort(
                 (
                     a,
                     b
-                ) =>
-                    this.getTimestamp(
-                        b
-                    ) -
-                    this.getTimestamp(
-                        a
+                ) => {
+
+                    const difference =
+                        this.getTimestamp(
+                            b
+                        ) -
+                        this.getTimestamp(
+                            a
+                        );
+
+
+                    if(
+                        difference !==
+                            0
+                    ){
+
+                        return difference;
+
+                    }
+
+
+                    return String(
+                        a.id ||
+                            ""
+                    ).localeCompare(
+                        String(
+                            b.id ||
+                                ""
+                        )
+                    );
+
+                }
+            );
+
+    },
+
+
+    /* =====================================================
+       SEARCH NORMALIZATION
+    ===================================================== */
+
+    normalizeSearch(value){
+
+        return String(
+            value ??
+                ""
+        )
+            .toLocaleLowerCase(
+                "tr-TR"
+            )
+            .trim()
+            .replace(
+                /\s+/g,
+                " "
+            );
+
+    },
+
+
+    itemMatchesSearch(
+        item,
+        query
+    ){
+
+        if(!query){
+
+            return true;
+
+        }
+
+
+        if(!item){
+
+            return false;
+
+        }
+
+
+        const haystack =
+            this.normalizeSearch(
+                [
+
+                    item.title,
+                    item.description,
+                    item.type,
+                    item.category,
+                    item.source,
+
+                    ...(
+                        Array.isArray(
+                            item.tags
+                        )
+                            ? item.tags
+                            : []
+                    )
+
+                ]
+                    .filter(
+                        value =>
+                            value !==
+                                null &&
+                            value !==
+                                undefined
+                    )
+                    .join(
+                        " "
                     )
             );
+
+
+        return haystack.includes(
+            query
+        );
 
     },
 
@@ -1775,8 +2271,20 @@ const TimelineApp = {
             );
 
 
+        const allowedFilters =
+            this.getAllowedFilters();
+
+
+        const filter =
+            allowedFilters.includes(
+                this.activeFilter
+            )
+                ? this.activeFilter
+                : "all";
+
+
         if(
-            this.activeFilter !==
+            filter !==
                 "all"
         ){
 
@@ -1784,68 +2292,48 @@ const TimelineApp = {
                 items.filter(
                     item =>
                         item.source ===
-                            this.activeFilter
+                            filter
                 );
 
         }
 
 
         const query =
-            String(
-                this.searchQuery ||
-                ""
-            )
-                .trim()
-                .toLocaleLowerCase(
-                    "tr-TR"
-                );
+            this.normalizeSearch(
+                this.searchQuery
+            );
 
 
         if(query){
 
             items =
                 items.filter(
-                    item => {
-
-                        const haystack = [
-
-                            item.title,
-                            item.description,
-                            item.type,
-                            item.category,
-                            item.source,
-
-                            ...(
-                                item.tags ||
-                                []
-                            )
-
-                        ]
-                            .join(" ")
-                            .toLocaleLowerCase(
-                                "tr-TR"
-                            );
-
-
-                        return haystack.includes(
+                    item =>
+                        this.itemMatchesSearch(
+                            item,
                             query
-                        );
-
-                    }
+                        )
                 );
 
         }
 
 
-        return items.slice(
-            0,
+        const limit =
             Math.max(
                 1,
-                Number(
-                    this.visibleLimit
-                ) ||
-                40
-            )
+                Math.min(
+                    500,
+                    Number(
+                        this.visibleLimit
+                    ) ||
+                    40
+                )
+            );
+
+
+        return items.slice(
+            0,
+            limit
         );
 
     },
@@ -1863,40 +2351,55 @@ const TimelineApp = {
             );
 
 
-        return {
+        const stats = {
 
             total:
                 items.length,
 
             evolution:
-                items.filter(
-                    item =>
-                        item.source ===
-                            "evolution"
-                ).length,
+                0,
 
             memory:
-                items.filter(
-                    item =>
-                        item.source ===
-                            "memory"
-                ).length,
+                0,
 
             system:
-                items.filter(
-                    item =>
-                        item.source ===
-                            "system"
-                ).length,
+                0,
 
             timeline:
-                items.filter(
-                    item =>
-                        item.source ===
-                            "timeline"
-                ).length
+                0
 
         };
+
+
+        items.forEach(
+            item => {
+
+                const source =
+                    this.normalizeSource(
+                        item?.source
+                    );
+
+
+                if(
+                    Object.prototype
+                        .hasOwnProperty.call(
+                            stats,
+                            source
+                        )
+                ){
+
+                    stats[
+                        source
+                    ] +=
+                        1;
+
+                }
+
+            }
+        );
+
+
+        return stats;
 
     },
 
@@ -1909,6 +2412,7 @@ const TimelineApp = {
 
         const groups =
             [];
+
 
         const map =
             new Map();
@@ -1955,7 +2459,8 @@ const TimelineApp = {
 
                             timestamp,
 
-                            items:[]
+                            items:
+                                []
 
                         };
 
@@ -1985,16 +2490,24 @@ const TimelineApp = {
 
     },
 
-   /* =====================================================
+
+    /* =====================================================
        ITEM CARD
     ===================================================== */
 
     renderItem(item){
 
+        if(!item){
+
+            return "";
+
+        }
+
+
         const description =
             String(
                 item.description ||
-                ""
+                    ""
             );
 
 
@@ -2010,18 +2523,39 @@ const TimelineApp = {
                 : description;
 
 
+        const source =
+            this.normalizeSource(
+                item.source
+            );
+
+
+        const tags =
+            Array.isArray(
+                item.tags
+            )
+                ? item.tags
+                    .slice(
+                        0,
+                        2
+                    )
+                : [];
+
+
         return `
             <button
                 type="button"
                 class="
                     timeline-stream-item
                     timeline-source-${this.escapeHTML(
-                        item.source
+                        source
                     )}
                 "
                 data-timeline-action="open"
                 data-timeline-id="${this.escapeHTML(
                     item.id
+                )}"
+                aria-label="${this.escapeHTML(
+                    `${item.title || "Timeline olayı"} ayrıntılarını aç`
                 )}"
             >
 
@@ -2031,11 +2565,10 @@ const TimelineApp = {
                 >
                     ${this.escapeHTML(
                         this.sourceIcon(
-                            item.source
+                            source
                         )
                     )}
                 </span>
-
 
                 <span class="timeline-stream-content">
 
@@ -2044,11 +2577,10 @@ const TimelineApp = {
                         <small class="timeline-source-label">
                             ${this.escapeHTML(
                                 this.sourceLabel(
-                                    item.source
+                                    source
                                 )
                             )}
                         </small>
-
 
                         <small>
                             ${this.escapeHTML(
@@ -2060,13 +2592,12 @@ const TimelineApp = {
 
                     </span>
 
-
                     <strong>
                         ${this.escapeHTML(
-                            item.title
+                            item.title ||
+                            "Timeline Olayı"
                         )}
                     </strong>
-
 
                     ${
                         preview
@@ -2076,10 +2607,9 @@ const TimelineApp = {
                                         preview
                                     )}
                                 </span>
-                              `
+                            `
                             : ""
                     }
-
 
                     <span class="timeline-stream-footer">
 
@@ -2091,7 +2621,6 @@ const TimelineApp = {
                             )}
                         </small>
 
-
                         ${
                             item.category
                                 ? `
@@ -2100,37 +2629,28 @@ const TimelineApp = {
                                             item.category
                                         )}
                                     </small>
-                                  `
+                                `
                                 : ""
                         }
 
-
                         ${
-                            Array.isArray(
-                                item.tags
-                            ) &&
-                            item.tags.length
+                            tags.length >
+                                0
                                 ? `
                                     <small>
                                         ${this.escapeHTML(
-                                            item.tags
-                                                .slice(
-                                                    0,
-                                                    2
-                                                )
-                                                .join(
-                                                    " · "
-                                                )
+                                            tags.join(
+                                                " · "
+                                            )
                                         )}
                                     </small>
-                                  `
+                                `
                                 : ""
                         }
 
                     </span>
 
                 </span>
-
 
                 <span
                     class="timeline-stream-arrow"
@@ -2151,26 +2671,43 @@ const TimelineApp = {
 
     renderGroup(group){
 
+        if(
+            !group ||
+            !Array.isArray(
+                group.items
+            )
+        ){
+
+            return "";
+
+        }
+
+
         return `
-            <section class="timeline-day-group">
+            <section
+                class="timeline-day-group"
+                data-timeline-day="${this.escapeHTML(
+                    group.key ||
+                    ""
+                )}"
+            >
 
                 <div class="timeline-day-heading">
 
-                    <span></span>
+                    <span aria-hidden="true"></span>
 
                     <strong>
                         ${this.escapeHTML(
-                            group.label
+                            group.label ||
+                            "Tarih bilinmiyor"
                         )}
                     </strong>
 
                     <small>
-                        ${group.items.length}
-                        olay
+                        ${group.items.length} olay
                     </small>
 
                 </div>
-
 
                 <div class="timeline-day-items">
 
@@ -2181,7 +2718,9 @@ const TimelineApp = {
                                     item
                                 )
                         )
-                        .join("")}
+                        .join(
+                            ""
+                        )}
 
                 </div>
 
@@ -2198,15 +2737,95 @@ const TimelineApp = {
     getAllowedFilters(){
 
         return [
+
             "all",
             "evolution",
             "memory",
             "system",
             "timeline"
+
         ];
 
     },
 
+
+    setFilter(filter){
+
+        const normalized =
+            String(
+                filter ||
+                    "all"
+            )
+                .trim()
+                .toLowerCase();
+
+
+        this.activeFilter =
+            this.getAllowedFilters()
+                .includes(
+                    normalized
+                )
+                ? normalized
+                : "all";
+
+
+        this.selectedItemId =
+            null;
+
+
+        return this.activeFilter;
+
+    },
+
+
+    setSearchQuery(value){
+
+        this.searchQuery =
+            String(
+                value ??
+                    ""
+            )
+                .slice(
+                    0,
+                    500
+                );
+
+
+        this.selectedItemId =
+            null;
+
+
+        return this.searchQuery;
+
+    },
+
+
+    resetFilters(){
+
+        this.searchQuery =
+            "";
+
+
+        this.activeFilter =
+            "all";
+
+
+        this.selectedItemId =
+            null;
+
+
+        this.visibleLimit =
+            40;
+
+
+        return true;
+
+    },
+
+
+    /* =====================================================
+       TOOLBAR
+    ===================================================== */
 
     renderToolbar(){
 
@@ -2264,11 +2883,12 @@ const TimelineApp = {
                         ⌕
                     </span>
 
-
                     <input
                         id="timelineSearchInput"
                         type="search"
                         autocomplete="off"
+                        enterkeyhint="search"
+                        aria-label="Yaşam akışında ara"
                         placeholder="Yaşam akışında ara"
                         value="${this.escapeHTML(
                             this.searchQuery
@@ -2277,8 +2897,11 @@ const TimelineApp = {
 
                 </label>
 
-
-                <div class="timeline-filter-row">
+                <div
+                    class="timeline-filter-row"
+                    role="group"
+                    aria-label="Timeline filtreleri"
+                >
 
                     ${filters
                         .map(
@@ -2295,6 +2918,12 @@ const TimelineApp = {
                                     data-timeline-filter="${this.escapeHTML(
                                         filter.id
                                     )}"
+                                    aria-pressed="${
+                                        this.activeFilter ===
+                                            filter.id
+                                            ? "true"
+                                            : "false"
+                                    }"
                                 >
                                     ${this.escapeHTML(
                                         filter.label
@@ -2302,7 +2931,9 @@ const TimelineApp = {
                                 </button>
                             `
                         )
-                        .join("")}
+                        .join(
+                            ""
+                        )}
 
                 </div>
 
@@ -2313,7 +2944,7 @@ const TimelineApp = {
 
 
     /* =====================================================
-       DETAIL
+       FIND ITEM
     ===================================================== */
 
     findVisibleItem(
@@ -2324,7 +2955,7 @@ const TimelineApp = {
         const id =
             String(
                 itemId ||
-                ""
+                    ""
             );
 
 
@@ -2341,14 +2972,24 @@ const TimelineApp = {
             )
                 .find(
                     item =>
-                        item.id ===
-                            id
+                        String(
+                            item.id
+                        ) ===
+                        id
                 ) ||
             null
         );
 
     },
 
+
+    /* =====================================================
+       CONTINUE IN PART 3
+    ===================================================== */
+
+   /* =====================================================
+       DETAIL
+    ===================================================== */
 
     renderDetail(item){
 
@@ -2367,12 +3008,11 @@ const TimelineApp = {
                     data-timeline-action="close"
                 ></div>
 
-
                 <section
                     class="timeline-detail"
                     role="dialog"
                     aria-modal="true"
-                    aria-label="Timeline olayı"
+                    aria-labelledby="timelineDetailTitle"
                 >
 
                     <header class="timeline-detail-header">
@@ -2387,15 +3027,14 @@ const TimelineApp = {
                                 )}
                             </span>
 
-
-                            <h2>
+                            <h2 id="timelineDetailTitle">
                                 ${this.escapeHTML(
-                                    item.title
+                                    item.title ||
+                                    "Timeline Olayı"
                                 )}
                             </h2>
 
                         </div>
-
 
                         <button
                             type="button"
@@ -2408,7 +3047,6 @@ const TimelineApp = {
 
                     </header>
 
-
                     <div class="timeline-detail-scroll">
 
                         ${
@@ -2419,14 +3057,13 @@ const TimelineApp = {
                                             item.description
                                         )}
                                     </p>
-                                  `
+                                `
                                 : `
                                     <p class="timeline-detail-description">
                                         Bu olay için ek açıklama bulunmuyor.
                                     </p>
-                                  `
+                                `
                         }
-
 
                         <div class="timeline-detail-info">
 
@@ -2446,7 +3083,6 @@ const TimelineApp = {
 
                             </div>
 
-
                             <div>
 
                                 <span>
@@ -2462,7 +3098,6 @@ const TimelineApp = {
                                 </strong>
 
                             </div>
-
 
                             <div>
 
@@ -2480,7 +3115,6 @@ const TimelineApp = {
 
                             </div>
 
-
                             <div>
 
                                 <span>
@@ -2495,7 +3129,6 @@ const TimelineApp = {
                                 </strong>
 
                             </div>
-
 
                             ${
                                 item.category
@@ -2513,15 +3146,18 @@ const TimelineApp = {
                                             </strong>
 
                                         </div>
-                                      `
+                                    `
                                     : ""
                             }
 
                         </div>
 
-
                         ${
-                            item.tags?.length
+                            Array.isArray(
+                                item.tags
+                            ) &&
+                            item.tags.length >
+                                0
                                 ? `
                                     <div class="timeline-detail-tags">
 
@@ -2535,15 +3171,16 @@ const TimelineApp = {
                                                     </span>
                                                 `
                                             )
-                                            .join("")}
+                                            .join(
+                                                ""
+                                            )}
 
                                     </div>
-                                  `
+                                `
                                 : ""
                         }
 
                     </div>
-
 
                     <footer class="timeline-detail-actions">
 
@@ -2562,10 +3199,9 @@ const TimelineApp = {
                                     >
                                         Evolution’da Aç
                                     </button>
-                                  `
+                                `
                                 : ""
                         }
-
 
                         ${
                             item.source ===
@@ -2582,10 +3218,9 @@ const TimelineApp = {
                                     >
                                         Memory’de Aç
                                     </button>
-                                  `
+                                `
                                 : ""
                         }
-
 
                         <button
                             type="button"
@@ -2611,6 +3246,14 @@ const TimelineApp = {
 
     renderEmptyState(){
 
+        const filtered =
+            Boolean(
+                this.searchQuery
+            ) ||
+            this.activeFilter !==
+                "all";
+
+
         return `
             <div class="section timeline-empty">
 
@@ -2621,27 +3264,35 @@ const TimelineApp = {
                     ◷
                 </span>
 
-
                 <h3>
                     ${
-                        this.searchQuery ||
-                        this.activeFilter !==
-                            "all"
+                        filtered
                             ? "Eşleşen olay bulunamadı"
                             : "Timeline henüz sessiz"
                     }
                 </h3>
 
-
                 <p>
                     ${
-                        this.searchQuery ||
-                        this.activeFilter !==
-                            "all"
+                        filtered
                             ? "Arama veya filtreyi değiştirerek tekrar deneyebilirsin."
                             : "Memory, Evolution ve Engine olayları oluştukça burada tek bir yaşam akışında birleşecek."
                     }
                 </p>
+
+                ${
+                    filtered
+                        ? `
+                            <button
+                                type="button"
+                                class="secondary-btn"
+                                data-timeline-action="reset"
+                            >
+                                Filtreleri Temizle
+                            </button>
+                        `
+                        : ""
+                }
 
             </div>
         `;
@@ -2655,20 +3306,39 @@ const TimelineApp = {
 
     renderAppHeader(entity){
 
-        if(
-            window.UI &&
-            typeof UI.appHeader ===
-                "function"
-        ){
+        try{
 
-            return UI.appHeader(
-                this.escapeHTML(
-                    entity.name ||
-                    "VAERO Varlığı"
-                ),
-                "TIMELINE",
-                "◷"
-            );
+            if(
+                typeof window !==
+                    "undefined" &&
+                window.UI &&
+                typeof window.UI.appHeader ===
+                    "function"
+            ){
+
+                const result =
+                    window.UI.appHeader(
+                        entity?.name ||
+                        "VAERO Varlığı",
+                        "TIMELINE",
+                        "◷"
+                    );
+
+
+                if(
+                    typeof result ===
+                        "string"
+                ){
+
+                    return result;
+
+                }
+
+            }
+
+        } catch(error){
+
+            /* fallback */
 
         }
 
@@ -2682,7 +3352,7 @@ const TimelineApp = {
 
                 <h1>
                     ${this.escapeHTML(
-                        entity.name ||
+                        entity?.name ||
                         "VAERO Varlığı"
                     )}
                 </h1>
@@ -2697,17 +3367,33 @@ const TimelineApp = {
 
         try{
 
-            return (
-                window.UI
-                    ?.brainPanel?.() ||
-                ""
-            );
+            if(
+                typeof window !==
+                    "undefined" &&
+                window.UI &&
+                typeof window.UI.brainPanel ===
+                    "function"
+            ){
+
+                const result =
+                    window.UI.brainPanel();
+
+
+                return typeof result ===
+                    "string"
+                    ? result
+                    : "";
+
+            }
 
         } catch(error){
 
-            return "";
+            /* optional */
 
         }
+
+
+        return "";
 
     },
 
@@ -2744,9 +3430,6 @@ const TimelineApp = {
         this.enterBrainContext(
             entity
         );
-
-
-        this.cleanOrphans();
 
 
         if(
@@ -2821,11 +3504,9 @@ const TimelineApp = {
 
                     </div>
 
-
                     ${this.renderAppHeader(
                         entity
                     )}
-
 
                     <section class="timeline-app-intro">
 
@@ -2835,18 +3516,15 @@ const TimelineApp = {
                                 LIVING TIMELINE
                             </span>
 
-
                             <h2>
                                 Yaşam akışı
                             </h2>
-
 
                             <p>
                                 Memory, Evolution ve Engine olaylarının zaman içinde oluşturduğu birleşik akış.
                             </p>
 
                         </div>
-
 
                         <div class="timeline-stats">
 
@@ -2862,7 +3540,6 @@ const TimelineApp = {
 
                             </div>
 
-
                             <div>
 
                                 <strong>
@@ -2875,7 +3552,6 @@ const TimelineApp = {
 
                             </div>
 
-
                             <div>
 
                                 <strong>
@@ -2887,7 +3563,6 @@ const TimelineApp = {
                                 </span>
 
                             </div>
-
 
                             <div>
 
@@ -2905,14 +3580,13 @@ const TimelineApp = {
 
                     </section>
 
-
                     ${this.renderToolbar()}
-
 
                     <div class="timeline-stream-scroll">
 
                         ${
-                            groups.length
+                            groups.length >
+                                0
                                 ? `
                                     <div class="timeline-stream">
 
@@ -2923,20 +3597,20 @@ const TimelineApp = {
                                                         group
                                                     )
                                             )
-                                            .join("")}
+                                            .join(
+                                                ""
+                                            )}
 
                                     </div>
-                                  `
+                                `
                                 : this.renderEmptyState()
                         }
 
                     </div>
 
-
                     ${this.renderBrainPanel()}
 
                 </div>
-
 
                 ${
                     selected
@@ -2953,12 +3627,114 @@ const TimelineApp = {
 
 
     /* =====================================================
+       ACTION BRIDGE
+    ===================================================== */
+
+    getActions(){
+
+        if(
+            typeof window !==
+                "undefined" &&
+            window.Actions
+        ){
+
+            return window.Actions;
+
+        }
+
+
+        return (
+            this.getService(
+                "actions"
+            ) ||
+            this.getService(
+                "actionsV2"
+            ) ||
+            null
+        );
+
+    },
+
+
+    openEntityPage(page){
+
+        const actions =
+            this.getActions();
+
+
+        if(
+            actions &&
+            typeof actions.openEntityPage ===
+                "function"
+        ){
+
+            try{
+
+                return (
+                    actions.openEntityPage(
+                        page
+                    ) !==
+                    false
+                );
+
+            } catch(error){
+
+                console.warn(
+                    `Timeline source page açılamadı: ${page}`,
+                    error
+                );
+
+            }
+
+        }
+
+
+        const engine =
+            this.getEngine();
+
+
+        if(
+            engine &&
+            typeof engine.setView ===
+                "function"
+        ){
+
+            try{
+
+                return (
+                    engine.setView(
+                        "entity",
+                        {
+                            entity:
+                                engine.currentOpenedEntity ||
+                                engine.currentEntity ||
+                                null,
+
+                            page
+                        }
+                    ) !==
+                    false
+                );
+
+            } catch(error){
+
+                /* final fallback */
+
+            }
+
+        }
+
+
+        return false;
+
+    },
+
+
+    /* =====================================================
        SOURCE NAVIGATION
     ===================================================== */
 
-    openEvolutionSource(
-        sourceId
-    ){
+    openEvolutionSource(sourceId){
 
         if(!sourceId){
 
@@ -2973,28 +3749,37 @@ const TimelineApp = {
 
         try{
 
+            const evolutionApp =
+                (
+                    typeof window !==
+                        "undefined"
+                        ? window.EvolutionApp ||
+                          null
+                        : null
+                ) ||
+                this.getService(
+                    "evolutionApp"
+                );
+
+
             if(
-                window.EvolutionApp &&
-                typeof window.EvolutionApp
-                    .selectEvent ===
+                evolutionApp &&
+                typeof evolutionApp.selectEvent ===
                     "function"
             ){
 
-                window.EvolutionApp
-                    .selectEvent(
-                        sourceId
-                    );
+                evolutionApp.selectEvent(
+                    sourceId
+                );
 
             }
-
             else if(
-                window.EvolutionApp &&
+                evolutionApp &&
                 "selectedEventId" in
-                    window.EvolutionApp
+                    evolutionApp
             ){
 
-                window.EvolutionApp
-                    .selectedEventId =
+                evolutionApp.selectedEventId =
                     sourceId;
 
             }
@@ -3009,29 +3794,14 @@ const TimelineApp = {
         }
 
 
-        if(
-            window.Actions &&
-            typeof window.Actions
-                .openEntityPage ===
-                "function"
-        ){
-
-            return window.Actions
-                .openEntityPage(
-                    "evolution"
-                );
-
-        }
-
-
-        return false;
+        return this.openEntityPage(
+            "evolution"
+        );
 
     },
 
 
-    openMemorySource(
-        sourceId
-    ){
+    openMemorySource(sourceId){
 
         if(!sourceId){
 
@@ -3046,18 +3816,51 @@ const TimelineApp = {
 
         try{
 
-            if(
-                window.MemoryApp
-            ){
+            const memoryApp =
+                (
+                    typeof window !==
+                        "undefined"
+                        ? window.MemoryApp ||
+                          null
+                        : null
+                ) ||
+                this.getService(
+                    "memoryApp"
+                );
 
-                window.MemoryApp
-                    .selectedMemoryId =
-                    sourceId;
+
+            if(memoryApp){
+
+                if(
+                    typeof memoryApp.selectMemory ===
+                        "function"
+                ){
+
+                    memoryApp.selectMemory(
+                        sourceId
+                    );
+
+                }
+                else if(
+                    "selectedMemoryId" in
+                        memoryApp
+                ){
+
+                    memoryApp.selectedMemoryId =
+                        sourceId;
+
+                }
 
 
-                window.MemoryApp
-                    .editorMode =
-                    null;
+                if(
+                    "editorMode" in
+                        memoryApp
+                ){
+
+                    memoryApp.editorMode =
+                        null;
+
+                }
 
             }
 
@@ -3071,22 +3874,9 @@ const TimelineApp = {
         }
 
 
-        if(
-            window.Actions &&
-            typeof window.Actions
-                .openEntityPage ===
-                "function"
-        ){
-
-            return window.Actions
-                .openEntityPage(
-                    "memory"
-                );
-
-        }
-
-
-        return false;
+        return this.openEntityPage(
+            "memory"
+        );
 
     },
 
@@ -3111,9 +3901,20 @@ const TimelineApp = {
         }
 
 
-        switch(action){
+        const normalizedAction =
+            String(
+                action ||
+                ""
+            )
+                .trim()
+                .toLowerCase();
 
-            case "open":{
+
+        switch(
+            normalizedAction
+        ){
+
+            case "open": {
 
                 const itemId =
                     button?.dataset
@@ -3137,6 +3938,11 @@ const TimelineApp = {
                     itemId;
 
 
+                this.enterBrainContext(
+                    entity
+                );
+
+
                 return this.remount();
 
             }
@@ -3148,35 +3954,48 @@ const TimelineApp = {
                     null;
 
 
+                this.enterBrainContext(
+                    entity
+                );
+
+
                 return this.remount();
 
 
-            case "filter":{
+            case "filter": {
 
                 const filter =
-                    String(
-                        button?.dataset
-                            ?.timelineFilter ||
-                        "all"
-                    );
+                    button?.dataset
+                        ?.timelineFilter ||
+                    "all";
 
 
-                this.activeFilter =
-                    this.getAllowedFilters()
-                        .includes(
-                            filter
-                        )
-                            ? filter
-                            : "all";
+                this.setFilter(
+                    filter
+                );
 
 
-                this.selectedItemId =
-                    null;
+                this.enterBrainContext(
+                    entity
+                );
 
 
                 return this.remount();
 
             }
+
+
+            case "reset":
+
+                this.resetFilters();
+
+
+                this.enterBrainContext(
+                    entity
+                );
+
+
+                return this.remount();
 
 
             case "source:evolution":
@@ -3203,6 +4022,120 @@ const TimelineApp = {
 
         }
 
+    },
+
+
+    /* =====================================================
+       SEARCH
+    ===================================================== */
+
+    handleSearchInput(value){
+
+        this.setSearchQuery(
+            value
+        );
+
+
+        if(
+            this.searchTimer !==
+                null
+        ){
+
+            clearTimeout(
+                this.searchTimer
+            );
+
+        }
+
+
+        this.searchTimer =
+            setTimeout(
+                () => {
+
+                    this.searchTimer =
+                        null;
+
+
+                    const entity =
+                        this.getCurrentEntity();
+
+
+                    if(entity){
+
+                        this.enterBrainContext(
+                            entity
+                        );
+
+                    }
+
+
+                    this.remount();
+
+                },
+                120
+            );
+
+
+        return true;
+
+    },
+
+
+    /* =====================================================
+       REPORT
+    ===================================================== */
+
+    report(){
+
+        const entity =
+            this.getCurrentEntity();
+
+
+        return {
+
+            version:
+                this.version,
+
+            entityId:
+                entity?.id ||
+                null,
+
+            activeFilter:
+                this.activeFilter,
+
+            searchQuery:
+                this.searchQuery,
+
+            selectedItemId:
+                this.selectedItemId,
+
+            visibleLimit:
+                this.visibleLimit,
+
+            counts:
+                entity
+                    ? this.getStats(
+                        entity
+                    )
+                    : {
+                        total:
+                            0,
+
+                        evolution:
+                            0,
+
+                        memory:
+                            0,
+
+                        system:
+                            0,
+
+                        timeline:
+                            0
+                    }
+
+        };
+
     }
 
 };
@@ -3212,82 +4145,82 @@ const TimelineApp = {
    TIMELINE CLICK DELEGATION
 ========================================================= */
 
-document.addEventListener(
-    "click",
-    event => {
+if(
+    typeof document !==
+        "undefined"
+){
 
-        const button =
-            event.target.closest(
-                "[data-timeline-action]"
+    document.addEventListener(
+        "click",
+        event => {
+
+            const target =
+                event.target;
+
+
+            if(
+                !target ||
+                typeof target.closest !==
+                    "function"
+            ){
+
+                return;
+
+            }
+
+
+            const button =
+                target.closest(
+                    "[data-timeline-action]"
+                );
+
+
+            if(!button){
+
+                return;
+
+            }
+
+
+            event.preventDefault();
+
+
+            TimelineApp.handleCommand(
+                button.dataset
+                    .timelineAction,
+                button
             );
-
-
-        if(!button){
-
-            return;
 
         }
+    );
 
 
-        event.preventDefault();
+    /* =====================================================
+       TIMELINE SEARCH
+    ===================================================== */
+
+    document.addEventListener(
+        "input",
+        event => {
+
+            if(
+                event.target?.id !==
+                    "timelineSearchInput"
+            ){
+
+                return;
+
+            }
 
 
-        TimelineApp.handleCommand(
-            button.dataset
-                .timelineAction,
-            button
-        );
-
-    }
-);
-
-
-/* =========================================================
-   TIMELINE SEARCH
-========================================================= */
-
-document.addEventListener(
-    "input",
-    event => {
-
-        if(
-            event.target.id !==
-                "timelineSearchInput"
-        ){
-
-            return;
+            TimelineApp.handleSearchInput(
+                event.target.value
+            );
 
         }
+    );
 
-
-        TimelineApp.searchQuery =
-            String(
-                event.target.value ||
-                ""
-            );
-
-
-        clearTimeout(
-            TimelineApp.searchTimer
-        );
-
-
-        TimelineApp.searchTimer =
-            setTimeout(
-                () => {
-
-                    TimelineApp.selectedItemId =
-                        null;
-
-
-                    TimelineApp.remount();
-
-                },
-                120
-            );
-
-    }
-);
+}
 
 
 /* =========================================================
@@ -3296,17 +4229,40 @@ document.addEventListener(
 
 try{
 
-    VAERO?.register?.(
-        "timelineApp",
-        TimelineApp
-    );
+    if(
+        typeof VAERO !==
+            "undefined" &&
+        typeof VAERO.register ===
+            "function"
+    ){
+
+        VAERO.register(
+            "timelineApp",
+            TimelineApp
+        );
+
+    }
 
 } catch(error){
 
-    /* global remains available */
+    console.warn(
+        "TimelineApp VAERO registration failed:",
+        error
+    );
 
 }
 
 
-window.TimelineApp =
-    TimelineApp;
+/* =========================================================
+   GLOBAL
+========================================================= */
+
+if(
+    typeof window !==
+        "undefined"
+){
+
+    window.TimelineApp =
+        TimelineApp;
+
+}
