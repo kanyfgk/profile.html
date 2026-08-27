@@ -5,19 +5,35 @@
 
 const Brain = {
 
-    history: [],
+    version:
+        "3.0.0",
 
-    sessions: [],
+    history:
+        [],
 
-    resumePoint: null,
+    sessions:
+        [],
 
-    maxHistoryItems: 100,
+    resumePoint:
+        null,
 
-    maxMessageLength: 8000,
+    maxHistoryItems:
+        100,
 
-    booted: false,
+    maxMessageLength:
+        8000,
 
-    bootedAt: null,
+    maxSnapshotItems:
+        250,
+
+    booted:
+        false,
+
+    bootedAt:
+        null,
+
+    subscriptions:
+        [],
 
 
     /* =====================================================
@@ -26,25 +42,45 @@ const Brain = {
 
     getService(name){
 
+        const serviceName =
+            String(
+                name ??
+                ""
+            ).trim();
+
+
+        if(!serviceName){
+
+            return null;
+
+        }
+
+
         try{
 
             if(
-                typeof VAERO === "undefined" ||
-                typeof VAERO.get !== "function"
+                typeof VAERO ===
+                    "undefined" ||
+                typeof VAERO.get !==
+                    "function"
             ){
+
                 return null;
+
             }
 
 
             return (
-                VAERO.get(name) ||
+                VAERO.get(
+                    serviceName
+                ) ||
                 null
             );
 
         } catch(error){
 
             console.warn(
-                `Brain servisi okunamadı: ${name}`,
+                `Brain servisi okunamadı: ${serviceName}`,
                 error
             );
 
@@ -61,22 +97,34 @@ const Brain = {
         try{
 
             if(
-                typeof VAERO !== "undefined" &&
+                typeof VAERO !==
+                    "undefined" &&
                 VAERO.engine
             ){
+
                 return VAERO.engine;
+
             }
 
         } catch(error){
 
-            /* fallback */
+            /* fallback below */
+
         }
 
 
-        return (
-            window.Engine ||
-            null
-        );
+        if(
+            typeof window !==
+                "undefined" &&
+            window.Engine
+        ){
+
+            return window.Engine;
+
+        }
+
+
+        return null;
 
     },
 
@@ -88,17 +136,22 @@ const Brain = {
     clone(value){
 
         if(
-            value === null ||
-            value === undefined
+            value ===
+                null ||
+            value ===
+                undefined
         ){
+
             return value;
+
         }
 
 
         try{
 
             if(
-                typeof structuredClone === "function"
+                typeof structuredClone ===
+                    "function"
             ){
 
                 return structuredClone(
@@ -110,6 +163,7 @@ const Brain = {
         } catch(error){
 
             /* JSON fallback */
+
         }
 
 
@@ -134,19 +188,31 @@ const Brain = {
        ID
     ===================================================== */
 
-    createId(){
+    createId(
+        prefix = "brain"
+    ){
 
-        if(
-            typeof crypto !== "undefined" &&
-            typeof crypto.randomUUID === "function"
-        ){
+        try{
 
-            return crypto.randomUUID();
+            if(
+                typeof crypto !==
+                    "undefined" &&
+                typeof crypto.randomUUID ===
+                    "function"
+            ){
+
+                return crypto.randomUUID();
+
+            }
+
+        } catch(error){
+
+            /* fallback */
 
         }
 
 
-        return `brain_${Date.now()}_${Math.random()
+        return `${prefix}_${Date.now()}_${Math.random()
             .toString(36)
             .slice(2,10)}`;
 
@@ -159,32 +225,60 @@ const Brain = {
 
     safeAll(
         service,
-        options = undefined
+        options = undefined,
+        limit = this.maxSnapshotItems
     ){
 
         if(
             !service ||
-            typeof service.all !== "function"
+            typeof service.all !==
+                "function"
         ){
+
             return [];
+
         }
 
 
         try{
 
             const result =
-                options === undefined
+                options ===
+                    undefined
                     ? service.all()
                     : service.all(
                         options
                     );
 
 
-            return Array.isArray(
-                result
-            )
-                ? result
-                : [];
+            if(
+                !Array.isArray(
+                    result
+                )
+            ){
+
+                return [];
+
+            }
+
+
+            const safeLimit =
+                Math.max(
+                    1,
+                    Math.min(
+                        this.maxSnapshotItems,
+                        Number(
+                            limit
+                        ) ||
+                        this.maxSnapshotItems
+                    )
+                );
+
+
+            return result.slice(
+                0,
+                safeLimit
+            );
 
         } catch(error){
 
@@ -204,80 +298,130 @@ const Brain = {
         const services = {
 
             identity:
-                this.getService("identity"),
+                this.getService(
+                    "identity"
+                ),
 
             profile:
-                this.getService("profile"),
+                this.getService(
+                    "profile"
+                ),
 
             memory:
-                this.getService("memorySystem"),
+                this.getService(
+                    "memorySystem"
+                ),
 
             timeline:
-                this.getService("timeline"),
+                this.getService(
+                    "timeline"
+                ),
 
             guardian:
-                this.getService("guardian"),
+                this.getService(
+                    "guardian"
+                ),
 
             bridge:
-                this.getService("bridge"),
+                this.getService(
+                    "bridge"
+                ),
 
             evolution:
-                this.getService("evolution"),
+                this.getService(
+                    "evolution"
+                ),
 
             world:
-                this.getService("world"),
+                this.getService(
+                    "world"
+                ),
 
             entityManager:
-                this.getService("entityManager"),
+                this.getService(
+                    "entityManager"
+                ),
 
             appRegistry:
-                this.getService("appRegistry"),
+                this.getService(
+                    "appRegistry"
+                ),
 
             organSystem:
-                this.getService("organSystem"),
+                this.getService(
+                    "organSystem"
+                ),
 
             organStatus:
-                this.getService("organStatus"),
+                this.getService(
+                    "organStatus"
+                ),
 
             brainIntent:
-                this.getService("brainIntent"),
+                this.getService(
+                    "brainIntent"
+                ),
 
             brainActions:
-                this.getService("brainActions"),
+                this.getService(
+                    "brainActions"
+                ),
 
             brainPolicy:
-                this.getService("brainActionPolicy"),
+                this.getService(
+                    "brainActionPolicy"
+                ),
 
             brainContext:
-                this.getService("brainContext"),
+                this.getService(
+                    "brainContext"
+                ),
 
             brainAwareness:
-                this.getService("brainAwareness"),
+                this.getService(
+                    "brainAwareness"
+                ),
 
             brainSkills:
-                this.getService("brainSkills"),
+                this.getService(
+                    "brainSkills"
+                ),
 
             brainMode:
-                this.getService("brainMode"),
+                this.getService(
+                    "brainMode"
+                ),
 
             brainService:
-                this.getService("brainService"),
+                this.getService(
+                    "brainService"
+                ),
 
             brainCore:
-                this.getService("brainCore")
+                this.getService(
+                    "brainCore"
+                )
 
         };
 
 
-        const result = {};
+        const result =
+            {};
 
 
         Object.entries(
             services
         ).forEach(
-            ([key,service]) => {
+            (
+                [
+                    key,
+                    service
+                ]
+            ) => {
 
-                result[key] =
+                result[
+                    key
+                ] =
                     service
                         ? "OK"
                         : "MISSING";
@@ -286,25 +430,35 @@ const Brain = {
         );
 
 
-        const total =
+        const serviceKeys =
             Object.keys(
-                result
-            ).length;
+                services
+            );
+
+
+        const total =
+            serviceKeys.length;
 
 
         const ready =
-            Object.values(
-                result
-            ).filter(
-                value =>
-                    value === "OK"
+            serviceKeys.filter(
+                key =>
+                    result[
+                        key
+                    ] ===
+                    "OK"
             ).length;
 
 
         result.integrity =
-            total > 0
+            total >
+                0
                 ? `${Math.round(
-                    ready / total * 100
+                    (
+                        ready /
+                        total
+                    ) *
+                    100
                 )}%`
                 : "0%";
 
@@ -337,20 +491,45 @@ const Brain = {
     normalizeMessage(message){
 
         return String(
-            message ?? ""
+            message ??
+                ""
         )
             .toLocaleLowerCase(
                 "tr-TR"
             )
             .trim()
-            .replaceAll("ı","i")
-            .replaceAll("ğ","g")
-            .replaceAll("ü","u")
-            .replaceAll("ş","s")
-            .replaceAll("ö","o")
-            .replaceAll("ç","c")
-            .replace(/[?.!,;:]/g," ")
-            .replace(/\s+/g," ")
+            .replaceAll(
+                "ı",
+                "i"
+            )
+            .replaceAll(
+                "ğ",
+                "g"
+            )
+            .replaceAll(
+                "ü",
+                "u"
+            )
+            .replaceAll(
+                "ş",
+                "s"
+            )
+            .replaceAll(
+                "ö",
+                "o"
+            )
+            .replaceAll(
+                "ç",
+                "c"
+            )
+            .replace(
+                /[?.!,;:()[\]{}"'`]/g,
+                " "
+            )
+            .replace(
+                /\s+/g,
+                " "
+            )
             .trim();
 
     },
@@ -360,12 +539,15 @@ const Brain = {
 
         const clean =
             String(
-                message ?? ""
+                message ??
+                    ""
             ).trim();
 
 
         if(!clean){
+
             return "";
+
         }
 
 
@@ -377,18 +559,138 @@ const Brain = {
     },
 
 
+    tokenizeMessage(message){
+
+        const normalized =
+            this.normalizeMessage(
+                message
+            );
+
+
+        if(!normalized){
+
+            return [];
+
+        }
+
+
+        return normalized
+            .split(
+                " "
+            )
+            .map(
+                token =>
+                    token.trim()
+            )
+            .filter(
+                Boolean
+            );
+
+    },
+
+
+    phraseMatch(
+        normalizedMessage,
+        tokens,
+        phrase
+    ){
+
+        const normalizedPhrase =
+            this.normalizeMessage(
+                phrase
+            );
+
+
+        if(!normalizedPhrase){
+
+            return false;
+
+        }
+
+
+        /*
+         * Single-token aliases use exact token matching.
+         * This prevents aliases such as "app" from matching
+         * unrelated words containing the same substring.
+         */
+
+        if(
+            !normalizedPhrase.includes(
+                " "
+            )
+        ){
+
+            return tokens.includes(
+                normalizedPhrase
+            );
+
+        }
+
+
+        return (
+            ` ${normalizedMessage} `
+                .includes(
+                    ` ${normalizedPhrase} `
+                )
+        );
+
+    },
+
+
     /* =====================================================
-       HISTORY
+       HISTORY SANITIZATION
     ===================================================== */
 
     sanitizeContext(context){
 
         if(
             !context ||
-            typeof context !== "object"
+            typeof context !==
+                "object" ||
+            Array.isArray(
+                context
+            )
         ){
+
             return null;
+
         }
+
+
+        const entity =
+            context.entity &&
+            typeof context.entity ===
+                "object"
+                ? {
+                    id:
+                        context.entity.id ||
+                        null,
+
+                    name:
+                        context.entity.name ||
+                        null,
+
+                    type:
+                        context.entity.type ||
+                        null
+                }
+                : null;
+
+
+        const world =
+            context.world &&
+            typeof context.world ===
+                "object"
+                ? {
+                    id:
+                        context.world.id ||
+                        null,
+
+                    name:
+                        context.world.name ||
+                        null
+                }
+                : null;
 
 
         return {
@@ -409,35 +711,13 @@ const Brain = {
                 context.previousApp ||
                 null,
 
-            entity:
-                context.entity
-                    ? {
-                        id:
-                            context.entity.id ||
-                            null,
+            entity,
 
-                        name:
-                            context.entity.name ||
-                            null,
+            world,
 
-                        type:
-                            context.entity.type ||
-                            null
-                    }
-                    : null,
-
-            world:
-                context.world
-                    ? {
-                        id:
-                            context.world.id ||
-                            null,
-
-                        name:
-                            context.world.name ||
-                            null
-                    }
-                    : null,
+            engineReady:
+                context.engineReady ===
+                    true,
 
             builtAt:
                 context.builtAt ||
@@ -452,32 +732,40 @@ const Brain = {
 
         if(
             !route ||
-            typeof route !== "object"
+            typeof route !==
+                "object" ||
+            Array.isArray(
+                route
+            )
         ){
+
             return null;
+
         }
 
 
         return {
 
             executed:
-                Boolean(
-                    route.executed
-                ),
+                route.executed ===
+                    true,
 
             blocked:
-                Boolean(
-                    route.blocked
-                ),
+                route.blocked ===
+                    true,
 
             requiresConfirmation:
-                Boolean(
-                    route.requiresConfirmation
-                ),
+                route.requiresConfirmation ===
+                    true,
+
+            confirmationApproved:
+                route.confirmationApproved ===
+                    true,
 
             actionType:
                 route.actionType ||
-                route.policy?.actionType ||
+                route.policy
+                    ?.actionType ||
                 null,
 
             executionReason:
@@ -498,19 +786,31 @@ const Brain = {
 
     addHistoryRecord(record = {}){
 
+        const role =
+            [
+                "user",
+                "brain",
+                "system"
+            ].includes(
+                record.role
+            )
+                ? record.role
+                : "system";
+
+
         const historyRecord = {
 
             id:
-                this.createId(),
+                this.createId(
+                    "brain_history"
+                ),
 
-            role:
-                record.role ||
-                "system",
+            role,
 
             text:
                 String(
                     record.text ??
-                    ""
+                        ""
                 ).slice(
                     0,
                     this.maxMessageLength
@@ -534,7 +834,9 @@ const Brain = {
                 ),
 
             createdAt:
-                record.createdAt ||
+                Number(
+                    record.createdAt
+                ) ||
                 Date.now()
 
         };
@@ -547,7 +849,7 @@ const Brain = {
 
         if(
             this.history.length >
-            this.maxHistoryItems
+                this.maxHistoryItems
         ){
 
             this.history =
@@ -565,28 +867,45 @@ const Brain = {
 
     getHistory(limit = 20){
 
+        const numeric =
+            Number(
+                limit
+            );
+
+
         const safeLimit =
             Math.max(
                 1,
                 Math.min(
                     this.maxHistoryItems,
-                    Number(limit) || 20
+                    Number.isFinite(
+                        numeric
+                    )
+                        ? Math.floor(
+                            numeric
+                        )
+                        : 20
                 )
             );
 
 
-        return this.clone(
-            this.history.slice(
-                -safeLimit
-            )
-        ) || [];
+        return (
+            this.clone(
+                this.history.slice(
+                    -safeLimit
+                )
+            ) ||
+            []
+        );
 
     },
 
 
     clearHistory(){
 
-        this.history = [];
+        this.history =
+            [];
+
 
         return true;
 
@@ -610,7 +929,9 @@ const Brain = {
 
 
         if(!cleanMessage){
+
             return null;
+
         }
 
 
@@ -620,12 +941,14 @@ const Brain = {
             );
 
 
-        let route = null;
+        let route =
+            null;
 
 
         if(
             brainCore &&
-            typeof brainCore.route === "function"
+            typeof brainCore.route ===
+                "function"
         ){
 
             try{
@@ -651,27 +974,45 @@ const Brain = {
 
         if(
             !route ||
-            typeof route !== "object"
+            typeof route !==
+                "object"
         ){
 
             route = {
 
                 intent:{
-                    type:"chat",
-                    target:null,
-                    operation:"general"
+                    type:
+                        "chat",
+
+                    target:
+                        null,
+
+                    operation:
+                        "general"
                 },
 
                 policy:{
-                    allowed:false,
-                    executable:false
+                    allowed:
+                        false,
+
+                    executable:
+                        false,
+
+                    blocked:
+                        false,
+
+                    requiresConfirmation:
+                        false
                 },
 
-                executed:false,
+                executed:
+                    false,
 
-                blocked:false,
+                blocked:
+                    false,
 
-                requiresConfirmation:false,
+                requiresConfirmation:
+                    false,
 
                 executionReason:
                     "brain-core-unavailable"
@@ -684,15 +1025,21 @@ const Brain = {
         const intent =
             route.intent ||
             {
-                type:"chat",
-                target:null,
-                operation:"general"
+                type:
+                    "chat",
+
+                target:
+                    null,
+
+                operation:
+                    "general"
             };
 
 
         this.addHistoryRecord({
 
-            role:"user",
+            role:
+                "user",
 
             text:
                 cleanMessage,
@@ -717,7 +1064,8 @@ const Brain = {
 
         this.addHistoryRecord({
 
-            role:"brain",
+            role:
+                "brain",
 
             text:
                 reply,
@@ -754,9 +1102,16 @@ const Brain = {
         if(!cleanMessage){
 
             return {
+
                 reply:
                     "Ne yapmak istediğini yazabilirsin.",
-                error:false
+
+                error:
+                    false,
+
+                empty:
+                    true
+
             };
 
         }
@@ -770,7 +1125,8 @@ const Brain = {
 
         if(
             !brainService ||
-            typeof brainService.ask !== "function"
+            typeof brainService.ask !==
+                "function"
         ){
 
             const fallbackContext =
@@ -791,66 +1147,100 @@ const Brain = {
                     reply ||
                     "Brain şu anda yanıt üretemedi.",
 
-                localFallback:true
+                localFallback:
+                    true,
+
+                error:
+                    false
 
             };
 
         }
 
 
-        const response =
-            await brainService.ask(
-                cleanMessage,
-                options
+        try{
+
+            const response =
+                await brainService.ask(
+                    cleanMessage,
+                    options
+                );
+
+
+            const context =
+                response?.context ||
+                this.getContext();
+
+
+            const intent =
+                response?.intent ||
+                null;
+
+
+            this.addHistoryRecord({
+
+                role:
+                    "user",
+
+                text:
+                    cleanMessage,
+
+                context,
+
+                intent,
+
+                route:
+                    response
+
+            });
+
+
+            this.addHistoryRecord({
+
+                role:
+                    "brain",
+
+                text:
+                    response?.reply ||
+                    "Brain yanıt üretemedi.",
+
+                context,
+
+                intent,
+
+                route:
+                    response
+
+            });
+
+
+            return response;
+
+        } catch(error){
+
+            console.error(
+                "Brain Service ask error:",
+                error
             );
 
 
-        const context =
-            response?.context ||
-            this.getContext();
+            return {
 
+                reply:
+                    "Brain isteği şu anda tamamlanamadı.",
 
-        const intent =
-            response?.intent ||
-            null;
+                error:
+                    true,
 
+                serviceError:
+                    error?.message ||
+                    String(
+                        error
+                    )
 
-        this.addHistoryRecord({
+            };
 
-            role:"user",
-
-            text:
-                cleanMessage,
-
-            context,
-
-            intent,
-
-            route:
-                response
-
-        });
-
-
-        this.addHistoryRecord({
-
-            role:"brain",
-
-            text:
-                response?.reply ||
-                "Brain yanıt üretemedi.",
-
-            context,
-
-            intent,
-
-            route:
-                response
-
-        });
-
-
-        return response;
+        }
 
     },
 
@@ -869,12 +1259,16 @@ const Brain = {
 
         if(
             contextService &&
-            typeof contextService.build === "function"
+            typeof contextService.build ===
+                "function"
         ){
 
             try{
 
-                return contextService.build();
+                return (
+                    contextService.build() ||
+                    {}
+                );
 
             } catch(error){
 
@@ -914,7 +1308,18 @@ const Brain = {
 
             world:
                 engine?.currentWorld ||
-                null
+                null,
+
+            engineReady:
+                Boolean(
+                    engine
+                ),
+
+            contextSource:
+                "brain-fallback",
+
+            builtAt:
+                Date.now()
 
         };
 
@@ -937,10 +1342,18 @@ const Brain = {
             );
 
 
+        const tokens =
+            this.tokenizeMessage(
+                normalizedMessage
+            );
+
+
         const topicDefinitions = [
 
             {
-                topic:"applications",
+                topic:
+                    "applications",
+
                 words:[
                     "applications",
                     "uygulamalar",
@@ -950,7 +1363,9 @@ const Brain = {
             },
 
             {
-                topic:"discovery",
+                topic:
+                    "discovery",
+
                 words:[
                     "discovery",
                     "kesif",
@@ -963,7 +1378,9 @@ const Brain = {
             },
 
             {
-                topic:"worlds",
+                topic:
+                    "worlds",
+
                 words:[
                     "dunyalar",
                     "dunyalarim",
@@ -972,7 +1389,9 @@ const Brain = {
             },
 
             {
-                topic:"world",
+                topic:
+                    "world",
+
                 words:[
                     "dunya",
                     "aktif dunya"
@@ -980,16 +1399,21 @@ const Brain = {
             },
 
             {
-                topic:"entities",
+                topic:
+                    "entities",
+
                 words:[
                     "varlik",
                     "varliklar",
-                    "entity"
+                    "entity",
+                    "entities"
                 ]
             },
 
             {
-                topic:"profile",
+                topic:
+                    "profile",
+
                 words:[
                     "profil",
                     "profile"
@@ -997,7 +1421,9 @@ const Brain = {
             },
 
             {
-                topic:"identity",
+                topic:
+                    "identity",
+
                 words:[
                     "kimlik",
                     "identity"
@@ -1005,7 +1431,9 @@ const Brain = {
             },
 
             {
-                topic:"memory",
+                topic:
+                    "memory",
+
                 words:[
                     "hafiza",
                     "memory"
@@ -1013,7 +1441,9 @@ const Brain = {
             },
 
             {
-                topic:"timeline",
+                topic:
+                    "timeline",
+
                 words:[
                     "timeline",
                     "zaman cizelgesi",
@@ -1022,7 +1452,9 @@ const Brain = {
             },
 
             {
-                topic:"bridge",
+                topic:
+                    "bridge",
+
                 words:[
                     "kopru",
                     "bridge",
@@ -1031,7 +1463,9 @@ const Brain = {
             },
 
             {
-                topic:"evolution",
+                topic:
+                    "evolution",
+
                 words:[
                     "evrim",
                     "evolution",
@@ -1041,7 +1475,9 @@ const Brain = {
             },
 
             {
-                topic:"organs",
+                topic:
+                    "organs",
+
                 words:[
                     "organ",
                     "organlar"
@@ -1049,7 +1485,9 @@ const Brain = {
             },
 
             {
-                topic:"settings",
+                topic:
+                    "settings",
+
                 words:[
                     "ayar",
                     "ayarlar",
@@ -1058,7 +1496,9 @@ const Brain = {
             },
 
             {
-                topic:"vaero",
+                topic:
+                    "vaero",
+
                 words:[
                     "vaero",
                     "engine durumu",
@@ -1067,7 +1507,9 @@ const Brain = {
             },
 
             {
-                topic:"brain",
+                topic:
+                    "brain",
+
                 words:[
                     "brain",
                     "beyin",
@@ -1076,7 +1518,9 @@ const Brain = {
             },
 
             {
-                topic:"home",
+                topic:
+                    "home",
+
                 words:[
                     "ana ekran",
                     "ana sayfa",
@@ -1092,7 +1536,9 @@ const Brain = {
                 definition =>
                     definition.words.some(
                         word =>
-                            normalizedMessage.includes(
+                            this.phraseMatch(
+                                normalizedMessage,
+                                tokens,
                                 word
                             )
                     )
@@ -1128,12 +1574,27 @@ const Brain = {
         if(
             !intent.type &&
             (
-                normalizedMessage.startsWith("ne ") ||
-                normalizedMessage.startsWith("nasil ") ||
-                normalizedMessage.startsWith("neden ") ||
-                normalizedMessage.startsWith("hangi ") ||
-                normalizedMessage.startsWith("kac ") ||
-                normalizedMessage.includes("var mi")
+                normalizedMessage.startsWith(
+                    "ne "
+                ) ||
+                normalizedMessage.startsWith(
+                    "nasil "
+                ) ||
+                normalizedMessage.startsWith(
+                    "neden "
+                ) ||
+                normalizedMessage.startsWith(
+                    "hangi "
+                ) ||
+                normalizedMessage.startsWith(
+                    "kac "
+                ) ||
+                normalizedMessage.includes(
+                    " var mi"
+                ) ||
+                normalizedMessage.endsWith(
+                    "var mi"
+                )
             )
         ){
 
@@ -1147,14 +1608,20 @@ const Brain = {
 
             rawMessage:
                 String(
-                    message ?? ""
+                    message ??
+                        ""
                 ),
 
             normalizedMessage,
 
             messageType,
 
-            topic,
+            topic:
+
+                String(
+                    topic ||
+                    "unknown"
+                ),
 
             mentionedTopic,
 
@@ -1173,10 +1640,16 @@ const Brain = {
                         intent.confidence
                     )
                 )
-                    ? Number(
-                        intent.confidence
+                    ? Math.max(
+                        0,
+                        Math.min(
+                            1,
+                            Number(
+                                intent.confidence
+                            )
+                        )
                     )
-                    : .35
+                    : 0.35
 
         };
 
@@ -1194,19 +1667,39 @@ const Brain = {
         route
     ){
 
+        const safeIntent =
+            intent &&
+            typeof intent ===
+                "object"
+                ? intent
+                : {};
+
+
+        const safeRoute =
+            route &&
+            typeof route ===
+                "object"
+                ? route
+                : {};
+
+
         const analysis =
             this.analyzeMessage(
                 message,
                 context,
-                intent
+                safeIntent
             );
 
 
-        if(route.blocked){
+        if(
+            safeRoute.blocked ===
+                true
+        ){
 
             return (
-                route.policy?.reason ||
-                route.executionReason ||
+                safeRoute.policy
+                    ?.reason ||
+                safeRoute.executionReason ||
                 "Bu işlem güvenlik nedeniyle Brain tarafından uygulanamaz."
             );
 
@@ -1214,31 +1707,38 @@ const Brain = {
 
 
         if(
-            route.requiresConfirmation &&
-            !route.executed
+            safeRoute.requiresConfirmation ===
+                true &&
+            safeRoute.executed !==
+                true
         ){
 
             return (
-                route.policy?.reason ||
-                route.executionReason ||
+                safeRoute.executionReason ||
+                safeRoute.policy
+                    ?.reason ||
                 "Bu işlemi uygulamadan önce onayın gerekiyor."
             );
 
         }
 
 
-        if(route.executed){
+        if(
+            safeRoute.executed ===
+                true
+        ){
 
             return this.getExecutedReply(
-                intent,
-                route
+                safeIntent,
+                safeRoute
             );
 
         }
 
 
         if(
-            intent.type === "clarify"
+            safeIntent.type ===
+                "clarify"
         ){
 
             return (
@@ -1249,7 +1749,8 @@ const Brain = {
 
 
         if(
-            analysis.messageType === "question"
+            analysis.messageType ===
+                "question"
         ){
 
             return this.getQuestionReply(
@@ -1261,7 +1762,8 @@ const Brain = {
 
 
         if(
-            analysis.messageType === "request"
+            analysis.messageType ===
+                "request"
         ){
 
             return this.getRequestReply(
@@ -1293,9 +1795,7 @@ const Brain = {
             null;
 
 
-        if(
-            actionResult?.message
-        ){
+        if(actionResult?.message){
 
             return String(
                 actionResult.message
@@ -1306,29 +1806,63 @@ const Brain = {
 
         const targetNames = {
 
-            home:"Ana ekran",
-            worlds:"Dünyalar",
-            world:"Dünya",
-            create:"Yarat",
-            entities:"Varlıklar",
-            identity:"Kimlik",
-            profile:"Profil",
-            discovery:"Discovery",
-            memory:"Hafıza",
-            timeline:"Zaman Çizelgesi",
-            bridge:"Bridge",
-            evolution:"Evolution",
-            organs:"Organlar",
-            applications:"Applications",
-            settings:"Ayarlar",
-            vaero:"VAERO",
-            brain:"Brain"
+            home:
+                "Ana ekran",
+
+            worlds:
+                "Dünyalar",
+
+            world:
+                "Dünya",
+
+            create:
+                "Yarat",
+
+            entities:
+                "Varlıklar",
+
+            identity:
+                "Kimlik",
+
+            profile:
+                "Profil",
+
+            discovery:
+                "Discovery",
+
+            memory:
+                "Hafıza",
+
+            timeline:
+                "Zaman Çizelgesi",
+
+            bridge:
+                "Bridge",
+
+            evolution:
+                "Evolution",
+
+            organs:
+                "Organlar",
+
+            applications:
+                "Applications",
+
+            settings:
+                "Ayarlar",
+
+            vaero:
+                "VAERO",
+
+            brain:
+                "Brain"
 
         };
 
 
         if(
-            intent.type === "resume:save"
+            intent.type ===
+                "resume:save"
         ){
 
             return (
@@ -1339,7 +1873,8 @@ const Brain = {
 
 
         if(
-            intent.type === "resume:restore"
+            intent.type ===
+                "resume:restore"
         ){
 
             return (
@@ -1350,8 +1885,10 @@ const Brain = {
 
 
         if(
-            intent.type === "create" &&
-            intent.target === "world"
+            intent.type ===
+                "create" &&
+            intent.target ===
+                "world"
         ){
 
             return (
@@ -1362,8 +1899,10 @@ const Brain = {
 
 
         if(
-            intent.type === "create" &&
-            intent.target === "entity"
+            intent.type ===
+                "create" &&
+            intent.target ===
+                "entity"
         ){
 
             return (
@@ -1374,7 +1913,8 @@ const Brain = {
 
 
         if(
-            intent.type === "navigate"
+            intent.type ===
+                "navigate"
         ){
 
             const label =
@@ -1573,14 +2113,18 @@ const Brain = {
 
     getDiscoveryContext(){
 
-        let result = null;
+        let result =
+            null;
 
 
         try{
 
             if(
+                typeof window !==
+                    "undefined" &&
                 window.DiscoveryApp &&
-                typeof window.DiscoveryApp.getResult === "function"
+                typeof window.DiscoveryApp.getResult ===
+                    "function"
             ){
 
                 result =
@@ -1600,18 +2144,25 @@ const Brain = {
 
             try{
 
-                const saved =
-                    localStorage.getItem(
-                        "vaero:discovery:result:v2"
-                    );
+                if(
+                    typeof localStorage !==
+                        "undefined"
+                ){
+
+                    const saved =
+                        localStorage.getItem(
+                            "vaero:discovery:result:v2"
+                        );
 
 
-                result =
-                    saved
-                        ? JSON.parse(
-                            saved
-                        )
-                        : null;
+                    result =
+                        saved
+                            ? JSON.parse(
+                                saved
+                            )
+                            : null;
+
+                }
 
             } catch(error){
 
@@ -1630,10 +2181,15 @@ const Brain = {
 
         if(
             !answers ||
-            typeof answers !== "object"
+            typeof answers !==
+                "object" ||
+            Array.isArray(
+                answers
+            )
         ){
 
-            answers = {};
+            answers =
+                {};
 
         }
 
@@ -1641,41 +2197,51 @@ const Brain = {
         if(
             Object.keys(
                 answers
-            ).length === 0
+            ).length ===
+                0
         ){
 
             try{
 
-                const saved =
-                    localStorage.getItem(
-                        "vaero:discovery:answers"
-                    );
-
-
-                const parsed =
-                    saved
-                        ? JSON.parse(
-                            saved
-                        )
-                        : null;
-
-
                 if(
-                    parsed &&
-                    typeof parsed === "object" &&
-                    !Array.isArray(
-                        parsed
-                    )
+                    typeof localStorage !==
+                        "undefined"
                 ){
 
-                    answers =
-                        parsed;
+                    const saved =
+                        localStorage.getItem(
+                            "vaero:discovery:answers"
+                        );
+
+
+                    const parsed =
+                        saved
+                            ? JSON.parse(
+                                saved
+                            )
+                            : null;
+
+
+                    if(
+                        parsed &&
+                        typeof parsed ===
+                            "object" &&
+                        !Array.isArray(
+                            parsed
+                        )
+                    ){
+
+                        answers =
+                            parsed;
+
+                    }
 
                 }
 
             } catch(error){
 
-                /* ignore */
+                /* optional legacy fallback */
+
             }
 
         }
@@ -1691,15 +2257,35 @@ const Brain = {
                 ){
 
                     return (
-                        value.join(", ") ||
+                        value
+                            .map(
+                                item =>
+                                    String(
+                                        item ??
+                                            ""
+                                    ).trim()
+                            )
+                            .filter(
+                                Boolean
+                            )
+                            .join(
+                                ", "
+                            ) ||
                         "Henüz belirlenmedi"
                     );
 
                 }
 
 
-                return String(
-                    value ||
+                const text =
+                    String(
+                        value ??
+                            ""
+                    ).trim();
+
+
+                return (
+                    text ||
                     "Henüz belirlenmedi"
                 );
 
@@ -1711,7 +2297,8 @@ const Brain = {
             completed:
                 Object.keys(
                     answers
-                ).length > 0,
+                ).length >
+                0,
 
             purpose:
                 format(
@@ -1772,7 +2359,8 @@ const Brain = {
             answers:
                 this.clone(
                     answers
-                ) || {},
+                ) ||
+                {},
 
             result:
                 this.clone(
@@ -1783,7 +2371,8 @@ const Brain = {
 
     },
 
-   /* =====================================================
+
+    /* =====================================================
        LOCAL ENGINE KNOWLEDGE
     ===================================================== */
 
@@ -1792,97 +2381,129 @@ const Brain = {
         return {
 
             home:{
-                label:"Ana ekran",
+                label:
+                    "Ana ekran",
+
                 purpose:
                     "Engine’in genel durumunu, aktif dünyanı, kısayolları ve son aktiviteleri tek merkezde gösterir."
             },
 
             worlds:{
-                label:"Dünyalar",
+                label:
+                    "Dünyalar",
+
                 purpose:
                     "Projeleri, toplulukları ve dijital yaşam alanlarını birbirinden ayırarak yönetir."
             },
 
             world:{
-                label:"Dünya",
+                label:
+                    "Dünya",
+
                 purpose:
                     "Varlıkların birlikte yaşadığı bağımsız bir proje veya topluluk alanıdır."
             },
 
             entities:{
-                label:"Varlıklar",
+                label:
+                    "Varlıklar",
+
                 purpose:
                     "Kişi, şirket, cihaz, bilgi, topluluk veya başka bir dijital yapıyı temsil eder."
             },
 
             identity:{
-                label:"Kimlik",
+                label:
+                    "Kimlik",
+
                 purpose:
                     "VAERO ID, görünürlük ve kimlik doğrulama durumunu taşır."
             },
 
             profile:{
-                label:"Profil",
+                label:
+                    "Profil",
+
                 purpose:
                     "Görünen isim, bio, yetenekler, ilgi alanları ve Discovery yönünü yönetir."
             },
 
             discovery:{
-                label:"Discovery",
+                label:
+                    "Discovery",
+
                 purpose:
                     "Amaç, ilgi, güçlü yön, hedef ve bağlantı sinyallerinden kişisel başlangıç yönü üretir."
             },
 
             memory:{
-                label:"Hafıza",
+                label:
+                    "Hafıza",
+
                 purpose:
                     "Notları, kararları, fikirleri, olayları ve önemli kalıcı bağlamları saklar."
             },
 
             timeline:{
-                label:"Zaman Çizelgesi",
+                label:
+                    "Zaman Çizelgesi",
+
                 purpose:
                     "Memory, Evolution ve sistem olaylarını kronolojik yaşam akışında birleştirir."
             },
 
             bridge:{
-                label:"Bridge",
+                label:
+                    "Bridge",
+
                 purpose:
                     "İnsanlar, varlıklar ve dünyalar arasındaki kontrollü ilişki ağını temsil eder."
             },
 
             evolution:{
-                label:"Evolution",
+                label:
+                    "Evolution",
+
                 purpose:
                     "Hedefleri, kararları, başarıları, kilometre taşlarını ve XP gelişimini takip eder."
             },
 
             organs:{
-                label:"Organlar",
+                label:
+                    "Organlar",
+
                 purpose:
                     "Engine organlarının health, capability, permission ve dependency durumlarını gösterir."
             },
 
             applications:{
-                label:"Applications",
+                label:
+                    "Applications",
+
                 purpose:
                     "Uygulamaları keşfetme, kurma, güncelleme, izin inceleme ve kaldırma yaşam döngüsünü yönetir."
             },
 
             settings:{
-                label:"Ayarlar",
+                label:
+                    "Ayarlar",
+
                 purpose:
                     "Privacy, Brain, Memory, Notifications, Applications, Security ve görünüm tercihlerini yönetir."
             },
 
             vaero:{
-                label:"VAERO",
+                label:
+                    "VAERO",
+
                 purpose:
                     "Worlds, Entities, Memory, Evolution, Bridge, Applications, Brain ve Engine sürekliliğini tek merkezde birleştirir."
             },
 
             brain:{
-                label:"Brain",
+                label:
+                    "Brain",
+
                 purpose:
                     "Kullanıcının isteğini, mevcut bağlamı, kişisel hafızayı ve izin verilen Engine işlemlerini koordine eder."
             }
@@ -1899,7 +2520,9 @@ const Brain = {
     getIdentitySnapshot(entity){
 
         if(!entity){
+
             return null;
+
         }
 
 
@@ -1917,7 +2540,8 @@ const Brain = {
 
             if(
                 identityService &&
-                typeof identityService.get === "function"
+                typeof identityService.get ===
+                    "function"
             ){
 
                 identity =
@@ -1938,13 +2562,11 @@ const Brain = {
         }
 
 
-        identity =
+        return (
             identity ||
             entity.identity ||
-            null;
-
-
-        return identity;
+            null
+        );
 
     },
 
@@ -1956,7 +2578,9 @@ const Brain = {
     getProfileSnapshot(entity){
 
         if(!entity){
+
             return null;
+
         }
 
 
@@ -1974,7 +2598,8 @@ const Brain = {
 
             if(
                 profileService &&
-                typeof profileService.get === "function"
+                typeof profileService.get ===
+                    "function"
             ){
 
                 profile =
@@ -2003,8 +2628,7 @@ const Brain = {
 
     },
 
-
-    /* =====================================================
+   /* =====================================================
        LOCAL QUESTIONS
     ===================================================== */
 
@@ -2026,11 +2650,13 @@ const Brain = {
 
 
         if(
-            analysis.topic === "worlds"
+            analysis.topic ===
+                "worlds"
         ){
 
             if(
-                snapshot.worldCount === 0
+                snapshot.worldCount ===
+                    0
             ){
 
                 return (
@@ -2046,9 +2672,16 @@ const Brain = {
                         world =>
                             world?.name
                     )
-                    .filter(Boolean)
-                    .slice(0,10)
-                    .join(", ");
+                    .filter(
+                        Boolean
+                    )
+                    .slice(
+                        0,
+                        10
+                    )
+                    .join(
+                        ", "
+                    );
 
 
             return names
@@ -2059,7 +2692,8 @@ const Brain = {
 
 
         if(
-            analysis.topic === "world"
+            analysis.topic ===
+                "world"
         ){
 
             const world =
@@ -2092,7 +2726,8 @@ const Brain = {
 
 
         if(
-            analysis.topic === "entities"
+            analysis.topic ===
+                "entities"
         ){
 
             return (
@@ -2103,7 +2738,8 @@ const Brain = {
 
 
         if(
-            analysis.topic === "identity"
+            analysis.topic ===
+                "identity"
         ){
 
             const entity =
@@ -2131,7 +2767,8 @@ const Brain = {
             const status =
                 identity.verificationStatus ||
                 (
-                    identity.verified
+                    identity.verified ===
+                        true
                         ? "verified"
                         : "unverified"
                 );
@@ -2139,10 +2776,17 @@ const Brain = {
 
             const labels = {
 
-                verified:"doğrulanmış",
-                pending:"doğrulama bekliyor",
-                rejected:"doğrulama reddedilmiş",
-                unverified:"henüz doğrulanmamış"
+                verified:
+                    "doğrulanmış",
+
+                pending:
+                    "doğrulama bekliyor",
+
+                rejected:
+                    "doğrulama reddedilmiş",
+
+                unverified:
+                    "henüz doğrulanmamış"
 
             };
 
@@ -2156,7 +2800,8 @@ const Brain = {
 
 
         if(
-            analysis.topic === "profile"
+            analysis.topic ===
+                "profile"
         ){
 
             const entity =
@@ -2188,8 +2833,10 @@ const Brain = {
 
 
             const bio =
-                profile.bio ||
-                "";
+                String(
+                    profile.bio ||
+                        ""
+                ).trim();
 
 
             return (
@@ -2205,7 +2852,8 @@ const Brain = {
 
 
         if(
-            analysis.topic === "discovery"
+            analysis.topic ===
+                "discovery"
         ){
 
             const discovery =
@@ -2213,7 +2861,8 @@ const Brain = {
 
 
             if(
-                !discovery.completed
+                discovery.completed !==
+                    true
             ){
 
                 return (
@@ -2266,6 +2915,19 @@ const Brain = {
             }
 
 
+            if(
+                discovery.recommendedApps
+                    .length >
+                0
+            ){
+
+                lines.push(
+                    `• Önerilen uygulamalar: ${discovery.recommendedApps.join(", ")}`
+                );
+
+            }
+
+
             return lines.join(
                 "\n"
             );
@@ -2274,7 +2936,8 @@ const Brain = {
 
 
         if(
-            analysis.topic === "memory"
+            analysis.topic ===
+                "memory"
         ){
 
             const entity =
@@ -2294,19 +2957,33 @@ const Brain = {
             if(
                 entity?.id &&
                 memory &&
-                typeof memory.forEntity === "function"
+                typeof memory.forEntity ===
+                    "function"
             ){
 
                 try{
 
-                    records =
+                    const scoped =
                         memory.forEntity(
                             entity.id
                         );
 
+
+                    if(
+                        Array.isArray(
+                            scoped
+                        )
+                    ){
+
+                        records =
+                            scoped;
+
+                    }
+
                 } catch(error){
 
                     /* global fallback */
+
                 }
 
             }
@@ -2320,7 +2997,8 @@ const Brain = {
 
 
         if(
-            analysis.topic === "timeline"
+            analysis.topic ===
+                "timeline"
         ){
 
             const entity =
@@ -2340,19 +3018,33 @@ const Brain = {
             if(
                 entity?.id &&
                 timeline &&
-                typeof timeline.forEntity === "function"
+                typeof timeline.forEntity ===
+                    "function"
             ){
 
                 try{
 
-                    events =
+                    const scoped =
                         timeline.forEntity(
                             entity.id
                         );
 
+
+                    if(
+                        Array.isArray(
+                            scoped
+                        )
+                    ){
+
+                        events =
+                            scoped;
+
+                    }
+
                 } catch(error){
 
-                    /* fallback */
+                    /* global fallback */
+
                 }
 
             }
@@ -2366,7 +3058,8 @@ const Brain = {
 
 
         if(
-            analysis.topic === "bridge"
+            analysis.topic ===
+                "bridge"
         ){
 
             const entity =
@@ -2386,19 +3079,33 @@ const Brain = {
             if(
                 entity?.id &&
                 bridge &&
-                typeof bridge.forEntity === "function"
+                typeof bridge.forEntity ===
+                    "function"
             ){
 
                 try{
 
-                    links =
+                    const scoped =
                         bridge.forEntity(
                             entity.id
                         );
 
+
+                    if(
+                        Array.isArray(
+                            scoped
+                        )
+                    ){
+
+                        links =
+                            scoped;
+
+                    }
+
                 } catch(error){
 
-                    /* fallback */
+                    /* global fallback */
+
                 }
 
             }
@@ -2412,7 +3119,8 @@ const Brain = {
 
 
         if(
-            analysis.topic === "evolution"
+            analysis.topic ===
+                "evolution"
         ){
 
             const entity =
@@ -2432,19 +3140,33 @@ const Brain = {
             if(
                 entity?.id &&
                 evolution &&
-                typeof evolution.forEntity === "function"
+                typeof evolution.forEntity ===
+                    "function"
             ){
 
                 try{
 
-                    events =
+                    const scoped =
                         evolution.forEntity(
                             entity.id
                         );
 
+
+                    if(
+                        Array.isArray(
+                            scoped
+                        )
+                    ){
+
+                        events =
+                            scoped;
+
+                    }
+
                 } catch(error){
 
-                    /* fallback */
+                    /* global fallback */
+
                 }
 
             }
@@ -2475,7 +3197,8 @@ const Brain = {
 
 
         if(
-            analysis.topic === "applications"
+            analysis.topic ===
+                "applications"
         ){
 
             const apps =
@@ -2493,19 +3216,62 @@ const Brain = {
                     app => {
 
                         if(
-                            app.system === true ||
-                            app.distribution === "built-in"
+                            app?.system ===
+                                true ||
+                            app?.distribution ===
+                                "built-in" ||
+                            app?.builtIn ===
+                                true
                         ){
+
                             return true;
+
+                        }
+
+
+                        if(
+                            !app?.id ||
+                            !organSystem
+                        ){
+
+                            return false;
+
                         }
 
 
                         try{
 
-                            return Boolean(
-                                organSystem?.get?.(
+                            const organ =
+                                organSystem.get?.(
                                     app.id
-                                )?.installed
+                                ) ||
+                                null;
+
+
+                            if(!organ){
+
+                                return false;
+
+                            }
+
+
+                            return (
+                                organ.installed ===
+                                    true ||
+                                [
+                                    "active",
+                                    "inactive",
+                                    "paused",
+                                    "disabled",
+                                    "error"
+                                ].includes(
+                                    String(
+                                        organ.status ||
+                                            ""
+                                    )
+                                        .trim()
+                                        .toLowerCase()
+                                )
                             );
 
                         } catch(error){
@@ -2527,7 +3293,8 @@ const Brain = {
 
 
         if(
-            analysis.topic === "organs"
+            analysis.topic ===
+                "organs"
         ){
 
             const health =
@@ -2543,17 +3310,46 @@ const Brain = {
             }
 
 
+            const status =
+                health.status ||
+                "bilinmiyor";
+
+
+            const averageHealth =
+                health.averageHealth !==
+                    undefined &&
+                health.averageHealth !==
+                    null
+                    ? health.averageHealth
+                    : "—";
+
+
+            const active =
+                Number(
+                    health.active
+                ) ||
+                0;
+
+
+            const total =
+                Number(
+                    health.total
+                ) ||
+                0;
+
+
             return (
-                `Engine organ durumu ${health.status}. ` +
-                `Ortalama health ${health.averageHealth ?? "—"}%. ` +
-                `${health.active}/${health.total} organ aktif.`
+                `Engine organ durumu ${status}. ` +
+                `Ortalama health ${averageHealth}%. ` +
+                `${active}/${total} organ aktif.`
             );
 
         }
 
 
         if(
-            analysis.topic === "vaero"
+            analysis.topic ===
+                "vaero"
         ){
 
             const health =
@@ -2571,7 +3367,8 @@ const Brain = {
 
 
         if(
-            analysis.topic === "brain"
+            analysis.topic ===
+                "brain"
         ){
 
             const status =
@@ -2624,18 +3421,46 @@ const Brain = {
 
 
         if(
-            analysis.operation === "delete"
+            analysis.operation ===
+                "delete" ||
+            analysis.operation ===
+                "remove"
         ){
 
             return (
-                `${knowledge.label} ile ilgili silme işlemi kullanıcı onayı olmadan uygulanmaz.`
+                `${knowledge.label} ile ilgili silme işlemi bağlı kullanıcı onayı olmadan uygulanmaz.`
             );
 
         }
 
 
         if(
-            analysis.operation === "edit"
+            analysis.operation ===
+                "archive"
+        ){
+
+            return (
+                `${knowledge.label} arşivleme işlemi bağlı kullanıcı onayı gerektirir.`
+            );
+
+        }
+
+
+        if(
+            analysis.operation ===
+                "restore"
+        ){
+
+            return (
+                `${knowledge.label} geri yükleme işlemi bağlı kullanıcı onayı gerektirir.`
+            );
+
+        }
+
+
+        if(
+            analysis.operation ===
+                "edit"
         ){
 
             return (
@@ -2646,7 +3471,8 @@ const Brain = {
 
 
         if(
-            analysis.operation === "search"
+            analysis.operation ===
+                "search"
         ){
 
             return (
@@ -2720,6 +3546,330 @@ const Brain = {
 
 
     /* =====================================================
+       SESSION
+    ===================================================== */
+
+    createSession(
+        data = {}
+    ){
+
+        const session = {
+
+            id:
+                this.createId(
+                    "brain_session"
+                ),
+
+            title:
+                String(
+                    data.title ||
+                        "Brain Oturumu"
+                )
+                    .trim()
+                    .slice(
+                        0,
+                        240
+                    ),
+
+            topic:
+                data.topic ||
+                null,
+
+            context:
+                this.sanitizeContext(
+                    data.context ||
+                    this.getContext()
+                ),
+
+            startedAt:
+                Date.now(),
+
+            endedAt:
+                null,
+
+            active:
+                true
+
+        };
+
+
+        this.sessions
+            .forEach(
+                item => {
+
+                    if(
+                        item &&
+                        item.active ===
+                            true
+                    ){
+
+                        item.active =
+                            false;
+
+
+                        item.endedAt =
+                            Date.now();
+
+                    }
+
+                }
+            );
+
+
+        this.sessions.push(
+            session
+        );
+
+
+        if(
+            this.sessions.length >
+                50
+        ){
+
+            this.sessions =
+                this.sessions.slice(
+                    -50
+                );
+
+        }
+
+
+        return this.clone(
+            session
+        );
+
+    },
+
+
+    endSession(sessionId = null){
+
+        const active =
+            sessionId
+                ? this.sessions.find(
+                    item =>
+                        item?.id ===
+                        sessionId
+                )
+                : [
+                    ...this.sessions
+                ]
+                    .reverse()
+                    .find(
+                        item =>
+                            item?.active ===
+                            true
+                    );
+
+
+        if(!active){
+
+            return false;
+
+        }
+
+
+        active.active =
+            false;
+
+
+        active.endedAt =
+            Date.now();
+
+
+        return true;
+
+    },
+
+
+    getSessions(limit = 20){
+
+        const safeLimit =
+            Math.max(
+                1,
+                Math.min(
+                    50,
+                    Number(
+                        limit
+                    ) ||
+                    20
+                )
+            );
+
+
+        return (
+            this.clone(
+                this.sessions.slice(
+                    -safeLimit
+                )
+            ) ||
+            []
+        );
+
+    },
+
+
+    /* =====================================================
+       RESUME POINT
+    ===================================================== */
+
+    saveResumePoint(
+        label = "Devam noktası",
+        context = null
+    ){
+
+        this.resumePoint = {
+
+            id:
+                this.createId(
+                    "brain_resume"
+                ),
+
+            label:
+                String(
+                    label ||
+                        "Devam noktası"
+                )
+                    .trim()
+                    .slice(
+                        0,
+                        1000
+                    ),
+
+            context:
+                this.sanitizeContext(
+                    context ||
+                    this.getContext()
+                ),
+
+            savedAt:
+                Date.now()
+
+        };
+
+
+        return this.clone(
+            this.resumePoint
+        );
+
+    },
+
+
+    getResumePoint(){
+
+        return this.resumePoint
+            ? this.clone(
+                this.resumePoint
+            )
+            : null;
+
+    },
+
+
+    clearResumePoint(){
+
+        this.resumePoint =
+            null;
+
+
+        return true;
+
+    },
+
+
+    /* =====================================================
+       SUBSCRIPTIONS
+    ===================================================== */
+
+    subscribe(
+        events,
+        eventName,
+        callback
+    ){
+
+        if(
+            !events ||
+            typeof events.on !==
+                "function" ||
+            typeof callback !==
+                "function"
+        ){
+
+            return false;
+
+        }
+
+
+        try{
+
+            const unsubscribe =
+                events.on(
+                    eventName,
+                    callback
+                );
+
+
+            if(
+                typeof unsubscribe ===
+                    "function"
+            ){
+
+                this.subscriptions.push(
+                    unsubscribe
+                );
+
+            }
+
+
+            return true;
+
+        } catch(error){
+
+            return false;
+
+        }
+
+    },
+
+
+    clearSubscriptions(){
+
+        this.subscriptions.forEach(
+            unsubscribe => {
+
+                if(
+                    typeof unsubscribe !==
+                        "function"
+                ){
+
+                    return;
+
+                }
+
+
+                try{
+
+                    unsubscribe();
+
+                } catch(error){
+
+                    /* ignore */
+
+                }
+
+            }
+        );
+
+
+        this.subscriptions =
+            [];
+
+
+        return true;
+
+    },
+
+
+    /* =====================================================
        STATUS
     ===================================================== */
 
@@ -2737,7 +3887,56 @@ const Brain = {
             );
 
 
+        const report =
+            this.report();
+
+
+        let modeSnapshot =
+            null;
+
+
+        try{
+
+            modeSnapshot =
+                mode &&
+                typeof mode.snapshot ===
+                    "function"
+                    ? mode.snapshot()
+                    : null;
+
+        } catch(error){
+
+            modeSnapshot =
+                null;
+
+        }
+
+
+        let provider =
+            null;
+
+
+        try{
+
+            provider =
+                providerCore &&
+                typeof providerCore.getProviderInfo ===
+                    "function"
+                    ? providerCore.getProviderInfo()
+                    : null;
+
+        } catch(error){
+
+            provider =
+                null;
+
+        }
+
+
         return {
+
+            version:
+                this.version,
 
             booted:
                 this.booted,
@@ -2751,21 +3950,36 @@ const Brain = {
             sessions:
                 this.sessions.length,
 
-            mode:
-                mode &&
-                typeof mode.snapshot === "function"
-                    ? mode.snapshot()
-                    : null,
+            activeSession:
+                Boolean(
+                    this.sessions.find(
+                        session =>
+                            session?.active ===
+                                true
+                    )
+                ),
 
-            provider:
-                providerCore &&
-                typeof providerCore.getProviderInfo === "function"
-                    ? providerCore.getProviderInfo()
-                    : null,
+            resumePointAvailable:
+                Boolean(
+                    this.resumePoint
+                ),
+
+            mode:
+                modeSnapshot,
+
+            provider,
 
             integrity:
-                this.report()
-                    .integrity
+                report.integrity,
+
+            readyServices:
+                report.ready,
+
+            totalServices:
+                report.total,
+
+            subscriptions:
+                this.subscriptions.length
 
         };
 
@@ -2793,10 +4007,6 @@ const Brain = {
             Date.now();
 
 
-        const status =
-            this.report();
-
-
         const events =
             this.getService(
                 "events"
@@ -2805,67 +4015,93 @@ const Brain = {
 
         if(
             events &&
-            typeof events.on === "function"
+            typeof events.on ===
+                "function"
         ){
 
-            try{
+            /*
+             * Canonical event only.
+             *
+             * Other compatibility layers may emit aliases,
+             * but Brain does not subscribe to both forms and
+             * therefore avoids duplicate awareness updates.
+             */
 
-                events.on(
-                    "engine.started",
-                    () => {
+            this.subscribe(
+                events,
+                "engine.started",
+                () => {
 
-                        const awareness =
-                            this.getService(
-                                "brainAwareness"
-                            );
-
-
-                        if(
-                            awareness &&
-                            typeof awareness.enter === "function"
-                        ){
-
-                            const engine =
-                                this.getEngine();
+                    const awareness =
+                        this.getService(
+                            "brainAwareness"
+                        );
 
 
-                            awareness.enter(
-                                engine?.currentView ||
-                                "home",
-                                {
-                                    source:
-                                        "engine.started"
-                                }
-                            );
+                    if(
+                        !awareness ||
+                        typeof awareness.enter !==
+                            "function"
+                    ){
 
-                        }
+                        return;
 
                     }
-                );
-
-            } catch(error){
-
-                console.warn(
-                    "Brain engine event bağlantısı kurulamadı:",
-                    error
-                );
-
-            }
 
 
-            try{
-
-                events.on(
-                    "discovery:completed",
-                    payload => {
-
-                        const awareness =
-                            this.getService(
-                                "brainAwareness"
-                            );
+                    const engine =
+                        this.getEngine();
 
 
-                        awareness?.enter?.(
+                    try{
+
+                        awareness.enter(
+                            engine?.currentView ||
+                            "home",
+                            {
+                                source:
+                                    "engine.started"
+                            }
+                        );
+
+                    } catch(error){
+
+                        console.warn(
+                            "Brain awareness engine başlangıcı işlenemedi:",
+                            error
+                        );
+
+                    }
+
+                }
+            );
+
+
+            this.subscribe(
+                events,
+                "discovery:completed",
+                payload => {
+
+                    const awareness =
+                        this.getService(
+                            "brainAwareness"
+                        );
+
+
+                    if(
+                        !awareness ||
+                        typeof awareness.enter !==
+                            "function"
+                    ){
+
+                        return;
+
+                    }
+
+
+                    try{
+
+                        awareness.enter(
                             "discovery",
                             {
                                 source:
@@ -2887,20 +4123,77 @@ const Brain = {
                             }
                         );
 
+                    } catch(error){
+
+                        /* optional */
+
                     }
-                );
 
-            } catch(error){
-
-                /* optional */
-            }
+                }
+            );
 
         }
 
 
+        const status =
+            this.report();
+
+
+        this.emitOnline(
+            status
+        );
+
+
+        return status;
+
+    },
+
+
+    /* =====================================================
+       ONLINE EVENT
+    ===================================================== */
+
+    emitOnline(status){
+
+        try{
+
+            if(
+                typeof VAERO !==
+                    "undefined" &&
+                typeof VAERO.emit ===
+                    "function"
+            ){
+
+                VAERO.emit(
+                    "brain.online",
+                    status
+                );
+
+
+                return true;
+
+            }
+
+        } catch(error){
+
+            console.warn(
+                "brain.online olayı gönderilemedi:",
+                error
+            );
+
+        }
+
+
+        const events =
+            this.getService(
+                "events"
+            );
+
+
         if(
             events &&
-            typeof events.emit === "function"
+            typeof events.emit ===
+                "function"
         ){
 
             try{
@@ -2910,10 +4203,13 @@ const Brain = {
                     status
                 );
 
+
+                return true;
+
             } catch(error){
 
                 console.warn(
-                    "brain.online olayı gönderilemedi:",
+                    "brain.online fallback gönderilemedi:",
                     error
                 );
 
@@ -2922,18 +4218,85 @@ const Brain = {
         }
 
 
-        return status;
+        return false;
+
+    },
+
+
+    /* =====================================================
+       RESET RUNTIME
+    ===================================================== */
+
+    resetRuntime(
+        options = {}
+    ){
+
+        this.history =
+            [];
+
+
+        this.sessions =
+            [];
+
+
+        if(
+            options.keepResumePoint !==
+                true
+        ){
+
+            this.resumePoint =
+                null;
+
+        }
+
+
+        return true;
 
     }
 
 };
 
 
-VAERO.register(
-    "brain",
-    Brain
-);
+/* =========================================================
+   REGISTER
+========================================================= */
+
+try{
+
+    if(
+        typeof VAERO !==
+            "undefined" &&
+        typeof VAERO.register ===
+            "function"
+    ){
+
+        VAERO.register(
+            "brain",
+            Brain
+        );
+
+    }
+
+} catch(error){
+
+    console.error(
+        "Brain register edilemedi:",
+        error
+    );
+
+}
 
 
-window.Brain =
-    Brain;
+/* =========================================================
+   GLOBAL
+========================================================= */
+
+if(
+    typeof window !==
+        "undefined"
+){
+
+    window.Brain =
+        Brain;
+
+}
