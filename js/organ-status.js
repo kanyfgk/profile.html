@@ -15,10 +15,25 @@ const OrganStatus = {
 
     getService(name){
 
+        const serviceName =
+            String(
+                name ??
+                ""
+            ).trim();
+
+
+        if(!serviceName){
+
+            return null;
+
+        }
+
+
         try{
 
             if(
-                typeof VAERO === "undefined" ||
+                typeof VAERO ===
+                    "undefined" ||
                 typeof VAERO.get !==
                     "function"
             ){
@@ -29,14 +44,16 @@ const OrganStatus = {
 
 
             return (
-                VAERO.get(name) ||
+                VAERO.get(
+                    serviceName
+                ) ||
                 null
             );
 
         } catch(error){
 
             console.warn(
-                `OrganStatus service lookup failed: ${name}`,
+                `OrganStatus service lookup failed: ${serviceName}`,
                 error
             );
 
@@ -54,49 +71,86 @@ const OrganStatus = {
 
     normalizeList(value){
 
+        let source =
+            [];
+
+
         if(
             Array.isArray(
                 value
             )
         ){
 
-            return [
-                ...new Set(
-                    value
-                        .map(
-                            item =>
-                                String(
-                                    item ??
-                                    ""
-                                ).trim()
-                        )
-                        .filter(Boolean)
-                )
-            ];
+            source =
+                value;
 
         }
 
-
-        if(
-            value instanceof Set
+        else if(
+            value instanceof
+                Set
         ){
 
-            return [
-                ...value
-            ]
-                .map(
-                    item =>
-                        String(
-                            item ??
-                            ""
-                        ).trim()
-                )
-                .filter(Boolean);
+            source =
+                [
+                    ...value
+                ];
+
+        }
+
+        else {
+
+            return [];
 
         }
 
 
-        return [];
+        const seen =
+            new Set();
+
+
+        return source
+            .map(
+                item =>
+                    String(
+                        item ??
+                        ""
+                    ).trim()
+            )
+            .filter(
+                item => {
+
+                    if(!item){
+
+                        return false;
+
+                    }
+
+
+                    const key =
+                        item.toLowerCase();
+
+
+                    if(
+                        seen.has(
+                            key
+                        )
+                    ){
+
+                        return false;
+
+                    }
+
+
+                    seen.add(
+                        key
+                    );
+
+
+                    return true;
+
+                }
+            );
 
     },
 
@@ -128,7 +182,7 @@ const OrganStatus = {
 
         const status =
             String(
-                value ||
+                value ??
                 ""
             )
                 .trim()
@@ -262,9 +316,7 @@ const OrganStatus = {
             const result =
                 options ===
                     undefined
-
                     ? service.all()
-
                     : service.all(
                         options
                     );
@@ -274,6 +326,7 @@ const OrganStatus = {
                 result
             )
                 ? result
+                    .filter(Boolean)
                 : [];
 
         } catch(error){
@@ -303,9 +356,7 @@ const OrganStatus = {
             (
                 typeof AppRegistry !==
                     "undefined"
-
                     ? AppRegistry
-
                     : null
             ) ||
 
@@ -316,9 +367,7 @@ const OrganStatus = {
             (
                 typeof OrganRegistry !==
                     "undefined"
-
                     ? OrganRegistry
-
                     : null
             ) ||
 
@@ -332,7 +381,7 @@ const OrganStatus = {
 
         const target =
             String(
-                id ||
+                id ??
                 ""
             ).trim();
 
@@ -355,45 +404,44 @@ const OrganStatus = {
         }
 
 
-        try{
+        const attempts = [
 
-            if(
+            () =>
+                typeof registry.get ===
+                    "function"
+                    ? registry.get(
+                        target
+                    )
+                    : null,
+
+            () =>
                 typeof registry.find ===
                     "function"
-            ){
-
-                const result =
-                    registry.find(
+                    ? registry.find(
                         target
-                    );
+                    )
+                    : null,
 
-
-                if(result){
-
-                    return result;
-
-                }
-
-            }
-
-        } catch(error){
-
-            /* continue */
-
-        }
-
-
-        try{
-
-            if(
+            () =>
                 typeof registry.findBySlug ===
                     "function"
-            ){
+                    ? registry.findBySlug(
+                        target
+                    )
+                    : null
+
+        ];
+
+
+        for(
+            const attempt of
+            attempts
+        ){
+
+            try{
 
                 const result =
-                    registry.findBySlug(
-                        target
-                    );
+                    attempt();
 
 
                 if(result){
@@ -402,13 +450,17 @@ const OrganStatus = {
 
                 }
 
+            } catch(error){
+
+                /* continue */
+
             }
 
-        } catch(error){
-
-            /* continue */
-
         }
+
+
+        let records =
+            [];
 
 
         try{
@@ -418,31 +470,11 @@ const OrganStatus = {
                     "function"
             ){
 
-                const records =
+                records =
                     registry.all({
                         includeDisabled:
                             true
                     });
-
-
-                if(
-                    Array.isArray(
-                        records
-                    )
-                ){
-
-                    return (
-                        records.find(
-                            record =>
-                                record?.id ===
-                                    target ||
-                                record?.slug ===
-                                    target
-                        ) ||
-                        null
-                    );
-
-                }
 
             }
 
@@ -450,39 +482,68 @@ const OrganStatus = {
 
             try{
 
-                const records =
-                    registry.all();
-
-
-                if(
-                    Array.isArray(
-                        records
-                    )
-                ){
-
-                    return (
-                        records.find(
-                            record =>
-                                record?.id ===
-                                    target ||
-                                record?.slug ===
-                                    target
-                        ) ||
-                        null
-                    );
-
-                }
+                records =
+                    registry.all?.() ||
+                    [];
 
             } catch(secondError){
 
-                return null;
+                records =
+                    [];
 
             }
 
         }
 
 
-        return null;
+        if(
+            !Array.isArray(
+                records
+            )
+        ){
+
+            return null;
+
+        }
+
+
+        const normalizedTarget =
+            target.toLowerCase();
+
+
+        return (
+            records.find(
+                record => {
+
+                    const recordId =
+                        String(
+                            record?.id ??
+                            ""
+                        )
+                            .trim()
+                            .toLowerCase();
+
+
+                    const recordSlug =
+                        String(
+                            record?.slug ??
+                            ""
+                        )
+                            .trim()
+                            .toLowerCase();
+
+
+                    return (
+                        recordId ===
+                            normalizedTarget ||
+                        recordSlug ===
+                            normalizedTarget
+                    );
+
+                }
+            ) ||
+            null
+        );
 
     },
 
@@ -502,14 +563,10 @@ const OrganStatus = {
                 "organ"
             ) ||
 
-            window.OrganSystem ||
-
             (
-                typeof Organ !==
+                typeof window !==
                     "undefined"
-
-                    ? Organ
-
+                    ? window.OrganSystem
                     : null
             ) ||
 
@@ -523,7 +580,7 @@ const OrganStatus = {
 
         const target =
             String(
-                id ||
+                id ??
                 ""
             ).trim();
 
@@ -650,6 +707,10 @@ const OrganStatus = {
                 }
 
 
+                const normalizedTarget =
+                    target.toLowerCase();
+
+
                 return (
                     [
                         ...organSystem
@@ -658,8 +719,20 @@ const OrganStatus = {
                     ]
                         .find(
                             organ =>
-                                organ?.slug ===
-                                target
+                                String(
+                                    organ?.slug ??
+                                    ""
+                                )
+                                    .trim()
+                                    .toLowerCase() ===
+                                    normalizedTarget ||
+                                String(
+                                    organ?.id ??
+                                    ""
+                                )
+                                    .trim()
+                                    .toLowerCase() ===
+                                    normalizedTarget
                         ) ||
                     null
                 );
@@ -722,17 +795,25 @@ const OrganStatus = {
         }
 
 
-        if(
-            organSystem.organs instanceof
-                Map
-        ){
+        try{
 
-            return [
-                ...organSystem
-                    .organs
-                    .values()
-            ]
-                .filter(Boolean);
+            if(
+                organSystem.organs instanceof
+                    Map
+            ){
+
+                return [
+                    ...organSystem
+                        .organs
+                        .values()
+                ]
+                    .filter(Boolean);
+
+            }
+
+        } catch(error){
+
+            /* no-op */
 
         }
 
@@ -769,7 +850,10 @@ const OrganStatus = {
                 if(
                     report &&
                     typeof report ===
-                        "object"
+                        "object" &&
+                    !Array.isArray(
+                        report
+                    )
                 ){
 
                     return report;
@@ -799,7 +883,10 @@ const OrganStatus = {
                 if(
                     health &&
                     typeof health ===
-                        "object"
+                        "object" &&
+                    !Array.isArray(
+                        health
+                    )
                 ){
 
                     return health;
@@ -832,12 +919,12 @@ const OrganStatus = {
 
         if(
             runtime?.installed !==
-            undefined
+                undefined
         ){
 
             return (
                 runtime.installed ===
-                true
+                    true
             );
 
         }
@@ -847,7 +934,11 @@ const OrganStatus = {
             registry?.distribution ===
                 "built-in" ||
             registry?.system ===
-                true
+                true ||
+            registry?.source ===
+                "system" ||
+            registry?.source ===
+                "built-in"
         ){
 
             return true;
@@ -857,12 +948,12 @@ const OrganStatus = {
 
         if(
             registry?.installed !==
-            undefined
+                undefined
         ){
 
             return (
                 registry.installed ===
-                true
+                    true
             );
 
         }
@@ -919,11 +1010,13 @@ const OrganStatus = {
 
             if(
                 candidate ===
-                undefined ||
-            candidate ===
-                null ||
-            candidate ===
-                ""
+                    undefined ||
+                candidate ===
+                    null ||
+                String(
+                    candidate
+                ).trim() ===
+                    ""
             ){
 
                 continue;
@@ -995,7 +1088,7 @@ const OrganStatus = {
 
             if(
                 normalized !==
-                null
+                    null
             ){
 
                 return normalized;
@@ -1067,9 +1160,27 @@ const OrganStatus = {
 
     resolveHealthLabel(score){
 
+        const health =
+            this.normalizeHealth(
+                score
+            );
+
+
         if(
-            score >=
-            90
+            health ===
+                null ||
+            health <=
+                0
+        ){
+
+            return "offline";
+
+        }
+
+
+        if(
+            health >=
+                90
         ){
 
             return "healthy";
@@ -1078,8 +1189,8 @@ const OrganStatus = {
 
 
         if(
-            score >=
-            70
+            health >=
+                70
         ){
 
             return "stable";
@@ -1088,8 +1199,8 @@ const OrganStatus = {
 
 
         if(
-            score >=
-            40
+            health >=
+                40
         ){
 
             return "degraded";
@@ -1097,17 +1208,56 @@ const OrganStatus = {
         }
 
 
+        return "critical";
+
+    },
+
+
+    /* =====================================================
+       PERMISSION STATE
+    ===================================================== */
+
+    permissionsComplete(
+        permissions,
+        requestedPermissions
+    ){
+
+        const granted =
+            this.normalizeList(
+                permissions
+            )
+                .map(
+                    permission =>
+                        permission.toLowerCase()
+                );
+
+
+        const requested =
+            this.normalizeList(
+                requestedPermissions
+            )
+                .map(
+                    permission =>
+                        permission.toLowerCase()
+                );
+
+
         if(
-            score >
-            0
+            requested.length ===
+                0
         ){
 
-            return "critical";
+            return true;
 
         }
 
 
-        return "offline";
+        return requested.every(
+            permission =>
+                granted.includes(
+                    permission
+                )
+        );
 
     },
 
@@ -1190,6 +1340,9 @@ const OrganStatus = {
                 runtime
                     ?.metadata
                     ?.requestedPermissions ||
+                runtime
+                    ?.meta
+                    ?.requestedPermissions ||
                 registry
                     ?.requestedPermissions ||
                 registry
@@ -1220,6 +1373,13 @@ const OrganStatus = {
             )
 
         };
+
+
+        const permissionState =
+            this.permissionsComplete(
+                permissions,
+                requestedPermissions
+            );
 
 
         return {
@@ -1274,6 +1434,10 @@ const OrganStatus = {
                             registry?.system ===
                                 true ||
                             registry?.distribution ===
+                                "built-in" ||
+                            registry?.source ===
+                                "system" ||
+                            registry?.source ===
                                 "built-in"
 
                                 ? true
@@ -1305,6 +1469,9 @@ const OrganStatus = {
             permissions,
 
             requestedPermissions,
+
+            permissionsComplete:
+                permissionState,
 
             capabilities,
 
@@ -1362,7 +1529,8 @@ const OrganStatus = {
             this.normalizeStatus(
                 organ.status ||
                 (
-                    organ.installed
+                    organ.installed ===
+                        true
                         ? "inactive"
                         : "missing"
                 )
@@ -1373,13 +1541,37 @@ const OrganStatus = {
             this.resolveHealthScore({
                 service:
                     null,
+
                 status,
+
                 registry,
+
                 runtime:
                     organ,
+
                 report:
                     null
             });
+
+
+        const permissions =
+            this.normalizeList(
+                organ.permissions
+            );
+
+
+        const requestedPermissions =
+            this.normalizeList(
+                organ
+                    ?.metadata
+                    ?.requestedPermissions ||
+                organ
+                    ?.meta
+                    ?.requestedPermissions ||
+                registry
+                    ?.requestedPermissions ||
+                []
+            );
 
 
         return {
@@ -1436,19 +1628,14 @@ const OrganStatus = {
                 registry?.distribution ||
                 null,
 
-            permissions:
-                this.normalizeList(
-                    organ.permissions
-                ),
+            permissions,
 
-            requestedPermissions:
-                this.normalizeList(
-                    organ
-                        ?.metadata
-                        ?.requestedPermissions ||
-                    registry
-                        ?.requestedPermissions ||
-                    []
+            requestedPermissions,
+
+            permissionsComplete:
+                this.permissionsComplete(
+                    permissions,
+                    requestedPermissions
                 ),
 
             capabilities:
@@ -1466,6 +1653,7 @@ const OrganStatus = {
                 ...this.normalizeObject(
                     registry?.metadata
                 ),
+
                 ...this.normalizeObject(
                     organ.metadata
                 )
@@ -1474,7 +1662,6 @@ const OrganStatus = {
             report:
                 typeof organ.report ===
                     "function"
-
                     ? (
                         (() => {
 
@@ -1490,7 +1677,6 @@ const OrganStatus = {
 
                         })()
                     )
-
                     : null,
 
             checkedAt:
@@ -1500,8 +1686,7 @@ const OrganStatus = {
 
     },
 
-
-    /* =====================================================
+   /* =====================================================
        IDENTITY
     ===================================================== */
 
@@ -1529,8 +1714,10 @@ const OrganStatus = {
         let total =
             null;
 
+
         let verified =
             null;
+
 
         let pending =
             null;
@@ -1590,8 +1777,11 @@ const OrganStatus = {
 
         return {
             ...base,
+
             total,
+
             verified,
+
             pending
         };
 
@@ -1625,6 +1815,7 @@ const OrganStatus = {
 
         let total =
             null;
+
 
         let discoverable =
             null;
@@ -1672,7 +1863,9 @@ const OrganStatus = {
 
         return {
             ...base,
+
             total,
+
             discoverable
         };
 
@@ -1829,6 +2022,22 @@ const OrganStatus = {
             });
 
 
+        const archived =
+            this.safeAll(
+                bridge,
+                {
+                    includeArchived:
+                        true
+                }
+            )
+                .filter(
+                    link =>
+                        link?.archived ===
+                            true
+                )
+                .length;
+
+
         return {
 
             ...base,
@@ -1843,20 +2052,7 @@ const OrganStatus = {
                             true
                 ).length,
 
-            archived:
-                this.safeAll(
-                    bridge,
-                    {
-                        includeArchived:
-                            true
-                    }
-                )
-                    .filter(
-                        link =>
-                            link?.archived ===
-                                true
-                    )
-                    .length
+            archived
 
         };
 
@@ -1985,7 +2181,9 @@ const OrganStatus = {
 
 
                     seen.add(
-                        status.id
+                        String(
+                            status.id
+                        ).toLowerCase()
                     );
 
                 }
@@ -2004,10 +2202,20 @@ const OrganStatus = {
                         ).trim();
 
 
+                    if(!id){
+
+                        return;
+
+                    }
+
+
+                    const key =
+                        id.toLowerCase();
+
+
                     if(
-                        !id ||
                         seen.has(
-                            id
+                            key
                         )
                     ){
 
@@ -2035,7 +2243,7 @@ const OrganStatus = {
 
 
                     seen.add(
-                        id
+                        key
                     );
 
                 }
@@ -2059,7 +2267,7 @@ const OrganStatus = {
 
         const organId =
             String(
-                id ||
+                id ??
                 ""
             ).trim();
 
@@ -2071,12 +2279,21 @@ const OrganStatus = {
         }
 
 
+        const target =
+            organId.toLowerCase();
+
+
         return (
             this.all()
                 .find(
                     organ =>
-                        organ.id ===
-                        organId
+                        String(
+                            organ.id ??
+                            ""
+                        )
+                            .trim()
+                            .toLowerCase() ===
+                            target
                 ) ||
             null
         );
@@ -2098,7 +2315,7 @@ const OrganStatus = {
             organs.filter(
                 organ =>
                     organ.installed !==
-                    false
+                        false
             );
 
 
@@ -2108,7 +2325,9 @@ const OrganStatus = {
                     organ.status !==
                         "active" ||
                     organ.health <
-                        70
+                        70 ||
+                    organ.permissionsComplete ===
+                        false
             );
 
 
@@ -2130,7 +2349,7 @@ const OrganStatus = {
 
         if(
             problematic.length >
-            0
+                0
         ){
 
             status =
@@ -2141,7 +2360,7 @@ const OrganStatus = {
 
         if(
             critical.length >
-            0
+                0
         ){
 
             status =
@@ -2161,10 +2380,15 @@ const OrganStatus = {
                         ) =>
                             total +
                             (
-                                Number(
-                                    organ.health
-                                ) ||
-                                0
+                                Number.isFinite(
+                                    Number(
+                                        organ.health
+                                    )
+                                )
+                                    ? Number(
+                                        organ.health
+                                    )
+                                    : 0
                             ),
                         0
                     ) /
@@ -2172,6 +2396,21 @@ const OrganStatus = {
                 )
 
                 : 0;
+
+
+        const permissionReview =
+            organs
+                .filter(
+                    organ =>
+                        organ.installed ===
+                            true &&
+                        organ.permissionsComplete ===
+                            false
+                )
+                .map(
+                    organ =>
+                        organ.id
+                );
 
 
         return {
@@ -2291,61 +2530,16 @@ const OrganStatus = {
                             organ.id
                     ),
 
-            permissionReview:
-                organs
-                    .filter(
-                        organ => {
-
-                            if(
-                                !organ.installed
-                            ){
-
-                                return false;
-
-                            }
-
-
-                            if(
-                                !organ.requestedPermissions
-                                    ?.length
-                            ){
-
-                                return false;
-
-                            }
-
-
-                            const granted =
-                                this.normalizeList(
-                                    organ.permissions
-                                )
-                                    .map(
-                                        item =>
-                                            item.toLowerCase()
-                                    );
-
-
-                            return organ
-                                .requestedPermissions
-                                .some(
-                                    permission =>
-                                        !granted.includes(
-                                            String(
-                                                permission
-                                            )
-                                                .toLowerCase()
-                                        )
-                                );
-
-                        }
-                    )
-                    .map(
-                        organ =>
-                            organ.id
-                    ),
+            permissionReview,
 
             problematic:
                 problematic.map(
+                    organ =>
+                        organ.id
+                ),
+
+            critical:
+                critical.map(
                     organ =>
                         organ.id
                 ),
@@ -2392,6 +2586,9 @@ const OrganStatus = {
 
             problematic:
                 health.problematic.length,
+
+            critical:
+                health.critical.length,
 
             missing:
                 health.missing.length,
@@ -2456,6 +2653,10 @@ try{
 
 }
 
+
+/* =========================================================
+   GLOBAL
+========================================================= */
 
 window.OrganStatus =
     OrganStatus;
