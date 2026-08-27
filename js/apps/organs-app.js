@@ -24,14 +24,56 @@ const OrgansApp = {
 
     escapeHTML(value){
 
+        if(
+            window.UI &&
+            typeof UI.escapeHTML ===
+                "function"
+        ){
+
+            return UI.escapeHTML(
+                value
+            );
+
+        }
+
+
         return String(
             value ?? ""
         )
-            .replaceAll("&", "&amp;")
-            .replaceAll("<", "&lt;")
-            .replaceAll(">", "&gt;")
-            .replaceAll('"', "&quot;")
-            .replaceAll("'", "&#039;");
+            .replaceAll(
+                "&",
+                "&amp;"
+            )
+            .replaceAll(
+                "<",
+                "&lt;"
+            )
+            .replaceAll(
+                ">",
+                "&gt;"
+            )
+            .replaceAll(
+                '"',
+                "&quot;"
+            )
+            .replaceAll(
+                "'",
+                "&#039;"
+            );
+
+    },
+
+
+    normalizeText(value){
+
+        return String(
+            value ??
+            ""
+        )
+            .trim()
+            .toLocaleLowerCase(
+                "tr-TR"
+            );
 
     },
 
@@ -45,15 +87,19 @@ const OrgansApp = {
         try{
 
             if(
-                typeof VAERO !== "undefined" &&
+                typeof VAERO !==
+                    "undefined" &&
                 VAERO.engine
             ){
+
                 return VAERO.engine;
+
             }
 
         } catch(error){
 
             /* fallback */
+
         }
 
 
@@ -70,16 +116,21 @@ const OrgansApp = {
         try{
 
             if(
-                typeof VAERO === "undefined" ||
+                typeof VAERO ===
+                    "undefined" ||
                 typeof VAERO.get !==
                     "function"
             ){
+
                 return null;
+
             }
 
 
             return (
-                VAERO.get(name) ||
+                VAERO.get(
+                    name
+                ) ||
                 null
             );
 
@@ -119,12 +170,21 @@ const OrgansApp = {
             typeof engine.mount !==
                 "function"
         ){
+
             return false;
+
         }
 
 
+        const entity =
+            engine.currentOpenedEntity ||
+            engine.currentEntity ||
+            engine.rootEntity ||
+            null;
+
+
         return engine.mount(
-            engine.currentEntity
+            entity
         );
 
     },
@@ -134,7 +194,9 @@ const OrgansApp = {
        BRAIN CONTEXT
     ===================================================== */
 
-    enterBrainContext(entity = null){
+    enterBrainContext(
+        entity = null
+    ){
 
         try{
 
@@ -155,7 +217,14 @@ const OrgansApp = {
                         this.selectedOrganId,
 
                     filter:
-                        this.activeFilter
+                        this.activeFilter,
+
+                    searchActive:
+                        Boolean(
+                            this.normalizeText(
+                                this.searchQuery
+                            )
+                        )
                 }
             );
 
@@ -183,12 +252,15 @@ const OrgansApp = {
                 typeof OrganRegistry !==
                     "undefined"
             ){
+
                 return OrganRegistry;
+
             }
 
         } catch(error){
 
             /* service fallback */
+
         }
 
 
@@ -213,7 +285,9 @@ const OrgansApp = {
             typeof registry.all !==
                 "function"
         ){
+
             return [];
+
         }
 
 
@@ -226,7 +300,12 @@ const OrgansApp = {
             return Array.isArray(
                 organs
             )
-                ? organs.filter(Boolean)
+                ? organs.filter(
+                    organ =>
+                        organ &&
+                        typeof organ ===
+                            "object"
+                )
                 : [];
 
         } catch(error){
@@ -254,7 +333,9 @@ const OrgansApp = {
 
 
         if(!organId){
+
             return null;
+
         }
 
 
@@ -277,7 +358,9 @@ const OrgansApp = {
 
 
                 if(found){
+
                     return found;
+
                 }
 
             }
@@ -285,15 +368,20 @@ const OrgansApp = {
         } catch(error){
 
             /* array fallback */
+
         }
 
 
         return (
-            this.getRegisteredOrgans()
+            this
+                .getRegisteredOrgans()
                 .find(
                     organ =>
-                        organ?.id ===
-                        organId
+                        String(
+                            organ?.id ||
+                            ""
+                        ) ===
+                            organId
                 ) ||
             null
         );
@@ -307,32 +395,69 @@ const OrgansApp = {
 
     getOrganSystem(){
 
-        return (
+        const service =
             this.getService(
                 "organSystem"
             ) ||
             this.getService(
                 "organ"
-            ) ||
-            (
+            );
+
+
+        if(service){
+
+            return service;
+
+        }
+
+
+        try{
+
+            if(
                 typeof Organ !==
                     "undefined"
-                    ? Organ
-                    : null
-            )
-        );
+            ){
+
+                return Organ;
+
+            }
+
+        } catch(error){
+
+            /* unavailable */
+
+        }
+
+
+        return null;
 
     },
 
 
     resolveRuntimeOrgan(id){
 
+        const organId =
+            String(
+                id ||
+                ""
+            ).trim();
+
+
+        if(!organId){
+
+            return null;
+
+        }
+
+
         const system =
             this.getOrganSystem();
 
 
         if(!system){
+
             return null;
+
         }
 
 
@@ -345,12 +470,14 @@ const OrgansApp = {
 
                 const organ =
                     system.get(
-                        id
+                        organId
                     );
 
 
                 if(organ){
+
                     return organ;
+
                 }
 
             }
@@ -358,6 +485,7 @@ const OrgansApp = {
         } catch(error){
 
             /* fallback */
+
         }
 
 
@@ -370,12 +498,14 @@ const OrgansApp = {
 
                 const organ =
                     system.find(
-                        id
+                        organId
                     );
 
 
                 if(organ){
+
                     return organ;
+
                 }
 
             }
@@ -383,6 +513,7 @@ const OrgansApp = {
         } catch(error){
 
             /* fallback */
+
         }
 
 
@@ -393,7 +524,7 @@ const OrgansApp = {
 
             return (
                 system.organs.get(
-                    id
+                    organId
                 ) ||
                 null
             );
@@ -408,7 +539,7 @@ const OrgansApp = {
 
             return (
                 system.registry.get(
-                    id
+                    organId
                 ) ||
                 null
             );
@@ -445,7 +576,9 @@ const OrgansApp = {
             typeof organStatus.all !==
                 "function"
         ){
+
             return [];
+
         }
 
 
@@ -458,7 +591,12 @@ const OrgansApp = {
             return Array.isArray(
                 statuses
             )
-                ? statuses.filter(Boolean)
+                ? statuses.filter(
+                    item =>
+                        item &&
+                        typeof item ===
+                            "object"
+                )
                 : [];
 
         } catch(error){
@@ -476,20 +614,6 @@ const OrgansApp = {
     },
 
 
-    normalizeText(value){
-
-        return String(
-            value ||
-            ""
-        )
-            .trim()
-            .toLocaleLowerCase(
-                "tr-TR"
-            );
-
-    },
-
-
     inferStatusId(app){
 
         const searchable =
@@ -497,6 +621,7 @@ const OrgansApp = {
                 [
                     app?.id,
                     app?.title,
+                    app?.name,
                     app?.action
                 ]
                     .filter(Boolean)
@@ -506,25 +631,75 @@ const OrgansApp = {
 
         const mappings = [
 
-            ["memory","memory"],
-            ["hafıza","memory"],
-            ["hafiza","memory"],
+            [
+                "memory",
+                "memory"
+            ],
 
-            ["timeline","timeline"],
-            ["zaman","timeline"],
+            [
+                "hafıza",
+                "memory"
+            ],
 
-            ["evolution","evolution"],
-            ["evrim","evolution"],
+            [
+                "hafiza",
+                "memory"
+            ],
 
-            ["bridge","bridge"],
-            ["bağlantı","bridge"],
-            ["baglanti","bridge"],
+            [
+                "timeline",
+                "timeline"
+            ],
 
-            ["identity","identity"],
-            ["kimlik","identity"],
+            [
+                "zaman",
+                "timeline"
+            ],
 
-            ["profile","profile"],
-            ["profil","profile"]
+            [
+                "evolution",
+                "evolution"
+            ],
+
+            [
+                "evrim",
+                "evolution"
+            ],
+
+            [
+                "bridge",
+                "bridge"
+            ],
+
+            [
+                "bağlantı",
+                "bridge"
+            ],
+
+            [
+                "baglanti",
+                "bridge"
+            ],
+
+            [
+                "identity",
+                "identity"
+            ],
+
+            [
+                "kimlik",
+                "identity"
+            ],
+
+            [
+                "profile",
+                "profile"
+            ],
+
+            [
+                "profil",
+                "profile"
+            ]
 
         ];
 
@@ -541,7 +716,9 @@ const OrgansApp = {
                     token
                 )
             ){
+
                 return id;
+
             }
 
         }
@@ -567,15 +744,27 @@ const OrgansApp = {
 
 
         if(!statusId){
+
             return null;
+
         }
+
+
+        const normalized =
+            String(
+                statusId
+            );
 
 
         return (
             liveStatuses.find(
                 item =>
-                    item?.id ===
-                    statusId
+                    String(
+                        item?.id ||
+                        item?.organId ||
+                        ""
+                    ) ===
+                        normalized
             ) ||
             null
         );
@@ -611,7 +800,9 @@ const OrgansApp = {
                 value
             )
         ){
+
             return value;
+
         }
 
 
@@ -631,45 +822,68 @@ const OrgansApp = {
         const map = {
 
             active:{
-                label:"Aktif",
-                tone:"good"
+                label:
+                    "Aktif",
+
+                tone:
+                    "good"
             },
 
             ready:{
-                label:"Hazır",
-                tone:"neutral"
+                label:
+                    "Hazır",
+
+                tone:
+                    "neutral"
             },
 
             inactive:{
-                label:"Pasif",
-                tone:"neutral"
+                label:
+                    "Pasif",
+
+                tone:
+                    "neutral"
             },
 
             paused:{
-                label:"Duraklatıldı",
-                tone:"warning"
+                label:
+                    "Duraklatıldı",
+
+                tone:
+                    "warning"
             },
 
             missing:{
-                label:"Bağlı değil",
-                tone:"danger"
+                label:
+                    "Bağlı değil",
+
+                tone:
+                    "danger"
             },
 
             error:{
-                label:"Hata",
-                tone:"danger"
+                label:
+                    "Hata",
+
+                tone:
+                    "danger"
             },
 
             disabled:{
-                label:"Devre dışı",
-                tone:"warning"
+                label:
+                    "Devre dışı",
+
+                tone:
+                    "warning"
             }
 
         };
 
 
         return (
-            map[normalized] ||
+            map[
+                normalized
+            ] ||
             map.ready
         );
 
@@ -691,7 +905,10 @@ const OrgansApp = {
 
         if(
             typeof raw ===
-                "number"
+                "number" &&
+            Number.isFinite(
+                raw
+            )
         ){
 
             const score =
@@ -708,10 +925,13 @@ const OrgansApp = {
 
             return {
                 score,
+
                 label:
-                    score >= 80
+                    score >=
+                        80
                         ? "İyi"
-                        : score >= 50
+                        : score >=
+                            50
                             ? "Dikkat"
                             : "Kritik"
             };
@@ -728,47 +948,81 @@ const OrgansApp = {
 
 
         if(
-            status === "active" ||
-            status === "ready"
+            status ===
+                "active" ||
+            status ===
+                "ready"
         ){
 
             return {
-                score:100,
-                label:"İyi"
+                score:
+                    100,
+
+                label:
+                    "İyi"
             };
 
         }
 
 
         if(
-            status === "paused" ||
-            status === "inactive"
+            status ===
+                "paused" ||
+            status ===
+                "inactive"
         ){
 
             return {
-                score:60,
-                label:"Dikkat"
+                score:
+                    60,
+
+                label:
+                    "Dikkat"
             };
 
         }
 
 
         if(
-            status === "missing" ||
-            status === "error"
+            status ===
+                "disabled"
         ){
 
             return {
-                score:0,
-                label:"Kritik"
+                score:
+                    40,
+
+                label:
+                    "Dikkat"
+            };
+
+        }
+
+
+        if(
+            status ===
+                "missing" ||
+            status ===
+                "error"
+        ){
+
+            return {
+                score:
+                    0,
+
+                label:
+                    "Kritik"
             };
 
         }
 
 
         return {
-            score:80,
-            label:"İyi"
+            score:
+                80,
+
+            label:
+                "İyi"
         };
 
     },
@@ -780,50 +1034,101 @@ const OrgansApp = {
 
     normalizeList(value){
 
+        let source =
+            [];
+
+
         if(
             Array.isArray(
                 value
             )
         ){
 
-            return [
-                ...new Set(
-                    value
-                        .map(
-                            item =>
-                                String(
-                                    item ??
-                                    ""
-                                ).trim()
-                        )
-                        .filter(Boolean)
-                )
-            ];
+            source =
+                value;
 
         }
 
-
-        if(
+        else if(
             value instanceof
                 Set
         ){
 
-            return [
-                ...value
-            ]
-                .map(
-                    item =>
-                        String(
-                            item ??
-                            ""
-                        ).trim()
-                )
-                .filter(Boolean);
+            source =
+                [
+                    ...value
+                ];
+
+        }
+
+        else {
+
+            return [];
 
         }
 
 
-        return [];
+        const seen =
+            new Set();
+
+
+        const items =
+            [];
+
+
+        source.forEach(
+            item => {
+
+                const value =
+                    String(
+                        item ??
+                        ""
+                    )
+                        .trim()
+                        .slice(
+                            0,
+                            160
+                        );
+
+
+                if(!value){
+
+                    return;
+
+                }
+
+
+                const key =
+                    value.toLocaleLowerCase(
+                        "tr-TR"
+                    );
+
+
+                if(
+                    seen.has(
+                        key
+                    )
+                ){
+
+                    return;
+
+                }
+
+
+                seen.add(
+                    key
+                );
+
+
+                items.push(
+                    value
+                );
+
+            }
+        );
+
+
+        return items;
 
     },
 
@@ -834,8 +1139,7 @@ const OrgansApp = {
     ){
 
         return this.normalizeList(
-            runtimeOrgan
-                ?.capabilities ||
+            runtimeOrgan?.capabilities ||
             app?.capabilities ||
             []
         );
@@ -849,8 +1153,7 @@ const OrgansApp = {
     ){
 
         return this.normalizeList(
-            runtimeOrgan
-                ?.permissions ||
+            runtimeOrgan?.permissions ||
             app?.permissions ||
             []
         );
@@ -864,10 +1167,8 @@ const OrgansApp = {
     ){
 
         return this.normalizeList(
-            runtimeOrgan
-                ?.dependencies ||
-            runtimeOrgan
-                ?.dependsOn ||
+            runtimeOrgan?.dependencies ||
+            runtimeOrgan?.dependsOn ||
             app?.dependencies ||
             []
         );
@@ -905,9 +1206,16 @@ const OrgansApp = {
         liveStatuses
     ){
 
+        const appId =
+            String(
+                app?.id ||
+                ""
+            ).trim();
+
+
         const runtimeOrgan =
             this.resolveRuntimeOrgan(
-                app?.id
+                appId
             );
 
 
@@ -916,6 +1224,21 @@ const OrgansApp = {
                 app,
                 liveStatuses
             );
+
+
+        const id =
+            String(
+                appId ||
+                runtimeOrgan?.id ||
+                ""
+            ).trim();
+
+
+        if(!id){
+
+            return null;
+
+        }
 
 
         const status =
@@ -927,14 +1250,15 @@ const OrgansApp = {
             );
 
 
+        const totalValue =
+            Number(
+                liveStatus?.total
+            );
+
+
         return {
 
-            id:
-                String(
-                    app?.id ||
-                    runtimeOrgan?.id ||
-                    ""
-                ).trim(),
+            id,
 
             title:
                 String(
@@ -943,21 +1267,35 @@ const OrgansApp = {
                     app?.name ||
                     runtimeOrgan?.name ||
                     "Organ"
-                ).trim(),
+                )
+                    .trim()
+                    .slice(
+                        0,
+                        120
+                    ),
 
             subtitle:
                 String(
                     app?.subtitle ||
                     runtimeOrgan?.description ||
                     "VAERO Engine organı"
-                ).trim(),
+                )
+                    .trim()
+                    .slice(
+                        0,
+                        240
+                    ),
 
             icon:
                 String(
                     app?.icon ||
                     runtimeOrgan?.icon ||
                     "◈"
-                ),
+                )
+                    .slice(
+                        0,
+                        12
+                    ),
 
             action:
                 String(
@@ -970,13 +1308,9 @@ const OrgansApp = {
 
             total:
                 Number.isFinite(
-                    Number(
-                        liveStatus?.total
-                    )
+                    totalValue
                 )
-                    ? Number(
-                        liveStatus.total
-                    )
+                    ? totalValue
                     : null,
 
             health:
@@ -1012,6 +1346,8 @@ const OrgansApp = {
 
             runtimeOrgan,
 
+            liveStatus,
+
             source:
                 app
 
@@ -1026,19 +1362,52 @@ const OrgansApp = {
             this.getLiveStatuses();
 
 
-        return this
+        const map =
+            new Map();
+
+
+        this
             .getRegisteredOrgans()
-            .map(
-                app =>
-                    this.buildOrganModel(
-                        app,
-                        statuses
-                    )
-            )
-            .filter(
-                organ =>
-                    organ.id
+            .forEach(
+                app => {
+
+                    const organ =
+                        this.buildOrganModel(
+                            app,
+                            statuses
+                        );
+
+
+                    if(
+                        !organ ||
+                        !organ.id
+                    ){
+
+                        return;
+
+                    }
+
+
+                    if(
+                        !map.has(
+                            organ.id
+                        )
+                    ){
+
+                        map.set(
+                            organ.id,
+                            organ
+                        );
+
+                    }
+
+                }
             );
+
+
+        return [
+            ...map.values()
+        ];
 
     },
 
@@ -1047,10 +1416,36 @@ const OrgansApp = {
        FILTER / SEARCH
     ===================================================== */
 
+    getAllowedFilters(){
+
+        return [
+            "all",
+            "active",
+            "attention",
+            "permissions"
+        ];
+
+    },
+
+
     getVisibleOrgans(){
 
         let organs =
             this.getOrgans();
+
+
+        if(
+            !this
+                .getAllowedFilters()
+                .includes(
+                    this.activeFilter
+                )
+        ){
+
+            this.activeFilter =
+                "all";
+
+        }
 
 
         if(
@@ -1062,7 +1457,7 @@ const OrgansApp = {
                 organs.filter(
                     organ =>
                         organ.status ===
-                        "active"
+                            "active"
                 );
 
         }
@@ -1082,6 +1477,8 @@ const OrgansApp = {
                             "missing" ||
                         organ.status ===
                             "paused" ||
+                        organ.status ===
+                            "disabled" ||
                         organ.health.score <
                             80
                 );
@@ -1098,7 +1495,8 @@ const OrgansApp = {
                 organs.filter(
                     organ =>
                         organ.permissions
-                            .length > 0
+                            .length >
+                            0
                 );
 
         }
@@ -1123,9 +1521,11 @@ const OrgansApp = {
                                     organ.title,
                                     organ.subtitle,
                                     organ.status,
+
                                     ...organ.capabilities,
                                     ...organ.permissions,
                                     ...organ.dependencies
+
                                 ].join(" ")
                             );
 
@@ -1151,12 +1551,27 @@ const OrgansApp = {
 
     findOrgan(id){
 
+        const organId =
+            String(
+                id ||
+                ""
+            ).trim();
+
+
+        if(!organId){
+
+            return null;
+
+        }
+
+
         return (
-            this.getOrgans()
+            this
+                .getOrgans()
                 .find(
                     organ =>
                         organ.id ===
-                        id
+                            organId
                 ) ||
             null
         );
@@ -1173,7 +1588,9 @@ const OrgansApp = {
 
 
         if(!organ){
+
             return false;
+
         }
 
 
@@ -1201,7 +1618,7 @@ const OrgansApp = {
        PERMISSIONS
     ===================================================== */
 
-    canManagePermissions(organ){
+    canGrantPermission(organ){
 
         const runtime =
             organ?.runtimeOrgan;
@@ -1213,9 +1630,40 @@ const OrgansApp = {
                 typeof runtime.grantPermission ===
                     "function" ||
                 typeof runtime.setPermission ===
-                    "function" ||
-                typeof runtime.revokePermission ===
                     "function"
+            )
+        );
+
+    },
+
+
+    canRevokePermission(organ){
+
+        const runtime =
+            organ?.runtimeOrgan;
+
+
+        return Boolean(
+            runtime &&
+            (
+                typeof runtime.revokePermission ===
+                    "function" ||
+                typeof runtime.setPermission ===
+                    "function"
+            )
+        );
+
+    },
+
+
+    canManagePermissions(organ){
+
+        return (
+            this.canGrantPermission(
+                organ
+            ) ||
+            this.canRevokePermission(
+                organ
             )
         );
 
@@ -1241,50 +1689,86 @@ const OrgansApp = {
             String(
                 permission ||
                 ""
-            ).trim();
+            )
+                .trim()
+                .slice(
+                    0,
+                    120
+                );
 
 
         if(
             !runtime ||
             !normalized
         ){
+
             return false;
+
         }
 
 
         try{
+
+            let result;
+
 
             if(
                 typeof runtime.grantPermission ===
                     "function"
             ){
 
-                const result =
+                result =
                     runtime.grantPermission(
                         normalized
                     );
 
+            }
 
-                if(result === false){
-                    return false;
-                }
-
-            } else if(
+            else if(
                 typeof runtime.setPermission ===
                     "function"
             ){
 
-                const result =
-                    runtime.setPermission(
-                        normalized
-                    );
+                /*
+                 * Existing runtime compatibility.
+                 * No permission state is written locally.
+                 */
 
+                if(
+                    runtime.setPermission.length >=
+                        2
+                ){
 
-                if(result === false){
-                    return false;
+                    result =
+                        runtime.setPermission(
+                            normalized,
+                            true
+                        );
+
                 }
 
-            } else {
+                else {
+
+                    result =
+                        runtime.setPermission(
+                            normalized
+                        );
+
+                }
+
+            }
+
+            else {
+
+                return false;
+
+            }
+
+
+            if(
+                result ===
+                    false
+            ){
 
                 return false;
 
@@ -1334,29 +1818,70 @@ const OrgansApp = {
             String(
                 permission ||
                 ""
-            ).trim();
+            )
+                .trim()
+                .slice(
+                    0,
+                    120
+                );
 
 
         if(
             !runtime ||
-            !normalized ||
-            typeof runtime.revokePermission !==
-                "function"
+            !normalized
         ){
+
             return false;
+
         }
 
 
         try{
 
-            const result =
-                runtime.revokePermission(
-                    normalized
-                );
+            let result;
 
 
-            if(result === false){
+            if(
+                typeof runtime.revokePermission ===
+                    "function"
+            ){
+
+                result =
+                    runtime.revokePermission(
+                        normalized
+                    );
+
+            }
+
+            else if(
+                typeof runtime.setPermission ===
+                    "function" &&
+                runtime.setPermission.length >=
+                    2
+            ){
+
+                result =
+                    runtime.setPermission(
+                        normalized,
+                        false
+                    );
+
+            }
+
+            else {
+
                 return false;
+
+            }
+
+
+            if(
+                result ===
+                    false
+            ){
+
+                return false;
+
             }
 
         } catch(error){
@@ -1396,7 +1921,8 @@ const OrgansApp = {
                 `organ:permission-${action}`,
                 {
                     organId:
-                        organ.id,
+                        organ?.id ||
+                        null,
 
                     permission,
 
@@ -1413,6 +1939,7 @@ const OrgansApp = {
         } catch(error){
 
             /* non-fatal */
+
         }
 
     },
@@ -1425,7 +1952,9 @@ const OrgansApp = {
     openOrgan(organ){
 
         if(!organ){
+
             return false;
+
         }
 
 
@@ -1440,23 +1969,34 @@ const OrgansApp = {
         }
 
 
+        /*
+         * Existing Engine action delegation remains authority.
+         * OrgansApp does not implement duplicate routing.
+         */
+
         try{
 
-            const trigger =
-                document.querySelector(
-                    `[data-action="${CSS.escape(
-                        organ.action
-                    )}"]`
+            const candidates =
+                document.querySelectorAll(
+                    "[data-action]"
                 );
 
 
-            if(
-                trigger &&
-                trigger !==
-                    document.activeElement
-            ){
+            const trigger =
+                [
+                    ...candidates
+                ].find(
+                    element =>
+                        element.dataset
+                            .action ===
+                            organ.action
+                );
+
+
+            if(trigger){
 
                 trigger.click();
+
 
                 return true;
 
@@ -1464,14 +2004,10 @@ const OrgansApp = {
 
         } catch(error){
 
-            /* fall through */
+            /* synthetic action fallback */
+
         }
 
-
-        /*
-         * Actions router kullanıyorsa sentetik click
-         * mevcut sistem davranışını bozmadan çalışır.
-         */
 
         try{
 
@@ -1484,11 +2020,13 @@ const OrgansApp = {
             button.type =
                 "button";
 
+
             button.dataset.action =
                 organ.action;
 
-            button.style.display =
-                "none";
+
+            button.hidden =
+                true;
 
 
             document.body.appendChild(
@@ -1497,6 +2035,7 @@ const OrgansApp = {
 
 
             button.click();
+
 
             button.remove();
 
@@ -1524,42 +2063,51 @@ const OrgansApp = {
 
     getSummary(organs){
 
+        const list =
+            Array.isArray(
+                organs
+            )
+                ? organs
+                : [];
+
+
         return {
 
             total:
-                organs.length,
+                list.length,
 
             active:
-                organs.filter(
+                list.filter(
                     organ =>
                         organ.status ===
-                        "active"
+                            "active"
                 ).length,
 
             healthy:
-                organs.filter(
+                list.filter(
                     organ =>
                         organ.health.score >=
-                        80
+                            80
                 ).length,
 
             attention:
-                organs.filter(
+                list.filter(
                     organ =>
                         organ.health.score <
                             80 ||
                         organ.status ===
                             "error" ||
                         organ.status ===
-                            "missing"
+                            "missing" ||
+                        organ.status ===
+                            "disabled"
                 ).length
 
         };
 
     },
 
-
-    /* =====================================================
+   /* =====================================================
        TOOLBAR
     ===================================================== */
 
@@ -1567,13 +2115,25 @@ const OrgansApp = {
 
         const filters = [
 
-            ["all","Tümü"],
+            [
+                "all",
+                "Tümü"
+            ],
 
-            ["active","Aktif"],
+            [
+                "active",
+                "Aktif"
+            ],
 
-            ["attention","Dikkat"],
+            [
+                "attention",
+                "Dikkat"
+            ],
 
-            ["permissions","İzinli"]
+            [
+                "permissions",
+                "İzinli"
+            ]
 
         ];
 
@@ -1586,6 +2146,7 @@ const OrgansApp = {
                     <span aria-hidden="true">
                         ⌕
                     </span>
+
 
                     <input
                         id="organsSearchInput"
@@ -1604,7 +2165,12 @@ const OrgansApp = {
 
                     ${filters
                         .map(
-                            ([id,label]) => `
+                            (
+                                [
+                                    id,
+                                    label
+                                ]
+                            ) => `
                                 <button
                                     type="button"
                                     class="organs-filter-btn ${
@@ -1614,9 +2180,13 @@ const OrgansApp = {
                                             : ""
                                     }"
                                     data-organs-action="filter"
-                                    data-organs-filter="${id}"
+                                    data-organs-filter="${this.escapeHTML(
+                                        id
+                                    )}"
                                 >
-                                    ${label}
+                                    ${this.escapeHTML(
+                                        label
+                                    )}
                                 </button>
                             `
                         )
@@ -1659,7 +2229,10 @@ const OrgansApp = {
                     )}"
                 >
 
-                    <span class="organ-control-icon">
+                    <span
+                        class="organ-control-icon"
+                        aria-hidden="true"
+                    >
                         ${this.escapeHTML(
                             organ.icon
                         )}
@@ -1675,6 +2248,7 @@ const OrgansApp = {
                                     organ.title
                                 )}
                             </strong>
+
 
                             <small>
                                 ${this.escapeHTML(
@@ -1700,15 +2274,20 @@ const OrgansApp = {
                                 )}
                             </small>
 
+
                             <small>
                                 Health ${organ.health.score}%
                             </small>
 
+
                             ${
-                                organ.total !== null
+                                organ.total !==
+                                    null
                                     ? `
                                         <small>
-                                            ${organ.total} kayıt
+                                            ${this.escapeHTML(
+                                                organ.total
+                                            )} kayıt
                                         </small>
                                       `
                                     : ""
@@ -1770,8 +2349,11 @@ const OrgansApp = {
     ){
 
         if(
-            !Array.isArray(values) ||
-            values.length === 0
+            !Array.isArray(
+                values
+            ) ||
+            values.length ===
+                0
         ){
 
             return `
@@ -1807,13 +2389,77 @@ const OrgansApp = {
 
 
     /* =====================================================
+       METADATA
+    ===================================================== */
+
+    getVisibleMetadataEntries(metadata){
+
+        if(
+            !metadata ||
+            typeof metadata !==
+                "object" ||
+            Array.isArray(
+                metadata
+            )
+        ){
+
+            return [];
+
+        }
+
+
+        return Object
+            .entries(
+                metadata
+            )
+            .filter(
+                (
+                    [
+                        key,
+                        value
+                    ]
+                ) => {
+
+                    if(
+                        !key ||
+                        value ===
+                            undefined ||
+                        value ===
+                            null
+                    ){
+
+                        return false;
+
+                    }
+
+
+                    return (
+                        typeof value !==
+                            "object" &&
+                        typeof value !==
+                            "function"
+                    );
+
+                }
+            )
+            .slice(
+                0,
+                8
+            );
+
+    },
+
+
+    /* =====================================================
        DETAIL
     ===================================================== */
 
     renderDetail(organ){
 
         if(!organ){
+
             return "";
+
         }
 
 
@@ -1824,19 +2470,9 @@ const OrgansApp = {
 
 
         const metadataEntries =
-            Object.entries(
-                organ.metadata ||
-                {}
-            )
-                .filter(
-                    ([,value]) =>
-                        typeof value !==
-                            "object"
-                )
-                .slice(
-                    0,
-                    8
-                );
+            this.getVisibleMetadataEntries(
+                organ.metadata
+            );
 
 
         return `
@@ -1852,13 +2488,19 @@ const OrgansApp = {
                     class="organ-detail-panel"
                     role="dialog"
                     aria-modal="true"
+                    aria-label="${this.escapeHTML(
+                        `${organ.title} organ detayları`
+                    )}"
                 >
 
                     <header class="organ-detail-header">
 
                         <div class="organ-detail-title">
 
-                            <span class="organ-detail-icon">
+                            <span
+                                class="organ-detail-icon"
+                                aria-hidden="true"
+                            >
                                 ${this.escapeHTML(
                                     organ.icon
                                 )}
@@ -1871,11 +2513,13 @@ const OrgansApp = {
                                     ORGAN CONTROL
                                 </span>
 
+
                                 <h2>
                                     ${this.escapeHTML(
                                         organ.title
                                     )}
                                 </h2>
+
 
                                 <small>
                                     ${this.escapeHTML(
@@ -1948,7 +2592,8 @@ const OrgansApp = {
 
 
                             ${
-                                organ.total !== null
+                                organ.total !==
+                                    null
                                     ? `
                                         <div>
 
@@ -1957,7 +2602,9 @@ const OrgansApp = {
                                             </span>
 
                                             <strong>
-                                                ${organ.total}
+                                                ${this.escapeHTML(
+                                                    organ.total
+                                                )}
                                             </strong>
 
                                         </div>
@@ -1973,6 +2620,7 @@ const OrgansApp = {
                             <span class="engine-section-label">
                                 CAPABILITIES
                             </span>
+
 
                             <h3>
                                 Yetenekler
@@ -1992,6 +2640,7 @@ const OrgansApp = {
                             <span class="engine-section-label">
                                 PERMISSIONS
                             </span>
+
 
                             <h3>
                                 İzinler
@@ -2016,13 +2665,9 @@ const OrgansApp = {
 
 
                                                             ${
-                                                                this.canManagePermissions(
+                                                                this.canRevokePermission(
                                                                     organ
-                                                                ) &&
-                                                                typeof organ
-                                                                    .runtimeOrgan
-                                                                    ?.revokePermission ===
-                                                                    "function"
+                                                                )
                                                                     ? `
                                                                         <button
                                                                             type="button"
@@ -2056,7 +2701,7 @@ const OrgansApp = {
 
 
                             ${
-                                this.canManagePermissions(
+                                this.canGrantPermission(
                                     organ
                                 )
                                     ? `
@@ -2072,9 +2717,11 @@ const OrgansApp = {
                                                 type="text"
                                                 name="permission"
                                                 maxlength="120"
+                                                autocomplete="off"
                                                 placeholder="permission.name"
                                                 required
                                             >
+
 
                                             <button
                                                 type="submit"
@@ -2087,7 +2734,7 @@ const OrgansApp = {
                                       `
                                     : `
                                         <p class="organ-detail-note">
-                                            Bu organın mevcut runtime API'si izin değişikliğini desteklemiyor. Arayüz kendi başına izin oluşturmaz.
+                                            Bu organın mevcut runtime API'si izin eklemeyi desteklemiyor. Organs arayüzü kendi başına permission oluşturmaz.
                                         </p>
                                       `
                             }
@@ -2100,6 +2747,7 @@ const OrgansApp = {
                             <span class="engine-section-label">
                                 DEPENDENCIES
                             </span>
+
 
                             <h3>
                                 Bağımlılıklar
@@ -2123,6 +2771,7 @@ const OrgansApp = {
                                             METADATA
                                         </span>
 
+
                                         <h3>
                                             Sistem bilgisi
                                         </h3>
@@ -2132,7 +2781,12 @@ const OrgansApp = {
 
                                             ${metadataEntries
                                                 .map(
-                                                    ([key,value]) => `
+                                                    (
+                                                        [
+                                                            key,
+                                                            value
+                                                        ]
+                                                    ) => `
                                                         <div>
 
                                                             <span>
@@ -2140,6 +2794,7 @@ const OrgansApp = {
                                                                     key
                                                                 )}
                                                             </span>
+
 
                                                             <strong>
                                                                 ${this.escapeHTML(
@@ -2166,8 +2821,9 @@ const OrgansApp = {
                                 Yetki sınırı
                             </strong>
 
+
                             <p>
-                                Buradaki permission bilgileri Engine içi organ politikasını temsil eder. Production yetkilendirmesi Guardian ve backend tarafında ayrıca uygulanmalıdır.
+                                Bu ekran yalnızca runtime organının gerçekten sunduğu permission API'lerini kullanır. Desteklenmeyen bir yetki davranışı arayüz tarafından taklit edilmez.
                             </p>
 
                         </div>
@@ -2219,29 +2875,100 @@ const OrgansApp = {
 
     renderEmpty(){
 
+        const filtered =
+            Boolean(
+                this.searchQuery ||
+                this.activeFilter !==
+                    "all"
+            );
+
+
         return `
             <div class="engine-empty-state organs-empty">
 
                 <strong>
                     ${
-                        this.searchQuery ||
-                        this.activeFilter !==
-                            "all"
+                        filtered
                             ? "Eşleşen organ bulunamadı"
                             : "Organ bulunamadı"
                     }
                 </strong>
 
-                ${
-                    this.searchQuery ||
-                    this.activeFilter !==
-                        "all"
-                        ? "Arama veya filtreyi değiştir."
-                        : "Organ Registry kullanılabilir bir Engine organı döndürmedi."
-                }
+
+                <span>
+                    ${
+                        filtered
+                            ? "Arama veya filtreyi değiştir."
+                            : "Organ Registry kullanılabilir bir Engine organı döndürmedi."
+                    }
+                </span>
 
             </div>
         `;
+
+    },
+
+
+    /* =====================================================
+       UI FALLBACKS
+    ===================================================== */
+
+    renderAppHeader(entity){
+
+        if(
+            window.UI &&
+            typeof UI.appHeader ===
+                "function"
+        ){
+
+            return UI.appHeader(
+                this.escapeHTML(
+                    entity?.name ||
+                    "VAERO Varlığı"
+                ),
+                "ORGANS",
+                "⌘"
+            );
+
+        }
+
+
+        return `
+            <header class="engine-app-header">
+
+                <span class="engine-section-label">
+                    ORGANS
+                </span>
+
+
+                <h1>
+                    ${this.escapeHTML(
+                        entity?.name ||
+                        "VAERO Varlığı"
+                    )}
+                </h1>
+
+            </header>
+        `;
+
+    },
+
+
+    renderBrainPanel(){
+
+        try{
+
+            return (
+                window.UI
+                    ?.brainPanel?.() ||
+                ""
+            );
+
+        } catch(error){
+
+            return "";
+
+        }
 
     },
 
@@ -2251,6 +2978,44 @@ const OrgansApp = {
     ===================================================== */
 
     render(entity){
+
+        if(!entity){
+
+            return `
+                <section class="engine-page">
+
+                    <div class="section engine-error-state">
+
+                        <h1>
+                            Organs açılamadı
+                        </h1>
+
+
+                        <p>
+                            Bu varlığın organ bağlamı bulunamadı.
+                        </p>
+
+                    </div>
+
+                </section>
+            `;
+
+        }
+
+
+        if(
+            !this
+                .getAllowedFilters()
+                .includes(
+                    this.activeFilter
+                )
+        ){
+
+            this.activeFilter =
+                "all";
+
+        }
+
 
         this.enterBrainContext(
             entity
@@ -2271,7 +3036,7 @@ const OrgansApp = {
             );
 
 
-        const selectedOrgan =
+        let selectedOrgan =
             this.selectedOrganId
                 ? this.findOrgan(
                     this.selectedOrganId
@@ -2285,6 +3050,10 @@ const OrgansApp = {
         ){
 
             this.selectedOrganId =
+                null;
+
+
+            selectedOrgan =
                 null;
 
         }
@@ -2308,13 +3077,8 @@ const OrgansApp = {
                     </div>
 
 
-                    ${UI.appHeader(
-                        this.escapeHTML(
-                            entity?.name ||
-                            "VAERO Varlığı"
-                        ),
-                        "ORGANS",
-                        "⌘"
+                    ${this.renderAppHeader(
+                        entity
                     )}
 
 
@@ -2326,12 +3090,14 @@ const OrgansApp = {
                                 ORGAN CONTROL
                             </span>
 
+
                             <h2>
                                 Engine organları
                             </h2>
 
+
                             <p>
-                                Uygulamaları aç, çalışma durumlarını incele ve desteklenen organlarda capabilities, permissions ve dependencies katmanlarını yönet.
+                                Engine içindeki organları aç, çalışma durumlarını incele ve runtime tarafından gerçekten desteklenen capabilities, permissions ve dependencies bilgilerini görüntüle.
                             </p>
 
                         </div>
@@ -2422,7 +3188,7 @@ const OrgansApp = {
                     </div>
 
 
-                    ${UI.brainPanel()}
+                    ${this.renderBrainPanel()}
 
                 </div>
 
@@ -2448,21 +3214,24 @@ const OrgansApp = {
 
         switch(action){
 
-            case "filter":
+            case "filter":{
+
+                const filter =
+                    String(
+                        element?.dataset
+                            ?.organsFilter ||
+                        "all"
+                    );
+
 
                 this.activeFilter =
-                    [
-                        "all",
-                        "active",
-                        "attention",
-                        "permissions"
-                    ].includes(
-                        element.dataset
-                            .organsFilter
-                    )
-                        ? element.dataset
-                            .organsFilter
-                        : "all";
+                    this
+                        .getAllowedFilters()
+                        .includes(
+                            filter
+                        )
+                            ? filter
+                            : "all";
 
 
                 this.selectedOrganId =
@@ -2471,12 +3240,14 @@ const OrgansApp = {
 
                 return this.remount();
 
+            }
+
 
             case "detail":
 
                 return this.selectOrgan(
-                    element.dataset
-                        .organId
+                    element?.dataset
+                        ?.organId
                 );
 
 
@@ -2489,8 +3260,8 @@ const OrgansApp = {
 
                 const organ =
                     this.findOrgan(
-                        element.dataset
-                            .organId
+                        element?.dataset
+                            ?.organId
                     );
 
 
@@ -2504,16 +3275,18 @@ const OrgansApp = {
             case "permission:revoke":
 
                 return this.revokePermission(
-                    element.dataset
-                        .organId,
-                    element.dataset
-                        .permission
+                    element?.dataset
+                        ?.organId,
+                    element?.dataset
+                        ?.permission
                 );
 
+
+            default:
+
+                return false;
+
         }
-
-
-        return false;
 
     }
 
@@ -2535,7 +3308,9 @@ document.addEventListener(
 
 
         if(!element){
+
             return;
+
         }
 
 
@@ -2564,7 +3339,9 @@ document.addEventListener(
             event.target.id !==
                 "organsSearchInput"
         ){
+
             return;
+
         }
 
 
@@ -2586,6 +3363,7 @@ document.addEventListener(
 
                     OrgansApp.selectedOrganId =
                         null;
+
 
                     OrgansApp.remount();
 
@@ -2612,7 +3390,9 @@ document.addEventListener(
 
 
         if(!form){
+
             return;
+
         }
 
 
@@ -2627,11 +3407,18 @@ document.addEventListener(
                     "permission"
                 ) ||
                 ""
-            ).trim();
+            )
+                .trim()
+                .slice(
+                    0,
+                    120
+                );
 
 
         if(!permission){
+
             return;
+
         }
 
 
@@ -2643,6 +3430,33 @@ document.addEventListener(
 
     }
 );
+
+
+/* =========================================================
+   REGISTER
+========================================================= */
+
+try{
+
+    if(
+        typeof VAERO !==
+            "undefined" &&
+        typeof VAERO.register ===
+            "function"
+    ){
+
+        VAERO.register(
+            "organsApp",
+            OrgansApp
+        );
+
+    }
+
+} catch(error){
+
+    /* global remains available */
+
+}
 
 
 window.OrgansApp =
