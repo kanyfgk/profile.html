@@ -5,7 +5,8 @@
 
 const MemorySystem = {
 
-    records: [],
+    records:
+        [],
 
     booted:
         false,
@@ -26,27 +27,48 @@ const MemorySystem = {
 
     getService(name){
 
+        const serviceName =
+            String(
+                name ??
+                ""
+            ).trim();
+
+
+        if(!serviceName){
+
+            return null;
+
+        }
+
+
         try{
 
             if(
-                typeof VAERO === "undefined" ||
-                typeof VAERO.get !== "function"
+                typeof VAERO ===
+                    "undefined" ||
+                typeof VAERO.get !==
+                    "function"
             ){
+
                 return null;
+
             }
 
 
             return (
-                VAERO.get(name) ||
+                VAERO.get(
+                    serviceName
+                ) ||
                 null
             );
 
         } catch(error){
 
             console.warn(
-                `Memory service lookup failed: ${name}`,
+                `Memory service lookup failed: ${serviceName}`,
                 error
             );
+
 
             return null;
 
@@ -64,23 +86,61 @@ const MemorySystem = {
         payload = {}
     ){
 
+        const name =
+            String(
+                eventName ??
+                ""
+            ).trim();
+
+
+        if(!name){
+
+            return false;
+
+        }
+
+
+        const safePayload =
+            payload &&
+            typeof payload ===
+                "object" &&
+            !Array.isArray(
+                payload
+            )
+                ? payload
+                : {};
+
+
         try{
 
             if(
-                typeof VAERO !== "undefined" &&
+                typeof VAERO !==
+                    "undefined" &&
                 typeof VAERO.emit ===
                     "function"
             ){
 
                 VAERO.emit(
-                    eventName,
-                    payload
+                    name,
+                    safePayload
                 );
+
 
                 return true;
 
             }
 
+        } catch(error){
+
+            console.warn(
+                `Memory VAERO event failed: ${name}`,
+                error
+            );
+
+        }
+
+
+        try{
 
             const events =
                 this.getService(
@@ -95,9 +155,10 @@ const MemorySystem = {
             ){
 
                 events.emit(
-                    eventName,
-                    payload
+                    name,
+                    safePayload
                 );
+
 
                 return true;
 
@@ -106,7 +167,7 @@ const MemorySystem = {
         } catch(error){
 
             console.warn(
-                `Memory event failed: ${eventName}`,
+                `Memory event fallback failed: ${name}`,
                 error
             );
 
@@ -124,13 +185,22 @@ const MemorySystem = {
 
     createId(){
 
-        if(
-            typeof crypto !== "undefined" &&
-            typeof crypto.randomUUID ===
-                "function"
-        ){
+        try{
 
-            return crypto.randomUUID();
+            if(
+                typeof crypto !==
+                    "undefined" &&
+                typeof crypto.randomUUID ===
+                    "function"
+            ){
+
+                return crypto.randomUUID();
+
+            }
+
+        } catch(error){
+
+            /* fallback below */
 
         }
 
@@ -182,25 +252,82 @@ const MemorySystem = {
         if(
             !Array.isArray(
                 value
-            )
+            ) &&
+            !(value instanceof Set)
         ){
+
             return [];
+
         }
 
 
-        return [
-            ...new Set(
+        const source =
+            Array.isArray(
                 value
-                    .map(
-                        item =>
-                            String(
-                                item ??
-                                ""
-                            ).trim()
-                    )
-                    .filter(Boolean)
             )
-        ];
+                ? value
+                : [
+                    ...value
+                ];
+
+
+        const seen =
+            new Set();
+
+
+        return source
+            .map(
+                item =>
+                    String(
+                        item ??
+                        ""
+                    )
+                        .trim()
+                        .slice(
+                            0,
+                            80
+                        )
+            )
+            .filter(
+                item => {
+
+                    if(!item){
+
+                        return false;
+
+                    }
+
+
+                    const key =
+                        item.toLocaleLowerCase(
+                            "tr-TR"
+                        );
+
+
+                    if(
+                        seen.has(
+                            key
+                        )
+                    ){
+
+                        return false;
+
+                    }
+
+
+                    seen.add(
+                        key
+                    );
+
+
+                    return true;
+
+                }
+            )
+            .slice(
+                0,
+                40
+            );
 
     },
 
@@ -215,7 +342,9 @@ const MemorySystem = {
                 value
             )
         ){
+
             return {};
+
         }
 
 
@@ -226,9 +355,80 @@ const MemorySystem = {
     },
 
 
+    normalizeText(
+        value,
+        maxLength = 10000
+    ){
+
+        return String(
+            value ??
+            ""
+        )
+            .trim()
+            .slice(
+                0,
+                maxLength
+            );
+
+    },
+
+
+    normalizeId(value){
+
+        const id =
+            String(
+                value ??
+                ""
+            )
+                .trim()
+                .slice(
+                    0,
+                    200
+                );
+
+
+        return (
+            id ||
+            null
+        );
+
+    },
+
+
+    normalizeTimestamp(
+        value,
+        fallback = Date.now()
+    ){
+
+        const timestamp =
+            Number(
+                value
+            );
+
+
+        return Number.isFinite(
+            timestamp
+        )
+            ? timestamp
+            : fallback;
+
+    },
+
+
     normalizeRecord(
         record = {}
     ){
+
+        const sourceRecord =
+            record &&
+            typeof record ===
+                "object" &&
+            !Array.isArray(
+                record
+            )
+                ? record
+                : {};
+
 
         const now =
             Date.now();
@@ -236,54 +436,65 @@ const MemorySystem = {
 
         const payload =
             this.normalizePayload(
-                record.payload
+                sourceRecord.payload
             );
 
 
         const entityId =
-            String(
-                record.entityId ||
+            this.normalizeId(
+                sourceRecord.entityId ||
                 payload.entityId ||
-                payload.relatedEntityId ||
-                ""
-            ).trim() ||
-            null;
+                payload.relatedEntityId
+            );
+
+
+        const worldId =
+            this.normalizeId(
+                sourceRecord.worldId ||
+                payload.worldId ||
+                payload.relatedWorldId
+            );
 
 
         const type =
-            String(
-                record.type ||
-                "memory"
+            this.normalizeText(
+                sourceRecord.type ||
+                "memory",
+                120
             )
-                .trim()
-                .toLowerCase();
+                .toLowerCase() ||
+            "memory";
 
 
         let category =
-            record.category;
+            sourceRecord.category;
 
 
         if(!category){
 
             if(
                 type ===
-                "life-event"
+                    "life-event"
             ){
 
                 category =
                     "life-event";
 
-            } else if(
+            }
+
+            else if(
                 type ===
-                "entity:mounted" ||
+                    "entity:mounted" ||
                 type ===
-                "entity.mounted"
+                    "entity.mounted"
             ){
 
                 category =
                     "system";
 
-            } else {
+            }
+
+            else {
 
                 category =
                     "note";
@@ -294,47 +505,69 @@ const MemorySystem = {
 
 
         const title =
-            String(
-                record.title ||
+            this.normalizeText(
+                sourceRecord.title ||
                 payload.title ||
-                record.description ||
-                "İsimsiz Hafıza"
-            ).trim();
+                sourceRecord.description ||
+                "İsimsiz Hafıza",
+                240
+            ) ||
+            "İsimsiz Hafıza";
 
 
         const content =
-            String(
-                record.content ||
+            this.normalizeText(
+                sourceRecord.content ||
                 payload.content ||
                 payload.description ||
+                "",
+                30000
+            );
+
+
+        const archived =
+            sourceRecord.archived ===
+                true;
+
+
+        const createdAt =
+            this.normalizeTimestamp(
+                sourceRecord.createdAt,
+                now
+            );
+
+
+        const updatedAt =
+            this.normalizeTimestamp(
+                sourceRecord.updatedAt,
+                createdAt
+            );
+
+
+        const importance =
+            String(
+                payload.importance ||
                 ""
-            ).trim();
+            )
+                .trim()
+                .toLowerCase();
 
 
         return {
 
             id:
-                String(
-                    record.id ||
-                    this.createId()
-                ),
+                this.normalizeId(
+                    sourceRecord.id
+                ) ||
+                this.createId(),
 
             type,
 
             entityId,
 
-            worldId:
-                String(
-                    record.worldId ||
-                    payload.worldId ||
-                    payload.relatedWorldId ||
-                    ""
-                ).trim() ||
-                null,
+            worldId,
 
-            title:
-                title ||
-                "İsimsiz Hafıza",
+            title,
 
             content,
 
@@ -347,60 +580,102 @@ const MemorySystem = {
 
             tags:
                 this.normalizeTags(
-                    record.tags ||
+                    sourceRecord.tags ||
                     payload.tags
                 ),
 
             source:
-                String(
-                    record.source ||
+                this.normalizeText(
+                    sourceRecord.source ||
                     payload.source ||
-                    "system"
-                )
-                    .trim() ||
+                    "system",
+                    120
+                ) ||
                 "system",
 
             important:
-                record.important ===
+                sourceRecord.important ===
                     true ||
-                payload.importance ===
-                    "high",
+                importance ===
+                    "high" ||
+                importance ===
+                    "critical",
 
             pinned:
-                record.pinned ===
+                sourceRecord.pinned ===
                     true,
 
-            archived:
-                record.archived ===
-                    true,
+            archived,
 
             archivedAt:
-                record.archived ===
-                    true
-                    ? (
-                        Number(
-                            record.archivedAt
-                        ) ||
-                        now
+                archived
+                    ? this.normalizeTimestamp(
+                        sourceRecord.archivedAt,
+                        updatedAt
                     )
                     : null,
 
-            createdAt:
-                Number(
-                    record.createdAt
-                ) ||
-                now,
+            createdAt,
 
             updatedAt:
-                Number(
-                    record.updatedAt
-                ) ||
-                Number(
-                    record.createdAt
-                ) ||
-                now
+                Math.max(
+                    createdAt,
+                    updatedAt
+                )
 
         };
+
+    },
+
+
+    /* =====================================================
+       DUPLICATE / LOOKUP HELPERS
+    ===================================================== */
+
+    hasId(memoryId){
+
+        const id =
+            this.normalizeId(
+                memoryId
+            );
+
+
+        if(!id){
+
+            return false;
+
+        }
+
+
+        return this.records.some(
+            record =>
+                record?.id ===
+                    id
+        );
+
+    },
+
+
+    findIndex(memoryId){
+
+        const id =
+            this.normalizeId(
+                memoryId
+            );
+
+
+        if(!id){
+
+            return -1;
+
+        }
+
+
+        return this.records.findIndex(
+            record =>
+                record?.id ===
+                    id
+        );
 
     },
 
@@ -411,8 +686,12 @@ const MemorySystem = {
 
     boot(){
 
-        if(this.booted){
+        if(
+            this.booted
+        ){
+
             return true;
+
         }
 
 
@@ -431,8 +710,13 @@ const MemorySystem = {
                 "Memory boot: Events service bulunamadı."
             );
 
+
             this.booted =
                 true;
+
+
+            this.cleanOrphanLifeEvents();
+
 
             return true;
 
@@ -445,9 +729,9 @@ const MemorySystem = {
         ){
 
             /*
-             * Eski ve yeni event isimlerini destekliyoruz.
-             * rememberSystemEvent içindeki fingerprint
-             * tekrar kaydı önler.
+             * Legacy + canonical event names are both
+             * supported. rememberSystemEvent fingerprint
+             * prevents duplicate memory creation.
              */
 
             events.on(
@@ -521,6 +805,18 @@ const MemorySystem = {
         this.cleanOrphanLifeEvents();
 
 
+        this.emit(
+            "memory:ready",
+            {
+                count:
+                    this.records.length,
+
+                time:
+                    Date.now()
+            }
+        );
+
+
         return true;
 
     },
@@ -542,13 +838,24 @@ const MemorySystem = {
             );
 
 
+        const normalizedType =
+            this.normalizeText(
+                type ||
+                "memory",
+                120
+            )
+                .toLowerCase() ||
+            "memory";
+
+
         const record =
             this.normalizeRecord({
 
                 id:
                     this.createId(),
 
-                type,
+                type:
+                    normalizedType,
 
                 entityId:
                     data.entityId ||
@@ -562,7 +869,7 @@ const MemorySystem = {
 
                 title:
                     data.title ||
-                    type ||
+                    normalizedType ||
                     "Hafıza",
 
                 content:
@@ -571,11 +878,11 @@ const MemorySystem = {
                     "",
 
                 category:
-                    type ===
+                    normalizedType ===
                         "life-event"
                         ? "life-event"
                         : (
-                            String(type).includes(
+                            normalizedType.includes(
                                 "entity"
                             )
                                 ? "system"
@@ -595,7 +902,9 @@ const MemorySystem = {
 
                 important:
                     data.importance ===
-                        "high",
+                        "high" ||
+                    data.importance ===
+                        "critical",
 
                 createdAt:
                     Date.now(),
@@ -614,14 +923,28 @@ const MemorySystem = {
         this.save();
 
 
+        if(
+            record.entityId
+        ){
+
+            this.syncEntityLegacyStorage(
+                record.entityId
+            );
+
+        }
+
+
         this.emit(
             "memory:created",
             {
                 record,
+
                 memoryId:
                     record.id,
+
                 entityId:
                     record.entityId,
+
                 time:
                     Date.now()
             }
@@ -647,27 +970,52 @@ const MemorySystem = {
                 data
             )
         ){
+
             return null;
+
         }
 
 
         const title =
-            String(
-                data.title ||
-                ""
-            ).trim();
-
-
-        const content =
-            String(
-                data.content ||
-                ""
-            ).trim();
+            this.normalizeText(
+                data.title,
+                240
+            );
 
 
         if(!title){
+
             return null;
+
         }
+
+
+        const requestedId =
+            this.normalizeId(
+                data.id
+            );
+
+
+        if(
+            requestedId &&
+            this.hasId(
+                requestedId
+            )
+        ){
+
+            return this.find(
+                requestedId,
+                {
+                    includeArchived:
+                        true
+                }
+            );
+
+        }
+
+
+        const now =
+            Date.now();
 
 
         const record =
@@ -676,8 +1024,16 @@ const MemorySystem = {
                 ...data,
 
                 id:
-                    data.id ||
+                    requestedId ||
                     this.createId(),
+
+                title,
+
+                content:
+                    this.normalizeText(
+                        data.content,
+                        30000
+                    ),
 
                 type:
                     data.type ||
@@ -692,16 +1048,16 @@ const MemorySystem = {
                     "manual",
 
                 createdAt:
-                    Number(
-                        data.createdAt
-                    ) ||
-                    Date.now(),
+                    this.normalizeTimestamp(
+                        data.createdAt,
+                        now
+                    ),
 
                 updatedAt:
-                    Number(
-                        data.updatedAt
-                    ) ||
-                    Date.now()
+                    this.normalizeTimestamp(
+                        data.updatedAt,
+                        now
+                    )
 
             });
 
@@ -723,10 +1079,13 @@ const MemorySystem = {
             "memory:created",
             {
                 record,
+
                 memoryId:
                     record.id,
+
                 entityId:
                     record.entityId,
+
                 time:
                     Date.now()
             }
@@ -762,40 +1121,63 @@ const MemorySystem = {
                 changes
             )
         ){
+
             return null;
+
         }
 
 
         const before = {
+
             ...record,
+
             payload:{
                 ...record.payload
             },
+
             tags:[
                 ...record.tags
             ]
+
         };
 
 
+        const previousEntityId =
+            record.entityId;
+
+
         if(
-            typeof changes.title ===
-                "string" &&
-            changes.title.trim()
+            changes.title !==
+                undefined
         ){
 
-            record.title =
-                changes.title.trim();
+            const title =
+                this.normalizeText(
+                    changes.title,
+                    240
+                );
+
+
+            if(title){
+
+                record.title =
+                    title;
+
+            }
 
         }
 
 
         if(
-            typeof changes.content ===
-                "string"
+            changes.content !==
+                undefined
         ){
 
             record.content =
-                changes.content.trim();
+                this.normalizeText(
+                    changes.content,
+                    30000
+                );
 
         }
 
@@ -814,9 +1196,8 @@ const MemorySystem = {
 
 
         if(
-            Array.isArray(
-                changes.tags
-            )
+            changes.tags !==
+                undefined
         ){
 
             record.tags =
@@ -850,6 +1231,54 @@ const MemorySystem = {
 
 
         if(
+            changes.entityId !==
+                undefined
+        ){
+
+            record.entityId =
+                this.normalizeId(
+                    changes.entityId
+                );
+
+        }
+
+
+        if(
+            changes.worldId !==
+                undefined
+        ){
+
+            record.worldId =
+                this.normalizeId(
+                    changes.worldId
+                );
+
+        }
+
+
+        if(
+            changes.source !==
+                undefined
+        ){
+
+            const source =
+                this.normalizeText(
+                    changes.source,
+                    120
+                );
+
+
+            if(source){
+
+                record.source =
+                    source;
+
+            }
+
+        }
+
+
+        if(
             changes.payload &&
             typeof changes.payload ===
                 "object" &&
@@ -859,8 +1288,11 @@ const MemorySystem = {
         ){
 
             record.payload = {
+
                 ...record.payload,
+
                 ...changes.payload
+
             };
 
         }
@@ -873,6 +1305,19 @@ const MemorySystem = {
         this.save();
 
 
+        if(
+            previousEntityId &&
+            previousEntityId !==
+                record.entityId
+        ){
+
+            this.syncEntityLegacyStorage(
+                previousEntityId
+            );
+
+        }
+
+
         this.syncEntityLegacyStorage(
             record.entityId
         );
@@ -882,11 +1327,15 @@ const MemorySystem = {
             "memory:updated",
             {
                 record,
+
                 before,
+
                 memoryId:
                     record.id,
+
                 entityId:
                     record.entityId,
+
                 time:
                     Date.now()
             }
@@ -908,14 +1357,15 @@ const MemorySystem = {
     ){
 
         const id =
-            String(
-                memoryId ??
-                ""
-            ).trim();
+            this.normalizeId(
+                memoryId
+            );
 
 
         if(!id){
+
             return null;
+
         }
 
 
@@ -923,21 +1373,27 @@ const MemorySystem = {
             this.records.find(
                 item =>
                     item?.id ===
-                    id
+                        id
             ) ||
             null;
 
 
-        if(
-            !record ||
-            (
-                record.archived ===
-                    true &&
-                options.includeArchived !==
-                    true
-            )
-        ){
+        if(!record){
+
             return null;
+
+        }
+
+
+        if(
+            record.archived ===
+                true &&
+            options?.includeArchived !==
+                true
+        ){
+
+            return null;
+
         }
 
 
@@ -956,20 +1412,21 @@ const MemorySystem = {
     ){
 
         const id =
-            String(
-                entityId ??
-                ""
-            ).trim();
+            this.normalizeId(
+                entityId
+            );
 
 
         if(!id){
+
             return [];
+
         }
 
 
         /*
-         * MemoryApp'in geçiş dönemindeki storage'ından
-         * yeni kayıt geldiyse merkeze al.
+         * During the MemoryApp migration period, import
+         * records written to the entity compatibility store.
          */
 
         this.syncFromEntityLegacyStorage(
@@ -977,16 +1434,27 @@ const MemorySystem = {
         );
 
 
+        const safeOptions =
+            options &&
+            typeof options ===
+                "object" &&
+            !Array.isArray(
+                options
+            )
+                ? options
+                : {};
+
+
         let records =
             this.records.filter(
                 record =>
                     record?.entityId ===
-                    id
+                        id
             );
 
 
         if(
-            options.includeArchived !==
+            safeOptions.includeArchived !==
                 true
         ){
 
@@ -994,21 +1462,21 @@ const MemorySystem = {
                 records.filter(
                     record =>
                         record.archived !==
-                        true
+                            true
                 );
 
         }
 
 
         if(
-            options.category &&
-            options.category !==
+            safeOptions.category &&
+            safeOptions.category !==
                 "all"
         ){
 
             const category =
                 this.normalizeCategory(
-                    options.category
+                    safeOptions.category
                 );
 
 
@@ -1016,14 +1484,14 @@ const MemorySystem = {
                 records.filter(
                     record =>
                         record.category ===
-                        category
+                            category
                 );
 
         }
 
 
         if(
-            options.important ===
+            safeOptions.important ===
                 true
         ){
 
@@ -1031,14 +1499,14 @@ const MemorySystem = {
                 records.filter(
                     record =>
                         record.important ===
-                        true
+                            true
                 );
 
         }
 
 
         if(
-            options.pinned ===
+            safeOptions.pinned ===
                 true
         ){
 
@@ -1046,18 +1514,17 @@ const MemorySystem = {
                 records.filter(
                     record =>
                         record.pinned ===
-                        true
+                            true
                 );
 
         }
 
 
         const query =
-            String(
-                options.query ||
-                ""
+            this.normalizeText(
+                safeOptions.query,
+                500
             )
-                .trim()
                 .toLocaleLowerCase(
                     "tr-TR"
                 );
@@ -1094,40 +1561,48 @@ const MemorySystem = {
 
         return [
             ...records
-        ].sort(
-            (a,b) => {
+        ]
+            .sort(
+                (
+                    a,
+                    b
+                ) => {
 
-                if(
-                    a.pinned !==
-                    b.pinned
-                ){
+                    if(
+                        a.pinned !==
+                            b.pinned
+                    ){
 
-                    return a.pinned
-                        ? -1
-                        : 1;
+                        return a.pinned
+                            ? -1
+                            : 1;
+
+                    }
+
+
+                    if(
+                        a.important !==
+                            b.important
+                    ){
+
+                        return a.important
+                            ? -1
+                            : 1;
+
+                    }
+
+
+                    return (
+                        Number(
+                            b.updatedAt
+                        ) -
+                        Number(
+                            a.updatedAt
+                        )
+                    );
 
                 }
-
-
-                if(
-                    a.important !==
-                    b.important
-                ){
-
-                    return a.important
-                        ? -1
-                        : 1;
-
-                }
-
-
-                return (
-                    b.updatedAt -
-                    a.updatedAt
-                );
-
-            }
-        );
+            );
 
     },
 
@@ -1138,11 +1613,10 @@ const MemorySystem = {
     ){
 
         const text =
-            String(
-                query ??
-                ""
+            this.normalizeText(
+                query,
+                500
             )
-                .trim()
                 .toLocaleLowerCase(
                     "tr-TR"
                 );
@@ -1155,7 +1629,9 @@ const MemorySystem = {
 
 
         if(!text){
+
             return records;
+
         }
 
 
@@ -1203,7 +1679,9 @@ const MemorySystem = {
 
 
         if(!record){
+
             return false;
+
         }
 
 
@@ -1233,7 +1711,9 @@ const MemorySystem = {
 
 
         if(!record){
+
             return false;
+
         }
 
 
@@ -1267,20 +1747,29 @@ const MemorySystem = {
 
 
         if(!record){
+
             return false;
+
         }
 
 
-        if(record.archived){
+        if(
+            record.archived ===
+                true
+        ){
+
             return true;
+
         }
 
 
         record.archived =
             true;
 
+
         record.archivedAt =
             Date.now();
+
 
         record.updatedAt =
             Date.now();
@@ -1298,10 +1787,13 @@ const MemorySystem = {
             "memory:archived",
             {
                 record,
+
                 memoryId:
                     record.id,
+
                 entityId:
                     record.entityId,
+
                 time:
                     Date.now()
             }
@@ -1326,20 +1818,29 @@ const MemorySystem = {
 
 
         if(!record){
+
             return false;
+
         }
 
 
-        if(!record.archived){
+        if(
+            record.archived !==
+                true
+        ){
+
             return true;
+
         }
 
 
         record.archived =
             false;
 
+
         record.archivedAt =
             null;
+
 
         record.updatedAt =
             Date.now();
@@ -1357,10 +1858,13 @@ const MemorySystem = {
             "memory:restored",
             {
                 record,
+
                 memoryId:
                     record.id,
+
                 entityId:
                     record.entityId,
+
                 time:
                     Date.now()
             }
@@ -1371,8 +1875,7 @@ const MemorySystem = {
 
     },
 
-
-    /* =====================================================
+   /* =====================================================
        HARD REMOVE
        Not the normal UX path.
     ===================================================== */
@@ -1390,7 +1893,9 @@ const MemorySystem = {
 
 
         if(!record){
+
             return false;
+
         }
 
 
@@ -1402,15 +1907,17 @@ const MemorySystem = {
             this.records.filter(
                 item =>
                     item.id !==
-                    record.id
+                        record.id
             );
 
 
         if(
             this.records.length ===
-            before
+                before
         ){
+
             return false;
+
         }
 
 
@@ -1426,10 +1933,13 @@ const MemorySystem = {
             "memory:removed",
             {
                 record,
+
                 memoryId:
                     record.id,
+
                 entityId:
                     record.entityId,
+
                 time:
                     Date.now()
             }
@@ -1456,18 +1966,26 @@ const MemorySystem = {
             );
 
 
+        const normalizedType =
+            this.normalizeText(
+                type ||
+                "system",
+                120
+            )
+                .toLowerCase() ||
+            "system";
+
+
         const entityId =
-            String(
+            this.normalizeId(
                 data.entityId ||
-                data.id ||
-                ""
-            ).trim() ||
-            null;
+                data.id
+            );
 
 
         const fingerprint =
             [
-                type,
+                normalizedType,
                 entityId ||
                     "global",
                 data.sourceEventId ||
@@ -1476,25 +1994,34 @@ const MemorySystem = {
                     data.createdAt ||
                     ""
             ]
+                .map(
+                    item =>
+                        String(
+                            item ??
+                            ""
+                        )
+                )
                 .join(":");
 
 
         const duplicate =
             this.records.some(
                 record =>
-                    record.payload
+                    record?.payload
                         ?.fingerprint ===
-                    fingerprint
+                        fingerprint
             );
 
 
         if(duplicate){
+
             return null;
+
         }
 
 
         return this.remember(
-            type,
+            normalizedType,
             {
                 ...data,
 
@@ -1505,10 +2032,10 @@ const MemorySystem = {
                 title:
                     data.title ||
                     (
-                        type ===
+                        normalizedType ===
                             "entity:mounted"
                             ? "Varlık sisteme bağlandı"
-                            : type
+                            : normalizedType
                     ),
 
                 source:
@@ -1529,29 +2056,45 @@ const MemorySystem = {
             !lifeEvent ||
             !lifeEvent.id
         ){
+
             return null;
+
+        }
+
+
+        const sourceEventId =
+            this.normalizeId(
+                lifeEvent.id
+            );
+
+
+        if(!sourceEventId){
+
+            return null;
+
         }
 
 
         const existing =
             this.records.find(
                 record =>
-                    record.payload
+                    record?.payload
                         ?.sourceEventId ===
-                    lifeEvent.id
+                        sourceEventId
             );
 
 
         if(existing){
+
             return existing;
+
         }
 
 
         return this.remember(
             "life-event",
             {
-                sourceEventId:
-                    lifeEvent.id,
+                sourceEventId,
 
                 entityId:
                     lifeEvent.relatedEntityId ||
@@ -1593,67 +2136,185 @@ const MemorySystem = {
             !lifeEvent ||
             !lifeEvent.id
         ){
+
             return false;
+
+        }
+
+
+        const sourceEventId =
+            this.normalizeId(
+                lifeEvent.id
+            );
+
+
+        if(!sourceEventId){
+
+            return false;
+
         }
 
 
         const linkedRecord =
             this.records.find(
                 record =>
-                    record.payload
+                    record?.payload
                         ?.sourceEventId ===
-                    lifeEvent.id
+                        sourceEventId
             );
 
 
         if(!linkedRecord){
+
             return false;
+
         }
 
 
-        linkedRecord.title =
-            lifeEvent.title ||
-            linkedRecord.title;
+        const previousEntityId =
+            linkedRecord.entityId;
 
 
-        linkedRecord.content =
-            lifeEvent.description ||
-            linkedRecord.content;
+        if(
+            lifeEvent.title !==
+                undefined
+        ){
+
+            const title =
+                this.normalizeText(
+                    lifeEvent.title,
+                    240
+                );
 
 
-        linkedRecord.important =
-            lifeEvent.importance ===
-                "high";
+            if(title){
+
+                linkedRecord.title =
+                    title;
+
+            }
+
+        }
 
 
-        linkedRecord.tags =
-            this.normalizeTags(
-                lifeEvent.tags ||
-                linkedRecord.tags
+        if(
+            lifeEvent.description !==
+                undefined
+        ){
+
+            linkedRecord.content =
+                this.normalizeText(
+                    lifeEvent.description,
+                    30000
+                );
+
+        }
+
+
+        if(
+            lifeEvent.importance !==
+                undefined
+        ){
+
+            const importance =
+                String(
+                    lifeEvent.importance ||
+                    ""
+                )
+                    .trim()
+                    .toLowerCase();
+
+
+            linkedRecord.important =
+                importance ===
+                    "high" ||
+                importance ===
+                    "critical";
+
+        }
+
+
+        if(
+            lifeEvent.tags !==
+                undefined
+        ){
+
+            linkedRecord.tags =
+                this.normalizeTags(
+                    lifeEvent.tags
+                );
+
+        }
+
+
+        const nextEntityId =
+            this.normalizeId(
+                lifeEvent.relatedEntityId ||
+                lifeEvent.entityId ||
+                linkedRecord.entityId
             );
 
 
+        const nextWorldId =
+            this.normalizeId(
+                lifeEvent.relatedWorldId ||
+                lifeEvent.worldId ||
+                linkedRecord.worldId
+            );
+
+
+        linkedRecord.entityId =
+            nextEntityId;
+
+
+        linkedRecord.worldId =
+            nextWorldId;
+
+
         linkedRecord.payload = {
+
             ...linkedRecord.payload,
+
+            sourceEventId,
 
             title:
                 lifeEvent.title ||
-                linkedRecord.payload.title,
+                linkedRecord.payload
+                    ?.title ||
+                linkedRecord.title,
+
+            description:
+                lifeEvent.description ||
+                linkedRecord.payload
+                    ?.description ||
+                linkedRecord.content,
 
             importance:
                 lifeEvent.importance ||
-                linkedRecord.payload.importance,
+                linkedRecord.payload
+                    ?.importance ||
+                "medium",
 
             relatedEntityId:
-                lifeEvent.relatedEntityId ||
-                linkedRecord.payload
-                    .relatedEntityId,
+                nextEntityId,
 
             relatedWorldId:
-                lifeEvent.relatedWorldId ||
-                linkedRecord.payload
-                    .relatedWorldId
+                nextWorldId,
+
+            tags:
+                this.normalizeTags(
+                    lifeEvent.tags ||
+                    linkedRecord.tags
+                ),
+
+            source:
+                "evolution"
+
         };
+
+
+        linkedRecord.source =
+            "evolution";
 
 
         linkedRecord.updatedAt =
@@ -1661,6 +2322,47 @@ const MemorySystem = {
 
 
         this.save();
+
+
+        if(
+            previousEntityId &&
+            previousEntityId !==
+                linkedRecord.entityId
+        ){
+
+            this.syncEntityLegacyStorage(
+                previousEntityId
+            );
+
+        }
+
+
+        this.syncEntityLegacyStorage(
+            linkedRecord.entityId
+        );
+
+
+        this.emit(
+            "memory:updated",
+            {
+                record:
+                    linkedRecord,
+
+                memoryId:
+                    linkedRecord.id,
+
+                entityId:
+                    linkedRecord.entityId,
+
+                sourceEventId,
+
+                source:
+                    "evolution",
+
+                time:
+                    Date.now()
+            }
+        );
 
 
         return true;
@@ -1680,6 +2382,51 @@ const MemorySystem = {
         }
 
 
+        const sourceEventId =
+            this.normalizeId(
+                lifeEvent.id
+            );
+
+
+        if(!sourceEventId){
+
+            return 0;
+
+        }
+
+
+        const linked =
+            this.records.filter(
+                record =>
+                    record?.payload
+                        ?.sourceEventId ===
+                        sourceEventId
+            );
+
+
+        if(
+            linked.length ===
+                0
+        ){
+
+            return 0;
+
+        }
+
+
+        const entityIds =
+            [
+                ...new Set(
+                    linked
+                        .map(
+                            record =>
+                                record.entityId
+                        )
+                        .filter(Boolean)
+                )
+            ];
+
+
         const before =
             this.records.length;
 
@@ -1687,9 +2434,9 @@ const MemorySystem = {
         this.records =
             this.records.filter(
                 record =>
-                    record.payload
+                    record?.payload
                         ?.sourceEventId !==
-                    lifeEvent.id
+                        sourceEventId
             );
 
 
@@ -1698,9 +2445,33 @@ const MemorySystem = {
             this.records.length;
 
 
-        if(removed > 0){
+        if(
+            removed >
+                0
+        ){
 
             this.save();
+
+
+            entityIds.forEach(
+                entityId =>
+                    this.syncEntityLegacyStorage(
+                        entityId
+                    )
+            );
+
+
+            this.emit(
+                "memory:life-event:removed",
+                {
+                    sourceEventId,
+
+                    removed,
+
+                    time:
+                        Date.now()
+                }
+            );
 
         }
 
@@ -1719,7 +2490,9 @@ const MemorySystem = {
             !memoryRecord.payload
                 ?.sourceEventId
         ){
+
             return null;
+
         }
 
 
@@ -1729,27 +2502,57 @@ const MemorySystem = {
             );
 
 
-        if(
-            !evolution ||
-            typeof evolution.find !==
-                "function"
-        ){
+        if(!evolution){
+
             return null;
+
         }
+
+
+        const sourceEventId =
+            memoryRecord.payload
+                .sourceEventId;
 
 
         try{
 
-            return evolution.find(
-                memoryRecord.payload
-                    .sourceEventId
-            );
+            if(
+                typeof evolution.find ===
+                    "function"
+            ){
+
+                return (
+                    evolution.find(
+                        sourceEventId
+                    ) ||
+                    null
+                );
+
+            }
+
+
+            if(
+                typeof evolution.get ===
+                    "function"
+            ){
+
+                return (
+                    evolution.get(
+                        sourceEventId
+                    ) ||
+                    null
+                );
+
+            }
 
         } catch(error){
 
             return null;
 
         }
+
+
+        return null;
 
     },
 
@@ -1762,17 +2565,40 @@ const MemorySystem = {
             );
 
 
-        if(
-            !evolution ||
-            typeof evolution.find !==
-                "function"
-        ){
+        if(!evolution){
+
             return 0;
+
         }
 
 
-        const before =
-            this.records.length;
+        const resolver =
+            typeof evolution.find ===
+                "function"
+                ? id =>
+                    evolution.find(
+                        id
+                    )
+                : (
+                    typeof evolution.get ===
+                        "function"
+                        ? id =>
+                            evolution.get(
+                                id
+                            )
+                        : null
+                );
+
+
+        if(!resolver){
+
+            return 0;
+
+        }
+
+
+        const removedRecords =
+            [];
 
 
         this.records =
@@ -1785,20 +2611,40 @@ const MemorySystem = {
                         !record.payload
                             ?.sourceEventId
                     ){
+
                         return true;
+
                     }
 
 
                     try{
 
-                        return Boolean(
-                            evolution.find(
-                                record.payload
-                                    .sourceEventId
-                            )
-                        );
+                        const exists =
+                            Boolean(
+                                resolver(
+                                    record.payload
+                                        .sourceEventId
+                                )
+                            );
+
+
+                        if(!exists){
+
+                            removedRecords.push(
+                                record
+                            );
+
+                        }
+
+
+                        return exists;
 
                     } catch(error){
+
+                        /*
+                         * A temporary Evolution lookup error must not
+                         * destroy Memory data.
+                         */
 
                         return true;
 
@@ -1809,13 +2655,44 @@ const MemorySystem = {
 
 
         const removed =
-            before -
-            this.records.length;
+            removedRecords.length;
 
 
-        if(removed > 0){
+        if(
+            removed >
+                0
+        ){
 
             this.save();
+
+
+            [
+                ...new Set(
+                    removedRecords
+                        .map(
+                            record =>
+                                record.entityId
+                        )
+                        .filter(Boolean)
+                )
+            ]
+                .forEach(
+                    entityId =>
+                        this.syncEntityLegacyStorage(
+                            entityId
+                        )
+                );
+
+
+            this.emit(
+                "memory:orphans:cleaned",
+                {
+                    removed,
+
+                    time:
+                        Date.now()
+                }
+            );
 
         }
 
@@ -1828,24 +2705,35 @@ const MemorySystem = {
     /* =====================================================
        LEGACY ENTITY MEMORY BRIDGE
 
-       MemoryApp currently writes:
+       MemoryApp compatibility storage:
        vaero:memory:entity:v2:<entityId>
 
-       This bridge allows Memory Core to become authority
-       without breaking the current app during migration.
+       MemorySystem remains the central authority while
+       supporting the transition period.
     ===================================================== */
 
     syncFromEntityLegacyStorage(entityId){
 
         const id =
-            String(
-                entityId ??
-                ""
-            ).trim();
+            this.normalizeId(
+                entityId
+            );
 
 
         if(!id){
+
             return 0;
+
+        }
+
+
+        if(
+            typeof localStorage ===
+                "undefined"
+        ){
+
+            return 0;
+
         }
 
 
@@ -1863,7 +2751,9 @@ const MemorySystem = {
 
 
             if(!saved){
+
                 return 0;
+
             }
 
 
@@ -1884,7 +2774,9 @@ const MemorySystem = {
                 parsed
             )
         ){
+
             return 0;
+
         }
 
 
@@ -1898,27 +2790,37 @@ const MemorySystem = {
                 if(
                     !legacy ||
                     typeof legacy !==
-                        "object"
+                        "object" ||
+                    Array.isArray(
+                        legacy
+                    )
                 ){
+
                     return;
+
                 }
 
 
                 const legacyId =
-                    String(
-                        legacy.id ||
-                        ""
-                    ).trim();
+                    this.normalizeId(
+                        legacy.id
+                    );
 
 
                 if(!legacyId){
+
                     return;
+
                 }
 
 
                 const normalized =
                     this.normalizeRecord({
+
                         ...legacy,
+
+                        id:
+                            legacyId,
 
                         entityId:
                             id,
@@ -1930,24 +2832,29 @@ const MemorySystem = {
                         source:
                             legacy.source ||
                             "manual"
+
                     });
 
 
                 const existingIndex =
-                    this.records.findIndex(
-                        record =>
-                            record.id ===
-                            legacyId
+                    this.findIndex(
+                        legacyId
                     );
 
 
-                if(existingIndex < 0){
+                if(
+                    existingIndex <
+                        0
+                ){
 
                     this.records.push(
                         normalized
                     );
 
-                    changed += 1;
+
+                    changed +=
+                        1;
+
 
                     return;
 
@@ -1961,15 +2868,22 @@ const MemorySystem = {
 
 
                 if(
-                    normalized.updatedAt >
-                    existing.updatedAt
+                    Number(
+                        normalized.updatedAt
+                    ) >
+                    Number(
+                        existing.updatedAt
+                    )
                 ){
 
                     this.records[
                         existingIndex
-                    ] = normalized;
+                    ] =
+                        normalized;
 
-                    changed += 1;
+
+                    changed +=
+                        1;
 
                 }
 
@@ -1977,7 +2891,10 @@ const MemorySystem = {
         );
 
 
-        if(changed > 0){
+        if(
+            changed >
+                0
+        ){
 
             this.save();
 
@@ -1992,14 +2909,25 @@ const MemorySystem = {
     syncEntityLegacyStorage(entityId){
 
         const id =
-            String(
-                entityId ??
-                ""
-            ).trim();
+            this.normalizeId(
+                entityId
+            );
 
 
         if(!id){
+
             return false;
+
+        }
+
+
+        if(
+            typeof localStorage ===
+                "undefined"
+        ){
+
+            return false;
+
         }
 
 
@@ -2016,11 +2944,15 @@ const MemorySystem = {
                 )
                 .map(
                     record => ({
+
                         id:
                             record.id,
 
                         entityId:
                             record.entityId,
+
+                        worldId:
+                            record.worldId,
 
                         title:
                             record.title,
@@ -2040,6 +2972,9 @@ const MemorySystem = {
                         archived:
                             record.archived,
 
+                        archivedAt:
+                            record.archivedAt,
+
                         source:
                             record.source,
 
@@ -2052,6 +2987,7 @@ const MemorySystem = {
 
                         updatedAt:
                             record.updatedAt
+
                     })
                 );
 
@@ -2060,7 +2996,7 @@ const MemorySystem = {
 
             localStorage.setItem(
                 this.entityStoragePrefix +
-                id,
+                    id,
                 JSON.stringify(
                     records
                 )
@@ -2090,6 +3026,17 @@ const MemorySystem = {
 
     all(options = {}){
 
+        const safeOptions =
+            options &&
+            typeof options ===
+                "object" &&
+            !Array.isArray(
+                options
+            )
+                ? options
+                : {};
+
+
         let records =
             [
                 ...this.records
@@ -2097,7 +3044,7 @@ const MemorySystem = {
 
 
         if(
-            options.includeArchived !==
+            safeOptions.includeArchived !==
                 true
         ){
 
@@ -2111,11 +3058,13 @@ const MemorySystem = {
         }
 
 
-        if(options.entityId){
+        if(
+            safeOptions.entityId
+        ){
 
             const entityId =
-                String(
-                    options.entityId
+                this.normalizeId(
+                    safeOptions.entityId
                 );
 
 
@@ -2129,11 +3078,13 @@ const MemorySystem = {
         }
 
 
-        if(options.worldId){
+        if(
+            safeOptions.worldId
+        ){
 
             const worldId =
-                String(
-                    options.worldId
+                this.normalizeId(
+                    safeOptions.worldId
                 );
 
 
@@ -2147,22 +3098,91 @@ const MemorySystem = {
         }
 
 
-        if(options.type){
+        if(
+            safeOptions.type
+        ){
+
+            const type =
+                this.normalizeText(
+                    safeOptions.type,
+                    120
+                )
+                    .toLowerCase();
+
 
             records =
                 records.filter(
                     record =>
                         record.type ===
-                            options.type
+                            type
+                );
+
+        }
+
+
+        if(
+            safeOptions.category &&
+            safeOptions.category !==
+                "all"
+        ){
+
+            const category =
+                this.normalizeCategory(
+                    safeOptions.category
+                );
+
+
+            records =
+                records.filter(
+                    record =>
+                        record.category ===
+                            category
+                );
+
+        }
+
+
+        if(
+            safeOptions.important ===
+                true
+        ){
+
+            records =
+                records.filter(
+                    record =>
+                        record.important ===
+                            true
+                );
+
+        }
+
+
+        if(
+            safeOptions.pinned ===
+                true
+        ){
+
+            records =
+                records.filter(
+                    record =>
+                        record.pinned ===
+                            true
                 );
 
         }
 
 
         return records.sort(
-            (a,b) =>
-                b.updatedAt -
-                a.updatedAt
+            (
+                a,
+                b
+            ) =>
+                Number(
+                    b.updatedAt
+                ) -
+                Number(
+                    a.updatedAt
+                )
         );
 
     },
@@ -2190,13 +3210,15 @@ const MemorySystem = {
             important:
                 records.filter(
                     record =>
-                        record.important
+                        record.important ===
+                            true
                 ).length,
 
             pinned:
                 records.filter(
                     record =>
-                        record.pinned
+                        record.pinned ===
+                            true
                 ).length,
 
             notes:
@@ -2220,11 +3242,32 @@ const MemorySystem = {
                             "idea"
                 ).length,
 
+            events:
+                records.filter(
+                    record =>
+                        record.category ===
+                            "event"
+                ).length,
+
+            lifeEvents:
+                records.filter(
+                    record =>
+                        record.category ===
+                            "life-event"
+                ).length,
+
             knowledge:
                 records.filter(
                     record =>
                         record.category ===
                             "knowledge"
+                ).length,
+
+            system:
+                records.filter(
+                    record =>
+                        record.category ===
+                            "system"
                 ).length
 
         };
@@ -2244,7 +3287,9 @@ const MemorySystem = {
                 typeof localStorage ===
                     "undefined"
             ){
+
                 return false;
+
             }
 
 
@@ -2285,6 +3330,7 @@ const MemorySystem = {
                 this.records =
                     [];
 
+
                 return this.records;
 
             }
@@ -2296,8 +3342,12 @@ const MemorySystem = {
                 );
 
 
+            let migrated =
+                false;
+
+
             /*
-             * v2 -> v3 migration
+             * Previous global Memory storage → v3.
              */
 
             if(!saved){
@@ -2307,6 +3357,12 @@ const MemorySystem = {
                         this.legacyStorageKey
                     );
 
+
+                migrated =
+                    Boolean(
+                        saved
+                    );
+
             }
 
 
@@ -2314,6 +3370,7 @@ const MemorySystem = {
 
                 this.records =
                     [];
+
 
                 return this.records;
 
@@ -2326,31 +3383,107 @@ const MemorySystem = {
                 );
 
 
-            this.records =
+            const sourceRecords =
                 Array.isArray(
                     parsed
                 )
                     ? parsed
-                        .filter(
-                            record =>
-                                record &&
-                                typeof record ===
-                                    "object"
-                        )
-                        .map(
-                            record =>
-                                this.normalizeRecord(
-                                    record
-                                )
-                        )
                     : [];
 
 
+            const normalized =
+                sourceRecords
+                    .filter(
+                        record =>
+                            record &&
+                            typeof record ===
+                                "object" &&
+                            !Array.isArray(
+                                record
+                            )
+                    )
+                    .map(
+                        record =>
+                            this.normalizeRecord(
+                                record
+                            )
+                    );
+
+
             /*
-             * Always persist in latest format.
+             * Keep one record for each memory id.
+             * Newest updatedAt wins during migration.
+             */
+
+            const byId =
+                new Map();
+
+
+            normalized.forEach(
+                record => {
+
+                    const existing =
+                        byId.get(
+                            record.id
+                        );
+
+
+                    if(
+                        !existing ||
+                        Number(
+                            record.updatedAt
+                        ) >
+                        Number(
+                            existing.updatedAt
+                        )
+                    ){
+
+                        byId.set(
+                            record.id,
+                            record
+                        );
+
+                    }
+
+                }
+            );
+
+
+            this.records =
+                [
+                    ...byId.values()
+                ];
+
+
+            /*
+             * Always persist the normalized latest format.
              */
 
             this.save();
+
+
+            if(
+                migrated
+            ){
+
+                this.emit(
+                    "memory:migrated",
+                    {
+                        from:
+                            this.legacyStorageKey,
+
+                        to:
+                            this.storageKey,
+
+                        count:
+                            this.records.length,
+
+                        time:
+                            Date.now()
+                    }
+                );
+
+            }
 
 
             return this.records;
@@ -2381,16 +3514,50 @@ const MemorySystem = {
 
     clear(options = {}){
 
-        if(options.entityId){
+        const safeOptions =
+            options &&
+            typeof options ===
+                "object" &&
+            !Array.isArray(
+                options
+            )
+                ? options
+                : {};
+
+
+        if(
+            safeOptions.entityId
+        ){
 
             const entityId =
-                String(
-                    options.entityId
+                this.normalizeId(
+                    safeOptions.entityId
                 );
 
 
-            const before =
-                this.records.length;
+            if(!entityId){
+
+                return false;
+
+            }
+
+
+            const removed =
+                this.records.filter(
+                    record =>
+                        record.entityId ===
+                            entityId
+                );
+
+
+            if(
+                removed.length ===
+                    0
+            ){
+
+                return false;
+
+            }
 
 
             this.records =
@@ -2401,14 +3568,6 @@ const MemorySystem = {
                 );
 
 
-            if(
-                this.records.length ===
-                before
-            ){
-                return false;
-            }
-
-
             this.save();
 
 
@@ -2417,9 +3576,27 @@ const MemorySystem = {
             );
 
 
+            this.emit(
+                "memory:cleared",
+                {
+                    entityId,
+
+                    removed:
+                        removed.length,
+
+                    time:
+                        Date.now()
+                }
+            );
+
+
             return true;
 
         }
+
+
+        const removed =
+            this.records.length;
 
 
         this.records =
@@ -2427,6 +3604,20 @@ const MemorySystem = {
 
 
         this.save();
+
+
+        this.emit(
+            "memory:cleared",
+            {
+                entityId:
+                    null,
+
+                removed,
+
+                time:
+                    Date.now()
+            }
+        );
 
 
         return true;
@@ -2440,6 +3631,33 @@ const MemorySystem = {
 
     report(){
 
+        const active =
+            this.records.filter(
+                record =>
+                    record.archived !==
+                        true
+            );
+
+
+        const archived =
+            this.records.filter(
+                record =>
+                    record.archived ===
+                        true
+            );
+
+
+        const entityIds =
+            new Set(
+                this.records
+                    .map(
+                        record =>
+                            record.entityId
+                    )
+                    .filter(Boolean)
+            );
+
+
         return {
 
             booted:
@@ -2449,16 +3667,25 @@ const MemorySystem = {
                 this.records.length,
 
             active:
-                this.records.filter(
+                active.length,
+
+            archived:
+                archived.length,
+
+            entities:
+                entityIds.size,
+
+            important:
+                active.filter(
                     record =>
-                        record.archived !==
+                        record.important ===
                             true
                 ).length,
 
-            archived:
-                this.records.filter(
+            pinned:
+                active.filter(
                     record =>
-                        record.archived ===
+                        record.pinned ===
                             true
                 ).length,
 
@@ -2481,7 +3708,19 @@ const MemorySystem = {
                     record =>
                         record.source ===
                             "evolution"
-                ).length
+                ).length,
+
+            lifeEvents:
+                this.records.filter(
+                    record =>
+                        record.type ===
+                            "life-event" ||
+                        record.category ===
+                            "life-event"
+                ).length,
+
+            storageKey:
+                this.storageKey
 
         };
 
@@ -2490,11 +3729,39 @@ const MemorySystem = {
 };
 
 
-VAERO.register(
-    "memorySystem",
-    MemorySystem
-);
+/* =========================================================
+   REGISTER
+========================================================= */
 
+try{
+
+    if(
+        typeof VAERO !==
+            "undefined" &&
+        typeof VAERO.register ===
+            "function"
+    ){
+
+        VAERO.register(
+            "memorySystem",
+            MemorySystem
+        );
+
+    }
+
+} catch(error){
+
+    console.warn(
+        "MemorySystem VAERO register başarısız:",
+        error
+    );
+
+}
+
+
+/* =========================================================
+   GLOBAL
+========================================================= */
 
 window.MemorySystem =
     MemorySystem;
