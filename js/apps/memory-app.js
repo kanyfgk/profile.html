@@ -1447,13 +1447,6 @@ const MemoryApp = {
             created.id;
 
 
-        this.recordEvolution(
-            entity,
-            created,
-            "created"
-        );
-
-
         this.enterBrainContext(
             entity
         );
@@ -1582,12 +1575,6 @@ const MemoryApp = {
             updated.id ||
             this.selectedMemoryId;
 
-
-        this.recordEvolution(
-            entity,
-            updated,
-            "updated"
-        );
 
 
         this.enterBrainContext(
@@ -1979,146 +1966,6 @@ const MemoryApp = {
         }
 
     },
-
-
-    /* =====================================================
-       EVOLUTION RECORD
-    ===================================================== */
-
-    recordEvolution(
-        entity,
-        memory,
-        action
-    ){
-
-        if(
-            !entity?.id ||
-            !memory
-        ){
-
-            return false;
-
-        }
-
-
-        const evolution =
-            this.getService(
-                "evolution"
-            );
-
-
-        if(
-            !evolution ||
-            typeof evolution.record !==
-                "function"
-        ){
-
-            return false;
-
-        }
-
-
-        const labels = {
-
-            created:
-                "hafızaya eklendi",
-
-            updated:
-                "hafızada güncellendi"
-
-        };
-
-
-        const engine =
-            this.getEngine();
-
-
-        try{
-
-            const result =
-                evolution.record(
-                    "life-event",
-                    `${memory.title || "Hafıza"} ${
-                        labels[
-                            action
-                        ] ||
-                        "güncellendi"
-                    }`,
-                    {
-
-                        title:
-                            memory.title ||
-                            "Hafıza",
-
-                        description:
-                            memory.content ||
-                            "",
-
-                        source:
-                            "memory",
-
-                        status:
-                            "completed",
-
-                        importance:
-                            memory.important ===
-                                true
-                                ? "high"
-                                : "low",
-
-                        relatedEntityId:
-                            entity.id,
-
-                        relatedWorldId:
-                            engine?.currentWorld?.id ||
-                            null,
-
-                        memoryId:
-                            memory.id,
-
-                        organs: [
-                            "memory",
-                            "timeline"
-                        ],
-
-                        tags: [
-
-                            "memory",
-
-                            memory.category ||
-                            "note",
-
-                            ...(
-                                Array.isArray(
-                                    memory.tags
-                                )
-                                    ? memory.tags
-                                    : []
-                            )
-
-                        ]
-
-                    }
-                );
-
-
-            return result !==
-                false;
-
-        } catch(error){
-
-            console.warn(
-                "Memory Evolution kaydı oluşturulamadı:",
-                error
-            );
-
-
-            return false;
-
-        }
-
-    },
-
 
     /* =====================================================
        FORMAT
