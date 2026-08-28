@@ -2149,6 +2149,13 @@ const BrainContext = {
 
             return {
 
+                /*
+                 * Extra context remains available at top level,
+                 * but can no longer overwrite authoritative
+                 * BrainContext fields below.
+                 */
+                ...safeExtra,
+
                 version:
                     this.version,
 
@@ -2246,9 +2253,7 @@ const BrainContext = {
                         .enteredAt,
 
                 builtAt:
-                    Date.now(),
-
-                ...safeExtra
+                    Date.now()
 
             };
 
@@ -2339,6 +2344,12 @@ const BrainContext = {
 
         return {
 
+            /*
+             * Caller-provided context is intentionally applied
+             * first. Authoritative runtime fields below always win.
+             */
+            ...safeExtra,
+
             version:
                 this.version,
 
@@ -2402,9 +2413,7 @@ const BrainContext = {
                     .enteredAt,
 
             builtAt:
-                Date.now(),
-
-            ...safeExtra
+                Date.now()
 
         };
 
