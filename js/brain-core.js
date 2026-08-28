@@ -881,37 +881,26 @@ const BrainCore = {
             null;
 
 
-        const actionType =
-            intent.actionType ||
-            intent.type ||
-            "unknown";
+        const safeIntent =
+            this.sanitizeValue(
+                intent
+            ) ||
+            {};
 
 
-        const target =
-            intent.target ||
-            intent.targetId ||
-            "unknown";
-
-
-        const operation =
-            intent.operation ||
-            intent.action ||
-            "general";
+        const intentFingerprint =
+            Object.keys(
+                safeIntent
+            )
+                .sort()
+                .map(
+                    key =>
+                        `${key}=${JSON.stringify(safeIntent[key])}`
+                )
+                .join("&");
 
 
         return [
-            String(
-                actionType
-            ),
-
-            String(
-                target
-            ),
-
-            String(
-                operation
-            ),
-
             String(
                 entityId ||
                 "no-entity"
@@ -920,13 +909,14 @@ const BrainCore = {
             String(
                 worldId ||
                 "no-world"
-            )
+            ),
+
+            intentFingerprint
         ].join(
             "::"
         );
 
     },
-
 
     /* =====================================================
        CONFIRMATION CLEANUP
