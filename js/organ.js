@@ -4575,6 +4575,11 @@ try{
             OrganSystem
         );
 
+       VAERO.register(
+    "organRegistry",
+    OrganSystem
+);
+
     }
 
 } catch(error){
@@ -4594,9 +4599,11 @@ try{
 window.OrganSystem =
     OrganSystem;
 
+window.OrganRegistry =
+    OrganSystem;
+
 
 /* =========================================================
    BOOT
 ========================================================= */
 
-OrganSystem.boot();
