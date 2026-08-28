@@ -851,18 +851,6 @@ const AppRegistry = (() => {
                 system:
                     isBuiltIn,
 
-                /*
-                 * Registry trust built-in uygulamalar dışında
-                 * verilmez.
-                 *
-                 * External runtime trust:
-                 *
-                 * ApplicationVerifier
-                 *        ↓
-                 * OrganSystem.setTrusted()
-                 *
-                 * zincirinin sorumluluğudur.
-                 */
                 trusted:
                     isBuiltIn,
 
@@ -878,10 +866,6 @@ const AppRegistry = (() => {
                         : app.installable ===
                             true,
 
-                /*
-                 * Built-in uygulamalar Store tarafından
-                 * güncellenmez. Engine build'i ile güncellenir.
-                 */
                 updateable:
                     isBuiltIn
                         ? false
@@ -959,10 +943,6 @@ const AppRegistry = (() => {
                 );
 
 
-            /* =================================================
-               EXISTING RECORD
-            ================================================= */
-
             if(
                 existingIndex >=
                     0
@@ -974,10 +954,6 @@ const AppRegistry = (() => {
                     ];
 
 
-                /*
-                 * Built-in manifest external kayıt tarafından
-                 * overwrite edilemez.
-                 */
                 if(
                     existing.system ===
                         true &&
@@ -997,11 +973,6 @@ const AppRegistry = (() => {
                 }
 
 
-                /*
-                 * External kayıt mevcutsa built-in bootstrap
-                 * aynı ID'yi devralabilir. Private token burada
-                 * authority'dir.
-                 */
                 if(isBuiltIn){
 
                     normalizedApp.system =
@@ -1061,10 +1032,6 @@ const AppRegistry = (() => {
 
             }
 
-
-            /* =================================================
-               NEW RECORD
-            ================================================= */
 
             this.apps.push(
                 normalizedApp
@@ -1193,9 +1160,6 @@ const AppRegistry = (() => {
             }
 
 
-            /*
-             * Built-in manifest catalogdan kapatılamaz.
-             */
             if(
                 app.system ===
                     true &&
@@ -1734,10 +1698,6 @@ const AppRegistry = (() => {
 
     const builtInApplications = [
 
-        /* =====================================================
-           IDENTITY
-        ===================================================== */
-
         {
             id:
                 "identity",
@@ -1777,10 +1737,6 @@ const AppRegistry = (() => {
         },
 
 
-        /* =====================================================
-           PROFILE
-        ===================================================== */
-
         {
             id:
                 "profile",
@@ -1819,10 +1775,6 @@ const AppRegistry = (() => {
             ]
         },
 
-
-        /* =====================================================
-           MEMORY
-        ===================================================== */
 
         {
             id:
@@ -1864,10 +1816,6 @@ const AppRegistry = (() => {
         },
 
 
-        /* =====================================================
-           TIMELINE
-        ===================================================== */
-
         {
             id:
                 "timeline",
@@ -1906,10 +1854,6 @@ const AppRegistry = (() => {
             ]
         },
 
-
-        /* =====================================================
-           BRIDGE
-        ===================================================== */
 
         {
             id:
@@ -1950,10 +1894,6 @@ const AppRegistry = (() => {
             ]
         },
 
-
-        /* =====================================================
-           EVOLUTION
-        ===================================================== */
 
         {
             id:
@@ -1996,10 +1936,6 @@ const AppRegistry = (() => {
         },
 
 
-        /* =====================================================
-           ORGANS
-        ===================================================== */
-
         {
             id:
                 "organs",
@@ -2041,10 +1977,6 @@ const AppRegistry = (() => {
         },
 
 
-        /* =====================================================
-           SETTINGS
-        ===================================================== */
-
         {
             id:
                 "settings",
@@ -2084,10 +2016,6 @@ const AppRegistry = (() => {
         },
 
 
-        /* =====================================================
-           DISCOVERY
-        ===================================================== */
-
         {
             id:
                 "discovery",
@@ -2126,10 +2054,6 @@ const AppRegistry = (() => {
             ]
         },
 
-
-        /* =====================================================
-           APPLICATIONS
-        ===================================================== */
 
         {
             id:
@@ -2172,10 +2096,6 @@ const AppRegistry = (() => {
             ]
         },
 
-
-        /* =====================================================
-           VAERO OFFICIAL APP
-        ===================================================== */
 
         {
             id:
@@ -2272,48 +2192,6 @@ try{
             AppRegistry
         );
 
-
-        /*
-         * Deprecated compatibility alias.
-         *
-         * Gerçek bir organRegistry servisi zaten varsa
-         * Application Registry onun üzerine yazılmaz.
-         */
-        let existingOrganRegistry =
-            null;
-
-
-        try{
-
-            if(
-                typeof VAERO.get ===
-                    "function"
-            ){
-
-                existingOrganRegistry =
-                    VAERO.get(
-                        "organRegistry"
-                    );
-
-            }
-
-        } catch(error){
-
-            existingOrganRegistry =
-                null;
-
-        }
-
-
-        if(!existingOrganRegistry){
-
-            VAERO.register(
-                "organRegistry",
-                AppRegistry
-            );
-
-        }
-
     }
 
 } catch(error){
@@ -2337,19 +2215,5 @@ if(
 
     window.AppRegistry =
         AppRegistry;
-
-
-    /*
-     * Legacy global yalnız gerçek OrganRegistry henüz yoksa
-     * sağlanır.
-     */
-    if(
-        !window.OrganRegistry
-    ){
-
-        window.OrganRegistry =
-            AppRegistry;
-
-    }
 
 }
