@@ -6,59 +6,176 @@ const BrainActionPolicy = {
         BLOCKED: "blocked"
     },
 
+    /*
+     * =====================================================
+     * ACTION RULES
+     * =====================================================
+     *
+     * SAFE
+     * Kullanıcıdan ayrıca onay almadan uygulanabilir.
+     * Kalıcı veya geri döndürülemez veri değişikliği yapmaz.
+     *
+     * CONFIRM
+     * Kalıcı veri oluşturur, değiştirir, kaldırır
+     * veya dış dünyaya etki eder.
+     *
+     * BLOCKED
+     * Brain'in doğrudan gerçekleştirmesine izin verilmez.
+     */
     rules: {
+
         /*
-         * Yalnızca ekran veya görünüm değiştirir.
+         * =================================================
+         * NAVIGATION / VIEW
+         * =================================================
          */
+
         "app:open": "safe",
         "view:change": "safe",
         "filter:apply": "safe",
         "search:run": "safe",
 
         /*
-         * Kullanıcının kendi cihazındaki geçici
-         * veya geri alınabilir durumlar.
+         * =================================================
+         * CREATE FLOWS
+         * =================================================
+         *
+         * Bunlar gerçek oluşturma işlemleri değildir.
+         * Yalnızca kullanıcıyı ilgili oluşturma
+         * arayüzüne götürür.
          */
+
+        "world:create:flow": "safe",
+        "entity:create:flow": "safe",
+
+        /*
+         * =================================================
+         * EDIT FLOWS
+         * =================================================
+         *
+         * Yalnızca düzenleme ekranını açar.
+         * Veri henüz değiştirilmez.
+         */
+
+        "profile:edit:flow": "safe",
+        "identity:edit:flow": "safe",
+        "settings:edit:flow": "safe",
+        "field:edit:flow": "safe",
+
+        /*
+         * =================================================
+         * LOCAL / REVERSIBLE STATE
+         * =================================================
+         */
+
         "draft:create": "safe",
         "draft:update": "safe",
+
         "session:save": "safe",
+
         "resume:save": "safe",
         "resume:restore": "safe",
 
         /*
-         * Kalıcı veri oluşturur veya değiştirir.
+         * =================================================
+         * PERSISTENT CREATION
+         * =================================================
+         *
+         * Gerçek kalıcı nesne oluşturma işlemleri.
          */
+
         "world:create": "confirm",
         "entity:create": "confirm",
-        "field:update": "confirm",
-        "profile:update": "confirm",
-        "identity:verify": "confirm",
         "bridge:create": "confirm",
-        "record:restore": "confirm",
 
         /*
-         * Dışarıya etki eden veya veri kaldıran işlemler.
+         * =================================================
+         * PERSISTENT UPDATE
+         * =================================================
          */
-        "content:publish": "confirm",
-        "message:send": "confirm",
+
+        "field:update": "confirm",
+        "profile:update": "confirm",
+        "identity:update": "confirm",
+        "settings:update": "confirm",
+
+        "identity:verify": "confirm",
+
+        /*
+         * =================================================
+         * RESTORE
+         * =================================================
+         */
+
+        "record:restore": "confirm",
+        "world:restore": "confirm",
+        "entity:restore": "confirm",
+
+        /*
+         * =================================================
+         * DELETE
+         * =================================================
+         */
+
         "record:delete": "confirm",
         "world:delete": "confirm",
         "entity:delete": "confirm",
+
+        /*
+         * =================================================
+         * EXTERNAL EFFECT
+         * =================================================
+         */
+
+        "content:publish": "confirm",
+        "message:send": "confirm",
         "form:submit": "confirm",
+
+        /*
+         * Satın alma akışının kullanıcı tarafından
+         * nihai olarak tamamlanması onay gerektirir.
+         */
         "purchase:complete": "confirm",
 
         /*
+         * =================================================
+         * BLOCKED
+         * =================================================
+         *
          * Brain tarafından doğrudan uygulanamaz.
          */
+
         "payment:execute": "blocked",
+
         "identity:transfer": "blocked",
         "ownership:change": "blocked",
+
         "credential:export": "blocked",
-        "security:disable": "blocked"
+        "credential:reveal": "blocked",
+
+        "security:disable": "blocked",
+        "security:bypass": "blocked"
     },
+
+    /*
+     * =====================================================
+     * BASIC POLICY HELPERS
+     * =====================================================
+     */
 
     check(actionType){
 
+        if(!actionType){
+            return this.levels.CONFIRM;
+        }
+
+        /*
+         * Bilinmeyen işlem SAFE kabul edilmez.
+         *
+         * Fail-closed yaklaşımı:
+         * Yeni bir action eklenir fakat Policy'ye
+         * tanıtılması unutulursa otomatik çalışmaz.
+         */
         return (
             this.rules[actionType] ||
             this.levels.CONFIRM
@@ -93,58 +210,205 @@ const BrainActionPolicy = {
 
     },
 
+    /*
+     * =====================================================
+     * INTENT -> ACTION TYPE
+     * =====================================================
+     *
+     * BrainIntent kullanıcının ne istediğini söyler.
+     *
+     * Policy burada o isteğin sistem açısından
+     * hangi güvenlik sınıfına ait olduğunu belirler.
+     */
+
     resolveIntentAction(intent){
 
-        if(!intent){
+        if(
+            !intent ||
+            typeof intent !== "object"
+        ){
             return null;
         }
 
-        if(intent.type === "navigate"){
+        /*
+         * =================================================
+         * NAVIGATION
+         * =================================================
+         */
+
+        if(
+            intent.type ===
+                "navigate"
+        ){
             return "app:open";
         }
 
-        if(intent.type === "resume:save"){
+        /*
+         * =================================================
+         * RESUME
+         * =================================================
+         */
+
+        if(
+            intent.type ===
+                "resume:save"
+        ){
             return "resume:save";
         }
 
-        if(intent.type === "resume:restore"){
+        if(
+            intent.type ===
+                "resume:restore"
+        ){
             return "resume:restore";
         }
 
-        if(intent.type === "create"){
+        /*
+         * =================================================
+         * CREATE
+         * =================================================
+         *
+         * BrainActions şu anda gerçek dünya veya
+         * varlık oluşturmuyor.
+         *
+         * Yalnızca oluşturma arayüzünü açıyor.
+         *
+         * Bu nedenle gerçek:
+         *
+         * world:create
+         * entity:create
+         *
+         * yerine FLOW action kullanıyoruz.
+         */
+
+        if(
+            intent.type ===
+                "create"
+        ){
+
+            if(
+                intent.target ===
+                    "world"
+            ){
+                return "world:create:flow";
+            }
+
+            if(
+                intent.target ===
+                    "entity"
+            ){
+                return "entity:create:flow";
+            }
 
             /*
-             * BrainActions bu intent ile yalnızca
-             * oluşturma ekranını açar. Formu kendi
-             * başına göndermez.
+             * Tanımsız create hedefini app:open
+             * olarak güvenli varsaymıyoruz.
              */
-            return "app:open";
+            return null;
 
         }
 
-        if(intent.type === "request"){
+        /*
+         * =================================================
+         * REQUEST
+         * =================================================
+         */
 
-            if(intent.operation === "search"){
+        if(
+            intent.type ===
+                "request"
+        ){
+
+            const operation =
+                intent.operation;
+
+            const target =
+                intent.target;
+
+            /*
+             * ---------------------------------------------
+             * SEARCH
+             * ---------------------------------------------
+             */
+
+            if(
+                operation ===
+                    "search"
+            ){
                 return "search:run";
             }
 
-            if(intent.operation === "edit"){
+            /*
+             * ---------------------------------------------
+             * EDIT
+             * ---------------------------------------------
+             *
+             * BrainActions mevcut yapıda gerçek
+             * güncelleme yapmıyor.
+             *
+             * Sadece düzenleme ekranını açıyor.
+             */
+
+            if(
+                operation ===
+                    "edit"
+            ){
+
+                if(
+                    target ===
+                        "profile"
+                ){
+                    return "profile:edit:flow";
+                }
+
+                if(
+                    target ===
+                        "identity"
+                ){
+                    return "identity:edit:flow";
+                }
+
+                if(
+                    target ===
+                        "settings"
+                ){
+                    return "settings:edit:flow";
+                }
 
                 /*
-                 * Şu aşamada yalnızca düzenleme
-                 * ekranına yönlendirilir.
+                 * Desteklenmeyen edit hedefini
+                 * güvenli kabul etmiyoruz.
                  */
-                return "app:open";
+                return null;
 
             }
 
-            if(intent.operation === "delete"){
+            /*
+             * ---------------------------------------------
+             * DELETE
+             * ---------------------------------------------
+             */
 
-                if(intent.target === "world"){
+            if(
+                operation ===
+                    "delete"
+            ){
+
+                if(
+                    target ===
+                        "world" ||
+                    target ===
+                        "worlds"
+                ){
                     return "world:delete";
                 }
 
-                if(intent.target === "entities"){
+                if(
+                    target ===
+                        "entity" ||
+                    target ===
+                        "entities"
+                ){
                     return "entity:delete";
                 }
 
@@ -152,62 +416,193 @@ const BrainActionPolicy = {
 
             }
 
-            if(intent.operation === "restore"){
+            /*
+             * ---------------------------------------------
+             * RESTORE
+             * ---------------------------------------------
+             */
+
+            if(
+                operation ===
+                    "restore"
+            ){
+
+                if(
+                    target ===
+                        "world" ||
+                    target ===
+                        "worlds"
+                ){
+                    return "world:restore";
+                }
+
+                if(
+                    target ===
+                        "entity" ||
+                    target ===
+                        "entities"
+                ){
+                    return "entity:restore";
+                }
+
                 return "record:restore";
+
             }
 
         }
 
+        /*
+         * question / chat / clarify / empty
+         *
+         * sistem işlemi değildir.
+         */
         return null;
 
     },
 
+    /*
+     * =====================================================
+     * ACTION EVALUATION
+     * =====================================================
+     */
+
     evaluate(action){
 
         const actionType =
-            action?.type || "";
+            String(
+                action?.type || ""
+            ).trim();
+
+        if(!actionType){
+
+            return {
+                allowed: false,
+
+                requiresConfirmation:
+                    false,
+
+                blocked:
+                    false,
+
+                permission:
+                    null,
+
+                action:
+                    action || null,
+
+                reason:
+                    "Geçerli action type bulunamadı."
+            };
+
+        }
 
         const permission =
-            this.check(actionType);
+            this.check(
+                actionType
+            );
+
+        const allowed =
+            permission ===
+                this.levels.SAFE;
+
+        const requiresConfirmation =
+            permission ===
+                this.levels.CONFIRM;
+
+        const blocked =
+            permission ===
+                this.levels.BLOCKED;
 
         return {
-            allowed:
-                permission ===
-                this.levels.SAFE,
-
-            requiresConfirmation:
-                permission ===
-                this.levels.CONFIRM,
-
-            blocked:
-                permission ===
-                this.levels.BLOCKED,
-
+            allowed,
+            requiresConfirmation,
+            blocked,
             permission,
-            action
+            action,
+
+            reason:
+                blocked
+                    ? "Bu işlem Brain tarafından uygulanamaz."
+                    : requiresConfirmation
+                        ? "Bu işlem kullanıcı onayı gerektiriyor."
+                        : null
         };
 
     },
 
+    /*
+     * =====================================================
+     * INTENT EVALUATION
+     * =====================================================
+     */
+
     evaluateIntent(intent){
+
+        if(
+            !intent ||
+            typeof intent !== "object"
+        ){
+
+            return {
+                allowed: false,
+
+                requiresConfirmation:
+                    false,
+
+                blocked:
+                    false,
+
+                permission:
+                    null,
+
+                actionType:
+                    null,
+
+                intent:
+                    intent || null,
+
+                executable:
+                    false,
+
+                reason:
+                    "Geçerli intent bulunamadı."
+            };
+
+        }
 
         const actionType =
             this.resolveIntentAction(
                 intent
             );
 
+        /*
+         * Chat, question, clarify veya henüz
+         * bağlı action bulunmayan intent.
+         */
         if(!actionType){
 
             return {
                 allowed: false,
-                requiresConfirmation: false,
-                blocked: false,
-                permission: null,
-                actionType: null,
+
+                requiresConfirmation:
+                    false,
+
+                blocked:
+                    false,
+
+                permission:
+                    null,
+
+                actionType:
+                    null,
+
                 intent,
-                executable: false,
+
+                executable:
+                    false,
+
                 reason:
-                    "Bu intent için sistem işlemi tanımlı değil."
+                    "Bu intent için doğrudan sistem işlemi tanımlı değil."
             };
 
         }
@@ -222,15 +617,31 @@ const BrainActionPolicy = {
 
         return {
             ...result,
+
             actionType,
             intent,
-            executable: true,
+
+            /*
+             * executable:
+             *
+             * Bu action sistem tarafından TANINIYOR
+             * anlamına gelir.
+             *
+             * Hemen çalışıp çalışamayacağına
+             * allowed karar verir.
+             *
+             * BrainCore zaten:
+             *
+             * policy.allowed &&
+             * policy.executable
+             *
+             * şartını kullanıyor.
+             */
+            executable:
+                true,
+
             reason:
-                result.blocked
-                    ? "Bu işlem Brain tarafından uygulanamaz."
-                    : result.requiresConfirmation
-                        ? "Bu işlem kullanıcı onayı gerektiriyor."
-                        : null
+                result.reason
         };
 
     }
