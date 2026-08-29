@@ -2,6 +2,12 @@ const BrainActions = {
 
     lastResult: null,
 
+    /*
+     * =====================================================
+     * SERVICES
+     * =====================================================
+     */
+
     getActions(){
 
         return (
@@ -16,47 +22,130 @@ const BrainActions = {
 
     },
 
+    getEngine(){
+
+        return (
+            VAERO.engine ||
+            null
+        );
+
+    },
+
+    /*
+     * =====================================================
+     * RESULT
+     * =====================================================
+     */
+
     setResult({
         success,
         intent,
         action,
-        reason = null
+        actionType = null,
+        reason = null,
+        meta = null
     }){
 
         this.lastResult = {
+
             success:
                 Boolean(success),
 
             intent:
                 intent || null,
 
+            /*
+             * Gerçekte çağrılan Actions
+             * operasyonunun adı.
+             *
+             * Örnek:
+             * profile:open
+             */
             action:
                 action || null,
+
+            /*
+             * BrainActionPolicy tarafından
+             * değerlendirilen güvenlik action'ı.
+             *
+             * Örnek:
+             * profile:edit:flow
+             */
+            actionType:
+                actionType || null,
 
             reason:
                 reason || null,
 
+            meta:
+                (
+                    meta &&
+                    typeof meta ===
+                        "object"
+                )
+                    ? meta
+                    : null,
+
             executedAt:
                 Date.now()
+
         };
 
-        return Boolean(success);
+        return Boolean(
+            success
+        );
 
     },
 
-    execute(intent, context = {}){
+    fail(
+        intent,
+        reason,
+        action = null,
+        actionType = null,
+        meta = null
+    ){
+
+        return this.setResult({
+
+            success:
+                false,
+
+            intent,
+
+            action,
+
+            actionType,
+
+            reason,
+
+            meta
+
+        });
+
+    },
+
+    /*
+     * =====================================================
+     * EXECUTION ENTRY
+     * =====================================================
+     */
+
+    execute(
+        intent,
+        context = {}
+    ){
 
         if(
             !intent ||
-            typeof intent !== "object"
+            typeof intent !==
+                "object"
         ){
-            return this.setResult({
-                success: false,
+
+            return this.fail(
                 intent,
-                action: null,
-                reason:
-                    "Geçerli intent bulunamadı."
-            });
+                "Geçerli intent bulunamadı."
+            );
+
         }
 
         const actions =
@@ -64,86 +153,117 @@ const BrainActions = {
 
         if(!actions){
 
-            return this.setResult({
-                success: false,
+            return this.fail(
                 intent,
-                action: null,
-                reason:
-                    "Actions servisi bulunamadı."
-            });
+                "Actions servisi bulunamadı."
+            );
 
         }
 
-        switch(intent.type){
+        try {
 
-            case "navigate":
+            switch(
+                intent.type
+            ){
 
-                return this.executeNavigation(
-                    intent,
-                    actions
-                );
+                case "navigate":
 
-            case "create":
+                    return this
+                        .executeNavigation(
+                            intent,
+                            actions
+                        );
 
-                return this.executeCreate(
-                    intent,
-                    actions
-                );
+                case "create":
 
-            case "resume:save":
+                    return this
+                        .executeCreate(
+                            intent,
+                            actions
+                        );
 
-                return this.setResult({
-                    success:
-                        actions.saveBrainResumePoint(
-                            intent.raw ||
-                            context.message ||
-                            "Devam noktası"
-                        ),
+                case "resume:save":
 
-                    intent,
-                    action:
-                        "resume:save"
-                });
+                    return this
+                        .executeResumeSave(
+                            intent,
+                            context,
+                            actions
+                        );
 
-            case "resume:restore":
+                case "resume:restore":
 
-                return this.setResult({
-                    success:
-                        actions.restoreBrainResumePoint(),
+                    return this
+                        .executeResumeRestore(
+                            intent,
+                            actions
+                        );
 
-                    intent,
-                    action:
-                        "resume:restore"
-                });
+                case "request":
 
-            case "request":
+                    return this
+                        .executeRequest(
+                            intent,
+                            actions
+                        );
 
-                return this.executeRequest(
-                    intent,
-                    actions
-                );
+                default:
 
-            default:
-
-                return this.setResult({
-                    success: false,
-                    intent,
-                    action: null,
-                    reason:
+                    return this.fail(
+                        intent,
                         "Bu intent doğrudan sistem işlemi gerektirmiyor."
-                });
+                    );
+
+            }
+
+        } catch(error){
+
+            console.error(
+                "Brain action execution failed:",
+                error
+            );
+
+            return this.fail(
+                intent,
+                "İşlem uygulanırken sistem hatası oluştu.",
+                null,
+                null,
+                {
+                    error:
+                        true,
+
+                    message:
+                        String(
+                            error?.message ||
+                            error ||
+                            "Unknown error"
+                        )
+                }
+            );
 
         }
 
     },
 
-    executeNavigation(intent, actions){
+    /*
+     * =====================================================
+     * NAVIGATION
+     * =====================================================
+     */
+
+    executeNavigation(
+        intent,
+        actions
+    ){
 
         const target =
             intent.target;
 
-        let success = false;
-        let action = null;
+        let success =
+            false;
+
+        let action =
+            null;
 
         switch(target){
 
@@ -169,21 +289,33 @@ const BrainActions = {
 
             case "world": {
 
+                const engine =
+                    this.getEngine();
+
                 const currentWorld =
-                    VAERO.engine
-                        .currentWorld;
+                    engine
+                        ?.currentWorld ||
+                    null;
 
-                success =
-                    currentWorld
-                        ? actions.openWorld(
+                if(currentWorld?.id){
+
+                    success =
+                        actions.openWorld(
                             currentWorld.id
-                        )
-                        : actions.openWorlds();
+                        );
 
-                action =
-                    currentWorld
-                        ? "world:open"
-                        : "worlds:open";
+                    action =
+                        "world:open";
+
+                }else{
+
+                    success =
+                        actions.openWorlds();
+
+                    action =
+                        "worlds:open";
+
+                }
 
                 break;
 
@@ -265,117 +397,386 @@ const BrainActions = {
 
             default:
 
-                return this.setResult({
-                    success: false,
+                return this.fail(
                     intent,
-                    action: null,
-                    reason:
-                        `Bilinmeyen navigasyon hedefi: ${target}`
-                });
+                    `Bilinmeyen navigasyon hedefi: ${target}`,
+                    null,
+                    "app:open"
+                );
 
         }
 
         return this.setResult({
+
             success,
+
             intent,
+
             action,
+
+            actionType:
+                "app:open",
+
             reason:
                 success
                     ? null
-                    : "Hedef ekran açılamadı."
+                    : "Hedef ekran açılamadı.",
+
+            meta: {
+                target
+            }
+
         });
 
     },
 
-    openEntityAwarePage(page, actions){
+    /*
+     * =====================================================
+     * ENTITY-AWARE NAVIGATION
+     * =====================================================
+     */
+
+    openEntityAwarePage(
+        page,
+        actions
+    ){
+
+        const engine =
+            this.getEngine();
+
+        if(!engine){
+            return false;
+        }
 
         const openedEntity =
-            VAERO.engine
-                .currentOpenedEntity;
+            engine
+                .currentOpenedEntity ||
+            null;
 
         const rootEntity =
-            VAERO.engine
-                .rootEntity;
+            engine
+                .rootEntity ||
+            null;
 
         /*
-         * Seçili özel bir varlık varsa onun
-         * Kimlik veya Profil ekranını aç.
+         * Özel bir varlık açıksa Kimlik / Profil
+         * işlemi o varlığın üzerinde yürür.
          */
         if(
             openedEntity &&
+            openedEntity.id &&
             openedEntity.id !==
                 rootEntity?.id
         ){
-            return actions.openEntityPage(
-                page
-            );
+
+            return actions
+                .openEntityPage(
+                    page
+                );
+
         }
 
-        return page === "identity"
-            ? actions.openIdentity()
-            : actions.openProfile();
+        /*
+         * Root kullanıcı için mevcut özel
+         * Actions metodları korunur.
+         */
+        if(
+            page ===
+                "identity"
+        ){
+
+            return actions
+                .openIdentity();
+
+        }
+
+        if(
+            page ===
+                "profile"
+        ){
+
+            return actions
+                .openProfile();
+
+        }
+
+        return false;
 
     },
 
-    executeCreate(intent, actions){
+    /*
+     * =====================================================
+     * CREATE FLOWS
+     * =====================================================
+     *
+     * ÖNEMLİ:
+     *
+     * Bu fonksiyon gerçek world/entity
+     * oluşturmaz.
+     *
+     * Yalnızca oluşturma akışını açar.
+     *
+     * Bu nedenle Policy tarafında:
+     *
+     * world:create:flow
+     * entity:create:flow
+     *
+     * SAFE'dir.
+     *
+     * Gerçek:
+     *
+     * world:create
+     * entity:create
+     *
+     * işlemleri ayrı olacak ve CONFIRM
+     * gerektirecektir.
+     */
 
-        if(intent.target === "world"){
+    executeCreate(
+        intent,
+        actions
+    ){
+
+        if(
+            intent.target ===
+                "world"
+        ){
+
+            const success =
+                actions.openCreate();
 
             return this.setResult({
-                success:
-                    actions.openCreate(),
+
+                success,
 
                 intent,
+
                 action:
-                    "create:open"
+                    "create:open",
+
+                actionType:
+                    "world:create:flow",
+
+                reason:
+                    success
+                        ? null
+                        : "Dünya oluşturma ekranı açılamadı.",
+
+                meta: {
+                    target:
+                        "world",
+
+                    flow:
+                        true,
+
+                    redirected:
+                        false
+                }
+
             });
 
         }
 
-        if(intent.target === "entity"){
+        if(
+            intent.target ===
+                "entity"
+        ){
+
+            const engine =
+                this.getEngine();
 
             const currentWorld =
-                VAERO.engine
-                    .currentWorld;
+                engine
+                    ?.currentWorld ||
+                null;
 
-            if(!currentWorld){
+            /*
+             * Varlığın hangi dünyaya ait olacağı
+             * bilinmeden create akışı başlamaz.
+             *
+             * Brain bunun yerine kullanıcıyı
+             * Dünyalar ekranına götürür.
+             */
+            if(
+                !currentWorld ||
+                !currentWorld.id
+            ){
+
+                const success =
+                    actions.openWorlds();
 
                 return this.setResult({
-                    success:
-                        actions.openWorlds(),
+
+                    success,
 
                     intent,
+
                     action:
                         "worlds:open",
 
+                    actionType:
+                        "entity:create:flow",
+
                     reason:
-                        "Önce varlığın ekleneceği dünya seçilmeli."
+                        success
+                            ? "Önce varlığın ekleneceği dünya seçilmeli."
+                            : "Dünya seçimi ekranı açılamadı.",
+
+                    meta: {
+                        target:
+                            "entity",
+
+                        flow:
+                            true,
+
+                        redirected:
+                            true,
+
+                        redirectTarget:
+                            "worlds",
+
+                        requiresWorld:
+                            true
+                    }
+
                 });
 
             }
 
+            const success =
+                actions
+                    .startEntityCreate();
+
             return this.setResult({
-                success:
-                    actions.startEntityCreate(),
+
+                success,
 
                 intent,
+
                 action:
-                    "entity:create:first"
+                    "entity:create:flow",
+
+                actionType:
+                    "entity:create:flow",
+
+                reason:
+                    success
+                        ? null
+                        : "Varlık oluşturma akışı başlatılamadı.",
+
+                meta: {
+                    target:
+                        "entity",
+
+                    flow:
+                        true,
+
+                    redirected:
+                        false,
+
+                    worldId:
+                        currentWorld.id
+                }
+
             });
 
         }
 
-        return this.setResult({
-            success: false,
+        return this.fail(
             intent,
-            action: null,
+            "Oluşturulacak yapı anlaşılamadı."
+        );
+
+    },
+
+    /*
+     * =====================================================
+     * RESUME
+     * =====================================================
+     */
+
+    executeResumeSave(
+        intent,
+        context,
+        actions
+    ){
+
+        const note =
+            intent.raw ||
+            context?.message ||
+            "Devam noktası";
+
+        const success =
+            actions
+                .saveBrainResumePoint(
+                    note
+                );
+
+        return this.setResult({
+
+            success,
+
+            intent,
+
+            action:
+                "resume:save",
+
+            actionType:
+                "resume:save",
+
             reason:
-                "Oluşturulacak yapı anlaşılamadı."
+                success
+                    ? null
+                    : "Devam noktası kaydedilemedi.",
+
+            meta: {
+                note
+            }
+
         });
 
     },
 
-    executeRequest(intent, actions){
+    executeResumeRestore(
+        intent,
+        actions
+    ){
+
+        const success =
+            actions
+                .restoreBrainResumePoint();
+
+        return this.setResult({
+
+            success,
+
+            intent,
+
+            action:
+                "resume:restore",
+
+            actionType:
+                "resume:restore",
+
+            reason:
+                success
+                    ? null
+                    : "Kaydedilmiş devam noktası açılamadı."
+
+        });
+
+    },
+
+    /*
+     * =====================================================
+     * REQUEST
+     * =====================================================
+     */
+
+    executeRequest(
+        intent,
+        actions
+    ){
 
         const target =
             intent.target;
@@ -384,113 +785,337 @@ const BrainActions = {
             intent.operation;
 
         /*
-         * Brain şu aşamada veri üzerinde sessizce
-         * değişiklik veya silme yapmaz.
+         * =================================================
+         * DEFENCE IN DEPTH
+         * =================================================
+         *
+         * Normal akışta delete / restore zaten
+         * BrainActionPolicy tarafından CONFIRM
+         * olarak durdurulur ve bu fonksiyona
+         * ulaşmaz.
+         *
+         * Fakat BrainActions başka bir katmandan
+         * yanlışlıkla doğrudan çağrılırsa burada
+         * da kalıcı işlem çalıştırmıyoruz.
          */
+
         if(
-            operation === "delete" ||
-            operation === "restore"
+            operation ===
+                "delete"
         ){
-            return this.setResult({
-                success: false,
+
+            return this.fail(
                 intent,
-                action: null,
-                reason:
-                    "Bu işlem kullanıcı onayı gerektiriyor."
-            });
+                "Silme işlemi kullanıcı onayı olmadan uygulanamaz.",
+                null,
+                this.resolveDeleteActionType(
+                    target
+                )
+            );
+
         }
 
-        if(operation === "edit"){
+        if(
+            operation ===
+                "restore"
+        ){
 
-            if(target === "profile"){
+            return this.fail(
+                intent,
+                "Geri yükleme işlemi kullanıcı onayı olmadan uygulanamaz.",
+                null,
+                this.resolveRestoreActionType(
+                    target
+                )
+            );
+
+        }
+
+        /*
+         * =================================================
+         * EDIT FLOW
+         * =================================================
+         */
+
+        if(
+            operation ===
+                "edit"
+        ){
+
+            if(
+                target ===
+                    "profile"
+            ){
+
+                const success =
+                    this.openEntityAwarePage(
+                        "profile",
+                        actions
+                    );
 
                 return this.setResult({
-                    success:
-                        this.openEntityAwarePage(
+
+                    success,
+
+                    intent,
+
+                    action:
+                        "profile:open",
+
+                    actionType:
+                        "profile:edit:flow",
+
+                    reason:
+                        success
+                            ? null
+                            : "Profil düzenleme ekranı açılamadı.",
+
+                    meta: {
+                        target:
                             "profile",
-                            actions
-                        ),
 
-                    intent,
-                    action:
-                        "profile:open"
+                        flow:
+                            true
+                    }
+
                 });
 
             }
 
-            if(target === "identity"){
+            if(
+                target ===
+                    "identity"
+            ){
+
+                const success =
+                    this.openEntityAwarePage(
+                        "identity",
+                        actions
+                    );
 
                 return this.setResult({
-                    success:
-                        this.openEntityAwarePage(
+
+                    success,
+
+                    intent,
+
+                    action:
+                        "identity:open",
+
+                    actionType:
+                        "identity:edit:flow",
+
+                    reason:
+                        success
+                            ? null
+                            : "Kimlik ekranı açılamadı.",
+
+                    meta: {
+                        target:
                             "identity",
-                            actions
-                        ),
 
-                    intent,
-                    action:
-                        "identity:open"
+                        flow:
+                            true
+                    }
+
                 });
 
             }
 
-            if(target === "settings"){
+            if(
+                target ===
+                    "settings"
+            ){
+
+                const success =
+                    actions.openEntityPage(
+                        "settings"
+                    );
 
                 return this.setResult({
-                    success:
-                        actions.openEntityPage(
-                            "settings"
-                        ),
+
+                    success,
 
                     intent,
+
                     action:
-                        "entity:settings"
+                        "entity:settings",
+
+                    actionType:
+                        "settings:edit:flow",
+
+                    reason:
+                        success
+                            ? null
+                            : "Ayarlar ekranı açılamadı.",
+
+                    meta: {
+                        target:
+                            "settings",
+
+                        flow:
+                            true
+                    }
+
                 });
 
             }
+
+            return this.fail(
+                intent,
+                "Bu alan için güvenli düzenleme akışı tanımlı değil."
+            );
 
         }
 
-        if(operation === "search"){
+        /*
+         * =================================================
+         * SEARCH
+         * =================================================
+         */
+
+        if(
+            operation ===
+                "search"
+        ){
 
             if(
                 target === "world" ||
                 target === "worlds"
             ){
 
+                const success =
+                    actions.openWorlds();
+
                 return this.setResult({
-                    success:
-                        actions.openWorlds(),
+
+                    success,
 
                     intent,
+
                     action:
-                        "worlds:open"
+                        "worlds:open",
+
+                    actionType:
+                        "search:run",
+
+                    reason:
+                        success
+                            ? null
+                            : "Dünyalar ekranı açılamadı.",
+
+                    meta: {
+                        target:
+                            "worlds",
+
+                        searchFlow:
+                            true
+                    }
+
                 });
 
             }
 
-            if(target === "entities"){
+            if(
+                target ===
+                    "entities"
+            ){
+
+                const success =
+                    actions.openEntities();
 
                 return this.setResult({
-                    success:
-                        actions.openEntities(),
+
+                    success,
 
                     intent,
+
                     action:
-                        "entities:open"
+                        "entities:open",
+
+                    actionType:
+                        "search:run",
+
+                    reason:
+                        success
+                            ? null
+                            : "Varlıklar ekranı açılamadı.",
+
+                    meta: {
+                        target:
+                            "entities",
+
+                        searchFlow:
+                            true
+                    }
+
                 });
 
             }
+
+            return this.fail(
+                intent,
+                "Bu alan için arama akışı henüz bağlı değil.",
+                null,
+                "search:run"
+            );
 
         }
 
-        return this.setResult({
-            success: false,
+        return this.fail(
             intent,
-            action: null,
-            reason:
-                "İstek anlaşıldı fakat bağlı bir sistem işlemi bulunmuyor."
-        });
+            "İstek anlaşıldı fakat bağlı bir sistem işlemi bulunmuyor."
+        );
+
+    },
+
+    /*
+     * =====================================================
+     * POLICY ACTION HELPERS
+     * =====================================================
+     */
+
+    resolveDeleteActionType(
+        target
+    ){
+
+        if(
+            target === "world" ||
+            target === "worlds"
+        ){
+            return "world:delete";
+        }
+
+        if(
+            target === "entity" ||
+            target === "entities"
+        ){
+            return "entity:delete";
+        }
+
+        return "record:delete";
+
+    },
+
+    resolveRestoreActionType(
+        target
+    ){
+
+        if(
+            target === "world" ||
+            target === "worlds"
+        ){
+            return "world:restore";
+        }
+
+        if(
+            target === "entity" ||
+            target === "entities"
+        ){
+            return "entity:restore";
+        }
+
+        return "record:restore";
 
     }
 
