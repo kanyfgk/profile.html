@@ -2336,33 +2336,22 @@ const Actions = {
 
         this.saveBrainState();
 
-        const handled =
-            this.dispatchBrainIntent(
-                text
-            );
+        this.renderBrainHistory();
 
-        if(!handled){
+const panel =
+    document.getElementById(
+        "brainPanel"
+    );
 
-            this.renderBrainHistory();
+if(panel){
+    panel.classList.remove(
+        "is-compact"
+    );
 
-            const panel =
-                document.getElementById(
-                    "brainPanel"
-                );
-
-            if(panel){
-
-                panel.classList.remove(
-                    "is-compact"
-                );
-
-                panel.classList.add(
-                    "is-expanded"
-                );
-
-            }
-
-        }
+    panel.classList.add(
+        "is-expanded"
+    );
+}
 
         return true;
 
