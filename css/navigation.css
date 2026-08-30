@@ -1814,7 +1814,7 @@ and
 ========================================================= */
 
 .bottom-nav{
-    pointer-events:auto;
+    pointer-events:none;
 }
 
 .nav-btn,
