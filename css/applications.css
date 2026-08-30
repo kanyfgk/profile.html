@@ -616,10 +616,16 @@
     min-height:0;
 
     padding:
-        0
-        3px
-        4px
-        0;
+    0
+    3px
+    calc(
+        84px +
+        env(
+            safe-area-inset-bottom,
+            0px
+        )
+    )
+    0;
 
     overflow-x:hidden;
     overflow-y:auto;
@@ -2043,11 +2049,19 @@
     ----------------------------------------------------- */
 
     .applications-scroll{
-        padding-right:0;
+    padding-right:0;
 
-        scrollbar-width:none;
-    }
+    padding-bottom:
+        calc(
+            76px +
+            env(
+                safe-area-inset-bottom,
+                0px
+            )
+        );
 
+    scrollbar-width:none;
+}
     .applications-scroll::-webkit-scrollbar{
         display:none;
     }
