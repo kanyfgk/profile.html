@@ -418,15 +418,16 @@ const Components = {
     getApplications(){
 
         const registry =
-            this.getService(
-                "appRegistry"
-            ) ||
-            window.AppRegistry ||
-            this.getService(
-                "organRegistry"
-            ) ||
-            window.OrganRegistry ||
-            null;
+    this.getService(
+        "appRegistry"
+    ) ||
+    (
+        typeof window !==
+            "undefined"
+            ? window.AppRegistry ||
+              null
+            : null
+    );
 
 
         if(
