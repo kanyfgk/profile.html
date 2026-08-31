@@ -2357,13 +2357,11 @@ const SettingsApp = {
         ){
 
             return UI.appHeader(
-                this.escapeHTML(
-                    entity?.name ||
-                    "VAERO Varlığı"
-                ),
-                "SETTINGS",
-                "⚙️"
-            );
+    entity?.name ||
+    "VAERO Varlığı",
+    "SETTINGS",
+    " "
+);
 
         }
 
