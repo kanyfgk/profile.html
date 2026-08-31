@@ -2089,12 +2089,10 @@ const ProfileApp = {
         ){
 
             return UI.appHeader(
-                this.escapeHTML(
-                    profile.displayName
-                ),
-                "PROFILE",
-                "◉"
-            );
+    profile.displayName,
+    "PROFILE",
+    "◉"
+);
 
         }
 
