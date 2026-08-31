@@ -3623,7 +3623,8 @@ const VaeroApp = {
                 <button
                     type="button"
                     class="vaero-commerce-id-btn"
-                    onclick="VaeroApp.openView('care')"
+                    data-vaero-command="view"
+data-view="care"
                     aria-label="VAERO Care"
                 >
                     VAERO
@@ -3662,7 +3663,8 @@ const VaeroApp = {
                             ? "is-active"
                             : ""
                     }"
-                    onclick="VaeroApp.openView('discover')"
+                    data-vaero-command="view"
+data-view="discover"
                     aria-pressed="${
                         this.activeView ===
                             "discover" ||
@@ -3684,7 +3686,8 @@ const VaeroApp = {
                             ? "is-active"
                             : ""
                     }"
-                    onclick="VaeroApp.openView('vision')"
+                    data-vaero-command="view"
+data-view="vision"
                     aria-pressed="${
                         this.activeView ===
                             "vision"
@@ -3789,9 +3792,10 @@ const VaeroApp = {
                                 <button
                                     type="button"
                                     class="vaero-cart-item"
-                                    onclick="VaeroApp.openProduct('${this.escapeHTML(
-                                        product.id
-                                    )}')"
+                                    data-vaero-command="product"
+data-product-id="${this.escapeHTML(
+    product.id
+)}"
                                 >
 
                                     <div class="vaero-cart-item-copy">
@@ -3874,7 +3878,8 @@ const VaeroApp = {
 
                 <button
                     type="button"
-                    onclick="VaeroApp.openProduct('device')"
+                    data-vaero-command="product"
+data-product-id="device"
                 >
                     Cihazı gör
                 </button>
@@ -3972,7 +3977,7 @@ const VaeroApp = {
 
                 <button
                     type="button"
-                    onclick="VaeroApp.backToDiscover()"
+                    data-vaero-command="back-discover"
                 >
                     ← Koleksiyon
                 </button>
@@ -4114,9 +4119,10 @@ const VaeroApp = {
                         ? `
                             <button
                                 type="button"
-                                onclick="VaeroApp.startProductPurchase('${this.escapeHTML(
-                                    product.id
-                                )}')"
+                                data-vaero-command="purchase"
+data-product-id="${this.escapeHTML(
+    product.id
+)}"
                             >
                                 Satın Al
                             </button>
@@ -4254,7 +4260,7 @@ const VaeroApp = {
 
                 <button
                     type="button"
-                    onclick="VaeroApp.saveVision()"
+                    data-vaero-command="save-vision"
                 >
                     Taslağı Kaydet
                 </button>
@@ -4461,7 +4467,7 @@ const VaeroApp = {
 
                 <button
                     type="button"
-                    onclick="VaeroApp.cancelPayment()"
+                    data-vaero-command="payment-cancel"
                 >
                     İptal
                 </button>
@@ -4575,7 +4581,8 @@ const VaeroApp = {
                                 ? "is-active"
                                 : ""
                         }"
-                        onclick="VaeroApp.selectPaymentMethod('card')"
+                        data-vaero-command="payment-method"
+data-payment-method="card"
                         aria-pressed="${
                             intent.method ===
                                 "card"
@@ -4595,7 +4602,8 @@ const VaeroApp = {
                                 ? "is-active"
                                 : ""
                         }"
-                        onclick="VaeroApp.selectPaymentMethod('bank')"
+                        data-vaero-command="payment-method"
+data-payment-method="card"
                         aria-pressed="${
                             intent.method ===
                                 "bank"
@@ -4659,9 +4667,10 @@ const VaeroApp = {
                                                             ? "is-active"
                                                             : ""
                                                     }"
-                                                    onclick="VaeroApp.selectPaymentProvider('${this.escapeHTML(
-                                                        providerId
-                                                    )}')"
+                                                    data-vaero-command="payment-provider"
+data-payment-provider="${this.escapeHTML(
+    providerId
+)}"
                                                     aria-pressed="${
                                                         intent.provider ===
                                                             providerId
@@ -4714,7 +4723,7 @@ const VaeroApp = {
 
                 <button
                     type="button"
-                    onclick="VaeroApp.beginPayment()"
+                    data-vaero-command="payment-start"
                     ${
                         !intent.method ||
                         !intent.provider
@@ -4902,6 +4911,95 @@ const VaeroApp = {
 
     },
 
+   /* =====================================================
+       VAERO INTERNAL COMMAND ROUTER
+    ===================================================== */
+
+    handleCommand(
+        command,
+        element = null
+    ){
+
+        const normalized =
+            String(
+                command ||
+                ""
+            )
+                .trim()
+                .toLowerCase();
+
+
+        switch(normalized){
+
+            case "view":
+
+                return this.openView(
+                    element?.dataset
+                        ?.view ||
+                    "discover"
+                );
+
+
+            case "product":
+
+                return this.openProduct(
+                    element?.dataset
+                        ?.productId
+                );
+
+
+            case "back-discover":
+
+                return this.backToDiscover();
+
+
+            case "purchase":
+
+                return this.startProductPurchase(
+                    element?.dataset
+                        ?.productId
+                );
+
+
+            case "save-vision":
+
+                return this.saveVision();
+
+
+            case "payment-method":
+
+                return this.selectPaymentMethod(
+                    element?.dataset
+                        ?.paymentMethod
+                );
+
+
+            case "payment-provider":
+
+                return this.selectPaymentProvider(
+                    element?.dataset
+                        ?.paymentProvider
+                );
+
+
+            case "payment-start":
+
+                return this.beginPayment();
+
+
+            case "payment-cancel":
+
+                return this.cancelPayment();
+
+
+            default:
+
+                return false;
+
+        }
+
+    },
+
 
     /* =====================================================
        RENDER
@@ -4948,6 +5046,61 @@ const VaeroApp = {
     }
 
 };
+
+/* =========================================================
+   VAERO APP EVENT DELEGATION
+========================================================= */
+
+if(
+    typeof document !==
+        "undefined"
+){
+
+    document.addEventListener(
+        "click",
+        event => {
+
+            const target =
+                event.target;
+
+
+            if(
+                !target ||
+                typeof target.closest !==
+                    "function"
+            ){
+
+                return;
+
+            }
+
+
+            const commandTarget =
+                target.closest(
+                    "[data-vaero-command]"
+                );
+
+
+            if(!commandTarget){
+
+                return;
+
+            }
+
+
+            event.preventDefault();
+
+
+            VaeroApp.handleCommand(
+                commandTarget.dataset
+                    .vaeroCommand,
+                commandTarget
+            );
+
+        }
+    );
+
+}
 
 
 /* =========================================================
