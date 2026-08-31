@@ -3707,7 +3707,8 @@ data-view="vision"
                             ? "is-active"
                             : ""
                     }"
-                    onclick="VaeroApp.openView('care')"
+                    data-vaero-command="view"
+data-view="care"
                     aria-pressed="${
                         this.activeView ===
                             "care"
@@ -3905,7 +3906,8 @@ data-product-id="device"
 
                     <button
                         type="button"
-                        onclick="VaeroApp.openView('vision')"
+                        data-vaero-command="view"
+data-view="vision"
                     >
                         Vizyon Stüdyosu
                     </button>
@@ -4143,7 +4145,8 @@ data-product-id="${this.escapeHTML(
 
                 <button
                     type="button"
-                    onclick="VaeroApp.openView('care')"
+                    data-vaero-command="view"
+data-view="care"
                 >
                     VAERO Care
                 </button>
@@ -4174,7 +4177,8 @@ data-product-id="${this.escapeHTML(
 
                 <button
                     type="button"
-                    onclick="VaeroApp.openView('discover')"
+                    data-vaero-command="view"
+data-view="discover"
                 >
                     ← VAERO
                 </button>
@@ -4307,7 +4311,8 @@ data-product-id="${this.escapeHTML(
 
                 <button
                     type="button"
-                    onclick="VaeroApp.openView('discover')"
+                    data-vaero-command="view"
+data-view="discover"
                 >
                     ← VAERO
                 </button>
@@ -4440,7 +4445,8 @@ data-product-id="${this.escapeHTML(
 
                         <button
                             type="button"
-                            onclick="VaeroApp.openView('discover')"
+                            data-vaero-command="view"
+data-view="discover"
                         >
                             Koleksiyona Dön
                         </button>
@@ -4603,7 +4609,7 @@ data-payment-method="card"
                                 : ""
                         }"
                         data-vaero-command="payment-method"
-data-payment-method="card"
+ data-payment-method="bank"
                         aria-pressed="${
                             intent.method ===
                                 "bank"
@@ -4737,7 +4743,7 @@ data-payment-provider="${this.escapeHTML(
 
                 <button
                     type="button"
-                    onclick="VaeroApp.cancelPayment()"
+                    data-vaero-command="payment-cancel"
                 >
                     Vazgeç
                 </button>
