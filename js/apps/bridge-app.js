@@ -3187,13 +3187,11 @@ const BridgeApp = {
         ){
 
             return UI.appHeader(
-                this.escapeHTML(
-                    entity.name ||
-                    "İsimsiz Varlık"
-                ),
-                "BRIDGE",
-                "⌁"
-            );
+    entity.name ||
+    "İsimsiz Varlık",
+    "BRIDGE",
+    "⌁"
+);
 
         }
 
@@ -4009,6 +4007,16 @@ document.addEventListener(
             );
 
 
+        const cursorStart =
+            event.target.selectionStart ??
+            BridgeApp.searchQuery.length;
+
+
+        const cursorEnd =
+            event.target.selectionEnd ??
+            cursorStart;
+
+
         clearTimeout(
             BridgeApp.searchTimer
         );
@@ -4028,13 +4036,50 @@ document.addEventListener(
 
                     BridgeApp.remount();
 
+
+                    requestAnimationFrame(
+                        () => {
+
+                            const input =
+                                document.getElementById(
+                                    "bridgeSearchInput"
+                                );
+
+
+                            if(!input){
+
+                                return;
+
+                            }
+
+
+                            input.focus({
+                                preventScroll:
+                                    true
+                            });
+
+
+                            if(
+                                typeof input.setSelectionRange ===
+                                    "function"
+                            ){
+
+                                input.setSelectionRange(
+                                    cursorStart,
+                                    cursorEnd
+                                );
+
+                            }
+
+                        }
+                    );
+
                 },
                 120
             );
 
     }
 );
-
 
 /* =========================================================
    BRIDGE FORMS
