@@ -876,8 +876,7 @@ const WelcomeApp = {
 
 
         screen.className =
-            "vaero-welcome-screen is-light-theme";
-
+    "vaero-welcome-screen is-dark-theme";
 
         screen.innerHTML = `
             <div
@@ -1151,24 +1150,23 @@ const WelcomeApp = {
                     <div class="welcome-theme-toggle">
 
                         <button
-                            type="button"
-                            class="is-active"
-                            data-welcome-theme="light"
-                            aria-label="Aydınlık tema"
-                            aria-pressed="true"
-                        >
-                            ☀️
-                        </button>
+    type="button"
+    data-welcome-theme="light"
+    aria-label="Aydınlık tema"
+    aria-pressed="false"
+>
+    ☀️
+</button>
 
-
-                        <button
-                            type="button"
-                            data-welcome-theme="dark"
-                            aria-label="Karanlık tema"
-                            aria-pressed="false"
-                        >
-                            ☾
-                        </button>
+<button
+    type="button"
+    class="is-active"
+    data-welcome-theme="dark"
+    aria-label="Karanlık tema"
+    aria-pressed="true"
+>
+    ☾
+</button>
 
                     </div>
 
@@ -1440,8 +1438,8 @@ const WelcomeApp = {
 
 
         this.setTheme(
-            "light"
-        );
+    "dark"
+);
 
 
         return true;
