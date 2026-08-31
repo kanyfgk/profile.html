@@ -2922,13 +2922,11 @@ const OrgansApp = {
         ){
 
             return UI.appHeader(
-                this.escapeHTML(
-                    entity?.name ||
-                    "VAERO Varlığı"
-                ),
-                "ORGANS",
-                "⌘"
-            );
+    entity?.name ||
+    "VAERO Varlığı",
+    "ORGANS",
+    "⌘"
+);
 
         }
 
@@ -3352,6 +3350,16 @@ document.addEventListener(
             );
 
 
+        const cursorStart =
+            event.target.selectionStart ??
+            OrgansApp.searchQuery.length;
+
+
+        const cursorEnd =
+            event.target.selectionEnd ??
+            cursorStart;
+
+
         clearTimeout(
             OrgansApp.searchTimer
         );
@@ -3366,6 +3374,44 @@ document.addEventListener(
 
 
                     OrgansApp.remount();
+
+
+                    requestAnimationFrame(
+                        () => {
+
+                            const input =
+                                document.getElementById(
+                                    "organsSearchInput"
+                                );
+
+
+                            if(!input){
+
+                                return;
+
+                            }
+
+
+                            input.focus({
+                                preventScroll:
+                                    true
+                            });
+
+
+                            if(
+                                typeof input.setSelectionRange ===
+                                    "function"
+                            ){
+
+                                input.setSelectionRange(
+                                    cursorStart,
+                                    cursorEnd
+                                );
+
+                            }
+
+                        }
+                    );
 
                 },
                 120
