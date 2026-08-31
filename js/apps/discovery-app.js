@@ -3333,30 +3333,43 @@ class DiscoveryApp {
 
     getCompletedAt(){
 
-        try{
+    try{
 
-            const value =
-                Number(
-                    localStorage.getItem(
-                        this.completedAtKey
-                    )
-                );
+        const stored =
+            localStorage.getItem(
+                this.completedAtKey
+            );
 
 
-            return Number.isFinite(
-                value
-            )
-                ? value
-                : null;
-
-        } catch(error){
+        if(!stored){
 
             return null;
 
         }
 
+
+        const value =
+            Number(
+                stored
+            );
+
+
+        return (
+            Number.isFinite(
+                value
+            ) &&
+            value > 0
+        )
+            ? value
+            : null;
+
+    } catch(error){
+
+        return null;
+
     }
 
+}
 
     /* =====================================================
        RESTART
