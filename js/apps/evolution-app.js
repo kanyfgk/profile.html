@@ -4522,56 +4522,114 @@ const EvolutionApp = {
        SEARCH
     ===================================================== */
 
-    handleSearchInput(value){
+    handleSearchInput(
+    value,
+    cursorStart = null,
+    cursorEnd = null
+){
 
-        this.setSearchQuery(
-            value
+    this.setSearchQuery(
+        value
+    );
+
+
+    if(
+        this.searchTimer !==
+            null
+    ){
+
+        clearTimeout(
+            this.searchTimer
+        );
+
+    }
+
+
+    this.searchTimer =
+        setTimeout(
+            () => {
+
+                this.searchTimer =
+                    null;
+
+
+                const entity =
+                    this.getCurrentEntity();
+
+
+                if(entity){
+
+                    this.enterBrainContext(
+                        entity
+                    );
+
+                }
+
+
+                this.remount();
+
+
+                requestAnimationFrame(
+                    () => {
+
+                        const input =
+                            document.getElementById(
+                                "evolutionSearchInput"
+                            );
+
+
+                        if(!input){
+
+                            return;
+
+                        }
+
+
+                        input.focus({
+                            preventScroll:
+                                true
+                        });
+
+
+                        if(
+                            typeof input.setSelectionRange ===
+                                "function"
+                        ){
+
+                            const start =
+                                Number.isFinite(
+                                    cursorStart
+                                )
+                                    ? cursorStart
+                                    : input.value.length;
+
+
+                            const end =
+                                Number.isFinite(
+                                    cursorEnd
+                                )
+                                    ? cursorEnd
+                                    : start;
+
+
+                            input.setSelectionRange(
+                                start,
+                                end
+                            );
+
+                        }
+
+                    }
+                );
+
+            },
+            120
         );
 
 
-        if(
-            this.searchTimer !==
-                null
-        ){
+    return true;
 
-            clearTimeout(
-                this.searchTimer
-            );
-
-        }
-
-
-        this.searchTimer =
-            setTimeout(
-                () => {
-
-                    this.searchTimer =
-                        null;
-
-
-                    const entity =
-                        this.getCurrentEntity();
-
-
-                    if(entity){
-
-                        this.enterBrainContext(
-                            entity
-                        );
-
-                    }
-
-
-                    this.remount();
-
-                },
-                120
-            );
-
-
-        return true;
-
-    },
+},
 
 
     /* =====================================================
@@ -4667,46 +4725,7 @@ if(
                 );
 
 
-            if(evolutionButton){
-
-                event.preventDefault();
-
-
-                EvolutionApp.handleCommand(
-                    evolutionButton.dataset
-                        .evolutionAction
-                );
-
-
-                return;
-
-            }
-
-
-            const actionButton =
-                target.closest(
-                    "[data-action]"
-                );
-
-
-            if(!actionButton){
-
-                return;
-
-            }
-
-
-            const action =
-                actionButton.dataset
-                    .action;
-
-
-            if(
-                !action ||
-                !action.startsWith(
-                    "evolution:"
-                )
-            ){
+            if(!evolutionButton){
 
                 return;
 
@@ -4716,14 +4735,13 @@ if(
             event.preventDefault();
 
 
-            EvolutionApp.handleGenericAction(
-                action,
-                actionButton
+            EvolutionApp.handleCommand(
+                evolutionButton.dataset
+                    .evolutionAction
             );
 
         }
     );
-
 
     /* =====================================================
        EVOLUTION SEARCH
@@ -4744,8 +4762,10 @@ if(
 
 
             EvolutionApp.handleSearchInput(
-                event.target.value
-            );
+    event.target.value,
+    event.target.selectionStart,
+    event.target.selectionEnd
+);
 
         }
     );
