@@ -454,20 +454,15 @@ const IdentityApp = {
                     : null,
 
             issuer:
-                String(
-                    existing.issuer ||
-                    (
-                        verificationStatus ===
-                            "verified"
-                            ? "VAERO"
-                            : ""
-                    )
-                )
-                    .trim()
-                    .slice(
-                        0,
-                        120
-                    ),
+    String(
+        existing.issuer ||
+        ""
+    )
+        .trim()
+        .slice(
+            0,
+            120
+        ),
 
             createdAt:
                 Number(
@@ -1140,14 +1135,11 @@ const IdentityApp = {
         ){
 
             return UI.appHeader(
-                this.escapeHTML(
-                    entity.name ||
-                    "İsimsiz Varlık"
-                ),
-                "IDENTITY",
-                "◈"
-            );
-
+    entity.name ||
+    "İsimsiz Varlık",
+    "IDENTITY",
+    "◈"
+);
         }
 
 
