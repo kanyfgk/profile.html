@@ -3859,256 +3859,161 @@ notify(
 
 
     /* =====================================================
-       PROFILE
-    ===================================================== */
+   PROFILE
+===================================================== */
 
-    saveProfile(){
+saveProfile(){
 
-        const nameInput =
-            document.getElementById(
-                "profileNameInput"
-            );
+    const nameInput =
+        document.getElementById(
+            "profileNameInput"
+        );
 
 
-        const descriptionInput =
-            document.getElementById(
-                "profileDescriptionInput"
-            );
+    const descriptionInput =
+        document.getElementById(
+            "profileDescriptionInput"
+        );
 
 
-        const name =
-            this.normalizeText(
-                nameInput?.value,
-                120
-            );
+    const name =
+        this.normalizeText(
+            nameInput?.value,
+            120
+        );
 
 
-        if(!name){
+    if(!name){
 
-            nameInput?.focus();
+        nameInput?.focus();
 
 
-            return false;
+        return false;
 
-        }
+    }
 
 
-        const description =
-            this.normalizeText(
-                descriptionInput?.value,
-                1200
-            );
+    const description =
+        this.normalizeText(
+            descriptionInput?.value,
+            1200
+        );
 
 
-        const engine =
-            this.getEngine();
+    const engine =
+        this.getEngine();
 
 
-        const entity =
-            engine?.currentOpenedEntity ||
-            engine?.rootEntity ||
-            engine?.currentEntity ||
-            null;
+    const entity =
+        engine?.currentOpenedEntity ||
+        engine?.rootEntity ||
+        engine?.currentEntity ||
+        null;
 
 
-        if(
-            !engine ||
-            !entity
-        ){
+    if(
+        !engine ||
+        !entity
+    ){
 
-            return false;
+        return false;
 
-        }
+    }
 
 
-        const isRoot =
-            entity.id ===
-                engine.rootEntity?.id;
+    const isRoot =
+        entity.id ===
+            engine.rootEntity?.id;
 
 
-        let success =
-            false;
+    let success =
+        false;
 
 
-        try{
+    try{
 
-            /*
-             * Root Profile ile Entity Identity birbirine
-             * karıştırılmaz.
-             *
-             * Root profil görünüm adı ve açıklaması,
-             * mevcut kullanıcı-profile compatibility
-             * storage alanında tutulmaya devam eder.
-             */
+        /*
+         * Root Profile ile Entity Identity birbirine
+         * karıştırılmaz.
+         *
+         * Root profil görünüm adı ve açıklaması,
+         * mevcut kullanıcı-profile compatibility
+         * storage alanında tutulmaya devam eder.
+         */
 
-            if(isRoot){
+        if(isRoot){
 
-                const currentProfile =
-                    entity.profile &&
-                    typeof entity.profile ===
-                        "object"
-                        ? entity.profile
-                        : {};
+            const currentProfile =
+                entity.profile &&
+                typeof entity.profile ===
+                    "object"
+                    ? entity.profile
+                    : {};
 
 
-                const userProfile = {
+            const userProfile = {
 
-                    name,
+                name,
 
-                    description,
+                description,
 
-                    updatedAt:
-                        Date.now()
+                updatedAt:
+                    Date.now()
 
-                };
+            };
 
 
-                try{
+            try{
 
-                    localStorage.setItem(
-                        "vaero:user:profile:v1",
-                        JSON.stringify(
-                            userProfile
-                        )
-                    );
+                localStorage.setItem(
+                    "vaero:user:profile:v1",
+                    JSON.stringify(
+                        userProfile
+                    )
+                );
 
-                } catch(error){
+            } catch(error){
 
-                    console.warn(
-                        "Root Profile compatibility kaydı yazılamadı:",
-                        error
-                    );
-
-                }
-
-
-                if(
-                    entity.profile &&
-                    typeof entity.profile ===
-                        "object"
-                ){
-
-                    entity.profile.name =
-                        name;
-
-
-                    entity.profile.description =
-                        description;
-
-
-                    entity.profile.updatedAt =
-                        Date.now();
-
-                }
-
-
-                const profileService =
-                    this.getService(
-                        "profile"
-                    );
-
-
-                if(
-                    profileService &&
-                    typeof profileService.update ===
-                        "function" &&
-                    entity.profile
-                ){
-
-                    const updatedProfile =
-                        profileService.update(
-                            entity.profile,
-                            {
-                                name,
-
-                                description,
-
-                                metadata:{
-                                    ...(
-                                        currentProfile
-                                            .metadata ||
-                                        {}
-                                    )
-                                }
-                            }
-                        );
-
-
-                    if(
-                        updatedProfile &&
-                        typeof updatedProfile ===
-                            "object"
-                    ){
-
-                        entity.profile =
-                            updatedProfile;
-
-                    }
-
-                }
-
-
-                success =
-                    true;
+                console.warn(
+                    "Root Profile compatibility kaydı yazılamadı:",
+                    error
+                );
 
             }
 
-            else {
 
-                /*
-                 * Non-root Entity profil ekranında,
-                 * Entity'nin canonical adı ve açıklaması
-                 * değiştirilmez.
-                 *
-                 * Profile presentation katmanı kendi
-                 * profile kaydını günceller.
-                 */
+            if(
+                entity.profile &&
+                typeof entity.profile ===
+                    "object"
+            ){
 
-                const profileService =
-                    this.getService(
-                        "profile"
-                    );
+                entity.profile.name =
+                    name;
 
 
-                if(
-                    !profileService ||
-                    typeof profileService.update !==
-                        "function"
-                ){
-
-                    console.warn(
-                        "Profile update API bulunamadı."
-                    );
+                entity.profile.description =
+                    description;
 
 
-                    return false;
+                entity.profile.updatedAt =
+                    Date.now();
 
-                }
-
-
-                if(!entity.profile){
-
-                    if(
-                        typeof profileService.create ===
-                            "function"
-                    ){
-
-                        entity.profile =
-                            profileService.create(
-                                entity
-                            );
-
-                    }
-
-                }
+            }
 
 
-                if(!entity.profile){
+            const profileService =
+                this.getService(
+                    "profile"
+                );
 
-                    return false;
 
-                }
-
+            if(
+                profileService &&
+                typeof profileService.update ===
+                    "function" &&
+                entity.profile
+            ){
 
                 const updatedProfile =
                     profileService.update(
@@ -4116,7 +4021,15 @@ notify(
                         {
                             name,
 
-                            description
+                            description,
+
+                            metadata:{
+                                ...(
+                                    currentProfile
+                                        .metadata ||
+                                    {}
+                                )
+                            }
                         }
                     );
 
@@ -4132,79 +4045,184 @@ notify(
 
                 }
 
+            }
 
-                try{
 
-                    this.getService(
-                        "world"
-                    )?.save?.();
+            success =
+                true;
 
-                } catch(error){
+        }
 
-                    console.warn(
-                        "Profile World snapshot kaydedilemedi:",
-                        error
-                    );
+        else {
+
+            /*
+             * Non-root Entity profil ekranında,
+             * Entity'nin canonical adı ve açıklaması
+             * değiştirilmez.
+             *
+             * Profile presentation katmanı kendi
+             * profile kaydını günceller.
+             */
+
+            const profileService =
+                this.getService(
+                    "profile"
+                );
+
+
+            if(
+                !profileService ||
+                typeof profileService.update !==
+                    "function"
+            ){
+
+                console.warn(
+                    "Profile update API bulunamadı."
+                );
+
+
+                return false;
+
+            }
+
+
+            if(!entity.profile){
+
+                if(
+                    typeof profileService.create ===
+                        "function"
+                ){
+
+                    entity.profile =
+                        profileService.create(
+                            entity
+                        );
 
                 }
 
+            }
 
-                success =
-                    updatedProfile !==
-                        false;
+
+            if(!entity.profile){
+
+                return false;
 
             }
 
-        } catch(error){
 
-            console.error(
-                "Profil kaydedilemedi:",
-                error
-            );
+            const updatedProfile =
+                profileService.update(
+                    entity.profile,
+                    {
+                        name,
 
-
-            return false;
-
-        }
-
-
-        if(!success){
-
-            return false;
-
-        }
+                        description
+                    }
+                );
 
 
-        const feedback =
-            document.getElementById(
-                "profileSaveFeedback"
-            );
+            if(
+                updatedProfile &&
+                typeof updatedProfile ===
+                    "object"
+            ){
 
+                entity.profile =
+                    updatedProfile;
 
-        if(feedback){
-
-            feedback.textContent =
-                "Profil kaydedildi.";
-
-        }
-
-
-        this.syncAwareness(
-            "profile",
-            {
-                entityId:
-                    entity.id ||
-                    null,
-
-                saved:
-                    true
             }
+
+
+            try{
+
+                this.getService(
+                    "world"
+                )?.save?.();
+
+            } catch(error){
+
+                console.warn(
+                    "Profile World snapshot kaydedilemedi:",
+                    error
+                );
+
+            }
+
+
+            success =
+                updatedProfile !==
+                    false;
+
+        }
+
+    } catch(error){
+
+        console.error(
+            "Profil kaydedilemedi:",
+            error
         );
 
 
-        return true;
+        return false;
 
-    },
+    }
+
+
+    if(!success){
+
+        return false;
+
+    }
+
+
+    const feedback =
+        document.getElementById(
+            "profileSaveFeedback"
+        );
+
+
+    if(feedback){
+
+        feedback.textContent =
+            "Profil kaydedildi.";
+
+    }
+
+
+    this.syncAwareness(
+        "profile",
+        {
+            entityId:
+                entity.id ||
+                null,
+
+            saved:
+                true
+        }
+    );
+
+
+    this.notify(
+        "profile:saved",
+        {
+            entityId:
+                entity.id ||
+                null,
+
+            worldId:
+                engine.currentWorld?.id ||
+                null,
+
+            name,
+
+            isRoot
+        }
+    );
+
+
+    return true;
+
+},
 
 
     /* =====================================================
