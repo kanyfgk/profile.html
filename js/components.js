@@ -804,27 +804,37 @@ const Components = {
 
                     <div class="engine-top-actions">
 
-                        <button
-                            type="button"
-                            class="engine-icon-btn"
-                            data-action="app:applications"
-                            aria-label="Applications"
-                            title="Applications"
-                        >
-                            ▦
-                        </button>
+<button
+type="button"
+class="engine-icon-btn"
+data-action="app:applications"
+aria-label="Uygulamalar"
+title="Uygulamalar"
+>
+▦
+</button>
 
-                        <button
-                            type="button"
-                            class="engine-icon-btn"
-                            data-action="brain:open"
-                            aria-label="Brain"
-                            title="Brain"
-                        >
-                            ✦
-                        </button>
+${
+    typeof window !==
+        "undefined" &&
+    window.NotificationCenter &&
+    typeof window.NotificationCenter.renderBell ===
+        "function"
+        ? window.NotificationCenter.renderBell()
+        : ""
+}
 
-                    </div>
+<button
+type="button"
+class="engine-icon-btn"
+data-action="brain:open"
+aria-label="Brain"
+title="Brain"
+>
+✦
+</button>
+
+</div>
 
                 </header>
 
