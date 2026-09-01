@@ -1,0 +1,741 @@
+/* =========================================================
+   VAERO NOTIFICATIONS
+   Notification / Interaction Surface
+========================================================= */
+
+
+/* =========================================================
+   TRIGGER
+========================================================= */
+
+.notification-trigger{
+    position:relative;
+}
+
+.notification-bell-icon{
+    position:relative;
+
+    width:18px;
+    height:18px;
+
+    display:block;
+
+    font-size:0;
+}
+
+.notification-bell-icon::before{
+    content:"";
+
+    position:absolute;
+
+    left:4px;
+    top:2px;
+
+    width:10px;
+    height:11px;
+
+    border:
+        1.5px solid
+        currentColor;
+
+    border-radius:
+        7px 7px 5px 5px;
+
+    border-bottom-width:2px;
+}
+
+.notification-bell-icon::after{
+    content:"";
+
+    position:absolute;
+
+    left:7px;
+    bottom:1px;
+
+    width:4px;
+    height:2px;
+
+    border-radius:999px;
+
+    background:
+        currentColor;
+}
+
+
+/* =========================================================
+   BADGE
+========================================================= */
+
+.notification-badge{
+    position:absolute;
+
+    top:-4px;
+    right:-4px;
+
+    min-width:17px;
+    height:17px;
+
+    padding:0 4px;
+
+    display:flex;
+    align-items:center;
+    justify-content:center;
+
+    border:
+        2px solid
+        #07111d;
+
+    border-radius:999px;
+
+    background:#dfbd7a;
+
+    color:#08111c;
+
+    font-size:9px;
+    font-weight:800;
+    line-height:1;
+
+    box-shadow:
+        0
+        4px
+        12px
+        rgba(0,0,0,.28);
+}
+
+
+/* =========================================================
+   LAYER
+========================================================= */
+
+.notification-layer{
+    position:fixed;
+
+    inset:0;
+
+    z-index:12000;
+
+    pointer-events:none;
+
+    background:
+        rgba(2,7,12,0);
+
+    transition:
+        background 180ms ease;
+}
+
+.notification-layer.is-open{
+    pointer-events:auto;
+
+    background:
+        rgba(2,7,12,.34);
+}
+
+
+/* =========================================================
+   PANEL
+========================================================= */
+
+.notification-panel{
+    position:absolute;
+
+    top:
+        calc(
+            env(safe-area-inset-top, 0px)
+            + 72px
+        );
+
+    right:18px;
+
+    width:
+        min(
+            390px,
+            calc(100vw - 36px)
+        );
+
+    max-height:
+        min(
+            680px,
+            calc(
+                100dvh
+                - 110px
+            )
+        );
+
+    display:flex;
+    flex-direction:column;
+
+    overflow:hidden;
+
+    border:
+        1px solid
+        rgba(255,255,255,.085);
+
+    border-radius:24px;
+
+    background:
+        radial-gradient(
+            circle at 85% 0%,
+            rgba(73,143,194,.09),
+            transparent 34%
+        ),
+
+        linear-gradient(
+            160deg,
+            rgba(14,26,40,.985),
+            rgba(5,13,22,.99)
+        );
+
+    box-shadow:
+        0
+        24px
+        80px
+        rgba(0,0,0,.52),
+
+        inset
+        0
+        1px
+        0
+        rgba(255,255,255,.035);
+
+    transform:
+        translateY(-10px)
+        scale(.985);
+
+    opacity:0;
+
+    transition:
+        transform 180ms ease,
+        opacity 180ms ease;
+}
+
+.notification-layer.is-open
+.notification-panel{
+    transform:
+        translateY(0)
+        scale(1);
+
+    opacity:1;
+}
+
+
+/* =========================================================
+   HEADER
+========================================================= */
+
+.notification-panel-head{
+    min-height:76px;
+
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+
+    gap:16px;
+
+    padding:
+        18px
+        18px
+        14px;
+
+    border-bottom:
+        1px solid
+        rgba(255,255,255,.055);
+}
+
+.notification-panel-head > div{
+    min-width:0;
+}
+
+.notification-panel-eyebrow{
+    display:block;
+
+    margin-bottom:4px;
+
+    color:#dfbd7a;
+
+    font-size:9px;
+    font-weight:800;
+
+    letter-spacing:.22em;
+}
+
+.notification-panel-head h2{
+    margin:0;
+
+    color:#f7f4ed;
+
+    font-size:22px;
+    line-height:1.05;
+}
+
+.notification-panel-close{
+    width:38px;
+    height:38px;
+
+    flex:0 0 auto;
+
+    border:
+        1px solid
+        rgba(255,255,255,.08);
+
+    border-radius:50%;
+
+    background:
+        rgba(255,255,255,.025);
+
+    color:
+        rgba(239,243,248,.65);
+
+    font-size:23px;
+    line-height:1;
+
+    cursor:pointer;
+}
+
+
+/* =========================================================
+   ACTION BAR
+========================================================= */
+
+.notification-panel-actions{
+    padding:
+        10px
+        16px
+        8px;
+
+    display:flex;
+    justify-content:flex-end;
+}
+
+.notification-panel-actions button{
+    border:0;
+
+    background:transparent;
+
+    color:
+        rgba(242,221,169,.78);
+
+    font:inherit;
+    font-size:11px;
+    font-weight:650;
+
+    cursor:pointer;
+}
+
+
+/* =========================================================
+   LIST
+========================================================= */
+
+.notification-list{
+    min-height:0;
+
+    overflow-y:auto;
+
+    padding:
+        2px
+        10px
+        14px;
+
+    overscroll-behavior:contain;
+
+    scrollbar-width:none;
+}
+
+.notification-list::-webkit-scrollbar{
+    display:none;
+}
+
+
+/* =========================================================
+   ITEM
+========================================================= */
+
+.notification-item{
+    position:relative;
+
+    display:flex;
+
+    margin-top:6px;
+
+    border:
+        1px solid
+        rgba(255,255,255,.055);
+
+    border-radius:17px;
+
+    background:
+        rgba(255,255,255,.018);
+
+    overflow:hidden;
+}
+
+.notification-item.is-unread{
+    border-color:
+        rgba(223,189,122,.13);
+
+    background:
+        linear-gradient(
+            135deg,
+            rgba(223,189,122,.055),
+            rgba(255,255,255,.012)
+        );
+}
+
+.notification-item-main{
+    width:100%;
+    min-width:0;
+
+    display:grid;
+
+    grid-template-columns:
+        38px
+        minmax(0,1fr)
+        auto;
+
+    align-items:center;
+
+    gap:10px;
+
+    padding:
+        13px
+        40px
+        13px
+        12px;
+
+    border:0;
+
+    background:transparent;
+
+    color:inherit;
+
+    text-align:left;
+
+    cursor:pointer;
+}
+
+
+/* =========================================================
+   ICON
+========================================================= */
+
+.notification-item-icon{
+    width:38px;
+    height:38px;
+
+    display:flex;
+    align-items:center;
+    justify-content:center;
+
+    border:
+        1px solid
+        rgba(255,255,255,.07);
+
+    border-radius:13px;
+
+    background:
+        rgba(255,255,255,.025);
+
+    color:#dfbd7a;
+
+    font-size:16px;
+}
+
+
+/* =========================================================
+   COPY
+========================================================= */
+
+.notification-item-copy{
+    min-width:0;
+
+    display:flex;
+    flex-direction:column;
+
+    gap:4px;
+}
+
+.notification-item-title{
+    overflow:hidden;
+
+    color:#f7f4ed;
+
+    font-size:13px;
+    font-weight:720;
+
+    white-space:nowrap;
+    text-overflow:ellipsis;
+}
+
+.notification-item-message{
+    display:-webkit-box;
+
+    overflow:hidden;
+
+    color:
+        rgba(233,239,246,.54);
+
+    font-size:11px;
+    line-height:1.45;
+
+    -webkit-box-orient:vertical;
+    -webkit-line-clamp:2;
+}
+
+
+/* =========================================================
+   TIME
+========================================================= */
+
+.notification-item-time{
+    align-self:start;
+
+    margin-top:2px;
+
+    color:
+        rgba(233,239,246,.3);
+
+    font-size:9px;
+
+    white-space:nowrap;
+}
+
+
+/* =========================================================
+   UNREAD
+========================================================= */
+
+.notification-unread-dot{
+    position:absolute;
+
+    left:5px;
+    top:50%;
+
+    width:4px;
+    height:4px;
+
+    border-radius:50%;
+
+    background:#dfbd7a;
+
+    transform:
+        translateY(-50%);
+
+    box-shadow:
+        0
+        0
+        7px
+        rgba(223,189,122,.5);
+}
+
+
+/* =========================================================
+   DISMISS
+========================================================= */
+
+.notification-dismiss{
+    position:absolute;
+
+    right:7px;
+    bottom:7px;
+
+    width:28px;
+    height:28px;
+
+    border:0;
+
+    border-radius:50%;
+
+    background:transparent;
+
+    color:
+        rgba(233,239,246,.28);
+
+    font-size:17px;
+
+    cursor:pointer;
+}
+
+
+/* =========================================================
+   EMPTY
+========================================================= */
+
+.notification-empty{
+    min-height:260px;
+
+    display:flex;
+    flex-direction:column;
+
+    align-items:center;
+    justify-content:center;
+
+    padding:32px;
+
+    text-align:center;
+}
+
+.notification-empty > span{
+    width:48px;
+    height:48px;
+
+    display:flex;
+    align-items:center;
+    justify-content:center;
+
+    margin-bottom:14px;
+
+    border:
+        1px solid
+        rgba(223,189,122,.13);
+
+    border-radius:16px;
+
+    background:
+        rgba(223,189,122,.035);
+
+    color:#dfbd7a;
+
+    font-size:19px;
+}
+
+.notification-empty strong{
+    color:#f7f4ed;
+
+    font-size:15px;
+}
+
+.notification-empty p{
+    max-width:230px;
+
+    margin:
+        7px
+        0
+        0;
+
+    color:
+        rgba(233,239,246,.45);
+
+    font-size:11px;
+    line-height:1.55;
+}
+
+
+/* =========================================================
+   DESKTOP HOVER
+========================================================= */
+
+@media
+(
+    hover:hover
+)
+and
+(
+    pointer:fine
+){
+
+    .notification-item:hover{
+        border-color:
+            rgba(223,189,122,.16);
+    }
+
+    .notification-panel-close:hover,
+    .notification-dismiss:hover{
+        color:#f7f4ed;
+
+        background:
+            rgba(255,255,255,.04);
+    }
+
+}
+
+
+/* =========================================================
+   MOBILE
+========================================================= */
+
+@media (max-width:600px){
+
+    .notification-layer{
+        display:flex;
+
+        align-items:flex-end;
+
+        padding:
+            0
+            10px
+            calc(
+                env(safe-area-inset-bottom, 0px)
+                + 10px
+            );
+    }
+
+    .notification-panel{
+        position:relative;
+
+        top:auto;
+        right:auto;
+
+        width:100%;
+
+        max-height:
+            min(
+                78dvh,
+                720px
+            );
+
+        border-radius:
+            26px;
+
+        transform:
+            translateY(28px);
+    }
+
+    .notification-layer.is-open
+    .notification-panel{
+        transform:
+            translateY(0);
+    }
+
+    .notification-panel::before{
+        content:"";
+
+        width:38px;
+        height:4px;
+
+        flex:0 0 auto;
+
+        align-self:center;
+
+        margin-top:8px;
+
+        border-radius:999px;
+
+        background:
+            rgba(255,255,255,.15);
+    }
+
+    .notification-panel-head{
+        min-height:68px;
+
+        padding-top:12px;
+    }
+
+    .notification-item-main{
+        min-height:67px;
+    }
+
+}
+
+
+/* =========================================================
+   REDUCED MOTION
+========================================================= */
+
+@media (prefers-reduced-motion:reduce){
+
+    .notification-layer,
+    .notification-panel{
+        transition:none;
+    }
+
+}
