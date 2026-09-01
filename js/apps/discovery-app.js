@@ -3212,28 +3212,58 @@ class DiscoveryApp {
 
         try{
 
-            engine.start();
-
-        } catch(error){
-
-            console.error(
-                "Engine başlatılamadı:",
-                error
-            );
+    engine.start();
 
 
-            transitionLayer
-                ?.remove();
+    /*
+     * Discovery ilk girişte çalışıyorsa start()
+     * Engine'i normal şekilde başlatır.
+     *
+     * Discovery zaten çalışan Engine içinden
+     * açılmışsa start() yeniden başlatmaz.
+     * Bu durumda mevcut Engine görünümünü
+     * tekrar mount ederek boş ekranı önleriz.
+     */
+
+    const entity =
+        engine.currentOpenedEntity ||
+        engine.currentEntity ||
+        engine.rootEntity ||
+        null;
 
 
-            screen?.classList.remove(
-                "is-leaving"
-            );
+    if(
+        entity &&
+        typeof engine.mount ===
+            "function"
+    ){
+
+        engine.mount(
+            entity
+        );
+
+    }
+
+} catch(error){
+
+    console.error(
+        "Engine başlatılamadı:",
+        error
+    );
 
 
-            return false;
+    transitionLayer
+        ?.remove();
 
-        }
+
+    screen?.classList.remove(
+        "is-leaving"
+    );
+
+
+    return false;
+
+}
 
 
         window.setTimeout(
