@@ -3003,58 +3003,42 @@ const Components = {
 
     entityDiscovery(entity){
 
-        const discoveryApp =
-            this.resolveApplication(
-                "discoveryApp",
-                "DiscoveryApp"
-            );
+    return `
+        <section class="engine-page">
+
+            ${this.pageHeader({
+                eyebrow:
+                    "DISCOVERY",
+
+                title:
+                    "Keşif yönünü güncelle",
+
+                text:
+                    "İlgi alanlarını, hedeflerini ve VAERO’dan beklentilerini yeniden değerlendirebilirsin."
+            })}
 
 
-        if(
-            discoveryApp &&
-            typeof discoveryApp.render ===
-                "function"
-        ){
+            ${this.emptyState({
+                icon:
+                    "◇",
 
-            return this.renderAppSafely(
-                discoveryApp,
-                entity,
-                "Discovery uygulaması yüklenemedi."
-            );
+                title:
+                    "Discovery Journey",
 
-        }
+                text:
+                    "Mevcut yönünü yeniden değerlendirmek için Discovery Journey’i yeniden başlatabilirsin.",
 
+                action:
+                    "discovery:restart",
 
-        return `
-            <section class="engine-page">
+                actionLabel:
+                    "Discovery’yi Yeniden Başlat"
+            })}
 
-                ${this.pageHeader({
-                    eyebrow:
-                        "DISCOVERY",
-                    title:
-                        "Keşif yönünü güncelle",
-                    text:
-                        "İlgi alanlarını, hedeflerini ve VAERO’dan beklentilerini yeniden değerlendirebilirsin."
-                })}
+        </section>
+    `;
 
-                ${this.emptyState({
-                    icon:
-                        "◇",
-                    title:
-                        "Discovery Journey",
-                    text:
-                        "Mevcut yönünü yeniden değerlendirmek için Discovery Journey’i yeniden başlatabilirsin.",
-                    action:
-                        "discovery:restart",
-                    actionLabel:
-                        "Discovery’yi Yeniden Başlat"
-                })}
-
-            </section>
-        `;
-
-    },
-
+},
 
     /* =====================================================
        SHARED PAGE UI
