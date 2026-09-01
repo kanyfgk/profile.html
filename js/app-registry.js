@@ -1863,13 +1863,13 @@ const AppRegistry = (() => {
                 "⌁",
 
             title:
-                "Bridge",
+    "Bağlantılar",
 
-            subtitle:
-                "Bağlantılarını yönet",
+subtitle:
+    "İlişkilerini ve bağlantılarını yönet",
 
             description:
-                "Varlıklar ve dünyalar arasındaki ilişki ve bağlantı ağını yönetir.",
+                "Varlıkların ve dünyaların birbiriyle nasıl bağlantı kurduğunu tek yerde gör ve yönet.",
 
             action:
                 "entity:bridge",
@@ -1903,13 +1903,12 @@ const AppRegistry = (() => {
                 "⌬",
 
             title:
-                "Evolution",
+    "Gelişim",
 
-            subtitle:
-                "Gelişimini takip et",
-
+subtitle:
+    "İlerlemeni ve hedeflerini takip et",
             description:
-                "Hedefleri, kararları, başarıları, yaşam olaylarını ve gelişim ilerlemesini takip eder.",
+                "Hedeflerini, kararlarını, başarılarını ve önemli gelişmeleri tek bir ilerleme akışında takip et.",
 
             action:
                 "entity:evolution",
@@ -1944,13 +1943,13 @@ const AppRegistry = (() => {
                 "⬡",
 
             title:
-                "Organlar",
+    "Varlık Sistemleri",
 
-            subtitle:
-                "Varlığının çalışan sistemlerini gör",
+subtitle:
+    "Varlığının temel işlevlerini yönet",
 
             description:
-                "Entity içindeki organların durumunu, yeteneklerini, izinlerini ve çalışma sağlığını tek yerde gösterir.",
+                "Kimlik, hafıza, bağlantılar ve diğer temel işlevlerin durumunu tek yerde gör ve yönet.",
 
             action:
                 "entity:organs",
@@ -2024,11 +2023,10 @@ const AppRegistry = (() => {
                 "◇",
 
             title:
-                "Discovery",
+    "Keşif",
 
-            subtitle:
-                "Kişisel yönünü keşfet",
-
+subtitle:
+    "Sana uygun yönleri keşfet",
             description:
                 "Amaç, ilgi, güçlü yön, hedef ve bağlantı sinyallerinden kişisel başlangıç yönünü oluşturur.",
 
@@ -2063,10 +2061,10 @@ const AppRegistry = (() => {
                 "▦",
 
             title:
-                "Applications",
+    "Uygulamalar",
 
-            subtitle:
-                "Engine yeteneklerini genişlet",
+subtitle:
+    "VAERO'daki araçlarını keşfet",
 
             description:
                 "Engine içindeki uygulamaları keşfet, izinleri incele, kurulu uygulamaları yönet ve güncellemeleri takip et.",
