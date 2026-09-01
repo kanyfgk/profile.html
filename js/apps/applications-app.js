@@ -3504,44 +3504,41 @@ const ApplicationsApp = {
 
         try{
 
-            /*
-             * Reuse Engine's existing delegated data-action
-             * routing rather than duplicating route logic here.
-             */
-            const button =
-                document.createElement(
-                    "button"
-                );
+    const actions =
+        this.getService(
+            "actions"
+        ) ||
+        (
+            typeof window !==
+                "undefined"
+                ? window.Actions ||
+                  null
+                : null
+        );
 
 
-            button.type =
-                "button";
+    /*
+     * Öncelik:
+     * doğrudan Engine action router.
+     */
 
+    if(
+        actions &&
+        typeof actions.routeAction ===
+            "function"
+    ){
 
-            button.dataset.action =
-                app.action;
-
-
-            button.hidden =
-                true;
-
-
-            button.setAttribute(
-                "aria-hidden",
-                "true"
+        const result =
+            actions.routeAction(
+                app.action,
+                null
             );
 
 
-            document.body.appendChild(
-                button
-            );
-
-
-            button.click();
-
-
-            button.remove();
-
+        if(
+            result !==
+                false
+        ){
 
             this.emitLifecycle(
                 "opened",
@@ -3550,20 +3547,72 @@ const ApplicationsApp = {
             );
 
 
-            return true;
-
-        } catch(error){
-
-            console.warn(
-                "Application could not be opened:",
-                error
-            );
-
-
-            return false;
+            return result;
 
         }
 
+    }
+
+
+    /*
+     * Compatibility fallback.
+     */
+
+    const button =
+        document.createElement(
+            "button"
+        );
+
+
+    button.type =
+        "button";
+
+
+    button.dataset.action =
+        app.action;
+
+
+    button.hidden =
+        true;
+
+
+    button.setAttribute(
+        "aria-hidden",
+        "true"
+    );
+
+
+    document.body.appendChild(
+        button
+    );
+
+
+    button.click();
+
+
+    button.remove();
+
+
+    this.emitLifecycle(
+        "opened",
+        app,
+        state.organ
+    );
+
+
+    return true;
+
+} catch(error){
+
+    console.warn(
+        "Application could not be opened:",
+        error
+    );
+
+
+    return false;
+
+}
     },
 
 
@@ -5375,33 +5424,34 @@ if(
 
 
     /* =====================================================
-       SEARCH
-    ===================================================== */
+   SEARCH
+===================================================== */
 
-    document.addEventListener(
-        "input",
-        event => {
+document.addEventListener(
+    "input",
+    event => {
 
-            if(
-                event.target?.id !==
-                    "applicationsSearch"
-            ){
+        if(
+            event.target?.id !==
+                "applicationsSearch"
+        ){
 
-                return;
-
-            }
-
-
-            ApplicationsApp.handleSearchInput(
-    event.target.value,
-    event.target.selectionStart,
-    event.target.selectionEnd
-);
+            return;
 
         }
-    );
 
-   document.addEventListener(
+
+        ApplicationsApp.handleSearchInput(
+            event.target.value,
+            event.target.selectionStart,
+            event.target.selectionEnd
+        );
+
+    }
+);
+
+
+document.addEventListener(
     "keydown",
     event => {
 
