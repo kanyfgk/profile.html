@@ -560,50 +560,22 @@ const UI = {
 
                         <div class="ui-application-title-row">
 
-                            <h3>
-                                ${this.escapeHTML(
-                                    title
-                                )}
-                            </h3>
+    <h3>
+        ${this.escapeHTML(
+            title
+        )}
+    </h3>
 
-                            ${
-                                system
-                                    ? this.statusBadge(
-                                        "Sistem",
-                                        "info"
-                                    )
-                                    : ""
-                            }
+    ${
+        updateAvailable
+            ? this.statusBadge(
+                "Güncelleme var",
+                "warning"
+            )
+            : ""
+    }
 
-                            ${
-                                trusted
-                                    ? this.statusBadge(
-                                        "Doğrulanmış",
-                                        "trusted"
-                                    )
-                                    : ""
-                            }
-
-                            ${
-                                installed &&
-                                !system
-                                    ? this.statusBadge(
-                                        "Yüklü",
-                                        "success"
-                                    )
-                                    : ""
-                            }
-
-                            ${
-                                updateAvailable
-                                    ? this.statusBadge(
-                                        "Güncelleme",
-                                        "warning"
-                                    )
-                                    : ""
-                            }
-
-                        </div>
+</div>
 
                         <p>
                             ${this.escapeHTML(
@@ -613,55 +585,20 @@ const UI = {
                             )}
                         </p>
 
-                        <div class="ui-application-meta">
-
-                            ${
-                                app.developer
-                                    ? `
-                                        <span>
-                                            ${this.escapeHTML(
-                                                app.developer
-                                            )}
-                                        </span>
-                                      `
-                                    : ""
-                            }
-
-                            ${
-                                app.version
-                                    ? `
-                                        <span>
-                                            v${this.escapeHTML(
-                                                app.version
-                                            )}
-                                        </span>
-                                      `
-                                    : ""
-                            }
-
-                            ${
-                                app.category
-                                    ? `
-                                        <span>
-                                            ${this.escapeHTML(
-                                                app.category
-                                            )}
-                                        </span>
-                                      `
-                                    : ""
-                            }
-
-                        </div>
-
                     </div>
 
                 </div>
 
                 <div class="ui-application-actions">
 
-                    ${this.pricingLabel(
-                        pricing
-                    )}
+                    ${
+    pricing.model !==
+        "free"
+        ? this.pricingLabel(
+            pricing
+        )
+        : ""
+}
 
                     <button
                         type="button"
