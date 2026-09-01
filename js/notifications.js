@@ -1158,11 +1158,152 @@ const NotificationCenter = {
 
 
         const actions =
-            this.getActions();
+    this.getActions();
 
 
-        const proxyButton = {
+/*
+ * CONTEXT DEEP LINK
+ *
+ * Bildirim belirli bir Dünya içindeki
+ * belirli bir Varlık sayfasına aitse,
+ * bağlam doğru sırayla geri yüklenir.
+ */
 
+const metadata =
+    notification.metadata &&
+    typeof notification.metadata ===
+        "object"
+        ? notification.metadata
+        : {};
+
+
+const deepWorldId =
+    this.normalizeText(
+        metadata.worldId,
+        160
+    );
+
+
+const deepEntityId =
+    this.normalizeText(
+        metadata.entityId ||
+        notification.dataset?.entityId,
+        160
+    );
+
+
+const deepPage =
+    this.normalizeText(
+        metadata.page,
+        80
+    );
+
+
+const allowedEntityPages =
+    new Set([
+        "identity",
+        "profile",
+        "organs",
+        "timeline",
+        "memory",
+        "bridge",
+        "evolution",
+        "settings",
+        "discovery"
+    ]);
+
+
+if(
+    actions &&
+    typeof actions.routeAction ===
+        "function" &&
+    deepWorldId &&
+    deepEntityId &&
+    deepPage &&
+    allowedEntityPages.has(
+        deepPage
+    )
+){
+
+    try{
+
+        const openedWorld =
+            actions.routeAction(
+                "world:open",
+                {
+                    dataset:{
+                        worldId:
+                            deepWorldId
+                    }
+                }
+            );
+
+
+        if(
+            openedWorld ===
+                false
+        ){
+
+            return false;
+
+        }
+
+
+        const openedEntity =
+            actions.routeAction(
+                "entity:open",
+                {
+                    dataset:{
+                        entityId:
+                            deepEntityId
+                    }
+                }
+            );
+
+
+        if(
+            openedEntity ===
+                false
+        ){
+
+            return false;
+
+        }
+
+
+        const openedPage =
+            actions.routeAction(
+                `entity:${deepPage}`,
+                {
+                    dataset:{}
+                }
+            );
+
+
+        if(
+            openedPage !==
+                false
+        ){
+
+            this.closePanel();
+
+            return openedPage;
+
+        }
+
+    } catch(error){
+
+        console.warn(
+            "Bildirim deep-link açılamadı:",
+            error
+        );
+
+    }
+
+}
+
+
+const proxyButton = {
             dataset:{
                 ...this.normalizeDataset(
                     notification.dataset
@@ -1921,6 +2062,81 @@ const NotificationCenter = {
             });
 
         }
+
+   /* -------------------------------------------------
+   PROFILE
+------------------------------------------------- */
+
+case "profile:saved":{
+
+    const entityId =
+        this.normalizeText(
+            data.entityId,
+            160
+        );
+
+    const worldId =
+        this.normalizeText(
+            data.worldId,
+            160
+        );
+
+    const isRoot =
+        data.isRoot ===
+            true;
+
+
+    return this.push({
+
+        type:
+            "success",
+
+        category:
+            "personal",
+
+        icon:
+            "✓",
+
+        title:
+            "Profilin güncellendi",
+
+        message:
+            "Değişikliklerin kaydedildi.",
+
+        action:
+            isRoot
+                ? "profile:open"
+                : "entity:open",
+
+        dataset:
+            !isRoot &&
+            entityId
+                ? {
+                    entityId
+                }
+                : {},
+
+        source:
+            "profile",
+
+        dedupeKey:
+            entityId
+                ? `profile:saved:${entityId}`
+                : "profile:saved:root",
+
+        metadata:{
+            entityId,
+            worldId,
+            isRoot,
+            page:
+                isRoot
+                    ? null
+                    : "profile"
+        }
+
+    });
+
+}
 
 
         /* -------------------------------------------------
