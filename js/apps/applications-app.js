@@ -12,6 +12,9 @@ const ApplicationsApp = {
     searchQuery:
         "",
 
+   searchExact:
+    false,
+   
     category:
         "all",
 
@@ -1121,55 +1124,103 @@ const ApplicationsApp = {
 
         if(query){
 
-            apps =
-                apps.filter(
-                    app => {
+    apps =
+        apps.filter(
+            app => {
 
-                        const searchable = [
-
-                            app?.id,
-                            app?.title,
-                            app?.subtitle,
-                            app?.description,
-                            app?.developer,
-                            app?.category,
-
-                            ...this.normalizeList(
-                                app?.tags
-                            ),
-
-                            ...this.normalizeList(
-                                app?.capabilities
-                            ),
-
-                            ...this.normalizeList(
-                                app?.requestedPermissions
-                            )
-
-                        ]
-                            .filter(
-                                value =>
-                                    value !==
-                                        null &&
-                                    value !==
-                                        undefined
-                            )
-                            .join(
-                                " "
-                            )
+                const normalize =
+                    value =>
+                        String(
+                            value ??
+                            ""
+                        )
+                            .trim()
                             .toLocaleLowerCase(
                                 "tr-TR"
                             );
 
 
-                        return searchable.includes(
-                            query
+                /*
+                 * Enter ile yapılan kesin aramada
+                 * yalnız uygulamanın gerçek kimliği/adı
+                 * eşleşir.
+                 *
+                 * Böylece "VAERO" araması developer alanı
+                 * yüzünden bütün VAERO uygulamalarını döndürmez.
+                 */
+
+                if(
+                    this.searchExact ===
+                        true
+                ){
+
+                    return [
+                        app?.id,
+                        app?.title,
+                        app?.name
+                    ]
+                        .map(
+                            normalize
+                        )
+                        .some(
+                            value =>
+                                value ===
+                                query
                         );
 
-                    }
+                }
+
+
+                /*
+                 * Yazarken canlı geniş arama.
+                 */
+
+                const searchable = [
+
+                    app?.id,
+                    app?.title,
+                    app?.name,
+                    app?.subtitle,
+                    app?.description,
+                    app?.developer,
+                    app?.category,
+
+                    ...this.normalizeList(
+                        app?.tags
+                    ),
+
+                    ...this.normalizeList(
+                        app?.capabilities
+                    ),
+
+                    ...this.normalizeList(
+                        app?.requestedPermissions
+                    )
+
+                ]
+                    .filter(
+                        value =>
+                            value !==
+                                null &&
+                            value !==
+                                undefined
+                    )
+                    .join(
+                        " "
+                    )
+                    .toLocaleLowerCase(
+                        "tr-TR"
+                    );
+
+
+                return searchable.includes(
+                    query
                 );
 
-        }
+            }
+        );
+
+}
 
 
         return apps;
@@ -5063,46 +5114,152 @@ const ApplicationsApp = {
        SEARCH
     ===================================================== */
 
-    handleSearchInput(value){
+    handleSearchInput(
+    value,
+    cursorStart = null,
+    cursorEnd = null
+){
 
-        this.setSearchQuery(
-            value
+    this.searchExact =
+        false;
+
+
+    this.setSearchQuery(
+        value
+    );
+
+
+    if(
+        this.searchTimer !==
+            null
+    ){
+
+        clearTimeout(
+            this.searchTimer
+        );
+
+    }
+
+
+    this.searchTimer =
+        setTimeout(
+            () => {
+
+                this.searchTimer =
+                    null;
+
+
+                this.enterBrainContext();
+
+
+                this.remount();
+
+
+                requestAnimationFrame(
+                    () => {
+
+                        const input =
+                            document.getElementById(
+                                "applicationsSearch"
+                            );
+
+
+                        if(!input){
+
+                            return;
+
+                        }
+
+
+                        input.focus({
+                            preventScroll:
+                                true
+                        });
+
+
+                        const length =
+                            input.value.length;
+
+
+                        const start =
+                            Number.isInteger(
+                                cursorStart
+                            )
+                                ? Math.min(
+                                    cursorStart,
+                                    length
+                                )
+                                : length;
+
+
+                        const end =
+                            Number.isInteger(
+                                cursorEnd
+                            )
+                                ? Math.min(
+                                    cursorEnd,
+                                    length
+                                )
+                                : start;
+
+
+                        try{
+
+                            input.setSelectionRange(
+                                start,
+                                end
+                            );
+
+                        } catch(error){
+
+                            /* optional */
+
+                        }
+
+                    }
+                );
+
+            },
+            120
         );
 
 
-        if(
-            this.searchTimer !==
-                null
-        ){
+    return true;
 
-            clearTimeout(
-                this.searchTimer
-            );
-
-        }
+},
 
 
-        this.searchTimer =
-            setTimeout(
-                () => {
+commitSearch(value){
 
-                    this.searchTimer =
-                        null;
-
-
-                    this.enterBrainContext();
-
-
-                    this.remount();
-
-                },
-                120
-            );
+    const query =
+        String(
+            value ??
+            ""
+        )
+            .trim();
 
 
-        return true;
+    this.setSearchQuery(
+        query
+    );
 
-    },
+
+    this.searchExact =
+        Boolean(
+            query
+        );
+
+
+    this.selectedAppId =
+        null;
+
+
+    this.enterBrainContext();
+
+
+    return this.remount();
+
+},
 
 
     /* =====================================================
@@ -5236,11 +5393,39 @@ if(
 
 
             ApplicationsApp.handleSearchInput(
-                event.target.value
-            );
+    event.target.value,
+    event.target.selectionStart,
+    event.target.selectionEnd
+);
 
         }
     );
+
+   document.addEventListener(
+    "keydown",
+    event => {
+
+        if(
+            event.target?.id !==
+                "applicationsSearch" ||
+            event.key !==
+                "Enter"
+        ){
+
+            return;
+
+        }
+
+
+        event.preventDefault();
+
+
+        ApplicationsApp.commitSearch(
+            event.target.value
+        );
+
+    }
+);
 
 }
 
