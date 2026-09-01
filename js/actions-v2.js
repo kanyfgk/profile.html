@@ -367,6 +367,57 @@ const Actions = {
 
     },
 
+   /* =====================================================
+   NOTIFICATION BRIDGE
+===================================================== */
+
+notify(
+    eventName,
+    payload = {}
+){
+
+    try{
+
+        const notifications =
+            (
+                typeof window !==
+                    "undefined"
+            )
+                ? window.NotificationCenter ||
+                  null
+                : null;
+
+
+        if(
+            !notifications ||
+            typeof notifications.handleRuntimeEvent !==
+                "function"
+        ){
+
+            return false;
+
+        }
+
+
+        return notifications
+            .handleRuntimeEvent(
+                eventName,
+                payload
+            );
+
+    } catch(error){
+
+        console.warn(
+            "Bildirim oluşturulamadı:",
+            error
+        );
+
+        return false;
+
+    }
+
+},
+
 
     /* =====================================================
        EVOLUTION RECORD BRIDGE
@@ -1463,6 +1514,18 @@ const Actions = {
             }
         );
 
+       this.notify(
+    "world:created",
+    {
+        worldId:
+            world.id,
+
+        name:
+            world.name ||
+            name
+    }
+);
+
 
         this.resetEditorState();
 
@@ -2475,6 +2538,21 @@ const Actions = {
                 ]
             }
         );
+
+       this.notify(
+    "entity:created",
+    {
+        entityId:
+            entity.id,
+
+        worldId:
+            world.id,
+
+        name:
+            entity.name ||
+            name
+    }
+);
 
 
         engine.currentOpenedEntity =
