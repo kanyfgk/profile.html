@@ -8950,13 +8950,34 @@ const Actions = {
 
 
         if(
-            !targetAction ||
-            !button
-        ){
+    !targetAction
+){
 
-            return false;
+    return false;
 
-        }
+}
+
+
+button =
+    button &&
+    typeof button ===
+        "object"
+        ? button
+        : {
+            dataset:{}
+        };
+
+
+if(
+    !button.dataset ||
+    typeof button.dataset !==
+        "object"
+){
+
+    button.dataset =
+        {};
+
+}
 
 
         const app =
@@ -9225,13 +9246,34 @@ const Actions = {
 
 
         if(
-            !targetAction ||
-            !button
-        ){
+    !targetAction
+){
 
-            return false;
+    return false;
 
-        }
+}
+
+
+button =
+    button &&
+    typeof button ===
+        "object"
+        ? button
+        : {
+            dataset:{}
+        };
+
+
+if(
+    !button.dataset ||
+    typeof button.dataset !==
+        "object"
+){
+
+    button.dataset =
+        {};
+
+}
 
 
         switch(targetAction){
