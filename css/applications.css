@@ -262,29 +262,37 @@
 
 
 /* =========================================================
-   06. HEADER STAT
+   06. HEADER STATS
 ========================================================= */
 
-.applications-header-stat{
-    position:relative;
+.applications-header-stats{
+    display:grid;
 
-    display:flex;
+    grid-template-columns:
+        repeat(
+            3,
+            minmax(82px,1fr)
+        );
+
+    gap:8px;
 
     flex:
         0
         0
         auto;
 
-    flex-direction:column;
+    min-width:286px;
+}
 
-    align-items:flex-end;
-    justify-content:center;
 
-    min-width:112px;
+.applications-header-stats > div{
+    position:relative;
+
+    min-width:0;
 
     padding:
-        13px
-        15px;
+        12px
+        13px;
 
     overflow:hidden;
 
@@ -292,7 +300,7 @@
         1px solid
         var(--applications-border);
 
-    border-radius:18px;
+    border-radius:16px;
 
     background:
         linear-gradient(
@@ -309,44 +317,52 @@
         rgba(255,255,255,.015);
 }
 
-.applications-header-stat::before{
+
+.applications-header-stats > div::before{
     content:"";
 
     position:absolute;
 
     top:0;
-    right:12px;
+    right:10px;
 
-    width:52px;
+    width:38px;
     height:1px;
 
     background:
         linear-gradient(
             90deg,
             transparent,
-            rgba(215,171,99,.28)
+            rgba(215,171,99,.25)
         );
 }
 
-.applications-header-stat strong{
+
+.applications-header-stats strong{
+    display:block;
+
     color:
         rgba(248,245,238,.95);
 
-    font-size:28px;
-    font-weight:570;
+    font-size:21px;
+    font-weight:620;
 
     line-height:1;
 
-    letter-spacing:-.045em;
+    letter-spacing:-.035em;
 }
 
-.applications-header-stat span{
-    margin-top:6px;
+
+.applications-header-stats span{
+    display:block;
+
+    margin-top:5px;
 
     color:
         var(--applications-muted);
 
-    font-size:10px;
+    font-size:8px;
+    font-weight:600;
 
     line-height:1.1;
 
@@ -1947,6 +1963,47 @@
             1px;
     }
 
+   .applications-header{
+    display:block;
+}
+
+
+.applications-header-stats{
+    width:100%;
+    min-width:0;
+
+    margin-top:12px;
+
+    grid-template-columns:
+        repeat(
+            3,
+            minmax(0,1fr)
+        );
+
+    gap:6px;
+}
+
+
+.applications-header-stats > div{
+    padding:
+        9px
+        10px;
+
+    border-radius:13px;
+}
+
+
+.applications-header-stats strong{
+    font-size:17px;
+}
+
+
+.applications-header-stats span{
+    margin-top:4px;
+
+    font-size:7px;
+}
+
 
     /* -----------------------------------------------------
        MOBILE HEADER
@@ -1975,26 +2032,6 @@
         font-size:11px;
 
         line-height:1.4;
-    }
-
-    .applications-header-stat{
-        min-width:78px;
-
-        padding:
-            10px
-            11px;
-
-        border-radius:15px;
-    }
-
-    .applications-header-stat strong{
-        font-size:21px;
-    }
-
-    .applications-header-stat span{
-        margin-top:4px;
-
-        font-size:8px;
     }
 
 
@@ -2292,11 +2329,7 @@
 ========================================================= */
 
 @media (max-width:420px){
-
-    .applications-header-stat{
-        display:none;
-    }
-
+   
     .applications-header{
         display:block;
     }
@@ -2351,15 +2384,15 @@
         font-size:10px;
     }
 
-    .applications-header-stat{
-        padding:
-            9px
-            11px;
-    }
+    .applications-header-stats > div{
+    padding:
+        9px
+        11px;
+}
 
-    .applications-header-stat strong{
-        font-size:20px;
-    }
+.applications-header-stats strong{
+    font-size:20px;
+}
 
     .applications-toolbar{
         gap:7px;
@@ -2405,17 +2438,15 @@
         display:none;
     }
 
-    .applications-header-stat{
-        min-width:70px;
+    .applications-header-stats > div{
+    padding:
+        7px
+        9px;
+}
 
-        padding:
-            7px
-            9px;
-    }
-
-    .applications-header-stat strong{
-        font-size:18px;
-    }
+.applications-header-stats strong{
+    font-size:18px;
+}
 
     .applications-search{
         height:36px;
@@ -2607,7 +2638,7 @@ and
 
     .applications-card,
     .applications-search,
-    .applications-header-stat,
+    .applications-header-stats > div,
     .applications-detail,
     .applications-detail-grid > div{
         border-color:
