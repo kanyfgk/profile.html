@@ -1378,6 +1378,38 @@ notify(
                 "worldTagsInput"
             );
 
+       const creationKindInput =
+    document.querySelector(
+        'input[name="creationKind"]:checked'
+    );
+
+
+const allowedCreationKinds =
+    new Set([
+        "idea",
+        "project",
+        "application",
+        "system",
+        "automation",
+        "invention"
+    ]);
+
+
+const requestedCreationKind =
+    this.normalizeText(
+        creationKindInput?.value,
+        40
+    )
+        .toLowerCase();
+
+
+const creationKind =
+    allowedCreationKinds.has(
+        requestedCreationKind
+    )
+        ? requestedCreationKind
+        : "project";
+
 
         const name =
             this.normalizeText(
@@ -1450,10 +1482,19 @@ notify(
 
                     tags,
 
-                    type:
-                        "custom-world",
+type:
+    "custom-world",
 
-                    owner:
+metadata:{
+
+    creationKind,
+
+    createdFrom:
+        "create-studio"
+
+},
+
+owner:
                         engine.rootEntity
                             ?.id ||
                         engine.currentEntity
@@ -1507,10 +1548,11 @@ notify(
                     world.id,
 
                 tags:[
-                    "world",
-                    "creation",
-                    ...tags
-                ]
+    "world",
+    "creation",
+    creationKind,
+    ...tags
+]
             }
         );
 
@@ -1522,7 +1564,9 @@ notify(
 
         name:
             world.name ||
-            name
+            name,
+
+        creationKind
     }
 );
 
