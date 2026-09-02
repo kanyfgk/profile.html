@@ -1339,6 +1339,48 @@ title="Brain"
                         "online"
             ).length;
 
+       const creationKind =
+    String(
+        world?.metadata
+            ?.creationKind ||
+        ""
+    )
+        .trim()
+        .toLowerCase();
+
+
+const creationKindLabels = {
+
+    idea:
+        "Fikir",
+
+    project:
+        "Proje",
+
+    application:
+        "Uygulama",
+
+    system:
+        "Sistem",
+
+    automation:
+        "Otomasyon",
+
+    invention:
+        "Buluş"
+
+};
+
+
+const worldKindLabel =
+    creationKindLabels[
+        creationKind
+    ] ||
+    this.translate(
+        world?.type ||
+        "custom-world"
+    );
+
 
         return `
             <button
@@ -1360,13 +1402,10 @@ title="Brain"
                 <span class="world-card-content">
 
                     <small>
-                        ${this.escapeHTML(
-                            this.translate(
-                                world?.type ||
-                                "custom-world"
-                            )
-                        )}
-                    </small>
+    ${this.escapeHTML(
+        worldKindLabel
+    )}
+</small>
 
                     <strong>
                         ${this.escapeHTML(
