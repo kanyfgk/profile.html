@@ -186,10 +186,10 @@ const Components = {
                 "Zaman Çizelgesi",
 
             "applications":
-                "Applications",
+"Uygulamalar",
 
-            "evolution":
-                "Evolution",
+"evolution":
+"Gelişim",
 
             "entity:mounted":
                 "Varlık sisteme bağlandı",
@@ -957,9 +957,10 @@ title="Brain"
                             icon:
                                 "▦",
                             title:
-                                "Applications",
-                            subtitle:
-                                "Engine'i genişlet",
+    "Uygulamalar",
+
+subtitle:
+    "Araçlarını keşfet",
                             tone:
                                 "violet"
                         })}
@@ -972,7 +973,7 @@ title="Brain"
                             title:
                                 "Yarat",
                             subtitle:
-                                "Yeni dünya başlat",
+                                "Fikrini inşa et",
                             tone:
                                 "green"
                         })}
@@ -2777,15 +2778,15 @@ const worldKindLabel =
                     ${this.entityAppLink(
                         "entity:timeline",
                         "◷",
-                        "Timeline",
-                        "Geçmiş ve olay akışı"
+                        "Zaman Çizelgesi",
+"Geçmiş ve önemli olaylar"
                     )}
 
                     ${this.entityAppLink(
                         "entity:bridge",
                         "⌁",
-                        "Bridge",
-                        "Bağlantılar ve ilişkiler"
+                        "Bağlantılar",
+"İlişkiler ve bağlantılar"
                     )}
 
                     ${this.entityAppLink(
