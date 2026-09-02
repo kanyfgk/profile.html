@@ -1401,37 +1401,220 @@ title="Brain"
 
     createView(){
 
-        const worlds =
-            this.getWorlds();
+    const worlds =
+        this.getWorlds();
 
 
-        return `
-            <section class="engine-page create-page">
+    const creationKinds = [
 
-                ${this.pageHeader({
-                    eyebrow:
-                        "YARAT",
-                    title:
-                        "Yeni bir dünya oluştur",
-                    text:
-                        "Bir proje, topluluk, fikir veya kişisel alan için yaşayan bir dijital dünya başlat."
-                })}
+        {
+            id:
+                "idea",
 
-                <div class="create-layout">
+            icon:
+                "✦",
 
-                    <form
-                        class="section create-world-form"
-                        data-engine-form="world-create"
-                    >
+            title:
+                "Fikir",
+
+            text:
+                "Bir düşünceyi geliştir ve şekillendir."
+        },
+
+        {
+            id:
+                "project",
+
+            icon:
+                "◇",
+
+            title:
+                "Proje",
+
+            text:
+                "Bir hedefi çalışan bir projeye dönüştür."
+        },
+
+        {
+            id:
+                "application",
+
+            icon:
+                "▦",
+
+            title:
+                "Uygulama",
+
+            text:
+                "VAERO içinde kullanılabilecek bir uygulama geliştir."
+        },
+
+        {
+            id:
+                "system",
+
+            icon:
+                "⬡",
+
+            title:
+                "Sistem",
+
+            text:
+                "Birbirine bağlı işlevlerden oluşan bir yapı kur."
+        },
+
+        {
+            id:
+                "automation",
+
+            icon:
+                "↻",
+
+            title:
+                "Otomasyon",
+
+            text:
+                "Tekrarlanan işleri çalışan bir akışa bağla."
+        },
+
+        {
+            id:
+                "invention",
+
+            icon:
+                "◉",
+
+            title:
+                "Buluş",
+
+            text:
+                "Yeni bir ürün, cihaz veya çözüm geliştir."
+        }
+
+    ];
+
+
+    return `
+        <section class="engine-page create-page">
+
+            ${this.pageHeader({
+                eyebrow:
+                    "YARAT",
+
+                title:
+                    "Ne oluşturmak istiyorsun?",
+
+                text:
+                    "Bir fikirle başla. VAERO sana bunun için bağımsız bir çalışma alanı açsın; Brain ile adım adım geliştir."
+            })}
+
+
+            <div class="create-layout">
+
+                <form
+                    class="section create-world-form create-studio"
+                    data-engine-form="world-create"
+                >
+
+                    <div class="create-intent-head">
 
                         <div class="eyebrow">
-                            DÜNYA BİLGİLERİ
+                            BAŞLANGIÇ TÜRÜ
                         </div>
+
+                        <p>
+                            Ne üzerinde çalışacağını seç.
+                            Teknik yapıyı VAERO arkada yönetecek.
+                        </p>
+
+                    </div>
+
+
+                    <div
+                        class="create-intent-grid"
+                        role="radiogroup"
+                        aria-label="Oluşturma türü"
+                    >
+
+                        ${creationKinds
+                            .map(
+                                (
+                                    item,
+                                    index
+                                ) => `
+
+                                    <label
+                                        class="create-intent-card"
+                                    >
+
+                                        <input
+                                            type="radio"
+                                            name="creationKind"
+                                            value="${this.escapeHTML(
+                                                item.id
+                                            )}"
+                                            ${
+                                                index ===
+                                                    1
+                                                    ? "checked"
+                                                    : ""
+                                            }
+                                        >
+
+                                        <span
+                                            class="create-intent-icon"
+                                            aria-hidden="true"
+                                        >
+                                            ${this.escapeHTML(
+                                                item.icon
+                                            )}
+                                        </span>
+
+                                        <span
+                                            class="create-intent-copy"
+                                        >
+
+                                            <strong>
+                                                ${this.escapeHTML(
+                                                    item.title
+                                                )}
+                                            </strong>
+
+                                            <small>
+                                                ${this.escapeHTML(
+                                                    item.text
+                                                )}
+                                            </small>
+
+                                        </span>
+
+                                        <span
+                                            class="create-intent-check"
+                                            aria-hidden="true"
+                                        >
+                                            ✓
+                                        </span>
+
+                                    </label>
+
+                                `
+                            )
+                            .join("")}
+
+                    </div>
+
+
+                    <div class="create-studio-fields">
+
+                        <div class="eyebrow">
+                            İLK ADIM
+                        </div>
+
 
                         <label class="engine-field">
 
                             <span>
-                                Dünya adı
+                                Ad
                             </span>
 
                             <input
@@ -1439,28 +1622,30 @@ title="Brain"
                                 name="worldName"
                                 type="text"
                                 maxlength="60"
-                                placeholder="Örn. Innerbloom"
+                                placeholder="Örn. Akıllı sera sistemi"
                                 autocomplete="off"
                                 required
                             >
 
                         </label>
 
+
                         <label class="engine-field">
 
                             <span>
-                                Açıklama
+                                Ne yapmak istiyorsun?
                             </span>
 
                             <textarea
                                 id="worldDescriptionInput"
                                 name="worldDescription"
                                 maxlength="300"
-                                placeholder="Bu dünya ne için yaşayacak?"
+                                placeholder="Fikrini birkaç cümleyle anlat..."
                                 rows="4"
                             ></textarea>
 
                         </label>
+
 
                         <label class="engine-field">
 
@@ -1473,58 +1658,61 @@ title="Brain"
                                 name="worldTags"
                                 type="text"
                                 maxlength="160"
-                                placeholder="proje, kişisel, araştırma"
+                                placeholder="teknoloji, tasarım, araştırma"
                                 autocomplete="off"
                             >
 
                         </label>
+
 
                         <button
                             type="submit"
                             class="primary-btn create-submit"
                             data-action="world:create:submit"
                         >
-                            Dünyayı Oluştur
+                            Çalışma Alanını Başlat
                         </button>
 
-                    </form>
+                    </div>
+
+                </form>
 
 
-                    <aside class="section create-preview">
+                <aside class="section create-preview">
 
-                        <span class="engine-section-label">
-                            CANLI YAPI
-                        </span>
+                    <span class="engine-section-label">
+                        VAERO YARAT
+                    </span>
 
-                        <div
-                            class="create-preview-orbit"
-                            aria-hidden="true"
-                        >
-                            <span></span>
-                        </div>
+                    <div
+                        class="create-preview-orbit"
+                        aria-hidden="true"
+                    >
+                        <span></span>
+                    </div>
 
-                        <h2>
-                            Yeni Dünyan
-                        </h2>
+                    <h2>
+                        Fikirden çalışan yapıya
+                    </h2>
 
-                        <p>
-                            Dünya; varlıkların, hafızaların, bağlantıların ve zaman çizgisinin yaşayacağı bağımsız alan olacak.
-                        </p>
+                    <p>
+                        VAERO seçtiğin şey için bağımsız bir çalışma alanı oluşturur.
+                        Brain, uygulamalar, varlıklar ve diğer araçlar bu alanın içinde birlikte çalışabilir.
+                    </p>
 
-                        <small>
-                            ${worlds.length}
-                            mevcut dünya
-                        </small>
+                    <small>
+                        ${worlds.length}
+                        mevcut çalışma alanı
+                    </small>
 
-                    </aside>
+                </aside>
 
-                </div>
+            </div>
 
-            </section>
-        `;
+        </section>
+    `;
 
-    },
-
+},
 
     /* =====================================================
        WORLD VIEW
