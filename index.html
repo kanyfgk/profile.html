@@ -499,17 +499,14 @@ document.addEventListener(
 
 
         if(
-            discoveryCompleted &&
-            welcomeCompleted &&
-            window.Engine &&
-            typeof window.Engine.start ===
-                "function"
-        ){
+    window.Engine &&
+    typeof window.Engine.start ===
+        "function"
+){
 
-            window.Engine.start();
+    window.Engine.start();
 
-        }
-
+}
     }
 );
 
