@@ -1111,6 +1111,61 @@ subtitle:
                         AKTİF DÜNYAN
                     </span>
 
+                    ${(() => {
+
+    const creationKind =
+        String(
+            world?.metadata
+                ?.creationKind ||
+            ""
+        )
+            .trim()
+            .toLowerCase();
+
+
+    const labels = {
+
+        idea:
+            "Fikir",
+
+        project:
+            "Proje",
+
+        application:
+            "Uygulama",
+
+        system:
+            "Sistem",
+
+        automation:
+            "Otomasyon",
+
+        invention:
+            "Buluş"
+
+    };
+
+
+    const label =
+        labels[
+            creationKind
+        ] ||
+        this.translate(
+            world?.type ||
+            "custom-world"
+        );
+
+
+    return `
+        <span class="engine-active-kind">
+            ${this.escapeHTML(
+                label
+            )}
+        </span>
+    `;
+
+})()}
+
                     <h2>
                         ${this.escapeHTML(
                             world.name ||
@@ -1798,6 +1853,47 @@ const worldKindLabel =
 
         }
 
+       const creationKind =
+    String(
+        world?.metadata
+            ?.creationKind ||
+        ""
+    )
+        .trim()
+        .toLowerCase();
+
+
+const creationKindLabels = {
+
+    idea:
+        "Fikir",
+
+    project:
+        "Proje",
+
+    application:
+        "Uygulama",
+
+    system:
+        "Sistem",
+
+    automation:
+        "Otomasyon",
+
+    invention:
+        "Buluş"
+
+};
+
+
+const worldKindLabel =
+    creationKindLabels[
+        creationKind
+    ] ||
+    this.translate(
+        world?.type ||
+        "custom-world"
+    );
 
         const entities =
             Array.isArray(
@@ -1869,14 +1965,11 @@ const worldKindLabel =
                     <div class="world-hero-copy">
 
                         <div class="world-badge">
-                            ◯
-                            ${this.escapeHTML(
-                                this.translate(
-                                    world.type
-                                )
-                            )}
-                        </div>
-
+    ◯
+    ${this.escapeHTML(
+        worldKindLabel
+    )}
+</div>
                         <h1 class="world-title">
                             ${this.escapeHTML(
                                 world.name
