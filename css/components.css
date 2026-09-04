@@ -4797,3 +4797,30 @@ select:focus-visible{
     }
 
 }
+
+.engine-active-kind{
+    display:inline-flex;
+    align-items:center;
+
+    min-height:22px;
+    margin-bottom:8px;
+    padding:0 9px;
+
+    border:
+        1px solid
+        rgba(230,199,141,.13);
+
+    border-radius:999px;
+
+    background:
+        rgba(230,199,141,.04);
+
+    color:
+        rgba(234,204,148,.82);
+
+    font-size:7px;
+    font-weight:750;
+
+    letter-spacing:.12em;
+    text-transform:uppercase;
+}
