@@ -750,6 +750,8 @@ const World = {
                     entityId
                 );
 
+               this.rehydrateEntityReferences();
+
             };
 
 
@@ -2285,6 +2287,139 @@ const World = {
        PERSISTENCE
     ===================================================== */
 
+   resolveEntityReference(entity){
+
+        if(
+            !entity ||
+            typeof entity !==
+                "object" ||
+            Array.isArray(
+                entity
+            )
+        ){
+
+            return null;
+
+        }
+
+
+        const id =
+            this.normalizeId(
+                entity.id
+            );
+
+
+        if(!id){
+
+            return null;
+
+        }
+
+
+        const manager =
+            this.getService(
+                "entityManager"
+            );
+
+
+        if(manager){
+
+            const methods = [
+                "get",
+                "find",
+                "getById"
+            ];
+
+
+            for(
+                const method of methods
+            ){
+
+                if(
+                    typeof manager[
+                        method
+                    ] !==
+                        "function"
+                ){
+
+                    continue;
+
+                }
+
+
+                try{
+
+                    const resolved =
+                        manager[
+                            method
+                        ](
+                            id
+                        );
+
+
+                    if(resolved){
+
+                        return resolved;
+
+                    }
+
+                } catch(error){
+
+                    /* next resolver */
+
+                }
+
+            }
+
+        }
+
+
+        /*
+         * EntityManager henüz hazır değilse
+         * persisted güvenli referansı koru.
+         */
+
+        return entity;
+
+    },
+
+
+    rehydrateEntityReferences(){
+
+        this.worlds.forEach(
+            world => {
+
+                if(
+                    !Array.isArray(
+                        world?.entities
+                    )
+                ){
+
+                    return;
+
+                }
+
+
+                world.entities =
+                    world.entities
+                        .map(
+                            entity =>
+                                this.resolveEntityReference(
+                                    entity
+                                )
+                        )
+                        .filter(
+                            Boolean
+                        );
+
+            }
+        );
+
+
+        return true;
+
+    },
+   
    toPersistenceEntityReference(entity){
 
         if(
@@ -2559,6 +2694,8 @@ const World = {
                 [
                     ...byId.values()
                 ];
+
+           this.rehydrateEntityReferences();
 
 
             /*
