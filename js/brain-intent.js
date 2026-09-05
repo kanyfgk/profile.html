@@ -160,17 +160,20 @@ const BrainIntent = {
         return [
 
             {
-                target:
-                    "applications",
+    target:
+        "applications",
 
-                names:[
-                    "applications",
-                    "uygulamalar",
-                    "uygulama magazasi",
-                    "uygulama merkezi",
-                    "app store"
-                ]
-            },
+    names:[
+        "applications",
+        "uygulamalar",
+        "uygulamaları",
+        "uygulamayı",
+        "uygulama",
+        "uygulama magazasi",
+        "uygulama merkezi",
+        "app store"
+    ]
+},
 
             {
                 target:
