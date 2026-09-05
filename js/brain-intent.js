@@ -141,6 +141,9 @@ const BrainIntent = {
             "yi",
             "yu",
 
+           "ni",
+           "nu",
+
             "ya",
             "ye",
 
