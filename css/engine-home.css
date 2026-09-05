@@ -4190,6 +4190,236 @@ and
     overscroll-behavior-y:contain;
 }
 
+/* =========================================================
+   ENGINE APPLICATION SHELF
+========================================================= */
+
+.engine-app-shelf{
+    min-width:0;
+    margin-top:9px;
+}
+
+.engine-app-shelf .engine-section-label{
+    margin-bottom:5px;
+}
+
+.engine-app-shelf-grid{
+    display:grid;
+    grid-auto-flow:column;
+    grid-auto-columns:minmax(132px,1fr);
+    gap:6px;
+
+    min-width:0;
+    overflow-x:auto;
+    overflow-y:hidden;
+
+    overscroll-behavior-x:contain;
+    scrollbar-width:none;
+    -webkit-overflow-scrolling:touch;
+}
+
+.engine-app-shelf-grid::-webkit-scrollbar{
+    display:none;
+}
+
+.engine-app-shelf-item{
+    display:grid;
+    grid-template-columns:30px minmax(0,1fr);
+    align-items:center;
+    gap:8px;
+
+    min-width:0;
+    min-height:48px;
+
+    margin:0;
+    padding:7px 9px;
+
+    border:
+        1px solid
+        rgba(255,255,255,.055);
+
+    border-radius:14px;
+
+    outline:none;
+
+    background:
+        linear-gradient(
+            145deg,
+            rgba(255,255,255,.028),
+            rgba(255,255,255,.008)
+        );
+
+    color:var(--engine-home-text);
+
+    font:inherit;
+    text-align:left;
+
+    cursor:pointer;
+
+    -webkit-tap-highlight-color:transparent;
+
+    transition:
+        transform .18s var(--engine-home-ease),
+        border-color .18s ease,
+        background .18s ease;
+}
+
+.engine-app-shelf-item:hover{
+    transform:translateY(-1px);
+
+    border-color:
+        rgba(215,171,99,.15);
+
+    background:
+        rgba(255,255,255,.038);
+}
+
+.engine-app-shelf-item:active{
+    transform:scale(.985);
+}
+
+.engine-app-shelf-item:focus-visible{
+    outline:
+        1px solid
+        rgba(215,171,99,.45);
+
+    outline-offset:2px;
+}
+
+.engine-app-shelf-icon{
+    display:flex;
+    align-items:center;
+    justify-content:center;
+
+    width:30px;
+    height:30px;
+
+    border:
+        1px solid
+        rgba(215,171,99,.1);
+
+    border-radius:10px;
+
+    background:
+        rgba(215,171,99,.045);
+
+    color:
+        rgba(237,197,116,.88);
+
+    font-size:14px;
+}
+
+.engine-app-shelf-copy{
+    display:flex;
+    flex-direction:column;
+    justify-content:center;
+
+    min-width:0;
+}
+
+.engine-app-shelf-copy strong{
+    overflow:hidden;
+
+    color:
+        rgba(246,243,236,.92);
+
+    font-size:9px;
+    font-weight:650;
+    line-height:1.15;
+
+    text-overflow:ellipsis;
+    white-space:nowrap;
+}
+
+.engine-app-shelf-copy small{
+    margin-top:3px;
+    overflow:hidden;
+
+    color:
+        rgba(226,230,236,.38);
+
+    font-size:7px;
+    line-height:1.15;
+
+    text-overflow:ellipsis;
+    white-space:nowrap;
+}
+
+
+/* =========================================================
+   APPLICATION SHELF — MOBILE
+========================================================= */
+
+@media (max-width:650px){
+
+    .engine-app-shelf{
+        margin-top:6px;
+    }
+
+    .engine-app-shelf-grid{
+        grid-auto-columns:
+            minmax(
+                118px,
+                42vw
+            );
+
+        gap:5px;
+    }
+
+    .engine-app-shelf-item{
+        grid-template-columns:
+            28px
+            minmax(0,1fr);
+
+        min-height:46px;
+
+        padding:
+            6px
+            7px;
+
+        border-radius:12px;
+    }
+
+    .engine-app-shelf-icon{
+        width:28px;
+        height:28px;
+
+        border-radius:9px;
+
+        font-size:13px;
+    }
+
+    .engine-app-shelf-copy strong{
+        font-size:8px;
+    }
+
+    .engine-app-shelf-copy small{
+        font-size:6.5px;
+    }
+
+}
+
+
+/* =========================================================
+   APPLICATION SHELF — TOUCH / MOTION
+========================================================= */
+
+@media (hover:none){
+
+    .engine-app-shelf-item:hover{
+        transform:none;
+    }
+
+}
+
+@media (prefers-reduced-motion:reduce){
+
+    .engine-app-shelf-item{
+        transition:none;
+    }
+
+}
+
 
 /* =========================================================
    END — VAERO ENGINE HOME
