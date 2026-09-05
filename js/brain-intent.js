@@ -84,6 +84,276 @@ const BrainIntent = {
 
     },
 
+   getTargetTokenVariants(token){
+
+        const value =
+            this.normalize(
+                token
+            );
+
+
+        if(!value){
+
+            return [];
+
+        }
+
+
+        const variants =
+            new Set([
+                value
+            ]);
+
+
+        const suffixes = [
+
+            "larimi",
+            "lerimi",
+            "larim",
+            "lerim",
+
+            "imizi",
+            "umuzu",
+            "inizi",
+            "unuzu",
+
+            "lari",
+            "leri",
+
+            "sini",
+            "sunu",
+
+            "imi",
+            "umu",
+            "ini",
+            "unu",
+
+            "dan",
+            "den",
+            "tan",
+            "ten",
+
+            "miz",
+            "muz",
+            "niz",
+            "nuz",
+
+            "yi",
+            "yu",
+
+            "ya",
+            "ye",
+
+            "da",
+            "de",
+            "ta",
+            "te",
+
+            "im",
+            "um",
+            "in",
+            "un",
+
+            "si",
+            "su",
+
+            "mi",
+            "mu",
+
+            "i",
+            "u",
+
+            "a",
+            "e",
+
+            "m",
+            "n"
+
+        ];
+
+
+        suffixes.forEach(
+            suffix => {
+
+                if(
+                    value.length >
+                        suffix.length + 2 &&
+                    value.endsWith(
+                        suffix
+                    )
+                ){
+
+                    variants.add(
+                        value.slice(
+                            0,
+                            -suffix.length
+                        )
+                    );
+
+                }
+
+            }
+        );
+
+
+        /*
+         * Türkçedeki ünsüz yumuşamasını da hesaba kat.
+         *
+         * kimlik → kimliği → kimligi
+         * kitap → kitabı → kitabi
+         * kanat → kanadı → kanadi
+         */
+
+        Array.from(
+            variants
+        ).forEach(
+            candidate => {
+
+                if(
+                    candidate.endsWith(
+                        "g"
+                    )
+                ){
+
+                    variants.add(
+                        candidate.slice(
+                            0,
+                            -1
+                        ) + "k"
+                    );
+
+                }
+
+
+                if(
+                    candidate.endsWith(
+                        "b"
+                    )
+                ){
+
+                    variants.add(
+                        candidate.slice(
+                            0,
+                            -1
+                        ) + "p"
+                    );
+
+                }
+
+
+                if(
+                    candidate.endsWith(
+                        "d"
+                    )
+                ){
+
+                    variants.add(
+                        candidate.slice(
+                            0,
+                            -1
+                        ) + "t"
+                    );
+
+                }
+
+            }
+        );
+
+
+        return Array.from(
+            variants
+        );
+
+    },
+
+
+    matchesTargetPhrase(
+        text,
+        phrase
+    ){
+
+        const textTokens =
+            this.tokenize(
+                text
+            );
+
+
+        const phraseTokens =
+            this.tokenize(
+                phrase
+            );
+
+
+        if(
+            !textTokens.length ||
+            !phraseTokens.length ||
+            phraseTokens.length >
+                textTokens.length
+        ){
+
+            return false;
+
+        }
+
+
+        for(
+            let start = 0;
+            start <=
+                textTokens.length -
+                phraseTokens.length;
+            start++
+        ){
+
+            let matched =
+                true;
+
+
+            for(
+                let index = 0;
+                index <
+                    phraseTokens.length;
+                index++
+            ){
+
+                const variants =
+                    this.getTargetTokenVariants(
+                        textTokens[
+                            start + index
+                        ]
+                    );
+
+
+                if(
+                    !variants.includes(
+                        phraseTokens[
+                            index
+                        ]
+                    )
+                ){
+
+                    matched =
+                        false;
+
+                    break;
+
+                }
+
+            }
+
+
+            if(matched){
+
+                return true;
+
+            }
+
+        }
+
+
+        return false;
+
+    },
+
 
     includesPhrase(
         text,
@@ -471,26 +741,11 @@ const BrainIntent = {
                                 false;
 
 
-                            if(
-                                normalizedName.includes(
-                                    " "
-                                )
-                            ){
-
-                                matched =
-                                    ` ${normalizedText} `
-                                        .includes(
-                                            ` ${normalizedName} `
-                                        );
-
-                            } else {
-
-                                matched =
-                                    tokens.includes(
-                                        normalizedName
-                                    );
-
-                            }
+                            matched =
+    this.matchesTargetPhrase(
+        normalizedText,
+        normalizedName
+    );
 
 
                             if(!matched){
