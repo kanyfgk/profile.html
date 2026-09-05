@@ -2285,6 +2285,122 @@ const World = {
        PERSISTENCE
     ===================================================== */
 
+   toPersistenceEntityReference(entity){
+
+        if(
+            !entity ||
+            typeof entity !==
+                "object" ||
+            Array.isArray(
+                entity
+            )
+        ){
+
+            return null;
+
+        }
+
+
+        const id =
+            this.normalizeId(
+                entity.id
+            );
+
+
+        if(!id){
+
+            return null;
+
+        }
+
+
+        return {
+
+            id,
+
+            type:
+                this.normalizeText(
+                    entity.type,
+                    "entity",
+                    120
+                ),
+
+            name:
+                this.normalizeText(
+                    entity.name,
+                    "İsimsiz Varlık",
+                    240
+                ),
+
+            status:
+                this.normalizeText(
+                    entity.status,
+                    "active",
+                    120
+                ),
+
+            archived:
+                entity.archived ===
+                    true,
+
+            createdAt:
+                this.normalizeTimestamp(
+                    entity.createdAt,
+                    null
+                ),
+
+            updatedAt:
+                this.normalizeTimestamp(
+                    entity.updatedAt,
+                    entity.createdAt ||
+                    null
+                )
+
+        };
+
+    },
+
+
+    toPersistenceWorld(world){
+
+        if(
+            !world ||
+            typeof world !==
+                "object" ||
+            Array.isArray(
+                world
+            )
+        ){
+
+            return null;
+
+        }
+
+
+        return {
+
+            ...world,
+
+            entities:
+                Array.isArray(
+                    world.entities
+                )
+                    ? world.entities
+                        .map(
+                            entity =>
+                                this.toPersistenceEntityReference(
+                                    entity
+                                )
+                        )
+                        .filter(
+                            Boolean
+                        )
+                    : []
+
+        };
+
+    },
+   
     save(){
 
         try{
@@ -2302,8 +2418,17 @@ const World = {
             localStorage.setItem(
                 this.storageKey,
                 JSON.stringify(
-                    this.worlds
+    this.worlds
+        .map(
+            world =>
+                this.toPersistenceWorld(
+                    world
                 )
+        )
+        .filter(
+            Boolean
+        )
+)
             );
 
 
