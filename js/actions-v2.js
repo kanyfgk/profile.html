@@ -7667,9 +7667,16 @@ saveProfile(){
             now;
 
 
+        this.updateBrainConversationSummary(
+            session
+        );
+
+
+        this.saveBrainState();
+
+
         input.value =
             "";
-
 
         this.brainSending =
             true;
