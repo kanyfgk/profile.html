@@ -804,6 +804,33 @@ const Components = {
     const applications =
         this.getApplications();
 
+        const homeApplicationIds = [
+    "identity",
+    "profile",
+    "memory",
+    "timeline",
+    "bridge",
+    "evolution",
+    "discovery",
+    "settings",
+    "vaero"
+];
+
+
+const homeApplications =
+    homeApplicationIds
+        .map(
+            id =>
+                applications.find(
+                    app =>
+                        app?.id ===
+                            id
+                )
+        )
+        .filter(
+            Boolean
+        );
+
 
     const displayName =
         this.getDisplayName(
@@ -1044,6 +1071,72 @@ const Components = {
                 </div>
 
             </section>
+
+            ${
+    homeApplications.length
+        ? `
+            <section class="engine-app-shelf">
+
+                <span class="engine-section-label">
+                    UYGULAMALAR
+                </span>
+
+
+                <div class="engine-app-shelf-grid">
+
+                    ${homeApplications
+                        .map(
+                            app => `
+                                <button
+                                    type="button"
+                                    class="engine-app-shelf-item"
+                                    data-action="${this.escapeHTML(
+                                        app.action ||
+                                        ""
+                                    )}"
+                                    aria-label="${this.escapeHTML(
+                                        app.title ||
+                                        app.id
+                                    )}"
+                                >
+
+                                    <span class="engine-app-shelf-icon">
+                                        ${this.escapeHTML(
+                                            app.icon ||
+                                            "◌"
+                                        )}
+                                    </span>
+
+
+                                    <span class="engine-app-shelf-copy">
+
+                                        <strong>
+                                            ${this.escapeHTML(
+                                                app.title ||
+                                                app.id
+                                            )}
+                                        </strong>
+
+                                        <small>
+                                            ${this.escapeHTML(
+                                                app.subtitle ||
+                                                ""
+                                            )}
+                                        </small>
+
+                                    </span>
+
+                                </button>
+                            `
+                        )
+                        .join("")}
+
+                </div>
+
+            </section>
+        `
+        : ""
+}
 
 
             ${
