@@ -919,159 +919,225 @@ const homeApplications =
 
             <section class="engine-hero">
 
-                <div class="engine-hero-copy">
+    <div class="engine-hero-copy">
 
-                    <span class="engine-welcome">
-                        ${welcomeText}
+        <span class="engine-welcome">
+            ${welcomeText}
+        </span>
+
+        <h1>
+            VAERO Engine
+        </h1>
+
+        <p>
+            Yaşayan dijital evrenin kontrol merkezi
+        </p>
+
+
+        <div
+            class="engine-status-pill"
+            data-engine-health="${this.escapeHTML(
+                engineStatus
+            )}"
+        >
+
+            <span
+                class="engine-status-dot"
+                aria-hidden="true"
+            ></span>
+
+            <strong>
+                ${
+                    engineStatus ===
+                        "critical"
+                        ? "Sistem Uyarısı"
+                        : engineStatus ===
+                            "degraded"
+                            ? "Sistem İzleniyor"
+                            : "Sistem Online"
+                }
+            </strong>
+
+            <span
+                class="engine-status-separator"
+                aria-hidden="true"
+            ></span>
+
+            <small>
+                ${applications.length}
+                uygulama hazır
+            </small>
+
+        </div>
+
+    </div>
+
+
+    <button
+        type="button"
+        class="engine-brain-orb"
+        data-action="brain:open"
+        aria-label="Brain'i aç"
+    >
+
+        <span
+            class="brain-orbit brain-orbit-1"
+        ></span>
+
+        <span
+            class="brain-orbit brain-orbit-2"
+        ></span>
+
+        <span
+            class="brain-orbit brain-orbit-3"
+        ></span>
+
+        <span class="brain-core">
+
+            <span class="brain-eye"></span>
+            <span class="brain-eye"></span>
+
+        </span>
+
+    </button>
+
+</section>
+
+
+<section class="engine-shortcuts">
+
+    <span class="engine-section-label">
+        ENGINE
+    </span>
+
+
+    <div class="engine-shortcuts-grid">
+
+        ${this.shortcutCard({
+            action:
+                "worlds:open",
+            icon:
+                "◯",
+            title:
+                "Dünyalar",
+            subtitle:
+                "Keşfet ve yönet",
+            tone:
+                "gold"
+        })}
+
+
+        ${this.shortcutCard({
+            action:
+                "entities:open",
+            icon:
+                "⬡",
+            title:
+                "Varlıklar",
+            subtitle:
+                "Yaşayan yapılar",
+            tone:
+                "blue"
+        })}
+
+
+        ${this.shortcutCard({
+            action:
+                "app:applications",
+            icon:
+                "▦",
+            title:
+                "Uygulamalar",
+            subtitle:
+                "Araçlarını keşfet",
+            tone:
+                "violet"
+        })}
+
+
+        ${this.shortcutCard({
+            action:
+                "create:open",
+            icon:
+                "✦",
+            title:
+                "Yarat",
+            subtitle:
+                "Fikrini inşa et",
+            tone:
+                "green"
+        })}
+
+    </div>
+
+
+    ${
+        homeApplications.length
+            ? `
+                <section class="engine-app-shelf">
+
+                    <span class="engine-section-label">
+                        UYGULAMALAR
                     </span>
 
-                    <h1>
-                        VAERO Engine
-                    </h1>
 
-                    <p>
-                        Yaşayan dijital evrenin kontrol merkezi
-                    </p>
+                    <div class="engine-app-shelf-grid">
+
+                        ${homeApplications
+                            .map(
+                                app => `
+                                    <button
+                                        type="button"
+                                        class="engine-app-shelf-item"
+                                        data-action="${this.escapeHTML(
+                                            app.action ||
+                                            ""
+                                        )}"
+                                        aria-label="${this.escapeHTML(
+                                            app.title ||
+                                            app.id
+                                        )}"
+                                    >
+
+                                        <span class="engine-app-shelf-icon">
+                                            ${this.escapeHTML(
+                                                app.icon ||
+                                                "◌"
+                                            )}
+                                        </span>
 
 
-                    <div
-                        class="engine-status-pill"
-                        data-engine-health="${this.escapeHTML(
-                            engineStatus
-                        )}"
-                    >
+                                        <span class="engine-app-shelf-copy">
 
-                        <span
-                            class="engine-status-dot"
-                            aria-hidden="true"
-                        ></span>
+                                            <strong>
+                                                ${this.escapeHTML(
+                                                    app.title ||
+                                                    app.id
+                                                )}
+                                            </strong>
 
-                        <strong>
-                            ${
-                                engineStatus ===
-                                    "critical"
-                                    ? "Sistem Uyarısı"
-                                    : engineStatus ===
-                                        "degraded"
-                                        ? "Sistem İzleniyor"
-                                        : "Sistem Online"
-                            }
-                        </strong>
+                                            <small>
+                                                ${this.escapeHTML(
+                                                    app.subtitle ||
+                                                    ""
+                                                )}
+                                            </small>
 
-                        <span
-                            class="engine-status-separator"
-                            aria-hidden="true"
-                        ></span>
+                                        </span>
 
-                        <small>
-                            ${applications.length}
-                            uygulama hazır
-                        </small>
+                                    </button>
+                                `
+                            )
+                            .join("")}
 
                     </div>
 
-                </div>
+                </section>
+            `
+            : ""
+    }
 
-
-                <button
-                    type="button"
-                    class="engine-brain-orb"
-                    data-action="brain:open"
-                    aria-label="Brain'i aç"
-                >
-
-                    <span
-                        class="brain-orbit brain-orbit-1"
-                    ></span>
-
-                    <span
-                        class="brain-orbit brain-orbit-2"
-                    ></span>
-
-                    <span
-                        class="brain-orbit brain-orbit-3"
-                    ></span>
-
-                    <span class="brain-core">
-
-                        <span class="brain-eye"></span>
-                        <span class="brain-eye"></span>
-
-                    </span>
-
-                </button>
-
-            </section>
-
-
-            <section class="engine-shortcuts">
-
-                <span class="engine-section-label">
-                    ENGINE
-                </span>
-
-
-                <div class="engine-shortcuts-grid">
-
-                    ${this.shortcutCard({
-                        action:
-                            "worlds:open",
-                        icon:
-                            "◯",
-                        title:
-                            "Dünyalar",
-                        subtitle:
-                            "Keşfet ve yönet",
-                        tone:
-                            "gold"
-                    })}
-
-
-                    ${this.shortcutCard({
-                        action:
-                            "entities:open",
-                        icon:
-                            "⬡",
-                        title:
-                            "Varlıklar",
-                        subtitle:
-                            "Yaşayan yapılar",
-                        tone:
-                            "blue"
-                    })}
-
-
-                    ${this.shortcutCard({
-                        action:
-                            "app:applications",
-                        icon:
-                            "▦",
-                        title:
-                            "Uygulamalar",
-                        subtitle:
-                            "Araçlarını keşfet",
-                        tone:
-                            "violet"
-                    })}
-
-
-                    ${this.shortcutCard({
-                        action:
-                            "create:open",
-                        icon:
-                            "✦",
-                        title:
-                            "Yarat",
-                        subtitle:
-                            "Fikrini inşa et",
-                        tone:
-                            "green"
-                    })}
-
-                </div>
-
-            </section>
-
+</section>
             ${
     homeApplications.length
         ? `
