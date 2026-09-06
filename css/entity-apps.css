@@ -1734,18 +1734,44 @@
 }
 
 .settings-content-scroll{
+    width:100%;
+    max-width:100%;
+    min-width:0;
+
     padding:0 2px 4px 0;
+
+    overflow-x:hidden;
+    overflow-y:auto;
 }
 
 .settings-panel,
 .settings-summary,
 .settings-warning-card{
+    width:100%;
+    max-width:100%;
+    min-width:0;
+
     padding:18px;
 
     border:1px solid var(--entity-app-line);
     border-radius:18px;
 
     background:var(--entity-app-surface);
+}
+
+.settings-panel header,
+.settings-panel header p,
+.settings-control-copy,
+.settings-control-copy small{
+    min-width:0;
+    max-width:100%;
+}
+
+.settings-panel header p,
+.settings-control-copy small{
+    white-space:normal;
+    overflow-wrap:anywhere;
+    word-break:normal;
 }
 
 .settings-panel + .settings-panel,
@@ -2255,19 +2281,30 @@
     }
 
     .settings-navigation{
-        flex-direction:row;
+    width:100%;
+    max-width:100%;
 
-        overflow-x:auto;
-        scrollbar-width:none;
-    }
+    flex-direction:row;
+
+    overflow-x:auto;
+    overflow-y:hidden;
+
+    overscroll-behavior-x:contain;
+    touch-action:pan-x;
+
+    scrollbar-width:none;
+}
 
     .settings-navigation::-webkit-scrollbar{
         display:none;
     }
 
     .settings-nav-item{
-        width:auto;
-    }
+    width:auto;
+    min-width:max-content;
+
+    flex:0 0 auto;
+}
 
     .organs-control-grid,
     .memory-record-list,
