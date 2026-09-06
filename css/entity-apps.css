@@ -1740,8 +1740,12 @@
 
     padding:0 2px 4px 0;
 
-    overflow-x:hidden;
-    overflow-y:auto;
+    overflow-x:auto;
+overflow-y:auto;
+
+-webkit-overflow-scrolling:touch;
+touch-action:pan-x pan-y;
+overscroll-behavior:contain;
 }
 
 .settings-panel,
@@ -2336,6 +2340,7 @@
             );
     }
 
+
     :is(
         .identity-app-intro,
         .organs-intro,
@@ -2350,6 +2355,7 @@
         flex-direction:column;
     }
 
+
     :is(
         .organs-toolbar,
         .timeline-toolbar,
@@ -2360,6 +2366,7 @@
         align-items:stretch;
         flex-direction:column;
     }
+
 
     :is(
         .organs-search,
@@ -2373,6 +2380,7 @@
         flex-basis:auto;
     }
 
+
     :is(
         .organs-search,
         .timeline-search,
@@ -2385,6 +2393,7 @@
         font-size:16px;
     }
 
+
     :is(
         .organs-summary,
         .timeline-stats,
@@ -2395,17 +2404,24 @@
     ){
         width:100%;
 
-        grid-template-columns:repeat(2, minmax(0,1fr));
+        grid-template-columns:
+            repeat(
+                2,
+                minmax(0,1fr)
+            );
     }
+
 
     .identity-primary-card{
         grid-template-columns:1fr;
     }
 
+
     .identity-primary-mark{
         width:58px;
         height:58px;
     }
+
 
     .identity-primary-meta,
     :is(
@@ -2417,31 +2433,39 @@
         grid-template-columns:1fr;
     }
 
+
     .identity-verification-panel{
         align-items:flex-start;
         flex-direction:column;
     }
 
+
     .profile-hero-card{
         grid-template-columns:1fr;
     }
+
 
     .profile-avatar{
         width:58px;
         height:58px;
     }
 
+
     .profile-hero-actions{
         grid-column:auto;
     }
+
 
     :is(
         .timeline-stream-item,
         .evolution-record,
         .bridge-record
     ){
-        grid-template-columns:auto minmax(0,1fr);
+        grid-template-columns:
+            auto
+            minmax(0,1fr);
     }
+
 
     .timeline-stream-arrow,
     .evolution-record-side,
@@ -2449,6 +2473,7 @@
         grid-column:2;
         justify-self:start;
     }
+
 
     :is(
         .identity-detail-layer,
@@ -2460,10 +2485,17 @@
         .bridge-detail-layer
     ){
         padding:
-            max(8px, env(safe-area-inset-top))
+            max(
+                8px,
+                env(safe-area-inset-top)
+            )
             8px
-            max(8px, env(safe-area-inset-bottom));
+            max(
+                8px,
+                env(safe-area-inset-bottom)
+            );
     }
+
 
     :is(
         .identity-editor,
@@ -2478,10 +2510,16 @@
         .bridge-editor
     ){
         width:100%;
-        max-height:calc(100dvh - 16px);
+
+        max-height:
+            calc(
+                100dvh -
+                16px
+            );
 
         border-radius:20px;
     }
+
 
     :is(
         .identity-detail-actions,
@@ -2495,10 +2533,296 @@
         flex-wrap:wrap;
     }
 
+
     .organ-permission-form{
         align-items:stretch;
         flex-direction:column;
     }
+
+
+    /* =====================================================
+       MOBILE TWO-AXIS INTERNAL SCROLL
+    ===================================================== */
+
+    :is(
+        .profile-content-scroll,
+        .timeline-stream-scroll,
+        .memory-records-scroll,
+        .settings-content-scroll
+    ){
+        width:100%;
+        max-width:100%;
+
+        min-width:0;
+        min-height:0;
+
+        overflow-x:auto;
+        overflow-y:auto;
+
+        -webkit-overflow-scrolling:touch;
+
+        touch-action:
+            pan-x
+            pan-y;
+
+        overscroll-behavior:contain;
+
+        scrollbar-width:thin;
+
+        scrollbar-color:
+            rgba(
+                230,
+                215,
+                176,
+                .18
+            )
+            transparent;
+    }
+
+
+    :is(
+        .profile-content-scroll,
+        .timeline-stream-scroll,
+        .memory-records-scroll,
+        .settings-content-scroll
+    )::-webkit-scrollbar{
+        width:7px;
+        height:7px;
+    }
+
+
+    :is(
+        .profile-content-scroll,
+        .timeline-stream-scroll,
+        .memory-records-scroll,
+        .settings-content-scroll
+    )::-webkit-scrollbar-thumb{
+        border-radius:999px;
+
+        background:
+            rgba(
+                230,
+                215,
+                176,
+                .16
+            );
+    }
+
+
+    /* =====================================================
+       PROFILE CONTENT
+    ===================================================== */
+
+    .profile-content-grid{
+        width:680px;
+        max-width:none;
+        min-width:680px;
+
+        grid-template-columns:
+            minmax(350px,1.15fr)
+            minmax(300px,.85fr);
+    }
+
+
+    .profile-overview{
+        min-width:0;
+    }
+
+
+    /* =====================================================
+       PROFILE POLICY HORIZONTAL STRIP
+    ===================================================== */
+
+    .profile-policy-list{
+        width:100%;
+        max-width:100%;
+        min-width:0;
+
+        display:flex;
+        flex-wrap:nowrap;
+        align-items:stretch;
+
+        gap:8px;
+
+        overflow-x:auto;
+        overflow-y:hidden;
+
+        padding-bottom:8px;
+
+        -webkit-overflow-scrolling:touch;
+
+        touch-action:pan-x;
+
+        overscroll-behavior-x:contain;
+
+        scrollbar-width:thin;
+
+        scrollbar-color:
+            rgba(
+                230,
+                215,
+                176,
+                .18
+            )
+            transparent;
+    }
+
+
+    .profile-policy-list > div{
+        flex:
+            0
+            0
+            150px;
+
+        min-width:150px;
+
+        padding:11px 12px;
+
+        border:
+            1px
+            solid
+            var(--entity-app-line);
+
+        border-radius:14px;
+
+        background:
+            rgba(
+                255,
+                255,
+                255,
+                .014
+            );
+    }
+
+
+    .profile-policy-list > div span,
+    .profile-policy-list > div strong{
+        display:block;
+
+        white-space:nowrap;
+    }
+
+
+    .profile-policy-list > div strong{
+        margin-top:5px;
+
+        color:
+            var(--entity-app-text);
+    }
+
+
+    .profile-policy-list::-webkit-scrollbar{
+        height:7px;
+    }
+
+
+    .profile-policy-list::-webkit-scrollbar-thumb{
+        border-radius:999px;
+
+        background:
+            rgba(
+                230,
+                215,
+                176,
+                .16
+            );
+    }
+
+
+    /* =====================================================
+       TIMELINE HORIZONTAL CONTENT
+    ===================================================== */
+
+    .timeline-stream{
+        width:620px;
+        max-width:none;
+        min-width:620px;
+    }
+
+
+    .timeline-day-group,
+    .timeline-day-items{
+        width:100%;
+        min-width:0;
+    }
+
+
+    .timeline-stream-item{
+        width:100%;
+        min-width:590px;
+    }
+
+
+    .timeline-stream-content{
+        min-width:0;
+    }
+
+
+    /* =====================================================
+       MEMORY HORIZONTAL CONTENT
+    ===================================================== */
+
+    .memory-record-list{
+        width:620px;
+        max-width:none;
+        min-width:620px;
+
+        grid-template-columns:1fr;
+    }
+
+
+    .memory-record{
+        width:100%;
+        min-width:590px;
+    }
+
+
+    .memory-record-body{
+        min-width:0;
+    }
+
+
+    /* =====================================================
+       SETTINGS HORIZONTAL CONTENT
+    ===================================================== */
+
+    .settings-content-scroll{
+        overflow-x:auto;
+        overflow-y:auto;
+    }
+
+
+    .settings-content-scroll > .settings-panel{
+        width:620px;
+        max-width:none;
+        min-width:620px;
+    }
+
+
+    .settings-content-scroll > .settings-reset-row{
+        width:620px;
+        max-width:none;
+        min-width:620px;
+    }
+
+
+    .settings-panel header,
+    .settings-panel header p,
+    .settings-control-copy,
+    .settings-control-copy small{
+        min-width:0;
+    }
+
+
+    .settings-panel header p,
+    .settings-control-copy small{
+        white-space:normal;
+
+        overflow-wrap:anywhere;
+
+        word-break:normal;
+    }
+
 }
 
 
