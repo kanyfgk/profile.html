@@ -4555,6 +4555,53 @@ saveProfile(){
 
     getVaeroPaymentCore(){
 
+        /*
+         * Öncelik VAERO Payment Controller'dadır.
+         *
+         * Controller:
+         * VAERO UI runtime cache'i ile
+         * Engine Payment state'ini birlikte tutar.
+         */
+
+        const controller =
+            typeof window !==
+                "undefined"
+                ? (
+                    window.VaeroPaymentController ||
+                    null
+                )
+                : null;
+
+
+        if(
+            controller &&
+            typeof controller ===
+                "object"
+        ){
+
+            return controller;
+
+        }
+
+
+        const registeredController =
+            this.getService(
+                "vaeroPaymentController"
+            );
+
+
+        if(registeredController){
+
+            return registeredController;
+
+        }
+
+
+        /*
+         * Controller hazır değilse doğrudan adapter
+         * geçiş/fallback yolu olarak kullanılabilir.
+         */
+
         const adapter =
             typeof window !==
                 "undefined"
@@ -4590,9 +4637,9 @@ saveProfile(){
 
 
         /*
-         * Transitional fallback.
-         * VAERO App legacy Payment Core kaldırılana kadar
-         * eski çalışma yolu tamamen koparılmaz.
+         * Legacy fallback.
+         * vaero-app.js içindeki eski Payment Core tamamen
+         * kaldırılana kadar çalışma yolu koparılmaz.
          */
 
         const app =
