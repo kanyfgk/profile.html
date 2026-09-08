@@ -1,26 +1,24 @@
 /* =========================================================
    VAERO PAYMENT SYSTEM
-   Engine Payment Intent Authority
+   Engine Payment Intent / Provider Authority
 
    IMPORTANT
    ---------------------------------------------------------
    Applications do not own payment infrastructure.
 
-   Applications may create and manage payment intents
-   through VAERO Engine.
+   Applications create and manage payment intents through
+   VAERO Engine.
 
-   This service DOES NOT treat browser state as proof
-   of payment.
+   Browser/application state can never self-verify payment.
 
-   completed / refunded / verified transaction state
-   must eventually come from a trusted VAERO payment
-   provider or VAERO-owned payment infrastructure.
+   Completed / refunded / transaction verification must
+   come from trusted VAERO payment infrastructure.
 ========================================================= */
 
 const PaymentSystem = {
 
     version:
-        "1.0.0",
+        "1.1.0",
 
     booted:
         false,
@@ -485,6 +483,79 @@ const PaymentSystem = {
     },
 
 
+    hasPaymentAccess(appId){
+
+        const manifest =
+            this.getAppManifest(
+                appId
+            );
+
+
+        if(
+            !this.isTrustedApplication(
+                appId
+            ) ||
+            !manifest
+        ){
+
+            return false;
+
+        }
+
+
+        const capabilities =
+            Array.isArray(
+                manifest.capabilities
+            )
+                ? manifest.capabilities
+                    .map(
+                        item =>
+                            String(
+                                item ||
+                                ""
+                            )
+                                .trim()
+                                .toLowerCase()
+                    )
+                : [];
+
+
+        const permissions =
+            Array.isArray(
+                manifest.requestedPermissions
+            )
+                ? manifest.requestedPermissions
+                    .map(
+                        item =>
+                            String(
+                                item ||
+                                ""
+                            )
+                                .trim()
+                                .toLowerCase()
+                    )
+                : [];
+
+
+        return (
+
+            capabilities.includes(
+                "vaero.purchase"
+            ) ||
+
+            capabilities.includes(
+                "payment.intent"
+            ) ||
+
+            permissions.includes(
+                "payment.intent"
+            )
+
+        );
+
+    },
+
+
     /* =====================================================
        ENGINE DATA
     ===================================================== */
@@ -499,7 +570,7 @@ const PaymentSystem = {
 
         if(
             !id ||
-            !this.isTrustedApplication(
+            !this.hasPaymentAccess(
                 id
             )
         ){
@@ -555,6 +626,185 @@ const PaymentSystem = {
         } catch(error){
 
             return null;
+
+        }
+
+    },
+
+
+    /* =====================================================
+       PROVIDER AUTHORITY
+    ===================================================== */
+
+    getProviderRegistry(){
+
+        return (
+            this.getService(
+                "paymentProviderRegistry"
+            ) ||
+            this.getService(
+                "checkoutProviderRegistry"
+            ) ||
+            null
+        );
+
+    },
+
+
+    getProvider(providerId){
+
+        const id =
+            this.normalizeProvider(
+                providerId
+            );
+
+
+        if(!id){
+
+            return null;
+
+        }
+
+
+        const registry =
+            this.getProviderRegistry();
+
+
+        if(!registry){
+
+            return null;
+
+        }
+
+
+        try{
+
+            let provider =
+                null;
+
+
+            if(
+                typeof registry.get ===
+                    "function"
+            ){
+
+                provider =
+                    registry.get(
+                        id
+                    ) ||
+                    null;
+
+            }
+
+            else if(
+                typeof registry.find ===
+                    "function"
+            ){
+
+                provider =
+                    registry.find(
+                        id
+                    ) ||
+                    null;
+
+            }
+
+
+            if(
+                !provider ||
+                provider.enabled ===
+                    false
+            ){
+
+                return null;
+
+            }
+
+
+            return provider;
+
+        } catch(error){
+
+            return null;
+
+        }
+
+    },
+
+
+    getAvailableProviders(){
+
+        const registry =
+            this.getProviderRegistry();
+
+
+        if(
+            !registry ||
+            typeof registry.all !==
+                "function"
+        ){
+
+            return [];
+
+        }
+
+
+        try{
+
+            const providers =
+                registry.all();
+
+
+            return Array.isArray(
+                providers
+            )
+                ? providers
+                    .filter(
+                        provider =>
+                            provider &&
+                            provider.enabled !==
+                                false
+                    )
+                    .map(
+                        provider => {
+
+                            const safe = {
+
+                                id:
+                                    provider.id ||
+                                    null,
+
+                                title:
+                                    provider.title ||
+                                    provider.name ||
+                                    provider.id ||
+                                    "Payment Provider",
+
+                                methods:
+                                    Array.isArray(
+                                        provider.methods
+                                    )
+                                        ? [
+                                            ...provider.methods
+                                        ]
+                                        : [],
+
+                                enabled:
+                                    provider.enabled !==
+                                        false
+
+                            };
+
+
+                            return safe;
+
+                        }
+                    )
+                : [];
+
+        } catch(error){
+
+            return [];
 
         }
 
@@ -653,6 +903,9 @@ const PaymentSystem = {
                     intent.status
                 ),
 
+            /*
+             * App-scoped browser data is never payment proof.
+             */
             verified:
                 false,
 
@@ -719,6 +972,10 @@ const PaymentSystem = {
 
 
     /* =====================================================
+       CONTINUE IN PART 2
+    ===================================================== */
+
+   /* =====================================================
        READ
     ===================================================== */
 
@@ -748,6 +1005,7 @@ const PaymentSystem = {
 
             const records =
                 await collection.list({
+
                     orderBy:
                         "updatedAt",
 
@@ -764,6 +1022,7 @@ const PaymentSystem = {
                             ? options
                             : {}
                     )
+
                 });
 
 
@@ -848,11 +1107,7 @@ const PaymentSystem = {
 
 
     /* =====================================================
-       CONTINUE IN PART 2
-    ===================================================== */
-
-  /* =====================================================
-       CREATE INTENT
+       CREATE
     ===================================================== */
 
     async createIntent(
@@ -967,10 +1222,6 @@ const PaymentSystem = {
             status:
                 "requires-selection",
 
-            /*
-             * Browser/application state is never accepted
-             * as payment verification.
-             */
             verified:
                 false,
 
@@ -1089,12 +1340,7 @@ const PaymentSystem = {
 
 
     /* =====================================================
-       UPDATE INTENT
-
-       Application-safe mutable fields only.
-
-       verified / transactionId / completed / refunded
-       cannot be granted by application state.
+       SAFE UPDATE
     ===================================================== */
 
     async updateIntent(
@@ -1211,10 +1457,6 @@ const PaymentSystem = {
                         ...existing.metadata
                     },
 
-            /*
-             * Application code may never self-verify
-             * payment state.
-             */
             verified:
                 false,
 
@@ -1290,6 +1532,499 @@ const PaymentSystem = {
 
 
     /* =====================================================
+       PAYMENT METHOD
+    ===================================================== */
+
+    async selectMethod(
+        appId,
+        intentId,
+        method
+    ){
+
+        const existing =
+            await this.get(
+                appId,
+                intentId
+            );
+
+
+        const selectedMethod =
+            this.normalizeMethod(
+                method
+            );
+
+
+        if(
+            !existing ||
+            !selectedMethod
+        ){
+
+            return null;
+
+        }
+
+
+        if(
+            existing.status ===
+                "cancelled"
+        ){
+
+            return existing;
+
+        }
+
+
+        return this.updateIntent(
+            appId,
+            existing.id,
+            {
+
+                method:
+                    selectedMethod,
+
+                status:
+                    existing.provider
+                        ? "ready"
+                        : "requires-selection"
+
+            }
+        );
+
+    },
+
+
+    /* =====================================================
+       PAYMENT PROVIDER
+    ===================================================== */
+
+    async selectProvider(
+        appId,
+        intentId,
+        providerId
+    ){
+
+        const existing =
+            await this.get(
+                appId,
+                intentId
+            );
+
+
+        const selectedProvider =
+            this.normalizeProvider(
+                providerId
+            );
+
+
+        if(
+            !existing ||
+            !selectedProvider
+        ){
+
+            return null;
+
+        }
+
+
+        if(
+            existing.status ===
+                "cancelled"
+        ){
+
+            return existing;
+
+        }
+
+
+        const provider =
+            this.getProvider(
+                selectedProvider
+            );
+
+
+        if(!provider){
+
+            return this.updateIntent(
+                appId,
+                existing.id,
+                {
+
+                    provider:
+                        null,
+
+                    status:
+                        "provider-unavailable",
+
+                    providerState: {
+
+                        connected:
+                            false,
+
+                        reference:
+                            null,
+
+                        lastAttemptAt:
+                            Date.now()
+
+                    }
+
+                }
+            );
+
+        }
+
+
+        return this.updateIntent(
+            appId,
+            existing.id,
+            {
+
+                provider:
+                    selectedProvider,
+
+                status:
+                    existing.method
+                        ? "ready"
+                        : "requires-selection",
+
+                providerState: {
+
+                    connected:
+                        true,
+
+                    reference:
+                        provider.id ||
+                        selectedProvider,
+
+                    lastAttemptAt:
+                        null
+
+                }
+
+            }
+        );
+
+    },
+
+
+    /* =====================================================
+       START CHECKOUT
+    ===================================================== */
+
+    async startIntent(
+        appId,
+        intentId
+    ){
+
+        const existing =
+            await this.get(
+                appId,
+                intentId
+            );
+
+
+        if(!existing){
+
+            return null;
+
+        }
+
+
+        if(
+            existing.status ===
+                "cancelled"
+        ){
+
+            return existing;
+
+        }
+
+
+        if(!existing.method){
+
+            return this.updateIntent(
+                appId,
+                existing.id,
+                {
+
+                    status:
+                        "requires-selection"
+
+                }
+            );
+
+        }
+
+
+        if(!existing.provider){
+
+            return this.updateIntent(
+                appId,
+                existing.id,
+                {
+
+                    status:
+                        "provider-unavailable"
+
+                }
+            );
+
+        }
+
+
+        const provider =
+            this.getProvider(
+                existing.provider
+            );
+
+
+        if(!provider){
+
+            return this.updateIntent(
+                appId,
+                existing.id,
+                {
+
+                    status:
+                        "provider-unavailable",
+
+                    providerState: {
+
+                        connected:
+                            false,
+
+                        reference:
+                            existing.provider,
+
+                        lastAttemptAt:
+                            Date.now()
+
+                    }
+
+                }
+            );
+
+        }
+
+
+        const startCheckout =
+            typeof provider.startCheckout ===
+                "function"
+                ? provider.startCheckout
+                : (
+                    typeof provider.start ===
+                        "function"
+                        ? provider.start
+                        : null
+                );
+
+
+        if(!startCheckout){
+
+            return this.updateIntent(
+                appId,
+                existing.id,
+                {
+
+                    status:
+                        "provider-unavailable",
+
+                    providerState: {
+
+                        connected:
+                            true,
+
+                        reference:
+                            provider.id ||
+                            existing.provider,
+
+                        lastAttemptAt:
+                            Date.now()
+
+                    }
+
+                }
+            );
+
+        }
+
+
+        let result =
+            null;
+
+
+        try{
+
+            result =
+                await Promise.resolve(
+                    startCheckout.call(
+                        provider,
+                        {
+
+                            intentId:
+                                existing.id,
+
+                            productId:
+                                existing.productId,
+
+                            title:
+                                existing.title,
+
+                            amount:
+                                existing.amount,
+
+                            currency:
+                                existing.currency,
+
+                            quantity:
+                                existing.quantity,
+
+                            method:
+                                existing.method,
+
+                            source:
+                                existing.source
+
+                        }
+                    )
+                );
+
+        } catch(error){
+
+            console.error(
+                "VAERO payment provider start failed:",
+                error
+            );
+
+
+            return this.updateIntent(
+                appId,
+                existing.id,
+                {
+
+                    status:
+                        "failed",
+
+                    providerState: {
+
+                        connected:
+                            true,
+
+                        reference:
+                            provider.id ||
+                            existing.provider,
+
+                        lastAttemptAt:
+                            Date.now()
+
+                    }
+
+                }
+            );
+
+        }
+
+
+        if(
+            result ===
+                false ||
+            result?.success ===
+                false
+        ){
+
+            return this.updateIntent(
+                appId,
+                existing.id,
+                {
+
+                    status:
+                        "failed",
+
+                    providerState: {
+
+                        connected:
+                            true,
+
+                        reference:
+                            provider.id ||
+                            existing.provider,
+
+                        lastAttemptAt:
+                            Date.now()
+
+                    }
+
+                }
+            );
+
+        }
+
+
+        const updated =
+            await this.updateIntent(
+                appId,
+                existing.id,
+                {
+
+                    status:
+                        "awaiting-provider",
+
+                    providerState: {
+
+                        connected:
+                            true,
+
+                        reference:
+                            result?.reference ||
+                            result?.checkoutId ||
+                            provider.id ||
+                            existing.provider,
+
+                        lastAttemptAt:
+                            Date.now()
+
+                    }
+
+                }
+            );
+
+
+        if(updated){
+
+            this.emit(
+                "payment:checkout:started",
+                {
+
+                    appId:
+                        this.normalizeIdentifier(
+                            appId
+                        ),
+
+                    intentId:
+                        updated.id,
+
+                    provider:
+                        updated.provider,
+
+                    time:
+                        Date.now()
+
+                }
+            );
+
+        }
+
+
+        return updated;
+
+    },
+
+
+    /* =====================================================
+       CONTINUE IN PART 3
+    ===================================================== */
+
+   /* =====================================================
        CANCEL
     ===================================================== */
 
@@ -1337,6 +2072,187 @@ const PaymentSystem = {
 
 
     /* =====================================================
+       REFUND AUTHORITY
+    ===================================================== */
+
+    async requestRefund(
+        appId,
+        transactionId
+    ){
+
+        if(
+            !this.hasPaymentAccess(
+                appId
+            )
+        ){
+
+            return false;
+
+        }
+
+
+        const id =
+            String(
+                transactionId ||
+                ""
+            ).trim();
+
+
+        if(!id){
+
+            return false;
+
+        }
+
+
+        const transactionService =
+            this.getService(
+                "paymentTransactions"
+            ) ||
+            this.getService(
+                "paymentService"
+            ) ||
+            null;
+
+
+        if(
+            !transactionService ||
+            typeof transactionService
+                .requestRefund !==
+                    "function"
+        ){
+
+            return false;
+
+        }
+
+
+        try{
+
+            const result =
+                await Promise.resolve(
+                    transactionService
+                        .requestRefund(
+                            id
+                        )
+                );
+
+
+            if(result){
+
+                this.emit(
+                    "payment:refund:requested",
+                    {
+
+                        appId:
+                            this.normalizeIdentifier(
+                                appId
+                            ),
+
+                        transactionId:
+                            id,
+
+                        time:
+                            Date.now()
+
+                    }
+                );
+
+            }
+
+
+            return result ||
+                false;
+
+        } catch(error){
+
+            return false;
+
+        }
+
+    },
+
+
+    /* =====================================================
+       VERIFIED ENTITLEMENT
+    ===================================================== */
+
+    async hasVerifiedEntitlement(
+        appId,
+        applicationId
+    ){
+
+        if(
+            !this.hasPaymentAccess(
+                appId
+            )
+        ){
+
+            return false;
+
+        }
+
+
+        const targetId =
+            String(
+                applicationId ||
+                ""
+            ).trim();
+
+
+        if(!targetId){
+
+            return false;
+
+        }
+
+
+        const entitlementService =
+            this.getService(
+                "entitlementService"
+            ) ||
+            this.getService(
+                "entitlements"
+            ) ||
+            null;
+
+
+        if(
+            !entitlementService ||
+            typeof entitlementService
+                .hasVerifiedEntitlement !==
+                    "function"
+        ){
+
+            return false;
+
+        }
+
+
+        try{
+
+            const result =
+                await Promise.resolve(
+                    entitlementService
+                        .hasVerifiedEntitlement(
+                            targetId
+                        )
+                );
+
+
+            return result ===
+                true;
+
+        } catch(error){
+
+            return false;
+
+        }
+
+    },
+
+
+    /* =====================================================
        APPLICATION-SCOPED CLIENT
     ===================================================== */
 
@@ -1350,7 +2266,7 @@ const PaymentSystem = {
 
         if(
             !id ||
-            !this.isTrustedApplication(
+            !this.hasPaymentAccess(
                 id
             )
         ){
@@ -1364,7 +2280,7 @@ const PaymentSystem = {
                         null,
 
                     reason:
-                        "application-not-trusted",
+                        "application-payment-access-denied",
 
                     time:
                         Date.now()
@@ -1432,12 +2348,129 @@ const PaymentSystem = {
             },
 
 
+            setMethod(
+                intentId,
+                method
+            ){
+
+                return host.selectMethod(
+                    id,
+                    intentId,
+                    method
+                );
+
+            },
+
+
+            selectMethod(
+                intentId,
+                method
+            ){
+
+                return host.selectMethod(
+                    id,
+                    intentId,
+                    method
+                );
+
+            },
+
+
+            setProvider(
+                intentId,
+                providerId
+            ){
+
+                return host.selectProvider(
+                    id,
+                    intentId,
+                    providerId
+                );
+
+            },
+
+
+            selectProvider(
+                intentId,
+                providerId
+            ){
+
+                return host.selectProvider(
+                    id,
+                    intentId,
+                    providerId
+                );
+
+            },
+
+
+            getAvailableProviders(){
+
+                return host
+                    .getAvailableProviders();
+
+            },
+
+
+            start(intentId){
+
+                return host.startIntent(
+                    id,
+                    intentId
+                );
+
+            },
+
+
+            startIntent(intentId){
+
+                return host.startIntent(
+                    id,
+                    intentId
+                );
+
+            },
+
+
+            cancel(intentId){
+
+                return host.cancelIntent(
+                    id,
+                    intentId
+                );
+
+            },
+
+
             cancelIntent(intentId){
 
                 return host.cancelIntent(
                     id,
                     intentId
                 );
+
+            },
+
+
+            refund(transactionId){
+
+                return host.requestRefund(
+                    id,
+                    transactionId
+                );
+
+            },
+
+
+            hasVerifiedEntitlement(
+                applicationId
+            ){
+
+                return host
+                    .hasVerifiedEntitlement(
+                        id,
+                        applicationId
+                    );
 
             }
 
@@ -1527,7 +2560,16 @@ const PaymentSystem = {
                     this.getService(
                         "data"
                     )
-                )
+                ),
+
+            providerRegistryAvailable:
+                Boolean(
+                    this.getProviderRegistry()
+                ),
+
+            availableProviders:
+                this.getAvailableProviders()
+                    .length
 
         };
 
