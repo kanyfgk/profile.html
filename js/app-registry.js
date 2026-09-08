@@ -2118,15 +2118,24 @@ subtitle:
                 "service",
 
             version:
-                "3.0.0",
+    "3.0.0",
 
-            capabilities: [
-                "vaero.products",
-                "vaero.atmospheres",
-                "vaero.purchase",
-                "vaero.care",
-                "vaero.vision"
-            ],
+requestedPermissions: [
+
+    "data.read",
+    "data.write"
+
+],
+
+capabilities: [
+
+    "vaero.products",
+    "vaero.atmospheres",
+    "vaero.purchase",
+    "vaero.care",
+    "vaero.vision"
+
+],
 
             tags: [
                 "vaero",
