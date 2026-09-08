@@ -37,36 +37,38 @@ const Kernel = {
 
     serviceList: [
 
-        "dna",
-        "events",
+    "dna",
+    "events",
 
-        "entityManager",
-        "identity",
-        "profile",
+    "entityManager",
+    "identity",
+    "profile",
 
-        "bridge",
-        "graph",
+    "bridge",
+    "graph",
 
-        "universe",
-        "world",
+    "data",
 
-        "runtime",
+    "universe",
+    "world",
 
-        "organSystem",
-        "organStatus",
+    "runtime",
 
-        "memorySystem",
-        "timeline",
+    "organSystem",
+    "organStatus",
 
-        "guardian",
-        "evolution",
+    "memorySystem",
+    "timeline",
 
-        "brain",
+    "guardian",
+    "evolution",
 
-        "components",
-        "renderer"
+    "brain",
 
-    ],
+    "components",
+    "renderer"
+
+],
 
 
     /* =====================================================
@@ -97,13 +99,14 @@ const Kernel = {
 
     criticalServices: [
 
-        "dna",
-        "events",
-        "entityManager",
-        "identity",
-        "guardian"
+    "dna",
+    "events",
+    "entityManager",
+    "identity",
+    "guardian",
+    "data"
 
-    ],
+],
 
 
     /* =====================================================
@@ -118,25 +121,27 @@ const Kernel = {
 
     bootOrder: [
 
-        "organSystem",
+    "organSystem",
 
-        "identity",
-        "profile",
+    "identity",
+    "profile",
 
-        "world",
-        "universe",
+    "world",
+    "universe",
 
-        "bridge",
-        "graph",
+    "bridge",
+    "graph",
 
-        "memorySystem",
-        "timeline",
+    "data",
 
-        "brain",
+    "memorySystem",
+    "timeline",
 
-        "runtime"
+    "brain",
 
-    ],
+    "runtime"
+
+],
 
 
     /* =====================================================
