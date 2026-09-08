@@ -23,7 +23,7 @@
 const DataSystem = {
 
     version:
-        "1.0.0",
+        "1.1.0",
 
     booted:
         false,
@@ -236,6 +236,14 @@ const DataSystem = {
         prefix = "data"
     ){
 
+        const safePrefix =
+            this.normalizeIdentifier(
+                prefix,
+                "data"
+            ) ||
+            "data";
+
+
         try{
 
             if(
@@ -245,7 +253,7 @@ const DataSystem = {
                     "function"
             ){
 
-                return `${prefix}_${crypto.randomUUID()}`;
+                return `${safePrefix}_${crypto.randomUUID()}`;
 
             }
 
@@ -256,7 +264,7 @@ const DataSystem = {
         }
 
 
-        return `${prefix}_${Date.now()}_${Math.random()
+        return `${safePrefix}_${Date.now()}_${Math.random()
             .toString(36)
             .slice(2,10)}`;
 
@@ -627,6 +635,245 @@ const DataSystem = {
 
 
     /* =====================================================
+       APPLICATION ACCESS POLICY
+
+       requestedPermissions is a declaration, not an
+       authority grant.
+
+       Until VAERO has a dedicated installed-app permission
+       authority, Data System only accepts applications that
+       AppRegistry itself marked as built-in system + trusted.
+
+       External apps therefore cannot grant themselves data
+       access simply by requesting data.read / data.write.
+    ===================================================== */
+
+    getAppManifest(appId){
+
+        const normalizedAppId =
+            this.normalizeIdentifier(
+                appId
+            );
+
+
+        if(!normalizedAppId){
+
+            return null;
+
+        }
+
+
+        const registry =
+            this.getService(
+                "appRegistry"
+            );
+
+
+        if(
+            !registry ||
+            typeof registry.get !==
+                "function"
+        ){
+
+            return null;
+
+        }
+
+
+        try{
+
+            return (
+                registry.get(
+                    normalizedAppId
+                ) ||
+                null
+            );
+
+        } catch(error){
+
+            return null;
+
+        }
+
+    },
+
+
+    isTrustedAppManifest(manifest){
+
+        if(
+            !manifest ||
+            typeof manifest !==
+                "object"
+        ){
+
+            return false;
+
+        }
+
+
+        if(
+            manifest.enabled ===
+                false
+        ){
+
+            return false;
+
+        }
+
+
+        return (
+            manifest.system ===
+                true &&
+            manifest.trusted ===
+                true &&
+            manifest.distribution ===
+                "built-in"
+        );
+
+    },
+
+
+    hasAppPermission(
+        appId,
+        permission
+    ){
+
+        const normalizedAppId =
+            this.normalizeIdentifier(
+                appId
+            );
+
+
+        const normalizedPermission =
+            String(
+                permission ??
+                ""
+            )
+                .trim()
+                .toLowerCase();
+
+
+        if(
+            !normalizedAppId ||
+            !normalizedPermission
+        ){
+
+            return false;
+
+        }
+
+
+        const manifest =
+            this.getAppManifest(
+                normalizedAppId
+            );
+
+
+        if(
+            !this.isTrustedAppManifest(
+                manifest
+            )
+        ){
+
+            return false;
+
+        }
+
+
+        const requested =
+            Array.isArray(
+                manifest.requestedPermissions
+            )
+                ? manifest.requestedPermissions
+                    .map(
+                        item =>
+                            String(
+                                item ??
+                                    ""
+                            )
+                                .trim()
+                                .toLowerCase()
+                    )
+                    .filter(Boolean)
+                : [];
+
+
+        return requested.includes(
+            normalizedPermission
+        );
+
+    },
+
+
+    authorizeApp(
+        appId,
+        permission,
+        context = {}
+    ){
+
+        const normalizedAppId =
+            this.normalizeIdentifier(
+                appId
+            );
+
+
+        const normalizedPermission =
+            String(
+                permission ??
+                ""
+            )
+                .trim()
+                .toLowerCase();
+
+
+        const allowed =
+            this.hasAppPermission(
+                normalizedAppId,
+                normalizedPermission
+            );
+
+
+        if(allowed){
+
+            return true;
+
+        }
+
+
+        this.emit(
+            "data:access:blocked",
+            {
+                appId:
+                    normalizedAppId ||
+                    null,
+
+                permission:
+                    normalizedPermission ||
+                    null,
+
+                collection:
+                    context.collection ||
+                    null,
+
+                operation:
+                    context.operation ||
+                    null,
+
+                reason:
+                    "application-permission-denied",
+
+                time:
+                    Date.now()
+            }
+        );
+
+
+        return false;
+
+    },
+
+
+    /* =====================================================
        NORMALIZE LOCATION
     ===================================================== */
 
@@ -694,16 +941,29 @@ const DataSystem = {
                 : [];
 
 
-        const where =
+        const safeOptions =
             (
-                options.where &&
-                typeof options.where ===
+                options &&
+                typeof options ===
                     "object" &&
                 !Array.isArray(
-                    options.where
+                    options
                 )
             )
-                ? options.where
+                ? options
+                : {};
+
+
+        const where =
+            (
+                safeOptions.where &&
+                typeof safeOptions.where ===
+                    "object" &&
+                !Array.isArray(
+                    safeOptions.where
+                )
+            )
+                ? safeOptions.where
                 : null;
 
 
@@ -734,7 +994,7 @@ const DataSystem = {
 
         const orderBy =
             String(
-                options.orderBy ||
+                safeOptions.orderBy ||
                 ""
             ).trim();
 
@@ -743,7 +1003,7 @@ const DataSystem = {
 
             const direction =
                 String(
-                    options.direction ||
+                    safeOptions.direction ||
                     "asc"
                 )
                     .trim()
@@ -796,7 +1056,7 @@ const DataSystem = {
 
         const numericLimit =
             Number(
-                options.limit
+                safeOptions.limit
             );
 
 
@@ -825,7 +1085,7 @@ const DataSystem = {
 
 
     /* =====================================================
-       READ
+       READ LIST
     ===================================================== */
 
     async list(
@@ -855,49 +1115,90 @@ const DataSystem = {
         }
 
 
-        const records =
-    await provider.list(
-        location.appId,
-        location.collection
-    );
+        if(
+            !this.authorizeApp(
+                location.appId,
+                "data.read",
+                {
+                    collection:
+                        location.collection,
+
+                    operation:
+                        "list"
+                }
+            )
+        ){
+
+            return [];
+
+        }
 
 
-const safeRecords =
-    Array.isArray(
-        records
-    )
-        ? records
-            .map(
-                record =>
-                    this.validatePayload(
-                        record,
-                        {
-                            ...location,
+        let records =
+            [];
 
-                            operation:
-                                "read-list"
-                        }
+
+        try{
+
+            records =
+                await provider.list(
+                    location.appId,
+                    location.collection
+                );
+
+        } catch(error){
+
+            console.warn(
+                "Data provider list işlemi başarısız:",
+                error
+            );
+
+
+            return [];
+
+        }
+
+
+        const safeRecords =
+            Array.isArray(
+                records
+            )
+                ? records
+                    .map(
+                        record =>
+                            this.validatePayload(
+                                record,
+                                {
+                                    ...location,
+
+                                    operation:
+                                        "read-list"
+                                }
+                            )
                     )
-            )
-            .filter(
-                validation =>
-                    validation?.valid ===
-                        true
-            )
-            .map(
-                validation =>
-                    validation.value
-            )
-        : [];
+                    .filter(
+                        validation =>
+                            validation?.valid ===
+                                true
+                    )
+                    .map(
+                        validation =>
+                            validation.value
+                    )
+                : [];
 
 
-return this.applyQuery(
-    safeRecords,
-    options
-);
+        return this.applyQuery(
+            safeRecords,
+            options
+        );
 
     },
 
+
+    /* =====================================================
+       READ ONE
+    ===================================================== */
 
     async get(
         appId,
@@ -933,12 +1234,49 @@ return this.applyQuery(
         }
 
 
-        const record =
-            await provider.get(
+        if(
+            !this.authorizeApp(
                 location.appId,
-                location.collection,
-                id
+                "data.read",
+                {
+                    collection:
+                        location.collection,
+
+                    operation:
+                        "get"
+                }
+            )
+        ){
+
+            return null;
+
+        }
+
+
+        let record =
+            null;
+
+
+        try{
+
+            record =
+                await provider.get(
+                    location.appId,
+                    location.collection,
+                    id
+                );
+
+        } catch(error){
+
+            console.warn(
+                "Data provider get işlemi başarısız:",
+                error
             );
+
+
+            return null;
+
+        }
 
 
         if(!record){
@@ -991,6 +1329,25 @@ return this.applyQuery(
         if(
             !location ||
             !provider
+        ){
+
+            return null;
+
+        }
+
+
+        if(
+            !this.authorizeApp(
+                location.appId,
+                "data.write",
+                {
+                    collection:
+                        location.collection,
+
+                    operation:
+                        "create"
+                }
+            )
         ){
 
             return null;
@@ -1074,12 +1431,30 @@ return this.applyQuery(
         }
 
 
-        const created =
-            await provider.create(
-                location.appId,
-                location.collection,
-                finalValidation.value
+        let created =
+            null;
+
+
+        try{
+
+            created =
+                await provider.create(
+                    location.appId,
+                    location.collection,
+                    finalValidation.value
+                );
+
+        } catch(error){
+
+            console.warn(
+                "Data provider create işlemi başarısız:",
+                error
             );
+
+
+            return null;
+
+        }
 
 
         if(created){
@@ -1151,12 +1526,49 @@ return this.applyQuery(
         }
 
 
-        const existing =
-            await provider.get(
+        if(
+            !this.authorizeApp(
                 location.appId,
-                location.collection,
-                id
+                "data.write",
+                {
+                    collection:
+                        location.collection,
+
+                    operation:
+                        "update"
+                }
+            )
+        ){
+
+            return null;
+
+        }
+
+
+        let existing =
+            null;
+
+
+        try{
+
+            existing =
+                await provider.get(
+                    location.appId,
+                    location.collection,
+                    id
+                );
+
+        } catch(error){
+
+            console.warn(
+                "Data provider update read işlemi başarısız:",
+                error
             );
+
+
+            return null;
+
+        }
 
 
         if(!existing){
@@ -1166,19 +1578,43 @@ return this.applyQuery(
         }
 
 
-        const validation =
+        /*
+         * Existing provider state is also validated before
+         * being merged with the incoming patch.
+         */
+
+        const existingValidation =
+            this.validatePayload(
+                existing,
+                {
+                    ...location,
+
+                    operation:
+                        "update-existing"
+                }
+            );
+
+
+        if(!existingValidation.valid){
+
+            return null;
+
+        }
+
+
+        const patchValidation =
             this.validatePayload(
                 patch,
                 {
                     ...location,
 
                     operation:
-                        "update"
+                        "update-patch"
                 }
             );
 
 
-        if(!validation.valid){
+        if(!patchValidation.valid){
 
             return null;
 
@@ -1187,13 +1623,14 @@ return this.applyQuery(
 
         const record = {
 
-            ...existing,
-            ...validation.value,
+            ...existingValidation.value,
+            ...patchValidation.value,
 
             id,
 
             createdAt:
-                existing.createdAt ||
+                existingValidation.value
+                    .createdAt ||
                 Date.now(),
 
             updatedAt:
@@ -1221,13 +1658,31 @@ return this.applyQuery(
         }
 
 
-        const updated =
-            await provider.update(
-                location.appId,
-                location.collection,
-                id,
-                finalValidation.value
+        let updated =
+            null;
+
+
+        try{
+
+            updated =
+                await provider.update(
+                    location.appId,
+                    location.collection,
+                    id,
+                    finalValidation.value
+                );
+
+        } catch(error){
+
+            console.warn(
+                "Data provider update işlemi başarısız:",
+                error
             );
+
+
+            return null;
+
+        }
 
 
         if(updated){
@@ -1272,7 +1727,10 @@ return this.applyQuery(
         if(
             !payload ||
             typeof payload !==
-                "object"
+                "object" ||
+            Array.isArray(
+                payload
+            )
         ){
 
             return null;
@@ -1357,12 +1815,49 @@ return this.applyQuery(
         }
 
 
-        const removed =
-            await provider.remove(
+        if(
+            !this.authorizeApp(
                 location.appId,
-                location.collection,
-                id
+                "data.write",
+                {
+                    collection:
+                        location.collection,
+
+                    operation:
+                        "remove"
+                }
+            )
+        ){
+
+            return false;
+
+        }
+
+
+        let removed =
+            false;
+
+
+        try{
+
+            removed =
+                await provider.remove(
+                    location.appId,
+                    location.collection,
+                    id
+                );
+
+        } catch(error){
+
+            console.warn(
+                "Data provider remove işlemi başarısız:",
+                error
             );
+
+
+            return false;
+
+        }
 
 
         if(removed){
@@ -1394,6 +1889,10 @@ return this.applyQuery(
     },
 
 
+    /* =====================================================
+       COUNT
+    ===================================================== */
+
     async count(
         appId,
         collection,
@@ -1417,6 +1916,9 @@ return this.applyQuery(
        APPLICATION-SCOPED CLIENT
 
        Application receives only its own namespace.
+
+       It cannot choose another application's namespace after
+       the client is created.
     ===================================================== */
 
     forApp(appId){
@@ -1434,6 +1936,77 @@ return this.applyQuery(
         }
 
 
+        const manifest =
+            this.getAppManifest(
+                normalizedAppId
+            );
+
+
+        if(
+            !this.isTrustedAppManifest(
+                manifest
+            )
+        ){
+
+            this.emit(
+                "data:client:blocked",
+                {
+                    appId:
+                        normalizedAppId,
+
+                    reason:
+                        "application-not-trusted",
+
+                    time:
+                        Date.now()
+                }
+            );
+
+
+            return null;
+
+        }
+
+
+        const canRead =
+            this.hasAppPermission(
+                normalizedAppId,
+                "data.read"
+            );
+
+
+        const canWrite =
+            this.hasAppPermission(
+                normalizedAppId,
+                "data.write"
+            );
+
+
+        if(
+            !canRead &&
+            !canWrite
+        ){
+
+            this.emit(
+                "data:client:blocked",
+                {
+                    appId:
+                        normalizedAppId,
+
+                    reason:
+                        "no-data-permission",
+
+                    time:
+                        Date.now()
+                }
+            );
+
+
+            return null;
+
+        }
+
+
         const host =
             this;
 
@@ -1442,6 +2015,17 @@ return this.applyQuery(
 
             appId:
                 normalizedAppId,
+
+            permissions:
+                Object.freeze({
+
+                    read:
+                        canRead,
+
+                    write:
+                        canWrite
+
+                }),
 
 
             collection(name){
@@ -1460,6 +2044,10 @@ return this.applyQuery(
 
 
                 return Object.freeze({
+
+                    name:
+                        collection,
+
 
                     list(
                         options = {}
@@ -1654,8 +2242,15 @@ return this.applyQuery(
 
    Browser-native persistence implementation.
 
+   IMPORTANT
+   ---------------------------------------------------------
    This is an Engine implementation detail.
-   Applications never access it directly.
+
+   Applications never access localStorage or this provider
+   directly.
+
+   The provider can later be replaced by VAERO-owned remote
+   infrastructure without changing application code.
 ========================================================= */
 
 const LocalDataProvider = {
@@ -1686,6 +2281,18 @@ const LocalDataProvider = {
 
 
     clone(value){
+
+        if(
+            value ===
+                undefined ||
+            value ===
+                null
+        ){
+
+            return value;
+
+        }
+
 
         try{
 
@@ -1915,10 +2522,21 @@ const LocalDataProvider = {
         }
 
 
-        records.push(
+        const clonedRecord =
             this.clone(
                 record
-            )
+            );
+
+
+        if(!clonedRecord){
+
+            return null;
+
+        }
+
+
+        records.push(
+            clonedRecord
         );
 
 
@@ -1974,12 +2592,23 @@ const LocalDataProvider = {
         }
 
 
-        records[
-            index
-        ] =
+        const clonedRecord =
             this.clone(
                 record
             );
+
+
+        if(!clonedRecord){
+
+            return null;
+
+        }
+
+
+        records[
+            index
+        ] =
+            clonedRecord;
 
 
         if(
