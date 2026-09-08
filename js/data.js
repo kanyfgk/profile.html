@@ -856,16 +856,45 @@ const DataSystem = {
 
 
         const records =
-            await provider.list(
-                location.appId,
-                location.collection
-            );
+    await provider.list(
+        location.appId,
+        location.collection
+    );
 
 
-        return this.applyQuery(
-            records,
-            options
-        );
+const safeRecords =
+    Array.isArray(
+        records
+    )
+        ? records
+            .map(
+                record =>
+                    this.validatePayload(
+                        record,
+                        {
+                            ...location,
+
+                            operation:
+                                "read-list"
+                        }
+                    )
+            )
+            .filter(
+                validation =>
+                    validation?.valid ===
+                        true
+            )
+            .map(
+                validation =>
+                    validation.value
+            )
+        : [];
+
+
+return this.applyQuery(
+    safeRecords,
+    options
+);
 
     },
 
