@@ -434,6 +434,87 @@ const VaeroApp = {
 
     },
 
+   /* =====================================================
+   ENGINE DATA ACCESS
+===================================================== */
+
+getDataClient(){
+
+    const data =
+        this.getService(
+            "data"
+        );
+
+
+    if(
+        !data ||
+        typeof data.forApp !==
+            "function"
+    ){
+
+        return null;
+
+    }
+
+
+    try{
+
+        return (
+            data.forApp(
+                this.id
+            ) ||
+            null
+        );
+
+    } catch(error){
+
+        console.warn(
+            "VAERO Engine Data erişimi açılamadı:",
+            error
+        );
+
+
+        return null;
+
+    }
+
+},
+
+
+getDataCollection(name){
+
+    const client =
+        this.getDataClient();
+
+
+    if(
+        !client ||
+        typeof client.collection !==
+            "function"
+    ){
+
+        return null;
+
+    }
+
+
+    try{
+
+        return (
+            client.collection(
+                name
+            ) ||
+            null
+        );
+
+    } catch(error){
+
+        return null;
+
+    }
+
+},
+
 
     /* =====================================================
        STORAGE
