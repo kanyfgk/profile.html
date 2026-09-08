@@ -279,6 +279,73 @@ const VaeroPaymentController = {
 
 
     /* =====================================================
+       ENGINE RUNTIME READINESS
+    ===================================================== */
+
+    isRuntimeReady(){
+
+        const data =
+            this.getService(
+                "data"
+            );
+
+
+        const payment =
+            this.getService(
+                "payment"
+            );
+
+
+        if(
+            !data ||
+            !payment
+        ){
+
+            return false;
+
+        }
+
+
+        if(
+            data.booted !==
+                true ||
+            payment.booted !==
+                true
+        ){
+
+            return false;
+
+        }
+
+
+        if(
+            typeof data.provider ===
+                "function"
+        ){
+
+            try{
+
+                if(!data.provider()){
+
+                    return false;
+
+                }
+
+            } catch(error){
+
+                return false;
+
+            }
+
+        }
+
+
+        return true;
+
+    },
+
+
+    /* =====================================================
        HYDRATE FROM ENGINE PAYMENT
     ===================================================== */
 
@@ -294,6 +361,22 @@ const VaeroPaymentController = {
         if(this.loadPromise){
 
             return this.loadPromise;
+
+        }
+
+
+        /*
+         * Controller dosyası Engine.start() çalışmadan
+         * önce yüklenebilir.
+         *
+         * Data ve Payment System boot edilmeden yapılan
+         * boş sorgu gerçek hydration olarak kabul edilmez.
+         */
+        if(
+            !this.isRuntimeReady()
+        ){
+
+            return this.all();
 
         }
 
@@ -320,11 +403,13 @@ const VaeroPaymentController = {
 
                     const records =
                         await adapter.list({
+
                             orderBy:
                                 "updatedAt",
 
                             direction:
                                 "desc"
+
                         });
 
 
@@ -380,8 +465,19 @@ const VaeroPaymentController = {
                     }
 
 
-                    this.loaded =
-                        true;
+                    /*
+                     * Sadece Engine runtime gerçekten
+                     * hazırken yapılan sorgu hydration
+                     * tamamlandı sayılır.
+                     */
+                    if(
+                        this.isRuntimeReady()
+                    ){
+
+                        this.loaded =
+                            true;
+
+                    }
 
 
                     return this.all();
@@ -392,6 +488,14 @@ const VaeroPaymentController = {
                         "VAERO Payment Controller hydrate başarısız:",
                         error
                     );
+
+
+                    /*
+                     * Hata halinde loaded açık bırakılmaz.
+                     * Bir sonraki load tekrar deneyebilir.
+                     */
+                    this.loaded =
+                        false;
 
 
                     return this.all();
@@ -431,11 +535,16 @@ const VaeroPaymentController = {
     },
 
 
+    /* =====================================================
+       LOAD
+    ===================================================== */
+
     load(){
 
         if(
             !this.loaded &&
-            !this.loadPromise
+            !this.loadPromise &&
+            this.isRuntimeReady()
         ){
 
             this.hydrate()
@@ -449,7 +558,6 @@ const VaeroPaymentController = {
         return this.all();
 
     },
-
 
     /* =====================================================
        PROVIDERS
