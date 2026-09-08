@@ -40,6 +40,12 @@ const VaeroApp = {
     visionDraft:
         null,
 
+    visionDataLoaded:
+        false,
+
+    visionDataLoadPromise:
+        null,
+
 
     /* =====================================================
        PRODUCT CATALOG
@@ -434,96 +440,97 @@ const VaeroApp = {
 
     },
 
-   /* =====================================================
-   ENGINE DATA ACCESS
-===================================================== */
 
-getDataClient(){
+    /* =====================================================
+       ENGINE DATA ACCESS
+    ===================================================== */
 
-    const data =
-        this.getService(
-            "data"
-        );
+    getDataClient(){
 
-
-    if(
-        !data ||
-        typeof data.forApp !==
-            "function"
-    ){
-
-        return null;
-
-    }
+        const data =
+            this.getService(
+                "data"
+            );
 
 
-    try{
+        if(
+            !data ||
+            typeof data.forApp !==
+                "function"
+        ){
 
-        return (
-            data.forApp(
-                this.id
-            ) ||
-            null
-        );
+            return null;
 
-    } catch(error){
-
-        console.warn(
-            "VAERO Engine Data erişimi açılamadı:",
-            error
-        );
+        }
 
 
-        return null;
+        try{
 
-    }
+            return (
+                data.forApp(
+                    this.id
+                ) ||
+                null
+            );
 
-},
+        } catch(error){
 
-
-getDataCollection(name){
-
-    const client =
-        this.getDataClient();
-
-
-    if(
-        !client ||
-        typeof client.collection !==
-            "function"
-    ){
-
-        return null;
-
-    }
+            console.warn(
+                "VAERO Engine Data erişimi açılamadı:",
+                error
+            );
 
 
-    try{
+            return null;
 
-        return (
-            client.collection(
-                name
-            ) ||
-            null
-        );
+        }
 
-    } catch(error){
+    },
 
-        return null;
 
-    }
+    getDataCollection(name){
 
-},
+        const client =
+            this.getDataClient();
+
+
+        if(
+            !client ||
+            typeof client.collection !==
+                "function"
+        ){
+
+            return null;
+
+        }
+
+
+        try{
+
+            return (
+                client.collection(
+                    name
+                ) ||
+                null
+            );
+
+        } catch(error){
+
+            return null;
+
+        }
+
+    },
 
 
     /* =====================================================
        STORAGE
+
+       Legacy local storage is currently retained only for
+       Payment Core until that layer is migrated separately.
     ===================================================== */
 
     storageKeys: {
-
-        vision:
-            "vaero:brand:vision:draft:v2",
 
         payment:
             "vaero:payment:intents:v2",
@@ -3455,32 +3462,151 @@ getDataCollection(name){
        CONTINUE IN PART 3
     ===================================================== */
 
-   /* =====================================================
+    /* =====================================================
        VISION STUDIO
     ===================================================== */
 
-    loadVisionDraft(){
+    async hydrateVisionDraft(){
 
-        const saved =
-            this.readJSON(
-                this.storageKeys.vision,
-                null
+        if(
+            this.visionDataLoaded ===
+                true
+        ){
+
+            return this.visionDraft;
+
+        }
+
+
+        if(
+            this.visionDataLoadPromise
+        ){
+
+            return this.visionDataLoadPromise;
+
+        }
+
+
+        const collection =
+            this.getDataCollection(
+                "vision-drafts"
             );
 
 
-        this.visionDraft =
-            (
-                saved &&
-                typeof saved ===
-                    "object" &&
-                !Array.isArray(
-                    saved
-                )
-            )
-                ? {
-                    ...saved
+        if(
+            !collection ||
+            typeof collection.list !==
+                "function"
+        ){
+
+            return null;
+
+        }
+
+
+        this.visionDataLoadPromise =
+            (async () => {
+
+                try{
+
+                    const records =
+                        await collection.list({
+
+                            orderBy:
+                                "updatedAt",
+
+                            direction:
+                                "desc",
+
+                            limit:
+                                1
+
+                        });
+
+
+                    const saved =
+                        Array.isArray(
+                            records
+                        )
+                            ? records[0] ||
+                                null
+                            : null;
+
+
+                    this.visionDraft =
+                        (
+                            saved &&
+                            typeof saved ===
+                                "object" &&
+                            !Array.isArray(
+                                saved
+                            )
+                        )
+                            ? {
+                                ...saved
+                            }
+                            : null;
+
+
+                    this.visionDataLoaded =
+                        true;
+
+
+                    return this.visionDraft;
+
+                } catch(error){
+
+                    console.warn(
+                        "VAERO Vision Engine Data üzerinden yüklenemedi:",
+                        error
+                    );
+
+
+                    return null;
+
+                } finally {
+
+                    this.visionDataLoadPromise =
+                        null;
+
                 }
-                : null;
+
+            })();
+
+
+        return this.visionDataLoadPromise;
+
+    },
+
+
+    loadVisionDraft(){
+
+        if(
+            this.visionDataLoaded !==
+                true &&
+            !this.visionDataLoadPromise
+        ){
+
+            this.hydrateVisionDraft()
+                .then(
+                    () => {
+
+                        if(
+                            this.activeView ===
+                                "vision"
+                        ){
+
+                            this.refresh();
+
+                        }
+
+                    }
+                )
+                .catch(
+                    () => {}
+                );
+
+        }
 
 
         return this.visionDraft;
@@ -3488,7 +3614,7 @@ getDataCollection(name){
     },
 
 
-    saveVision(){
+    async saveVision(){
 
         if(
             typeof document ===
@@ -3564,6 +3690,26 @@ getDataCollection(name){
         }
 
 
+        await this.hydrateVisionDraft();
+
+
+        const collection =
+            this.getDataCollection(
+                "vision-drafts"
+            );
+
+
+        if(
+            !collection ||
+            typeof collection.upsert !==
+                "function"
+        ){
+
+            return false;
+
+        }
+
+
         const now =
             Date.now();
 
@@ -3599,20 +3745,50 @@ getDataCollection(name){
         };
 
 
-        this.visionDraft =
-            draft;
+        let saved =
+            null;
 
 
-        this.writeJSON(
-            this.storageKeys.vision,
-            draft
-        );
+        try{
+
+            saved =
+                await collection.upsert(
+                    draft
+                );
+
+        } catch(error){
+
+            console.warn(
+                "VAERO Vision Engine Data üzerine kaydedilemedi:",
+                error
+            );
+
+
+            return false;
+
+        }
+
+
+        if(!saved){
+
+            return false;
+
+        }
+
+
+        this.visionDraft = {
+            ...saved
+        };
+
+
+        this.visionDataLoaded =
+            true;
 
 
         this.enterBrainContext({
 
             visionId:
-                draft.id,
+                saved.id,
 
             visionStatus:
                 "draft"
@@ -3705,7 +3881,7 @@ getDataCollection(name){
                     type="button"
                     class="vaero-commerce-id-btn"
                     data-vaero-command="view"
-data-view="care"
+                    data-view="care"
                     aria-label="VAERO Care"
                 >
                     VAERO
@@ -3745,7 +3921,7 @@ data-view="care"
                             : ""
                     }"
                     data-vaero-command="view"
-data-view="discover"
+                    data-view="discover"
                     aria-pressed="${
                         this.activeView ===
                             "discover" ||
@@ -3768,7 +3944,7 @@ data-view="discover"
                             : ""
                     }"
                     data-vaero-command="view"
-data-view="vision"
+                    data-view="vision"
                     aria-pressed="${
                         this.activeView ===
                             "vision"
@@ -3789,7 +3965,7 @@ data-view="vision"
                             : ""
                     }"
                     data-vaero-command="view"
-data-view="care"
+                    data-view="care"
                     aria-pressed="${
                         this.activeView ===
                             "care"
@@ -3875,9 +4051,9 @@ data-view="care"
                                     type="button"
                                     class="vaero-cart-item"
                                     data-vaero-command="product"
-data-product-id="${this.escapeHTML(
-    product.id
-)}"
+                                    data-product-id="${this.escapeHTML(
+                                        product.id
+                                    )}"
                                 >
 
                                     <div class="vaero-cart-item-copy">
@@ -3961,7 +4137,7 @@ data-product-id="${this.escapeHTML(
                 <button
                     type="button"
                     data-vaero-command="product"
-data-product-id="device"
+                    data-product-id="device"
                 >
                     Cihazı gör
                 </button>
@@ -3988,7 +4164,7 @@ data-product-id="device"
                     <button
                         type="button"
                         data-vaero-command="view"
-data-view="vision"
+                        data-view="vision"
                     >
                         Vizyon Stüdyosu
                     </button>
@@ -4203,9 +4379,9 @@ data-view="vision"
                             <button
                                 type="button"
                                 data-vaero-command="purchase"
-data-product-id="${this.escapeHTML(
-    product.id
-)}"
+                                data-product-id="${this.escapeHTML(
+                                    product.id
+                                )}"
                             >
                                 Satın Al
                             </button>
@@ -4227,7 +4403,7 @@ data-product-id="${this.escapeHTML(
                 <button
                     type="button"
                     data-vaero-command="view"
-data-view="care"
+                    data-view="care"
                 >
                     VAERO Care
                 </button>
@@ -4259,7 +4435,7 @@ data-view="care"
                 <button
                     type="button"
                     data-vaero-command="view"
-data-view="discover"
+                    data-view="discover"
                 >
                     ← VAERO
                 </button>
@@ -4393,7 +4569,7 @@ data-view="discover"
                 <button
                     type="button"
                     data-vaero-command="view"
-data-view="discover"
+                    data-view="discover"
                 >
                     ← VAERO
                 </button>
@@ -4527,7 +4703,7 @@ data-view="discover"
                         <button
                             type="button"
                             data-vaero-command="view"
-data-view="discover"
+                            data-view="discover"
                         >
                             Koleksiyona Dön
                         </button>
@@ -4669,7 +4845,7 @@ data-view="discover"
                                 : ""
                         }"
                         data-vaero-command="payment-method"
-data-payment-method="card"
+                        data-payment-method="card"
                         aria-pressed="${
                             intent.method ===
                                 "card"
@@ -4690,7 +4866,7 @@ data-payment-method="card"
                                 : ""
                         }"
                         data-vaero-command="payment-method"
- data-payment-method="bank"
+                        data-payment-method="bank"
                         aria-pressed="${
                             intent.method ===
                                 "bank"
@@ -4755,9 +4931,9 @@ data-payment-method="card"
                                                             : ""
                                                     }"
                                                     data-vaero-command="payment-provider"
-data-payment-provider="${this.escapeHTML(
-    providerId
-)}"
+                                                    data-payment-provider="${this.escapeHTML(
+                                                        providerId
+                                                    )}"
                                                     aria-pressed="${
                                                         intent.provider ===
                                                             providerId
@@ -4998,7 +5174,8 @@ data-payment-provider="${this.escapeHTML(
 
     },
 
-   /* =====================================================
+
+    /* =====================================================
        VAERO INTERNAL COMMAND ROUTER
     ===================================================== */
 
@@ -5134,6 +5311,7 @@ data-payment-provider="${this.escapeHTML(
 
 };
 
+
 /* =========================================================
    VAERO APP EVENT DELEGATION
 ========================================================= */
@@ -5262,4 +5440,4 @@ if(
     window.VaeroApp =
         VaeroApp;
 
-} 
+}
