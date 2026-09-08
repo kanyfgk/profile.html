@@ -6,10 +6,10 @@
    ---------------------------------------------------------
    This adapter belongs to the VAERO application layer.
 
-   It does not own payment persistence or payment authority.
+   It owns no payment persistence and no payment authority.
 
-   All persistent payment intent operations are delegated
-   to VAERO Engine Payment System.
+   Persistent payment state and provider operations are
+   delegated to VAERO Engine Payment System.
 ========================================================= */
 
 const VaeroPaymentAdapter = {
@@ -18,7 +18,7 @@ const VaeroPaymentAdapter = {
         "vaero-payment-adapter",
 
     version:
-        "1.0.0",
+        "1.1.0",
 
     appId:
         "vaero",
@@ -139,30 +139,20 @@ const VaeroPaymentAdapter = {
     },
 
 
-    /* =====================================================
-       AVAILABILITY
-    ===================================================== */
-
     available(){
 
-        const client =
-            this.getClient();
-
-
         return Boolean(
-            client
+            this.getClient()
         );
 
     },
 
 
     /* =====================================================
-       LIST
+       READ
     ===================================================== */
 
-    async list(
-        options = {}
-    ){
+    async list(options = {}){
 
         const client =
             this.getClient();
@@ -195,12 +185,6 @@ const VaeroPaymentAdapter = {
 
         } catch(error){
 
-            console.warn(
-                "VAERO ödeme niyetleri okunamadı:",
-                error
-            );
-
-
             return [];
 
         }
@@ -208,25 +192,7 @@ const VaeroPaymentAdapter = {
     },
 
 
-    /* =====================================================
-       GET
-    ===================================================== */
-
     async get(intentId){
-
-        const id =
-            String(
-                intentId ||
-                ""
-            ).trim();
-
-
-        if(!id){
-
-            return null;
-
-        }
-
 
         const client =
             this.getClient();
@@ -247,7 +213,7 @@ const VaeroPaymentAdapter = {
 
             return (
                 await client.get(
-                    id
+                    intentId
                 ) ||
                 null
             );
@@ -265,7 +231,7 @@ const VaeroPaymentAdapter = {
        CREATE
     ===================================================== */
 
-    async create(
+    async createIntent(
         payload = {}
     ){
 
@@ -308,6 +274,15 @@ const VaeroPaymentAdapter = {
     },
 
 
+    create(payload = {}){
+
+        return this.createIntent(
+            payload
+        );
+
+    },
+
+
     /* =====================================================
        UPDATE
     ===================================================== */
@@ -316,20 +291,6 @@ const VaeroPaymentAdapter = {
         intentId,
         patch = {}
     ){
-
-        const id =
-            String(
-                intentId ||
-                ""
-            ).trim();
-
-
-        if(!id){
-
-            return null;
-
-        }
-
 
         const client =
             this.getClient();
@@ -350,7 +311,7 @@ const VaeroPaymentAdapter = {
 
             return (
                 await client.updateIntent(
-                    id,
+                    intentId,
                     patch
                 ) ||
                 null
@@ -358,12 +319,6 @@ const VaeroPaymentAdapter = {
 
         } catch(error){
 
-            console.warn(
-                "VAERO ödeme niyeti güncellenemedi:",
-                error
-            );
-
-
             return null;
 
         }
@@ -372,144 +327,13 @@ const VaeroPaymentAdapter = {
 
 
     /* =====================================================
-       PAYMENT METHOD
+       METHOD
     ===================================================== */
 
-    setMethod(
+    async setMethod(
         intentId,
         method
     ){
-
-        const value =
-            String(
-                method ||
-                ""
-            )
-                .trim()
-                .toLowerCase();
-
-
-        if(!value){
-
-            return Promise.resolve(
-                null
-            );
-
-        }
-
-
-        return this.update(
-            intentId,
-            {
-
-                method:
-                    value
-
-            }
-        );
-
-    },
-
-
-    /* =====================================================
-       PROVIDER
-    ===================================================== */
-
-    setProvider(
-        intentId,
-        provider
-    ){
-
-        const value =
-            String(
-                provider ||
-                ""
-            )
-                .trim()
-                .toLowerCase();
-
-
-        if(!value){
-
-            return Promise.resolve(
-                null
-            );
-
-        }
-
-
-        return this.update(
-            intentId,
-            {
-
-                provider:
-                    value
-
-            }
-        );
-
-    },
-
-
-    /* =====================================================
-       STATUS
-    ===================================================== */
-
-    setStatus(
-        intentId,
-        status
-    ){
-
-        const value =
-            String(
-                status ||
-                ""
-            )
-                .trim()
-                .toLowerCase();
-
-
-        if(!value){
-
-            return Promise.resolve(
-                null
-            );
-
-        }
-
-
-        return this.update(
-            intentId,
-            {
-
-                status:
-                    value
-
-            }
-        );
-
-    },
-
-
-    /* =====================================================
-       CANCEL
-    ===================================================== */
-
-    async cancel(intentId){
-
-        const id =
-            String(
-                intentId ||
-                ""
-            ).trim();
-
-
-        if(!id){
-
-            return null;
-
-        }
-
 
         const client =
             this.getClient();
@@ -517,7 +341,7 @@ const VaeroPaymentAdapter = {
 
         if(
             !client ||
-            typeof client.cancelIntent !==
+            typeof client.setMethod !==
                 "function"
         ){
 
@@ -529,8 +353,157 @@ const VaeroPaymentAdapter = {
         try{
 
             return (
-                await client.cancelIntent(
-                    id
+                await client.setMethod(
+                    intentId,
+                    method
+                ) ||
+                null
+            );
+
+        } catch(error){
+
+            return null;
+
+        }
+
+    },
+
+
+    selectMethod(
+        intentId,
+        method
+    ){
+
+        return this.setMethod(
+            intentId,
+            method
+        );
+
+    },
+
+
+    /* =====================================================
+       PROVIDER
+    ===================================================== */
+
+    async setProvider(
+        intentId,
+        providerId
+    ){
+
+        const client =
+            this.getClient();
+
+
+        if(
+            !client ||
+            typeof client.setProvider !==
+                "function"
+        ){
+
+            return null;
+
+        }
+
+
+        try{
+
+            return (
+                await client.setProvider(
+                    intentId,
+                    providerId
+                ) ||
+                null
+            );
+
+        } catch(error){
+
+            return null;
+
+        }
+
+    },
+
+
+    selectProvider(
+        intentId,
+        providerId
+    ){
+
+        return this.setProvider(
+            intentId,
+            providerId
+        );
+
+    },
+
+
+    getAvailableProviders(){
+
+        const client =
+            this.getClient();
+
+
+        if(
+            !client ||
+            typeof client
+                .getAvailableProviders !==
+                    "function"
+        ){
+
+            return [];
+
+        }
+
+
+        try{
+
+            const providers =
+                client
+                    .getAvailableProviders();
+
+
+            return Array.isArray(
+                providers
+            )
+                ? providers
+                : [];
+
+        } catch(error){
+
+            return [];
+
+        }
+
+    },
+
+
+    /* =====================================================
+       START
+    ===================================================== */
+
+    async start(intentId){
+
+        const client =
+            this.getClient();
+
+
+        if(
+            !client ||
+            typeof client.start !==
+                "function"
+        ){
+
+            return null;
+
+        }
+
+
+        try{
+
+            return (
+                await client.start(
+                    intentId
                 ) ||
                 null
             );
@@ -538,12 +511,149 @@ const VaeroPaymentAdapter = {
         } catch(error){
 
             console.warn(
-                "VAERO ödeme niyeti iptal edilemedi:",
+                "VAERO ödeme işlemi başlatılamadı:",
                 error
             );
 
 
             return null;
+
+        }
+
+    },
+
+
+    startIntent(intentId){
+
+        return this.start(
+            intentId
+        );
+
+    },
+
+
+    /* =====================================================
+       CANCEL
+    ===================================================== */
+
+    async cancel(intentId){
+
+        const client =
+            this.getClient();
+
+
+        if(
+            !client ||
+            typeof client.cancel !==
+                "function"
+        ){
+
+            return null;
+
+        }
+
+
+        try{
+
+            return (
+                await client.cancel(
+                    intentId
+                ) ||
+                null
+            );
+
+        } catch(error){
+
+            return null;
+
+        }
+
+    },
+
+
+    cancelIntent(intentId){
+
+        return this.cancel(
+            intentId
+        );
+
+    },
+
+
+    /* =====================================================
+       REFUND
+    ===================================================== */
+
+    async refund(transactionId){
+
+        const client =
+            this.getClient();
+
+
+        if(
+            !client ||
+            typeof client.refund !==
+                "function"
+        ){
+
+            return false;
+
+        }
+
+
+        try{
+
+            return (
+                await client.refund(
+                    transactionId
+                )
+            ) || false;
+
+        } catch(error){
+
+            return false;
+
+        }
+
+    },
+
+
+    /* =====================================================
+       VERIFIED ENTITLEMENT
+    ===================================================== */
+
+    async hasVerifiedEntitlement(
+        applicationId
+    ){
+
+        const client =
+            this.getClient();
+
+
+        if(
+            !client ||
+            typeof client
+                .hasVerifiedEntitlement !==
+                    "function"
+        ){
+
+            return false;
+
+        }
+
+
+        try{
+
+            return (
+                await client
+                    .hasVerifiedEntitlement(
+                        applicationId
+                    )
+            ) === true;
+
+        } catch(error){
+
+            return false;
 
         }
 
@@ -573,7 +683,11 @@ const VaeroPaymentAdapter = {
                 ),
 
             clientAvailable:
-                this.available()
+                this.available(),
+
+            availableProviders:
+                this.getAvailableProviders()
+                    .length
 
         };
 
