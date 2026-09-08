@@ -4542,14 +4542,58 @@ saveProfile(){
 
 
     /* =====================================================
-       VAERO PAYMENT CORE
+       VAERO PAYMENT BRIDGE
        -----------------------------------------------------
-       Actions ödeme işlemini kendisi gerçekleştirmez.
-       Yalnızca VaeroApp tarafından gerçekten sağlanan
-       paymentCore contract'ını yönlendirir.
+       Actions ödeme otoritesi değildir.
+
+       VAERO ödeme işlemleri önce uygulama adapter'ına,
+       oradan Engine Payment System'e yönlendirilir.
+
+       Legacy VaeroApp.paymentCore yalnızca geçiş sürecinde
+       fallback olarak tutulur.
     ===================================================== */
 
     getVaeroPaymentCore(){
+
+        const adapter =
+            typeof window !==
+                "undefined"
+                ? (
+                    window.VaeroPaymentAdapter ||
+                    null
+                )
+                : null;
+
+
+        if(
+            adapter &&
+            typeof adapter ===
+                "object"
+        ){
+
+            return adapter;
+
+        }
+
+
+        const registeredAdapter =
+            this.getService(
+                "vaeroPaymentAdapter"
+            );
+
+
+        if(registeredAdapter){
+
+            return registeredAdapter;
+
+        }
+
+
+        /*
+         * Transitional fallback.
+         * VAERO App legacy Payment Core kaldırılana kadar
+         * eski çalışma yolu tamamen koparılmaz.
+         */
 
         const app =
             typeof window !==
@@ -4629,8 +4673,11 @@ saveProfile(){
     refreshVaeroPaymentView(){
 
         const app =
-            window.VaeroApp ||
-            null;
+            typeof window !==
+                "undefined"
+                ? window.VaeroApp ||
+                    null
+                : null;
 
 
         if(
@@ -4671,7 +4718,7 @@ saveProfile(){
     },
 
 
-    createVaeroPaymentIntent(
+    async createVaeroPaymentIntent(
         payload = {}
     ){
 
@@ -4679,14 +4726,24 @@ saveProfile(){
             this.getVaeroPaymentCore();
 
 
-        if(
-            !core ||
-            typeof core.createIntent !==
+        const createIntent =
+            core &&
+            typeof core.createIntent ===
                 "function"
-        ){
+                ? core.createIntent
+                : (
+                    core &&
+                    typeof core.create ===
+                        "function"
+                        ? core.create
+                        : null
+                );
+
+
+        if(!createIntent){
 
             console.warn(
-                "VAERO Payment Core intent API bulunamadı."
+                "VAERO Payment intent API bulunamadı."
             );
 
 
@@ -4713,8 +4770,11 @@ saveProfile(){
         try{
 
             intent =
-                core.createIntent(
-                    safePayload
+                await Promise.resolve(
+                    createIntent.call(
+                        core,
+                        safePayload
+                    )
                 );
 
         } catch(error){
@@ -4733,7 +4793,11 @@ saveProfile(){
         if(
             !intent ||
             typeof intent !==
-                "object"
+                "object" ||
+            Array.isArray(
+                intent
+            ) ||
+            !intent.id
         ){
 
             return false;
@@ -4761,7 +4825,7 @@ saveProfile(){
     },
 
 
-    selectVaeroPaymentMethod(method){
+    async selectVaeroPaymentMethod(method){
 
         const selectedMethod =
             this.normalizeText(
@@ -4801,53 +4865,44 @@ saveProfile(){
         }
 
 
-        let result =
-            false;
+        const selectMethod =
+            typeof core.setMethod ===
+                "function"
+                ? core.setMethod
+                : (
+                    typeof core.selectMethod ===
+                        "function"
+                        ? core.selectMethod
+                        : null
+                );
+
+
+        if(!selectMethod){
+
+            console.warn(
+                "Payment method seçim API'si bulunamadı."
+            );
+
+
+            return false;
+
+        }
+
+
+        let updated =
+            null;
 
 
         try{
 
-            /*
-             * Exact core contract hangisiyse onu kullanır.
-             * Olmayan bir payment API üretmez.
-             */
-
-            if(
-                typeof core.setMethod ===
-                    "function"
-            ){
-
-                result =
-                    core.setMethod(
+            updated =
+                await Promise.resolve(
+                    selectMethod.call(
+                        core,
                         intent.id,
                         selectedMethod
-                    );
-
-            }
-
-            else if(
-                typeof core.selectMethod ===
-                    "function"
-            ){
-
-                result =
-                    core.selectMethod(
-                        intent.id,
-                        selectedMethod
-                    );
-
-            }
-
-            else {
-
-                console.warn(
-                    "Payment method seçim API'si bulunamadı."
+                    )
                 );
-
-
-                return false;
-
-            }
 
         } catch(error){
 
@@ -4863,48 +4918,32 @@ saveProfile(){
 
 
         if(
-            result &&
-            typeof result ===
-                "object"
+            !updated ||
+            typeof updated !==
+                "object" ||
+            Array.isArray(
+                updated
+            )
         ){
 
-            engine.currentVaeroPaymentIntent =
-                result;
-
-        }
-
-        else if(
-            result !==
-                false
-        ){
-
-            engine.currentVaeroPaymentIntent = {
-                ...intent,
-
-                method:
-                    selectedMethod
-            };
+            return false;
 
         }
 
 
-        if(
-            result !==
-                false
-        ){
-
-            this.refreshVaeroPaymentView();
-
-        }
+        engine.currentVaeroPaymentIntent =
+            updated;
 
 
-        return result !==
-            false;
+        this.refreshVaeroPaymentView();
+
+
+        return true;
 
     },
 
 
-    selectVaeroPaymentProvider(provider){
+    async selectVaeroPaymentProvider(provider){
 
         const selectedProvider =
             this.normalizeText(
@@ -4944,48 +4983,44 @@ saveProfile(){
         }
 
 
-        let result =
-            false;
+        const selectProvider =
+            typeof core.setProvider ===
+                "function"
+                ? core.setProvider
+                : (
+                    typeof core.selectProvider ===
+                        "function"
+                        ? core.selectProvider
+                        : null
+                );
+
+
+        if(!selectProvider){
+
+            console.warn(
+                "Payment provider seçim API'si bulunamadı."
+            );
+
+
+            return false;
+
+        }
+
+
+        let updated =
+            null;
 
 
         try{
 
-            if(
-                typeof core.setProvider ===
-                    "function"
-            ){
-
-                result =
-                    core.setProvider(
+            updated =
+                await Promise.resolve(
+                    selectProvider.call(
+                        core,
                         intent.id,
                         selectedProvider
-                    );
-
-            }
-
-            else if(
-                typeof core.selectProvider ===
-                    "function"
-            ){
-
-                result =
-                    core.selectProvider(
-                        intent.id,
-                        selectedProvider
-                    );
-
-            }
-
-            else {
-
-                console.warn(
-                    "Payment provider seçim API'si bulunamadı."
+                    )
                 );
-
-
-                return false;
-
-            }
 
         } catch(error){
 
@@ -5001,48 +5036,32 @@ saveProfile(){
 
 
         if(
-            result &&
-            typeof result ===
-                "object"
+            !updated ||
+            typeof updated !==
+                "object" ||
+            Array.isArray(
+                updated
+            )
         ){
 
-            engine.currentVaeroPaymentIntent =
-                result;
-
-        }
-
-        else if(
-            result !==
-                false
-        ){
-
-            engine.currentVaeroPaymentIntent = {
-                ...intent,
-
-                provider:
-                    selectedProvider
-            };
+            return false;
 
         }
 
 
-        if(
-            result !==
-                false
-        ){
-
-            this.refreshVaeroPaymentView();
-
-        }
+        engine.currentVaeroPaymentIntent =
+            updated;
 
 
-        return result !==
-            false;
+        this.refreshVaeroPaymentView();
+
+
+        return true;
 
     },
 
 
-    startVaeroPayment(){
+    async startVaeroPayment(){
 
         const core =
             this.getVaeroPaymentCore();
@@ -5068,46 +5087,43 @@ saveProfile(){
         }
 
 
-        let result =
-            false;
+        const startPayment =
+            typeof core.start ===
+                "function"
+                ? core.start
+                : (
+                    typeof core.startIntent ===
+                        "function"
+                        ? core.startIntent
+                        : null
+                );
+
+
+        if(!startPayment){
+
+            console.warn(
+                "Payment start API bulunamadı."
+            );
+
+
+            return false;
+
+        }
+
+
+        let updated =
+            null;
 
 
         try{
 
-            if(
-                typeof core.start ===
-                    "function"
-            ){
-
-                result =
-                    core.start(
+            updated =
+                await Promise.resolve(
+                    startPayment.call(
+                        core,
                         intent.id
-                    );
-
-            }
-
-            else if(
-                typeof core.startIntent ===
-                    "function"
-            ){
-
-                result =
-                    core.startIntent(
-                        intent.id
-                    );
-
-            }
-
-            else {
-
-                console.warn(
-                    "Payment start API bulunamadı."
+                    )
                 );
-
-
-                return false;
-
-            }
 
         } catch(error){
 
@@ -5123,36 +5139,32 @@ saveProfile(){
 
 
         if(
-            result &&
-            typeof result ===
-                "object" &&
-            typeof result.then !==
-                "function"
+            !updated ||
+            typeof updated !==
+                "object" ||
+            Array.isArray(
+                updated
+            )
         ){
 
-            engine.currentVaeroPaymentIntent =
-                result;
+            return false;
 
         }
 
 
-        if(
-            result !==
-                false
-        ){
-
-            this.refreshVaeroPaymentView();
-
-        }
+        engine.currentVaeroPaymentIntent =
+            updated;
 
 
-        return result !==
-            false;
-
-    }, 
+        this.refreshVaeroPaymentView();
 
 
-    cancelVaeroPayment(){
+        return true;
+
+    },
+
+
+    async cancelVaeroPayment(){
 
         const core =
             this.getVaeroPaymentCore();
@@ -5169,6 +5181,7 @@ saveProfile(){
 
         if(
             !core ||
+            !engine ||
             !intent?.id
         ){
 
@@ -5177,46 +5190,43 @@ saveProfile(){
         }
 
 
-        let result =
-            false;
+        const cancelPayment =
+            typeof core.cancel ===
+                "function"
+                ? core.cancel
+                : (
+                    typeof core.cancelIntent ===
+                        "function"
+                        ? core.cancelIntent
+                        : null
+                );
+
+
+        if(!cancelPayment){
+
+            console.warn(
+                "Payment cancel API bulunamadı."
+            );
+
+
+            return false;
+
+        }
+
+
+        let updated =
+            null;
 
 
         try{
 
-            if(
-                typeof core.cancel ===
-                    "function"
-            ){
-
-                result =
-                    core.cancel(
+            updated =
+                await Promise.resolve(
+                    cancelPayment.call(
+                        core,
                         intent.id
-                    );
-
-            }
-
-            else if(
-                typeof core.cancelIntent ===
-                    "function"
-            ){
-
-                result =
-                    core.cancelIntent(
-                        intent.id
-                    );
-
-            }
-
-            else {
-
-                console.warn(
-                    "Payment cancel API bulunamadı."
+                    )
                 );
-
-
-                return false;
-
-            }
 
         } catch(error){
 
@@ -5232,35 +5242,32 @@ saveProfile(){
 
 
         if(
-            result &&
-            typeof result ===
-                "object" &&
-            engine
+            !updated ||
+            typeof updated !==
+                "object" ||
+            Array.isArray(
+                updated
+            )
         ){
 
-            engine.currentVaeroPaymentIntent =
-                result;
+            return false;
 
         }
 
 
-        if(
-            result !==
-                false
-        ){
-
-            this.refreshVaeroPaymentView();
-
-        }
+        engine.currentVaeroPaymentIntent =
+            updated;
 
 
-        return result !==
-            false;
+        this.refreshVaeroPaymentView();
+
+
+        return true;
 
     },
 
 
-    refundVaeroPayment(
+    async refundVaeroPayment(
         transactionId
     ){
 
@@ -5300,9 +5307,16 @@ saveProfile(){
 
         try{
 
-            return core.refund(
-                id
-            );
+            const result =
+                await Promise.resolve(
+                    core.refund(
+                        id
+                    )
+                );
+
+
+            return result ||
+                false;
 
         } catch(error){
 
