@@ -48,6 +48,7 @@ const Kernel = {
     "graph",
 
     "data",
+    "payment",
 
     "universe",
     "world",
@@ -69,7 +70,6 @@ const Kernel = {
     "renderer"
 
 ],
-
 
     /* =====================================================
        BRAIN FOUNDATION
@@ -133,6 +133,7 @@ const Kernel = {
     "graph",
 
     "data",
+    "payment",
 
     "memorySystem",
     "timeline",
@@ -142,7 +143,6 @@ const Kernel = {
     "runtime"
 
 ],
-
 
     /* =====================================================
        SAFE VAERO ACCESS
