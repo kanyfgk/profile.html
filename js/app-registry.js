@@ -10,19 +10,6 @@ const AppRegistry = (() => {
        PRIVATE BUILT-IN AUTHORITY
     ===================================================== */
 
-    /*
-     * Built-in yetkisi yalnızca bu closure içindeki private
-     * token üzerinden verilebilir.
-     *
-     * External bir manifest:
-     *
-     * system:true
-     * trusted:true
-     * distribution:"built-in"
-     *
-     * yazsa bile kendisini VAERO built-in uygulaması yapamaz.
-     */
-
     const BUILT_IN_TOKEN =
         Symbol(
             "VAERO_INTERNAL_BUILT_IN"
@@ -35,7 +22,7 @@ const AppRegistry = (() => {
             "3.0.0",
 
         manifestVersion:
-            3,
+            4,
 
         apps: [],
 
@@ -431,6 +418,134 @@ const AppRegistry = (() => {
 
 
         /* =====================================================
+           INTERACTION NETWORK MANIFEST
+        ===================================================== */
+
+        normalizeTrustRequirements(value){
+
+            if(
+                !value ||
+                typeof value !==
+                    "object" ||
+                Array.isArray(
+                    value
+                )
+            ){
+
+                return {
+
+                    level:
+                        null,
+
+                    verifiedIdentity:
+                        false,
+
+                    stepUpActions:
+                        [],
+
+                    evidence:
+                        []
+
+                };
+
+            }
+
+
+            const level =
+                value.level
+                    ? String(
+                        value.level
+                    )
+                        .trim()
+                        .toLowerCase()
+                    : null;
+
+
+            return {
+
+                level,
+
+                verifiedIdentity:
+                    value.verifiedIdentity ===
+                        true,
+
+                stepUpActions:
+                    this.normalizeArray(
+                        value.stepUpActions
+                    ),
+
+                evidence:
+                    this.normalizeArray(
+                        value.evidence
+                    )
+
+            };
+
+        },
+
+
+        normalizeNetworkManifest(app){
+
+            const legacyCapabilities =
+                this.normalizeArray(
+                    app.capabilities
+                );
+
+
+            const requestedCapabilities =
+                this.normalizeArray(
+                    app.capabilitiesRequested
+                );
+
+
+            const capabilities =
+                requestedCapabilities.length >
+                    0
+                    ? requestedCapabilities
+                    : legacyCapabilities;
+
+
+            return {
+
+                objectTypes:
+                    this.normalizeArray(
+                        app.objectTypes
+                    ),
+
+                nativeVerbs:
+                    this.normalizeArray(
+                        app.nativeVerbs
+                    ),
+
+                outcomeTypes:
+                    this.normalizeArray(
+                        app.outcomeTypes
+                    ),
+
+                capabilitiesRequested:
+                    capabilities,
+
+                contextInputs:
+                    this.normalizeArray(
+                        app.contextInputs
+                    ),
+
+                contextOutputs:
+                    this.normalizeArray(
+                        app.contextOutputs
+                    ),
+
+                trustRequirements:
+                    this.normalizeTrustRequirements(
+                        app.trustRequirements
+                    )
+
+            };
+
+        },
+
+
+        /* =====================================================
            CLONE
         ===================================================== */
 
@@ -460,6 +575,75 @@ const AppRegistry = (() => {
                         []
                     )
                 ],
+
+                capabilitiesRequested: [
+                    ...(
+                        app.capabilitiesRequested ||
+                        []
+                    )
+                ],
+
+                objectTypes: [
+                    ...(
+                        app.objectTypes ||
+                        []
+                    )
+                ],
+
+                nativeVerbs: [
+                    ...(
+                        app.nativeVerbs ||
+                        []
+                    )
+                ],
+
+                outcomeTypes: [
+                    ...(
+                        app.outcomeTypes ||
+                        []
+                    )
+                ],
+
+                contextInputs: [
+                    ...(
+                        app.contextInputs ||
+                        []
+                    )
+                ],
+
+                contextOutputs: [
+                    ...(
+                        app.contextOutputs ||
+                        []
+                    )
+                ],
+
+                trustRequirements: {
+
+                    ...(
+                        app.trustRequirements ||
+                        {}
+                    ),
+
+                    stepUpActions: [
+                        ...(
+                            app
+                                .trustRequirements
+                                ?.stepUpActions ||
+                            []
+                        )
+                    ],
+
+                    evidence: [
+                        ...(
+                            app
+                                .trustRequirements
+                                ?.evidence ||
+                            []
+                        )
+                    ]
+
+                },
 
                 dependencies: [
                     ...(
@@ -769,10 +953,6 @@ const AppRegistry = (() => {
                     BUILT_IN_TOKEN;
 
 
-            /*
-             * External manifest built-in distribution talep
-             * edemez. Built-in yalnız private token ile oluşur.
-             */
             const distribution =
                 isBuiltIn
                     ? "built-in"
@@ -791,6 +971,12 @@ const AppRegistry = (() => {
                         app.maxEngineVersion
 
                 });
+
+
+            const networkManifest =
+                this.normalizeNetworkManifest(
+                    app
+                );
 
 
             const normalizedApp = {
@@ -885,10 +1071,47 @@ const AppRegistry = (() => {
                         app.requestedPermissions
                     ),
 
-                capabilities:
-                    this.normalizeArray(
-                        app.capabilities
-                    ),
+                /*
+                 * Legacy compatibility.
+                 *
+                 * EngineSession currently reads capabilities.
+                 * The canonical manifest field going forward
+                 * is capabilitiesRequested.
+                 */
+
+                capabilities: [
+                    ...networkManifest
+                        .capabilitiesRequested
+                ],
+
+                capabilitiesRequested: [
+                    ...networkManifest
+                        .capabilitiesRequested
+                ],
+
+                objectTypes:
+                    networkManifest
+                        .objectTypes,
+
+                nativeVerbs:
+                    networkManifest
+                        .nativeVerbs,
+
+                outcomeTypes:
+                    networkManifest
+                        .outcomeTypes,
+
+                contextInputs:
+                    networkManifest
+                        .contextInputs,
+
+                contextOutputs:
+                    networkManifest
+                        .contextOutputs,
+
+                trustRequirements:
+                    networkManifest
+                        .trustRequirements,
 
                 dependencies:
                     this.normalizeArray(
@@ -1402,6 +1625,34 @@ const AppRegistry = (() => {
             }
 
 
+            if(
+                safeOptions.interactionReady ===
+                    true
+            ){
+
+                apps =
+                    apps.filter(
+                        app =>
+                            (
+                                app.objectTypes
+                                    ?.length >
+                                0
+                            ) ||
+                            (
+                                app.nativeVerbs
+                                    ?.length >
+                                0
+                            ) ||
+                            (
+                                app.outcomeTypes
+                                    ?.length >
+                                0
+                            )
+                    );
+
+            }
+
+
             return apps.map(
                 app =>
                     this.cloneApp(
@@ -1468,7 +1719,37 @@ const AppRegistry = (() => {
                         ),
 
                         ...(
+                            app.capabilitiesRequested ||
+                            []
+                        ),
+
+                        ...(
                             app.requestedPermissions ||
+                            []
+                        ),
+
+                        ...(
+                            app.objectTypes ||
+                            []
+                        ),
+
+                        ...(
+                            app.nativeVerbs ||
+                            []
+                        ),
+
+                        ...(
+                            app.outcomeTypes ||
+                            []
+                        ),
+
+                        ...(
+                            app.contextInputs ||
+                            []
+                        ),
+
+                        ...(
+                            app.contextOutputs ||
                             []
                         )
 
@@ -1570,6 +1851,27 @@ const AppRegistry = (() => {
                 });
 
 
+            const interactionReady =
+                apps.filter(
+                    app =>
+                        (
+                            app.objectTypes
+                                ?.length >
+                            0
+                        ) ||
+                        (
+                            app.nativeVerbs
+                                ?.length >
+                            0
+                        ) ||
+                        (
+                            app.outcomeTypes
+                                ?.length >
+                            0
+                        )
+                ).length;
+
+
             return {
 
                 manifestVersion:
@@ -1612,6 +1914,8 @@ const AppRegistry = (() => {
                             app.installable ===
                                 true
                     ).length,
+
+                interactionReady,
 
                 free:
                     apps.filter(
@@ -1678,6 +1982,9 @@ const AppRegistry = (() => {
                 installable:
                     catalog.installable,
 
+                interactionReady:
+                    catalog.interactionReady,
+
                 paid:
                     catalog.paid +
                     catalog.subscriptions,
@@ -1729,6 +2036,48 @@ const AppRegistry = (() => {
                 "identity.verification.request"
             ],
 
+            objectTypes: [
+                "identity",
+                "verification",
+                "evidence"
+            ],
+
+            nativeVerbs: [
+                "view",
+                "manage",
+                "verify"
+            ],
+
+            outcomeTypes: [
+                "verified",
+                "completed"
+            ],
+
+            contextInputs: [
+                "entity-ref",
+                "identity-ref"
+            ],
+
+            contextOutputs: [
+                "identity-ref",
+                "verification-ref",
+                "outcome-ref"
+            ],
+
+            trustRequirements: {
+
+                level:
+                    "engine-trusted",
+
+                verifiedIdentity:
+                    false,
+
+                stepUpActions: [
+                    "identity.verify"
+                ]
+
+            },
+
             tags: [
                 "identity",
                 "va-id",
@@ -1767,6 +2116,43 @@ const AppRegistry = (() => {
                 "profile.manage",
                 "profile.discovery"
             ],
+
+            objectTypes: [
+                "profile",
+                "identity",
+                "preference"
+            ],
+
+            nativeVerbs: [
+                "view",
+                "edit",
+                "present"
+            ],
+
+            outcomeTypes: [
+                "created",
+                "progressed"
+            ],
+
+            contextInputs: [
+                "entity-ref",
+                "identity-ref"
+            ],
+
+            contextOutputs: [
+                "profile-ref",
+                "context-ref"
+            ],
+
+            trustRequirements: {
+
+                level:
+                    "engine-trusted",
+
+                verifiedIdentity:
+                    false
+
+            },
 
             tags: [
                 "profile",
@@ -1808,6 +2194,58 @@ const AppRegistry = (() => {
                 "memory.search"
             ],
 
+            objectTypes: [
+                "memory-event",
+                "decision",
+                "conversation",
+                "outcome",
+                "collaboration",
+                "learned-preference",
+                "active-context"
+            ],
+
+            nativeVerbs: [
+                "remember",
+                "search",
+                "correct",
+                "forget",
+                "link"
+            ],
+
+            outcomeTypes: [
+                "learned",
+                "organised",
+                "progressed"
+            ],
+
+            contextInputs: [
+                "context-ref",
+                "entity-ref",
+                "conversation-ref",
+                "decision-ref",
+                "outcome-ref"
+            ],
+
+            contextOutputs: [
+                "memory-ref",
+                "context-ref",
+                "outcome-ref"
+            ],
+
+            trustRequirements: {
+
+                level:
+                    "engine-trusted",
+
+                verifiedIdentity:
+                    false,
+
+                stepUpActions: [
+                    "memory.forget"
+                ]
+
+            },
+
             tags: [
                 "memory",
                 "knowledge",
@@ -1847,10 +2285,55 @@ const AppRegistry = (() => {
                 "timeline.link"
             ],
 
+            objectTypes: [
+                "memory-event",
+                "outcome",
+                "task",
+                "decision",
+                "conversation"
+            ],
+
+            nativeVerbs: [
+                "view",
+                "resume",
+                "respond",
+                "complete",
+                "link"
+            ],
+
+            outcomeTypes: [
+                "progressed",
+                "completed"
+            ],
+
+            contextInputs: [
+                "entity-ref",
+                "memory-ref",
+                "outcome-ref",
+                "task-ref"
+            ],
+
+            contextOutputs: [
+                "context-ref",
+                "task-ref",
+                "outcome-ref"
+            ],
+
+            trustRequirements: {
+
+                level:
+                    "engine-trusted",
+
+                verifiedIdentity:
+                    false
+
+            },
+
             tags: [
                 "timeline",
                 "history",
-                "events"
+                "events",
+                "continuation"
             ]
         },
 
@@ -1863,10 +2346,10 @@ const AppRegistry = (() => {
                 "⌁",
 
             title:
-    "Bağlantılar",
+                "Bağlantılar",
 
-subtitle:
-    "İlişkilerini ve bağlantılarını yönet",
+            subtitle:
+                "İlişkilerini ve bağlantılarını yönet",
 
             description:
                 "Varlıkların ve dünyaların birbiriyle nasıl bağlantı kurduğunu tek yerde gör ve yönet.",
@@ -1887,10 +2370,55 @@ subtitle:
                 "bridge.search"
             ],
 
+            objectTypes: [
+                "entity",
+                "relation",
+                "conversation",
+                "collaboration",
+                "community"
+            ],
+
+            nativeVerbs: [
+                "connect",
+                "follow",
+                "fan",
+                "converse",
+                "collaborate"
+            ],
+
+            outcomeTypes: [
+                "organised",
+                "progressed",
+                "completed"
+            ],
+
+            contextInputs: [
+                "entity-ref",
+                "relation-ref",
+                "world-ref"
+            ],
+
+            contextOutputs: [
+                "relation-ref",
+                "conversation-ref",
+                "collaboration-ref"
+            ],
+
+            trustRequirements: {
+
+                level:
+                    "engine-trusted",
+
+                verifiedIdentity:
+                    false
+
+            },
+
             tags: [
                 "bridge",
                 "connections",
-                "network"
+                "network",
+                "relationships"
             ]
         },
 
@@ -1903,10 +2431,11 @@ subtitle:
                 "⌬",
 
             title:
-    "Gelişim",
+                "Gelişim",
 
-subtitle:
-    "İlerlemeni ve hedeflerini takip et",
+            subtitle:
+                "İlerlemeni ve hedeflerini takip et",
+
             description:
                 "Hedeflerini, kararlarını, başarılarını ve önemli gelişmeleri tek bir ilerleme akışında takip et.",
 
@@ -1926,6 +2455,53 @@ subtitle:
                 "evolution.goals"
             ],
 
+            objectTypes: [
+                "goal",
+                "decision",
+                "task",
+                "outcome",
+                "evidence"
+            ],
+
+            nativeVerbs: [
+                "plan",
+                "track",
+                "decide",
+                "complete",
+                "verify"
+            ],
+
+            outcomeTypes: [
+                "decided",
+                "progressed",
+                "completed",
+                "verified"
+            ],
+
+            contextInputs: [
+                "goal-ref",
+                "decision-ref",
+                "task-ref",
+                "outcome-ref"
+            ],
+
+            contextOutputs: [
+                "decision-ref",
+                "task-ref",
+                "outcome-ref",
+                "evidence-ref"
+            ],
+
+            trustRequirements: {
+
+                level:
+                    "engine-trusted",
+
+                verifiedIdentity:
+                    false
+
+            },
+
             tags: [
                 "evolution",
                 "goals",
@@ -1943,10 +2519,10 @@ subtitle:
                 "⬡",
 
             title:
-    "Varlık Sistemleri",
+                "Varlık Sistemleri",
 
-subtitle:
-    "Varlığının temel işlevlerini yönet",
+            subtitle:
+                "Varlığının temel işlevlerini yönet",
 
             description:
                 "Kimlik, hafıza, bağlantılar ve diğer temel işlevlerin durumunu tek yerde gör ve yönet.",
@@ -1966,6 +2542,52 @@ subtitle:
                 "organs.inspect",
                 "organs.navigate"
             ],
+
+            objectTypes: [
+                "organ",
+                "capability",
+                "permission",
+                "grant"
+            ],
+
+            nativeVerbs: [
+                "inspect",
+                "manage",
+                "authorise",
+                "revoke"
+            ],
+
+            outcomeTypes: [
+                "organised",
+                "verified"
+            ],
+
+            contextInputs: [
+                "entity-ref",
+                "application-ref",
+                "organ-ref"
+            ],
+
+            contextOutputs: [
+                "organ-ref",
+                "permission-ref",
+                "grant-ref"
+            ],
+
+            trustRequirements: {
+
+                level:
+                    "engine-trusted",
+
+                verifiedIdentity:
+                    false,
+
+                stepUpActions: [
+                    "permission.authorise",
+                    "permission.revoke"
+                ]
+
+            },
 
             tags: [
                 "organs",
@@ -2007,6 +2629,51 @@ subtitle:
                 "privacy.manage"
             ],
 
+            objectTypes: [
+                "preference",
+                "privacy",
+                "security",
+                "notification"
+            ],
+
+            nativeVerbs: [
+                "view",
+                "configure",
+                "authorise",
+                "revoke"
+            ],
+
+            outcomeTypes: [
+                "organised",
+                "verified"
+            ],
+
+            contextInputs: [
+                "identity-ref",
+                "application-ref",
+                "context-ref"
+            ],
+
+            contextOutputs: [
+                "preference-ref",
+                "permission-ref"
+            ],
+
+            trustRequirements: {
+
+                level:
+                    "engine-trusted",
+
+                verifiedIdentity:
+                    false,
+
+                stepUpActions: [
+                    "security.change",
+                    "permission.revoke"
+                ]
+
+            },
+
             tags: [
                 "settings",
                 "privacy",
@@ -2023,10 +2690,11 @@ subtitle:
                 "◇",
 
             title:
-    "Keşif",
+                "Keşif",
 
-subtitle:
-    "Sana uygun yönleri keşfet",
+            subtitle:
+                "Sana uygun yönleri keşfet",
+
             description:
                 "Amaç, ilgi, güçlü yön, hedef ve bağlantı sinyallerinden kişisel başlangıç yönünü oluşturur.",
 
@@ -2045,10 +2713,60 @@ subtitle:
                 "discovery.personalise"
             ],
 
+            objectTypes: [
+                "intent",
+                "person",
+                "application",
+                "product",
+                "community",
+                "recommendation",
+                "comparison"
+            ],
+
+            nativeVerbs: [
+                "discover",
+                "compare",
+                "recommend",
+                "follow",
+                "fan"
+            ],
+
+            outcomeTypes: [
+                "learned",
+                "decided",
+                "progressed"
+            ],
+
+            contextInputs: [
+                "intent-ref",
+                "identity-ref",
+                "preference-ref",
+                "context-ref"
+            ],
+
+            contextOutputs: [
+                "recommendation-ref",
+                "comparison-ref",
+                "application-ref",
+                "person-ref",
+                "product-ref"
+            ],
+
+            trustRequirements: {
+
+                level:
+                    "engine-trusted",
+
+                verifiedIdentity:
+                    false
+
+            },
+
             tags: [
                 "discovery",
                 "direction",
-                "personalisation"
+                "personalisation",
+                "recommendations"
             ]
         },
 
@@ -2061,10 +2779,10 @@ subtitle:
                 "▦",
 
             title:
-    "Uygulamalar",
+                "Uygulamalar",
 
-subtitle:
-    "VAERO'daki araçlarını keşfet",
+            subtitle:
+                "VAERO'daki araçlarını keşfet",
 
             description:
                 "Engine içindeki uygulamaları keşfet, izinleri incele, kurulu uygulamaları yönet ve güncellemeleri takip et.",
@@ -2086,11 +2804,71 @@ subtitle:
                 "permissions.review"
             ],
 
+            objectTypes: [
+                "application",
+                "app-entity",
+                "person",
+                "conversation",
+                "comparison",
+                "decision",
+                "outcome",
+                "community"
+            ],
+
+            nativeVerbs: [
+                "discover",
+                "open",
+                "compare",
+                "recommend",
+                "follow",
+                "fan",
+                "converse",
+                "install",
+                "manage"
+            ],
+
+            outcomeTypes: [
+                "decided",
+                "created",
+                "completed",
+                "progressed"
+            ],
+
+            contextInputs: [
+                "intent-ref",
+                "entity-ref",
+                "world-ref",
+                "context-ref"
+            ],
+
+            contextOutputs: [
+                "application-ref",
+                "comparison-ref",
+                "decision-ref",
+                "context-ref"
+            ],
+
+            trustRequirements: {
+
+                level:
+                    "engine-trusted",
+
+                verifiedIdentity:
+                    false,
+
+                stepUpActions: [
+                    "application.install",
+                    "permission.grant"
+                ]
+
+            },
+
             tags: [
                 "applications",
                 "catalog",
                 "permissions",
-                "updates"
+                "updates",
+                "application-network"
             ]
         },
 
@@ -2118,31 +2896,109 @@ subtitle:
                 "service",
 
             version:
-    "3.0.0",
+                "3.0.0",
 
-requestedPermissions: [
+            requestedPermissions: [
 
-    "data.read",
-    "data.write"
+                "data.read",
+                "data.write"
 
-],
+            ],
 
-capabilities: [
+            capabilities: [
 
-    "vaero.products",
-    "vaero.atmospheres",
-    "vaero.purchase",
-    "vaero.care",
-    "vaero.vision"
+                "vaero.products",
+                "vaero.atmospheres",
+                "vaero.purchase",
+                "vaero.care",
+                "vaero.vision"
 
-],
+            ],
+
+            objectTypes: [
+
+                "product",
+                "atmosphere",
+                "device",
+                "care-request",
+                "vision",
+                "payment-intent",
+                "outcome"
+
+            ],
+
+            nativeVerbs: [
+
+                "discover",
+                "compare",
+                "buy",
+                "create",
+                "request",
+                "verify"
+
+            ],
+
+            outcomeTypes: [
+
+                "bought",
+                "created",
+                "verified",
+                "progressed",
+                "completed"
+
+            ],
+
+            contextInputs: [
+
+                "intent-ref",
+                "product-ref",
+                "vision-ref",
+                "entity-ref",
+                "context-ref"
+
+            ],
+
+            contextOutputs: [
+
+                "product-ref",
+                "vision-ref",
+                "payment-intent-ref",
+                "outcome-ref",
+                "context-ref"
+
+            ],
+
+            trustRequirements: {
+
+                level:
+                    "engine-trusted",
+
+                verifiedIdentity:
+                    false,
+
+                stepUpActions: [
+
+                    "purchase.confirm",
+                    "payment.confirm"
+
+                ],
+
+                evidence: [
+
+                    "payment-provider",
+                    "commerce-source"
+
+                ]
+
+            },
 
             tags: [
                 "vaero",
                 "atmosphere",
                 "device",
                 "care",
-                "vision"
+                "vision",
+                "physical-world"
             ],
 
             metadata: {
@@ -2151,7 +3007,10 @@ capabilities: [
                     true,
 
                 engineCore:
-                    false
+                    false,
+
+                interactionNetwork:
+                    true
 
             }
         }
@@ -2224,3 +3083,4 @@ if(
         AppRegistry;
 
 }
+   
