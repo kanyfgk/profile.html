@@ -316,6 +316,208 @@ const Actions = {
 
     },
 
+   /* =====================================================
+   APPLICATION ROUTE CONTEXT
+
+   Raw runtime token is accepted only during routing.
+   Public Engine/App context never contains accessToken.
+===================================================== */
+
+normalizeRouteContext(value){
+
+    if(
+        !value ||
+        typeof value !==
+            "object" ||
+        Array.isArray(
+            value
+        )
+    ){
+        return {};
+    }
+
+    return {
+        ...value
+    };
+
+},
+
+
+getSafeApplicationContext(routeContext = {}){
+
+    const context =
+        this.normalizeRouteContext(
+            routeContext
+        );
+
+    const applicationContext =
+        context.applicationContext;
+
+    if(
+        !applicationContext ||
+        typeof applicationContext !==
+            "object" ||
+        Array.isArray(
+            applicationContext
+        )
+    ){
+        return null;
+    }
+
+    /*
+     * accessToken must never be copied to Engine state,
+     * DOM datasets, lifecycle events or Brain context.
+     */
+    const {
+        accessToken,
+        ...safeContext
+    } = applicationContext;
+
+    return {
+        ...safeContext,
+
+        capabilities:
+            Array.isArray(
+                safeContext.capabilities
+            )
+                ? [
+                    ...safeContext.capabilities
+                ]
+                : [],
+
+        permissions:
+            Array.isArray(
+                safeContext.permissions
+            )
+                ? [
+                    ...safeContext.permissions
+                ]
+                : [],
+
+        contextRef:
+            (
+                safeContext.contextRef &&
+                typeof safeContext.contextRef ===
+                    "object" &&
+                !Array.isArray(
+                    safeContext.contextRef
+                )
+            )
+                ? {
+                    ...safeContext.contextRef
+                }
+                : null
+    };
+
+},
+
+
+applyApplicationContext(
+    appId,
+    routeContext = {}
+){
+
+    const id =
+        this.normalizeText(
+            appId,
+            160
+        );
+
+    if(!id){
+        return null;
+    }
+
+    const safeContext =
+        this.getSafeApplicationContext(
+            routeContext
+        );
+
+    if(!safeContext){
+        return null;
+    }
+
+    if(
+        safeContext.appId &&
+        String(
+            safeContext.appId
+        ) !==
+        id
+    ){
+        console.warn(
+            "Application context rejected: app id mismatch.",
+            {
+                expected:
+                    id,
+
+                received:
+                    safeContext.appId
+            }
+        );
+
+        return null;
+    }
+
+    const engine =
+        this.getEngine();
+
+    if(engine){
+
+        /*
+         * Context continuity belongs to Engine.
+         * Only non-secret metadata is attached here.
+         */
+        engine.currentApplicationContext = {
+
+            ...safeContext,
+
+            appId:
+                id,
+
+            receivedAt:
+                Date.now()
+
+        };
+
+    }
+
+    this.syncAwareness(
+        id,
+        {
+            source:
+                "application-launch",
+
+            appId:
+                id,
+
+            grantId:
+                safeContext.grantId ||
+                null,
+
+            subjectId:
+                safeContext.subjectId ||
+                null,
+
+            trustLevel:
+                safeContext.trustLevel ||
+                null,
+
+            contextRef:
+                safeContext.contextRef ||
+                null
+        }
+    );
+
+    return (
+        engine?.currentApplicationContext ||
+        {
+            ...safeContext,
+            appId:
+                id
+        }
+    );
+
+},
+
 
     /* =====================================================
        BRAIN AWARENESS
@@ -4419,127 +4621,155 @@ saveProfile(){
        SYSTEM APPLICATIONS
     ===================================================== */
 
-    openVaeroApp(){
+    openVaeroApp(
+    routeContext = {}
+){
 
-        const engine =
-            this.getEngine();
+    const engine =
+        this.getEngine();
 
+    if(
+        !engine ||
+        typeof engine.openSystemPage !==
+            "function"
+    ){
+        return false;
+    }
 
-        if(
-            !engine ||
-            typeof engine.openSystemPage !==
-                "function"
-        ){
+    this.resetEditorState();
 
-            return false;
+    const applicationContext =
+        this.applyApplicationContext(
+            "vaero",
+            routeContext
+        );
 
-        }
+    let opened =
+        false;
 
+    try{
 
-        this.resetEditorState();
-
-
-        let opened =
-            false;
-
-
-        try{
-
-            opened =
-                engine.openSystemPage(
-                    "vaero"
-                );
-
-        } catch(error){
-
-            console.error(
-                "VAERO uygulaması açılamadı:",
-                error
+        opened =
+            engine.openSystemPage(
+                "vaero",
+                {
+                    applicationContext
+                }
             );
 
+    } catch(error){
 
-            return false;
+        console.error(
+            "VAERO uygulaması açılamadı:",
+            error
+        );
 
-        }
+        return false;
+    }
 
+    if(
+        opened !==
+            false
+    ){
 
-        if(
-            opened !==
-                false
-        ){
+        this.syncAwareness(
+            "vaero",
+            {
+                appId:
+                    "vaero",
 
-            this.syncAwareness(
-                "vaero"
+                grantId:
+                    applicationContext
+                        ?.grantId ||
+                    null,
+
+                contextRef:
+                    applicationContext
+                        ?.contextRef ||
+                    null
+            }
+        );
+
+    }
+
+    return opened;
+
+},
+
+    openApplicationsApp(
+    routeContext = {}
+){
+
+    const engine =
+        this.getEngine();
+
+    if(
+        !engine ||
+        typeof engine.openSystemPage !==
+            "function"
+    ){
+        return false;
+    }
+
+    this.resetEditorState();
+
+    const applicationContext =
+        this.applyApplicationContext(
+            "applications",
+            routeContext
+        );
+
+    let opened =
+        false;
+
+    try{
+
+        opened =
+            engine.openSystemPage(
+                "applications",
+                {
+                    applicationContext
+                }
             );
 
-        }
+    } catch(error){
 
+        console.error(
+            "Applications açılamadı:",
+            error
+        );
 
-        return opened;
+        return false;
+    }
 
-    },
+    if(
+        opened !==
+            false
+    ){
 
+        this.syncAwareness(
+            "applications",
+            {
+                appId:
+                    "applications",
 
-    openApplicationsApp(){
+                grantId:
+                    applicationContext
+                        ?.grantId ||
+                    null,
 
-        const engine =
-            this.getEngine();
+                contextRef:
+                    applicationContext
+                        ?.contextRef ||
+                    null
+            }
+        );
 
+    }
 
-        if(
-            !engine ||
-            typeof engine.openSystemPage !==
-                "function"
-        ){
+    return opened;
 
-            return false;
-
-        }
-
-
-        this.resetEditorState();
-
-
-        let opened =
-            false;
-
-
-        try{
-
-            opened =
-                engine.openSystemPage(
-                    "applications"
-                );
-
-        } catch(error){
-
-            console.error(
-                "Applications açılamadı:",
-                error
-            );
-
-
-            return false;
-
-        }
-
-
-        if(
-            opened !==
-                false
-        ){
-
-            this.syncAwareness(
-                "applications"
-            );
-
-        }
-
-
-        return opened;
-
-    },
-
+},
 
     /* =====================================================
        VAERO PAYMENT BRIDGE
@@ -9441,9 +9671,10 @@ if(
     ===================================================== */
 
     routeAction(
-        action,
-        button
-    ){
+    action,
+    button,
+    routeContext = {}
+){
 
         const targetAction =
             String(
@@ -9717,13 +9948,14 @@ if(
             --------------------------------------------- */
 
             case "app:applications":
+    return this.openApplicationsApp(
+        routeContext
+    );
 
-                return this.openApplicationsApp();
-
-
-            case "app:vaero":
-
-                return this.openVaeroApp();
+case "app:vaero":
+    return this.openVaeroApp(
+        routeContext
+    );
 
 
             /* ---------------------------------------------
