@@ -1103,27 +1103,43 @@ const manifestVersion =
     }
     else {
 
-        /*
-         * External applications never receive a capability
-         * simply because they requested it.
-         *
-         * Existing runtime capabilities are also pruned when
-         * the current manifest no longer declares them.
-         */
+        else {
+    /*
+     * External applications never receive authority
+     * simply because they requested it.
+     *
+     * Existing runtime capabilities and permissions
+     * are pruned when the current manifest no longer
+     * declares them.
+     */
 
-        organ.capabilities =
-            this.normalizeList(
-                organ.capabilities
-            )
-                .filter(
-                    capability =>
-                        requestedCapabilities.includes(
-                            capability
-                        )
-                );
+    organ.capabilities =
+        this.normalizeList(
+            organ.capabilities
+        )
+        .filter(
+            capability =>
+                requestedCapabilities.includes(
+                    capability
+                )
+        );
 
-    }
+    const requestedPermissions =
+        this.getRequestedPermissions(
+            organ
+        );
 
+    organ.permissions =
+        this.normalizeList(
+            organ.permissions
+        )
+        .filter(
+            permission =>
+                requestedPermissions.includes(
+                    permission
+                )
+        );
+}
 
     /*
      * If requested permissions changed and the app no longer
@@ -5668,12 +5684,16 @@ if(
                 ){
 
                     const requestedCapabilities =
-                        this.getRequestedCapabilities(
-                            organ
-                        );
+    this.getRequestedCapabilities(
+        organ
+    );
 
+const requestedPermissions =
+    this.getRequestedPermissions(
+        organ
+    );
 
-                    organ.capabilities =
+organ.capabilities =
     this.normalizeList(
         organ.capabilities
     )
@@ -5683,6 +5703,17 @@ if(
                 capability
             )
     );
+
+organ.permissions =
+    this.normalizeList(
+        organ.permissions
+    )
+    .filter(
+        permission =>
+            requestedPermissions.includes(
+                permission
+            )
+    ); 
 
                 }
 
