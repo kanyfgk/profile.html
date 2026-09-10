@@ -1213,221 +1213,474 @@ const EngineSession = {
 
 
     /* =====================================================
-       STEP-UP
-    ===================================================== */
+   STEP-UP
+===================================================== */
 
-    requiresStepUp(capability){
+hasCompletedStepUp(
+    capability,
+    appId = null
+){
 
-        const value =
-            this.normalizeId(
-                capability
-            );
-
-        if(!value){
-            return false;
-        }
-
-        if(
-            !this.sensitiveCapabilities
-                .has(
-                    value
-                )
-        ){
-            return false;
-        }
-
-        return !this.hasTrust(
-            "verified"
+    const value =
+        this.normalizeId(
+            capability
         );
 
-    },
+    const normalizedAppId =
+        this.normalizeId(
+            appId
+        );
+
+    const stepUp =
+        this.session?.stepUp ||
+        null;
 
 
-    requestStepUp(
-        capability,
-        metadata = {}
+    if(
+        !value ||
+        !stepUp ||
+        stepUp.status !==
+            "completed"
     ){
+        return false;
+    }
 
-        const value =
-            this.normalizeId(
-                capability
+
+    if(
+        Number(
+            stepUp.expiresAt
+        ) <=
+        Date.now()
+    ){
+        return false;
+    }
+
+
+    if(
+        String(
+            stepUp.capability ||
+            ""
+        ).toLowerCase() !==
+        value.toLowerCase()
+    ){
+        return false;
+    }
+
+
+    const stepUpAppId =
+        this.normalizeId(
+            stepUp.appId
+        );
+
+
+    /*
+     * App-scoped verification must match
+     * the exact application.
+     */
+    if(
+        normalizedAppId &&
+        stepUpAppId !==
+            normalizedAppId
+    ){
+        return false;
+    }
+
+
+    /*
+     * A global check cannot consume an
+     * application-scoped step-up.
+     */
+    if(
+        !normalizedAppId &&
+        stepUpAppId
+    ){
+        return false;
+    }
+
+
+    return true;
+
+},
+
+
+requiresStepUp(
+    capability,
+    appId = null
+){
+
+    const value =
+        this.normalizeId(
+            capability
+        );
+
+    if(!value){
+        return false;
+    }
+
+
+    const normalizedValue =
+        value.toLowerCase();
+
+
+    const globallySensitive =
+        Array.from(
+            this.sensitiveCapabilities
+        )
+            .some(
+                capabilityName =>
+                    String(
+                        capabilityName
+                    )
+                        .toLowerCase() ===
+                    normalizedValue
             );
 
-        if(!value){
-            return null;
+
+    const normalizedAppId =
+        this.normalizeId(
+            appId
+        );
+
+
+    let manifestRequiresStepUp =
+        false;
+
+
+    if(normalizedAppId){
+
+        const app =
+            this.findApp(
+                normalizedAppId
+            );
+
+
+        if(app){
+
+            const requirements =
+                this.getAppTrustRequirements(
+                    app
+                );
+
+
+            manifestRequiresStepUp =
+                this.normalizeList(
+                    requirements.stepUpActions
+                )
+                    .some(
+                        action =>
+                            action.toLowerCase() ===
+                            normalizedValue
+                    );
+
         }
 
-        const session =
-            this.ensureSession();
+    }
 
-        if(!session){
-            return null;
-        }
 
-        if(
-            !this.requiresStepUp(
-                value
-            )
-        ){
+    if(
+        !globallySensitive &&
+        !manifestRequiresStepUp
+    ){
+        return false;
+    }
 
-            return {
 
-                required:
-                    false,
+    /*
+     * A session that was genuinely verified
+     * through the Engine trust layer already
+     * satisfies the requirement.
+     */
+    if(
+        this.hasTrust(
+            "verified"
+        )
+    ){
+        return false;
+    }
 
-                capability:
-                    value
 
-            };
+    /*
+     * Otherwise only a matching completed
+     * app + capability step-up is accepted.
+     */
+    return !this.hasCompletedStepUp(
+        value,
+        normalizedAppId ||
+        null
+    );
 
-        }
+},
 
-        const now =
-            Date.now();
 
-        session.stepUp = {
+requestStepUp(
+    capability,
+    metadata = {},
+    appId = null
+){
 
-            id:
-                this.createId(
-                    "step-up"
-                ),
+    const value =
+        this.normalizeId(
+            capability
+        );
+
+    const normalizedAppId =
+        this.normalizeId(
+            appId
+        );
+
+
+    if(!value){
+        return null;
+    }
+
+
+    const session =
+        this.ensureSession();
+
+
+    if(!session){
+        return null;
+    }
+
+
+    /*
+     * Already authorised.
+     */
+    if(
+        !this.requiresStepUp(
+            value,
+            normalizedAppId ||
+            null
+        )
+    ){
+
+        return {
+
+            required:
+                false,
 
             capability:
                 value,
 
-            status:
-                "required",
-
-            createdAt:
-                now,
-
-            expiresAt:
-                now +
-                this.defaultStepUpLifetime,
-
-            completedAt:
-                null,
-
-            metadata:
-                this.normalizeObject(
-                    metadata
-                )
+            appId:
+                normalizedAppId ||
+                null
 
         };
 
-        this.save();
-
-        this.emit(
-            "session:step-up-required",
-            {
-                ...session.stepUp
-            }
-        );
-
-        return {
-            ...session.stepUp
-        };
-
-    },
+    }
 
 
-    completeStepUp(
-        stepUpId,
-        assurance =
-            "verified"
+    const now =
+        Date.now();
+
+
+    /*
+     * Reuse an existing non-expired challenge for
+     * the exact same app + capability instead of
+     * creating duplicate step-up requests.
+     */
+    const existing =
+        session.stepUp ||
+        null;
+
+
+    if(
+        existing &&
+        existing.status ===
+            "required" &&
+        Number(
+            existing.expiresAt
+        ) >
+            now &&
+        String(
+            existing.capability ||
+            ""
+        ).toLowerCase() ===
+            value.toLowerCase() &&
+        this.normalizeId(
+            existing.appId
+        ) ===
+            normalizedAppId
     ){
 
-        const id =
-            this.normalizeId(
-                stepUpId
-            );
+        return {
+            ...existing
+        };
 
-        if(
-            !id ||
-            !this.session?.stepUp ||
-            this.session.stepUp.id !==
-                id
-        ){
-            return false;
-        }
+    }
 
-        if(
-            this.session.stepUp.status !==
-                "required"
-        ){
-            return false;
-        }
 
-        if(
-            Number(
-                this.session.stepUp.expiresAt
-            ) <=
-            Date.now()
-        ){
+    session.stepUp = {
 
-            this.session.stepUp.status =
-                "expired";
+        id:
+            this.createId(
+                "step-up"
+            ),
 
-            this.save();
+        capability:
+            value,
 
-            return false;
+        appId:
+            normalizedAppId ||
+            null,
 
-        }
+        status:
+            "required",
 
-        const normalizedAssurance =
-            this.trustLevels.has(
-                String(
-                    assurance
-                )
-                    .trim()
-                    .toLowerCase()
+        createdAt:
+            now,
+
+        expiresAt:
+            now +
+            this.defaultStepUpLifetime,
+
+        completedAt:
+            null,
+
+        assuranceLevel:
+            null,
+
+        metadata:
+            this.normalizeObject(
+                metadata
             )
-                ? String(
-                    assurance
-                )
-                    .trim()
-                    .toLowerCase()
-                : "verified";
+
+    };
+
+
+    session.lastActiveAt =
+        now;
+
+
+    this.save();
+
+
+    this.emit(
+        "session:step-up-required",
+        {
+            ...session.stepUp
+        }
+    );
+
+
+    return {
+        ...session.stepUp
+    };
+
+},
+
+
+completeStepUp(
+    stepUpId,
+    assurance = "verified"
+){
+
+    const id =
+        this.normalizeId(
+            stepUpId
+        );
+
+
+    if(
+        !id ||
+        !this.session?.stepUp ||
+        this.session.stepUp.id !==
+            id
+    ){
+        return false;
+    }
+
+
+    if(
+        this.session.stepUp.status !==
+            "required"
+    ){
+        return false;
+    }
+
+
+    if(
+        Number(
+            this.session.stepUp.expiresAt
+        ) <=
+        Date.now()
+    ){
 
         this.session.stepUp.status =
-            "completed";
-
-        this.session.stepUp.completedAt =
-            Date.now();
-
-        this.session.assuranceLevel =
-            normalizedAssurance;
-
-        this.session.verified =
-            this.getTrustIndex(
-                normalizedAssurance
-            ) >=
-            this.getTrustIndex(
-                "verified"
-            );
-
-        this.session.lastActiveAt =
-            Date.now();
+            "expired";
 
         this.save();
 
-        this.emit(
-            "session:step-up-completed",
-            {
-                stepUp:
-                    {
-                        ...this.session.stepUp
-                    },
+        return false;
 
-                session:
-                    this.getPublicSession()
-            }
-        );
+    }
 
-        return true;
 
-    },
+    const normalizedAssurance =
+        String(
+            assurance ||
+            ""
+        )
+            .trim()
+            .toLowerCase();
 
+
+    if(
+        !this.trustLevels.has(
+            normalizedAssurance
+        ) ||
+        this.getTrustIndex(
+            normalizedAssurance
+        ) <
+        this.getTrustIndex(
+            "verified"
+        )
+    ){
+        return false;
+    }
+
+
+    /*
+     * IMPORTANT:
+     * This verification belongs only to the current
+     * app + capability challenge.
+     *
+     * It does NOT upgrade the entire Engine session.
+     */
+    this.session.stepUp.status =
+        "completed";
+
+    this.session.stepUp.completedAt =
+        Date.now();
+
+    this.session.stepUp.assuranceLevel =
+        normalizedAssurance;
+
+    this.session.lastActiveAt =
+        Date.now();
+
+
+    this.save();
+
+
+    this.emit(
+        "session:step-up-completed",
+        {
+            stepUp:
+                {
+                    ...this.session.stepUp
+                },
+
+            session:
+                this.getPublicSession()
+        }
+    );
+
+
+    return true;
+
+},
 
     /* =====================================================
        APPLICATION LOOKUP
@@ -1596,128 +1849,383 @@ const EngineSession = {
     ===================================================== */
 
     getAllowedCapabilities(
-        app,
-        organ,
-        requestedCapabilities =
-            null
-    ){
+    app,
+    organ,
+    requestedCapabilities = null
+){
 
-        const declared =
-            this.normalizeList(
-                app?.capabilities
-            );
+    if(!app){
+        return [];
+    }
 
-        const installed =
-            this.normalizeList(
-                organ?.capabilities
-            );
 
-        const available =
-            installed.length
-                ? declared.filter(
-                    capability =>
-                        installed
-                            .map(
-                                item =>
-                                    item
-                                        .toLowerCase()
-                            )
-                            .includes(
-                                capability
-                                    .toLowerCase()
-                            )
-                )
-                : declared;
-
-        if(
-            !Array.isArray(
-                requestedCapabilities
-            )
-        ){
-            return available;
-        }
-
-        const requested =
-            this.normalizeList(
-                requestedCapabilities
-            );
-
-        const availableNormalized =
-            available.map(
-                item =>
-                    item.toLowerCase()
-            );
-
-        return requested.filter(
-            capability =>
-                availableNormalized
-                    .includes(
-                        capability
-                            .toLowerCase()
-                    )
+    const builtIn =
+        this.isBuiltInApp(
+            app
         );
 
-    },
+
+    /*
+     * Registry v4:
+     * capabilitiesRequested is the declarative manifest.
+     * Legacy capabilities remains supported as fallback.
+     */
+    const declared =
+        this.normalizeList(
+            app.capabilitiesRequested ||
+            app.capabilities ||
+            []
+        );
+
+
+    /*
+     * Built-ins are trusted by Engine origin.
+     *
+     * External applications receive ONLY capabilities
+     * that are BOTH:
+     *
+     * 1. declared by their manifest
+     * 2. authorised in OrganSystem runtime state
+     */
+    let available =
+        [];
+
+
+    if(builtIn){
+
+        available =
+            [
+                ...declared
+            ];
+
+    }
+    else {
+
+        if(!organ){
+
+            return [];
+
+        }
+
+
+        const authorised =
+            this.normalizeList(
+                organ.capabilities
+            );
+
+
+        const authorisedNormalized =
+            authorised.map(
+                capability =>
+                    capability.toLowerCase()
+            );
+
+
+        available =
+            declared.filter(
+                capability =>
+                    authorisedNormalized.includes(
+                        capability.toLowerCase()
+                    )
+            );
+
+    }
+
+
+    /*
+     * No explicit capability request means:
+     * return the full authorised app-scoped set.
+     */
+    if(
+        !Array.isArray(
+            requestedCapabilities
+        )
+    ){
+
+        return available;
+
+    }
+
+
+    /*
+     * Explicit request can only REDUCE the grant.
+     * It can never expand it.
+     */
+    const requested =
+        this.normalizeList(
+            requestedCapabilities
+        );
+
+
+    const availableNormalized =
+        available.map(
+            capability =>
+                capability.toLowerCase()
+        );
+
+
+    return requested.filter(
+        capability =>
+            availableNormalized.includes(
+                capability.toLowerCase()
+            )
+    );
+
+},
 
 
     getAllowedPermissions(
-        app,
-        organ,
-        requestedPermissions =
-            null
-    ){
+    app,
+    organ,
+    requestedPermissions = null
+){
+
+    if(!app){
+        return [];
+    }
+
+
+    const builtIn =
+        this.isBuiltInApp(
+            app
+        );
+
+
+    const declared =
+        this.normalizeList(
+            app.requestedPermissions ||
+            []
+        );
+
+
+    let available =
+        [];
+
+
+    if(builtIn){
 
         /*
-         * Built-ins may have declared permissions in manifest.
-         * External applications only receive permissions
-         * actually granted through OrganSystem.
+         * Built-in permissions are trusted by Engine origin.
          */
-        const builtIn =
-            this.isBuiltInApp(
-                app
-            );
+        available =
+            [
+                ...declared
+            ];
 
-        const declared =
-            this.normalizeList(
-                app?.requestedPermissions
-            );
+    }
+    else {
 
-        const granted =
-            builtIn
-                ? declared
-                : this.normalizeList(
-                    organ?.permissions
-                );
+        if(!organ){
 
-        if(
-            !Array.isArray(
-                requestedPermissions
-            )
-        ){
-            return granted;
+            return [];
+
         }
 
-        const requested =
+
+        /*
+         * organ.permissions is the authorised runtime set.
+         *
+         * External apps receive only permissions that remain
+         * declared by the CURRENT application manifest.
+         *
+         * This prevents stale permissions surviving after an
+         * application manifest update.
+         */
+        const granted =
             this.normalizeList(
-                requestedPermissions
+                organ.permissions
             );
+
 
         const grantedNormalized =
             granted.map(
-                item =>
-                    item.toLowerCase()
+                permission =>
+                    permission.toLowerCase()
             );
 
-        return requested.filter(
-            permission =>
-                grantedNormalized
-                    .includes(
-                        permission
-                            .toLowerCase()
+
+        available =
+            declared.filter(
+                permission =>
+                    grantedNormalized.includes(
+                        permission.toLowerCase()
                     )
+            );
+
+    }
+
+
+    if(
+        !Array.isArray(
+            requestedPermissions
+        )
+    ){
+
+        return available;
+
+    }
+
+
+    /*
+     * Explicit request may only narrow the grant.
+     */
+    const requested =
+        this.normalizeList(
+            requestedPermissions
         );
 
-    },
+
+    const availableNormalized =
+        available.map(
+            permission =>
+                permission.toLowerCase()
+        );
+
+
+    return requested.filter(
+        permission =>
+            availableNormalized.includes(
+                permission.toLowerCase()
+            )
+    );
+
+},
+
+   /* =====================================================
+   APPLICATION TRUST REQUIREMENTS
+===================================================== */
+
+getAppTrustRequirements(app){
+
+    if(
+        !app ||
+        typeof app !==
+            "object"
+    ){
+        return {
+            level: null,
+            verifiedIdentity: false,
+            stepUpActions: [],
+            evidence: []
+        };
+    }
+
+
+    const requirements =
+        this.normalizeObject(
+            app.trustRequirements
+        );
+
+
+    const level =
+        String(
+            requirements.level ||
+            ""
+        )
+            .trim()
+            .toLowerCase();
+
+
+    return {
+
+        level:
+            level ||
+            null,
+
+        verifiedIdentity:
+            requirements.verifiedIdentity ===
+            true,
+
+        stepUpActions:
+            this.normalizeList(
+                requirements.stepUpActions
+            ),
+
+        evidence:
+            this.normalizeList(
+                requirements.evidence
+            )
+
+    };
+
+},
+
+
+satisfiesAppTrustRequirements(app){
+
+    const session =
+        this.getSession();
+
+    if(!session){
+        return false;
+    }
+
+
+    const requirements =
+        this.getAppTrustRequirements(
+            app
+        );
+
+
+    /*
+     * Built-in applications are already inside the trusted
+     * Engine boundary. "engine-trusted" describes application
+     * origin, not the user's assurance level.
+     */
+    if(
+        this.isBuiltInApp(
+            app
+        )
+    ){
+
+        if(
+            requirements.verifiedIdentity ===
+                true &&
+            session.verified !==
+                true
+        ){
+            return false;
+        }
+
+        return true;
+
+    }
+
+
+    /*
+     * External application requirements may demand a minimum
+     * Engine identity assurance level.
+     */
+    if(
+        requirements.level &&
+        this.trustLevels.has(
+            requirements.level
+        ) &&
+        !this.hasTrust(
+            requirements.level
+        )
+    ){
+
+        return false;
+
+    }
+
+
+    if(
+        requirements.verifiedIdentity ===
+            true &&
+        session.verified !==
+            true
+    ){
+
+        return false;
+
+    }
+
+
+    return true;
+
+},
 
 
     /* =====================================================
@@ -1778,26 +2286,100 @@ const EngineSession = {
             return null;
         }
 
-        const app =
-            options.app ||
-            this.findApp(
-                id
-            );
+        /*
+ * Registry is the canonical application authority.
+ * Caller supplied application objects must never determine
+ * system status, capabilities or trust requirements.
+ */
+const app =
+    this.findApp(
+        id
+    );
 
-        if(!app){
-            return null;
-        }
+if(!app){
+    return null;
+}
 
         const builtIn =
             this.isBuiltInApp(
                 app
             );
 
-        const organ =
-            options.organ ||
-            this.getInstalledOrgan(
-                app
+        /*
+ * OrganSystem is the canonical runtime authorization source.
+ * Caller supplied organ objects are intentionally ignored.
+ */
+let organ =
+    this.getInstalledOrgan(
+        app
+    );
+
+
+/*
+ * Before issuing a grant, synchronize the installed
+ * application organ with the current Registry manifest.
+ *
+ * This ensures removed capabilities / permissions cannot
+ * survive inside a newly issued application grant.
+ */
+if(organ){
+
+    const organSystem =
+        this.getOrganSystem();
+
+    if(
+        organSystem &&
+        typeof organSystem.syncApplicationManifest ===
+            "function"
+    ){
+
+        try{
+
+            organSystem.syncApplicationManifest(
+                organ.id
             );
+
+            /*
+             * Re-read the organ after synchronization.
+             * Do not continue using a potentially stale object
+             * supplied by the caller.
+             */
+            if(
+                typeof organSystem.get ===
+                    "function"
+            ){
+
+                organ =
+                    organSystem.get(
+                        organ.id
+                    ) ||
+                    organ;
+
+            }
+
+        } catch(error){
+
+            console.warn(
+                "Application manifest synchronization failed before grant:",
+                error
+            );
+
+            /*
+             * External applications fail closed.
+             */
+            if(
+                !this.isBuiltInApp(
+                    app
+                )
+            ){
+                return null;
+            }
+
+        }
+
+    }
+
+}
 
         /*
          * External apps must be installed, trusted and active.
@@ -1817,6 +2399,19 @@ const EngineSession = {
             }
 
         }
+       /*
+ * Application-level trust requirements are enforced before
+ * capabilities, permissions or runtime tokens are issued.
+ */
+if(
+    !this.satisfiesAppTrustRequirements(
+        app
+    )
+){
+
+    return null;
+
+}
 
         const capabilities =
             this.getAllowedCapabilities(
@@ -1949,21 +2544,27 @@ const EngineSession = {
             this.createRuntimeToken();
 
         this.runtimeTokens.set(
+    id,
+    {
+        token:
+            runtimeToken,
+
+        appId:
             id,
-            {
-                token:
-                    runtimeToken,
 
-                grantId:
-                    grant.id,
+        grantId:
+            grant.id,
 
-                issuedAt:
-                    now,
+        sessionId:
+            session.sessionId,
 
-                expiresAt:
-                    grant.expiresAt
-            }
-        );
+        issuedAt:
+            now,
+
+        expiresAt:
+            grant.expiresAt
+    }
+);
 
         session.lastActiveAt =
             now;
@@ -2134,119 +2735,506 @@ const EngineSession = {
 
     getRuntimeToken(appId){
 
-        const id =
+    const id =
+        this.normalizeId(
+            appId
+        );
+
+
+    if(!id){
+        return null;
+    }
+
+
+    /*
+     * Parent Engine session must still be valid.
+     */
+    if(
+        !this.isValid()
+    ){
+
+        this.runtimeTokens.delete(
+            id
+        );
+
+        return null;
+
+    }
+
+
+    const grant =
+        this.getGrant(
+            id
+        );
+
+
+    if(!grant){
+
+        this.runtimeTokens.delete(
+            id
+        );
+
+        return null;
+
+    }
+
+
+    let runtime =
+        this.runtimeTokens.get(
+            id
+        ) ||
+        null;
+
+
+    const now =
+        Date.now();
+
+
+    /*
+     * Existing runtime credential may be reused only if
+     * it still belongs to the exact active session + grant.
+     */
+    if(
+        runtime &&
+
+        this.normalizeId(
+            runtime.appId
+        ) ===
+            id &&
+
+        this.normalizeId(
+            runtime.sessionId
+        ) ===
             this.normalizeId(
-                appId
-            );
+                this.session?.sessionId
+            ) &&
 
-        if(!id){
-            return null;
-        }
+        this.normalizeId(
+            runtime.grantId
+        ) ===
+            this.normalizeId(
+                grant.id
+            ) &&
 
-        const grant =
-            this.getGrant(
-                id
-            );
-
-        if(!grant){
-            this.runtimeTokens.delete(
-                id
-            );
-
-            return null;
-        }
-
-        let runtime =
-            this.runtimeTokens.get(
-                id
-            ) ||
-            null;
-
-        if(
-            !runtime ||
-            runtime.grantId !==
-                grant.id ||
-            runtime.expiresAt <=
-                Date.now()
-        ){
-
-            const token =
-                this.createRuntimeToken();
-
-            runtime = {
-
-                token,
-
-                grantId:
-                    grant.id,
-
-                issuedAt:
-                    Date.now(),
-
-                expiresAt:
-                    grant.expiresAt
-
-            };
-
-            this.runtimeTokens.set(
-                id,
-                runtime
-            );
-
-        }
+        Number(
+            runtime.expiresAt
+        ) >
+            now
+    ){
 
         return runtime.token;
 
-    },
+    }
+
+
+    /*
+     * Never manufacture a fresh token directly from persisted
+     * grant metadata.
+     *
+     * A missing / stale runtime token forces the application
+     * through the complete authorization pipeline again:
+     *
+     * Registry manifest
+     * -> OrganSystem synchronization
+     * -> installation / active / trust checks
+     * -> capability / permission intersection
+     * -> Engine trust requirements
+     * -> fresh app-scoped grant + token
+     */
+    this.runtimeTokens.delete(
+        id
+    );
+
+
+    const refreshedContext =
+        this.issueAppContext(
+            id,
+            {
+                capabilities:
+                    this.normalizeList(
+                        grant.capabilities
+                    ),
+
+                permissions:
+                    this.normalizeList(
+                        grant.permissions
+                    ),
+
+                contextRef:
+                    grant.contextRef
+                        ? {
+                            ...grant.contextRef
+                        }
+                        : null
+            }
+        );
+
+
+    if(
+        !refreshedContext ||
+        !refreshedContext.accessToken
+    ){
+
+        return null;
+
+    }
+
+
+    return refreshedContext.accessToken;
+
+},
 
 
     validateRuntimeToken(
-        appId,
-        token
-    ){
+    appId,
+    token
+){
 
-        const id =
-            this.normalizeId(
-                appId
-            );
-
-        const supplied =
-            this.normalizeId(
-                token
-            );
-
-        if(
-            !id ||
-            !supplied
-        ){
-            return false;
-        }
-
-        const runtime =
-            this.runtimeTokens.get(
-                id
-            );
-
-        const grant =
-            this.getGrant(
-                id
-            );
-
-        if(
-            !runtime ||
-            !grant ||
-            runtime.expiresAt <=
-                Date.now()
-        ){
-            return false;
-        }
-
-        return (
-            runtime.token ===
-            supplied
+    const id =
+        this.normalizeId(
+            appId
         );
 
-    },
+    const supplied =
+        this.normalizeId(
+            token
+        );
+
+
+    if(
+        !id ||
+        !supplied
+    ){
+        return false;
+    }
+
+
+    /*
+     * Runtime authorization is valid only while
+     * the parent Engine session itself is valid.
+     */
+    if(
+        !this.isValid()
+    ){
+
+        this.runtimeTokens.delete(
+            id
+        );
+
+        return false;
+
+    }
+
+
+    const runtime =
+        this.runtimeTokens.get(
+            id
+        ) ||
+        null;
+
+
+    const grant =
+        this.getGrant(
+            id
+        );
+
+
+    if(
+        !runtime ||
+        !grant
+    ){
+
+        this.runtimeTokens.delete(
+            id
+        );
+
+        return false;
+
+    }
+
+
+    const now =
+        Date.now();
+
+
+    /*
+     * Runtime token must belong to the exact:
+     * - application
+     * - Engine session
+     * - grant
+     */
+    if(
+        this.normalizeId(
+            runtime.appId
+        ) !==
+            id ||
+
+        this.normalizeId(
+            runtime.sessionId
+        ) !==
+            this.normalizeId(
+                this.session?.sessionId
+            ) ||
+
+        this.normalizeId(
+            runtime.grantId
+        ) !==
+            this.normalizeId(
+                grant.id
+            )
+    ){
+
+        this.runtimeTokens.delete(
+            id
+        );
+
+        return false;
+
+    }
+
+
+    if(
+        Number(
+            runtime.expiresAt
+        ) <=
+            now ||
+
+        Number(
+            grant.expiresAt
+        ) <=
+            now
+    ){
+
+        this.runtimeTokens.delete(
+            id
+        );
+
+        return false;
+
+    }
+
+
+    /*
+     * Validate the supplied secret before doing
+     * more expensive authorization work.
+     */
+    if(
+        runtime.token !==
+        supplied
+    ){
+        return false;
+    }
+
+
+    const app =
+        this.findApp(
+            id
+        );
+
+
+    if(!app){
+
+        this.runtimeTokens.delete(
+            id
+        );
+
+        return false;
+
+    }
+
+
+    const builtIn =
+        this.isBuiltInApp(
+            app
+        );
+
+
+    let organ =
+        this.getInstalledOrgan(
+            app
+        );
+
+
+    /*
+     * External application authorization must remain valid
+     * for the entire lifetime of the runtime token.
+     */
+    if(!builtIn){
+
+        if(!organ){
+
+            this.revokeApp(
+                id
+            );
+
+            return false;
+
+        }
+
+
+        const organSystem =
+            this.getOrganSystem();
+
+
+        if(
+            organSystem &&
+            typeof organSystem.syncApplicationManifest ===
+                "function"
+        ){
+
+            try{
+
+                organSystem.syncApplicationManifest(
+                    organ.id
+                );
+
+
+                if(
+                    typeof organSystem.get ===
+                        "function"
+                ){
+
+                    organ =
+                        organSystem.get(
+                            organ.id
+                        ) ||
+                        organ;
+
+                }
+
+            } catch(error){
+
+                this.revokeApp(
+                    id
+                );
+
+                return false;
+
+            }
+
+        }
+
+
+        if(
+            organ.installed !==
+                true ||
+            organ.trusted !==
+                true ||
+            organ.status !==
+                "active"
+        ){
+
+            this.revokeApp(
+                id
+            );
+
+            return false;
+
+        }
+
+    }
+
+
+    /*
+     * Recalculate the currently authorised capability and
+     * permission sets from Registry + OrganSystem.
+     */
+    const allowedCapabilities =
+        this.getAllowedCapabilities(
+            app,
+            organ
+        );
+
+
+    const allowedPermissions =
+        this.getAllowedPermissions(
+            app,
+            organ
+        );
+
+
+    const allowedCapabilitySet =
+        new Set(
+            allowedCapabilities.map(
+                capability =>
+                    capability.toLowerCase()
+            )
+        );
+
+
+    const allowedPermissionSet =
+        new Set(
+            allowedPermissions.map(
+                permission =>
+                    permission.toLowerCase()
+            )
+        );
+
+
+    const grantCapabilitiesStillValid =
+        this.normalizeList(
+            grant.capabilities
+        )
+            .every(
+                capability =>
+                    allowedCapabilitySet.has(
+                        capability.toLowerCase()
+                    )
+            );
+
+
+    const grantPermissionsStillValid =
+        this.normalizeList(
+            grant.permissions
+        )
+            .every(
+                permission =>
+                    allowedPermissionSet.has(
+                        permission.toLowerCase()
+                    )
+            );
+
+
+    if(
+        !grantCapabilitiesStillValid ||
+        !grantPermissionsStillValid
+    ){
+
+        /*
+         * A previously issued grant must not survive
+         * authorization withdrawal.
+         */
+        this.revokeApp(
+            id
+        );
+
+        return false;
+
+    }
+
+
+    /*
+     * Application trust requirements may also change
+     * after the grant was issued.
+     */
+    if(
+        !this.satisfiesAppTrustRequirements(
+            app
+        )
+    ){
+
+        this.revokeApp(
+            id
+        );
+
+        return false;
+
+    }
+
+
+    return true;
+
+},
 
 
     revokeApp(appId){
@@ -2365,58 +3353,79 @@ const EngineSession = {
     ===================================================== */
 
     can(
-        appId,
-        capability
+    appId,
+    capability
+){
+
+    const id =
+        this.normalizeId(
+            appId
+        );
+
+    const value =
+        this.normalizeId(
+            capability
+        );
+
+    if(
+        !id ||
+        !value
     ){
+        return false;
+    }
 
-        const id =
-            this.normalizeId(
-                appId
-            );
 
-        const value =
-            this.normalizeId(
-                capability
-            );
+    const grant =
+        this.getGrant(
+            id
+        );
 
-        if(
-            !id ||
-            !value
-        ){
-            return false;
-        }
+    if(!grant){
+        return false;
+    }
 
-        const grant =
-            this.getGrant(
-                id
-            );
 
-        if(!grant){
-            return false;
-        }
-
-        if(
-            this.requiresStepUp(
-                value
-            )
-        ){
-            return false;
-        }
-
-        return (
-            grant.capabilities ||
-            []
+    const grantedCapabilities =
+        this.normalizeList(
+            grant.capabilities
         )
             .map(
                 item =>
                     item.toLowerCase()
-            )
-            .includes(
-                value.toLowerCase()
             );
 
-    },
 
+    /*
+     * Capability must already exist inside
+     * the issued app-scoped grant.
+     */
+    if(
+        !grantedCapabilities.includes(
+            value.toLowerCase()
+        )
+    ){
+        return false;
+    }
+
+
+    /*
+     * Central step-up policy:
+     * - Engine-wide sensitive capabilities
+     * - App Registry trustRequirements.stepUpActions
+     */
+    if(
+        this.requiresStepUp(
+            value,
+            id
+        )
+    ){
+        return false;
+    }
+
+
+    return true;
+
+},
 
     hasAppPermission(
         appId,
