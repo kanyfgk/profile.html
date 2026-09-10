@@ -1,23 +1,44 @@
 /* =========================================================
    VAERO ENGINE SESSION
-   Identity / Trust / Session Boundary
+   Identity / Trust / Application Security Boundary
 
-   Purpose:
+   Responsibilities:
    - Engine owns the authenticated identity.
-   - Apps consume Engine identity context.
-   - Repeated login friction is avoided.
-   - Sensitive actions can request step-up verification.
+   - Applications never receive a master Engine token.
+   - Every application receives an app-scoped grant.
+   - External apps receive app-scoped subject aliases.
+   - Sensitive capabilities may require step-up verification.
+   - Persistent storage contains metadata only, never secrets.
 ========================================================= */
 
 const EngineSession = {
 
     version:
-        "1.0.0",
+        "2.0.0",
 
     storageKey:
+        "vaero:engine:session:v2",
+
+    previousStorageKey:
         "vaero:engine:session:v1",
 
     session: null,
+
+    /*
+     * Secrets and runtime-only access tokens live here.
+     * They are intentionally never persisted to localStorage.
+     */
+    runtimeTokens:
+        new Map(),
+
+    defaultSessionLifetime:
+        1000 * 60 * 60 * 24,
+
+    defaultGrantLifetime:
+        1000 * 60 * 30,
+
+    defaultStepUpLifetime:
+        1000 * 60 * 10,
 
     trustLevels:
         new Set([
@@ -27,6 +48,14 @@ const EngineSession = {
             "verified",
             "high"
         ]),
+
+    trustOrder: [
+        "unknown",
+        "basic",
+        "trusted",
+        "verified",
+        "high"
+    ],
 
     sensitiveCapabilities:
         new Set([
@@ -78,6 +107,7 @@ const EngineSession = {
         } catch(error){
 
             return null;
+
         }
 
     },
@@ -114,31 +144,145 @@ const EngineSession = {
     },
 
 
+    getRegistry(){
+
+        return (
+            this.getService(
+                "appRegistry"
+            ) ||
+            this.getService(
+                "applicationRegistry"
+            ) ||
+            (
+                typeof window !==
+                    "undefined"
+                    ? window.AppRegistry ||
+                        null
+                    : null
+            )
+        );
+
+    },
+
+
+    getOrganSystem(){
+
+        return (
+            this.getService(
+                "organSystem"
+            ) ||
+            (
+                typeof window !==
+                    "undefined"
+                    ? window.OrganSystem ||
+                        null
+                    : null
+            )
+        );
+
+    },
+
+
     /* =====================================================
-       ID
+       NORMALIZATION
     ===================================================== */
 
-    createId(prefix = "session"){
+    normalizeId(value){
 
-        try{
+        return String(
+            value ??
+            ""
+        ).trim();
 
-            if(
-                typeof crypto !==
-                    "undefined" &&
-                typeof crypto.randomUUID ===
-                    "function"
-            ){
-                return crypto.randomUUID();
-            }
+    },
 
-        } catch(error){
-            /* fallback */
+
+    normalizeList(value){
+
+        if(
+            !Array.isArray(
+                value
+            )
+        ){
+            return [];
         }
+
+        const seen =
+            new Set();
+
+        const result =
+            [];
+
+        value.forEach(
+            item => {
+
+                const normalized =
+                    String(
+                        item ??
+                        ""
+                    ).trim();
+
+                if(!normalized){
+                    return;
+                }
+
+                const key =
+                    normalized.toLowerCase();
+
+                if(
+                    seen.has(
+                        key
+                    )
+                ){
+                    return;
+                }
+
+                seen.add(
+                    key
+                );
+
+                result.push(
+                    normalized
+                );
+
+            }
+        );
+
+        return result;
+
+    },
+
+
+    normalizeObject(value){
+
+        if(
+            !value ||
+            typeof value !==
+                "object" ||
+            Array.isArray(
+                value
+            )
+        ){
+            return {};
+        }
+
+        return {
+            ...value
+        };
+
+    },
+
+
+    /* =====================================================
+       ID / TOKEN
+    ===================================================== */
+
+    createId(prefix = "id"){
 
         const safePrefix =
             String(
                 prefix ||
-                "session"
+                "id"
             )
                 .trim()
                 .replace(
@@ -149,11 +293,76 @@ const EngineSession = {
                     0,
                     40
                 ) ||
-            "session";
+            "id";
+
+        try{
+
+            if(
+                typeof crypto !==
+                    "undefined" &&
+                typeof crypto.randomUUID ===
+                    "function"
+            ){
+                return `${safePrefix}_${crypto.randomUUID()}`;
+            }
+
+        } catch(error){
+            /* fallback */
+        }
 
         return `${safePrefix}_${Date.now()}_${Math.random()
             .toString(36)
-            .slice(2,10)}`;
+            .slice(2,12)}`;
+
+    },
+
+
+    createRuntimeToken(){
+
+        try{
+
+            if(
+                typeof crypto !==
+                    "undefined" &&
+                typeof crypto.getRandomValues ===
+                    "function"
+            ){
+
+                const bytes =
+                    new Uint8Array(
+                        32
+                    );
+
+                crypto.getRandomValues(
+                    bytes
+                );
+
+                return Array
+                    .from(
+                        bytes
+                    )
+                    .map(
+                        byte =>
+                            byte
+                                .toString(16)
+                                .padStart(
+                                    2,
+                                    "0"
+                                )
+                    )
+                    .join(
+                        ""
+                    );
+
+            }
+
+        } catch(error){
+            /* fallback */
+        }
+
+        return `${this.createId("token")}_${Math.random()
+            .toString(36)
+            .slice(2)}`;
 
     },
 
@@ -167,9 +376,12 @@ const EngineSession = {
         const engine =
             this.getEngine();
 
+        /*
+         * Acting identity must belong to the Engine root.
+         * currentOpenedEntity is context, not actor.
+         */
         const entity =
             engine?.rootEntity ||
-            engine?.currentEntity ||
             null;
 
         if(!entity){
@@ -189,10 +401,6 @@ const EngineSession = {
             name:
                 entity.profile?.name ||
                 entity.name ||
-                null,
-
-            profile:
-                entity.profile ||
                 null
 
         };
@@ -201,7 +409,7 @@ const EngineSession = {
 
 
     /* =====================================================
-       SESSION CONTEXT
+       ENGINE CONTEXT
     ===================================================== */
 
     buildContext(){
@@ -216,19 +424,27 @@ const EngineSession = {
             return null;
         }
 
+        const openedEntity =
+            engine?.currentOpenedEntity ||
+            engine?.currentEntity ||
+            null;
+
         return {
 
-            identityId:
+            actorEntityId:
                 identity.id,
 
             entityId:
-                engine?.currentOpenedEntity
-                    ?.id ||
+                openedEntity?.id ||
                 identity.id,
 
+            entityType:
+                openedEntity?.type ||
+                identity.type ||
+                null,
+
             worldId:
-                engine?.currentWorld
-                    ?.id ||
+                engine?.currentWorld?.id ||
                 null,
 
             view:
@@ -245,11 +461,50 @@ const EngineSession = {
     },
 
 
+    setWorldContext(
+        context = {}
+    ){
+
+        const session =
+            this.ensureSession();
+
+        if(!session){
+            return false;
+        }
+
+        session.worldContext =
+            this.normalizeObject(
+                context
+            );
+
+        session.lastActiveAt =
+            Date.now();
+
+        this.save();
+
+        this.emit(
+            "session:context-changed",
+            {
+                sessionId:
+                    session.sessionId,
+
+                context:
+                    {
+                        ...session.worldContext
+                    }
+            }
+        );
+
+        return true;
+
+    },
+
+
     /* =====================================================
-       CREATE SESSION
+       SESSION CREATION
     ===================================================== */
 
-    create(
+    createSession(
         options = {}
     ){
 
@@ -263,16 +518,29 @@ const EngineSession = {
         const now =
             Date.now();
 
+        const requestedTrust =
+            String(
+                options.trustLevel ||
+                "basic"
+            )
+                .trim()
+                .toLowerCase();
+
         const trustLevel =
             this.trustLevels.has(
-                options.trustLevel
+                requestedTrust
             )
-                ? options.trustLevel
+                ? requestedTrust
                 : "basic";
+
+        const requestedExpiry =
+            Number(
+                options.expiresAt
+            );
 
         this.session = {
 
-            id:
+            sessionId:
                 this.createId(
                     "engine-session"
                 ),
@@ -280,10 +548,33 @@ const EngineSession = {
             identityId:
                 identity.id,
 
+            actorEntityId:
+                identity.id,
+
             identityType:
                 identity.type,
 
-            trustLevel,
+            createdAt:
+                now,
+
+            authenticatedAt:
+                now,
+
+            lastActiveAt:
+                now,
+
+            expiresAt:
+                Number.isFinite(
+                    requestedExpiry
+                ) &&
+                requestedExpiry >
+                    now
+                    ? requestedExpiry
+                    : now +
+                        this.defaultSessionLifetime,
+
+            assuranceLevel:
+                trustLevel,
 
             authenticated:
                 options.authenticated !==
@@ -294,70 +585,39 @@ const EngineSession = {
                 true,
 
             deviceTrust:
-                options.deviceTrust ||
-                "unknown",
+                String(
+                    options.deviceTrust ||
+                    "unknown"
+                ),
 
-            permissions:
-                Array.isArray(
-                    options.permissions
-                )
-                    ? [
-                        ...new Set(
-                            options.permissions
-                                .map(
-                                    permission =>
-                                        String(
-                                            permission
-                                        ).trim()
-                                )
-                                .filter(Boolean)
-                        )
-                    ]
-                    : [],
+            worldContext:
+                this.normalizeObject(
+                    options.worldContext
+                ),
 
-            createdAt:
-                now,
+            stepUp:
+                null,
 
-            authenticatedAt:
-                now,
-
-            lastActivityAt:
-                now,
-
-            expiresAt:
-                Number.isFinite(
-                    Number(
-                        options.expiresAt
-                    )
-                )
-                    ? Number(
-                        options.expiresAt
-                    )
-                    : null,
-
-            stepUp: null,
+            grants:
+                {},
 
             metadata:
-                (
-                    options.metadata &&
-                    typeof options.metadata ===
-                        "object" &&
-                    !Array.isArray(
-                        options.metadata
-                    )
+                this.normalizeObject(
+                    options.metadata
                 )
-                    ? {
-                        ...options.metadata
-                    }
-                    : {}
 
         };
+
+        this.runtimeTokens.clear();
 
         this.save();
 
         this.emit(
-            "engine-session:created",
-            this.getPublicSession()
+            "session:created",
+            {
+                session:
+                    this.getPublicSession()
+            }
         );
 
         return this.session;
@@ -367,7 +627,161 @@ const EngineSession = {
 
     /* =====================================================
        STORAGE
+
+       Only non-secret metadata is persisted.
     ===================================================== */
+
+    getPersistableSession(){
+
+        if(!this.session){
+            return null;
+        }
+
+        const persistedGrants =
+            {};
+
+        Object.entries(
+            this.session.grants ||
+            {}
+        ).forEach(
+            ([
+                appId,
+                grant
+            ]) => {
+
+                if(!grant){
+                    return;
+                }
+
+                persistedGrants[
+                    appId
+                ] = {
+
+                    id:
+                        grant.id,
+
+                    appId:
+                        grant.appId,
+
+                    subjectId:
+                        grant.subjectId,
+
+                    subjectAlias:
+                        grant.subjectAlias,
+
+                    builtIn:
+                        grant.builtIn ===
+                        true,
+
+                    capabilities:
+                        [
+                            ...(
+                                grant.capabilities ||
+                                []
+                            )
+                        ],
+
+                    permissions:
+                        [
+                            ...(
+                                grant.permissions ||
+                                []
+                            )
+                        ],
+
+                    contextRef:
+                        grant.contextRef
+                            ? {
+                                ...grant.contextRef
+                            }
+                            : null,
+
+                    issuedAt:
+                        grant.issuedAt,
+
+                    expiresAt:
+                        grant.expiresAt,
+
+                    trustLevel:
+                        grant.trustLevel,
+
+                    revoked:
+                        grant.revoked ===
+                        true,
+
+                    revokedAt:
+                        grant.revokedAt ||
+                        null
+
+                };
+
+            }
+        );
+
+        return {
+
+            sessionId:
+                this.session.sessionId,
+
+            identityId:
+                this.session.identityId,
+
+            actorEntityId:
+                this.session.actorEntityId,
+
+            identityType:
+                this.session.identityType,
+
+            createdAt:
+                this.session.createdAt,
+
+            authenticatedAt:
+                this.session.authenticatedAt,
+
+            lastActiveAt:
+                this.session.lastActiveAt,
+
+            expiresAt:
+                this.session.expiresAt,
+
+            assuranceLevel:
+                this.session.assuranceLevel,
+
+            authenticated:
+                this.session.authenticated ===
+                true,
+
+            verified:
+                this.session.verified ===
+                true,
+
+            deviceTrust:
+                this.session.deviceTrust,
+
+            worldContext:
+                this.normalizeObject(
+                    this.session.worldContext
+                ),
+
+            stepUp:
+                this.session.stepUp
+                    ? {
+                        ...this.session.stepUp
+                    }
+                    : null,
+
+            grants:
+                persistedGrants,
+
+            metadata:
+                this.normalizeObject(
+                    this.session.metadata
+                )
+
+        };
+
+    },
+
 
     save(){
 
@@ -377,10 +791,20 @@ const EngineSession = {
 
         try{
 
+            if(
+                typeof localStorage ===
+                    "undefined"
+            ){
+                return false;
+            }
+
+            const persisted =
+                this.getPersistableSession();
+
             localStorage.setItem(
                 this.storageKey,
                 JSON.stringify(
-                    this.session
+                    persisted
                 )
             );
 
@@ -389,11 +813,12 @@ const EngineSession = {
         } catch(error){
 
             console.warn(
-                "Engine session could not be saved:",
+                "Engine Session could not be saved:",
                 error
             );
 
             return false;
+
         }
 
     },
@@ -402,6 +827,13 @@ const EngineSession = {
     load(){
 
         try{
+
+            if(
+                typeof localStorage ===
+                    "undefined"
+            ){
+                return null;
+            }
 
             const raw =
                 localStorage.getItem(
@@ -421,25 +853,209 @@ const EngineSession = {
                 !parsed ||
                 typeof parsed !==
                     "object" ||
+                !parsed.sessionId ||
                 !parsed.identityId
             ){
                 return null;
             }
 
+            parsed.grants =
+                this.normalizeObject(
+                    parsed.grants
+                );
+
             this.session =
                 parsed;
+
+            /*
+             * Runtime tokens deliberately do not survive reload.
+             * Existing grants will receive fresh tokens on demand.
+             */
+            this.runtimeTokens.clear();
 
             return this.session;
 
         } catch(error){
 
             console.warn(
-                "Engine session could not be loaded:",
+                "Engine Session could not be loaded:",
                 error
             );
 
             return null;
+
         }
+
+    },
+
+
+    migratePreviousStorage(){
+
+        try{
+
+            if(
+                typeof localStorage ===
+                    "undefined"
+            ){
+                return false;
+            }
+
+            const current =
+                localStorage.getItem(
+                    this.storageKey
+                );
+
+            if(current){
+                return false;
+            }
+
+            const previous =
+                localStorage.getItem(
+                    this.previousStorageKey
+                );
+
+            if(!previous){
+                return false;
+            }
+
+            /*
+             * V1 contained session-wide permissions.
+             * They are intentionally not migrated into app grants.
+             */
+            localStorage.removeItem(
+                this.previousStorageKey
+            );
+
+            return true;
+
+        } catch(error){
+
+            return false;
+
+        }
+
+    },
+
+
+    /* =====================================================
+       SESSION VALIDITY
+    ===================================================== */
+
+    isExpired(){
+
+        if(!this.session){
+            return true;
+        }
+
+        const expiresAt =
+            Number(
+                this.session.expiresAt
+            );
+
+        if(
+            !Number.isFinite(
+                expiresAt
+            )
+        ){
+            return true;
+        }
+
+        return (
+            Date.now() >=
+            expiresAt
+        );
+
+    },
+
+
+    isValid(){
+
+        if(!this.session){
+            return false;
+        }
+
+        if(
+            this.session.authenticated !==
+                true ||
+            this.isExpired()
+        ){
+            return false;
+        }
+
+        const identity =
+            this.getRootIdentity();
+
+        if(
+            identity?.id &&
+            String(
+                this.session.identityId
+            ) !==
+            String(
+                identity.id
+            )
+        ){
+            return false;
+        }
+
+        return true;
+
+    },
+
+
+    ensureSession(){
+
+        if(
+            this.isValid()
+        ){
+
+            this.touch();
+
+            return this.session;
+
+        }
+
+        return this.createSession({
+            authenticated:
+                true,
+
+            trustLevel:
+                "basic"
+        });
+
+    },
+
+
+    /*
+     * Compatibility alias for earlier code.
+     */
+    ensure(){
+
+        return this.ensureSession();
+
+    },
+
+
+    getSession(){
+
+        return this.isValid()
+            ? this.session
+            : null;
+
+    },
+
+
+    touch(){
+
+        if(!this.session){
+            return false;
+        }
+
+        this.session.lastActiveAt =
+            Date.now();
+
+        this.save();
+
+        return true;
 
     },
 
@@ -452,21 +1068,34 @@ const EngineSession = {
         this.session =
             null;
 
+        this.runtimeTokens.clear();
+
         try{
 
-            localStorage.removeItem(
-                this.storageKey
-            );
+            if(
+                typeof localStorage !==
+                    "undefined"
+            ){
+
+                localStorage.removeItem(
+                    this.storageKey
+                );
+
+                localStorage.removeItem(
+                    this.previousStorageKey
+                );
+
+            }
 
         } catch(error){
             /* non-fatal */
         }
 
         this.emit(
-            "engine-session:cleared",
+            "session:cleared",
             {
                 sessionId:
-                    previous?.id ||
+                    previous?.sessionId ||
                     null,
 
                 identityId:
@@ -484,101 +1113,50 @@ const EngineSession = {
 
 
     /* =====================================================
-       SESSION VALIDITY
-    ===================================================== */
-
-    isExpired(){
-
-        if(
-            !this.session ||
-            !this.session.expiresAt
-        ){
-            return false;
-        }
-
-        return (
-            Date.now() >
-            this.session.expiresAt
-        );
-
-    },
-
-
-    isValid(){
-
-        if(!this.session){
-            return false;
-        }
-
-        if(
-            this.session.authenticated !==
-                true
-        ){
-            return false;
-        }
-
-        if(
-            this.isExpired()
-        ){
-            return false;
-        }
-
-        const identity =
-            this.getRootIdentity();
-
-        if(
-            identity?.id &&
-            this.session.identityId !==
-                identity.id
-        ){
-            return false;
-        }
-
-        return true;
-
-    },
-
-
-    ensure(){
-
-        if(
-            this.isValid()
-        ){
-            this.touch();
-
-            return this.session;
-        }
-
-        return this.create({
-            authenticated:
-                true,
-
-            trustLevel:
-                "basic"
-        });
-
-    },
-
-
-    touch(){
-
-        if(!this.session){
-            return false;
-        }
-
-        this.session.lastActivityAt =
-            Date.now();
-
-        this.save();
-
-        return true;
-
-    },
-
-
-    /* =====================================================
        TRUST
     ===================================================== */
+
+    getTrustIndex(level){
+
+        return this.trustOrder
+            .indexOf(
+                String(
+                    level ||
+                    "unknown"
+                )
+                    .trim()
+                    .toLowerCase()
+            );
+
+    },
+
+
+    hasTrust(requiredLevel){
+
+        const current =
+            this.getTrustIndex(
+                this.session
+                    ?.assuranceLevel ||
+                    "unknown"
+            );
+
+        const required =
+            this.getTrustIndex(
+                requiredLevel
+            );
+
+        if(
+            current < 0 ||
+            required < 0
+        ){
+            return false;
+        }
+
+        return current >=
+            required;
+
+    },
+
 
     setTrustLevel(level){
 
@@ -599,109 +1177,31 @@ const EngineSession = {
         }
 
         const session =
-            this.ensure();
+            this.ensureSession();
 
         if(!session){
             return false;
         }
 
-        session.trustLevel =
+        session.assuranceLevel =
             normalized;
 
-        session.lastActivityAt =
+        session.verified =
+            this.getTrustIndex(
+                normalized
+            ) >=
+            this.getTrustIndex(
+                "verified"
+            );
+
+        session.lastActiveAt =
             Date.now();
 
         this.save();
 
         this.emit(
-            "engine-session:trust-changed",
-            this.getPublicSession()
-        );
-
-        return true;
-
-    },
-
-
-    hasTrust(requiredLevel){
-
-        const order = [
-            "unknown",
-            "basic",
-            "trusted",
-            "verified",
-            "high"
-        ];
-
-        const current =
-            order.indexOf(
-                this.session?.trustLevel ||
-                "unknown"
-            );
-
-        const required =
-            order.indexOf(
-                requiredLevel
-            );
-
-        if(
-            required ===
-                -1
-        ){
-            return false;
-        }
-
-        return (
-            current >=
-            required
-        );
-
-    },
-
-
-    /* =====================================================
-       PERMISSIONS
-    ===================================================== */
-
-    grant(permission){
-
-        const value =
-            String(
-                permission ||
-                ""
-            ).trim();
-
-        if(!value){
-            return false;
-        }
-
-        const session =
-            this.ensure();
-
-        if(!session){
-            return false;
-        }
-
-        if(
-            !session.permissions
-                .includes(
-                    value
-                )
-        ){
-            session.permissions
-                .push(
-                    value
-                );
-        }
-
-        this.save();
-
-        this.emit(
-            "engine-session:permission-granted",
+            "session:trust-changed",
             {
-                permission:
-                    value,
-
                 session:
                     this.getPublicSession()
             }
@@ -712,81 +1212,16 @@ const EngineSession = {
     },
 
 
-    revoke(permission){
-
-        const value =
-            String(
-                permission ||
-                ""
-            ).trim();
-
-        if(
-            !value ||
-            !this.session
-        ){
-            return false;
-        }
-
-        this.session.permissions =
-            this.session.permissions
-                .filter(
-                    item =>
-                        item !==
-                        value
-                );
-
-        this.save();
-
-        this.emit(
-            "engine-session:permission-revoked",
-            {
-                permission:
-                    value,
-
-                session:
-                    this.getPublicSession()
-            }
-        );
-
-        return true;
-
-    },
-
-
-    hasPermission(permission){
-
-        const value =
-            String(
-                permission ||
-                ""
-            ).trim();
-
-        if(!value){
-            return false;
-        }
-
-        return Boolean(
-            this.session
-                ?.permissions
-                ?.includes(
-                    value
-                )
-        );
-
-    },
-
-
     /* =====================================================
-       STEP-UP AUTHENTICATION
+       STEP-UP
     ===================================================== */
 
     requiresStepUp(capability){
 
         const value =
-            String(
-                capability ||
-                ""
-            ).trim();
+            this.normalizeId(
+                capability
+            );
 
         if(!value){
             return false;
@@ -801,15 +1236,9 @@ const EngineSession = {
             return false;
         }
 
-        if(
-            this.hasTrust(
-                "verified"
-            )
-        ){
-            return false;
-        }
-
-        return true;
+        return !this.hasTrust(
+            "verified"
+        );
 
     },
 
@@ -820,17 +1249,16 @@ const EngineSession = {
     ){
 
         const value =
-            String(
-                capability ||
-                ""
-            ).trim();
+            this.normalizeId(
+                capability
+            );
 
         if(!value){
             return null;
         }
 
         const session =
-            this.ensure();
+            this.ensureSession();
 
         if(!session){
             return null;
@@ -841,14 +1269,21 @@ const EngineSession = {
                 value
             )
         ){
+
             return {
+
                 required:
                     false,
 
                 capability:
                     value
+
             };
+
         }
+
+        const now =
+            Date.now();
 
         session.stepUp = {
 
@@ -864,55 +1299,95 @@ const EngineSession = {
                 "required",
 
             createdAt:
-                Date.now(),
+                now,
+
+            expiresAt:
+                now +
+                this.defaultStepUpLifetime,
+
+            completedAt:
+                null,
 
             metadata:
-                (
-                    metadata &&
-                    typeof metadata ===
-                        "object" &&
-                    !Array.isArray(
-                        metadata
-                    )
+                this.normalizeObject(
+                    metadata
                 )
-                    ? {
-                        ...metadata
-                    }
-                    : {}
 
         };
 
         this.save();
 
         this.emit(
-            "engine-session:step-up-required",
-            session.stepUp
+            "session:step-up-required",
+            {
+                ...session.stepUp
+            }
         );
 
-        return session.stepUp;
+        return {
+            ...session.stepUp
+        };
 
     },
 
 
     completeStepUp(
-        stepUpId
+        stepUpId,
+        assurance =
+            "verified"
     ){
 
         const id =
-            String(
-                stepUpId ||
-                ""
-            ).trim();
+            this.normalizeId(
+                stepUpId
+            );
 
         if(
             !id ||
-            !this.session
-                ?.stepUp ||
+            !this.session?.stepUp ||
             this.session.stepUp.id !==
                 id
         ){
             return false;
         }
+
+        if(
+            this.session.stepUp.status !==
+                "required"
+        ){
+            return false;
+        }
+
+        if(
+            Number(
+                this.session.stepUp.expiresAt
+            ) <=
+            Date.now()
+        ){
+
+            this.session.stepUp.status =
+                "expired";
+
+            this.save();
+
+            return false;
+
+        }
+
+        const normalizedAssurance =
+            this.trustLevels.has(
+                String(
+                    assurance
+                )
+                    .trim()
+                    .toLowerCase()
+            )
+                ? String(
+                    assurance
+                )
+                    .trim()
+                    .toLowerCase()
+                : "verified";
 
         this.session.stepUp.status =
             "completed";
@@ -920,22 +1395,29 @@ const EngineSession = {
         this.session.stepUp.completedAt =
             Date.now();
 
+        this.session.assuranceLevel =
+            normalizedAssurance;
+
         this.session.verified =
-            true;
+            this.getTrustIndex(
+                normalizedAssurance
+            ) >=
+            this.getTrustIndex(
+                "verified"
+            );
 
-        this.session.trustLevel =
-            "verified";
-
-        this.session.lastActivityAt =
+        this.session.lastActiveAt =
             Date.now();
 
         this.save();
 
         this.emit(
-            "engine-session:step-up-completed",
+            "session:step-up-completed",
             {
                 stepUp:
-                    this.session.stepUp,
+                    {
+                        ...this.session.stepUp
+                    },
 
                 session:
                     this.getPublicSession()
@@ -948,80 +1430,1044 @@ const EngineSession = {
 
 
     /* =====================================================
-       APPLICATION CONTEXT
-
-       Apps receive identity + trust + permissions
-       from Engine instead of owning login.
+       APPLICATION LOOKUP
     ===================================================== */
 
-    getAppContext(
-        appId
+    findApp(appId){
+
+        const id =
+            this.normalizeId(
+                appId
+            );
+
+        if(!id){
+            return null;
+        }
+
+        const registry =
+            this.getRegistry();
+
+        if(!registry){
+            return null;
+        }
+
+        try{
+
+            if(
+                typeof registry.find ===
+                    "function"
+            ){
+
+                const app =
+                    registry.find(
+                        id
+                    );
+
+                if(app){
+                    return app;
+                }
+
+            }
+
+        } catch(error){
+            /* fallback */
+        }
+
+        try{
+
+            if(
+                typeof registry.all ===
+                    "function"
+            ){
+
+                const apps =
+                    registry.all({
+                        includeDisabled:
+                            true
+                    });
+
+                if(
+                    Array.isArray(
+                        apps
+                    )
+                ){
+
+                    return (
+                        apps.find(
+                            app =>
+                                String(
+                                    app?.id ||
+                                    ""
+                                ) ===
+                                id
+                        ) ||
+                        null
+                    );
+
+                }
+
+            }
+
+        } catch(error){
+            /* no compatible lookup */
+        }
+
+        return null;
+
+    },
+
+
+    isBuiltInApp(app){
+
+        return Boolean(
+            app?.system ===
+                true ||
+            app?.distribution ===
+                "built-in"
+        );
+
+    },
+
+
+    getInstalledOrgan(app){
+
+        if(
+            !app?.id
+        ){
+            return null;
+        }
+
+        const organSystem =
+            this.getOrganSystem();
+
+        if(!organSystem){
+            return null;
+        }
+
+        try{
+
+            if(
+                typeof organSystem.get ===
+                    "function"
+            ){
+
+                const organ =
+                    organSystem.get(
+                        app.id
+                    );
+
+                if(organ){
+                    return organ;
+                }
+
+            }
+
+        } catch(error){
+            /* fallback */
+        }
+
+        try{
+
+            if(
+                typeof organSystem.findBySlug ===
+                    "function"
+            ){
+
+                return (
+                    organSystem.findBySlug(
+                        app.id
+                    ) ||
+                    null
+                );
+
+            }
+
+        } catch(error){
+            /* optional */
+        }
+
+        return null;
+
+    },
+
+
+    /* =====================================================
+       APP CAPABILITY / PERMISSION RESOLUTION
+    ===================================================== */
+
+    getAllowedCapabilities(
+        app,
+        organ,
+        requestedCapabilities =
+            null
     ){
 
+        const declared =
+            this.normalizeList(
+                app?.capabilities
+            );
+
+        const installed =
+            this.normalizeList(
+                organ?.capabilities
+            );
+
+        const available =
+            installed.length
+                ? declared.filter(
+                    capability =>
+                        installed
+                            .map(
+                                item =>
+                                    item
+                                        .toLowerCase()
+                            )
+                            .includes(
+                                capability
+                                    .toLowerCase()
+                            )
+                )
+                : declared;
+
+        if(
+            !Array.isArray(
+                requestedCapabilities
+            )
+        ){
+            return available;
+        }
+
+        const requested =
+            this.normalizeList(
+                requestedCapabilities
+            );
+
+        const availableNormalized =
+            available.map(
+                item =>
+                    item.toLowerCase()
+            );
+
+        return requested.filter(
+            capability =>
+                availableNormalized
+                    .includes(
+                        capability
+                            .toLowerCase()
+                    )
+        );
+
+    },
+
+
+    getAllowedPermissions(
+        app,
+        organ,
+        requestedPermissions =
+            null
+    ){
+
+        /*
+         * Built-ins may have declared permissions in manifest.
+         * External applications only receive permissions
+         * actually granted through OrganSystem.
+         */
+        const builtIn =
+            this.isBuiltInApp(
+                app
+            );
+
+        const declared =
+            this.normalizeList(
+                app?.requestedPermissions
+            );
+
+        const granted =
+            builtIn
+                ? declared
+                : this.normalizeList(
+                    organ?.permissions
+                );
+
+        if(
+            !Array.isArray(
+                requestedPermissions
+            )
+        ){
+            return granted;
+        }
+
+        const requested =
+            this.normalizeList(
+                requestedPermissions
+            );
+
+        const grantedNormalized =
+            granted.map(
+                item =>
+                    item.toLowerCase()
+            );
+
+        return requested.filter(
+            permission =>
+                grantedNormalized
+                    .includes(
+                        permission
+                            .toLowerCase()
+                    )
+        );
+
+    },
+
+
+    /* =====================================================
+       APP-SCOPED SUBJECT
+    ===================================================== */
+
+    createSubjectAlias(appId){
+
         const session =
-            this.ensure();
+            this.ensureSession();
 
         if(!session){
             return null;
         }
 
-        const normalizedAppId =
-            String(
-                appId ||
-                ""
-            ).trim();
+        const id =
+            this.normalizeId(
+                appId
+            );
 
+        if(!id){
+            return null;
+        }
+
+        /*
+         * Alias is intentionally opaque.
+         * It does not expose the canonical Engine identity.
+         */
+        return this.createId(
+            `subject-${id}`
+        );
+
+    },
+
+
+    /* =====================================================
+       APP GRANTS
+    ===================================================== */
+
+    issueAppContext(
+        appId,
+        options = {}
+    ){
+
+        const id =
+            this.normalizeId(
+                appId
+            );
+
+        if(!id){
+            return null;
+        }
+
+        const session =
+            this.ensureSession();
+
+        if(!session){
+            return null;
+        }
+
+        const app =
+            options.app ||
+            this.findApp(
+                id
+            );
+
+        if(!app){
+            return null;
+        }
+
+        const builtIn =
+            this.isBuiltInApp(
+                app
+            );
+
+        const organ =
+            options.organ ||
+            this.getInstalledOrgan(
+                app
+            );
+
+        /*
+         * External apps must be installed, trusted and active.
+         */
+        if(!builtIn){
+
+            if(
+                !organ ||
+                organ.installed !==
+                    true ||
+                organ.trusted !==
+                    true ||
+                organ.status !==
+                    "active"
+            ){
+                return null;
+            }
+
+        }
+
+        const capabilities =
+            this.getAllowedCapabilities(
+                app,
+                organ,
+                options.capabilities
+            );
+
+        const permissions =
+            this.getAllowedPermissions(
+                app,
+                organ,
+                options.permissions
+            );
+
+        const existing =
+            session.grants?.[
+                id
+            ] ||
+            null;
+
+        const now =
+            Date.now();
+
+        const requestedExpiry =
+            Number(
+                options.expiresAt
+            );
+
+        const expiresAt =
+            Number.isFinite(
+                requestedExpiry
+            ) &&
+            requestedExpiry >
+                now
+                ? Math.min(
+                    requestedExpiry,
+                    session.expiresAt
+                )
+                : Math.min(
+                    now +
+                    this.defaultGrantLifetime,
+                    session.expiresAt
+                );
+
+        const contextRef =
+            this.normalizeObject(
+                options.contextRef ||
+                this.buildContext()
+            );
+
+        const subjectAlias =
+            builtIn
+                ? null
+                : (
+                    existing
+                        ?.subjectAlias ||
+                    this.createSubjectAlias(
+                        id
+                    )
+                );
+
+        const subjectId =
+            builtIn
+                ? session.identityId
+                : subjectAlias;
+
+        const grant = {
+
+            id:
+                existing?.id ||
+                this.createId(
+                    `grant-${id}`
+                ),
+
+            appId:
+                id,
+
+            subjectId,
+
+            subjectAlias,
+
+            builtIn,
+
+            capabilities,
+
+            permissions,
+
+            contextRef,
+
+            issuedAt:
+                now,
+
+            expiresAt,
+
+            trustLevel:
+                builtIn
+                    ? session.assuranceLevel
+                    : (
+                        organ?.trusted
+                            ? "trusted"
+                            : "unknown"
+                    ),
+
+            revoked:
+                false,
+
+            revokedAt:
+                null
+
+        };
+
+        if(
+            !session.grants ||
+            typeof session.grants !==
+                "object"
+        ){
+            session.grants =
+                {};
+        }
+
+        session.grants[
+            id
+        ] = grant;
+
+        /*
+         * New runtime token invalidates any previous token.
+         */
+        const runtimeToken =
+            this.createRuntimeToken();
+
+        this.runtimeTokens.set(
+            id,
+            {
+                token:
+                    runtimeToken,
+
+                grantId:
+                    grant.id,
+
+                issuedAt:
+                    now,
+
+                expiresAt:
+                    grant.expiresAt
+            }
+        );
+
+        session.lastActiveAt =
+            now;
+
+        this.save();
+
+        this.emit(
+            "session:grant-issued",
+            {
+                appId:
+                    id,
+
+                grantId:
+                    grant.id,
+
+                builtIn,
+
+                capabilities:
+                    [
+                        ...capabilities
+                    ],
+
+                permissions:
+                    [
+                        ...permissions
+                    ],
+
+                expiresAt:
+                    grant.expiresAt
+            }
+        );
+
+        /*
+         * Only this returned object contains the runtime token.
+         * It is never stored in localStorage.
+         */
         return {
 
             appId:
-                normalizedAppId ||
-                null,
+                grant.appId,
 
-            sessionId:
-                session.id,
+            grantId:
+                grant.id,
 
-            identityId:
-                session.identityId,
+            subjectId:
+                grant.subjectId,
 
-            trustLevel:
-                session.trustLevel,
+            builtIn:
+                grant.builtIn,
 
-            authenticated:
-                session.authenticated ===
-                true,
-
-            verified:
-                session.verified ===
-                true,
-
-            deviceTrust:
-                session.deviceTrust,
+            capabilities:
+                [
+                    ...grant.capabilities
+                ],
 
             permissions:
                 [
-                    ...(
-                        session.permissions ||
-                        []
-                    )
+                    ...grant.permissions
                 ],
 
-            context:
-                this.buildContext(),
+            contextRef:
+                grant.contextRef
+                    ? {
+                        ...grant.contextRef
+                    }
+                    : null,
 
-            sessionAge:
-                Math.max(
-                    0,
-                    Date.now() -
-                    session.authenticatedAt
-                )
+            trustLevel:
+                grant.trustLevel,
+
+            issuedAt:
+                grant.issuedAt,
+
+            expiresAt:
+                grant.expiresAt,
+
+            accessToken:
+                runtimeToken
 
         };
 
     },
 
 
+    /*
+     * Compatibility alias.
+     */
+    getAppContext(
+        appId,
+        options = {}
+    ){
+
+        return this.issueAppContext(
+            appId,
+            options
+        );
+
+    },
+
+
+    getGrant(appId){
+
+        const id =
+            this.normalizeId(
+                appId
+            );
+
+        if(
+            !id ||
+            !this.session
+        ){
+            return null;
+        }
+
+        const grant =
+            this.session
+                .grants?.[
+                    id
+                ] ||
+            null;
+
+        if(!grant){
+            return null;
+        }
+
+        if(
+            grant.revoked ===
+                true ||
+            Number(
+                grant.expiresAt
+            ) <=
+            Date.now()
+        ){
+            return null;
+        }
+
+        return {
+
+            ...grant,
+
+            capabilities:
+                [
+                    ...(
+                        grant.capabilities ||
+                        []
+                    )
+                ],
+
+            permissions:
+                [
+                    ...(
+                        grant.permissions ||
+                        []
+                    )
+                ],
+
+            contextRef:
+                grant.contextRef
+                    ? {
+                        ...grant.contextRef
+                    }
+                    : null
+
+        };
+
+    },
+
+
+    getRuntimeToken(appId){
+
+        const id =
+            this.normalizeId(
+                appId
+            );
+
+        if(!id){
+            return null;
+        }
+
+        const grant =
+            this.getGrant(
+                id
+            );
+
+        if(!grant){
+            this.runtimeTokens.delete(
+                id
+            );
+
+            return null;
+        }
+
+        let runtime =
+            this.runtimeTokens.get(
+                id
+            ) ||
+            null;
+
+        if(
+            !runtime ||
+            runtime.grantId !==
+                grant.id ||
+            runtime.expiresAt <=
+                Date.now()
+        ){
+
+            const token =
+                this.createRuntimeToken();
+
+            runtime = {
+
+                token,
+
+                grantId:
+                    grant.id,
+
+                issuedAt:
+                    Date.now(),
+
+                expiresAt:
+                    grant.expiresAt
+
+            };
+
+            this.runtimeTokens.set(
+                id,
+                runtime
+            );
+
+        }
+
+        return runtime.token;
+
+    },
+
+
+    validateRuntimeToken(
+        appId,
+        token
+    ){
+
+        const id =
+            this.normalizeId(
+                appId
+            );
+
+        const supplied =
+            this.normalizeId(
+                token
+            );
+
+        if(
+            !id ||
+            !supplied
+        ){
+            return false;
+        }
+
+        const runtime =
+            this.runtimeTokens.get(
+                id
+            );
+
+        const grant =
+            this.getGrant(
+                id
+            );
+
+        if(
+            !runtime ||
+            !grant ||
+            runtime.expiresAt <=
+                Date.now()
+        ){
+            return false;
+        }
+
+        return (
+            runtime.token ===
+            supplied
+        );
+
+    },
+
+
+    revokeApp(appId){
+
+        const id =
+            this.normalizeId(
+                appId
+            );
+
+        if(
+            !id ||
+            !this.session
+        ){
+            return false;
+        }
+
+        const grant =
+            this.session
+                .grants?.[
+                    id
+                ];
+
+        if(!grant){
+            return false;
+        }
+
+        grant.revoked =
+            true;
+
+        grant.revokedAt =
+            Date.now();
+
+        this.runtimeTokens.delete(
+            id
+        );
+
+        this.save();
+
+        this.emit(
+            "session:grant-revoked",
+            {
+                appId:
+                    id,
+
+                grantId:
+                    grant.id,
+
+                revokedAt:
+                    grant.revokedAt
+            }
+        );
+
+        return true;
+
+    },
+
+
+    revokeAllApps(){
+
+        if(!this.session){
+            return false;
+        }
+
+        Object.keys(
+            this.session.grants ||
+            {}
+        ).forEach(
+            appId => {
+
+                const grant =
+                    this.session
+                        .grants[
+                            appId
+                        ];
+
+                if(
+                    !grant ||
+                    grant.revoked ===
+                        true
+                ){
+                    return;
+                }
+
+                grant.revoked =
+                    true;
+
+                grant.revokedAt =
+                    Date.now();
+
+            }
+        );
+
+        this.runtimeTokens.clear();
+
+        this.save();
+
+        this.emit(
+            "session:all-grants-revoked",
+            {
+                sessionId:
+                    this.session
+                        .sessionId,
+
+                time:
+                    Date.now()
+            }
+        );
+
+        return true;
+
+    },
+
+
+    /* =====================================================
+       APP AUTHORIZATION
+    ===================================================== */
+
+    can(
+        appId,
+        capability
+    ){
+
+        const id =
+            this.normalizeId(
+                appId
+            );
+
+        const value =
+            this.normalizeId(
+                capability
+            );
+
+        if(
+            !id ||
+            !value
+        ){
+            return false;
+        }
+
+        const grant =
+            this.getGrant(
+                id
+            );
+
+        if(!grant){
+            return false;
+        }
+
+        if(
+            this.requiresStepUp(
+                value
+            )
+        ){
+            return false;
+        }
+
+        return (
+            grant.capabilities ||
+            []
+        )
+            .map(
+                item =>
+                    item.toLowerCase()
+            )
+            .includes(
+                value.toLowerCase()
+            );
+
+    },
+
+
+    hasAppPermission(
+        appId,
+        permission
+    ){
+
+        const id =
+            this.normalizeId(
+                appId
+            );
+
+        const value =
+            this.normalizeId(
+                permission
+            );
+
+        if(
+            !id ||
+            !value
+        ){
+            return false;
+        }
+
+        const grant =
+            this.getGrant(
+                id
+            );
+
+        if(!grant){
+            return false;
+        }
+
+        return (
+            grant.permissions ||
+            []
+        )
+            .map(
+                item =>
+                    item.toLowerCase()
+            )
+            .includes(
+                value.toLowerCase()
+            );
+
+    },
+
+
     /* =====================================================
        PUBLIC SESSION
+
+       Does not expose runtime tokens.
     ===================================================== */
 
     getPublicSession(){
@@ -1032,14 +2478,17 @@ const EngineSession = {
 
         return {
 
-            id:
-                this.session.id,
+            sessionId:
+                this.session.sessionId,
 
             identityId:
                 this.session.identityId,
 
-            trustLevel:
-                this.session.trustLevel,
+            actorEntityId:
+                this.session.actorEntityId,
+
+            assuranceLevel:
+                this.session.assuranceLevel,
 
             authenticated:
                 this.session.authenticated ===
@@ -1052,25 +2501,39 @@ const EngineSession = {
             deviceTrust:
                 this.session.deviceTrust,
 
-            permissions:
-                [
-                    ...(
-                        this.session.permissions ||
-                        []
-                    )
-                ],
-
             createdAt:
                 this.session.createdAt,
 
             authenticatedAt:
                 this.session.authenticatedAt,
 
-            lastActivityAt:
-                this.session.lastActivityAt,
+            lastActiveAt:
+                this.session.lastActiveAt,
 
             expiresAt:
                 this.session.expiresAt,
+
+            worldContext:
+                this.normalizeObject(
+                    this.session.worldContext
+                ),
+
+            activeGrantCount:
+                Object.values(
+                    this.session.grants ||
+                    {}
+                )
+                    .filter(
+                        grant =>
+                            grant &&
+                            grant.revoked !==
+                                true &&
+                            Number(
+                                grant.expiresAt
+                            ) >
+                            Date.now()
+                    )
+                    .length,
 
             stepUp:
                 this.session.stepUp
@@ -1094,10 +2557,9 @@ const EngineSession = {
     ){
 
         const name =
-            String(
-                eventName ||
-                ""
-            ).trim();
+            this.normalizeId(
+                eventName
+            );
 
         if(!name){
             return false;
@@ -1111,12 +2573,14 @@ const EngineSession = {
                 typeof VAERO.emit ===
                     "function"
             ){
+
                 VAERO.emit(
                     name,
                     payload
                 );
 
                 return true;
+
             }
 
         } catch(error){
@@ -1135,12 +2599,14 @@ const EngineSession = {
                 typeof events.emit ===
                     "function"
             ){
+
                 events.emit(
                     name,
                     payload
                 );
 
                 return true;
+
             }
 
         } catch(error){
@@ -1158,6 +2624,63 @@ const EngineSession = {
 
     report(){
 
+        const grants =
+            Object.values(
+                this.session
+                    ?.grants ||
+                {}
+            )
+                .map(
+                    grant => ({
+
+                        appId:
+                            grant.appId,
+
+                        grantId:
+                            grant.id,
+
+                        builtIn:
+                            grant.builtIn ===
+                            true,
+
+                        capabilities:
+                            [
+                                ...(
+                                    grant.capabilities ||
+                                    []
+                                )
+                            ],
+
+                        permissions:
+                            [
+                                ...(
+                                    grant.permissions ||
+                                    []
+                                )
+                            ],
+
+                        trustLevel:
+                            grant.trustLevel,
+
+                        revoked:
+                            grant.revoked ===
+                            true,
+
+                        issuedAt:
+                            grant.issuedAt,
+
+                        expiresAt:
+                            grant.expiresAt,
+
+                        runtimeTokenActive:
+                            this.runtimeTokens
+                                .has(
+                                    grant.appId
+                                )
+
+                    })
+                );
+
         return {
 
             version:
@@ -1171,6 +2694,8 @@ const EngineSession = {
 
             context:
                 this.buildContext(),
+
+            grants,
 
             sensitiveCapabilities:
                 [
@@ -1189,12 +2714,15 @@ const EngineSession = {
 
     init(){
 
+        this.migratePreviousStorage();
+
         this.load();
 
-        this.ensure();
+        const session =
+            this.ensureSession();
 
         this.emit(
-            "engine-session:ready",
+            "session:ready",
             {
                 version:
                     this.version,
@@ -1207,7 +2735,11 @@ const EngineSession = {
             }
         );
 
-        return this;
+        return (
+            session
+                ? this
+                : null
+        );
 
     }
 
@@ -1226,10 +2758,12 @@ try{
         typeof VAERO.register ===
             "function"
     ){
+
         VAERO.register(
             "engineSession",
             EngineSession
         );
+
     }
 
 } catch(error){
