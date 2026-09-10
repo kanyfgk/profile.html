@@ -395,6 +395,164 @@ const ApplicationsApp = {
 
     },
 
+   /* =====================================================
+   ENGINE SESSION / INTERACTION CORE
+===================================================== */
+
+getEngineSession(){
+
+    return (
+        this.getService(
+            "engineSession"
+        ) ||
+        (
+            typeof window !==
+                "undefined"
+                ? window.EngineSession ||
+                    null
+                : null
+        )
+    );
+
+},
+
+
+getInteractionCore(){
+
+    return (
+        this.getService(
+            "interaction"
+        ) ||
+        (
+            typeof window !==
+                "undefined"
+                ? window.InteractionCore ||
+                    null
+                : null
+        )
+    );
+
+},
+
+
+revokeAppGrant(appId){
+
+    const id =
+        String(
+            appId ||
+            ""
+        ).trim();
+
+    if(!id){
+        return false;
+    }
+
+    const engineSession =
+        this.getEngineSession();
+
+    if(
+        !engineSession ||
+        typeof engineSession.revokeApp !==
+            "function"
+    ){
+        return false;
+    }
+
+    try{
+
+        return engineSession.revokeApp(
+            id
+        );
+
+    } catch(error){
+
+        console.warn(
+            "Application Engine grant could not be revoked:",
+            error
+        );
+
+        return false;
+
+    }
+
+},
+
+
+createLaunchContext(
+    app,
+    state
+){
+
+    if(
+        !app ||
+        !app.id
+    ){
+        return null;
+    }
+
+    const engineSession =
+        this.getEngineSession();
+
+    if(
+        !engineSession ||
+        typeof engineSession.issueAppContext !==
+            "function"
+    ){
+
+        console.warn(
+            "Application open blocked: Engine Session unavailable.",
+            app.id
+        );
+
+        return null;
+
+    }
+
+    try{
+
+        return engineSession.issueAppContext(
+            app.id,
+            {
+                app,
+
+                organ:
+                    state?.organ ||
+                    null,
+
+                contextRef: {
+
+                    source:
+                        "applications",
+
+                    appId:
+                        app.id,
+
+                    entityId:
+                        this.getCurrentEntity()
+                            ?.id ||
+                        null,
+
+                    openedAt:
+                        Date.now()
+
+                }
+
+            }
+        );
+
+    } catch(error){
+
+        console.error(
+            "Application launch context could not be issued:",
+            error
+        );
+
+        return null;
+
+    }
+
+},
+
 
     /* =====================================================
        MANIFEST HELPERS
@@ -2557,18 +2715,17 @@ const ApplicationsApp = {
         );
 
 
-        this.enterBrainContext();
+        this.revokeAppGrant(
+    app.id
+);
 
+this.enterBrainContext();
+this.remount();
 
-        this.remount();
+return true;
+},
 
-
-        return true;
-
-    },
-
-
-    activateWhenPermissionsReviewed(app){
+activateWhenPermissionsReviewed(app){
 
         if(!app){
 
@@ -2812,6 +2969,9 @@ const ApplicationsApp = {
 
         }
 
+       this.revokeAppGrant(
+    app.id
+);
 
         this.emitLifecycle(
             "permission-revoked",
@@ -3266,6 +3426,10 @@ const ApplicationsApp = {
 
         }
 
+       this.revokeAppGrant(
+    app.id
+);
+
 
         this.emitLifecycle(
             "removed",
@@ -3426,217 +3590,289 @@ const ApplicationsApp = {
 
 
     /* =====================================================
-       OPEN
-    ===================================================== */
+   OPEN
+===================================================== */
 
-    open(app){
-
-        if(
-            !app ||
-            !app.action
-        ){
-
-            return false;
-
-        }
-
-
-        const state =
-            this.getAppState(
-                app
-            );
-
-
-        if(
-            !state.installed
-        ){
-
-            return false;
-
-        }
-
-
-        if(
-            !state.builtIn &&
-            state.trusted !==
-                true
-        ){
-
-            this.selectedAppId =
-                app.id;
-
-
-            this.remount();
-
-
-            return false;
-
-        }
-
-
-        if(
-            !state.builtIn &&
-            state.status !==
-                "active"
-        ){
-
-            this.selectedAppId =
-                app.id;
-
-
-            this.remount();
-
-
-            return false;
-
-        }
-
-
-        if(
-            typeof document ===
-                "undefined"
-        ){
-
-            return false;
-
-        }
-
-
-        try{
-
-    const actions =
-        this.getService(
-            "actions"
-        ) ||
-        (
-            typeof window !==
-                "undefined"
-                ? window.Actions ||
-                  null
-                : null
-        );
-
-
-    /*
-     * Öncelik:
-     * doğrudan Engine action router.
-     */
+open(app){
 
     if(
-        actions &&
-        typeof actions.routeAction ===
-            "function"
+        !app ||
+        !app.action
     ){
+        return false;
+    }
 
-        const result =
-            actions.routeAction(
-                app.action,
-                null
-            );
+    const state =
+        this.getAppState(
+            app
+        );
 
-
-        if(
-            result !==
-                false
-        ){
-
-            this.emitLifecycle(
-                "opened",
-                app,
-                state.organ
-            );
-
-
-            return result;
-
-        }
-
+    if(
+        !state.installed
+    ){
+        return false;
     }
 
 
     /*
-     * Compatibility fallback.
+     * External applications must be trusted.
      */
+    if(
+        !state.builtIn &&
+        state.trusted !==
+            true
+    ){
 
-    const button =
-        document.createElement(
-            "button"
+        this.selectedAppId =
+            app.id;
+
+        this.remount();
+
+        return false;
+    }
+
+
+    /*
+     * External applications must also be active.
+     */
+    if(
+        !state.builtIn &&
+        state.status !==
+            "active"
+    ){
+
+        this.selectedAppId =
+            app.id;
+
+        this.remount();
+
+        return false;
+    }
+
+
+    /*
+     * Engine Session is now the identity / trust boundary.
+     *
+     * Applications do not perform their own Engine login.
+     * They receive an app-scoped launch context instead.
+     */
+    const launchContext =
+        this.createLaunchContext(
+            app,
+            state
         );
 
+    if(!launchContext){
 
-    button.type =
-        "button";
+        console.warn(
+            "Application open blocked: secure launch context unavailable.",
+            app.id
+        );
 
-
-    button.dataset.action =
-        app.action;
-
-
-    button.hidden =
-        true;
+        return false;
+    }
 
 
-    button.setAttribute(
-        "aria-hidden",
-        "true"
-    );
+    if(
+        typeof document ===
+            "undefined"
+    ){
+        return false;
+    }
 
 
-    document.body.appendChild(
-        button
-    );
+    try{
 
-
-    button.click();
-
-
-    button.remove();
-
-
-    this.emitLifecycle(
-        "opened",
-        app,
-        state.organ
-    );
-
-
-    return true;
-
-} catch(error){
-
-    console.warn(
-        "Application could not be opened:",
-        error
-    );
-
-
-    return false;
-
-}
-    },
-
-
-    openApplication(appId){
-
-        const app =
-            this.findApp(
-                appId
+        const actions =
+            this.getService(
+                "actions"
+            ) ||
+            (
+                typeof window !==
+                    "undefined"
+                    ? window.Actions ||
+                        null
+                    : null
             );
 
 
-        if(!app){
+        /*
+         * Primary path:
+         * Engine action router.
+         *
+         * Third argument carries the scoped application
+         * context. Existing routers that currently accept
+         * only two arguments safely ignore the extra value.
+         */
+        if(
+            actions &&
+            typeof actions.routeAction ===
+                "function"
+        ){
 
-            return false;
+            const result =
+                actions.routeAction(
+                    app.action,
+                    null,
+                    {
+                        source:
+                            "applications",
+
+                        appId:
+                            app.id,
+
+                        applicationContext:
+                            launchContext
+                    }
+                );
+
+
+            if(
+                result !==
+                    false
+            ){
+
+                /*
+                 * Never place accessToken in lifecycle events.
+                 */
+                this.emitLifecycle(
+                    "opened",
+                    app,
+                    state.organ,
+                    {
+                        grantId:
+                            launchContext.grantId ||
+                            null,
+
+                        subjectId:
+                            launchContext.subjectId ||
+                            null,
+
+                        builtIn:
+                            launchContext.builtIn ===
+                            true,
+
+                        trustLevel:
+                            launchContext.trustLevel ||
+                            null,
+
+                        contextRef:
+                            launchContext.contextRef ||
+                            null
+                    }
+                );
+
+                return result;
+            }
 
         }
 
 
-        return this.open(
-            app
+        /*
+         * Compatibility fallback.
+         *
+         * Existing DOM action delegation still works.
+         * The application can retrieve its active grant from
+         * EngineSession after launch if needed.
+         */
+        const button =
+            document.createElement(
+                "button"
+            );
+
+        button.type =
+            "button";
+
+        button.dataset.action =
+            app.action;
+
+        button.dataset.applicationId =
+            app.id;
+
+        button.hidden =
+            true;
+
+        button.setAttribute(
+            "aria-hidden",
+            "true"
         );
 
-    },
+        document.body.appendChild(
+            button
+        );
 
+        button.click();
+
+        button.remove();
+
+
+        this.emitLifecycle(
+            "opened",
+            app,
+            state.organ,
+            {
+                grantId:
+                    launchContext.grantId ||
+                    null,
+
+                subjectId:
+                    launchContext.subjectId ||
+                    null,
+
+                builtIn:
+                    launchContext.builtIn ===
+                    true,
+
+                trustLevel:
+                    launchContext.trustLevel ||
+                    null,
+
+                contextRef:
+                    launchContext.contextRef ||
+                    null
+            }
+        );
+
+
+        return true;
+
+
+    } catch(error){
+
+        /*
+         * Launch failed, so leave no active grant behind.
+         */
+        this.revokeAppGrant(
+            app.id
+        );
+
+        console.warn(
+            "Application could not be opened:",
+            error
+        );
+
+        return false;
+
+    }
+
+},
+
+   openApplication(appId){
+
+    const app =
+        this.findApp(
+            appId
+        );
+
+    if(!app){
+        return false;
+    }
+
+    return this.open(
+        app
+    );
+
+},
 
     /* =====================================================
        CONTINUE IN PART 3
