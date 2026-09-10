@@ -961,6 +961,15 @@ syncApplicationManifest(id){
 
     }
 
+   const registry =
+    this.getApplicationRegistry();
+
+
+const manifestVersion =
+    manifest.manifestVersion ??
+    registry?.manifestVersion ??
+    null;
+
 
     const requestedCapabilities =
         this.normalizeList(
@@ -1017,7 +1026,7 @@ syncApplicationManifest(id){
             manifest.id,
 
         manifestVersion:
-            manifest.manifestVersion,
+    manifestVersion,
 
         requestedPermissions:
             this.normalizeList(
@@ -1150,7 +1159,7 @@ syncApplicationManifest(id){
                 manifest.id,
 
             manifestVersion:
-                manifest.manifestVersion,
+    manifestVersion,
 
             capabilitiesRequested: [
                 ...requestedCapabilities
@@ -3531,12 +3540,11 @@ syncApplicationManifest(id){
 
 
             if(
-                requested.length >
-                    0 &&
-                !requested.includes(
-                    target
-                )
-            ){
+    requested.length === 0 ||
+    !requested.includes(
+        target
+    )
+){
 
                 console.warn(
                     "Application manifest dışında permission verilemez:",
@@ -4292,17 +4300,86 @@ syncApplicationManifest(id){
                 : {};
 
 
-        if(
-            !this.guardianCheck(
-                organ,
-                "update",
-                safeContext
-            )
-        ){
+        /*
+ * Application manifest-owned fields are authoritative
+ * in AppRegistry.
+ *
+ * External application organs cannot rewrite these fields
+ * directly or through metadata / meta.
+ */
+if(
+    this.isApplicationOrgan(
+        organ
+    ) &&
+    !this.isSystemSource(
+        organ.source
+    )
+){
 
-            return false;
+    const manifestOwnedFields = [
+        "applicationId",
+        "manifestVersion",
+        "requestedPermissions",
+        "capabilitiesRequested",
+        "objectTypes",
+        "nativeVerbs",
+        "outcomeTypes",
+        "contextInputs",
+        "contextOutputs",
+        "trustRequirements"
+    ];
 
-        }
+
+    const containsProtectedField =
+        object => {
+
+            if(
+                !object ||
+                typeof object !==
+                    "object" ||
+                Array.isArray(
+                    object
+                )
+            ){
+                return false;
+            }
+
+
+            return manifestOwnedFields.some(
+                field =>
+                    Object.prototype.hasOwnProperty.call(
+                        object,
+                        field
+                    )
+            );
+
+        };
+
+
+    const attemptsManifestMutation =
+        containsProtectedField(
+            patch
+        ) ||
+        containsProtectedField(
+            patch.metadata
+        ) ||
+        containsProtectedField(
+            patch.meta
+        );
+
+
+    if(attemptsManifestMutation){
+
+        console.warn(
+            "External application manifest fields cannot be changed through OrganSystem.update():",
+            organ.id
+        );
+
+        return false;
+
+    }
+
+}
 
 
         const before = {
@@ -5596,23 +5673,16 @@ syncApplicationManifest(id){
                         );
 
 
-                    if(
-                        requestedCapabilities.length >
-                        0
-                    ){
-
-                        organ.capabilities =
-                            this.normalizeList(
-                                organ.capabilities
-                            )
-                                .filter(
-                                    capability =>
-                                        requestedCapabilities.includes(
-                                            capability
-                                        )
-                                );
-
-                    }
+                    organ.capabilities =
+    this.normalizeList(
+        organ.capabilities
+    )
+    .filter(
+        capability =>
+            requestedCapabilities.includes(
+                capability
+            )
+    );
 
                 }
 
