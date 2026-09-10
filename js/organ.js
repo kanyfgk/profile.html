@@ -926,92 +926,225 @@ const OrganSystem = {
 
 
     /* =====================================================
-       APPLICATION MANIFEST SYNC
-    ===================================================== */
+   APPLICATION MANIFEST SYNC
+===================================================== */
 
-    syncApplicationManifest(id){
+syncApplicationManifest(id){
 
-        const organ =
-            this.get(
-                id
-            );
+    const organ =
+        this.get(
+            id
+        );
 
 
-        if(
-            !organ ||
-            !this.isApplicationOrgan(
-                organ
+    if(
+        !organ ||
+        !this.isApplicationOrgan(
+            organ
+        )
+    ){
+
+        return false;
+
+    }
+
+
+    const manifest =
+        this.getApplicationManifest(
+            organ
+        );
+
+
+    if(!manifest){
+
+        return false;
+
+    }
+
+
+    const requestedCapabilities =
+        this.normalizeList(
+            manifest.capabilitiesRequested ||
+            manifest.capabilities
+        );
+
+
+    organ.capabilitiesRequested =
+        requestedCapabilities;
+
+
+    organ.objectTypes =
+        this.normalizeList(
+            manifest.objectTypes
+        );
+
+
+    organ.nativeVerbs =
+        this.normalizeList(
+            manifest.nativeVerbs
+        );
+
+
+    organ.outcomeTypes =
+        this.normalizeList(
+            manifest.outcomeTypes
+        );
+
+
+    organ.contextInputs =
+        this.normalizeList(
+            manifest.contextInputs
+        );
+
+
+    organ.contextOutputs =
+        this.normalizeList(
+            manifest.contextOutputs
+        );
+
+
+    organ.trustRequirements =
+        this.normalizeTrustRequirements(
+            manifest.trustRequirements
+        );
+
+
+    organ.metadata = {
+
+        ...organ.metadata,
+
+        applicationId:
+            manifest.id,
+
+        manifestVersion:
+            manifest.manifestVersion,
+
+        requestedPermissions:
+            this.normalizeList(
+                manifest.requestedPermissions
+            ),
+
+        capabilitiesRequested:
+            [
+                ...requestedCapabilities
+            ],
+
+        objectTypes:
+            [
+                ...organ.objectTypes
+            ],
+
+        nativeVerbs:
+            [
+                ...organ.nativeVerbs
+            ],
+
+        outcomeTypes:
+            [
+                ...organ.outcomeTypes
+            ],
+
+        contextInputs:
+            [
+                ...organ.contextInputs
+            ],
+
+        contextOutputs:
+            [
+                ...organ.contextOutputs
+            ],
+
+        trustRequirements: {
+            ...organ.trustRequirements
+        }
+
+    };
+
+
+    organ.meta = {
+
+        ...organ.meta,
+
+        ...organ.metadata
+
+    };
+
+
+    /*
+     * Built-in/system organs are trusted by origin,
+     * so declared capabilities may become runtime
+     * capabilities automatically.
+     */
+
+    if(
+        this.isSystemSource(
+            organ.source
+        )
+    ){
+
+        organ.capabilities =
+            this.normalizeList([
+                ...(
+                    organ.capabilities ||
+                    []
+                ),
+                ...requestedCapabilities
+            ]);
+
+    }
+    else {
+
+        /*
+         * External applications never receive a capability
+         * simply because they requested it.
+         *
+         * Existing runtime capabilities are also pruned when
+         * the current manifest no longer declares them.
+         */
+
+        organ.capabilities =
+            this.normalizeList(
+                organ.capabilities
             )
-        ){
+                .filter(
+                    capability =>
+                        requestedCapabilities.includes(
+                            capability
+                        )
+                );
 
-            return false;
-
-        }
-
-
-        const manifest =
-            this.getApplicationManifest(
-                organ
-            );
+    }
 
 
-        if(!manifest){
+    /*
+     * If requested permissions changed and the app no longer
+     * satisfies them, it cannot remain active.
+     */
 
-            return false;
+    if(
+        organ.status ===
+            "active" &&
+        !this.permissionsComplete(
+            organ
+        )
+    ){
 
-        }
+        organ.status =
+            "inactive";
 
-
-        const requestedCapabilities =
-            this.normalizeList(
-                manifest.capabilitiesRequested ||
-                manifest.capabilities
-            );
-
-
-        organ.capabilitiesRequested =
-            requestedCapabilities;
-
-
-        organ.objectTypes =
-            this.normalizeList(
-                manifest.objectTypes
-            );
+    }
 
 
-        organ.nativeVerbs =
-            this.normalizeList(
-                manifest.nativeVerbs
-            );
+    organ.updatedAt =
+        Date.now();
 
 
-        organ.outcomeTypes =
-            this.normalizeList(
-                manifest.outcomeTypes
-            );
+    this.emit(
+        "organ:manifest:synced",
+        {
 
-
-        organ.contextInputs =
-            this.normalizeList(
-                manifest.contextInputs
-            );
-
-
-        organ.contextOutputs =
-            this.normalizeList(
-                manifest.contextOutputs
-            );
-
-
-        organ.trustRequirements =
-            this.normalizeTrustRequirements(
-                manifest.trustRequirements
-            );
-
-
-        organ.metadata = {
-
-            ...organ.metadata,
+            organId:
+                organ.id,
 
             applicationId:
                 manifest.id,
@@ -1019,124 +1152,20 @@ const OrganSystem = {
             manifestVersion:
                 manifest.manifestVersion,
 
-            requestedPermissions:
-                this.normalizeList(
-                    manifest.requestedPermissions
-                ),
+            capabilitiesRequested: [
+                ...requestedCapabilities
+            ],
 
-            capabilitiesRequested:
-                [
-                    ...requestedCapabilities
-                ],
-
-            objectTypes:
-                [
-                    ...organ.objectTypes
-                ],
-
-            nativeVerbs:
-                [
-                    ...organ.nativeVerbs
-                ],
-
-            outcomeTypes:
-                [
-                    ...organ.outcomeTypes
-                ],
-
-            contextInputs:
-                [
-                    ...organ.contextInputs
-                ],
-
-            contextOutputs:
-                [
-                    ...organ.contextOutputs
-                ],
-
-            trustRequirements: {
-                ...organ.trustRequirements
-            }
-
-        };
-
-
-        organ.meta = {
-
-            ...organ.meta,
-
-            ...organ.metadata
-
-        };
-
-
-        /*
-         * Built-in/system organs can inherit declared
-         * capabilities because their origin is trusted.
-         *
-         * External applications only declare requested
-         * capabilities here. Declaration does NOT grant them.
-         */
-
-        if(
-            this.isSystemSource(
-                organ.source
-            )
-        ){
-
-            organ.capabilities =
-                this.normalizeList([
-                    ...(
-                        organ.capabilities ||
-                        []
-                    ),
-                    ...requestedCapabilities
-                ]);
+            time:
+                Date.now()
 
         }
+    );
 
 
-        if(
-            organ.status ===
-                "active" &&
-            !this.permissionsComplete(
-                organ
-            )
-        ){
+    return true;
 
-            organ.status =
-                "inactive";
-
-        }
-
-
-        organ.updatedAt =
-            Date.now();
-
-
-        this.emit(
-            "organ:manifest:synced",
-            {
-
-                organId:
-                    organ.id,
-
-                applicationId:
-                    manifest.id,
-
-                manifestVersion:
-                    manifest.manifestVersion,
-
-                time:
-                    Date.now()
-
-            }
-        );
-
-
-        return true;
-
-    },
+},
 
 
     /* =====================================================
@@ -3857,12 +3886,11 @@ const OrganSystem = {
 
 
             if(
-                requested.length >
-                    0 &&
-                !requested.includes(
-                    target
-                )
-            ){
+    requested.length === 0 ||
+    !requested.includes(
+        target
+    )
+){
 
                 console.warn(
                     "Application manifest dışında capability verilemez:",
