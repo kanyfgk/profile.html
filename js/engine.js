@@ -28,6 +28,9 @@ const Engine = {
     currentEntityPage:
         null,
 
+    currentApplicationContext:
+        null,
+
     currentView:
         "home",
 
@@ -434,12 +437,6 @@ const Engine = {
         }
 
 
-        /*
-         * Kernel is the primary lifecycle authority.
-         * Do not re-run services which clearly expose an
-         * already-booted state.
-         */
-
         if(
             service.booted ===
                 true ||
@@ -573,6 +570,10 @@ const Engine = {
 
 
         this.currentEntityPage =
+            null;
+
+
+        this.currentApplicationContext =
             null;
 
 
@@ -803,13 +804,6 @@ const Engine = {
         }
 
 
-        /*
-         * Engine never self-verifies identity.
-         *
-         * Verification authority belongs to the dedicated
-         * verification/trust boundary.
-         */
-
         return rootIdentity;
 
     },
@@ -975,10 +969,6 @@ const Engine = {
             }
 
 
-            /* =================================================
-               KERNEL
-            ================================================= */
-
             const kernel =
                 this.getService(
                     "kernel"
@@ -1041,10 +1031,6 @@ const Engine = {
 
             }
 
-
-            /* =================================================
-               SERVICES
-            ================================================= */
 
             const entityManager =
                 this.resolveKernelService(
@@ -1207,10 +1193,6 @@ const Engine = {
                 renderer;
 
 
-            /* =================================================
-               REQUIRED SERVICES
-            ================================================= */
-
             const requiredServices = {
 
                 entityManager,
@@ -1264,10 +1246,6 @@ const Engine = {
             }
 
 
-            /* =================================================
-               SECURITY READINESS
-            ================================================= */
-
             if(
                 typeof kernel.assertSecurity ===
                     "function"
@@ -1290,10 +1268,6 @@ const Engine = {
 
             }
 
-
-            /* =================================================
-               OPTIONAL / NON-KERNEL LIFECYCLE
-            ================================================= */
 
             const optionalBootServices = [
 
@@ -1351,10 +1325,6 @@ const Engine = {
             }
 
 
-            /* =================================================
-               ROOT ENTITY
-            ================================================= */
-
             const vaeroEntity =
                 this.resolveRootEntity(
                     entityManager
@@ -1369,10 +1339,6 @@ const Engine = {
 
             }
 
-
-            /* =================================================
-               ROOT IDENTITY
-            ================================================= */
 
             const rootIdentity =
                 this.ensureRootIdentity(
@@ -1390,23 +1356,11 @@ const Engine = {
             }
 
 
-            /* =================================================
-               ROOT PROFILE
-            ================================================= */
-
             this.ensureRootProfile(
                 vaeroEntity,
                 profile
             );
 
-
-            /* =================================================
-               CONTINUE IN PART 2
-            ================================================= */
-
-       /* =================================================
-               ROOT ORGANS
-            ================================================= */
 
             const rootOrgans = [
 
@@ -1610,10 +1564,6 @@ const Engine = {
             }
 
 
-            /* =================================================
-               GUARDIAN VALIDATION
-            ================================================= */
-
             if(
                 typeof guardian.validate !==
                     "function"
@@ -1679,10 +1629,6 @@ const Engine = {
             }
 
 
-            /* =================================================
-               ENGINE STATE
-            ================================================= */
-
             this.currentEntity =
                 vaeroEntity;
 
@@ -1697,10 +1643,6 @@ const Engine = {
 
             this.resetTransientState();
 
-
-            /* =================================================
-               ROOT WORLD
-            ================================================= */
 
             let rootWorld =
                 null;
@@ -1735,19 +1677,9 @@ const Engine = {
             }
 
 
-            /*
-             * Root World belongs to World authority.
-             * It is not automatically opened during Engine boot.
-             * Home remains the initial UI state.
-             */
-
             this.currentWorld =
                 null;
 
-
-            /* =================================================
-               ENTITY MOUNT EVENT
-            ================================================= */
 
             this.emit(
                 "entity.mounted",
@@ -1766,10 +1698,6 @@ const Engine = {
                 }
             );
 
-
-            /* =================================================
-               EVOLUTION START EVENT
-            ================================================= */
 
             let evolutionHistory =
                 [];
@@ -1846,10 +1774,6 @@ const Engine = {
             }
 
 
-            /* =================================================
-               INITIAL RENDER
-            ================================================= */
-
             this.started =
                 true;
 
@@ -1881,10 +1805,6 @@ const Engine = {
             }
 
 
-            /* =================================================
-               INITIAL AWARENESS
-            ================================================= */
-
             this.syncAwareness(
                 "home",
                 {
@@ -1897,10 +1817,6 @@ const Engine = {
                 }
             );
 
-
-            /* =================================================
-               ENGINE START EVENT
-            ================================================= */
 
             this.emit(
                 "engine.started",
@@ -1992,11 +1908,6 @@ const Engine = {
         this.currentView =
             nextView;
 
-
-        /*
-         * A normal view transition clears system-page state
-         * unless the caller explicitly provides a page.
-         */
 
         if(
             !Object.prototype
@@ -2146,7 +2057,10 @@ const Engine = {
        SYSTEM APPLICATION PAGE
     ===================================================== */
 
-    openSystemPage(page){
+    openSystemPage(
+        page,
+        state = {}
+    ){
 
         const normalizedPage =
             String(
@@ -2174,6 +2088,45 @@ const Engine = {
         }
 
 
+        const applicationContext =
+            (
+                state &&
+                typeof state ===
+                    "object" &&
+                !Array.isArray(
+                    state
+                ) &&
+                state.applicationContext &&
+                typeof state.applicationContext ===
+                    "object" &&
+                !Array.isArray(
+                    state.applicationContext
+                )
+            )
+                ? {
+                    ...state.applicationContext
+                }
+                : null;
+
+
+        /*
+         * Engine only keeps non-secret application metadata.
+         * Access tokens must remain inside EngineSession runtime.
+         */
+
+        if(
+            applicationContext &&
+            Object.prototype.hasOwnProperty.call(
+                applicationContext,
+                "accessToken"
+            )
+        ){
+
+            delete applicationContext.accessToken;
+
+        }
+
+
         this.currentView =
             "home";
 
@@ -2188,6 +2141,10 @@ const Engine = {
 
         this.currentEntityPage =
             normalizedPage;
+
+
+        this.currentApplicationContext =
+            applicationContext;
 
 
         this.entityCreateMode =
@@ -2213,7 +2170,19 @@ const Engine = {
                     "engine.openSystemPage",
 
                 systemPage:
-                    true
+                    true,
+
+                appId:
+                    applicationContext?.appId ||
+                    normalizedPage,
+
+                grantId:
+                    applicationContext?.grantId ||
+                    null,
+
+                contextRef:
+                    applicationContext?.contextRef ||
+                    null
             }
         );
 
@@ -2269,6 +2238,10 @@ const Engine = {
             return false;
 
         }
+
+
+        this.currentApplicationContext =
+            null;
 
 
         this.currentView =
@@ -2341,6 +2314,10 @@ const Engine = {
             return false;
 
         }
+
+
+        this.currentApplicationContext =
+            null;
 
 
         this.currentView =
@@ -2480,10 +2457,6 @@ const Engine = {
 
 
     /* =====================================================
-       CONTINUE IN PART 3
-    ===================================================== */
-
-   /* =====================================================
        REPORT
     ===================================================== */
 
@@ -2584,6 +2557,14 @@ const Engine = {
             currentPage:
                 this.currentEntityPage,
 
+            currentApplicationId:
+                this.currentApplicationContext?.appId ||
+                null,
+
+            currentApplicationGrantId:
+                this.currentApplicationContext?.grantId ||
+                null,
+
             currentWorldId:
                 this.currentWorld?.id ||
                 null,
@@ -2673,6 +2654,10 @@ const Engine = {
 
 
         this.currentEntityPage =
+            null;
+
+
+        this.currentApplicationContext =
             null;
 
 
