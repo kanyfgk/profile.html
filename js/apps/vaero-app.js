@@ -46,6 +46,9 @@ const VaeroApp = {
     visionDataLoadPromise:
         null,
 
+   applicationContext:
+    null,
+
 
     /* =====================================================
        PRODUCT CATALOG
@@ -439,6 +442,145 @@ const VaeroApp = {
         );
 
     },
+
+   /* =====================================================
+   APPLICATION CONTEXT
+===================================================== */
+
+sanitizeApplicationContext(context){
+
+    if(
+        !context ||
+        typeof context !==
+            "object" ||
+        Array.isArray(
+            context
+        )
+    ){
+
+        return null;
+
+    }
+
+
+    /*
+     * VAERO App never stores or exposes runtime accessToken.
+     */
+
+    const {
+        accessToken,
+        ...safeContext
+    } = context;
+
+
+    const appId =
+        String(
+            safeContext.appId ||
+                this.id
+        )
+            .trim()
+            .toLowerCase();
+
+
+    if(
+        appId !==
+            this.id
+    ){
+
+        console.warn(
+            "VAERO App rejected application context: app id mismatch.",
+            {
+                expected:
+                    this.id,
+
+                received:
+                    appId
+            }
+        );
+
+
+        return null;
+
+    }
+
+
+    return {
+
+        ...safeContext,
+
+        appId:
+            this.id,
+
+        capabilities:
+            Array.isArray(
+                safeContext.capabilities
+            )
+                ? [
+                    ...safeContext.capabilities
+                ]
+                : [],
+
+        permissions:
+            Array.isArray(
+                safeContext.permissions
+            )
+                ? [
+                    ...safeContext.permissions
+                ]
+                : [],
+
+        contextRef:
+            (
+                safeContext.contextRef &&
+                typeof safeContext.contextRef ===
+                    "object" &&
+                !Array.isArray(
+                    safeContext.contextRef
+                )
+            )
+                ? {
+                    ...safeContext.contextRef
+                }
+                : null
+
+    };
+
+},
+
+
+setApplicationContext(context){
+
+    const safeContext =
+        this.sanitizeApplicationContext(
+            context
+        );
+
+
+    this.applicationContext =
+        safeContext;
+
+
+    return safeContext;
+
+},
+
+
+getApplicationContext(){
+
+    if(
+        !this.applicationContext
+    ){
+
+        return null;
+
+    }
+
+
+    return this.sanitizeApplicationContext(
+        this.applicationContext
+    );
+
+},
 
 
     /* =====================================================
@@ -5266,48 +5408,127 @@ const VaeroApp = {
 
 
     /* =====================================================
-       RENDER
-    ===================================================== */
+   RENDER
+===================================================== */
 
-    render(){
+render(applicationContext = null){
 
-        this.activeView =
-            this.normalizeView(
-                this.activeView
-            );
+    if(applicationContext){
 
-
-        this.paymentCore.load();
-
-
-        this.loadVisionDraft();
-
-
-        this.enterBrainContext();
-
-
-        return `
-            <section class="engine-page vaero-commerce-app">
-
-                ${this.renderHeader()}
-
-
-                <section class="vaero-commerce-section">
-
-                    ${this.renderNavigation()}
-
-
-                    ${this.renderActiveView()}
-
-                </section>
-
-
-                ${this.renderBrainPanel()}
-
-            </section>
-        `;
+        this.setApplicationContext(
+            applicationContext
+        );
 
     }
+
+
+    const context =
+        this.getApplicationContext();
+
+
+    this.activeView =
+        this.normalizeView(
+            this.activeView
+        );
+
+
+    this.paymentCore.load();
+
+
+    this.loadVisionDraft();
+
+
+    this.enterBrainContext({
+
+        applicationGrantId:
+            context?.grantId ||
+            null,
+
+        applicationSubjectId:
+            context?.subjectId ||
+            null,
+
+        applicationTrustLevel:
+            context?.trustLevel ||
+            null,
+
+        contextRef:
+            context?.contextRef ||
+            null
+
+    });
+
+
+    return `
+        <section class="engine-page vaero-commerce-app">
+
+            ${this.renderHeader()}
+
+            <section class="vaero-commerce-section">
+
+                ${this.renderNavigation()}
+
+                ${this.renderActiveView()}
+
+            </section>
+
+            ${this.renderBrainPanel()}
+
+        </section>
+    `;
+
+},
+
+
+/* =====================================================
+   AFTER RENDER
+===================================================== */
+
+afterRender(
+    root,
+    applicationContext = null
+){
+
+    if(applicationContext){
+
+        this.setApplicationContext(
+            applicationContext
+        );
+
+    }
+
+
+    const context =
+        this.getApplicationContext();
+
+
+    this.enterBrainContext({
+
+        applicationGrantId:
+            context?.grantId ||
+            null,
+
+        applicationSubjectId:
+            context?.subjectId ||
+            null,
+
+        applicationTrustLevel:
+            context?.trustLevel ||
+            null,
+
+        contextRef:
+            context?.contextRef ||
+            null,
+
+        rendered:
+            true
+
+    });
+
+
+    return true;
+
+}
 
 };
 
