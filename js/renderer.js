@@ -155,6 +155,142 @@ const Renderer = {
 
 
     /* =====================================================
+       APPLICATION CONTEXT
+    ===================================================== */
+
+    getApplicationContext(
+        engine = null,
+        expectedAppId = null
+    ){
+
+        const targetEngine =
+            engine ||
+            this.getEngine();
+
+
+        const context =
+            targetEngine
+                ?.currentApplicationContext ||
+            null;
+
+
+        if(
+            !context ||
+            typeof context !==
+                "object" ||
+            Array.isArray(
+                context
+            )
+        ){
+
+            return null;
+
+        }
+
+
+        const expectedId =
+            String(
+                expectedAppId ||
+                    ""
+            )
+                .trim()
+                .toLowerCase();
+
+
+        const contextAppId =
+            String(
+                context.appId ||
+                    ""
+            )
+                .trim()
+                .toLowerCase();
+
+
+        if(
+            expectedId &&
+            contextAppId &&
+            expectedId !==
+                contextAppId
+        ){
+
+            console.warn(
+                "Renderer rejected application context: app id mismatch.",
+                {
+                    expected:
+                        expectedId,
+
+                    received:
+                        contextAppId
+                }
+            );
+
+
+            return null;
+
+        }
+
+
+        /*
+         * Defensive boundary.
+         *
+         * Engine should already contain only safe metadata,
+         * but Renderer never forwards accessToken even if a
+         * future caller accidentally places one in context.
+         */
+
+        const {
+            accessToken,
+            ...safeContext
+        } = context;
+
+
+        return {
+
+            ...safeContext,
+
+            appId:
+                contextAppId ||
+                expectedId ||
+                null,
+
+            capabilities:
+                Array.isArray(
+                    safeContext.capabilities
+                )
+                    ? [
+                        ...safeContext.capabilities
+                    ]
+                    : [],
+
+            permissions:
+                Array.isArray(
+                    safeContext.permissions
+                )
+                    ? [
+                        ...safeContext.permissions
+                    ]
+                    : [],
+
+            contextRef:
+                (
+                    safeContext.contextRef &&
+                    typeof safeContext.contextRef ===
+                        "object" &&
+                    !Array.isArray(
+                        safeContext.contextRef
+                    )
+                )
+                    ? {
+                        ...safeContext.contextRef
+                    }
+                    : null
+
+        };
+
+    },
+
+
+    /* =====================================================
        SAFE ESCAPE
     ===================================================== */
 
@@ -561,7 +697,8 @@ const Renderer = {
 
     renderSystemApplication(
         page,
-        components
+        components,
+        engine = null
     ){
 
         const normalized =
@@ -599,10 +736,54 @@ const Renderer = {
         }
 
 
+        const applicationContext =
+            this.getApplicationContext(
+                engine,
+                normalized
+            );
+
+
+        /*
+         * Optional context receiver.
+         *
+         * Apps may adopt this API without requiring the
+         * Renderer to know their internal state model.
+         */
+
+        if(
+            typeof application.setApplicationContext ===
+                "function"
+        ){
+
+            try{
+
+                application.setApplicationContext(
+                    applicationContext
+                );
+
+            } catch(error){
+
+                console.warn(
+                    `Application context could not be attached: ${normalized}`,
+                    error
+                );
+
+            }
+
+        }
+
+
         try{
 
+            /*
+             * Existing render() implementations remain valid:
+             * JavaScript safely ignores unused arguments.
+             */
+
             const result =
-                application.render();
+                application.render(
+                    applicationContext
+                );
 
 
             if(
@@ -896,6 +1077,13 @@ const Renderer = {
                 : null;
 
 
+        const applicationContext =
+            this.getApplicationContext(
+                engine,
+                currentEntityPage
+            );
+
+
         this.syncDocumentState(
             engine,
             view,
@@ -1062,6 +1250,14 @@ const Renderer = {
             page:
                 currentEntityPage,
 
+            applicationId:
+                applicationContext?.appId ||
+                null,
+
+            applicationGrantId:
+                applicationContext?.grantId ||
+                null,
+
             worldId:
                 engine.currentWorld?.id ||
                 null,
@@ -1090,7 +1286,9 @@ const Renderer = {
             view,
 
             page:
-                currentEntityPage
+                currentEntityPage,
+
+            applicationContext
 
         });
 
@@ -1099,7 +1297,8 @@ const Renderer = {
 
     },
 
-   /* =====================================================
+
+    /* =====================================================
        SCREEN ROUTER
     ===================================================== */
 
@@ -1124,7 +1323,8 @@ const Renderer = {
             const systemApplication =
                 this.renderSystemApplication(
                     currentEntityPage,
-                    components
+                    components,
+                    engine
                 );
 
 
@@ -1146,10 +1346,6 @@ const Renderer = {
 
         switch(view){
 
-            /* -------------------------------------------------
-               IDENTITY
-            ------------------------------------------------- */
-
             case "identity":
 
                 return this.callComponent(
@@ -1162,10 +1358,6 @@ const Renderer = {
                     "Kimlik görünümü açılamadı."
                 );
 
-
-            /* -------------------------------------------------
-               PROFILE
-            ------------------------------------------------- */
 
             case "profile":
 
@@ -1180,10 +1372,6 @@ const Renderer = {
                 );
 
 
-            /* -------------------------------------------------
-               CREATE
-            ------------------------------------------------- */
-
             case "create":
 
                 return this.callComponent(
@@ -1196,10 +1384,6 @@ const Renderer = {
                 );
 
 
-            /* -------------------------------------------------
-               WORLDS
-            ------------------------------------------------- */
-
             case "worlds":
 
                 return this.callComponent(
@@ -1211,10 +1395,6 @@ const Renderer = {
                     "Dünyalar görünümü açılamadı."
                 );
 
-
-            /* -------------------------------------------------
-               WORLD
-            ------------------------------------------------- */
 
             case "world": {
 
@@ -1275,10 +1455,6 @@ const Renderer = {
             }
 
 
-            /* -------------------------------------------------
-               ENTITY
-            ------------------------------------------------- */
-
             case "entity": {
 
                 const openedEntity =
@@ -1326,10 +1502,6 @@ const Renderer = {
             }
 
 
-            /* -------------------------------------------------
-               HOME
-            ------------------------------------------------- */
-
             case "home":
 
                 return this.callComponent(
@@ -1341,10 +1513,6 @@ const Renderer = {
                     "VAERO ana ekranı açılamadı."
                 );
 
-
-            /* -------------------------------------------------
-               FALLBACK
-            ------------------------------------------------- */
 
             default:
 
@@ -1376,7 +1544,8 @@ const Renderer = {
         root,
         engine,
         view,
-        page
+        page,
+        applicationContext = null
     }){
 
         /* -------------------------------------------------
@@ -1417,7 +1586,8 @@ const Renderer = {
             ){
 
                 applications.afterRender(
-                    root
+                    root,
+                    applicationContext
                 );
 
             }
@@ -1470,7 +1640,8 @@ const Renderer = {
             ){
 
                 vaeroApp.afterRender(
-                    root
+                    root,
+                    applicationContext
                 );
 
             }
@@ -1581,6 +1752,14 @@ const Renderer = {
 
                 page:
                     page ||
+                    null,
+
+                applicationId:
+                    applicationContext?.appId ||
+                    null,
+
+                applicationGrantId:
+                    applicationContext?.grantId ||
                     null,
 
                 worldId:
@@ -1729,6 +1908,12 @@ const Renderer = {
                 Boolean(
                     engine
                 ),
+
+            currentApplicationId:
+                engine
+                    ?.currentApplicationContext
+                    ?.appId ||
+                null,
 
             componentsAvailable:
                 Boolean(
