@@ -1101,8 +1101,6 @@ const manifestVersion =
             ]);
 
     }
-    else {
-
         else {
     /*
      * External applications never receive authority
