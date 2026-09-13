@@ -801,28 +801,81 @@ const ActionsBrain = {
 
     getReplyText(response){
 
-        const reply =
-            response?.reply ||
-            response?.message ||
-            response?.text ||
-            response
-                ?.actionResult
-                ?.message ||
-            (
-                response?.executed ===
-                    true
-                    ? "İşlem tamamlandı."
-                    : ""
-            );
+    const directReply =
+        response?.reply ||
+        response?.message ||
+        response?.text ||
+        response
+            ?.actionResult
+            ?.message ||
+        "";
 
+    if(directReply){
 
         return this.normalizeText(
-            reply,
+            directReply,
             30000
         );
 
-    },
+    }
 
+
+    const actionType =
+        this.getActionType(
+            response
+        );
+
+    const intent =
+        this.getIntent(
+            response
+        );
+
+
+    if(
+        actionType ===
+            "open-applications" ||
+        intent ===
+            "open-applications"
+    ){
+
+        return "Uygulamaları açtım.";
+
+    }
+
+
+    if(
+        response?.executed ===
+            true
+    ){
+
+        return "İşlem tamamlandı.";
+
+    }
+
+
+    if(
+        response?.blocked ===
+            true
+    ){
+
+        return "Bu işlemi şu anda gerçekleştiremiyorum.";
+
+    }
+
+
+    if(
+        response?.requiresConfirmation ===
+            true
+    ){
+
+        return "Bu işlem için onayına ihtiyacım var.";
+
+    }
+
+
+    return "Komutu işledim.";
+
+},
 
     getIntent(response){
 
