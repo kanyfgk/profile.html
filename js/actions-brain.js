@@ -1465,174 +1465,251 @@ const ActionsBrain = {
 
 
     pushBrainResponse(
-        actions,
-        session,
-        response,
-        replyText,
-        context,
-        request,
-        decisionTrace
+    actions,
+    session,
+    response,
+    replyText,
+    context,
+    request,
+    decisionTrace
+){
+
+    const brain =
+        typeof actions.getService ===
+            "function"
+            ? actions.getService(
+                "brain"
+            )
+            : null;
+
+
+    let activeSession =
+        session;
+
+
+    if(
+        brain &&
+        Array.isArray(
+            brain.sessions
+        )
     ){
 
-        if(
-            response?.confirmation &&
-            response.confirmation.id
-        ){
+        const liveSession =
+            brain.sessions.find(
+                item =>
+                    item?.id ===
+                    session?.id
+            );
 
-            session.pendingConfirmation = {
 
-                ...response.confirmation,
+        if(liveSession){
 
-                prompt:
-                    request.text,
-
-                context:
-                    context &&
-                    typeof context ===
-                        "object"
-                        ? {
-                            ...context
-                        }
-                        : {},
-
-                actionType:
-                    this.getActionType(
-                        response
-                    ),
-
-                receivedAt:
-                    Date.now()
-
-            };
+            activeSession =
+                liveSession;
 
         }
 
         else if(
-            response?.confirmationApproved ===
-                true ||
-            response?.executed ===
-                true ||
-            response?.blocked ===
-                true
+            typeof actions
+                .getTodayBrainConversationSession ===
+                "function"
         ){
 
-            session.pendingConfirmation =
-                null;
+            activeSession =
+                actions
+                    .getTodayBrainConversationSession(
+                        brain
+                    ) ||
+                session;
 
         }
 
+    }
 
-        if(replyText){
 
-            session.actions.push({
+    if(
+        !activeSession
+    ){
 
-                id:
-                    actions.createId(
-                        "brain-action"
-                    ),
+        return false;
 
-                requestId:
-                    request.id,
+    }
 
-                role:
-                    "brain",
 
-                type:
-                    (
-                        response?.requiresConfirmation &&
-                        !response?.confirmationApproved
-                    )
-                        ? "confirmation-required"
-                        : "reply",
+    if(
+        !Array.isArray(
+            activeSession.actions
+        )
+    ){
 
-                content:
-                    replyText,
+        activeSession.actions =
+            [];
 
-                createdAt:
-                    Date.now(),
+    }
 
-                confirmationId:
+
+    if(
+        response?.confirmation &&
+        response.confirmation.id
+    ){
+
+        activeSession.pendingConfirmation = {
+
+            ...response.confirmation,
+
+            prompt:
+                request.text,
+
+            context:
+                context &&
+                typeof context ===
+                    "object"
+                    ? {
+                        ...context
+                    }
+                    : {},
+
+            actionType:
+                this.getActionType(
                     response
-                        ?.confirmation
-                        ?.id ||
+                ),
+
+            receivedAt:
+                Date.now()
+
+        };
+
+    }
+
+    else if(
+        response?.confirmationApproved ===
+            true ||
+        response?.executed ===
+            true ||
+        response?.blocked ===
+            true
+    ){
+
+        activeSession.pendingConfirmation =
+            null;
+
+    }
+
+
+    if(replyText){
+
+        activeSession.actions.push({
+
+            id:
+                actions.createId(
+                    "brain-action"
+                ),
+
+            requestId:
+                request.id,
+
+            role:
+                "brain",
+
+            type:
+                (
+                    response?.requiresConfirmation &&
+                    !response?.confirmationApproved
+                )
+                    ? "confirmation-required"
+                    : "reply",
+
+            content:
+                replyText,
+
+            createdAt:
+                Date.now(),
+
+            confirmationId:
+                response
+                    ?.confirmation
+                    ?.id ||
+                null,
+
+            requiresConfirmation:
+                Boolean(
+                    response
+                        ?.requiresConfirmation
+                ),
+
+            blocked:
+                Boolean(
+                    response?.blocked
+                ),
+
+            executed:
+                Boolean(
+                    response?.executed
+                ),
+
+            actionType:
+                this.getActionType(
+                    response
+                ),
+
+            intent:
+                this.getIntent(
+                    response
+                ),
+
+            confidence:
+                this.getConfidence(
+                    response
+                ),
+
+            decisionTrace:
+                decisionTrace ||
+                null,
+
+            context:{
+
+                app:
+                    context?.app ||
                     null,
 
-                requiresConfirmation:
-                    Boolean(
-                        response
-                            ?.requiresConfirmation
-                    ),
-
-                blocked:
-                    Boolean(
-                        response?.blocked
-                    ),
-
-                executed:
-                    Boolean(
-                        response?.executed
-                    ),
-
-                actionType:
-                    this.getActionType(
-                        response
-                    ),
-
-                intent:
-                    this.getIntent(
-                        response
-                    ),
-
-                confidence:
-                    this.getConfidence(
-                        response
-                    ),
-
-                decisionTrace:
-                    decisionTrace ||
+                screen:
+                    context?.screen ||
                     null,
 
-                context:{
+                page:
+                    context?.page ||
+                    null
 
-                    app:
-                        context?.app ||
-                        null,
+            },
 
-                    screen:
-                        context?.screen ||
-                        null,
+            appLinks:
+                typeof actions.extractBrainAppMentions ===
+                    "function"
+                    ? actions.extractBrainAppMentions(
+                        replyText
+                    )
+                    : []
 
-                    page:
-                        context?.page ||
-                        null
+        });
 
-                },
-
-                appLinks:
-                    typeof actions.extractBrainAppMentions ===
-                        "function"
-                        ? actions.extractBrainAppMentions(
-                            replyText
-                        )
-                        : []
-
-            });
-
-        }
+    }
 
 
-        session.updatedAt =
-            Date.now();
+    activeSession.updatedAt =
+        Date.now();
 
 
-        actions.updateBrainConversationSummary(
-            session
-        );
+    actions.updateBrainConversationSummary(
+        activeSession
+    );
 
 
-        actions.saveBrainState();
+    actions.saveBrainState();
 
-    },
+
+    return true;
+
+},
 
 
     /* =====================================================
