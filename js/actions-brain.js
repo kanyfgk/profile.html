@@ -2104,6 +2104,58 @@ if(
             this.evaluateOutcome(
                 response
             );
+       if(
+    intelligence &&
+    intelligenceDecision &&
+    typeof intelligence.recordOutcome ===
+        "function"
+){
+
+    try{
+
+        await intelligence.recordOutcome(
+            intelligenceDecision.id,
+            {
+
+                success:
+                    outcome.successful,
+
+                status:
+                    outcome.status,
+
+                executed:
+                    outcome.executed,
+
+                blocked:
+                    outcome.blocked,
+
+                error:
+                    outcome.error,
+
+                requiresConfirmation:
+                    outcome.requiresConfirmation,
+
+                confirmed:
+                    outcome.confirmed,
+
+                response:
+                    this.clone(
+                        response
+                    )
+
+            }
+        );
+
+    } catch(error){
+
+        console.warn(
+            "Brain Intelligence outcome feedback failed:",
+            error
+        );
+
+    }
+
+}
 
 
         this.recordLearning(
