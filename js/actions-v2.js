@@ -7773,6 +7773,21 @@ this.renderBrainHistory();
     ===================================================== */
 
     async sendBrainMessage(){
+       const actionsBrain =
+    window.ActionsBrain ||
+    null;
+
+if(
+    actionsBrain &&
+    typeof actionsBrain.sendMessage ===
+        "function"
+){
+
+    return actionsBrain.sendMessage(
+        this
+    );
+
+}
 
         if(
             this.brainSending

@@ -1,24 +1,22 @@
 /* =========================================================
-   VAERO BRAIN MEMORY V4
+   VAERO BRAIN MEMORY
    Adaptive Learning / Command Memory / Correction Authority
    Preference Memory / Pattern Memory / Retrieval
-
-   VAERO Engine V4 Intelligence Layer
 ========================================================= */
 
 const BrainMemory = {
 
     version:
-        "4.0.0",
+        "1.0.0",
 
     storageKey:
-        "vaero:brain-memory:v4",
+        "vaero:brain-memory:v1",
 
     legacyKeys:[
-        "vaero:brain-memory:v3",
-        "vaero:brain-memory:v2",
-        "vaero:brain-memory:v1"
-    ],
+    "vaero:brain-memory:v4",
+    "vaero:brain-memory:v3",
+    "vaero:brain-memory:v2"
+],
 
     maxRecords:
         2500,
