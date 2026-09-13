@@ -223,6 +223,23 @@ const ActionsBrain = {
 
     },
 
+   getIntelligence(){
+
+    return (
+        this.getService(
+            "brainIntelligence"
+        ) ||
+        (
+            typeof window !==
+                "undefined"
+                ? window.BrainIntelligence ||
+                  null
+                : null
+        )
+    );
+
+},
+
 
     /* =====================================================
        SAFE HELPERS
@@ -1865,6 +1882,8 @@ const ActionsBrain = {
             this.getMemory(
                 actions
             );
+       const intelligence =
+    this.getIntelligence();
 
 
         let context =
@@ -1894,6 +1913,82 @@ const ActionsBrain = {
                 text,
                 context
             );
+       let intelligenceDecision =
+    null;
+
+
+if(
+    intelligence &&
+    typeof intelligence.decide ===
+        "function"
+){
+
+    try{
+
+        intelligenceDecision =
+            await intelligence.decide({
+
+                text,
+
+                context,
+
+                metadata:{
+
+                    requestId:
+                        request.id,
+
+                    source:
+                        "actions-brain"
+
+                }
+
+            });
+
+    } catch(error){
+
+        console.warn(
+            "Brain Intelligence decision failed:",
+            error
+        );
+
+    }
+
+}
+
+       if(
+    intelligenceDecision
+){
+
+    const intelligenceTrace =
+        typeof intelligence
+            ?.toDecisionTrace ===
+            "function"
+            ? intelligence.toDecisionTrace(
+                intelligenceDecision
+            )
+            : {
+                decisionId:
+                    intelligenceDecision.id,
+
+                mode:
+                    intelligenceDecision.mode,
+
+                reason:
+                    intelligenceDecision.reason,
+
+                confidence:
+                    intelligenceDecision.confidence
+            };
+
+
+    context = {
+        ...context,
+
+        intelligence:
+            intelligenceTrace
+    };
+
+}
 
 
         const session =
