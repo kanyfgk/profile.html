@@ -2169,40 +2169,145 @@ if(
 
         try{
 
-            rawResponse =
-                await this.executeGateway(
-                    gateway,
-                    brain,
-                    text,
-                    context,
-                    request
-                );
+    const mode =
+        intelligenceDecision?.mode ||
+        "act";
 
-        } catch(error){
+    if(mode === "blocked"){
 
-            console.error(
-                "ActionsBrain request failed:",
-                error
+        rawResponse = {
+
+            reply:
+                intelligenceDecision?.message ||
+                intelligenceDecision?.reason ||
+                "Bu işlemi şu anda gerçekleştiremiyorum.",
+
+            blocked:
+                true,
+
+            executed:
+                false,
+
+            intent:
+                intelligenceDecision?.intent ||
+                null,
+
+            confidence:
+                intelligenceDecision?.confidence ||
+                null
+
+        };
+
+    }
+
+    else if(mode === "ask"){
+
+        rawResponse = {
+
+            reply:
+                intelligenceDecision?.question ||
+                intelligenceDecision?.message ||
+                intelligenceDecision?.reason ||
+                "Devam etmeden önce biraz daha bilgiye ihtiyacım var.",
+
+            executed:
+                false,
+
+            requiresInput:
+                true,
+
+            intent:
+                intelligenceDecision?.intent ||
+                null,
+
+            confidence:
+                intelligenceDecision?.confidence ||
+                null
+
+        };
+
+    }
+
+    else if(mode === "confirm"){
+
+        rawResponse = {
+
+            reply:
+                intelligenceDecision?.message ||
+                intelligenceDecision?.reason ||
+                "Bu işlemi gerçekleştirmeden önce onayına ihtiyacım var.",
+
+            requiresConfirmation:
+                true,
+
+            executed:
+                false,
+
+            confirmation:{
+
+                id:
+                    typeof actions.createId ===
+                        "function"
+                        ? actions.createId(
+                            "brain-confirmation"
+                        )
+                        : `brain-confirmation-${Date.now()}`,
+
+                action:
+                    intelligenceDecision?.action ||
+                    null
+
+            },
+
+            intent:
+                intelligenceDecision?.intent ||
+                null,
+
+            confidence:
+                intelligenceDecision?.confidence ||
+                null
+
+        };
+
+    }
+
+    else{
+
+        rawResponse =
+            await this.executeGateway(
+                gateway,
+                brain,
+                text,
+                context,
+                request
             );
 
+    }
 
-            rawResponse = {
+} catch(error){
 
-                reply:
-                    "Brain isteği şu anda tamamlanamadı.",
+    console.error(
+        "ActionsBrain request failed:",
+        error
+    );
 
-                error:
-                    true,
+    rawResponse = {
 
-                intelligenceError:
-                    error?.message ||
-                    String(
-                        error
-                    )
+        reply:
+            "Brain isteği şu anda tamamlanamadı.",
 
-            };
+        error:
+            true,
 
-        }
+        intelligenceError:
+            error?.message ||
+            String(
+                error
+            )
+
+    };
+
+}
 
 
         const response =
