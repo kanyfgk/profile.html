@@ -6588,6 +6588,30 @@ saveProfile(){
 
     },
 
+   getBrainMemory(){
+
+    try{
+
+        if(
+            typeof VAERO !== "undefined" &&
+            typeof VAERO.get === "function"
+        ){
+
+            return (
+                VAERO.get("brainMemory") ||
+                window.BrainMemory ||
+                null
+            );
+        }
+
+    } catch(error){}
+
+    return (
+        window.BrainMemory ||
+        null
+    );
+},
+
 
     getActiveBrainSession(){
 
@@ -7829,6 +7853,8 @@ saveProfile(){
 
         const gateway =
             this.getBrainGateway();
+       const brainMemory =
+    this.getBrainMemory();
 
 
         const contextService =
