@@ -1867,152 +1867,181 @@ const BrainIntelligence = {
     }){
 
         if(
-            policy?.allowed ===
-                false
-        ){
+    policy?.allowed ===
+        false
+){
 
-            return {
+    const softPolicyReasons = [
+        "policy-blocked",
+        "unknown-action",
+        "action-unclassified",
+        "no-policy-match"
+    ];
 
-                mode:
-                    "blocked",
+    const policyReason =
+        policy?.reason ||
+        "policy-blocked";
 
-                reason:
-                    policy.reason ||
-                    "policy-blocked"
+    const isSoftPolicyBlock =
+        softPolicyReasons.includes(
+            policyReason
+        );
 
-            };
+    const isLowRisk =
+        (
+            risk?.score ??
+            0
+        ) <
+        this.highRiskThreshold;
 
-        }
-
-
-        if(
-            trust?.requiresStepUp ===
-                true ||
-            policy?.requiresStepUp ===
-                true
-        ){
-
-            return {
-
-                mode:
-                    "confirm",
-
-                reason:
-                    "step-up-required"
-
-            };
-
-        }
-
-
-        if(
-            policy
-                ?.requiresConfirmation ===
-                true
-        ){
-
-            return {
-
-                mode:
-                    "confirm",
-
-                reason:
-                    "policy-confirmation"
-
-            };
-
-        }
-
-
-        if(
-            risk?.score >=
-                this
-                    .highRiskThreshold
-        ){
-
-            return {
-
-                mode:
-                    "confirm",
-
-                reason:
-                    "high-risk-action"
-
-            };
-
-        }
-
-
-        if(
-            ambiguity >=
-                0.60
-        ){
-
-            return {
-
-                mode:
-                    "ask",
-
-                reason:
-                    "ambiguous-request"
-
-            };
-
-        }
-
-
-        if(
-            confidence >=
-                this
-                    .minimumActConfidence &&
-            risk?.score <
-                this
-                    .highRiskThreshold
-        ){
-
-            return {
-
-                mode:
-                    "act",
-
-                reason:
-                    "confidence-sufficient"
-
-            };
-
-        }
-
-
-        if(
-            confidence >=
-                this
-                    .minimumAskConfidence
-        ){
-
-            return {
-
-                mode:
-                    "ask",
-
-                reason:
-                    "clarification-recommended"
-
-            };
-
-        }
-
+    if(
+        !isSoftPolicyBlock ||
+        !isLowRisk
+    ){
 
         return {
 
             mode:
-                "ask",
+                "blocked",
 
             reason:
-                "confidence-low"
+                policyReason
 
         };
 
-    },
+    }
+
+}
+
+
+if(
+    trust?.requiresStepUp ===
+        true ||
+    policy?.requiresStepUp ===
+        true
+){
+
+    return {
+
+        mode:
+            "confirm",
+
+        reason:
+            "step-up-required"
+
+    };
+
+}
+
+
+if(
+    policy
+        ?.requiresConfirmation ===
+            true
+){
+
+    return {
+
+        mode:
+            "confirm",
+
+        reason:
+            "policy-confirmation"
+
+    };
+
+}
+
+
+if(
+    risk?.score >=
+        this
+            .highRiskThreshold
+){
+
+    return {
+
+        mode:
+            "confirm",
+
+        reason:
+            "high-risk-action"
+
+    };
+
+}
+
+
+if(
+    ambiguity >=
+        0.60
+){
+
+    return {
+
+        mode:
+            "ask",
+
+        reason:
+            "ambiguous-request"
+
+    };
+
+}
+
+
+if(
+    confidence >=
+        this
+            .minimumActConfidence &&
+    risk?.score <
+        this
+            .highRiskThreshold
+){
+
+    return {
+
+        mode:
+            "act",
+
+        reason:
+            "confidence-sufficient"
+
+    };
+
+}
+
+
+if(
+    confidence >=
+        this
+            .minimumAskConfidence
+){
+
+    return {
+
+        mode:
+            "ask",
+
+        reason:
+            "clarification-recommended"
+
+    };
+
+}
+
+
+return {
+
+    mode:
+        "ask",
+
+    reason:
+        "confidence-low"
+
+};
+
+},
 
 
     buildClarificationQuestion(
