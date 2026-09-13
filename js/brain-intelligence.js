@@ -1679,110 +1679,146 @@ const BrainIntelligence = {
     },
 
 
-    /* =====================================================
-       ACTION POLICY BRIDGE
-    ===================================================== */
-
     async inspectActionPolicy(
-        request
-    ){
+    request
+){
 
-        const policy =
-            this.getActionPolicy();
+    const policy =
+        this.getActionPolicy();
 
 
-        if(!policy){
+    if(!policy){
 
-            return {
+        return {
 
-                available:
-                    false,
+            available:
+                false,
 
-                allowed:
-                    true,
+            allowed:
+                true,
 
-                requiresConfirmation:
-                    false,
+            requiresConfirmation:
+                false,
 
-                reason:
-                    null
+            reason:
+                null
 
-            };
+        };
+
+    }
+
+
+    try{
+
+        /*
+         * Brain Intelligence works with an intent request.
+         * BrainActionPolicy has a dedicated intent evaluator.
+         */
+
+        if(
+            typeof policy
+                .evaluateIntent ===
+                "function"
+        ){
+
+            const response =
+                await Promise.resolve(
+                    policy.evaluateIntent(
+                        request?.intent ||
+                        null,
+                        request?.context ||
+                        {}
+                    )
+                );
+
+
+            if(
+                response &&
+                typeof response ===
+                    "object"
+            ){
+
+                return {
+
+                    available:
+                        true,
+
+                    allowed:
+                        response.allowed !==
+                            false &&
+                        response.blocked !==
+                            true,
+
+                    requiresConfirmation:
+                        response
+                            .requiresConfirmation ===
+                                true,
+
+                    requiresStepUp:
+                        response
+                            .requiresStepUp ===
+                                true,
+
+                    reason:
+                        response.reason ||
+                        null,
+
+                    actionType:
+                        response.actionType ||
+                        null,
+
+                    raw:
+                        response
+
+                };
+
+            }
 
         }
 
 
-        const candidates = [
+        /*
+         * Raw action fallback.
+         */
 
-            "evaluate",
-
-            "check",
-
-            "resolve",
-
-            "authorize",
-
-            "inspect"
-
-        ];
-
-
-        for(
-            const method of
-            candidates
+        if(
+            typeof policy.evaluate ===
+                "function"
         ){
 
-            if(
-                typeof policy[
-                    method
-                ] !==
-                    "function"
-            ){
+            const actionType =
+                request
+                    ?.intent
+                    ?.actionType ||
+                request
+                    ?.intent
+                    ?.action ||
+                request
+                    ?.actionType ||
+                request
+                    ?.action ||
+                null;
 
-                continue;
 
-            }
-
-
-            try{
+            if(actionType){
 
                 const response =
                     await Promise.resolve(
-                        policy[
-                            method
-                        ](
-                            request
-                        )
+                        policy.evaluate({
+
+                            type:
+                                actionType,
+
+                            intent:
+                                request?.intent ||
+                                null,
+
+                            context:
+                                request?.context ||
+                                {}
+
+                        })
                     );
-
-
-                if(
-                    typeof response ===
-                        "boolean"
-                ){
-
-                    return {
-
-                        available:
-                            true,
-
-                        allowed:
-                            response,
-
-                        requiresConfirmation:
-                            false,
-
-                        reason:
-                            response
-                                ? null
-                                : "policy-blocked",
-
-                        raw:
-                            response
-
-                    };
-
-                }
 
 
                 if(
@@ -1805,9 +1841,6 @@ const BrainIntelligence = {
                         requiresConfirmation:
                             response
                                 .requiresConfirmation ===
-                                    true ||
-                            response
-                                .confirm ===
                                     true,
 
                         requiresStepUp:
@@ -1819,6 +1852,10 @@ const BrainIntelligence = {
                             response.reason ||
                             null,
 
+                        actionType:
+                            response.actionType ||
+                            actionType,
+
                         raw:
                             response
 
@@ -1826,33 +1863,37 @@ const BrainIntelligence = {
 
                 }
 
-            } catch(error){
-
-                /* try next */
-
             }
 
         }
 
+    } catch(error){
 
-        return {
+        console.error(
+            "Brain policy inspection failed:",
+            error
+        );
 
-            available:
-                true,
+    }
 
-            allowed:
-                true,
 
-            requiresConfirmation:
-                false,
+    return {
 
-            reason:
-                null
+        available:
+            true,
 
-        };
+        allowed:
+            true,
 
-    },
+        requiresConfirmation:
+            false,
 
+        reason:
+            null
+
+    };
+
+},
 
     /* =====================================================
        DECISION ENGINE
