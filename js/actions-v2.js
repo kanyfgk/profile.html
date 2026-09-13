@@ -7202,8 +7202,21 @@ saveProfile(){
 
         this.saveBrainState();
 
+if(
+    !document.getElementById(
+        "brainHistory"
+    )
+){
+    document
+        .getElementById(
+            "brainPanel"
+        )
+        ?.remove();
 
-        this.renderBrainHistory();
+    this.openBrain();
+}
+
+this.renderBrainHistory();
 
 
         try{
