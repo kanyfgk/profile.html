@@ -1539,101 +1539,69 @@ const BrainIntelligence = {
 
 
     /*
-     * Memory is optional evidence.
-     * Empty memory must not reduce an otherwise
-     * clear and explicit command.
-     */
+        Memory is optional evidence.
+
+        Missing memory must not reduce confidence.
+        When memory exists, it participates with
+        its normal 18% influence.
+    */
 
     const hasMemoryEvidence =
+        memoryConfidence > 0 &&
         (
-            Array.isArray(
+            !Array.isArray(
                 memory?.items
-            ) &&
-            memory.items.length >
-                0
-        ) ||
-        this.number(
-            memory?.confidence,
-            0
-        ) >
-            0 ||
-        this.number(
-            memory?.influence,
-            0
-        ) >
-            0;
-
-
-    let weightedScore =
-        (
-            intentConfidence *
-            0.55
-        ) +
-        (
-            trustScore *
-            0.12
-        ) +
-        (
-            contextScore *
-            0.15
+            ) ||
+            memory.items.length > 0
         );
 
 
-    let totalWeight =
+    const baseWeight =
         0.55 +
         0.12 +
         0.15;
+
+
+    let score =
+        (
+            (
+                intentConfidence *
+                0.55
+            ) +
+
+            (
+                trustScore *
+                0.12
+            ) +
+
+            (
+                contextScore *
+                0.15
+            )
+        ) /
+        baseWeight;
 
 
     if(
         hasMemoryEvidence
     ){
 
-        weightedScore +=
-            memoryConfidence *
-            0.18;
+        score =
+            (
+                score *
+                0.82
+            ) +
 
-        totalWeight +=
-            0.18;
+            (
+                memoryConfidence *
+                0.18
+            );
 
     }
-
-
-    let score =
-        totalWeight >
-            0
-            ? weightedScore /
-                totalWeight
-            : intentConfidence;
 
 
     score -=
         ambiguityPenalty;
-
-
-    /*
-     * Explicit high-confidence commands should
-     * retain their intent certainty when no
-     * contradictory evidence exists.
-     */
-
-    if(
-        intent?.explicit ===
-            true &&
-        intentConfidence >=
-            0.90 &&
-        ambiguity <
-            0.20
-    ){
-
-        score =
-            Math.max(
-                score,
-                intentConfidence *
-                0.90
-            );
-
-    }
 
 
     return this.clamp(
@@ -1641,7 +1609,6 @@ const BrainIntelligence = {
     );
 
 },
-
 
     detectAmbiguity(
         text,
