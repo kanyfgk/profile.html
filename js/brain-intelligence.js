@@ -1494,60 +1494,79 @@ const BrainIntelligence = {
     ===================================================== */
 
     calculateConfidence({
-        intent,
-        memory,
-        context,
-        trust,
-        ambiguity = 0
-    }){
+    intent,
+    memory,
+    context,
+    trust,
+    ambiguity = 0
+}){
 
-        const intentConfidence =
-            this.clamp(
-                intent?.confidence ??
-                0.35
-            );
-
-
-        const memoryConfidence =
-            this.clamp(
-                memory?.confidence ??
-                0
-            );
+    const intentConfidence =
+        this.clamp(
+            intent?.confidence ??
+            0.35
+        );
 
 
-        const trustScore =
-            this.clamp(
-                trust?.score ??
-                0.50
-            );
+    const memoryConfidence =
+        this.clamp(
+            memory?.confidence ??
+            0
+        );
 
 
-        const contextScore =
-            context &&
-            Object.keys(
-                context
-            ).length
-                ? 0.70
-                : 0.35;
+    const trustScore =
+        this.clamp(
+            trust?.score ??
+            0.50
+        );
 
 
-        const ambiguityPenalty =
-            this.clamp(
-                ambiguity
-            ) *
-            0.30;
+    const contextScore =
+        context &&
+        Object.keys(
+            context
+        ).length
+            ? 0.70
+            : 0.35;
 
 
-        let score =
+    const ambiguityPenalty =
+        this.clamp(
+            ambiguity
+        ) *
+        0.30;
 
+
+    /*
+        Memory is optional evidence.
+
+        Missing memory must not reduce confidence.
+        When memory exists, it participates with
+        its normal 18% influence.
+    */
+
+    const hasMemoryEvidence =
+        memoryConfidence > 0 &&
+        (
+            !Array.isArray(
+                memory?.items
+            ) ||
+            memory.items.length > 0
+        );
+
+
+    const baseWeight =
+        0.55 +
+        0.12 +
+        0.15;
+
+
+    let score =
+        (
             (
                 intentConfidence *
                 0.55
-            ) +
-
-            (
-                memoryConfidence *
-                0.18
             ) +
 
             (
@@ -1558,18 +1577,38 @@ const BrainIntelligence = {
             (
                 contextScore *
                 0.15
+            )
+        ) /
+        baseWeight;
+
+
+    if(
+        hasMemoryEvidence
+    ){
+
+        score =
+            (
+                score *
+                0.82
+            ) +
+
+            (
+                memoryConfidence *
+                0.18
             );
 
-
-        score -=
-            ambiguityPenalty;
+    }
 
 
-        return this.clamp(
-            score
-        );
+    score -=
+        ambiguityPenalty;
 
-    },
+
+    return this.clamp(
+        score
+    );
+
+},
 
 
     detectAmbiguity(
