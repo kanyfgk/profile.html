@@ -1494,82 +1494,153 @@ const BrainIntelligence = {
     ===================================================== */
 
     calculateConfidence({
-        intent,
-        memory,
-        context,
-        trust,
-        ambiguity = 0
-    }){
+    intent,
+    memory,
+    context,
+    trust,
+    ambiguity = 0
+}){
 
-        const intentConfidence =
-            this.clamp(
-                intent?.confidence ??
-                0.35
-            );
-
-
-        const memoryConfidence =
-            this.clamp(
-                memory?.confidence ??
-                0
-            );
-
-
-        const trustScore =
-            this.clamp(
-                trust?.score ??
-                0.50
-            );
-
-
-        const contextScore =
-            context &&
-            Object.keys(
-                context
-            ).length
-                ? 0.70
-                : 0.35;
-
-
-        const ambiguityPenalty =
-            this.clamp(
-                ambiguity
-            ) *
-            0.30;
-
-
-        let score =
-
-            (
-                intentConfidence *
-                0.55
-            ) +
-
-            (
-                memoryConfidence *
-                0.18
-            ) +
-
-            (
-                trustScore *
-                0.12
-            ) +
-
-            (
-                contextScore *
-                0.15
-            );
-
-
-        score -=
-            ambiguityPenalty;
-
-
-        return this.clamp(
-            score
+    const intentConfidence =
+        this.clamp(
+            intent?.confidence ??
+            0.35
         );
 
-    },
+
+    const memoryConfidence =
+        this.clamp(
+            memory?.confidence ??
+            0
+        );
+
+
+    const trustScore =
+        this.clamp(
+            trust?.score ??
+            0.50
+        );
+
+
+    const contextScore =
+        context &&
+        Object.keys(
+            context
+        ).length
+            ? 0.70
+            : 0.35;
+
+
+    const ambiguityPenalty =
+        this.clamp(
+            ambiguity
+        ) *
+        0.30;
+
+
+    /*
+     * Memory is optional evidence.
+     * Empty memory must not reduce an otherwise
+     * clear and explicit command.
+     */
+
+    const hasMemoryEvidence =
+        (
+            Array.isArray(
+                memory?.items
+            ) &&
+            memory.items.length >
+                0
+        ) ||
+        this.number(
+            memory?.confidence,
+            0
+        ) >
+            0 ||
+        this.number(
+            memory?.influence,
+            0
+        ) >
+            0;
+
+
+    let weightedScore =
+        (
+            intentConfidence *
+            0.55
+        ) +
+        (
+            trustScore *
+            0.12
+        ) +
+        (
+            contextScore *
+            0.15
+        );
+
+
+    let totalWeight =
+        0.55 +
+        0.12 +
+        0.15;
+
+
+    if(
+        hasMemoryEvidence
+    ){
+
+        weightedScore +=
+            memoryConfidence *
+            0.18;
+
+        totalWeight +=
+            0.18;
+
+    }
+
+
+    let score =
+        totalWeight >
+            0
+            ? weightedScore /
+                totalWeight
+            : intentConfidence;
+
+
+    score -=
+        ambiguityPenalty;
+
+
+    /*
+     * Explicit high-confidence commands should
+     * retain their intent certainty when no
+     * contradictory evidence exists.
+     */
+
+    if(
+        intent?.explicit ===
+            true &&
+        intentConfidence >=
+            0.90 &&
+        ambiguity <
+            0.20
+    ){
+
+        score =
+            Math.max(
+                score,
+                intentConfidence *
+                0.90
+            );
+
+    }
+
+
+    return this.clamp(
+        score
+    );
+
+},
 
 
     detectAmbiguity(
