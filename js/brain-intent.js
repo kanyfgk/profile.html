@@ -498,14 +498,18 @@ const BrainIntent = {
             },
 
             {
-                target:
-                    "create",
+    target:
+        "create",
 
-                names:[
-                    "olusturma ekrani",
-                    "yarat"
-                ]
-            },
+    names:[
+        "olusturma ekrani",
+        "yarat",
+        "fikir",
+        "fikirler",
+        "idea",
+        "ideas"
+    ]
+},
 
             {
                 target:
