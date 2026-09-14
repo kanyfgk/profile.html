@@ -1214,33 +1214,10 @@ const BrainActions = {
                 }
 
 
-                ideaInput.checked =
-                    true;
-
-
-                ideaInput.dispatchEvent(
-                    new Event(
-                        "input",
-                        {
-                            bubbles:
-                                true
-                        }
-                    )
-                );
-
-
-                ideaInput.dispatchEvent(
-                    new Event(
-                        "change",
-                        {
-                            bubbles:
-                                true
-                        }
-                    )
-                );
+                ideaInput.click();
 
             },
-            0
+            150
         );
 
     }
