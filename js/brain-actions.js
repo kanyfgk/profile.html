@@ -1162,19 +1162,93 @@ const BrainActions = {
             }
 
 
-            case "create":
+            case "create": {
 
-                result =
-                    this.callAction(
-                        actions,
-                        "openCreate"
+    result =
+        this.callAction(
+            actions,
+            "openCreate"
+        );
+
+
+    action =
+        "create:open";
+
+
+    const normalizedText =
+        this.normalizeValue(
+            intent.normalizedText ||
+            intent.raw ||
+            ""
+        );
+
+
+    const shouldSelectIdea =
+        normalizedText.includes(
+            "fikir"
+        ) ||
+        normalizedText.includes(
+            "idea"
+        );
+
+
+    if(
+        shouldSelectIdea
+    ){
+
+        setTimeout(
+            () => {
+
+                const ideaInput =
+                    document.querySelector(
+                        'input[name="creationKind"][value="idea"]'
                     );
 
 
-                action =
-                    "create:open";
+                if(
+                    !ideaInput
+                ){
 
-                break;
+                    return;
+
+                }
+
+
+                ideaInput.checked =
+                    true;
+
+
+                ideaInput.dispatchEvent(
+                    new Event(
+                        "input",
+                        {
+                            bubbles:
+                                true
+                        }
+                    )
+                );
+
+
+                ideaInput.dispatchEvent(
+                    new Event(
+                        "change",
+                        {
+                            bubbles:
+                                true
+                        }
+                    )
+                );
+
+            },
+            0
+        );
+
+    }
+
+
+    break;
+
+}
 
 
             case "entities":
