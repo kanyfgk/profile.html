@@ -1183,64 +1183,103 @@ const BrainActions = {
         );
 
 
-    const shouldSelectIdea =
-        normalizedText.includes(
-            "fikir"
-        ) ||
-        normalizedText.includes(
-            "idea"
-        );
+    const creationKindMap = [
+
+        {
+            kind:
+                "idea",
+
+            terms:[
+                "fikir",
+                "idea"
+            ]
+        },
+
+        {
+            kind:
+                "project",
+
+            terms:[
+                "proje",
+                "project"
+            ]
+        },
+
+        {
+            kind:
+                "application",
+
+            terms:[
+                "uygulama",
+                "application",
+                "app"
+            ]
+        },
+
+        {
+            kind:
+                "system",
+
+            terms:[
+                "sistem",
+                "system"
+            ]
+        },
+
+        {
+            kind:
+                "automation",
+
+            terms:[
+                "otomasyon",
+                "automation"
+            ]
+        },
+
+        {
+            kind:
+                "invention",
+
+            terms:[
+                "buluş",
+                "bulus",
+                "invention"
+            ]
+        }
+
+    ];
+
+
+    const requestedKind =
+        creationKindMap.find(
+            item =>
+                item.terms.some(
+                    term =>
+                        normalizedText.includes(
+                            term
+                        )
+                )
+        )?.kind ||
+        null;
 
 
     if(
-        shouldSelectIdea
+        requestedKind
     ){
 
         setTimeout(
             () => {
 
-                const ideaInput =
+                const creationInput =
                     document.querySelector(
-                        'input[name="creationKind"][value="idea"]'
+                        `input[name="creationKind"][value="${requestedKind}"]`
                     );
 
 
-                if(
-                    !ideaInput
-                ){
-
-                    return;
-
-                }
-
-
-                ideaInput.checked =
-                    true;
-
-
-                ideaInput.dispatchEvent(
-                    new Event(
-                        "input",
-                        {
-                            bubbles:
-                                true
-                        }
-                    )
-                );
-
-
-                ideaInput.dispatchEvent(
-                    new Event(
-                        "change",
-                        {
-                            bubbles:
-                                true
-                        }
-                    )
-                );
+                creationInput?.click();
 
             },
-            0
+            150
         );
 
     }
