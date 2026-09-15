@@ -1725,6 +1725,117 @@ const BrainIntent = {
                 text
             );
 
+/* =================================================
+           CREATE SUBTYPE NAVIGATION
+        ================================================= */
+
+        if(
+            operation ===
+                "open"
+        ){
+
+            const creationTokens =
+                new Set(
+                    this.tokenize(
+                        text
+                    )
+                );
+
+
+            const creationKinds = [
+
+                {
+                    token:
+                        "fikir",
+                    kind:
+                        "idea"
+                },
+
+                {
+                    token:
+                        "proje",
+                    kind:
+                        "project"
+                },
+
+                {
+                    token:
+                        "uygulama",
+                    kind:
+                        "application"
+                },
+
+                {
+                    token:
+                        "sistem",
+                    kind:
+                        "system"
+                },
+
+                {
+                    token:
+                        "otomasyon",
+                    kind:
+                        "automation"
+                },
+
+                {
+                    token:
+                        "bulus",
+                    kind:
+                        "invention"
+                }
+
+            ];
+
+
+            const creationMatch =
+                creationKinds.find(
+                    item =>
+                        creationTokens.has(
+                            item.token
+                        )
+                );
+
+
+            if(creationMatch){
+
+                return this.buildResult({
+
+                    type:
+                        "navigate",
+
+                    target:
+                        "create",
+
+                    operation:
+                        "open",
+
+                    creationKind:
+                        creationMatch.kind,
+
+                    confidence:
+                        0.99,
+
+                    explicit:
+                        true,
+
+                    raw,
+
+                    normalizedText:
+                        text,
+
+                    detectedTarget:
+                        "create",
+
+                    contextTarget:
+                        null
+
+                });
+
+            }
+
+        }
 
         const question =
             this.isQuestion(

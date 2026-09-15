@@ -1164,130 +1164,97 @@ const BrainActions = {
 
             case "create": {
 
-    result =
-        this.callAction(
-            actions,
-            "openCreate"
-        );
-
-
-    action =
-        "create:open";
-
-
-    const normalizedText =
-        this.normalizeValue(
-            intent.normalizedText ||
-            intent.raw ||
-            ""
-        );
-
-
-    const creationKindMap = [
-
-        {
-            kind:
-                "idea",
-
-            terms:[
-                "fikir",
-                "idea"
-            ]
-        },
-
-        {
-            kind:
-                "project",
-
-            terms:[
-                "proje",
-                "project"
-            ]
-        },
-
-        {
-            kind:
-                "application",
-
-            terms:[
-                "uygulama",
-                "application",
-                "app"
-            ]
-        },
-
-        {
-            kind:
-                "system",
-
-            terms:[
-                "sistem",
-                "system"
-            ]
-        },
-
-        {
-            kind:
-                "automation",
-
-            terms:[
-                "otomasyon",
-                "automation"
-            ]
-        },
-
-        {
-            kind:
-                "invention",
-
-            terms:[
-                "buluş",
-                "bulus",
-                "invention"
-            ]
-        }
-
-    ];
-
-
-    const requestedKind =
-        creationKindMap.find(
-            item =>
-                item.terms.some(
-                    term =>
-                        normalizedText.includes(
-                            term
-                        )
-                )
-        )?.kind ||
-        null;
-
-
-    if(
-        requestedKind
-    ){
-
-        setTimeout(
-            () => {
-
-                const creationInput =
-                    document.querySelector(
-                        `input[name="creationKind"][value="${requestedKind}"]`
+                result =
+                    this.callAction(
+                        actions,
+                        "openCreate"
                     );
 
 
-                creationInput?.click();
-
-            },
-            150
-        );
-
-    }
+                action =
+                    "create:open";
 
 
-    break;
+                const requestedKind =
+                    String(
+                        intent.creationKind ||
+                        ""
+                    ).trim();
 
-}
+
+                if(requestedKind){
+
+                    const startedAt =
+                        Date.now();
+
+
+                    const selectCreationKind =
+                        () => {
+
+                            const creationInput =
+                                document.querySelector(
+                                    `input[name="creationKind"][value="${requestedKind}"]`
+                                );
+
+
+                            if(creationInput){
+
+                                creationInput.checked =
+                                    true;
+
+
+                                creationInput.dispatchEvent(
+                                    new Event(
+                                        "input",
+                                        {
+                                            bubbles:
+                                                true
+                                        }
+                                    )
+                                );
+
+
+                                creationInput.dispatchEvent(
+                                    new Event(
+                                        "change",
+                                        {
+                                            bubbles:
+                                                true
+                                        }
+                                    )
+                                );
+
+
+                                return;
+
+                            }
+
+
+                            if(
+                                Date.now() -
+                                startedAt <
+                                1200
+                            ){
+
+                                requestAnimationFrame(
+                                    selectCreationKind
+                                );
+
+                            }
+
+                        };
+
+
+                    requestAnimationFrame(
+                        selectCreationKind
+                    );
+
+                }
+
+
+                break;
+
+            }
 
 
             case "entities":
