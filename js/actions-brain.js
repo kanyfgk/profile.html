@@ -1337,34 +1337,61 @@ const ActionsBrain = {
     ===================================================== */
 
     getSession(
-        actions,
-        brain
+    actions,
+    brain
+){
+
+    if(
+        !actions ||
+        !brain
     ){
 
-        if(
+        return null;
+
+    }
+
+
+    if(
+        (
             !Array.isArray(
                 brain.sessions
+            ) ||
+            brain.sessions.length ===
+                0
+        ) &&
+        typeof actions.loadBrainState ===
+            "function"
+    ){
+
+        actions.loadBrainState();
+
+    }
+
+
+    if(
+        !Array.isArray(
+            brain.sessions
+        )
+    ){
+
+        brain.sessions =
+            [];
+
+    }
+
+
+    return (
+        actions
+            .getTodayBrainConversationSession(
+                brain
+            ) ||
+        actions
+            .createTodayBrainConversation(
+                brain
             )
-        ){
+    );
 
-            brain.sessions =
-                [];
-
-        }
-
-
-        return (
-            actions
-                .getTodayBrainConversationSession(
-                    brain
-                ) ||
-            actions
-                .createTodayBrainConversation(
-                    brain
-                )
-        );
-
-    },
+},
 
 
     pushUserMessage(
