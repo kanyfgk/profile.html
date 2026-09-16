@@ -367,6 +367,103 @@ const BrainIntent = {
     },
 
 
+    findTargetPhraseMatch(
+        text,
+        phrase
+    ){
+
+        const textTokens =
+            this.tokenize(
+                text
+            );
+
+
+        const phraseTokens =
+            this.tokenize(
+                phrase
+            );
+
+
+        if(
+            !textTokens.length ||
+            !phraseTokens.length ||
+            phraseTokens.length >
+                textTokens.length
+        ){
+
+            return null;
+
+        }
+
+
+        for(
+            let start = 0;
+            start <=
+                textTokens.length -
+                phraseTokens.length;
+            start++
+        ){
+
+            let matched =
+                true;
+
+
+            for(
+                let index = 0;
+                index <
+                    phraseTokens.length;
+                index++
+            ){
+
+                const variants =
+                    this.getTargetTokenVariants(
+                        textTokens[
+                            start + index
+                        ]
+                    );
+
+
+                if(
+                    !variants.includes(
+                        phraseTokens[
+                            index
+                        ]
+                    )
+                ){
+
+                    matched =
+                        false;
+
+                    break;
+
+                }
+
+            }
+
+
+            if(matched){
+
+                return {
+
+                    start,
+
+                    end:
+                        start +
+                        phraseTokens.length -
+                        1
+
+                };
+
+            }
+
+        }
+
+
+        return null;
+
+    },
+
+
     matchesTargetPhrase(
         text,
         phrase
