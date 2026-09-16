@@ -23,6 +23,12 @@ const BrainIntent = {
                 "tr-TR"
             )
             .trim()
+            .replace(/\u0131/g, "i")
+            .replace(/\u011f/g, "g")
+            .replace(/\u00fc/g, "u")
+            .replace(/\u015f/g, "s")
+            .replace(/\u00f6/g, "o")
+            .replace(/\u00e7/g, "c")
             .replaceAll(
                 "Ä±",
                 "i"
