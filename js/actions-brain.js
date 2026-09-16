@@ -2300,14 +2300,44 @@ if(
 
     else{
 
-        rawResponse =
-            await this.executeGateway(
-                gateway,
-                brain,
-                text,
-                context,
-                request
+        const resolvedIntent =
+            intelligenceDecision?.intent ||
+            null;
+
+        const localExecutor =
+            this.getService(
+                "brainActions"
             );
+
+        const canFastPath =
+            resolvedIntent?.type ===
+                "navigate" &&
+            localExecutor &&
+            typeof localExecutor.execute ===
+                "function";
+
+        if(canFastPath){
+
+            rawResponse =
+                await Promise.resolve(
+                    localExecutor.execute(
+                        resolvedIntent,
+                        context
+                    )
+                );
+
+        } else {
+
+            rawResponse =
+                await this.executeGateway(
+                    gateway,
+                    brain,
+                    text,
+                    context,
+                    request
+                );
+
+        }
 
     }
 
