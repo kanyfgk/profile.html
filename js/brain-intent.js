@@ -179,7 +179,7 @@ const BrainIntent = {
             suffix => {
 
                 if(
-                    value.length >
+                    value.length >=
                         suffix.length + 2 &&
                     value.endsWith(
                         suffix
