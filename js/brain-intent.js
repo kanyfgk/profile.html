@@ -1019,6 +1019,7 @@ const BrainIntent = {
                     "acmani istiyorum",
                     "gosterir misin",
                     "beni gotur",
+                    "gotur",
                     "goruntule",
 "goster",
 "ac",
@@ -1782,7 +1783,9 @@ const BrainIntent = {
 
         if(
             operation ===
-                "open"
+                "open" ||
+            operation ===
+                "create"
         ){
 
             const creationTokens =
