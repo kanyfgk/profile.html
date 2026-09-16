@@ -24,27 +24,27 @@ const BrainIntent = {
             )
             .trim()
             .replaceAll(
-                "ı",
+                "Ä±",
                 "i"
             )
             .replaceAll(
-                "ğ",
+                "ÄŸ",
                 "g"
             )
             .replaceAll(
-                "ü",
+                "Ã¼",
                 "u"
             )
             .replaceAll(
-                "ş",
+                "ÅŸ",
                 "s"
             )
             .replaceAll(
-                "ö",
+                "Ã¶",
                 "o"
             )
             .replaceAll(
-                "ç",
+                "Ã§",
                 "c"
             )
             .replace(
@@ -179,7 +179,7 @@ const BrainIntent = {
             suffix => {
 
                 if(
-                    value.length >
+                    value.length >=
                         suffix.length + 2 &&
                     value.endsWith(
                         suffix
@@ -200,11 +200,11 @@ const BrainIntent = {
 
 
         /*
-         * Türkçedeki ünsüz yumuşamasını da hesaba kat.
+         * TÃ¼rkÃ§edeki Ã¼nsÃ¼z yumuÅŸamasÄ±nÄ± da hesaba kat.
          *
-         * kimlik → kimliği → kimligi
-         * kitap → kitabı → kitabi
-         * kanat → kanadı → kanadi
+         * kimlik â†’ kimliÄŸi â†’ kimligi
+         * kitap â†’ kitabÄ± â†’ kitabi
+         * kanat â†’ kanadÄ± â†’ kanadi
          */
 
         Array.from(
@@ -463,8 +463,8 @@ const BrainIntent = {
     names:[
         "applications",
         "uygulamalar",
-        "uygulamaları",
-        "uygulamayı",
+        "uygulamalarÄ±",
+        "uygulamayÄ±",
         "uygulama",
         "uygulama magazasi",
         "uygulama merkezi",
@@ -816,15 +816,15 @@ const BrainIntent = {
             ) => {
 
                 /*
-                 * Cümlede komuta daha yakın olan hedef
-                 * önceliklidir.
+                 * CÃ¼mlede komuta daha yakÄ±n olan hedef
+                 * Ã¶nceliklidir.
                  *
-                 * "VAERO world aç"
+                 * "VAERO world aÃ§"
                  *
                  * VAERO -> end 0
                  * world -> end 1
                  *
-                 * Sonuç: world
+                 * SonuÃ§: world
                  */
 
                 if(
