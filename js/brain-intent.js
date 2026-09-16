@@ -270,7 +270,7 @@ const BrainIntent = {
     },
 
 
-    matchesTargetPhrase(
+    findTargetPhraseMatch(
         text,
         phrase
     ){
@@ -294,7 +294,7 @@ const BrainIntent = {
                 textTokens.length
         ){
 
-            return false;
+            return null;
 
         }
 
@@ -346,83 +346,40 @@ const BrainIntent = {
 
             if(matched){
 
-                return true;
+                return {
+
+                    start,
+
+                    end:
+                        start +
+                        phraseTokens.length -
+                        1
+
+                };
 
             }
 
         }
 
 
-        return false;
+        return null;
 
     },
 
 
-    includesPhrase(
+    matchesTargetPhrase(
         text,
-        phrases = []
+        phrase
     ){
 
-        const normalizedText =
-            this.normalize(
-                text
-            );
-
-
-        if(!normalizedText){
-
-            return false;
-
-        }
-
-
-        const tokens =
-            this.tokenize(
-                normalizedText
-            );
-
-
-        return phrases.some(
-            phrase => {
-
-                const normalizedPhrase =
-                    this.normalize(
-                        phrase
-                    );
-
-
-                if(!normalizedPhrase){
-
-                    return false;
-
-                }
-
-
-                if(
-                    normalizedPhrase.includes(
-                        " "
-                    )
-                ){
-
-                    return (
-                        ` ${normalizedText} `
-                            .includes(
-                                ` ${normalizedPhrase} `
-                            )
-                    );
-
-                }
-
-
-                return tokens.includes(
-                    normalizedPhrase
-                );
-
-            }
+        return Boolean(
+            this.findTargetPhraseMatch(
+                text,
+                phrase
+            )
         );
 
     },
-
 
     /* =====================================================
        TARGET DEFINITIONS
