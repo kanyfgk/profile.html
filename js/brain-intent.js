@@ -23,6 +23,8 @@ const BrainIntent = {
                 "tr-TR"
             )
             .trim()
+
+            /* Gerçek Türkçe karakterler */
             .replaceAll(
                 "ı",
                 "i"
@@ -47,6 +49,33 @@ const BrainIntent = {
                 "ç",
                 "c"
             )
+
+            /* Eski encoding / mojibake uyumluluğu */
+            .replaceAll(
+                "Ã„Â±",
+                "i"
+            )
+            .replaceAll(
+                "Ã„Å¸",
+                "g"
+            )
+            .replaceAll(
+                "ÃƒÂ¼",
+                "u"
+            )
+            .replaceAll(
+                "Ã…Å¸",
+                "s"
+            )
+            .replaceAll(
+                "ÃƒÂ¶",
+                "o"
+            )
+            .replaceAll(
+                "ÃƒÂ§",
+                "c"
+            )
+
             .replace(
                 /[?.!,;:()[\]{}"'`]/g,
                 " "
