@@ -763,12 +763,6 @@ const BrainIntent = {
         }
 
 
-        const tokens =
-            this.tokenize(
-                normalizedText
-            );
-
-
         const matches =
             [];
 
@@ -794,18 +788,14 @@ const BrainIntent = {
                             }
 
 
-                            let matched =
-                                false;
+                            const phraseMatch =
+                                this.findTargetPhraseMatch(
+                                    normalizedText,
+                                    normalizedName
+                                );
 
 
-                            matched =
-    this.matchesTargetPhrase(
-        normalizedText,
-        normalizedName
-    );
-
-
-                            if(!matched){
+                            if(!phraseMatch){
 
                                 return;
 
@@ -819,6 +809,12 @@ const BrainIntent = {
 
                                 phrase:
                                     normalizedName,
+
+                                start:
+                                    phraseMatch.start,
+
+                                end:
+                                    phraseMatch.end,
 
                                 length:
                                     normalizedName.length,
@@ -844,6 +840,31 @@ const BrainIntent = {
                 a,
                 b
             ) => {
+
+                /*
+                 * Cümlede komuta daha yakın olan hedef
+                 * önceliklidir.
+                 *
+                 * "VAERO world aç"
+                 *
+                 * VAERO -> end 0
+                 * world -> end 1
+                 *
+                 * Sonuç: world
+                 */
+
+                if(
+                    b.end !==
+                        a.end
+                ){
+
+                    return (
+                        b.end -
+                        a.end
+                    );
+
+                }
+
 
                 if(
                     b.tokenCount !==
@@ -874,7 +895,7 @@ const BrainIntent = {
             null
         );
 
-    },
+    }, 
 
 
     /* =====================================================
