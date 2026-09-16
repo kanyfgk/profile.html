@@ -270,7 +270,7 @@ const BrainIntent = {
     },
 
 
-    matchesTargetPhrase(
+    findTargetPhraseMatch(
         text,
         phrase
     ){
@@ -294,7 +294,7 @@ const BrainIntent = {
                 textTokens.length
         ){
 
-            return false;
+            return null;
 
         }
 
@@ -303,7 +303,7 @@ const BrainIntent = {
             let start = 0;
             start <=
                 textTokens.length -
-                phraseTokens.length;
+                    phraseTokens.length;
             start++
         ){
 
@@ -346,14 +346,38 @@ const BrainIntent = {
 
             if(matched){
 
-                return true;
+                return {
+
+                    start,
+
+                    end:
+                        start +
+                        phraseTokens.length -
+                        1
+
+                };
 
             }
 
         }
 
 
-        return false;
+        return null;
+
+    },
+
+
+    matchesTargetPhrase(
+        text,
+        phrase
+    ){
+
+        return Boolean(
+            this.findTargetPhraseMatch(
+                text,
+                phrase
+            )
+        );
 
     },
 
@@ -713,12 +737,6 @@ const BrainIntent = {
         }
 
 
-        const tokens =
-            this.tokenize(
-                normalizedText
-            );
-
-
         const matches =
             [];
 
@@ -744,18 +762,14 @@ const BrainIntent = {
                             }
 
 
-                            let matched =
-                                false;
+                            const phraseMatch =
+                                this.findTargetPhraseMatch(
+                                    normalizedText,
+                                    normalizedName
+                                );
 
 
-                            matched =
-    this.matchesTargetPhrase(
-        normalizedText,
-        normalizedName
-    );
-
-
-                            if(!matched){
+                            if(!phraseMatch){
 
                                 return;
 
@@ -769,6 +783,12 @@ const BrainIntent = {
 
                                 phrase:
                                     normalizedName,
+
+                                start:
+                                    phraseMatch.start,
+
+                                end:
+                                    phraseMatch.end,
 
                                 length:
                                     normalizedName.length,
@@ -794,6 +814,31 @@ const BrainIntent = {
                 a,
                 b
             ) => {
+
+                /*
+                 * Cümlede komuta daha yakın olan hedef
+                 * önceliklidir.
+                 *
+                 * "VAERO world aç"
+                 *
+                 * VAERO -> end 0
+                 * world -> end 1
+                 *
+                 * Sonuç: world
+                 */
+
+                if(
+                    b.end !==
+                        a.end
+                ){
+
+                    return (
+                        b.end -
+                        a.end
+                    );
+
+                }
+
 
                 if(
                     b.tokenCount !==
@@ -968,12 +1013,12 @@ const BrainIntent = {
                     "acmani istiyorum",
                     "gosterir misin",
                     "beni gotur",
-                    "buraya git",
                     "goruntule",
-                    "goster",
-                    "ac",
-                    "git",
-                    "gec"
+"goster",
+"ac",
+"git",
+"gec",
+"don"
                 ]
             },
 
