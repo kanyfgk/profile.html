@@ -759,511 +759,461 @@ const Components = {
 
     home(entity){
 
-    const worlds =
-        this.getWorlds();
+        const worlds =
+            this.getWorlds();
 
 
-    const activeWorld =
-        worlds.find(
-            world =>
-                world?.status ===
-                    "active" &&
-                world?.archived !==
-                    true
-        ) ||
-        worlds.find(
-            world =>
-                world?.archived !==
-                    true
-        ) ||
-        null;
+        const activeWorld =
+            worlds.find(
+                world =>
+                    world?.status ===
+                        "active" &&
+                    world?.archived !==
+                        true
+            ) ||
+            worlds.find(
+                world =>
+                    world?.archived !==
+                        true
+            ) ||
+            null;
 
 
-    const activeEntities =
-        Array.isArray(
-            activeWorld?.entities
-        )
-            ? activeWorld.entities.filter(
-                item =>
-                    item?.archived !==
-                        true &&
-                    (
-                        item?.status ===
-                            "active" ||
-                        item?.status ===
-                            "online"
-                    )
+        const activeEntities =
+            Array.isArray(
+                activeWorld?.entities
             )
-            : [];
-
-
-    const activities =
-        this.getActivity();
-
-
-    const applications =
-        this.getApplications();
-
-        const homeApplicationIds = [
-    "identity",
-    "profile",
-    "memory",
-    "timeline",
-    "bridge",
-    "evolution",
-    "discovery",
-    "settings",
-    "vaero"
-];
-
-
-const homeApplications =
-    homeApplicationIds
-        .map(
-            id =>
-                applications.find(
-                    app =>
-                        app?.id ===
-                            id
+                ? activeWorld.entities.filter(
+                    item =>
+                        item?.archived !==
+                            true &&
+                        (
+                            item?.status ===
+                                "active" ||
+                            item?.status ===
+                                "online"
+                        )
                 )
-        )
-        .filter(
-            Boolean
-        );
+                : [];
 
 
-    const displayName =
-        this.getDisplayName(
-            entity
-        );
+        const activities =
+            this.getActivity();
 
 
-    const welcomeText =
-        displayName
-            ? `Hoş geldin, ${this.escapeHTML(
-                displayName
-            )}`
-            : "Hoş geldin";
+        const applications =
+            this.getApplications();
 
 
-    const health =
-        this.getOrganStatus();
+        const displayName =
+            this.getDisplayName(
+                entity
+            );
 
 
-    const engineStatus =
-        health?.status ||
-        (
-            this.getEngine()
-                ?.started
-                ? "healthy"
-                : "unknown"
-        );
+        const welcomeText =
+            displayName
+                ? `Hoş geldin, ${this.escapeHTML(
+                    displayName
+                )}`
+                : "Hoş geldin";
 
 
-    return `
-        <section class="vaero-engine-home">
+        const health =
+            this.getOrganStatus();
 
-            <header class="engine-home-topbar">
 
-                <div class="engine-brand">
+        const engineStatus =
+            health?.status ||
+            (
+                this.getEngine()
+                    ?.started
+                    ? "healthy"
+                    : "unknown"
+            );
 
-                    <span class="engine-brand-main">
-                        VAERO
-                    </span>
 
-                    <span class="engine-brand-sub">
-                        ENGINE
-                    </span>
+        const worldName =
+            activeWorld?.name ||
+            "VAERO World";
 
-                </div>
 
+        const worldPopulation =
+            activeEntities.length;
 
-                <div class="engine-top-actions">
 
-                    <button
-                        type="button"
-                        class="engine-icon-btn"
-                        data-action="app:applications"
-                        aria-label="Uygulamalar"
-                        title="Uygulamalar"
-                    >
-                        ▦
-                    </button>
+        const latestActivity =
+            activities[0] ||
+            null;
 
 
-                    ${
-                        typeof window !==
-                            "undefined" &&
-                        window.NotificationCenter &&
-                        typeof window.NotificationCenter.renderBell ===
-                            "function"
-                            ? window.NotificationCenter.renderBell()
-                            : ""
-                    }
+        return `
+            <section class="vaero-engine-home">
 
+                <header class="engine-home-topbar">
 
-                    <button
-                        type="button"
-                        class="engine-icon-btn"
-                        data-action="brain:open"
-                        aria-label="Brain"
-                        title="Brain"
-                    >
-                        ✦
-                    </button>
+                    <div class="engine-brand">
 
-                </div>
+                        <span class="engine-brand-main">
+                            VAERO
+                        </span>
 
-            </header>
-
-
-            <section class="engine-hero">
-
-    <div class="engine-hero-copy">
-
-        <span class="engine-welcome">
-            ${welcomeText}
-        </span>
-
-        <h1>
-            VAERO Engine
-        </h1>
-
-        <p>
-            Yaşayan dijital evrenin kontrol merkezi
-        </p>
-
-
-        <div
-            class="engine-status-pill"
-            data-engine-health="${this.escapeHTML(
-                engineStatus
-            )}"
-        >
-
-            <span
-                class="engine-status-dot"
-                aria-hidden="true"
-            ></span>
-
-            <strong>
-                ${
-                    engineStatus ===
-                        "critical"
-                        ? "Sistem Uyarısı"
-                        : engineStatus ===
-                            "degraded"
-                            ? "Sistem İzleniyor"
-                            : "Sistem Online"
-                }
-            </strong>
-
-            <span
-                class="engine-status-separator"
-                aria-hidden="true"
-            ></span>
-
-            <small>
-                ${applications.length}
-                uygulama hazır
-            </small>
-
-        </div>
-
-    </div>
-
-
-    <button
-        type="button"
-        class="engine-brain-orb"
-        data-action="brain:open"
-        aria-label="Brain'i aç"
-    >
-
-        <span
-            class="brain-orbit brain-orbit-1"
-        ></span>
-
-        <span
-            class="brain-orbit brain-orbit-2"
-        ></span>
-
-        <span
-            class="brain-orbit brain-orbit-3"
-        ></span>
-
-        <span class="brain-core">
-
-            <span class="brain-eye"></span>
-            <span class="brain-eye"></span>
-
-        </span>
-
-    </button>
-
-</section>
-
-
-<section class="engine-shortcuts">
-
-    <span class="engine-section-label">
-        ENGINE
-    </span>
-
-
-    <div class="engine-shortcuts-grid">
-
-        ${this.shortcutCard({
-            action:
-                "worlds:open",
-            icon:
-                "◯",
-            title:
-                "Dünyalar",
-            subtitle:
-                "Keşfet ve yönet",
-            tone:
-                "gold"
-        })}
-
-
-        ${this.shortcutCard({
-            action:
-                "entities:open",
-            icon:
-                "⬡",
-            title:
-                "Varlıklar",
-            subtitle:
-                "Yaşayan yapılar",
-            tone:
-                "blue"
-        })}
-
-
-        ${this.shortcutCard({
-            action:
-                "app:applications",
-            icon:
-                "▦",
-            title:
-                "Uygulamalar",
-            subtitle:
-                "Araçlarını keşfet",
-            tone:
-                "violet"
-        })}
-
-
-        ${this.shortcutCard({
-            action:
-                "create:open",
-            icon:
-                "✦",
-            title:
-                "Yarat",
-            subtitle:
-                "Fikrini inşa et",
-            tone:
-                "green"
-        })}
-
-    </div>
-
-
-    ${
-        homeApplications.length
-            ? `
-                <section class="engine-app-shelf">
-
-                    <span class="engine-section-label">
-                        UYGULAMALAR
-                    </span>
-
-
-                    <div class="engine-app-shelf-grid">
-
-                        ${homeApplications
-                            .map(
-                                app => `
-                                    <button
-                                        type="button"
-                                        class="engine-app-shelf-item"
-                                        data-action="${this.escapeHTML(
-                                            app.action ||
-                                            ""
-                                        )}"
-                                        aria-label="${this.escapeHTML(
-                                            app.title ||
-                                            app.id
-                                        )}"
-                                    >
-
-                                        <span class="engine-app-shelf-icon">
-                                            ${this.escapeHTML(
-                                                app.icon ||
-                                                "◌"
-                                            )}
-                                        </span>
-
-
-                                        <span class="engine-app-shelf-copy">
-
-                                            <strong>
-                                                ${this.escapeHTML(
-                                                    app.title ||
-                                                    app.id
-                                                )}
-                                            </strong>
-
-                                            <small>
-                                                ${this.escapeHTML(
-                                                    app.subtitle ||
-                                                    ""
-                                                )}
-                                            </small>
-
-                                        </span>
-
-                                    </button>
-                                `
-                            )
-                            .join("")}
+                        <span class="engine-brand-sub">
+                            ENGINE
+                        </span>
 
                     </div>
 
-                </section>
-            `
-            : ""
-    }
 
-</section>
-            ${
-    homeApplications.length
-        ? `
-            <section class="engine-app-shelf">
+                    <div class="engine-top-actions">
 
-                <span class="engine-section-label">
-                    UYGULAMALAR
-                </span>
+                        <button
+                            type="button"
+                            class="engine-icon-btn"
+                            data-action="app:applications"
+                            aria-label="Uygulamalar"
+                            title="Uygulamalar"
+                        >
+                            ▦
+                        </button>
 
 
-                <div class="engine-app-shelf-grid">
-
-                    ${homeApplications
-                        .map(
-                            app => `
-                                <button
-                                    type="button"
-                                    class="engine-app-shelf-item"
-                                    data-action="${this.escapeHTML(
-                                        app.action ||
-                                        ""
-                                    )}"
-                                    aria-label="${this.escapeHTML(
-                                        app.title ||
-                                        app.id
-                                    )}"
-                                >
-
-                                    <span class="engine-app-shelf-icon">
-                                        ${this.escapeHTML(
-                                            app.icon ||
-                                            "◌"
-                                        )}
-                                    </span>
+                        ${
+                            typeof window !==
+                                "undefined" &&
+                            window.NotificationCenter &&
+                            typeof window.NotificationCenter.renderBell ===
+                                "function"
+                                ? window.NotificationCenter.renderBell()
+                                : ""
+                        }
 
 
-                                    <span class="engine-app-shelf-copy">
+                        <button
+                            type="button"
+                            class="engine-icon-btn"
+                            data-action="brain:open"
+                            aria-label="Brain"
+                            title="Brain"
+                        >
+                            ✦
+                        </button>
 
-                                        <strong>
-                                            ${this.escapeHTML(
-                                                app.title ||
-                                                app.id
-                                            )}
-                                        </strong>
+                    </div>
 
-                                        <small>
-                                            ${this.escapeHTML(
-                                                app.subtitle ||
-                                                ""
-                                            )}
-                                        </small>
-
-                                    </span>
-
-                                </button>
-                            `
-                        )
-                        .join("")}
-
-                </div>
-
-            </section>
-        `
-        : ""
-}
+                </header>
 
 
-            ${
-                activeWorld
-                    ? this.activeWorldCard(
-                        activeWorld,
-                        activeEntities.length
-                    )
-                    : this.emptyWorldCard()
-            }
+                <main class="engine-spatial-home">
+
+                    <section class="engine-world-stage">
+
+                        <div
+                            class="engine-space-field"
+                            aria-hidden="true"
+                        >
+                            <span class="engine-star-field engine-star-field-a"></span>
+                            <span class="engine-star-field engine-star-field-b"></span>
+                            <span class="engine-star-field engine-star-field-c"></span>
+                        </div>
 
 
-            <section class="engine-activity">
+                        <div class="engine-stage-welcome">
 
-                <span class="engine-section-label">
-                    SON AKTİVİTELER
-                </span>
+                            <span>
+                                ${welcomeText}
+                            </span>
+
+                            <small>
+                                Yaşayan dijital evren
+                            </small>
+
+                        </div>
 
 
-                ${
-                    activities.length
-                        ? `
-                            <div class="engine-activity-list">
+                        <button
+                            type="button"
+                            class="engine-world-globe"
+                            data-action="worlds:open"
+                            aria-label="VAERO World'ü aç"
+                        >
 
-                                ${activities
-                                    .map(
-                                        (
-                                            event,
-                                            index
-                                        ) =>
-                                            this.activityItem(
-                                                event,
-                                                index
-                                            )
-                                    )
-                                    .join("")}
+                            <span
+                                class="engine-world-atmosphere"
+                                aria-hidden="true"
+                            ></span>
 
-                            </div>
-                        `
-                        : `
-                            <div class="engine-empty-state">
+                            <span
+                                class="engine-world-surface"
+                                aria-hidden="true"
+                            ></span>
 
-                                <strong>
-                                    Henüz aktivite yok
-                                </strong>
+                            <span
+                                class="engine-world-light"
+                                aria-hidden="true"
+                            ></span>
 
-                                <span>
-                                    Engine ile yaptığın işlemler burada görünecek.
+                        </button>
+
+
+                        <div class="engine-world-identity">
+
+                            <span class="engine-world-kicker">
+                                VAERO WORLD
+                            </span>
+
+                            <strong>
+                                ${this.escapeHTML(
+                                    worldName
+                                )}
+                            </strong>
+
+                            <small>
+                                ${
+                                    worldPopulation > 0
+                                        ? `${worldPopulation} yaşayan varlık aktif`
+                                        : "Dünya seni bekliyor"
+                                }
+                            </small>
+
+                        </div>
+
+
+                        <div class="engine-brain-presence">
+
+                            <button
+                                type="button"
+                                class="engine-brain-orb"
+                                data-action="brain:open"
+                                aria-label="Brain'i aç"
+                            >
+
+                                <span
+                                    class="brain-orbit brain-orbit-1"
+                                ></span>
+
+                                <span
+                                    class="brain-orbit brain-orbit-2"
+                                ></span>
+
+                                <span
+                                    class="brain-orbit brain-orbit-3"
+                                ></span>
+
+                                <span class="brain-core">
+
+                                    <span class="brain-eye"></span>
+                                    <span class="brain-eye"></span>
+
                                 </span>
 
+                            </button>
+
+
+                            <div class="engine-brain-invitation">
+
+                                <span>
+                                    VAERO Brain
+                                </span>
+
+                                <h1>
+                                    Şu an ne yapmak istersin?
+                                </h1>
+
+                                <button
+                                    type="button"
+                                    class="engine-brain-prompt"
+                                    data-action="brain:open"
+                                >
+                                    Brain'e yaz veya bir şey seç...
+                                    <span>✦</span>
+                                </button>
+
                             </div>
-                        `
-                }
+
+                        </div>
+
+
+                        <div class="engine-intent-dock">
+
+                            <button
+                                type="button"
+                                data-action="brain:open"
+                            >
+                                Sıkıldım
+                            </button>
+
+                            <button
+                                type="button"
+                                data-action="brain:open"
+                            >
+                                Araştır
+                            </button>
+
+                            <button
+                                type="button"
+                                data-action="brain:open"
+                            >
+                                Anı ekle
+                            </button>
+
+                            <button
+                                type="button"
+                                data-action="brain:open"
+                            >
+                                Film bul
+                            </button>
+
+                            <button
+                                type="button"
+                                data-action="brain:open"
+                            >
+                                Hedef koy
+                            </button>
+
+                            <button
+                                type="button"
+                                data-action="brain:open"
+                            >
+                                Oyun oyna
+                            </button>
+
+                            <button
+                                type="button"
+                                data-action="brain:open"
+                            >
+                                Alışveriş
+                            </button>
+
+                            <button
+                                type="button"
+                                data-action="brain:open"
+                            >
+                                Beni şaşırt
+                            </button>
+
+                        </div>
+
+
+                        <aside class="engine-now-panel">
+
+                            <div class="engine-now-heading">
+
+                                <span>
+                                    ŞİMDİ
+                                </span>
+
+                                <i
+                                    class="engine-now-live"
+                                    aria-hidden="true"
+                                ></i>
+
+                            </div>
+
+
+                            <div class="engine-now-item">
+
+                                <small>
+                                    Dünya
+                                </small>
+
+                                <strong>
+                                    ${this.escapeHTML(
+                                        worldName
+                                    )}
+                                </strong>
+
+                            </div>
+
+
+                            <div class="engine-now-item">
+
+                                <small>
+                                    Aktivite
+                                </small>
+
+                                <strong>
+                                    ${
+                                        latestActivity
+                                            ? this.escapeHTML(
+                                                this.translate(
+                                                    latestActivity?.type ||
+                                                    "Yeni hareket"
+                                                )
+                                            )
+                                            : "Henüz yeni hareket yok"
+                                    }
+                                </strong>
+
+                            </div>
+
+
+                            <div class="engine-now-item">
+
+                                <small>
+                                    Sistem
+                                </small>
+
+                                <strong>
+                                    ${
+                                        engineStatus ===
+                                            "critical"
+                                            ? "Dikkat gerekiyor"
+                                            : engineStatus ===
+                                                "degraded"
+                                                ? "İzleniyor"
+                                                : "Online"
+                                    }
+                                </strong>
+
+                            </div>
+
+                        </aside>
+
+
+                        <nav
+                            class="engine-world-bridge"
+                            aria-label="VAERO ana geçişleri"
+                        >
+
+                            <button
+                                type="button"
+                                data-action="worlds:open"
+                            >
+                                Dünyalar
+                            </button>
+
+                            <button
+                                type="button"
+                                data-action="entities:open"
+                            >
+                                Varlıklar
+                            </button>
+
+                            <button
+                                type="button"
+                                data-action="app:applications"
+                            >
+                                Uygulamalar
+                            </button>
+
+                            <button
+                                type="button"
+                                data-action="create:open"
+                            >
+                                Yarat
+                            </button>
+
+                        </nav>
+
+                    </section>
+
+                </main>
 
             </section>
+        `;
 
-        </section>
-    `;
-
-},
-
+    },
 
 shortcutCard({
     action,
