@@ -5596,3 +5596,177 @@ and
     min-width:0;
     min-height:0;
 }
+
+/* =========================================================
+   SPATIAL HOME — WORLD / BRAIN COMPOSITION
+========================================================= */
+
+.engine-world-globe{
+    left:37% !important;
+    top:50% !important;
+    bottom:auto !important;
+
+    width:min(55vw,680px) !important;
+
+    transform:
+        translate(-50%,-50%) !important;
+}
+
+.engine-world-globe:hover{
+    transform:
+        translate(-50%,-50%)
+        scale(1.018) !important;
+}
+
+.engine-world-surface{
+    background:
+        radial-gradient(
+            ellipse at 27% 29%,
+            rgba(122,156,100,.34) 0 10%,
+            transparent 11%
+        ),
+        radial-gradient(
+            ellipse at 59% 24%,
+            rgba(87,132,92,.29) 0 13%,
+            transparent 14%
+        ),
+        radial-gradient(
+            ellipse at 71% 49%,
+            rgba(111,143,94,.26) 0 11%,
+            transparent 12%
+        ),
+        radial-gradient(
+            ellipse at 43% 62%,
+            rgba(75,115,83,.3) 0 15%,
+            transparent 16%
+        ),
+        radial-gradient(
+            ellipse at 68% 75%,
+            rgba(73,104,77,.2) 0 9%,
+            transparent 10%
+        ),
+        radial-gradient(
+            circle at 48% 48%,
+            rgba(24,79,105,.2),
+            rgba(7,32,50,.08) 62%,
+            transparent 63%
+        ) !important;
+
+    opacity:.92 !important;
+}
+
+.engine-world-light{
+    top:10% !important;
+    left:14% !important;
+
+    width:47% !important;
+    height:32% !important;
+
+    opacity:.9;
+}
+
+.engine-world-identity{
+    left:37% !important;
+    bottom:8% !important;
+
+    transform:
+        translateX(-50%) !important;
+}
+
+.engine-brain-presence{
+    top:43% !important;
+    left:auto !important;
+    right:5.5% !important;
+
+    transform:
+        translateY(-50%) !important;
+
+    width:min(360px,30vw) !important;
+
+    align-items:flex-start !important;
+    text-align:left !important;
+}
+
+.engine-brain-presence .engine-brain-orb{
+    width:104px !important;
+    height:104px !important;
+
+    margin:
+        0
+        0
+        12px
+        10px !important;
+}
+
+.engine-brain-invitation{
+    align-items:flex-start !important;
+}
+
+.engine-brain-invitation h1{
+    font-size:
+        clamp(
+            25px,
+            2.8vw,
+            38px
+        ) !important;
+
+    text-align:left !important;
+}
+
+.engine-brain-prompt{
+    width:100% !important;
+}
+
+.engine-now-panel{
+    right:5.5% !important;
+    top:auto !important;
+    bottom:78px !important;
+
+    transform:none !important;
+
+    width:min(360px,30vw) !important;
+}
+
+.engine-intent-dock{
+    left:37% !important;
+    bottom:24px !important;
+
+    width:min(720px,60vw) !important;
+}
+
+.engine-world-bridge{
+    left:22px !important;
+    bottom:22px !important;
+}
+
+.engine-stage-welcome{
+    top:24px !important;
+    left:26px !important;
+}
+
+@media (max-width: 980px){
+
+    .engine-world-globe{
+        left:50% !important;
+        width:min(76vw,650px) !important;
+    }
+
+    .engine-world-identity{
+        left:50% !important;
+    }
+
+    .engine-brain-presence{
+        right:24px !important;
+        width:300px !important;
+    }
+
+    .engine-now-panel{
+        display:none !important;
+    }
+
+    .engine-intent-dock{
+        left:50% !important;
+        width:calc(100% - 40px) !important;
+    }
+
+}
