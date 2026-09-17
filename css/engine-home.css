@@ -7734,3 +7734,406 @@ and
 
     pointer-events:none;
 }
+
+/* =========================================================
+   SEMANTIC ZOOM V1 — WORLD → EASTERN MEDITERRANEAN
+========================================================= */
+
+
+/* ---------- Cyprus geographic hotspot ---------- */
+
+.engine-region-hotspot{
+    position:absolute;
+
+    z-index:24;
+
+    display:flex;
+    align-items:center;
+
+    gap:7px;
+
+    margin:0;
+    padding:
+        7px
+        10px;
+
+    border:
+        1px solid
+        rgba(139,218,246,.24);
+
+    border-radius:999px;
+
+    background:
+        rgba(3,19,29,.78);
+
+    color:
+        rgba(244,248,249,.94);
+
+    box-shadow:
+        0
+        12px
+        34px
+        rgba(0,0,0,.30),
+
+        inset
+        0
+        1px
+        0
+        rgba(255,255,255,.055);
+
+    font:inherit;
+
+    cursor:pointer;
+
+    opacity:0;
+
+    pointer-events:none;
+
+    transform:
+        translate(-50%,-50%)
+        scale(.78);
+
+    transition:
+        opacity .32s ease,
+        transform .45s cubic-bezier(.2,.75,.2,1),
+        border-color .2s ease,
+        background .2s ease;
+
+    backdrop-filter:
+        blur(16px);
+
+    -webkit-backdrop-filter:
+        blur(16px);
+}
+
+
+/*
+ * Orthographic projection:
+ * Cyprus ≈ 58.8% x / 35.8% y
+ */
+
+.engine-region-hotspot-cyprus{
+    left:58.8%;
+    top:35.8%;
+}
+
+
+.engine-region-hotspot-pulse{
+    position:relative;
+
+    width:7px;
+    height:7px;
+
+    flex:
+        0
+        0
+        7px;
+
+    border-radius:50%;
+
+    background:
+        #86ddff;
+
+    box-shadow:
+        0
+        0
+        14px
+        rgba(112,213,255,.88);
+}
+
+.engine-region-hotspot-pulse::after{
+    content:"";
+
+    position:absolute;
+
+    inset:-6px;
+
+    border:
+        1px solid
+        rgba(122,217,255,.38);
+
+    border-radius:50%;
+
+    animation:
+        vaeroRegionPulse
+        2.2s
+        ease-out
+        infinite;
+}
+
+@keyframes vaeroRegionPulse{
+
+    0%{
+        opacity:.75;
+        transform:scale(.45);
+    }
+
+    70%{
+        opacity:0;
+        transform:scale(1.5);
+    }
+
+    100%{
+        opacity:0;
+        transform:scale(1.5);
+    }
+
+}
+
+
+.engine-region-hotspot-copy{
+    display:flex;
+    flex-direction:column;
+
+    align-items:flex-start;
+
+    line-height:1.05;
+}
+
+.engine-region-hotspot-copy strong{
+    font-size:8px;
+    font-weight:720;
+}
+
+.engine-region-hotspot-copy small{
+    margin-top:3px;
+
+    color:
+        rgba(205,222,230,.54);
+
+    font-size:6px;
+}
+
+
+.engine-spatial-home.is-world-focus:not(.is-region-focus)
+.engine-region-hotspot{
+    opacity:1;
+
+    pointer-events:auto;
+
+    transform:
+        translate(-50%,-50%)
+        scale(1);
+}
+
+.engine-spatial-home.is-world-focus:not(.is-region-focus)
+.engine-region-hotspot:hover{
+    border-color:
+        rgba(139,218,246,.46);
+
+    background:
+        rgba(6,29,42,.92);
+
+    transform:
+        translate(-50%,-50%)
+        scale(1.06);
+}
+
+
+/* ---------- region focus header ---------- */
+
+.engine-region-focus-panel{
+    position:absolute;
+
+    top:22px;
+    left:50%;
+
+    z-index:55;
+
+    display:flex;
+    align-items:center;
+
+    gap:16px;
+
+    opacity:0;
+
+    pointer-events:none;
+
+    transform:
+        translate(-50%,-10px);
+
+    transition:
+        opacity .35s ease,
+        transform .45s cubic-bezier(.2,.75,.2,1);
+}
+
+
+.engine-region-back{
+    display:flex;
+    align-items:center;
+
+    gap:7px;
+
+    padding:
+        8px
+        11px;
+
+    border:
+        1px solid
+        rgba(174,214,235,.14);
+
+    border-radius:999px;
+
+    background:
+        rgba(3,15,24,.72);
+
+    color:
+        rgba(238,245,248,.84);
+
+    font:inherit;
+    font-size:7px;
+
+    cursor:pointer;
+
+    backdrop-filter:
+        blur(16px);
+
+    -webkit-backdrop-filter:
+        blur(16px);
+}
+
+.engine-region-back span{
+    color:
+        rgba(127,211,246,.92);
+
+    font-size:13px;
+}
+
+
+.engine-region-focus-copy{
+    display:flex;
+    flex-direction:column;
+
+    padding-left:14px;
+
+    border-left:
+        1px solid
+        rgba(155,209,231,.13);
+}
+
+.engine-region-focus-copy > span{
+    color:
+        rgba(126,205,237,.58);
+
+    font-size:6px;
+    font-weight:750;
+
+    letter-spacing:.18em;
+}
+
+.engine-region-focus-copy strong{
+    margin-top:3px;
+
+    color:
+        rgba(245,248,249,.96);
+
+    font-size:13px;
+    font-weight:670;
+}
+
+.engine-region-focus-copy small{
+    margin-top:2px;
+
+    color:
+        rgba(205,219,227,.44);
+
+    font-size:7px;
+}
+
+
+/* ---------- second zoom level ---------- */
+
+.engine-world-system
+.engine-world-globe{
+    transition:
+        transform
+        .9s
+        cubic-bezier(.18,.82,.18,1),
+
+        filter
+        .55s
+        ease !important;
+}
+
+
+.engine-spatial-home.is-world-focus.is-region-focus
+.engine-world-globe{
+
+    /*
+     * Keep Cyprus as the transform origin,
+     * then bring the Eastern Mediterranean toward centre.
+     */
+
+    transform:
+        translate(-8.8%,14.2%)
+        scale(2.15) !important;
+
+    transform-origin:
+        58.8%
+        35.8% !important;
+
+    pointer-events:none;
+
+    filter:
+        brightness(.92)
+        saturate(.88)
+        contrast(1.04) !important;
+}
+
+
+.engine-spatial-home.is-world-focus.is-region-focus
+.engine-world-node{
+    opacity:0 !important;
+
+    pointer-events:none;
+
+    transform:
+        scale(.78) !important;
+}
+
+
+.engine-spatial-home.is-world-focus.is-region-focus
+.engine-region-hotspot{
+    opacity:0;
+
+    pointer-events:none;
+}
+
+
+.engine-spatial-home.is-world-focus.is-region-focus
+.engine-world-focus-exit{
+    opacity:0;
+
+    pointer-events:none;
+}
+
+
+.engine-spatial-home.is-world-focus.is-region-focus
+.engine-region-focus-panel{
+    opacity:1;
+
+    pointer-events:auto;
+
+    transform:
+        translate(-50%,0);
+}
+
+
+/* ---------- mobile ---------- */
+
+@media (max-width:720px){
+
+    .engine-spatial-home.is-world-focus.is-region-focus
+    .engine-world-globe{
+        transform:
+            translate(-8.8%,14.2%)
+            scale(1.72) !important;
+    }
+
+    .engine-region-focus-panel{
+        top:14px;
+
+        gap:9px;
+    }
+
+}

@@ -960,6 +960,25 @@ const Components = {
     <strong>Dünya görünümünden çık</strong>
 </button>
 
+<div class="engine-region-focus-panel">
+
+    <button
+        type="button"
+        class="engine-region-back"
+        data-action="world:region:exit"
+    >
+        <span>←</span>
+        Dünya görünümüne dön
+    </button>
+
+    <div class="engine-region-focus-copy">
+        <span>VAERO WORLD / REGION</span>
+        <strong>Doğu Akdeniz</strong>
+        <small>Kıbrıs bölge katmanı</small>
+    </div>
+
+</div>
+
 <div class="engine-world-system">
 
     <button
@@ -1001,6 +1020,21 @@ const Components = {
             aria-hidden="true"
         ></span>
 
+    </button>
+
+    <button
+        type="button"
+        class="engine-region-hotspot engine-region-hotspot-cyprus"
+        data-action="world:region:open"
+        data-region-id="eastern-mediterranean"
+        aria-label="Doğu Akdeniz ve Kıbrıs bölgesine yaklaş"
+    >
+        <span class="engine-region-hotspot-pulse"></span>
+
+        <span class="engine-region-hotspot-copy">
+            <strong>Kıbrıs</strong>
+            <small>Doğu Akdeniz</small>
+        </span>
     </button>
 
 

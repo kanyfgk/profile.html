@@ -1129,7 +1129,12 @@ notify(
         }
 
         stage.classList.remove(
-            "is-world-focus"
+            "is-world-focus",
+            "is-region-focus"
+        );
+
+        stage.removeAttribute(
+            "data-world-region"
         );
 
         stage.removeAttribute(
@@ -1141,6 +1146,88 @@ notify(
             {
                 source:
                     "world-focus-exit"
+            }
+        );
+
+        return true;
+
+    },
+
+
+    openWorldRegion(regionId){
+
+        const stage =
+            document.querySelector(
+                ".engine-spatial-home"
+            );
+
+        if(!stage){
+            return false;
+        }
+
+        const id =
+            this.normalizeText(
+                regionId,
+                80
+            ).toLowerCase();
+
+        if(
+            id !==
+            "eastern-mediterranean"
+        ){
+            return false;
+        }
+
+        stage.classList.add(
+            "is-world-focus",
+            "is-region-focus"
+        );
+
+        stage.setAttribute(
+            "data-world-region",
+            id
+        );
+
+        this.syncAwareness(
+            "world",
+            {
+                mode:
+                    "region",
+
+                regionId:
+                    id
+            }
+        );
+
+        return true;
+
+    },
+
+
+    exitWorldRegion(){
+
+        const stage =
+            document.querySelector(
+                ".engine-spatial-home"
+            );
+
+        if(!stage){
+            return false;
+        }
+
+        stage.classList.remove(
+            "is-region-focus"
+        );
+
+        stage.removeAttribute(
+            "data-world-region"
+        );
+
+        this.syncAwareness(
+            "world",
+            {
+                mode:
+                    "focus"
             }
         );
 
@@ -9842,6 +9929,19 @@ if(
             case "world:focus:exit":
 
                 return this.exitWorldFocus();
+
+
+            case "world:region:open":
+
+                return this.openWorldRegion(
+                    button.dataset
+                        .regionId
+                );
+
+
+            case "world:region:exit":
+
+                return this.exitWorldRegion();
 
 
             case "worlds:open":
