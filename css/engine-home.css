@@ -7129,3 +7129,258 @@ and
     left:34% !important;
     bottom:11% !important;
 }
+
+/* =========================================================
+   WORLD RENDERER V2 — SVG PLANET SURFACE
+========================================================= */
+
+.engine-world-map{
+    position:absolute;
+
+    inset:0;
+
+    z-index:3;
+
+    width:100%;
+    height:100%;
+
+    pointer-events:none;
+
+    overflow:visible;
+
+    transform:
+        scale(.96)
+        rotate(-3deg);
+
+    transform-origin:center;
+
+    opacity:.88;
+
+    filter:
+        drop-shadow(
+            0
+            8px
+            15px
+            rgba(0,0,0,.22)
+        );
+}
+
+
+.engine-world-continents{
+    transform-origin:center;
+}
+
+
+.engine-world-continent{
+    fill:
+        rgba(70,112,92,.74);
+
+    stroke:
+        rgba(157,195,165,.11);
+
+    stroke-width:2;
+
+    vector-effect:
+        non-scaling-stroke;
+
+    filter:
+        drop-shadow(
+            0
+            2px
+            4px
+            rgba(2,20,24,.34)
+        );
+
+    transition:
+        fill
+        .35s
+        ease,
+
+        opacity
+        .35s
+        ease;
+}
+
+
+/* subtle geographic variation */
+
+.engine-world-north-america{
+    fill:
+        rgba(73,112,91,.73);
+}
+
+.engine-world-south-america{
+    fill:
+        rgba(57,103,83,.76);
+}
+
+.engine-world-europe{
+    fill:
+        rgba(82,119,92,.72);
+}
+
+.engine-world-africa{
+    fill:
+        rgba(76,108,78,.78);
+}
+
+.engine-world-asia{
+    fill:
+        rgba(66,106,85,.75);
+}
+
+.engine-world-australia{
+    fill:
+        rgba(66,101,80,.70);
+}
+
+.engine-world-greenland{
+    fill:
+        rgba(112,143,137,.58);
+}
+
+
+/* soften land into the planet instead of floating shapes */
+
+.engine-world-system .engine-world-globe::before{
+    content:"";
+
+    position:absolute;
+
+    inset:0;
+
+    z-index:6;
+
+    border-radius:50%;
+
+    pointer-events:none;
+
+    background:
+        linear-gradient(
+            112deg,
+            rgba(176,220,239,.12),
+            transparent 28%,
+            transparent 62%,
+            rgba(0,8,14,.35) 100%
+        ),
+        radial-gradient(
+            circle at 47% 45%,
+            transparent 48%,
+            rgba(2,13,21,.20) 76%,
+            rgba(0,6,11,.46) 100%
+        );
+}
+
+
+.engine-world-system .engine-world-globe::after{
+    content:"";
+
+    position:absolute;
+
+    inset:3%;
+
+    z-index:6;
+
+    border-radius:50%;
+
+    pointer-events:none;
+
+    background:
+        repeating-linear-gradient(
+            8deg,
+            transparent 0 31px,
+            rgba(178,221,238,.018) 32px,
+            transparent 33px
+        );
+
+    opacity:.75;
+
+    mix-blend-mode:screen;
+}
+
+
+/* old polygon renderer disabled */
+
+.engine-world-land{
+    display:none !important;
+}
+
+
+/* city light layer becomes quieter */
+
+.engine-world-city-lights{
+    z-index:4;
+
+    opacity:.48 !important;
+
+    mix-blend-mode:screen;
+}
+
+
+/* clouds sit over SVG geography */
+
+.engine-world-clouds{
+    z-index:5;
+
+    opacity:.58 !important;
+
+    animation:
+        engineWorldCloudDrift
+        32s
+        ease-in-out
+        infinite
+        alternate;
+}
+
+
+@keyframes engineWorldCloudDrift{
+
+    from{
+        transform:
+            translate3d(-1%,0,0)
+            rotate(-8deg);
+    }
+
+    to{
+        transform:
+            translate3d(1.5%,.8%,0)
+            rotate(-5deg);
+    }
+
+}
+
+
+/* slightly deeper ocean */
+
+.engine-world-system .engine-world-surface{
+    background:
+        radial-gradient(
+            circle at 31% 25%,
+            rgba(91,172,211,.22),
+            transparent 22%
+        ),
+        radial-gradient(
+            circle at 58% 53%,
+            rgba(19,79,108,.14),
+            transparent 48%
+        ),
+        linear-gradient(
+            145deg,
+            rgba(22,83,112,.20),
+            rgba(3,25,39,.18)
+        ) !important;
+}
+
+
+/* retain atmosphere above world surface */
+
+.engine-world-system .engine-world-atmosphere{
+    z-index:8;
+}
+
+
+/* world nodes remain above the planet */
+
+.engine-world-node{
+    z-index:14;
+}
