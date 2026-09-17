@@ -969,51 +969,12 @@ const Components = {
             aria-hidden="true"
         ></span>
 
-        <svg
+        <img
     class="engine-world-map"
-    viewBox="0 0 1000 1000"
+    src="./assets/world/ne_110m_land.svg"
+    alt=""
     aria-hidden="true"
-    focusable="false"
->
-    <g class="engine-world-continents">
-
-        <path
-            class="engine-world-continent engine-world-north-america"
-            d="M126 300 C152 226 228 184 308 194 C350 200 382 231 408 271 C384 298 355 322 341 356 C317 377 292 381 267 404 C241 397 222 376 194 373 C172 352 151 328 126 300 Z"
-        />
-
-        <path
-            class="engine-world-continent engine-world-south-america"
-            d="M326 420 C369 427 403 451 421 488 C426 532 409 567 392 605 C378 645 361 689 333 729 C309 701 304 665 290 632 C280 594 265 561 269 520 C284 483 301 451 326 420 Z"
-        />
-
-        <path
-            class="engine-world-continent engine-world-europe"
-            d="M472 276 C507 250 551 247 583 266 C599 284 596 309 576 324 C548 325 524 318 499 329 C479 319 465 299 472 276 Z"
-        />
-
-        <path
-            class="engine-world-continent engine-world-africa"
-            d="M486 341 C532 323 581 338 605 373 C620 418 608 465 589 510 C568 556 542 596 506 619 C482 584 464 544 451 501 C439 455 443 405 459 367 C468 356 477 348 486 341 Z"
-        />
-
-        <path
-            class="engine-world-continent engine-world-asia"
-            d="M579 248 C633 215 712 211 770 238 C811 260 842 291 855 330 C828 351 795 353 769 373 C734 372 707 356 679 372 C649 362 625 338 594 329 C572 307 568 277 579 248 Z"
-        />
-
-        <path
-            class="engine-world-continent engine-world-australia"
-            d="M726 567 C768 548 817 557 839 590 C837 625 810 652 775 661 C744 653 717 633 708 603 C710 588 716 576 726 567 Z"
-        />
-
-        <path
-            class="engine-world-continent engine-world-greenland"
-            d="M372 176 C397 151 432 151 451 174 C450 201 430 222 405 233 C384 222 369 202 372 176 Z"
-        />
-
-    </g>
-</svg>
+/>
 
         <span
             class="engine-world-city-lights"

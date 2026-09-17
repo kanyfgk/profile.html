@@ -7384,3 +7384,37 @@ and
 .engine-world-node{
     z-index:14;
 }
+
+/* =========================================================
+   WORLD RENDERER V2.1 — FILE BASED SVG MAP
+========================================================= */
+
+.engine-world-map{
+    position:absolute;
+
+    inset:14%;
+
+    z-index:3;
+
+    width:72%;
+    height:72%;
+
+    object-fit:contain;
+
+    pointer-events:none;
+
+    opacity:.34;
+
+    filter:
+        brightness(.78)
+        sepia(.18)
+        hue-rotate(58deg)
+        saturate(.70)
+        contrast(.92)
+        drop-shadow(0 2px 4px rgba(2,20,24,.22));
+}
+
+.engine-world-continent,
+.engine-world-continents{
+    display:none !important;
+}
