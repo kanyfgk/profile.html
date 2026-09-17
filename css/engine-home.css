@@ -8605,3 +8605,74 @@ and
     filter:
         blur(26px) !important;
 }
+
+/* =========================================================
+   REGION MAP V1.5 — FULL STAGE VIEWPORT
+========================================================= */
+
+.engine-region-map-layer{
+    left:0 !important;
+    top:0 !important;
+    right:0 !important;
+    bottom:0 !important;
+
+    width:100% !important;
+    height:100% !important;
+
+    max-height:none !important;
+    aspect-ratio:auto !important;
+
+    overflow:hidden !important;
+
+    transform:none !important;
+
+    -webkit-mask-image:none !important;
+    mask-image:none !important;
+
+    filter:none !important;
+}
+
+.engine-spatial-home.is-world-focus.is-region-focus
+.engine-region-map-layer{
+    opacity:1 !important;
+
+    transform:none !important;
+}
+
+.engine-region-ocean{
+    inset:-10% !important;
+
+    border-radius:0 !important;
+
+    filter:
+        blur(24px) !important;
+}
+
+.engine-region-map{
+    left:50% !important;
+    top:50% !important;
+    right:auto !important;
+    bottom:auto !important;
+
+    width:138% !important;
+    height:138% !important;
+
+    max-width:none !important;
+    max-height:none !important;
+
+    object-fit:cover !important;
+    object-position:center !important;
+
+    transform:
+        translate(-50%,-50%) !important;
+
+    -webkit-mask-image:none !important;
+    mask-image:none !important;
+
+    opacity:.80 !important;
+}
+
+.engine-region-marker-cyprus{
+    left:67% !important;
+    top:51% !important;
+}
