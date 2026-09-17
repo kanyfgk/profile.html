@@ -8676,3 +8676,154 @@ and
     left:67% !important;
     top:51% !important;
 }
+
+/* =========================================================
+   REGION MAP V1.6 — TRUE TRANSPARENT GEOGRAPHY
+   Rectangle removed at source layer level
+========================================================= */
+
+.engine-spatial-home.is-world-focus.is-region-focus
+.engine-region-map-layer{
+    position:absolute !important;
+
+    inset:0 !important;
+
+    width:100% !important;
+    height:100% !important;
+
+    max-width:none !important;
+    max-height:none !important;
+
+    aspect-ratio:auto !important;
+
+    overflow:hidden !important;
+
+    background:transparent !important;
+
+    opacity:1 !important;
+
+    transform:none !important;
+
+    -webkit-mask-image:none !important;
+    mask-image:none !important;
+
+    filter:none !important;
+
+    isolation:isolate;
+}
+
+
+/* ---------------------------------------------------------
+   REMOVE THE RECTANGULAR "OCEAN CARD"
+--------------------------------------------------------- */
+
+.engine-region-ocean{
+    display:none !important;
+}
+
+
+/* ---------------------------------------------------------
+   AMBIENT REGION LIGHT
+   Full-stage atmosphere instead of a rectangular background
+--------------------------------------------------------- */
+
+.engine-region-map-layer::before{
+    content:"";
+
+    position:absolute;
+
+    inset:-12%;
+
+    z-index:0;
+
+    pointer-events:none;
+
+    background:
+        radial-gradient(
+            ellipse 58% 48% at 58% 52%,
+            rgba(27,104,139,.24) 0%,
+            rgba(15,72,101,.14) 38%,
+            rgba(8,45,67,.07) 58%,
+            transparent 78%
+        );
+
+    filter:
+        blur(22px);
+}
+
+
+/* ---------------------------------------------------------
+   TRANSPARENT GEOGRAPHY ONLY
+--------------------------------------------------------- */
+
+.engine-region-map{
+    position:absolute !important;
+
+    left:50% !important;
+    top:50% !important;
+
+    right:auto !important;
+    bottom:auto !important;
+
+    z-index:2 !important;
+
+    width:142% !important;
+    height:142% !important;
+
+    max-width:none !important;
+    max-height:none !important;
+
+    object-fit:cover !important;
+    object-position:center !important;
+
+    background:transparent !important;
+
+    transform:
+        translate(-50%,-50%) !important;
+
+    opacity:.78 !important;
+
+    -webkit-mask-image:none !important;
+    mask-image:none !important;
+
+    filter:
+        brightness(.72)
+        saturate(.76)
+        contrast(1.06)
+        drop-shadow(
+            0
+            3px
+            7px
+            rgba(0,10,16,.28)
+        ) !important;
+}
+
+
+/* ---------------------------------------------------------
+   REGION MARKERS STAY ABOVE GEOGRAPHY
+--------------------------------------------------------- */
+
+.engine-region-marker{
+    z-index:8 !important;
+}
+
+.engine-region-marker-cyprus{
+    left:67% !important;
+    top:51% !important;
+}
+
+
+/* ---------------------------------------------------------
+   OLD GLOBE BECOMES ALMOST INVISIBLE
+--------------------------------------------------------- */
+
+.engine-spatial-home.is-world-focus.is-region-focus
+.engine-world-system{
+    opacity:.018 !important;
+
+    filter:
+        blur(16px)
+        brightness(.48) !important;
+
+    pointer-events:none !important;
+}
