@@ -7465,3 +7465,20 @@ and
 .engine-world-system .engine-world-light{
     opacity:.66 !important;
 }
+
+/* =========================================================
+   WORLD RENDERER V2.3 — GLOBE / MAP ALIGNMENT
+========================================================= */
+
+.engine-world-map{
+    inset:0 !important;
+
+    width:100% !important;
+    height:100% !important;
+
+    transform:
+        scale(1.053)
+        rotate(-3deg) !important;
+
+    transform-origin:center !important;
+}
