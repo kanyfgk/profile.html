@@ -7698,3 +7698,39 @@ and
     }
 
 }
+
+/* =========================================================
+   WORLD ZOOM LAYER V1.1 — FOCUS COMPOSITION
+========================================================= */
+
+.engine-spatial-home.is-world-focus
+.engine-world-system{
+    left:50% !important;
+    top:51% !important;
+
+    width:
+        min(
+            64vw,
+            72vh,
+            740px
+        ) !important;
+}
+
+.engine-bottom-nav{
+    transition:
+        opacity .35s ease,
+        filter .35s ease;
+}
+
+.engine-spatial-home.is-world-focus
+~ .engine-bottom-nav,
+.vaero-engine-home:has(.engine-spatial-home.is-world-focus)
+.engine-bottom-nav{
+    opacity:.20;
+
+    filter:
+        saturate(.55)
+        brightness(.72);
+
+    pointer-events:none;
+}
