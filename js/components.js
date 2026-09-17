@@ -904,6 +904,25 @@ const Components = {
                 </header>
 
 
+                <div class="engine-shell-identity">
+
+                    <div>
+                        <span>VAERO ENGINE</span>
+                        <small>Living System</small>
+                    </div>
+
+                    <button
+                        type="button"
+                        class="engine-system-view-btn"
+                        data-action="app:vaero"
+                    >
+                        Engine View
+                        <span>→</span>
+                    </button>
+
+                </div>
+
+
                 <main class="engine-spatial-home">
 
                     <section class="engine-world-stage">

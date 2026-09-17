@@ -5395,3 +5395,168 @@ and
     }
 
 }
+
+
+/* =========================================================
+   ENGINE SHELL IDENTITY
+========================================================= */
+
+.engine-shell-identity{
+    position:relative;
+
+    z-index:30;
+
+    display:flex;
+
+    align-items:center;
+    justify-content:space-between;
+
+    gap:18px;
+
+    width:100%;
+
+    min-height:48px;
+
+    padding:
+        0
+        6px
+        0
+        8px;
+}
+
+
+.engine-shell-identity > div{
+    display:flex;
+
+    align-items:baseline;
+
+    gap:10px;
+}
+
+
+.engine-shell-identity > div > span{
+    color:
+        rgba(247,246,242,.96);
+
+    font-size:12px;
+    font-weight:760;
+
+    letter-spacing:.18em;
+}
+
+
+.engine-shell-identity > div > small{
+    color:
+        rgba(215,171,99,.68);
+
+    font-size:8px;
+    font-weight:650;
+
+    letter-spacing:.08em;
+
+    text-transform:uppercase;
+}
+
+
+.engine-system-view-btn{
+    display:inline-flex;
+
+    align-items:center;
+    justify-content:center;
+
+    gap:8px;
+
+    min-height:32px;
+
+    padding:
+        0
+        13px;
+
+    border:
+        1px solid
+        rgba(255,255,255,.075);
+
+    border-radius:999px;
+
+    background:
+        rgba(4,11,19,.46);
+
+    color:
+        rgba(234,237,240,.64);
+
+    font:inherit;
+
+    font-size:8px;
+    font-weight:650;
+
+    letter-spacing:.02em;
+
+    cursor:pointer;
+
+    backdrop-filter:blur(14px);
+    -webkit-backdrop-filter:blur(14px);
+
+    transition:
+        transform
+        .18s
+        ease,
+
+        color
+        .18s
+        ease,
+
+        border-color
+        .18s
+        ease,
+
+        background
+        .18s
+        ease;
+}
+
+
+.engine-system-view-btn:hover{
+    transform:
+        translateY(-1px);
+
+    color:
+        var(--engine-home-gold-bright);
+
+    border-color:
+        rgba(215,171,99,.2);
+
+    background:
+        rgba(12,20,28,.68);
+}
+
+
+.engine-system-view-btn span{
+    font-size:11px;
+}
+
+
+@media (max-width: 620px){
+
+    .engine-shell-identity{
+        min-height:42px;
+
+        padding:
+            0
+            2px;
+    }
+
+
+    .engine-shell-identity > div > small{
+        display:none;
+    }
+
+
+    .engine-system-view-btn{
+        min-height:29px;
+
+        padding:
+            0
+            10px;
+    }
+
+}
