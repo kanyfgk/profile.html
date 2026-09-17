@@ -7418,3 +7418,50 @@ and
 .engine-world-continents{
     display:none !important;
 }
+
+/* =========================================================
+   WORLD RENDERER V2.2 — MATERIAL PASS
+========================================================= */
+
+.engine-world-map{
+    opacity:.72 !important;
+
+    filter:
+        brightness(.74)
+        saturate(.78)
+        contrast(.98)
+        drop-shadow(
+            0
+            4px
+            7px
+            rgba(0,12,17,.28)
+        ) !important;
+}
+
+.engine-world-system .engine-world-globe{
+    background:
+        radial-gradient(
+            circle at 29% 22%,
+            rgba(112,190,224,.17),
+            transparent 18%
+        ),
+        radial-gradient(
+            circle at 51% 47%,
+            #124760 0%,
+            #0b354b 43%,
+            #062537 70%,
+            #02131e 100%
+        ) !important;
+}
+
+.engine-world-city-lights{
+    opacity:.58 !important;
+}
+
+.engine-world-clouds{
+    opacity:.43 !important;
+}
+
+.engine-world-system .engine-world-light{
+    opacity:.66 !important;
+}
