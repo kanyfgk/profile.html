@@ -979,6 +979,29 @@ const Components = {
 
 </div>
 
+<div
+    class="engine-region-map-layer"
+    aria-hidden="true"
+>
+    <div class="engine-region-ocean"></div>
+
+    <img
+        class="engine-region-map"
+        src="./assets/world/eastern_mediterranean_10m.svg"
+        alt=""
+        aria-hidden="true"
+    />
+
+    <div class="engine-region-marker engine-region-marker-cyprus">
+        <span></span>
+
+        <div>
+            <strong>Kıbrıs</strong>
+            <small>Doğu Akdeniz</small>
+        </div>
+    </div>
+</div>
+
 <div class="engine-world-system">
 
     <button

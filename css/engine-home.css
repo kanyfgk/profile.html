@@ -8137,3 +8137,273 @@ and
     }
 
 }
+
+/* =========================================================
+   SEMANTIC ZOOM V1.1 — REAL REGIONAL MAP
+========================================================= */
+
+.engine-region-map-layer{
+    position:absolute;
+
+    left:50%;
+    top:52%;
+
+    z-index:20;
+
+    width:
+        min(
+            84vw,
+            980px
+        );
+
+    aspect-ratio:
+        1000 / 760;
+
+    max-height:
+        72vh;
+
+    opacity:0;
+
+    pointer-events:none;
+
+    transform:
+        translate(-50%,-50%)
+        scale(.88);
+
+    transition:
+        opacity .48s ease,
+        transform .9s cubic-bezier(.18,.82,.18,1);
+
+    filter:
+        drop-shadow(
+            0
+            28px
+            60px
+            rgba(0,0,0,.26)
+        );
+}
+
+
+.engine-region-ocean{
+    position:absolute;
+
+    inset:0;
+
+    border-radius:28px;
+
+    background:
+        radial-gradient(
+            circle at 68% 48%,
+            rgba(40,112,148,.30),
+            transparent 34%
+        ),
+        linear-gradient(
+            145deg,
+            rgba(9,50,71,.86),
+            rgba(4,27,41,.94)
+        );
+
+    box-shadow:
+        inset
+        0
+        1px
+        0
+        rgba(255,255,255,.045),
+
+        inset
+        0
+        0
+        80px
+        rgba(0,0,0,.22);
+
+    border:
+        1px solid
+        rgba(132,202,228,.09);
+}
+
+
+.engine-region-map{
+    position:absolute;
+
+    inset:0;
+
+    width:100%;
+    height:100%;
+
+    object-fit:contain;
+
+    z-index:2;
+
+    opacity:.90;
+
+    filter:
+        brightness(.78)
+        saturate(.76)
+        contrast(1.02)
+        drop-shadow(
+            0
+            3px
+            6px
+            rgba(0,10,15,.24)
+        );
+}
+
+
+.engine-region-marker{
+    position:absolute;
+
+    z-index:6;
+
+    display:flex;
+    align-items:center;
+
+    gap:8px;
+
+    padding:
+        7px
+        10px;
+
+    border:
+        1px solid
+        rgba(137,220,250,.24);
+
+    border-radius:999px;
+
+    background:
+        rgba(3,20,30,.78);
+
+    color:
+        rgba(246,249,250,.94);
+
+    box-shadow:
+        0
+        12px
+        30px
+        rgba(0,0,0,.28);
+
+    backdrop-filter:
+        blur(14px);
+
+    -webkit-backdrop-filter:
+        blur(14px);
+
+    transform:
+        translate(-50%,-50%);
+}
+
+
+/*
+ * Regional SVG bbox:
+ * lon 20°–39°
+ * lat 28°–42.5°
+ *
+ * Cyprus ≈ lon 33.3 / lat 35.1
+ */
+
+.engine-region-marker-cyprus{
+    left:70%;
+    top:51%;
+}
+
+
+.engine-region-marker > span{
+    width:7px;
+    height:7px;
+
+    flex:
+        0
+        0
+        7px;
+
+    border-radius:50%;
+
+    background:
+        #88dcfb;
+
+    box-shadow:
+        0
+        0
+        16px
+        rgba(110,215,255,.92);
+}
+
+
+.engine-region-marker > div{
+    display:flex;
+    flex-direction:column;
+
+    line-height:1.05;
+}
+
+
+.engine-region-marker strong{
+    font-size:8px;
+    font-weight:720;
+}
+
+
+.engine-region-marker small{
+    margin-top:3px;
+
+    color:
+        rgba(205,222,230,.56);
+
+    font-size:6px;
+}
+
+
+/* ---------- activate regional map ---------- */
+
+.engine-spatial-home.is-world-focus.is-region-focus
+.engine-region-map-layer{
+    opacity:1;
+
+    pointer-events:auto;
+
+    transform:
+        translate(-50%,-50%)
+        scale(1);
+}
+
+
+/*
+ * Old 110m globe now becomes only a transition ghost.
+ * We no longer enlarge it as the actual regional map.
+ */
+
+.engine-spatial-home.is-world-focus.is-region-focus
+.engine-world-system{
+    opacity:.10;
+
+    transform:
+        scale(.88);
+
+    filter:
+        blur(7px)
+        brightness(.72);
+
+    pointer-events:none;
+}
+
+
+.engine-spatial-home.is-world-focus.is-region-focus
+.engine-world-globe{
+    transform:
+        scale(1) !important;
+
+    transform-origin:
+        center !important;
+}
+
+
+/* ---------- mobile ---------- */
+
+@media (max-width:720px){
+
+    .engine-region-map-layer{
+        width:94vw;
+
+        top:54%;
+    }
+
+}
