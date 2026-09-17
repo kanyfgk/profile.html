@@ -971,7 +971,7 @@ const Components = {
 
         <img
     class="engine-world-map"
-    src="./assets/world/ne_110m_land.svg"
+    src="./assets/world/vaero_globe_ortho.svg"
     alt=""
     aria-hidden="true"
 />
