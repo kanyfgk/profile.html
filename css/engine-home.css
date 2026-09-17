@@ -8407,3 +8407,77 @@ and
     }
 
 }
+
+/* =========================================================
+   REGION MAP V1.2 — VISUAL INTEGRATION
+========================================================= */
+
+.engine-region-map-layer{
+    width:
+        min(
+            78vw,
+            920px
+        ) !important;
+
+    filter:
+        drop-shadow(
+            0
+            30px
+            70px
+            rgba(0,0,0,.22)
+        );
+}
+
+.engine-region-ocean{
+    border-radius:34px !important;
+
+    background:
+        radial-gradient(
+            circle at 63% 52%,
+            rgba(37,105,139,.24),
+            transparent 38%
+        ),
+        linear-gradient(
+            145deg,
+            rgba(8,43,61,.90),
+            rgba(3,24,37,.96)
+        ) !important;
+}
+
+.engine-region-map{
+    opacity:.78 !important;
+
+    filter:
+        brightness(.70)
+        saturate(.72)
+        contrast(1.04)
+        drop-shadow(
+            0
+            3px
+            5px
+            rgba(0,9,14,.24)
+        ) !important;
+
+    -webkit-mask-image:
+        linear-gradient(
+            to right,
+            transparent 0%,
+            black 4%,
+            black 96%,
+            transparent 100%
+        );
+
+    mask-image:
+        linear-gradient(
+            to right,
+            transparent 0%,
+            black 4%,
+            black 96%,
+            transparent 100%
+        );
+}
+
+.engine-region-marker-cyprus{
+    left:68.8% !important;
+    top:50.7% !important;
+}
