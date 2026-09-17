@@ -7060,3 +7060,72 @@ and
     }
 
 }
+
+/* =========================================================
+   WORLD RENDERER V1.1 — COMPOSITION POLISH
+========================================================= */
+
+.engine-world-system{
+    left:34% !important;
+    top:49% !important;
+
+    width:min(42vw,520px) !important;
+}
+
+.engine-world-land{
+    opacity:.62;
+
+    background:
+        linear-gradient(
+            145deg,
+            rgba(74,112,86,.72),
+            rgba(30,68,64,.76)
+        ) !important;
+
+    filter:
+        saturate(.62)
+        contrast(.92)
+        blur(.25px);
+}
+
+.engine-world-city-lights{
+    opacity:.62;
+}
+
+.engine-world-clouds{
+    opacity:.52;
+}
+
+.engine-world-node{
+    min-width:106px;
+
+    padding:
+        7px
+        9px;
+
+    background:
+        rgba(3,13,22,.60);
+
+    border-color:
+        rgba(157,208,235,.10);
+}
+
+.engine-world-node-community{
+    left:0%;
+    top:40%;
+}
+
+.engine-world-node-explore{
+    right:-2%;
+    top:28%;
+}
+
+.engine-world-node-active{
+    right:4%;
+    bottom:17%;
+}
+
+.engine-world-identity{
+    left:34% !important;
+    bottom:11% !important;
+}
