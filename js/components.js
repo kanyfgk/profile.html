@@ -950,12 +950,22 @@ const Components = {
                         </div>
 
 
-                        <div class="engine-world-system">
+                        <button
+    type="button"
+    class="engine-world-focus-exit"
+    data-action="world:focus:exit"
+    aria-label="Dünya odağından çık"
+>
+    <span>←</span>
+    <strong>Dünya görünümünden çık</strong>
+</button>
+
+<div class="engine-world-system">
 
     <button
         type="button"
         class="engine-world-globe"
-        data-action="worlds:open"
+        data-action="world:focus"
         aria-label="VAERO World'ü aç"
     >
 

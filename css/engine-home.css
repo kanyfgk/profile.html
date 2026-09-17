@@ -7482,3 +7482,219 @@ and
 
     transform-origin:center !important;
 }
+
+/* =========================================================
+   WORLD ZOOM LAYER V1
+========================================================= */
+
+.engine-world-system{
+    transition:
+        left .72s cubic-bezier(.2,.75,.2,1),
+        top .72s cubic-bezier(.2,.75,.2,1),
+        width .72s cubic-bezier(.2,.75,.2,1),
+        transform .72s cubic-bezier(.2,.75,.2,1),
+        filter .45s ease;
+}
+
+.engine-world-focus-exit{
+    position:absolute;
+
+    top:22px;
+    left:24px;
+
+    z-index:40;
+
+    display:flex;
+    align-items:center;
+
+    gap:8px;
+
+    padding:
+        8px
+        12px;
+
+    border:
+        1px solid
+        rgba(174,214,235,.14);
+
+    border-radius:999px;
+
+    background:
+        rgba(3,15,24,.64);
+
+    color:
+        rgba(238,245,248,.84);
+
+    box-shadow:
+        0
+        14px
+        34px
+        rgba(0,0,0,.22);
+
+    font:inherit;
+
+    cursor:pointer;
+
+    opacity:0;
+
+    pointer-events:none;
+
+    transform:
+        translateY(-8px);
+
+    transition:
+        opacity .35s ease,
+        transform .35s ease,
+        background .2s ease;
+
+    backdrop-filter:
+        blur(16px);
+
+    -webkit-backdrop-filter:
+        blur(16px);
+}
+
+.engine-world-focus-exit span{
+    color:
+        rgba(127,211,246,.9);
+
+    font-size:14px;
+}
+
+.engine-world-focus-exit strong{
+    font-size:8px;
+    font-weight:650;
+
+    letter-spacing:.02em;
+}
+
+.engine-world-focus-exit:hover{
+    background:
+        rgba(7,27,40,.82);
+}
+
+
+/* ---------- focused world ---------- */
+
+.engine-spatial-home.is-world-focus
+.engine-world-system{
+    left:50% !important;
+    top:50% !important;
+
+    width:
+        min(
+            72vw,
+            820px
+        ) !important;
+
+    filter:
+        brightness(1.03);
+}
+
+.engine-spatial-home.is-world-focus
+.engine-world-focus-exit{
+    opacity:1;
+
+    pointer-events:auto;
+
+    transform:
+        translateY(0);
+}
+
+
+/* ---------- surrounding UI retreats ---------- */
+
+.engine-brain-presence,
+.engine-now-panel,
+.engine-stage-welcome,
+.engine-intent-dock,
+.engine-world-bridge,
+.engine-world-identity{
+    transition:
+        opacity .36s ease,
+        transform .5s cubic-bezier(.2,.75,.2,1),
+        filter .36s ease;
+}
+
+.engine-spatial-home.is-world-focus
+.engine-brain-presence,
+.engine-spatial-home.is-world-focus
+.engine-now-panel{
+    opacity:0;
+
+    pointer-events:none;
+
+    transform:
+        translateX(34px);
+
+    filter:
+        blur(5px);
+}
+
+.engine-spatial-home.is-world-focus
+.engine-stage-welcome{
+    opacity:0;
+
+    pointer-events:none;
+
+    transform:
+        translateY(-14px);
+}
+
+.engine-spatial-home.is-world-focus
+.engine-intent-dock{
+    opacity:.12;
+
+    pointer-events:none;
+
+    transform:
+        translateX(-50%)
+        translateY(18px);
+}
+
+.engine-spatial-home.is-world-focus
+.engine-world-bridge{
+    opacity:0;
+
+    pointer-events:none;
+
+    transform:
+        translateY(16px);
+}
+
+.engine-spatial-home.is-world-focus
+.engine-world-identity{
+    opacity:0;
+
+    pointer-events:none;
+}
+
+
+/* ---------- nodes stay usable ---------- */
+
+.engine-spatial-home.is-world-focus
+.engine-world-node{
+    opacity:.92;
+
+    backdrop-filter:
+        blur(18px);
+
+    -webkit-backdrop-filter:
+        blur(18px);
+}
+
+
+/* ---------- mobile ---------- */
+
+@media (max-width:720px){
+
+    .engine-spatial-home.is-world-focus
+    .engine-world-system{
+        width:
+            min(
+                94vw,
+                650px
+            ) !important;
+    }
+
+}

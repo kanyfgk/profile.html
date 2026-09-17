@@ -1084,6 +1084,71 @@ notify(
     },
 
 
+    focusWorld(){
+
+        const stage =
+            document.querySelector(
+                ".engine-spatial-home"
+            );
+
+        if(!stage){
+            return false;
+        }
+
+        stage.classList.add(
+            "is-world-focus"
+        );
+
+        stage.setAttribute(
+            "data-world-focus",
+            "true"
+        );
+
+        this.syncAwareness(
+            "world",
+            {
+                mode:
+                    "focus"
+            }
+        );
+
+        return true;
+
+    },
+
+
+    exitWorldFocus(){
+
+        const stage =
+            document.querySelector(
+                ".engine-spatial-home"
+            );
+
+        if(!stage){
+            return false;
+        }
+
+        stage.classList.remove(
+            "is-world-focus"
+        );
+
+        stage.removeAttribute(
+            "data-world-focus"
+        );
+
+        this.syncAwareness(
+            "home",
+            {
+                source:
+                    "world-focus-exit"
+            }
+        );
+
+        return true;
+
+    },
+
+
     openWorlds(){
 
         const engine =
@@ -9767,6 +9832,16 @@ if(
             case "create:open":
 
                 return this.openCreate();
+
+
+            case "world:focus":
+
+                return this.focusWorld();
+
+
+            case "world:focus:exit":
+
+                return this.exitWorldFocus();
 
 
             case "worlds:open":
