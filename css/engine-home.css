@@ -8556,3 +8556,52 @@ and
         blur(12px)
         brightness(.58) !important;
 }
+
+/* =========================================================
+   REGION MAP V1.4 — REMOVE RECTANGULAR CROP
+========================================================= */
+
+.engine-region-map-layer{
+    width:
+        min(
+            94vw,
+            1120px
+        ) !important;
+
+    -webkit-mask-image:
+        radial-gradient(
+            ellipse 72% 70% at 50% 50%,
+            #000 0%,
+            #000 58%,
+            rgba(0,0,0,.92) 68%,
+            rgba(0,0,0,.62) 79%,
+            rgba(0,0,0,.24) 90%,
+            transparent 100%
+        ) !important;
+
+    mask-image:
+        radial-gradient(
+            ellipse 72% 70% at 50% 50%,
+            #000 0%,
+            #000 58%,
+            rgba(0,0,0,.92) 68%,
+            rgba(0,0,0,.62) 79%,
+            rgba(0,0,0,.24) 90%,
+            transparent 100%
+        ) !important;
+
+    -webkit-mask-repeat:no-repeat !important;
+    mask-repeat:no-repeat !important;
+}
+
+.engine-region-map{
+    -webkit-mask-image:none !important;
+    mask-image:none !important;
+}
+
+.engine-region-ocean{
+    inset:-12% !important;
+
+    filter:
+        blur(26px) !important;
+}
