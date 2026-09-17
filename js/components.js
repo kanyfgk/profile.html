@@ -950,29 +950,104 @@ const Components = {
                         </div>
 
 
-                        <button
-                            type="button"
-                            class="engine-world-globe"
-                            data-action="worlds:open"
-                            aria-label="VAERO World'ü aç"
-                        >
+                        <div class="engine-world-system">
 
-                            <span
-                                class="engine-world-atmosphere"
-                                aria-hidden="true"
-                            ></span>
+    <button
+        type="button"
+        class="engine-world-globe"
+        data-action="worlds:open"
+        aria-label="VAERO World'ü aç"
+    >
 
-                            <span
-                                class="engine-world-surface"
-                                aria-hidden="true"
-                            ></span>
+        <span
+            class="engine-world-atmosphere"
+            aria-hidden="true"
+        ></span>
 
-                            <span
-                                class="engine-world-light"
-                                aria-hidden="true"
-                            ></span>
+        <span
+            class="engine-world-surface"
+            aria-hidden="true"
+        ></span>
 
-                        </button>
+        <span
+            class="engine-world-land engine-world-land-a"
+            aria-hidden="true"
+        ></span>
+
+        <span
+            class="engine-world-land engine-world-land-b"
+            aria-hidden="true"
+        ></span>
+
+        <span
+            class="engine-world-land engine-world-land-c"
+            aria-hidden="true"
+        ></span>
+
+        <span
+            class="engine-world-city-lights"
+            aria-hidden="true"
+        ></span>
+
+        <span
+            class="engine-world-clouds"
+            aria-hidden="true"
+        ></span>
+
+        <span
+            class="engine-world-light"
+            aria-hidden="true"
+        ></span>
+
+    </button>
+
+
+    <button
+        type="button"
+        class="engine-world-node engine-world-node-community"
+        data-action="worlds:open"
+    >
+        <i></i>
+        <span>Topluluk</span>
+        <small>Yaşayan alan</small>
+    </button>
+
+
+    <button
+        type="button"
+        class="engine-world-node engine-world-node-explore"
+        data-action="worlds:open"
+    >
+        <i></i>
+        <span>Keşif</span>
+        <small>Dünyaları keşfet</small>
+    </button>
+
+
+    ${
+        activeWorld?.id
+            ? `
+                <button
+                    type="button"
+                    class="engine-world-node engine-world-node-active"
+                    data-action="world:open"
+                    data-world-id="${this.escapeHTML(
+                        activeWorld.id
+                    )}"
+                >
+                    <i></i>
+                    <span>
+                        ${this.escapeHTML(
+                            worldName
+                        )}
+                    </span>
+                    <small>Aktif Dünya</small>
+                </button>
+            `
+            : ""
+    }
+
+</div>
 
 
                         <div class="engine-world-identity">
