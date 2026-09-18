@@ -7484,17 +7484,210 @@ and
 }
 
 /* =========================================================
-   WORLD ZOOM LAYER V1
+   VAERO WORLD SCENE SYSTEM V1
+   HOME → WORLD → REGION → ISLAND
 ========================================================= */
 
-.engine-world-system{
-    transition:
-        left .72s cubic-bezier(.2,.75,.2,1),
-        top .72s cubic-bezier(.2,.75,.2,1),
-        width .72s cubic-bezier(.2,.75,.2,1),
-        transform .72s cubic-bezier(.2,.75,.2,1),
-        filter .45s ease;
+
+/* =========================================================
+   SHARED STAGE
+========================================================= */
+
+.engine-spatial-home{
+    position:relative !important;
+
+    width:100% !important;
+    height:100% !important;
+
+    min-width:0 !important;
+    min-height:0 !important;
+
+    overflow:hidden !important;
 }
+
+.engine-world-stage{
+    position:relative !important;
+
+    width:100% !important;
+    height:100% !important;
+
+    min-width:0 !important;
+    min-height:0 !important;
+
+    overflow:hidden !important;
+}
+
+
+/* =========================================================
+   SHARED TRANSITIONS
+========================================================= */
+
+.engine-world-system,
+.engine-brain-presence,
+.engine-world-identity,
+.engine-stage-welcome,
+.engine-intent-dock,
+.engine-now-panel,
+.engine-world-bridge,
+.engine-region-map-layer,
+.engine-island-map-layer{
+    transition:
+        opacity .42s ease,
+        transform .68s cubic-bezier(.2,.75,.2,1),
+        filter .42s ease;
+}
+
+
+/* =========================================================
+   HOME SCENE — DESKTOP
+========================================================= */
+
+.engine-spatial-home:not(.is-world-focus)
+.engine-world-system{
+    left:36% !important;
+    top:49% !important;
+
+    width:
+        min(
+            46vw,
+            600px
+        ) !important;
+
+    transform:
+        translate(-50%,-50%) !important;
+
+    opacity:1 !important;
+    visibility:visible !important;
+
+    pointer-events:auto !important;
+}
+
+.engine-spatial-home:not(.is-world-focus)
+.engine-world-identity{
+    left:36% !important;
+
+    top:auto !important;
+    bottom:7% !important;
+
+    transform:
+        translateX(-50%) !important;
+
+    opacity:1 !important;
+}
+
+.engine-spatial-home:not(.is-world-focus)
+.engine-brain-presence{
+    left:auto !important;
+    right:5.5% !important;
+
+    top:43% !important;
+
+    width:
+        min(
+            360px,
+            30vw
+        ) !important;
+
+    transform:
+        translateY(-50%) !important;
+
+    opacity:1 !important;
+
+    align-items:flex-start !important;
+    text-align:left !important;
+}
+
+.engine-spatial-home:not(.is-world-focus)
+.engine-brain-presence
+.engine-brain-orb{
+    width:104px !important;
+    height:104px !important;
+
+    margin:
+        0
+        0
+        12px
+        10px !important;
+}
+
+.engine-spatial-home:not(.is-world-focus)
+.engine-brain-invitation{
+    align-items:flex-start !important;
+}
+
+.engine-spatial-home:not(.is-world-focus)
+.engine-brain-invitation h1{
+    font-size:
+        clamp(
+            25px,
+            2.8vw,
+            38px
+        ) !important;
+
+    text-align:left !important;
+}
+
+.engine-spatial-home:not(.is-world-focus)
+.engine-brain-prompt{
+    width:100% !important;
+}
+
+.engine-spatial-home:not(.is-world-focus)
+.engine-intent-dock{
+    left:36% !important;
+
+    bottom:22px !important;
+
+    width:
+        min(
+            720px,
+            60vw
+        ) !important;
+
+    transform:
+        translateX(-50%) !important;
+
+    opacity:1 !important;
+}
+
+.engine-spatial-home:not(.is-world-focus)
+.engine-now-panel{
+    right:5.5% !important;
+
+    top:auto !important;
+    bottom:76px !important;
+
+    width:
+        min(
+            360px,
+            30vw
+        ) !important;
+
+    transform:none !important;
+
+    opacity:1 !important;
+}
+
+.engine-spatial-home:not(.is-world-focus)
+.engine-world-bridge{
+    left:22px !important;
+    bottom:22px !important;
+
+    opacity:1 !important;
+}
+
+.engine-spatial-home:not(.is-world-focus)
+.engine-stage-welcome{
+    top:24px !important;
+    left:26px !important;
+
+    opacity:1 !important;
+}
+
+
+/* =========================================================
+   FOCUS CONTROLS
+========================================================= */
 
 .engine-world-focus-exit{
     position:absolute;
@@ -7502,7 +7695,7 @@ and
     top:22px;
     left:24px;
 
-    z-index:40;
+    z-index:64;
 
     display:flex;
     align-items:center;
@@ -7510,20 +7703,20 @@ and
     gap:8px;
 
     padding:
-        8px
-        12px;
+        9px
+        13px;
 
     border:
         1px solid
-        rgba(174,214,235,.14);
+        rgba(174,214,235,.15);
 
     border-radius:999px;
 
     background:
-        rgba(3,15,24,.64);
+        rgba(3,15,24,.74);
 
     color:
-        rgba(238,245,248,.84);
+        rgba(238,245,248,.88);
 
     box-shadow:
         0
@@ -7536,27 +7729,28 @@ and
     cursor:pointer;
 
     opacity:0;
+    visibility:hidden;
 
     pointer-events:none;
 
     transform:
-        translateY(-8px);
-
-    transition:
-        opacity .35s ease,
-        transform .35s ease,
-        background .2s ease;
+        translateY(-7px);
 
     backdrop-filter:
         blur(16px);
 
     -webkit-backdrop-filter:
         blur(16px);
+
+    transition:
+        opacity .3s ease,
+        transform .35s ease,
+        visibility .3s ease;
 }
 
 .engine-world-focus-exit span{
     color:
-        rgba(127,211,246,.9);
+        rgba(127,211,246,.94);
 
     font-size:14px;
 }
@@ -7564,149 +7758,17 @@ and
 .engine-world-focus-exit strong{
     font-size:8px;
     font-weight:650;
-
-    letter-spacing:.02em;
-}
-
-.engine-world-focus-exit:hover{
-    background:
-        rgba(7,27,40,.82);
 }
 
 
-/* ---------- focused world ---------- */
+/* =========================================================
+   WORLD FOCUS SCENE
+========================================================= */
 
-.engine-spatial-home.is-world-focus
+.engine-spatial-home.is-world-focus:not(.is-region-focus)
 .engine-world-system{
     left:50% !important;
     top:50% !important;
-
-    width:
-        min(
-            72vw,
-            820px
-        ) !important;
-
-    filter:
-        brightness(1.03);
-}
-
-.engine-spatial-home.is-world-focus
-.engine-world-focus-exit{
-    opacity:1;
-
-    pointer-events:auto;
-
-    transform:
-        translateY(0);
-}
-
-
-/* ---------- surrounding UI retreats ---------- */
-
-.engine-brain-presence,
-.engine-now-panel,
-.engine-stage-welcome,
-.engine-intent-dock,
-.engine-world-bridge,
-.engine-world-identity{
-    transition:
-        opacity .36s ease,
-        transform .5s cubic-bezier(.2,.75,.2,1),
-        filter .36s ease;
-}
-
-.engine-spatial-home.is-world-focus
-.engine-brain-presence,
-.engine-spatial-home.is-world-focus
-.engine-now-panel{
-    opacity:0;
-
-    pointer-events:none;
-
-    transform:
-        translateX(34px);
-
-    filter:
-        blur(5px);
-}
-
-.engine-spatial-home.is-world-focus
-.engine-stage-welcome{
-    opacity:0;
-
-    pointer-events:none;
-
-    transform:
-        translateY(-14px);
-}
-
-.engine-spatial-home.is-world-focus
-.engine-intent-dock{
-    opacity:.12;
-
-    pointer-events:none;
-
-    transform:
-        translateX(-50%)
-        translateY(18px);
-}
-
-.engine-spatial-home.is-world-focus
-.engine-world-bridge{
-    opacity:0;
-
-    pointer-events:none;
-
-    transform:
-        translateY(16px);
-}
-
-.engine-spatial-home.is-world-focus
-.engine-world-identity{
-    opacity:0;
-
-    pointer-events:none;
-}
-
-
-/* ---------- nodes stay usable ---------- */
-
-.engine-spatial-home.is-world-focus
-.engine-world-node{
-    opacity:.92;
-
-    backdrop-filter:
-        blur(18px);
-
-    -webkit-backdrop-filter:
-        blur(18px);
-}
-
-
-/* ---------- mobile ---------- */
-
-@media (max-width:720px){
-
-    .engine-spatial-home.is-world-focus
-    .engine-world-system{
-        width:
-            min(
-                94vw,
-                650px
-            ) !important;
-    }
-
-}
-
-/* =========================================================
-   WORLD ZOOM LAYER V1.1 — FOCUS COMPOSITION
-========================================================= */
-
-.engine-spatial-home.is-world-focus
-.engine-world-system{
-    left:50% !important;
-    top:51% !important;
 
     width:
         min(
@@ -7714,109 +7776,112 @@ and
             72vh,
             740px
         ) !important;
+
+    transform:
+        translate(-50%,-50%) !important;
+
+    opacity:1 !important;
+    visibility:visible !important;
+
+    pointer-events:auto !important;
 }
 
-.engine-bottom-nav{
-    transition:
-        opacity .35s ease,
-        filter .35s ease;
+.engine-spatial-home.is-world-focus:not(.is-region-focus)
+.engine-world-focus-exit{
+    opacity:1;
+    visibility:visible;
+
+    pointer-events:auto;
+
+    transform:
+        translateY(0);
 }
 
 .engine-spatial-home.is-world-focus
-~ .engine-bottom-nav,
-.vaero-engine-home:has(.engine-spatial-home.is-world-focus)
-.engine-bottom-nav{
-    opacity:.20;
+.engine-stage-welcome,
+.engine-spatial-home.is-world-focus
+.engine-brain-presence,
+.engine-spatial-home.is-world-focus
+.engine-world-identity,
+.engine-spatial-home.is-world-focus
+.engine-intent-dock,
+.engine-spatial-home.is-world-focus
+.engine-now-panel,
+.engine-spatial-home.is-world-focus
+.engine-world-bridge{
+    opacity:0 !important;
 
-    filter:
-        saturate(.55)
-        brightness(.72);
+    visibility:hidden !important;
 
-    pointer-events:none;
+    pointer-events:none !important;
 }
 
+
 /* =========================================================
-   SEMANTIC ZOOM V1 — WORLD → EASTERN MEDITERRANEAN
+   WORLD → REGION HOTSPOT
 ========================================================= */
-
-
-/* ---------- Cyprus geographic hotspot ---------- */
 
 .engine-region-hotspot{
     position:absolute;
 
-    z-index:24;
+    z-index:25;
 
     display:flex;
     align-items:center;
 
     gap:7px;
 
-    margin:0;
     padding:
         7px
         10px;
 
     border:
         1px solid
-        rgba(139,218,246,.24);
+        rgba(139,218,246,.25);
 
     border-radius:999px;
 
     background:
-        rgba(3,19,29,.78);
+        rgba(3,19,29,.82);
 
     color:
-        rgba(244,248,249,.94);
+        rgba(244,248,249,.95);
 
     box-shadow:
         0
         12px
         34px
-        rgba(0,0,0,.30),
-
-        inset
-        0
-        1px
-        0
-        rgba(255,255,255,.055);
+        rgba(0,0,0,.30);
 
     font:inherit;
 
     cursor:pointer;
 
     opacity:0;
+    visibility:hidden;
 
     pointer-events:none;
 
     transform:
         translate(-50%,-50%)
-        scale(.78);
-
-    transition:
-        opacity .32s ease,
-        transform .45s cubic-bezier(.2,.75,.2,1),
-        border-color .2s ease,
-        background .2s ease;
+        scale(.82);
 
     backdrop-filter:
         blur(16px);
 
     -webkit-backdrop-filter:
         blur(16px);
+
+    transition:
+        opacity .3s ease,
+        transform .4s cubic-bezier(.2,.75,.2,1),
+        visibility .3s ease;
 }
-
-
-/*
- * Orthographic projection:
- * Cyprus ≈ 58.8% x / 35.8% y
- */
 
 .engine-region-hotspot-cyprus{
     left:58.8%;
     top:35.8%;
 }
-
 
 .engine-region-hotspot-pulse{
     position:relative;
@@ -7831,8 +7896,7 @@ and
 
     border-radius:50%;
 
-    background:
-        #86ddff;
+    background:#86ddff;
 
     box-shadow:
         0
@@ -7877,9 +7941,7 @@ and
         opacity:0;
         transform:scale(1.5);
     }
-
 }
-
 
 .engine-region-hotspot-copy{
     display:flex;
@@ -7899,15 +7961,15 @@ and
     margin-top:3px;
 
     color:
-        rgba(205,222,230,.54);
+        rgba(205,222,230,.56);
 
     font-size:6px;
 }
 
-
 .engine-spatial-home.is-world-focus:not(.is-region-focus)
 .engine-region-hotspot{
     opacity:1;
+    visibility:visible;
 
     pointer-events:auto;
 
@@ -7916,29 +7978,19 @@ and
         scale(1);
 }
 
-.engine-spatial-home.is-world-focus:not(.is-region-focus)
-.engine-region-hotspot:hover{
-    border-color:
-        rgba(139,218,246,.46);
 
-    background:
-        rgba(6,29,42,.92);
+/* =========================================================
+   REGION / ISLAND HUD
+========================================================= */
 
-    transform:
-        translate(-50%,-50%)
-        scale(1.06);
-}
-
-
-/* ---------- region focus header ---------- */
-
-.engine-region-focus-panel{
+.engine-region-focus-panel,
+.engine-island-focus-panel{
     position:absolute;
 
-    top:22px;
+    top:20px;
     left:50%;
 
-    z-index:55;
+    z-index:70;
 
     display:flex;
     align-items:center;
@@ -7946,17 +7998,18 @@ and
     gap:16px;
 
     opacity:0;
+    visibility:hidden;
 
     pointer-events:none;
 
     transform:
-        translate(-50%,-10px);
+        translate(-50%,-8px);
 
     transition:
-        opacity .35s ease,
-        transform .45s cubic-bezier(.2,.75,.2,1);
+        opacity .3s ease,
+        transform .4s cubic-bezier(.2,.75,.2,1),
+        visibility .3s ease;
 }
-
 
 .engine-region-back{
     display:flex;
@@ -7964,24 +8017,26 @@ and
 
     gap:7px;
 
+    min-height:36px;
+
     padding:
-        8px
-        11px;
+        0
+        13px;
 
     border:
         1px solid
-        rgba(174,214,235,.14);
+        rgba(174,214,235,.15);
 
     border-radius:999px;
 
     background:
-        rgba(3,15,24,.72);
+        rgba(3,15,24,.78);
 
     color:
-        rgba(238,245,248,.84);
+        rgba(238,245,248,.88);
 
     font:inherit;
-    font-size:7px;
+    font-size:8px;
 
     cursor:pointer;
 
@@ -7994,11 +8049,10 @@ and
 
 .engine-region-back span{
     color:
-        rgba(127,211,246,.92);
+        rgba(127,211,246,.94);
 
-    font-size:13px;
+    font-size:14px;
 }
-
 
 .engine-region-focus-copy{
     display:flex;
@@ -8008,12 +8062,12 @@ and
 
     border-left:
         1px solid
-        rgba(155,209,231,.13);
+        rgba(155,209,231,.14);
 }
 
 .engine-region-focus-copy > span{
     color:
-        rgba(126,205,237,.58);
+        rgba(126,205,237,.62);
 
     font-size:6px;
     font-weight:750;
@@ -8027,467 +8081,67 @@ and
     color:
         rgba(245,248,249,.96);
 
-    font-size:13px;
-    font-weight:670;
+    font-size:14px;
+    font-weight:680;
 }
 
 .engine-region-focus-copy small{
     margin-top:2px;
 
     color:
-        rgba(205,219,227,.44);
+        rgba(205,219,227,.48);
 
     font-size:7px;
 }
 
 
-/* ---------- second zoom level ---------- */
-
-.engine-world-system
-.engine-world-globe{
-    transition:
-        transform
-        .9s
-        cubic-bezier(.18,.82,.18,1),
-
-        filter
-        .55s
-        ease !important;
-}
-
-
-.engine-spatial-home.is-world-focus.is-region-focus
-.engine-world-globe{
-
-    /*
-     * Keep Cyprus as the transform origin,
-     * then bring the Eastern Mediterranean toward centre.
-     */
-
-    transform:
-        translate(-8.8%,14.2%)
-        scale(2.15) !important;
-
-    transform-origin:
-        58.8%
-        35.8% !important;
-
-    pointer-events:none;
-
-    filter:
-        brightness(.92)
-        saturate(.88)
-        contrast(1.04) !important;
-}
-
-
-.engine-spatial-home.is-world-focus.is-region-focus
-.engine-world-node{
-    opacity:0 !important;
-
-    pointer-events:none;
-
-    transform:
-        scale(.78) !important;
-}
-
-
-.engine-spatial-home.is-world-focus.is-region-focus
-.engine-region-hotspot{
-    opacity:0;
-
-    pointer-events:none;
-}
-
-
-.engine-spatial-home.is-world-focus.is-region-focus
-.engine-world-focus-exit{
-    opacity:0;
-
-    pointer-events:none;
-}
-
-
-.engine-spatial-home.is-world-focus.is-region-focus
-.engine-region-focus-panel{
-    opacity:1;
-
-    pointer-events:auto;
-
-    transform:
-        translate(-50%,0);
-}
-
-
-/* ---------- mobile ---------- */
-
-@media (max-width:720px){
-
-    .engine-spatial-home.is-world-focus.is-region-focus
-    .engine-world-globe{
-        transform:
-            translate(-8.8%,14.2%)
-            scale(1.72) !important;
-    }
-
-    .engine-region-focus-panel{
-        top:14px;
-
-        gap:9px;
-    }
-
-}
-
 /* =========================================================
-   SEMANTIC ZOOM V1.1 — REAL REGIONAL MAP
+   REGION SCENE
 ========================================================= */
 
-.engine-region-map-layer{
-    position:absolute;
-
-    left:50%;
-    top:52%;
-
-    z-index:20;
-
-    width:
-        min(
-            84vw,
-            980px
-        );
-
-    aspect-ratio:
-        1000 / 760;
-
-    max-height:
-        72vh;
-
-    opacity:0;
-
-    pointer-events:none;
-
-    transform:
-        translate(-50%,-50%)
-        scale(.88);
-
-    transition:
-        opacity .48s ease,
-        transform .9s cubic-bezier(.18,.82,.18,1);
-
-    filter:
-        drop-shadow(
-            0
-            28px
-            60px
-            rgba(0,0,0,.26)
-        );
-}
-
-
-.engine-region-ocean{
-    position:absolute;
-
-    inset:0;
-
-    border-radius:28px;
-
-    background:
-        radial-gradient(
-            circle at 68% 48%,
-            rgba(40,112,148,.30),
-            transparent 34%
-        ),
-        linear-gradient(
-            145deg,
-            rgba(9,50,71,.86),
-            rgba(4,27,41,.94)
-        );
-
-    box-shadow:
-        inset
-        0
-        1px
-        0
-        rgba(255,255,255,.045),
-
-        inset
-        0
-        0
-        80px
-        rgba(0,0,0,.22);
-
-    border:
-        1px solid
-        rgba(132,202,228,.09);
-}
-
-
-.engine-region-map{
-    position:absolute;
-
-    inset:0;
-
-    width:100%;
-    height:100%;
-
-    object-fit:contain;
-
-    z-index:2;
-
-    opacity:.90;
-
-    filter:
-        brightness(.78)
-        saturate(.76)
-        contrast(1.02)
-        drop-shadow(
-            0
-            3px
-            6px
-            rgba(0,10,15,.24)
-        );
-}
-
-
-.engine-region-marker{
-    position:absolute;
-
-    z-index:6;
-
-    display:flex;
-    align-items:center;
-
-    gap:8px;
-
-    padding:
-        7px
-        10px;
-
-    border:
-        1px solid
-        rgba(137,220,250,.24);
-
-    border-radius:999px;
-
-    background:
-        rgba(3,20,30,.78);
-
-    color:
-        rgba(246,249,250,.94);
-
-    box-shadow:
-        0
-        12px
-        30px
-        rgba(0,0,0,.28);
-
-    backdrop-filter:
-        blur(14px);
-
-    -webkit-backdrop-filter:
-        blur(14px);
-
-    transform:
-        translate(-50%,-50%);
-}
-
-
-/*
- * Regional SVG bbox:
- * lon 20°–39°
- * lat 28°–42.5°
- *
- * Cyprus ≈ lon 33.3 / lat 35.1
- */
-
-.engine-region-marker-cyprus{
-    left:70%;
-    top:51%;
-}
-
-
-.engine-region-marker > span{
-    width:7px;
-    height:7px;
-
-    flex:
-        0
-        0
-        7px;
-
-    border-radius:50%;
-
-    background:
-        #88dcfb;
-
-    box-shadow:
-        0
-        0
-        16px
-        rgba(110,215,255,.92);
-}
-
-
-.engine-region-marker > div{
-    display:flex;
-    flex-direction:column;
-
-    line-height:1.05;
-}
-
-
-.engine-region-marker strong{
-    font-size:8px;
-    font-weight:720;
-}
-
-
-.engine-region-marker small{
-    margin-top:3px;
-
-    color:
-        rgba(205,222,230,.56);
-
-    font-size:6px;
-}
-
-
-/* ---------- activate regional map ---------- */
-
-.engine-spatial-home.is-world-focus.is-region-focus
-.engine-region-map-layer{
-    opacity:1;
-
-    pointer-events:auto;
-
-    transform:
-        translate(-50%,-50%)
-        scale(1);
-}
-
-
-/*
- * Old 110m globe now becomes only a transition ghost.
- * We no longer enlarge it as the actual regional map.
- */
-
-.engine-spatial-home.is-world-focus.is-region-focus
-.engine-world-system{
-    opacity:.10;
-
-    transform:
-        scale(.88);
-
-    filter:
-        blur(7px)
-        brightness(.72);
-
-    pointer-events:none;
-}
-
-
-.engine-spatial-home.is-world-focus.is-region-focus
-.engine-world-globe{
-    transform:
-        scale(1) !important;
-
-    transform-origin:
-        center !important;
-}
-
-
-/* ---------- mobile ---------- */
-
-@media (max-width:720px){
-
-    .engine-region-map-layer{
-        width:94vw;
-
-        top:54%;
-    }
-
-}
-
-/* =========================================================
-   VAERO REGION MAP — FINAL V3
-   TRUE GEOGRAPHIC VIEWBOX
-========================================================= */
-
-.engine-spatial-home.is-world-focus.is-region-focus
-.engine-world-stage{
-    overflow:hidden !important;
-
-    background:
-        radial-gradient(
-            ellipse at 58% 52%,
-            rgba(27,103,142,.20),
-            transparent 52%
-        ),
-        linear-gradient(
-            180deg,
-            #061827 0%,
-            #08283a 50%,
-            #051722 100%
-        ) !important;
-}
-
-
-.engine-spatial-home.is-world-focus.is-region-focus
 .engine-region-map-layer{
     position:absolute !important;
 
     inset:0 !important;
 
-    left:0 !important;
-    top:0 !important;
-    right:0 !important;
-    bottom:0 !important;
+    z-index:20 !important;
 
     width:100% !important;
     height:100% !important;
 
-    max-width:none !important;
-    max-height:none !important;
-
-    z-index:20 !important;
-
     overflow:hidden !important;
 
-    opacity:1 !important;
+    opacity:0 !important;
+    visibility:hidden !important;
 
-    pointer-events:auto !important;
+    pointer-events:none !important;
 
     transform:none !important;
 
     background:
+        radial-gradient(
+            ellipse at 58% 52%,
+            rgba(29,108,148,.18),
+            transparent 50%
+        ),
         linear-gradient(
             180deg,
-            #0b3b52,
-            #072c40
+            #0a3b53,
+            #062b40 54%,
+            #051a29
         ) !important;
 
     filter:none !important;
-
-    -webkit-mask-image:none !important;
-    mask-image:none !important;
 }
-
 
 .engine-region-ocean{
     display:none !important;
 }
 
-
-.engine-spatial-home.is-world-focus.is-region-focus
 .engine-region-map{
     position:absolute !important;
 
     inset:0 !important;
-
-    left:0 !important;
-    top:0 !important;
-    right:0 !important;
-    bottom:0 !important;
 
     width:100% !important;
     height:100% !important;
@@ -8500,9 +8154,9 @@ and
 
     transform:none !important;
 
-    background:transparent !important;
-
     opacity:.88 !important;
+
+    background:transparent !important;
 
     filter:
         brightness(.74)
@@ -8516,79 +8170,324 @@ and
         ) !important;
 }
 
+.engine-spatial-home.is-region-focus:not(.is-island-focus)
+.engine-region-map-layer{
+    opacity:1 !important;
+    visibility:visible !important;
 
-.engine-spatial-home.is-world-focus.is-region-focus
+    pointer-events:auto !important;
+}
+
+.engine-spatial-home.is-region-focus:not(.is-island-focus)
+.engine-region-focus-panel{
+    opacity:1;
+    visibility:visible;
+
+    pointer-events:auto;
+
+    transform:
+        translate(-50%,0);
+}
+
+.engine-spatial-home.is-region-focus
 .engine-world-system{
     opacity:0 !important;
+    visibility:hidden !important;
 
+    pointer-events:none !important;
+}
+
+.engine-spatial-home.is-region-focus
+.engine-world-focus-exit{
+    opacity:0 !important;
     visibility:hidden !important;
 
     pointer-events:none !important;
 }
 
 
-/*
- * Cyprus ≈ 33.3E / 35.1N
- * Within V3 viewBox:
- * x ≈ 57.2%
- * y ≈ 53.1%
- */
+/* =========================================================
+   REGION MARKER
+========================================================= */
 
-.engine-spatial-home.is-world-focus.is-region-focus
+.engine-region-marker{
+    position:absolute;
+
+    z-index:30;
+
+    display:flex;
+    align-items:center;
+
+    gap:8px;
+
+    padding:
+        8px
+        11px;
+
+    border:
+        1px solid
+        rgba(137,220,250,.25);
+
+    border-radius:999px;
+
+    background:
+        rgba(3,20,30,.84);
+
+    color:
+        rgba(246,249,250,.96);
+
+    box-shadow:
+        0
+        12px
+        30px
+        rgba(0,0,0,.28);
+
+    font:inherit;
+
+    cursor:pointer;
+
+    transform:
+        translate(-50%,-50%);
+
+    backdrop-filter:
+        blur(14px);
+
+    -webkit-backdrop-filter:
+        blur(14px);
+}
+
 .engine-region-marker-cyprus{
     left:57.2% !important;
     top:53.1% !important;
 }
 
+.engine-region-marker > span{
+    width:7px;
+    height:7px;
 
-.engine-spatial-home.is-world-focus.is-region-focus
-.engine-region-marker{
-    z-index:28 !important;
+    flex:
+        0
+        0
+        7px;
+
+    border-radius:50%;
+
+    background:#88dcfb;
+
+    box-shadow:
+        0
+        0
+        16px
+        rgba(110,215,255,.92);
+}
+
+.engine-region-marker > div{
+    display:flex;
+    flex-direction:column;
+
+    line-height:1.05;
+}
+
+.engine-region-marker strong{
+    font-size:8px;
+    font-weight:720;
+}
+
+.engine-region-marker small{
+    margin-top:3px;
+
+    color:
+        rgba(205,222,230,.58);
+
+    font-size:6px;
 }
 
 
-.engine-spatial-home.is-world-focus.is-region-focus
-.engine-region-focus-panel{
-    top:20px !important;
-
-    z-index:60 !important;
-}
-
-
-@media (max-width:720px){
-
-    /*
-     * Same real map; horizontal crop changes because
-     * mobile viewport is narrow.
-     */
-
-    .engine-spatial-home.is-world-focus.is-region-focus
-    .engine-region-marker-cyprus{
-        left:78% !important;
-        top:53% !important;
-    }
-
-    .engine-spatial-home.is-world-focus.is-region-focus
-    .engine-region-focus-panel{
-        top:12px !important;
-    }
-
-}
 /* =========================================================
-   MOBILE HOME V2 — SEPARATED WORLD / BRAIN
+   ISLAND SCENE
+========================================================= */
+
+.engine-island-map-layer{
+    position:absolute !important;
+
+    inset:0 !important;
+
+    z-index:32 !important;
+
+    width:100% !important;
+    height:100% !important;
+
+    overflow:hidden !important;
+
+    opacity:0 !important;
+    visibility:hidden !important;
+
+    pointer-events:none !important;
+
+    background:
+        radial-gradient(
+            ellipse at 50% 52%,
+            rgba(37,123,164,.25),
+            transparent 44%
+        ),
+        radial-gradient(
+            ellipse at 50% 54%,
+            rgba(18,72,103,.22),
+            transparent 68%
+        ),
+        linear-gradient(
+            180deg,
+            #082e44,
+            #061f31 58%,
+            #04151f
+        ) !important;
+
+    transition:
+        opacity .5s ease,
+        visibility .5s ease;
+}
+
+.engine-island-map{
+    position:absolute !important;
+
+    left:50% !important;
+    top:52% !important;
+
+    width:
+        min(
+            78%,
+            920px
+        ) !important;
+
+    height:
+        min(
+            66%,
+            560px
+        ) !important;
+
+    max-width:none !important;
+    max-height:none !important;
+
+    object-fit:contain !important;
+    object-position:center !important;
+
+    transform:
+        translate(-50%,-50%) !important;
+
+    opacity:.96 !important;
+
+    filter:
+        brightness(.76)
+        saturate(.82)
+        contrast(1.05)
+        drop-shadow(
+            0
+            20px
+            42px
+            rgba(0,0,0,.28)
+        ) !important;
+}
+
+.engine-spatial-home.is-island-focus
+.engine-region-map-layer{
+    opacity:0 !important;
+    visibility:hidden !important;
+
+    pointer-events:none !important;
+}
+
+.engine-spatial-home.is-island-focus
+.engine-island-map-layer{
+    opacity:1 !important;
+    visibility:visible !important;
+
+    pointer-events:auto !important;
+}
+
+.engine-spatial-home.is-island-focus
+.engine-region-focus-panel{
+    opacity:0 !important;
+    visibility:hidden !important;
+
+    pointer-events:none !important;
+}
+
+.engine-spatial-home.is-island-focus
+.engine-island-focus-panel{
+    opacity:1;
+    visibility:visible;
+
+    pointer-events:auto;
+
+    transform:
+        translate(-50%,0);
+}
+
+
+/* =========================================================
+   FOCUSED BOTTOM NAV
+========================================================= */
+
+body:has(.engine-spatial-home.is-world-focus)
+.engine-bottom-nav,
+.vaero-engine-home:has(.engine-spatial-home.is-world-focus)
+.engine-bottom-nav{
+    opacity:.20 !important;
+
+    filter:
+        saturate(.55)
+        brightness(.72);
+
+    pointer-events:none !important;
+}
+
+
+/* =========================================================
+   TABLET
+========================================================= */
+
+@media (max-width:980px) and (min-width:721px){
+
+    .engine-spatial-home:not(.is-world-focus)
+    .engine-world-system{
+        left:43% !important;
+
+        width:
+            min(
+                58vw,
+                560px
+            ) !important;
+    }
+
+    .engine-spatial-home:not(.is-world-focus)
+    .engine-world-identity{
+        left:43% !important;
+    }
+
+    .engine-spatial-home:not(.is-world-focus)
+    .engine-brain-presence{
+        right:22px !important;
+
+        width:
+            min(
+                300px,
+                32vw
+            ) !important;
+    }
+
+    .engine-spatial-home:not(.is-world-focus)
+    .engine-now-panel{
+        display:none !important;
+    }
+
+}
+
+
+/* =========================================================
+   MOBILE — HOME
 ========================================================= */
 
 @media (max-width:720px){
-
-    /*
-     * MOBILE STAGE
-     * World above, Brain below.
-     */
-
-    .engine-spatial-home{
-        overflow:hidden !important;
-    }
-
 
     .engine-stage-welcome{
         top:15px !important;
@@ -8596,19 +8495,15 @@ and
     }
 
 
-    /* -----------------------------------------------------
-       WORLD
-    ----------------------------------------------------- */
-
     .engine-spatial-home:not(.is-world-focus)
     .engine-world-system{
         left:50% !important;
-        top:26% !important;
+        top:25.5% !important;
 
         width:
             min(
-                62vw,
-                245px
+                72vw,
+                300px
             ) !important;
 
         transform:
@@ -8626,13 +8521,15 @@ and
     .engine-world-identity{
         left:50% !important;
 
-        top:43% !important;
+        top:42.5% !important;
         bottom:auto !important;
 
-        width:90%;
+        width:90% !important;
 
         transform:
             translateX(-50%) !important;
+
+        text-align:center !important;
     }
 
 
@@ -8648,16 +8545,12 @@ and
     }
 
 
-    /* -----------------------------------------------------
-       BRAIN
-    ----------------------------------------------------- */
-
     .engine-spatial-home:not(.is-world-focus)
     .engine-brain-presence{
         left:50% !important;
         right:auto !important;
 
-        top:61% !important;
+        top:60.5% !important;
 
         width:
             calc(100% - 28px) !important;
@@ -8674,13 +8567,13 @@ and
     .engine-spatial-home:not(.is-world-focus)
     .engine-brain-presence
     .engine-brain-orb{
-        width:64px !important;
-        height:64px !important;
+        width:62px !important;
+        height:62px !important;
 
         margin:
             0
             0
-            6px !important;
+            5px !important;
     }
 
 
@@ -8699,15 +8592,15 @@ and
     .engine-spatial-home:not(.is-world-focus)
     .engine-brain-invitation h1{
         margin:
-            5px
+            4px
             0
             9px !important;
 
         font-size:
             clamp(
-                25px,
-                7.4vw,
-                31px
+                24px,
+                7.1vw,
+                30px
             ) !important;
 
         line-height:1.02 !important;
@@ -8724,15 +8617,11 @@ and
                 390px
             ) !important;
 
-        min-height:42px !important;
+        min-height:43px !important;
 
         font-size:9px !important;
     }
 
-
-    /* -----------------------------------------------------
-       SECONDARY UI
-    ----------------------------------------------------- */
 
     .engine-now-panel,
     .engine-world-bridge{
@@ -8744,7 +8633,7 @@ and
     .engine-intent-dock{
         left:50% !important;
 
-        bottom:76px !important;
+        bottom:78px !important;
 
         width:
             calc(100% - 20px) !important;
@@ -8758,23 +8647,53 @@ and
 
     .engine-spatial-home:not(.is-world-focus)
     .engine-intent-dock button{
-        min-height:27px !important;
+        min-height:28px !important;
 
         padding:
             0
-            9px !important;
+            10px !important;
 
         font-size:7.5px !important;
     }
 
 
-    /* -----------------------------------------------------
-       MOBILE REGION VIEW
-       V3 map uses object-fit:cover.
-       Cyprus shifts right in narrow portrait viewport.
-    ----------------------------------------------------- */
+    /* ---------------------------------------------
+       MOBILE — WORLD
+    --------------------------------------------- */
 
-    .engine-spatial-home.is-world-focus.is-region-focus
+    .engine-spatial-home.is-world-focus:not(.is-region-focus)
+    .engine-world-system{
+        left:50% !important;
+        top:49% !important;
+
+        width:
+            min(
+                88vw,
+                430px
+            ) !important;
+
+        transform:
+            translate(-50%,-50%) !important;
+    }
+
+
+    .engine-spatial-home.is-world-focus:not(.is-region-focus)
+    .engine-world-node{
+        display:none !important;
+    }
+
+
+    .engine-world-focus-exit{
+        top:16px;
+        left:16px;
+    }
+
+
+    /* ---------------------------------------------
+       MOBILE — REGION
+    --------------------------------------------- */
+
+    .engine-spatial-home.is-region-focus:not(.is-island-focus)
     .engine-region-map-layer{
         inset:0 !important;
 
@@ -8783,229 +8702,21 @@ and
     }
 
 
-    .engine-spatial-home.is-world-focus.is-region-focus
+    .engine-spatial-home.is-region-focus
+    .engine-region-map{
+        object-position:
+            56% center !important;
+    }
+
+
+    .engine-spatial-home.is-region-focus:not(.is-island-focus)
     .engine-region-marker-cyprus{
-        left:81% !important;
+        left:80% !important;
         top:53% !important;
     }
 
 
-    .engine-spatial-home.is-world-focus.is-region-focus
-    .engine-region-focus-panel{
-        top:11px !important;
-
-        width:
-            calc(100% - 18px) !important;
-
-        gap:8px !important;
-
-        justify-content:center !important;
-    }
-
-
-    .engine-spatial-home.is-world-focus.is-region-focus
-    .engine-region-focus-copy strong{
-        font-size:11px !important;
-    }
-
-
-}
-
-
-/* Extra-short phones */
-
-@media (max-width:720px) and (max-height:700px){
-
-    .engine-spatial-home:not(.is-world-focus)
-    .engine-world-system{
-        top:24% !important;
-
-        width:
-            min(
-                56vw,
-                215px
-            ) !important;
-    }
-
-
-    .engine-spatial-home:not(.is-world-focus)
-    .engine-world-identity{
-        top:40% !important;
-    }
-
-
-    .engine-spatial-home:not(.is-world-focus)
-    .engine-brain-presence{
-        top:58% !important;
-    }
-
-
-    .engine-spatial-home:not(.is-world-focus)
-    .engine-brain-presence
-    .engine-brain-orb{
-        width:56px !important;
-        height:56px !important;
-    }
-
-
-    .engine-spatial-home:not(.is-world-focus)
-    .engine-intent-dock{
-        bottom:70px !important;
-    }
-
-}
-
-/* =========================================================
-   CYPRUS ISLAND ZOOM V1
-   REGION → ISLAND
-========================================================= */
-
-.engine-region-marker{
-    font:inherit;
-}
-
-button.engine-region-marker{
-    cursor:pointer;
-}
-
-button.engine-region-marker:hover{
-    border-color:
-        rgba(137,220,250,.46);
-
-    background:
-        rgba(6,29,42,.94);
-}
-
-
-/* ---------- island panel ---------- */
-
-.engine-island-focus-panel{
-    position:absolute;
-
-    top:20px;
-    left:50%;
-
-    z-index:72;
-
-    display:flex;
-    align-items:center;
-
-    gap:16px;
-
-    opacity:0;
-
-    pointer-events:none;
-
-    transform:
-        translate(-50%,-8px);
-
-    transition:
-        opacity .35s ease,
-        transform .45s cubic-bezier(.2,.75,.2,1);
-}
-
-
-/* ---------- island surface ---------- */
-
-.engine-island-map-layer{
-    position:absolute;
-
-    inset:0;
-
-    z-index:32;
-
-    overflow:hidden;
-
-    opacity:0;
-
-    pointer-events:none;
-
-    background:
-        radial-gradient(
-            ellipse at 50% 52%,
-            rgba(29,108,148,.24),
-            transparent 46%
-        ),
-        linear-gradient(
-            180deg,
-            #0a3b53,
-            #062b40 54%,
-            #051a29
-        );
-
-    transition:
-        opacity .55s ease;
-}
-
-
-.engine-island-map{
-    position:absolute;
-
-    left:6%;
-    top:11%;
-
-    width:88%;
-    height:76%;
-
-    object-fit:contain;
-    object-position:center;
-
-    opacity:.94;
-
-    filter:
-        brightness(.76)
-        saturate(.82)
-        contrast(1.05)
-        drop-shadow(
-            0
-            16px
-            34px
-            rgba(0,0,0,.24)
-        );
-}
-
-
-/* ---------- island active ---------- */
-
-.engine-spatial-home.is-island-focus
-.engine-region-map-layer{
-    opacity:0 !important;
-
-    pointer-events:none !important;
-}
-
-
-.engine-spatial-home.is-island-focus
-.engine-region-focus-panel{
-    opacity:0 !important;
-
-    pointer-events:none !important;
-}
-
-
-.engine-spatial-home.is-island-focus
-.engine-island-map-layer{
-    opacity:1;
-
-    pointer-events:auto;
-}
-
-
-.engine-spatial-home.is-island-focus
-.engine-island-focus-panel{
-    opacity:1;
-
-    pointer-events:auto;
-
-    transform:
-        translate(-50%,0);
-}
-
-
-/* ---------- mobile ---------- */
-
-@media (max-width:720px){
-
+    .engine-region-focus-panel,
     .engine-island-focus-panel{
         top:11px;
 
@@ -9018,12 +8729,92 @@ button.engine-region-marker:hover{
     }
 
 
-    .engine-island-map{
-        left:3%;
-        top:17%;
+    .engine-region-back{
+        min-height:34px;
 
-        width:94%;
-        height:62%;
+        padding:
+            0
+            11px;
+
+        font-size:7px;
+    }
+
+
+    .engine-region-focus-copy{
+        padding-left:10px;
+    }
+
+
+    .engine-region-focus-copy strong{
+        font-size:11px !important;
+    }
+
+
+    /* ---------------------------------------------
+       MOBILE — ISLAND
+    --------------------------------------------- */
+
+    .engine-island-map{
+        left:50% !important;
+        top:52% !important;
+
+        width:94% !important;
+        height:54% !important;
+
+        transform:
+            translate(-50%,-50%) !important;
+    }
+
+}
+
+
+/* =========================================================
+   SHORT MOBILE
+========================================================= */
+
+@media (max-width:720px) and (max-height:700px){
+
+    .engine-spatial-home:not(.is-world-focus)
+    .engine-world-system{
+        top:23% !important;
+
+        width:
+            min(
+                62vw,
+                235px
+            ) !important;
+    }
+
+
+    .engine-spatial-home:not(.is-world-focus)
+    .engine-world-identity{
+        top:39% !important;
+    }
+
+
+    .engine-spatial-home:not(.is-world-focus)
+    .engine-brain-presence{
+        top:57% !important;
+    }
+
+
+    .engine-spatial-home:not(.is-world-focus)
+    .engine-brain-presence
+    .engine-brain-orb{
+        width:54px !important;
+        height:54px !important;
+    }
+
+
+    .engine-spatial-home:not(.is-world-focus)
+    .engine-intent-dock{
+        bottom:70px !important;
+    }
+
+
+    .engine-island-map{
+        width:92% !important;
+        height:48% !important;
     }
 
 }
