@@ -8827,3 +8827,37 @@ and
 
     pointer-events:none !important;
 }
+
+/* =========================================================
+   REGION MAP V1.7 — BUFFERED GEOGRAPHIC SOURCE
+========================================================= */
+
+.engine-region-map{
+    left:50% !important;
+    top:50% !important;
+
+    width:160% !important;
+    height:auto !important;
+
+    max-width:none !important;
+    max-height:none !important;
+
+    object-fit:contain !important;
+
+    transform:
+        translate(-50%,-50%) !important;
+
+    background:transparent !important;
+
+    opacity:.80 !important;
+}
+
+
+/*
+ * Cyprus in new buffered geographic projection.
+ */
+
+.engine-region-marker-cyprus{
+    left:60.6% !important;
+    top:50% !important;
+}
