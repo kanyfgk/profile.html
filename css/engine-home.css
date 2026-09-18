@@ -8409,33 +8409,49 @@ and
 }
 
 /* =========================================================
-   VAERO REGION MAP — FINAL FULL-SCREEN ARCHITECTURE
-   World → Region → Island → City
+   VAERO REGION MAP — FINAL V2
+   TRUE FULL-SCREEN CROP
 ========================================================= */
 
-
-/* Stage itself is the viewport. */
+/*
+ * Buffered geographic source:
+ * lon 5 → 55
+ * lat 15 → 55
+ *
+ * The map itself is 250% of the stage.
+ * Therefore its real SVG boundaries stay far outside
+ * the visible viewport.
+ */
 
 .engine-spatial-home.is-world-focus.is-region-focus
 .engine-world-stage{
     overflow:hidden !important;
+
+    background:
+        radial-gradient(
+            ellipse at 58% 50%,
+            rgba(28,104,143,.22),
+            transparent 48%
+        ),
+        linear-gradient(
+            180deg,
+            #061827 0%,
+            #08283a 50%,
+            #051722 100%
+        ) !important;
 }
 
 
-/* ---------------------------------------------------------
-   FULL-SCREEN GEOGRAPHIC LAYER
-
-   Intentionally larger than the visible stage.
-   Geographic source boundaries remain outside viewport.
---------------------------------------------------------- */
+/* ---------- geographic viewport ---------- */
 
 .engine-spatial-home.is-world-focus.is-region-focus
 .engine-region-map-layer{
     position:absolute !important;
 
-    inset:-18% !important;
-
-    z-index:20 !important;
+    left:-75% !important;
+    top:-75% !important;
+    right:-75% !important;
+    bottom:-75% !important;
 
     width:auto !important;
     height:auto !important;
@@ -8443,7 +8459,7 @@ and
     max-width:none !important;
     max-height:none !important;
 
-    aspect-ratio:auto !important;
+    z-index:20 !important;
 
     overflow:hidden !important;
 
@@ -8455,64 +8471,33 @@ and
 
     background:
         radial-gradient(
-            ellipse at 58% 50%,
-            rgba(31,105,139,.16),
-            transparent 46%
-        ),
-        linear-gradient(
-            145deg,
-            rgba(7,43,63,.96),
-            rgba(3,24,38,.985)
+            ellipse at 50% 50%,
+            #0a3b53 0%,
+            #072b40 52%,
+            #051a29 100%
         ) !important;
 
     filter:none !important;
 
     -webkit-mask-image:none !important;
     mask-image:none !important;
-
-    transition:
-        opacity
-        .55s
-        ease !important;
 }
 
 
-/* Old card/ocean object is permanently gone. */
+/* old card layer is not part of the design */
 
-.engine-spatial-home.is-world-focus.is-region-focus
 .engine-region-ocean{
     display:none !important;
 }
 
 
-/* Old artificial glow layer is unnecessary. */
-
-.engine-spatial-home.is-world-focus.is-region-focus
-.engine-region-map-layer::before{
-    display:none !important;
-    content:none !important;
-}
-
-
-/* ---------------------------------------------------------
-   ACTUAL GEOGRAPHY
-
-   The SVG fills the oversized geographic layer.
-   Anything outside World Stage is naturally clipped.
---------------------------------------------------------- */
+/* ---------- real 10m geography ---------- */
 
 .engine-spatial-home.is-world-focus.is-region-focus
 .engine-region-map{
     position:absolute !important;
 
     inset:0 !important;
-
-    left:0 !important;
-    top:0 !important;
-    right:0 !important;
-    bottom:0 !important;
-
-    z-index:2 !important;
 
     width:100% !important;
     height:100% !important;
@@ -8525,9 +8510,9 @@ and
 
     transform:none !important;
 
-    opacity:.82 !important;
-
     background:transparent !important;
+
+    opacity:.82 !important;
 
     -webkit-mask-image:none !important;
     mask-image:none !important;
@@ -8535,19 +8520,17 @@ and
     filter:
         brightness(.72)
         saturate(.78)
-        contrast(1.05)
+        contrast(1.04)
         drop-shadow(
             0
             3px
             7px
-            rgba(0,10,16,.24)
+            rgba(0,10,16,.22)
         ) !important;
 }
 
 
-/* ---------------------------------------------------------
-   OLD WORLD GLOBE LEAVES THE STAGE
---------------------------------------------------------- */
+/* world globe is replaced by region geography */
 
 .engine-spatial-home.is-world-focus.is-region-focus
 .engine-world-system{
@@ -8561,39 +8544,195 @@ and
 }
 
 
-/* ---------------------------------------------------------
-   CYPRUS
-   Coordinate from buffered map:
-   lon ≈ 33.3° / lat ≈ 35.1°
---------------------------------------------------------- */
-
-.engine-spatial-home.is-world-focus.is-region-focus
-.engine-region-marker{
-    z-index:8 !important;
-}
+/*
+ * Cyprus:
+ * source coordinate ≈ 56.6% x / 49.8% y.
+ * After 2.5x viewport crop ≈ 66.5% x / 49.5% y.
+ */
 
 .engine-spatial-home.is-world-focus.is-region-focus
 .engine-region-marker-cyprus{
-    left:56.6% !important;
-    top:49.8% !important;
+    left:66.5% !important;
+    top:49.5% !important;
+}
+
+.engine-spatial-home.is-world-focus.is-region-focus
+.engine-region-marker{
+    z-index:28 !important;
 }
 
 
-/* Region title/back controls always remain above geography. */
+/* region controls */
 
 .engine-spatial-home.is-world-focus.is-region-focus
 .engine-region-focus-panel{
+    top:20px !important;
+
     z-index:60 !important;
 }
 
 
-/* Mobile keeps the exact same architecture. */
+/* =========================================================
+   MOBILE HOME — FINAL COMPOSITION
+========================================================= */
 
 @media (max-width:720px){
 
+    /*
+     * Globe occupies upper half.
+     * Brain gets its own lower zone.
+     */
+
+    .engine-spatial-home:not(.is-world-focus)
+    .engine-world-system{
+        left:50% !important;
+        top:30% !important;
+
+        width:
+            min(
+                68vw,
+                300px
+            ) !important;
+
+        transform:
+            translate(-50%,-50%) !important;
+    }
+
+
+    .engine-spatial-home:not(.is-world-focus)
+    .engine-brain-presence{
+        left:50% !important;
+        right:auto !important;
+
+        top:61% !important;
+
+        width:
+            calc(100% - 34px) !important;
+
+        transform:
+            translate(-50%,-50%) !important;
+
+        align-items:center !important;
+
+        text-align:center !important;
+    }
+
+
+    .engine-spatial-home:not(.is-world-focus)
+    .engine-brain-presence
+    .engine-brain-orb{
+        width:72px !important;
+        height:72px !important;
+
+        margin:
+            0
+            0
+            7px !important;
+    }
+
+
+    .engine-spatial-home:not(.is-world-focus)
+    .engine-brain-invitation{
+        align-items:center !important;
+    }
+
+
+    .engine-spatial-home:not(.is-world-focus)
+    .engine-brain-invitation h1{
+        margin:
+            5px
+            0
+            9px !important;
+
+        font-size:
+            clamp(
+                27px,
+                8vw,
+                34px
+            ) !important;
+
+        text-align:center !important;
+    }
+
+
+    .engine-spatial-home:not(.is-world-focus)
+    .engine-brain-prompt{
+        width:
+            min(
+                92%,
+                390px
+            ) !important;
+
+        min-height:44px !important;
+    }
+
+
+    .engine-spatial-home:not(.is-world-focus)
+    .engine-world-identity{
+        left:50% !important;
+
+        top:43% !important;
+        bottom:auto !important;
+
+        transform:
+            translateX(-50%) !important;
+    }
+
+
+    .engine-spatial-home:not(.is-world-focus)
+    .engine-world-bridge{
+        display:none !important;
+    }
+
+
+    .engine-spatial-home:not(.is-world-focus)
+    .engine-intent-dock{
+        left:50% !important;
+
+        bottom:82px !important;
+
+        width:
+            calc(100% - 22px) !important;
+
+        transform:
+            translateX(-50%) !important;
+    }
+
+
+    .engine-stage-welcome{
+        top:18px !important;
+        left:18px !important;
+    }
+
+
+    /*
+     * Region mode remains full-screen on mobile too.
+     */
+
     .engine-spatial-home.is-world-focus.is-region-focus
     .engine-region-map-layer{
-        inset:-24% !important;
+        left:-90% !important;
+        top:-90% !important;
+        right:-90% !important;
+        bottom:-90% !important;
+    }
+
+
+    .engine-spatial-home.is-world-focus.is-region-focus
+    .engine-region-marker-cyprus{
+        left:68% !important;
+        top:50% !important;
+    }
+
+
+    .engine-spatial-home.is-world-focus.is-region-focus
+    .engine-region-focus-panel{
+        top:12px !important;
+
+        width:
+            calc(100% - 24px);
+
+        justify-content:center;
     }
 
 }
