@@ -8484,26 +8484,31 @@ body:has(.engine-spatial-home.is-world-focus)
 
 
 /* =========================================================
-   MOBILE — HOME
+   MOBILE — HOME V3
+   WORLD / BRAIN SEPARATED COMPOSITION
 ========================================================= */
 
 @media (max-width:720px){
 
     .engine-stage-welcome{
-        top:15px !important;
-        left:17px !important;
+        top:16px !important;
+        left:18px !important;
     }
 
+
+    /* =====================================================
+       HOME — WORLD
+    ===================================================== */
 
     .engine-spatial-home:not(.is-world-focus)
     .engine-world-system{
         left:50% !important;
-        top:25.5% !important;
+        top:22% !important;
 
         width:
             min(
-                72vw,
-                300px
+                58vw,
+                240px
             ) !important;
 
         transform:
@@ -8521,10 +8526,10 @@ body:has(.engine-spatial-home.is-world-focus)
     .engine-world-identity{
         left:50% !important;
 
-        top:42.5% !important;
+        top:39.5% !important;
         bottom:auto !important;
 
-        width:90% !important;
+        width:88% !important;
 
         transform:
             translateX(-50%) !important;
@@ -8534,8 +8539,16 @@ body:has(.engine-spatial-home.is-world-focus)
 
 
     .engine-spatial-home:not(.is-world-focus)
+    .engine-world-kicker{
+        margin-bottom:4px !important;
+
+        font-size:7px !important;
+    }
+
+
+    .engine-spatial-home:not(.is-world-focus)
     .engine-world-identity strong{
-        font-size:20px !important;
+        font-size:19px !important;
     }
 
 
@@ -8545,15 +8558,19 @@ body:has(.engine-spatial-home.is-world-focus)
     }
 
 
+    /* =====================================================
+       HOME — BRAIN
+    ===================================================== */
+
     .engine-spatial-home:not(.is-world-focus)
     .engine-brain-presence{
         left:50% !important;
         right:auto !important;
 
-        top:60.5% !important;
+        top:56.5% !important;
 
         width:
-            calc(100% - 28px) !important;
+            calc(100% - 34px) !important;
 
         transform:
             translate(-50%,-50%) !important;
@@ -8567,13 +8584,21 @@ body:has(.engine-spatial-home.is-world-focus)
     .engine-spatial-home:not(.is-world-focus)
     .engine-brain-presence
     .engine-brain-orb{
-        width:62px !important;
-        height:62px !important;
+        width:50px !important;
+        height:50px !important;
 
         margin:
             0
             0
-            5px !important;
+            4px !important;
+    }
+
+
+    .engine-spatial-home:not(.is-world-focus)
+    .engine-brain-presence
+    .brain-core{
+        transform:
+            scale(.78) !important;
     }
 
 
@@ -8585,25 +8610,29 @@ body:has(.engine-spatial-home.is-world-focus)
 
     .engine-spatial-home:not(.is-world-focus)
     .engine-brain-invitation > span{
-        font-size:8px !important;
+        font-size:7px !important;
+
+        letter-spacing:.16em !important;
     }
 
 
     .engine-spatial-home:not(.is-world-focus)
     .engine-brain-invitation h1{
+        max-width:330px !important;
+
         margin:
             4px
-            0
+            auto
             9px !important;
 
         font-size:
             clamp(
-                24px,
-                7.1vw,
-                30px
+                23px,
+                6.5vw,
+                27px
             ) !important;
 
-        line-height:1.02 !important;
+        line-height:1.04 !important;
 
         text-align:center !important;
     }
@@ -8613,15 +8642,23 @@ body:has(.engine-spatial-home.is-world-focus)
     .engine-brain-prompt{
         width:
             min(
-                94%,
-                390px
+                92%,
+                360px
             ) !important;
 
-        min-height:43px !important;
+        min-height:42px !important;
+
+        margin:
+            0
+            auto !important;
 
         font-size:9px !important;
     }
 
+
+    /* =====================================================
+       HOME — QUICK ACTIONS
+    ===================================================== */
 
     .engine-now-panel,
     .engine-world-bridge{
@@ -8633,10 +8670,10 @@ body:has(.engine-spatial-home.is-world-focus)
     .engine-intent-dock{
         left:50% !important;
 
-        bottom:78px !important;
+        bottom:86px !important;
 
         width:
-            calc(100% - 20px) !important;
+            calc(100% - 28px) !important;
 
         gap:5px !important;
 
@@ -8647,29 +8684,29 @@ body:has(.engine-spatial-home.is-world-focus)
 
     .engine-spatial-home:not(.is-world-focus)
     .engine-intent-dock button{
-        min-height:28px !important;
+        min-height:27px !important;
 
         padding:
             0
-            10px !important;
+            9px !important;
 
-        font-size:7.5px !important;
+        font-size:7px !important;
     }
 
 
-    /* ---------------------------------------------
-       MOBILE — WORLD
-    --------------------------------------------- */
+    /* =====================================================
+       WORLD FOCUS
+    ===================================================== */
 
     .engine-spatial-home.is-world-focus:not(.is-region-focus)
     .engine-world-system{
         left:50% !important;
-        top:49% !important;
+        top:51% !important;
 
         width:
             min(
-                88vw,
-                430px
+                76vw,
+                330px
             ) !important;
 
         transform:
@@ -8683,15 +8720,36 @@ body:has(.engine-spatial-home.is-world-focus)
     }
 
 
+    .engine-spatial-home.is-world-focus:not(.is-region-focus)
     .engine-world-focus-exit{
-        top:16px;
-        left:16px;
+        top:14px !important;
+        left:14px !important;
     }
 
 
-    /* ---------------------------------------------
-       MOBILE — REGION
-    --------------------------------------------- */
+    .engine-spatial-home.is-world-focus:not(.is-region-focus)
+    .engine-world-focus-exit strong{
+        font-size:7px !important;
+    }
+
+
+    body:has(.engine-spatial-home.is-world-focus)
+    .engine-bottom-nav,
+    .vaero-engine-home:has(.engine-spatial-home.is-world-focus)
+    .engine-bottom-nav{
+        opacity:0 !important;
+        visibility:hidden !important;
+
+        pointer-events:none !important;
+
+        transform:
+            translateY(18px) !important;
+    }
+
+
+    /* =====================================================
+       REGION
+    ===================================================== */
 
     .engine-spatial-home.is-region-focus:not(.is-island-focus)
     .engine-region-map-layer{
@@ -8750,9 +8808,9 @@ body:has(.engine-spatial-home.is-world-focus)
     }
 
 
-    /* ---------------------------------------------
-       MOBILE — ISLAND
-    --------------------------------------------- */
+    /* =====================================================
+       ISLAND
+    ===================================================== */
 
     .engine-island-map{
         left:50% !important;
@@ -8776,39 +8834,62 @@ body:has(.engine-spatial-home.is-world-focus)
 
     .engine-spatial-home:not(.is-world-focus)
     .engine-world-system{
-        top:23% !important;
+        top:20.5% !important;
 
         width:
             min(
-                62vw,
-                235px
+                54vw,
+                210px
             ) !important;
     }
 
 
     .engine-spatial-home:not(.is-world-focus)
     .engine-world-identity{
-        top:39% !important;
+        top:36.5% !important;
     }
 
 
     .engine-spatial-home:not(.is-world-focus)
     .engine-brain-presence{
-        top:57% !important;
+        top:53.5% !important;
     }
 
 
     .engine-spatial-home:not(.is-world-focus)
     .engine-brain-presence
     .engine-brain-orb{
-        width:54px !important;
-        height:54px !important;
+        width:44px !important;
+        height:44px !important;
+    }
+
+
+    .engine-spatial-home:not(.is-world-focus)
+    .engine-brain-invitation h1{
+        font-size:
+            clamp(
+                21px,
+                6vw,
+                25px
+            ) !important;
     }
 
 
     .engine-spatial-home:not(.is-world-focus)
     .engine-intent-dock{
-        bottom:70px !important;
+        bottom:72px !important;
+    }
+
+
+    .engine-spatial-home.is-world-focus:not(.is-region-focus)
+    .engine-world-system{
+        top:50% !important;
+
+        width:
+            min(
+                72vw,
+                300px
+            ) !important;
     }
 
 
