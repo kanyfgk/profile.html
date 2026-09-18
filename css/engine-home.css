@@ -8861,3 +8861,34 @@ and
     left:60.6% !important;
     top:50% !important;
 }
+
+/* =========================================================
+   REGION MAP V1.8 — TRUE FULL-STAGE SVG
+========================================================= */
+
+.engine-spatial-home.is-world-focus.is-region-focus
+.engine-region-map{
+    position:absolute !important;
+
+    inset:0 !important;
+
+    left:0 !important;
+    top:0 !important;
+    right:0 !important;
+    bottom:0 !important;
+
+    width:100% !important;
+    height:100% !important;
+
+    max-width:none !important;
+    max-height:none !important;
+
+    object-fit:cover !important;
+    object-position:center !important;
+
+    transform:none !important;
+
+    background:transparent !important;
+
+    opacity:.80 !important;
+}
