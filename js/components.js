@@ -1203,16 +1203,245 @@ const Components = {
 
 </div>
 
+<div class="engine-island-map-layer">
+
+    <div class="engine-island-surface">
+
+        <img
+            class="engine-island-map"
+            src="./assets/world/cyprus_10m.svg"
+            alt=""
+            aria-hidden="true"
+        />
+
+
+        <button
+            type="button"
+            class="engine-city-node engine-city-node-lefkosa"
+            data-action="world:city:open"
+            data-city-id="nicosia"
+            aria-label="Lefkoşa şehir katmanını aç"
+        >
+            <span></span>
+            <strong>Lefkoşa</strong>
+        </button>
+
+
+        <button
+            type="button"
+            class="engine-city-node engine-city-node-girne"
+            data-action="world:city:open"
+            data-city-id="kyrenia"
+            aria-label="Girne şehir katmanını aç"
+        >
+            <span></span>
+            <strong>Girne</strong>
+        </button>
+
+
+        <button
+            type="button"
+            class="engine-city-node engine-city-node-magusa"
+            data-action="world:city:open"
+            data-city-id="famagusta"
+            aria-label="Mağusa şehir katmanını aç"
+        >
+            <span></span>
+            <strong>Mağusa</strong>
+        </button>
+
+
+        <button
+            type="button"
+            class="engine-city-node engine-city-node-larnaka"
+            data-action="world:city:open"
+            data-city-id="larnaca"
+            aria-label="Larnaka şehir katmanını aç"
+        >
+            <span></span>
+            <strong>Larnaka</strong>
+        </button>
+
+
+        <button
+            type="button"
+            class="engine-city-node engine-city-node-limasol"
+            data-action="world:city:open"
+            data-city-id="limassol"
+            aria-label="Limasol şehir katmanını aç"
+        >
+            <span></span>
+            <strong>Limasol</strong>
+        </button>
+
+
+        <button
+            type="button"
+            class="engine-city-node engine-city-node-baf"
+            data-action="world:city:open"
+            data-city-id="paphos"
+            aria-label="Baf şehir katmanını aç"
+        >
+            <span></span>
+            <strong>Baf</strong>
+        </button>
+
+    </div>
+
+
+    <div class="engine-island-guide">
+
+        <span>
+            SHARED WORLD
+        </span>
+
+        <strong>
+            Kıbrıs canlı katmanı
+        </strong>
+
+        <small>
+            Bir alan seç veya Brain'e ne aradığını söyle.
+        </small>
+
+    </div>
+
+</div>
+
+
+<div class="engine-city-focus-panel">
+
+    <button
+        type="button"
+        class="engine-region-back"
+        data-action="world:city:exit"
+    >
+        <span>←</span>
+        Kıbrıs'a dön
+    </button>
+
+
+    <div class="engine-region-focus-copy">
+
+        <span>
+            VAERO WORLD / LIVE
+        </span>
+
+        <strong data-world-city-name>
+            Şehir
+        </strong>
+
+        <small>
+            Ortak etkileşim katmanı
+        </small>
+
+    </div>
+
+</div>
+
+
 <div
-    class="engine-island-map-layer"
+    class="engine-city-live-layer"
     aria-hidden="true"
 >
-    <img
-        class="engine-island-map"
-        src="./assets/world/cyprus_10m.svg"
-        alt=""
+
+    <div
+        class="engine-city-live-grid"
         aria-hidden="true"
-    />
+    ></div>
+
+
+    <span
+        class="engine-city-signal engine-city-signal-a"
+        aria-hidden="true"
+    ></span>
+
+    <span
+        class="engine-city-signal engine-city-signal-b"
+        aria-hidden="true"
+    ></span>
+
+    <span
+        class="engine-city-signal engine-city-signal-c"
+        aria-hidden="true"
+    ></span>
+
+    <span
+        class="engine-city-signal engine-city-signal-d"
+        aria-hidden="true"
+    ></span>
+
+
+    <div class="engine-city-live-core">
+
+        <span>
+            VAERO WORLD / NOW
+        </span>
+
+        <strong data-world-city-live-name>
+            Şehir
+        </strong>
+
+        <small>
+            Dünya senin arayışına göre şekillenir.
+        </small>
+
+
+        <button
+            type="button"
+            class="engine-city-brain-entry"
+            data-action="brain:open"
+        >
+            <span>
+                Brain'e ne aradığını söyle
+            </span>
+
+            <i>
+                ✦
+            </i>
+        </button>
+
+    </div>
+
+
+    <div class="engine-city-lenses">
+
+        <button
+            type="button"
+            data-action="brain:open"
+        >
+            Şimdi
+        </button>
+
+        <button
+            type="button"
+            data-action="brain:open"
+        >
+            Mekânlar
+        </button>
+
+        <button
+            type="button"
+            data-action="brain:open"
+        >
+            Etkinlikler
+        </button>
+
+        <button
+            type="button"
+            data-action="brain:open"
+        >
+            Topluluk
+        </button>
+
+        <button
+            type="button"
+            data-action="brain:open"
+        >
+            Keşif
+        </button>
+
+    </div>
+
 </div>
 
 <div class="engine-world-system">

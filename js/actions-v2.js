@@ -1309,11 +1309,16 @@ notify(
         }
 
         stage.classList.remove(
-            "is-island-focus"
+            "is-island-focus",
+            "is-city-focus"
         );
 
         stage.removeAttribute(
             "data-world-island"
+        );
+
+        stage.removeAttribute(
+            "data-world-city"
         );
 
         this.syncAwareness(
@@ -1331,6 +1336,162 @@ notify(
 
     },
 
+
+    openWorldCity(cityId){
+
+        const stage =
+            document.querySelector(
+                ".engine-spatial-home"
+            );
+
+
+        if(!stage){
+            return false;
+        }
+
+
+        const id =
+            this.normalizeText(
+                cityId,
+                60
+            ).toLowerCase();
+
+
+        const cities = {
+
+            nicosia:{
+                name:
+                    "Lefkoşa"
+            },
+
+            kyrenia:{
+                name:
+                    "Girne"
+            },
+
+            famagusta:{
+                name:
+                    "Mağusa"
+            },
+
+            larnaca:{
+                name:
+                    "Larnaka"
+            },
+
+            limassol:{
+                name:
+                    "Limasol"
+            },
+
+            paphos:{
+                name:
+                    "Baf"
+            }
+
+        };
+
+
+        const city =
+            cities[
+                id
+            ];
+
+
+        if(!city){
+            return false;
+        }
+
+
+        stage.classList.add(
+            "is-world-focus",
+            "is-region-focus",
+            "is-island-focus",
+            "is-city-focus"
+        );
+
+
+        stage.setAttribute(
+            "data-world-city",
+            id
+        );
+
+
+        document
+            .querySelectorAll(
+                "[data-world-city-name], [data-world-city-live-name]"
+            )
+            .forEach(
+                element => {
+
+                    element.textContent =
+                        city.name;
+
+                }
+            );
+
+
+        this.syncAwareness(
+            "world",
+            {
+                mode:
+                    "city",
+
+                cityId:
+                    id,
+
+                cityName:
+                    city.name,
+
+                islandId:
+                    "cyprus"
+            }
+        );
+
+
+        return true;
+
+    },
+
+
+    exitWorldCity(){
+
+        const stage =
+            document.querySelector(
+                ".engine-spatial-home"
+            );
+
+
+        if(!stage){
+            return false;
+        }
+
+
+        stage.classList.remove(
+            "is-city-focus"
+        );
+
+
+        stage.removeAttribute(
+            "data-world-city"
+        );
+
+
+        this.syncAwareness(
+            "world",
+            {
+                mode:
+                    "island",
+
+                islandId:
+                    "cyprus"
+            }
+        );
+
+
+        return true;
+
+    },
 
     openWorlds(){
 
@@ -10131,6 +10292,18 @@ if(
 
                 return this.exitWorldFocus();
 
+
+            case "world:city:open":
+
+                return this.openWorldCity(
+                    button.dataset
+                        .cityId
+                );
+
+
+            case "world:city:exit":
+
+                return this.exitWorldCity();
 
             case "world:island:open":
 
