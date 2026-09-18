@@ -4944,6 +4944,111 @@ saveProfile(){
 
 },
 
+    toggleApplicationsPeek(){
+
+        const home =
+            document.querySelector(
+                ".vaero-engine-home"
+            );
+
+        if(!home){
+            return false;
+        }
+
+        const panel =
+            home.querySelector(
+                ".engine-applications-peek"
+            );
+
+        const trigger =
+            home.querySelector(
+                '[data-action="applications:peek:toggle"]'
+            );
+
+        const shouldOpen =
+            !home.classList.contains(
+                "is-applications-peek-open"
+            );
+
+        home.classList.toggle(
+            "is-applications-peek-open",
+            shouldOpen
+        );
+
+        if(panel){
+
+            panel.setAttribute(
+                "aria-hidden",
+                shouldOpen
+                    ? "false"
+                    : "true"
+            );
+
+        }
+
+        if(trigger){
+
+            trigger.setAttribute(
+                "aria-expanded",
+                shouldOpen
+                    ? "true"
+                    : "false"
+            );
+
+        }
+
+        return shouldOpen;
+
+    },
+
+
+    closeApplicationsPeek(){
+
+        const home =
+            document.querySelector(
+                ".vaero-engine-home"
+            );
+
+        if(!home){
+            return false;
+        }
+
+        home.classList.remove(
+            "is-applications-peek-open"
+        );
+
+        const panel =
+            home.querySelector(
+                ".engine-applications-peek"
+            );
+
+        const trigger =
+            home.querySelector(
+                '[data-action="applications:peek:toggle"]'
+            );
+
+        if(panel){
+
+            panel.setAttribute(
+                "aria-hidden",
+                "true"
+            );
+
+        }
+
+        if(trigger){
+
+            trigger.setAttribute(
+                "aria-expanded",
+                "false"
+            );
+
+        }
+
+        return true;
+
+    },
+
     openApplicationsApp(
     routeContext = {}
 ){
@@ -10258,6 +10363,15 @@ if(
             /* ---------------------------------------------
                SYSTEM APPLICATIONS
             --------------------------------------------- */
+
+            case "applications:peek:toggle":
+
+                return this.toggleApplicationsPeek();
+
+
+            case "applications:peek:close":
+
+                return this.closeApplicationsPeek();
 
             case "app:applications":
     return this.openApplicationsApp(
