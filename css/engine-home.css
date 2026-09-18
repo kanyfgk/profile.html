@@ -8409,19 +8409,9 @@ and
 }
 
 /* =========================================================
-   VAERO REGION MAP — FINAL V2
-   TRUE FULL-SCREEN CROP
+   VAERO REGION MAP — FINAL V3
+   TRUE GEOGRAPHIC VIEWBOX
 ========================================================= */
-
-/*
- * Buffered geographic source:
- * lon 5 → 55
- * lat 15 → 55
- *
- * The map itself is 250% of the stage.
- * Therefore its real SVG boundaries stay far outside
- * the visible viewport.
- */
 
 .engine-spatial-home.is-world-focus.is-region-focus
 .engine-world-stage{
@@ -8429,9 +8419,9 @@ and
 
     background:
         radial-gradient(
-            ellipse at 58% 50%,
-            rgba(28,104,143,.22),
-            transparent 48%
+            ellipse at 58% 52%,
+            rgba(27,103,142,.20),
+            transparent 52%
         ),
         linear-gradient(
             180deg,
@@ -8442,19 +8432,19 @@ and
 }
 
 
-/* ---------- geographic viewport ---------- */
-
 .engine-spatial-home.is-world-focus.is-region-focus
 .engine-region-map-layer{
     position:absolute !important;
 
-    left:-75% !important;
-    top:-75% !important;
-    right:-75% !important;
-    bottom:-75% !important;
+    inset:0 !important;
 
-    width:auto !important;
-    height:auto !important;
+    left:0 !important;
+    top:0 !important;
+    right:0 !important;
+    bottom:0 !important;
+
+    width:100% !important;
+    height:100% !important;
 
     max-width:none !important;
     max-height:none !important;
@@ -8470,11 +8460,10 @@ and
     transform:none !important;
 
     background:
-        radial-gradient(
-            ellipse at 50% 50%,
-            #0a3b53 0%,
-            #072b40 52%,
-            #051a29 100%
+        linear-gradient(
+            180deg,
+            #0b3b52,
+            #072c40
         ) !important;
 
     filter:none !important;
@@ -8484,20 +8473,21 @@ and
 }
 
 
-/* old card layer is not part of the design */
-
 .engine-region-ocean{
     display:none !important;
 }
 
-
-/* ---------- real 10m geography ---------- */
 
 .engine-spatial-home.is-world-focus.is-region-focus
 .engine-region-map{
     position:absolute !important;
 
     inset:0 !important;
+
+    left:0 !important;
+    top:0 !important;
+    right:0 !important;
+    bottom:0 !important;
 
     width:100% !important;
     height:100% !important;
@@ -8512,14 +8502,11 @@ and
 
     background:transparent !important;
 
-    opacity:.82 !important;
-
-    -webkit-mask-image:none !important;
-    mask-image:none !important;
+    opacity:.88 !important;
 
     filter:
-        brightness(.72)
-        saturate(.78)
+        brightness(.74)
+        saturate(.80)
         contrast(1.04)
         drop-shadow(
             0
@@ -8530,8 +8517,6 @@ and
 }
 
 
-/* world globe is replaced by region geography */
-
 .engine-spatial-home.is-world-focus.is-region-focus
 .engine-world-system{
     opacity:0 !important;
@@ -8539,30 +8524,28 @@ and
     visibility:hidden !important;
 
     pointer-events:none !important;
-
-    filter:none !important;
 }
 
 
 /*
- * Cyprus:
- * source coordinate ≈ 56.6% x / 49.8% y.
- * After 2.5x viewport crop ≈ 66.5% x / 49.5% y.
+ * Cyprus ≈ 33.3E / 35.1N
+ * Within V3 viewBox:
+ * x ≈ 57.2%
+ * y ≈ 53.1%
  */
 
 .engine-spatial-home.is-world-focus.is-region-focus
 .engine-region-marker-cyprus{
-    left:56.6% !important;
-    top:49.5% !important;
+    left:57.2% !important;
+    top:53.1% !important;
 }
+
 
 .engine-spatial-home.is-world-focus.is-region-focus
 .engine-region-marker{
     z-index:28 !important;
 }
 
-
-/* region controls */
 
 .engine-spatial-home.is-world-focus.is-region-focus
 .engine-region-focus-panel{
@@ -8572,6 +8555,25 @@ and
 }
 
 
+@media (max-width:720px){
+
+    /*
+     * Same real map; horizontal crop changes because
+     * mobile viewport is narrow.
+     */
+
+    .engine-spatial-home.is-world-focus.is-region-focus
+    .engine-region-marker-cyprus{
+        left:78% !important;
+        top:53% !important;
+    }
+
+    .engine-spatial-home.is-world-focus.is-region-focus
+    .engine-region-focus-panel{
+        top:12px !important;
+    }
+
+}
 /* =========================================================
    MOBILE HOME — FINAL COMPOSITION
 ========================================================= */
