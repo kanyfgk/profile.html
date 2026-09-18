@@ -8899,3 +8899,578 @@ body:has(.engine-spatial-home.is-world-focus)
     }
 
 }
+
+/* =========================================================
+   APPLICATIONS CAPABILITIES PEEK V1
+   SMALL ENTRY / LARGE NETWORK
+========================================================= */
+
+.engine-applications-peek-scrim{
+    position:absolute;
+
+    inset:0;
+
+    z-index:108;
+
+    margin:0;
+    padding:0;
+
+    border:0;
+
+    background:
+        rgba(1,8,13,.28);
+
+    opacity:0;
+    visibility:hidden;
+
+    pointer-events:none;
+
+    cursor:default;
+
+    backdrop-filter:
+        blur(2px);
+
+    -webkit-backdrop-filter:
+        blur(2px);
+
+    transition:
+        opacity .28s ease,
+        visibility .28s ease;
+}
+
+
+.engine-applications-peek{
+    position:absolute;
+
+    top:78px;
+    right:24px;
+
+    z-index:110;
+
+    width:
+        min(
+            430px,
+            calc(100% - 36px)
+        );
+
+    max-height:
+        min(
+            620px,
+            calc(100vh - 110px)
+        );
+
+    display:flex;
+    flex-direction:column;
+
+    padding:18px;
+
+    border:
+        1px solid
+        rgba(163,213,235,.14);
+
+    border-radius:26px;
+
+    background:
+        radial-gradient(
+            circle at 86% 8%,
+            rgba(49,126,159,.18),
+            transparent 32%
+        ),
+        linear-gradient(
+            160deg,
+            rgba(7,29,43,.96),
+            rgba(3,17,27,.975)
+        );
+
+    box-shadow:
+        0
+        34px
+        90px
+        rgba(0,0,0,.46),
+
+        inset
+        0
+        1px
+        0
+        rgba(255,255,255,.045);
+
+    opacity:0;
+    visibility:hidden;
+
+    pointer-events:none;
+
+    transform:
+        translateY(-10px)
+        scale(.97);
+
+    transform-origin:
+        top right;
+
+    backdrop-filter:
+        blur(28px)
+        saturate(1.12);
+
+    -webkit-backdrop-filter:
+        blur(28px)
+        saturate(1.12);
+
+    transition:
+        opacity .3s ease,
+        transform .4s cubic-bezier(.2,.78,.2,1),
+        visibility .3s ease;
+}
+
+
+.vaero-engine-home.is-applications-peek-open
+.engine-applications-peek-scrim{
+    opacity:1;
+    visibility:visible;
+
+    pointer-events:auto;
+}
+
+
+.vaero-engine-home.is-applications-peek-open
+.engine-applications-peek{
+    opacity:1;
+    visibility:visible;
+
+    pointer-events:auto;
+
+    transform:
+        translateY(0)
+        scale(1);
+}
+
+
+.vaero-engine-home.is-applications-peek-open
+.engine-applications-trigger{
+    border-color:
+        rgba(227,183,104,.34);
+
+    background:
+        rgba(227,183,104,.09);
+}
+
+
+.engine-applications-peek-head{
+    display:flex;
+    align-items:flex-start;
+    justify-content:space-between;
+
+    gap:14px;
+
+    padding:
+        2px
+        2px
+        15px;
+}
+
+
+.engine-applications-peek-head > div{
+    display:flex;
+    flex-direction:column;
+}
+
+
+.engine-applications-peek-head span{
+    color:
+        rgba(224,181,101,.82);
+
+    font-size:7px;
+    font-weight:760;
+
+    letter-spacing:.19em;
+}
+
+
+.engine-applications-peek-head strong{
+    margin-top:4px;
+
+    color:
+        rgba(247,250,251,.98);
+
+    font-size:21px;
+    font-weight:680;
+}
+
+
+.engine-applications-peek-head small{
+    margin-top:5px;
+
+    color:
+        rgba(197,215,225,.48);
+
+    font-size:8px;
+}
+
+
+.engine-applications-peek-close{
+    width:31px;
+    height:31px;
+
+    flex:
+        0
+        0
+        31px;
+
+    display:grid;
+    place-items:center;
+
+    margin:0;
+    padding:0;
+
+    border:
+        1px solid
+        rgba(162,205,225,.12);
+
+    border-radius:50%;
+
+    background:
+        rgba(255,255,255,.025);
+
+    color:
+        rgba(228,239,244,.62);
+
+    font:inherit;
+    font-size:17px;
+
+    cursor:pointer;
+}
+
+
+.engine-applications-peek-grid{
+    display:grid;
+
+    grid-template-columns:
+        repeat(
+            2,
+            minmax(0,1fr)
+        );
+
+    gap:8px;
+
+    overflow:auto;
+
+    padding:
+        2px
+        1px;
+}
+
+
+.engine-capability-card{
+    position:relative;
+
+    min-width:0;
+    min-height:88px;
+
+    display:grid;
+
+    grid-template-columns:
+        34px
+        minmax(0,1fr);
+
+    align-items:center;
+
+    gap:10px;
+
+    padding:
+        12px;
+
+    border:
+        1px solid
+        rgba(155,204,226,.095);
+
+    border-radius:18px;
+
+    background:
+        linear-gradient(
+            150deg,
+            rgba(255,255,255,.038),
+            rgba(255,255,255,.012)
+        );
+
+    color:
+        rgba(244,248,250,.94);
+
+    font:inherit;
+
+    text-align:left;
+
+    cursor:pointer;
+
+    transition:
+        transform .22s ease,
+        border-color .22s ease,
+        background .22s ease;
+}
+
+
+.engine-capability-card:hover{
+    transform:
+        translateY(-2px);
+
+    border-color:
+        rgba(224,181,101,.24);
+
+    background:
+        linear-gradient(
+            150deg,
+            rgba(224,181,101,.075),
+            rgba(255,255,255,.018)
+        );
+}
+
+
+.engine-capability-icon{
+    width:34px;
+    height:34px;
+
+    display:grid;
+    place-items:center;
+
+    border:
+        1px solid
+        rgba(170,211,230,.12);
+
+    border-radius:12px;
+
+    background:
+        rgba(7,28,42,.72);
+
+    font-size:15px;
+}
+
+
+.engine-capability-copy{
+    min-width:0;
+
+    display:flex;
+    flex-direction:column;
+}
+
+
+.engine-capability-copy strong{
+    overflow:hidden;
+
+    color:
+        rgba(244,248,250,.96);
+
+    font-size:10px;
+    font-weight:680;
+
+    white-space:nowrap;
+    text-overflow:ellipsis;
+}
+
+
+.engine-capability-copy small{
+    display:-webkit-box;
+
+    overflow:hidden;
+
+    margin-top:4px;
+
+    color:
+        rgba(195,214,224,.46);
+
+    font-size:7px;
+    line-height:1.35;
+
+    -webkit-line-clamp:2;
+    -webkit-box-orient:vertical;
+}
+
+
+.engine-capability-live{
+    position:absolute;
+
+    top:10px;
+    right:10px;
+
+    width:5px;
+    height:5px;
+
+    border-radius:50%;
+
+    background:
+        rgba(118,216,255,.78);
+
+    box-shadow:
+        0
+        0
+        11px
+        rgba(104,209,255,.44);
+}
+
+
+.engine-applications-peek-foot{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+
+    gap:12px;
+
+    margin-top:14px;
+
+    padding-top:13px;
+
+    border-top:
+        1px solid
+        rgba(154,204,226,.09);
+}
+
+
+.engine-applications-peek-foot > div{
+    display:flex;
+    align-items:center;
+
+    gap:7px;
+}
+
+
+.engine-applications-peek-foot small{
+    color:
+        rgba(185,207,217,.42);
+
+    font-size:7px;
+}
+
+
+.engine-capability-network-dot{
+    width:6px;
+    height:6px;
+
+    border-radius:50%;
+
+    background:
+        rgba(226,184,105,.92);
+
+    box-shadow:
+        0
+        0
+        12px
+        rgba(226,184,105,.44);
+}
+
+
+.engine-applications-open-all{
+    display:flex;
+    align-items:center;
+
+    gap:9px;
+
+    min-height:34px;
+
+    padding:
+        0
+        13px;
+
+    border:
+        1px solid
+        rgba(225,183,104,.19);
+
+    border-radius:999px;
+
+    background:
+        rgba(225,183,104,.07);
+
+    color:
+        rgba(240,219,178,.92);
+
+    font:inherit;
+    font-size:8px;
+    font-weight:650;
+
+    cursor:pointer;
+}
+
+
+.engine-applications-open-all span{
+    font-size:11px;
+}
+
+
+.engine-capabilities-empty{
+    grid-column:
+        1 / -1;
+
+    padding:28px;
+
+    color:
+        rgba(194,211,220,.45);
+
+    font-size:8px;
+
+    text-align:center;
+}
+
+
+/* =========================================================
+   MOBILE
+========================================================= */
+
+@media (max-width:720px){
+
+    .engine-applications-peek{
+        top:72px;
+        left:12px;
+        right:12px;
+
+        width:auto;
+
+        max-height:
+            calc(100% - 96px);
+
+        padding:15px;
+
+        border-radius:23px;
+
+        transform-origin:
+            top center;
+    }
+
+
+    .engine-applications-peek-grid{
+        gap:7px;
+    }
+
+
+    .engine-capability-card{
+        min-height:82px;
+
+        grid-template-columns:
+            30px
+            minmax(0,1fr);
+
+        gap:8px;
+
+        padding:10px;
+    }
+
+
+    .engine-capability-icon{
+        width:30px;
+        height:30px;
+
+        border-radius:10px;
+
+        font-size:13px;
+    }
+
+
+    .engine-applications-peek-head strong{
+        font-size:18px;
+    }
+
+
+    .engine-applications-peek-head small{
+        font-size:7px;
+    }
+
+
+    .engine-applications-peek-foot{
+        align-items:flex-end;
+    }
+
+}

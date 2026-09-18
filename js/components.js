@@ -805,6 +805,24 @@ const Components = {
             this.getApplications();
 
 
+        const applicationPreview =
+            Array.isArray(
+                applications
+            )
+                ? applications
+                    .filter(
+                        app =>
+                            app &&
+                            app.archived !==
+                                true
+                    )
+                    .slice(
+                        0,
+                        6
+                    )
+                : [];
+
+
         const displayName =
             this.getDisplayName(
                 entity
@@ -869,10 +887,11 @@ const Components = {
 
                         <button
                             type="button"
-                            class="engine-icon-btn"
-                            data-action="app:applications"
-                            aria-label="Uygulamalar"
-                            title="Uygulamalar"
+                            class="engine-icon-btn engine-applications-trigger"
+                            data-action="applications:peek:toggle"
+                            aria-label="Applications ve Capabilities"
+                            aria-expanded="false"
+                            title="Applications"
                         >
                             ▦
                         </button>
@@ -902,6 +921,163 @@ const Components = {
                     </div>
 
                 </header>
+
+
+                <button
+                    type="button"
+                    class="engine-applications-peek-scrim"
+                    data-action="applications:peek:close"
+                    aria-label="Applications katmanını kapat"
+                    tabindex="-1"
+                ></button>
+
+
+                <aside
+                    class="engine-applications-peek"
+                    aria-hidden="true"
+                >
+
+                    <div class="engine-applications-peek-head">
+
+                        <div>
+
+                            <span>
+                                VAERO CAPABILITIES
+                            </span>
+
+                            <strong>
+                                Applications
+                            </strong>
+
+                            <small>
+                                Kullandıkça evrene bağlanan yetenekler
+                            </small>
+
+                        </div>
+
+
+                        <button
+                            type="button"
+                            class="engine-applications-peek-close"
+                            data-action="applications:peek:close"
+                            aria-label="Kapat"
+                        >
+                            ×
+                        </button>
+
+                    </div>
+
+
+                    <div class="engine-applications-peek-grid">
+
+                        ${
+                            applicationPreview.length
+                                ? applicationPreview
+                                    .map(
+                                        app => {
+
+                                            const action =
+                                                this.safeAction(
+                                                    app?.action ||
+                                                    "app:applications"
+                                                );
+
+
+                                            const icon =
+                                                app?.icon ||
+                                                "✦";
+
+
+                                            const title =
+                                                app?.title ||
+                                                app?.name ||
+                                                app?.id ||
+                                                "Capability";
+
+
+                                            const subtitle =
+                                                app?.subtitle ||
+                                                app?.description ||
+                                                "VAERO capability";
+
+
+                                            return `
+                                                <button
+                                                    type="button"
+                                                    class="engine-capability-card"
+                                                    data-action="${this.escapeHTML(
+                                                        action
+                                                    )}"
+                                                >
+
+                                                    <span class="engine-capability-icon">
+                                                        ${this.escapeHTML(
+                                                            icon
+                                                        )}
+                                                    </span>
+
+                                                    <span class="engine-capability-copy">
+
+                                                        <strong>
+                                                            ${this.escapeHTML(
+                                                                title
+                                                            )}
+                                                        </strong>
+
+                                                        <small>
+                                                            ${this.escapeHTML(
+                                                                subtitle
+                                                            )}
+                                                        </small>
+
+                                                    </span>
+
+                                                    <i
+                                                        class="engine-capability-live"
+                                                        aria-hidden="true"
+                                                    ></i>
+
+                                                </button>
+                                            `;
+
+                                        }
+                                    )
+                                    .join("")
+                                : `
+                                    <div class="engine-capabilities-empty">
+                                        Henüz kullanılabilir capability yok.
+                                    </div>
+                                `
+                        }
+
+                    </div>
+
+
+                    <div class="engine-applications-peek-foot">
+
+                        <div>
+
+                            <span class="engine-capability-network-dot"></span>
+
+                            <small>
+                                Interaction Network hazır
+                            </small>
+
+                        </div>
+
+
+                        <button
+                            type="button"
+                            class="engine-applications-open-all"
+                            data-action="app:applications"
+                        >
+                            Tüm Applications
+                            <span>→</span>
+                        </button>
+
+                    </div>
+
+                </aside>
 
 
                 <div class="engine-shell-identity">
