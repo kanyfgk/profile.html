@@ -8575,31 +8575,82 @@ and
 
 }
 /* =========================================================
-   MOBILE HOME — FINAL COMPOSITION
+   MOBILE HOME V2 — SEPARATED WORLD / BRAIN
 ========================================================= */
 
 @media (max-width:720px){
 
     /*
-     * Globe occupies upper half.
-     * Brain gets its own lower zone.
+     * MOBILE STAGE
+     * World above, Brain below.
      */
+
+    .engine-spatial-home{
+        overflow:hidden !important;
+    }
+
+
+    .engine-stage-welcome{
+        top:15px !important;
+        left:17px !important;
+    }
+
+
+    /* -----------------------------------------------------
+       WORLD
+    ----------------------------------------------------- */
 
     .engine-spatial-home:not(.is-world-focus)
     .engine-world-system{
         left:50% !important;
-        top:30% !important;
+        top:26% !important;
 
         width:
             min(
-                68vw,
-                300px
+                62vw,
+                245px
             ) !important;
 
         transform:
             translate(-50%,-50%) !important;
     }
 
+
+    .engine-spatial-home:not(.is-world-focus)
+    .engine-world-node{
+        display:none !important;
+    }
+
+
+    .engine-spatial-home:not(.is-world-focus)
+    .engine-world-identity{
+        left:50% !important;
+
+        top:43% !important;
+        bottom:auto !important;
+
+        width:90%;
+
+        transform:
+            translateX(-50%) !important;
+    }
+
+
+    .engine-spatial-home:not(.is-world-focus)
+    .engine-world-identity strong{
+        font-size:20px !important;
+    }
+
+
+    .engine-spatial-home:not(.is-world-focus)
+    .engine-world-identity small{
+        display:none !important;
+    }
+
+
+    /* -----------------------------------------------------
+       BRAIN
+    ----------------------------------------------------- */
 
     .engine-spatial-home:not(.is-world-focus)
     .engine-brain-presence{
@@ -8609,7 +8660,7 @@ and
         top:61% !important;
 
         width:
-            calc(100% - 34px) !important;
+            calc(100% - 28px) !important;
 
         transform:
             translate(-50%,-50%) !important;
@@ -8623,19 +8674,25 @@ and
     .engine-spatial-home:not(.is-world-focus)
     .engine-brain-presence
     .engine-brain-orb{
-        width:72px !important;
-        height:72px !important;
+        width:64px !important;
+        height:64px !important;
 
         margin:
             0
             0
-            7px !important;
+            6px !important;
     }
 
 
     .engine-spatial-home:not(.is-world-focus)
     .engine-brain-invitation{
         align-items:center !important;
+    }
+
+
+    .engine-spatial-home:not(.is-world-focus)
+    .engine-brain-invitation > span{
+        font-size:8px !important;
     }
 
 
@@ -8648,10 +8705,12 @@ and
 
         font-size:
             clamp(
-                27px,
-                8vw,
-                34px
+                25px,
+                7.4vw,
+                31px
             ) !important;
+
+        line-height:1.02 !important;
 
         text-align:center !important;
     }
@@ -8661,27 +8720,21 @@ and
     .engine-brain-prompt{
         width:
             min(
-                92%,
+                94%,
                 390px
             ) !important;
 
-        min-height:44px !important;
+        min-height:42px !important;
+
+        font-size:9px !important;
     }
 
 
-    .engine-spatial-home:not(.is-world-focus)
-    .engine-world-identity{
-        left:50% !important;
+    /* -----------------------------------------------------
+       SECONDARY UI
+    ----------------------------------------------------- */
 
-        top:43% !important;
-        bottom:auto !important;
-
-        transform:
-            translateX(-50%) !important;
-    }
-
-
-    .engine-spatial-home:not(.is-world-focus)
+    .engine-now-panel,
     .engine-world-bridge{
         display:none !important;
     }
@@ -8691,50 +8744,113 @@ and
     .engine-intent-dock{
         left:50% !important;
 
-        bottom:82px !important;
+        bottom:76px !important;
 
         width:
-            calc(100% - 22px) !important;
+            calc(100% - 20px) !important;
+
+        gap:5px !important;
 
         transform:
             translateX(-50%) !important;
     }
 
 
-    .engine-stage-welcome{
-        top:18px !important;
-        left:18px !important;
+    .engine-spatial-home:not(.is-world-focus)
+    .engine-intent-dock button{
+        min-height:27px !important;
+
+        padding:
+            0
+            9px !important;
+
+        font-size:7.5px !important;
     }
 
 
-    /*
-     * Region mode remains full-screen on mobile too.
-     */
+    /* -----------------------------------------------------
+       MOBILE REGION VIEW
+       V3 map uses object-fit:cover.
+       Cyprus shifts right in narrow portrait viewport.
+    ----------------------------------------------------- */
 
     .engine-spatial-home.is-world-focus.is-region-focus
     .engine-region-map-layer{
-        left:-90% !important;
-        top:-90% !important;
-        right:-90% !important;
-        bottom:-90% !important;
+        inset:0 !important;
+
+        width:100% !important;
+        height:100% !important;
     }
 
 
     .engine-spatial-home.is-world-focus.is-region-focus
     .engine-region-marker-cyprus{
-        left:56.6% !important;
-        top:50% !important;
+        left:81% !important;
+        top:53% !important;
     }
 
 
     .engine-spatial-home.is-world-focus.is-region-focus
     .engine-region-focus-panel{
-        top:12px !important;
+        top:11px !important;
 
         width:
-            calc(100% - 24px);
+            calc(100% - 18px) !important;
 
-        justify-content:center;
+        gap:8px !important;
+
+        justify-content:center !important;
+    }
+
+
+    .engine-spatial-home.is-world-focus.is-region-focus
+    .engine-region-focus-copy strong{
+        font-size:11px !important;
+    }
+
+
+}
+
+
+/* Extra-short phones */
+
+@media (max-width:720px) and (max-height:700px){
+
+    .engine-spatial-home:not(.is-world-focus)
+    .engine-world-system{
+        top:24% !important;
+
+        width:
+            min(
+                56vw,
+                215px
+            ) !important;
+    }
+
+
+    .engine-spatial-home:not(.is-world-focus)
+    .engine-world-identity{
+        top:40% !important;
+    }
+
+
+    .engine-spatial-home:not(.is-world-focus)
+    .engine-brain-presence{
+        top:58% !important;
+    }
+
+
+    .engine-spatial-home:not(.is-world-focus)
+    .engine-brain-presence
+    .engine-brain-orb{
+        width:56px !important;
+        height:56px !important;
+    }
+
+
+    .engine-spatial-home:not(.is-world-focus)
+    .engine-intent-dock{
+        bottom:70px !important;
     }
 
 }
