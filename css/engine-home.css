@@ -8854,3 +8854,176 @@ and
     }
 
 }
+
+/* =========================================================
+   CYPRUS ISLAND ZOOM V1
+   REGION → ISLAND
+========================================================= */
+
+.engine-region-marker{
+    font:inherit;
+}
+
+button.engine-region-marker{
+    cursor:pointer;
+}
+
+button.engine-region-marker:hover{
+    border-color:
+        rgba(137,220,250,.46);
+
+    background:
+        rgba(6,29,42,.94);
+}
+
+
+/* ---------- island panel ---------- */
+
+.engine-island-focus-panel{
+    position:absolute;
+
+    top:20px;
+    left:50%;
+
+    z-index:72;
+
+    display:flex;
+    align-items:center;
+
+    gap:16px;
+
+    opacity:0;
+
+    pointer-events:none;
+
+    transform:
+        translate(-50%,-8px);
+
+    transition:
+        opacity .35s ease,
+        transform .45s cubic-bezier(.2,.75,.2,1);
+}
+
+
+/* ---------- island surface ---------- */
+
+.engine-island-map-layer{
+    position:absolute;
+
+    inset:0;
+
+    z-index:32;
+
+    overflow:hidden;
+
+    opacity:0;
+
+    pointer-events:none;
+
+    background:
+        radial-gradient(
+            ellipse at 50% 52%,
+            rgba(29,108,148,.24),
+            transparent 46%
+        ),
+        linear-gradient(
+            180deg,
+            #0a3b53,
+            #062b40 54%,
+            #051a29
+        );
+
+    transition:
+        opacity .55s ease;
+}
+
+
+.engine-island-map{
+    position:absolute;
+
+    left:6%;
+    top:11%;
+
+    width:88%;
+    height:76%;
+
+    object-fit:contain;
+    object-position:center;
+
+    opacity:.94;
+
+    filter:
+        brightness(.76)
+        saturate(.82)
+        contrast(1.05)
+        drop-shadow(
+            0
+            16px
+            34px
+            rgba(0,0,0,.24)
+        );
+}
+
+
+/* ---------- island active ---------- */
+
+.engine-spatial-home.is-island-focus
+.engine-region-map-layer{
+    opacity:0 !important;
+
+    pointer-events:none !important;
+}
+
+
+.engine-spatial-home.is-island-focus
+.engine-region-focus-panel{
+    opacity:0 !important;
+
+    pointer-events:none !important;
+}
+
+
+.engine-spatial-home.is-island-focus
+.engine-island-map-layer{
+    opacity:1;
+
+    pointer-events:auto;
+}
+
+
+.engine-spatial-home.is-island-focus
+.engine-island-focus-panel{
+    opacity:1;
+
+    pointer-events:auto;
+
+    transform:
+        translate(-50%,0);
+}
+
+
+/* ---------- mobile ---------- */
+
+@media (max-width:720px){
+
+    .engine-island-focus-panel{
+        top:11px;
+
+        width:
+            calc(100% - 18px);
+
+        gap:8px;
+
+        justify-content:center;
+    }
+
+
+    .engine-island-map{
+        left:3%;
+        top:17%;
+
+        width:94%;
+        height:62%;
+    }
+
+}

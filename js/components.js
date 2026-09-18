@@ -992,14 +992,51 @@ const Components = {
         aria-hidden="true"
     />
 
-    <div class="engine-region-marker engine-region-marker-cyprus">
-        <span></span>
+    <button
+    type="button"
+    class="engine-region-marker engine-region-marker-cyprus"
+    data-action="world:island:open"
+    data-island-id="cyprus"
+    aria-label="Kıbrıs ada görünümünü aç"
+>
+    <span></span>
 
-        <div>
-            <strong>Kıbrıs</strong>
-            <small>Doğu Akdeniz</small>
-        </div>
+    <div>
+        <strong>Kıbrıs</strong>
+        <small>Doğu Akdeniz</small>
     </div>
+</button>
+</div>
+
+<div class="engine-island-focus-panel">
+
+    <button
+        type="button"
+        class="engine-region-back"
+        data-action="world:island:exit"
+    >
+        <span>←</span>
+        Doğu Akdeniz'e dön
+    </button>
+
+    <div class="engine-region-focus-copy">
+        <span>VAERO WORLD / ISLAND</span>
+        <strong>Kıbrıs</strong>
+        <small>Ada katmanı</small>
+    </div>
+
+</div>
+
+<div
+    class="engine-island-map-layer"
+    aria-hidden="true"
+>
+    <img
+        class="engine-island-map"
+        src="./assets/world/cyprus_10m.svg"
+        alt=""
+        aria-hidden="true"
+    />
 </div>
 
 <div class="engine-world-system">

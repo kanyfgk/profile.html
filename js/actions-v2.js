@@ -1130,11 +1130,16 @@ notify(
 
         stage.classList.remove(
             "is-world-focus",
-            "is-region-focus"
+            "is-region-focus",
+            "is-island-focus"
         );
 
         stage.removeAttribute(
             "data-world-region"
+        );
+
+        stage.removeAttribute(
+            "data-world-island"
         );
 
         stage.removeAttribute(
@@ -1216,7 +1221,12 @@ notify(
         }
 
         stage.classList.remove(
-            "is-region-focus"
+            "is-region-focus",
+            "is-island-focus"
+        );
+
+        stage.removeAttribute(
+            "data-world-island"
         );
 
         stage.removeAttribute(
@@ -1228,6 +1238,92 @@ notify(
             {
                 mode:
                     "focus"
+            }
+        );
+
+        return true;
+
+    },
+
+
+    openWorldIsland(islandId){
+
+        const stage =
+            document.querySelector(
+                ".engine-spatial-home"
+            );
+
+        if(!stage){
+            return false;
+        }
+
+        const id =
+            this.normalizeText(
+                islandId,
+                60
+            ).toLowerCase();
+
+        if(
+            id !==
+            "cyprus"
+        ){
+            return false;
+        }
+
+        stage.classList.add(
+            "is-world-focus",
+            "is-region-focus",
+            "is-island-focus"
+        );
+
+        stage.setAttribute(
+            "data-world-island",
+            id
+        );
+
+        this.syncAwareness(
+            "world",
+            {
+                mode:
+                    "island",
+
+                islandId:
+                    id
+            }
+        );
+
+        return true;
+
+    },
+
+
+    exitWorldIsland(){
+
+        const stage =
+            document.querySelector(
+                ".engine-spatial-home"
+            );
+
+        if(!stage){
+            return false;
+        }
+
+        stage.classList.remove(
+            "is-island-focus"
+        );
+
+        stage.removeAttribute(
+            "data-world-island"
+        );
+
+        this.syncAwareness(
+            "world",
+            {
+                mode:
+                    "region",
+
+                regionId:
+                    "eastern-mediterranean"
             }
         );
 
@@ -9929,6 +10025,19 @@ if(
             case "world:focus:exit":
 
                 return this.exitWorldFocus();
+
+
+            case "world:island:open":
+
+                return this.openWorldIsland(
+                    button.dataset
+                        .islandId
+                );
+
+
+            case "world:island:exit":
+
+                return this.exitWorldIsland();
 
 
             case "world:region:open":
